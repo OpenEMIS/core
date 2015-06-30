@@ -35,16 +35,60 @@ trait MessagesTrait {
 			'invalidUrl' => 'You have entered an invalid url.',
 			'notSelected' => 'No Record has been selected/saved.'
 		],
+		'date' => [
+			'start' => 'Start Date',
+			'end' => 'End Date',
+			'from' => 'From',
+			'to' => 'To'
+		],
+		'time' => [
+			'start' => 'Start Time',
+			'end' => 'End Time',
+			'from' => 'From',
+			'to' => 'To'
+		],
+		'gender' => [
+			'm' => 'Male',
+			'f' => 'Female'
+		],
+		'password'=> [
+			'oldPassword' => 'Current Password',
+			'retypePassword' => 'Retype New Password',
+		],
+		'fileUpload' => [
+			'single' => '*File size should not be larger than 2MB.',
+			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
+		],
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.'
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
+		'Institutions' => [
+			'date_opened' => 'Date Opened',
+			'date_closed' => 'Date Closed',
+		],
+		'InstitutionSitePositions' => [
+			'current_staff_list' => 'Current Staff List',
+			'past_staff_list' => 'Past Staff List',
+		],
+		'InstitutionSiteStaff' => [
+			'start_date' => 'Start Date',
+			'fte' => 'FTE',
+			'total_fte' => 'Total FTE'
+		],
 		'InstitutionSiteProgrammes' => [
 			'noEducationLevels' => 'There are no available Education Level.',
 			'noEducationProgrammes' => 'There are no available Education Programme.',
 			'noEducationGrades' => 'There are no available Education Grade.',
+			'start_date' => 'Start Date',
+			'end_date' => 'End Date',
+			'education_grade' => 'Education Grades'
+		],
+		'InstitutionSiteShifts' => [
+			'start_time' => 'Start Time',
+			'end_time' => 'End Time',
 		],
 		'InstitutionSiteSections' => [
 			'noSections' => 'No Sections',
@@ -89,17 +133,55 @@ trait MessagesTrait {
 			'tabTitle' => 'System Roles'
 		],
 		'Users' => [
+			'photo_content' => 'Photo ID',
 			'openemis_no' => 'OpenEMIS ID',
 			'name' => 'Name',
 			'gender' => 'Gender',
 			'date_of_birth' => 'Date Of Birth',
 			'student_category' => 'Category',
+			'status' => 'Status',
 			'select_student' => 'Select Student',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',
 			'select_teacher' => 'Select Teacher',
 			'add_teacher' => 'Add Teacher'
+		],
+		'InfrastructureTypes' => [
+			'infrastructure_level_id' => 'Level Name'
+		],
+		'InfrastructureCustomFields' => [
+			'infrastructure_level_id' => 'Level Name'
+		],
+		'CustomGroups' => [
+			'custom_modules' => 'Module'
+		],
+		'SurveyTemplates' => [
+			'survey_module_id' => 'Module'
+		],
+		'SurveyQuestions' => [
+			'survey_template_id' => 'Survey Template'
+		],
+		'SurveyStatuses' => [
+			'survey_template_id' => 'Survey Template'
+		],
+		'RubricSections' => [
+			'rubric_template_id' => 'Rubric Template'
+		],
+		'RubricCriterias' => [
+			'rubric_section_id' => 'Rubric Section',
+			'criterias' => 'Criterias'
+		],
+		'RubricTemplateOptions' => [
+			'rubric_template_id' => 'Rubric Template',
+			'weighting' => 'Weighting'
+		],
+		'Workflows' => [
+			'workflow_model_id' => 'Form'
+		],
+		'WorkflowActions' => [
+			'next_step' => 'Next Step',
+			'comment_required' => 'Comment Required'
 		],
 		
 		// Validation Messages

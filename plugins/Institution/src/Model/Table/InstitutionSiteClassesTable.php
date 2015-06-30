@@ -24,6 +24,12 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
 		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
 
+		$this->belongsToMany('Teachers', [
+			'className' => 'User.Users',
+			'joinTable' => 'institution_site_class_staff',
+			'foreignKey' => 'institution_site_class_id',
+			'targetForeignKey' => 'security_user_id'
+		]);
 		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
 
 		/**
@@ -76,17 +82,15 @@ class InstitutionSiteClassesTable extends AppTable {
 			],
 			'visible' => false
 		]);
+
 		$this->ControllerAction->field('teachers', [
-			'label' => '',
-			'override' => true,
-			'type' => 'element',
-			'element' => 'Institution.Classes/teachers',
-			'data' => [	
-				'teachers'=>[],
-				'teacherOptions'=>[]
-			],
+			'type' => 'chosenSelect',
+			'fieldNameKey' => 'teachers',
+			'fieldName' => $this->alias() . '.teachers._ids',
+			'placeholder' => $this->getMessage('Users.select_teacher'),
 			'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
 		]);
+
 		$this->ControllerAction->field('male_students', [
 			'type' => 'integer',
 			'visible' => ['index'=>true]
@@ -98,8 +102,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'education_subject_id', 'teachers',
-			'male_students', 'female_students',
+			'name', 'education_subject_id', 'teachers', 'male_students', 'female_students',
 		]);
 
 		if (strtolower($this->action) != 'index') {
@@ -114,8 +117,6 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function indexBeforeAction($event) {
-		$this->fields['teachers']['type'] = 'string';
-
 		$Classes = $this;
 		$Sections = $this->InstitutionSiteSections;
  		$institutionsId = $this->Session->read('Institutions.id');
@@ -196,6 +197,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function indexBeforePaginate($event, $request, $paginateOptions) {
 		$paginateOptions['finder'] = ['bySections' => []];
+		$paginateOptions['contain'][] = 'Teachers';
 		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriodId;
 		return $paginateOptions;
 	}
@@ -216,7 +218,11 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function viewBeforeQuery(Event $event, Query $query, $contain) {
 		$contain = array_merge([
-			'InstitutionSiteSectionClasses' => ['InstitutionSiteSections']
+			'InstitutionSiteSectionClasses' => ['InstitutionSiteSections'],
+
+			'Teachers',
+			'InstitutionSiteClassStaff',
+
 		], $contain);
 		return compact('query', 'contain');
 	}
@@ -228,12 +234,12 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 		$entity->section_name = implode(', ', $sections);
 		
-		$this->fields['teachers']['data']['teachers'] = $this
-			->InstitutionSiteClassStaff
-			->find()
-			->contain(['Users'])
-			->where(['InstitutionSiteClassStaff.institution_site_class_id'=>$entity->id])
-			->toArray();
+		// $this->fields['teachers']['data']['teachers'] = $this
+		// 	->InstitutionSiteClassStaff
+		// 	->find()
+		// 	->contain(['Users'])
+		// 	->where(['InstitutionSiteClassStaff.institution_site_class_id'=>$entity->id])
+		// 	->toArray();
 
 		$this->fields['students']['data']['students'] = $this
 			->InstitutionSiteClassStudents
@@ -321,13 +327,12 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 			$this->Alert->success('general.add.success');
 			$action = $this->ControllerAction->buttons['index']['url'];
-			$this->controller->redirect($action);
+			return $this->controller->redirect($action);
 		} else {
 			// pr($error);
 			$this->log($error, 'debug');
 			$this->Alert->error('general.add.failed');
 		}
-		return false;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -375,7 +380,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		$contain = array_merge([
 			'AcademicPeriods', 
 			'EducationSubjects',
-			'InstitutionSiteClassStaff'=>['Users'],
+			'Teachers',
+			'InstitutionSiteClassStaff',
 			'InstitutionSiteClassStudents'=>['Users'=>['Genders']],
 			'InstitutionSiteSectionClasses'
 		], $contain);
@@ -383,6 +389,8 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	public function editBeforePatch($event, $entity, $data, $options) {
+		// pr($entity);
+		// pr($data);
 		/**
 		 * Unable to utilise updateAll for this scenario.
 		 * Only new student records will be saved as status=1 at the later part of this scope.
@@ -393,7 +401,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 
 		/**
-		 * In students.ctp && teachers.ctp, we set the security_user_id as the array keys for easy search and compare.
+		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
 		 */
 		foreach($entity->institution_site_class_students as $key => $record) {
@@ -414,16 +422,24 @@ class InstitutionSiteClassesTable extends AppTable {
 				];
 			}
 		}
+		$checkedStaff = [];
 		foreach($entity->institution_site_class_staff as $key => $record) {
 			$k = $record->security_user_id;
-			if (array_key_exists('institution_site_class_staff', $data[$this->alias()])) {
-				if (!array_key_exists($k, $data[$this->alias()]['institution_site_class_staff'])) {			
+			if (	array_key_exists('teachers', $data[$this->alias()])	
+				&& 	array_key_exists('_ids', $data[$this->alias()]['teachers'])
+			) {
+				if (!in_array($k, $data[$this->alias()]['teachers']['_ids'])) {
 					$data[$this->alias()]['institution_site_class_staff'][$k] = [
 						'id' => $record->id,
 						'status' => 0 
 					];
 				} else {
-					$data[$this->alias()]['institution_site_class_staff'][$k]['id'] = $record->id;
+					$checkedStaff[] = $k;
+					$data[$this->alias()]['institution_site_class_staff'][$k] = [
+						'id' => $record->id,
+						'security_user_id' => $k,
+						'status' => 1
+					];
 				}
 			} else {
 				$data[$this->alias()]['institution_site_class_staff'][$k] = [
@@ -431,7 +447,18 @@ class InstitutionSiteClassesTable extends AppTable {
 					'status' => 0 
 				];
 			}
-		}		
+		}
+		if (!empty($checkedStaff)) {
+			$balance = array_diff($data[$this->alias()]['teachers']['_ids'], $checkedStaff);
+			foreach ($balance as $bal) {
+				$data[$this->alias()]['institution_site_class_staff'][$bal] = [
+					'security_user_id' => $bal,
+					'status' => 1
+				];
+			}
+		}
+		unset($data[$this->alias()]['teachers']);
+		// pr($data);die;
 		return compact('entity', 'data', 'options');
 	}
 
@@ -454,43 +481,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($query as $teacher) {
 			$teacherOptions[$teacher->user->id] = $teacher->user->name_with_id;
 		}
-		$teachers = $entity->institution_site_class_staff;
-		/**
-		 * Check if the request is a page reload
-		 */
-		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
-			$teachers = [];
-			/**
-			 * Populate records in the UI table & unset the record from teacherOptions
-			 */
-			if (array_key_exists('institution_site_class_staff', $this->request->data[$this->alias()])) {
-				foreach ($this->request->data[$this->alias()]['institution_site_class_staff'] as $row) {
-					if ($row['status']>0 && array_key_exists($row['security_user_id'], $teacherOptions)) {
-						$id = $row['security_user_id'];
-						$teachers[] = $this->createVirtualEntity($id, $entity, 'staff');
-						unset($teacherOptions[$id]);
-					}
-				}
-			}
-			/**
-			 * Insert the newly record into the UI table & unset the record from teacherOptions
-			 */
-			if (array_key_exists('staff_id', $this->request->data) && $this->request->data['staff_id']!=0) {
-				$id = $this->request->data['staff_id'];
-				$teachers[] = $this->createVirtualEntity($id, $entity, 'staff');
-				unset($teacherOptions[$id]);
-			}
-		} else {
-			/**
-			 * Just unset the record from teacherOptions on first page load
-			 */
-			foreach ($entity->institution_site_class_staff as $row) {
-				if ($row->status>0 && array_key_exists($row->security_user_id, $teacherOptions)) {
-					unset($teacherOptions[$row->security_user_id]);
-				}
-			}
-		}
-
 
 		/**
 		 * @todo should have additional filter; by start_date, end_date & education_programme_id
@@ -545,10 +535,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 
-		$this->fields['teachers']['data'] = [
-			'teachers' => $teachers,
-			'teacherOptions' => $teacherOptions
-		];
+		$this->fields['teachers']['options'] = $teacherOptions;
 		$this->fields['students']['data'] = [
 			'students' => $students,
 			'studentOptions' => $studentOptions
@@ -611,7 +598,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$list = $this->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
 		if (empty($list)) {
 			$this->Alert->warning('Institutions.noProgramme');
-			return $this->redirect($this->ControllerAction->buttons['index']['url']);
+			return $this->controller->redirect($this->ControllerAction->buttons['index']['url']);
 		} else {
 			if ($this->_selectedAcademicPeriodId != 0) {
 				if (!array_key_exists($this->_selectedAcademicPeriodId, $list)) {
@@ -669,7 +656,8 @@ class InstitutionSiteClassesTable extends AppTable {
 			->contain([
 				'InstitutionSiteClasses'=>[
 					'EducationSubjects',
-					'InstitutionSiteClassStaff'=>['Users'=>['Genders']]
+					// 'InstitutionSiteClassStaff'=>['Users'=>['Genders']]
+					'Teachers'=>['Genders']
 				],
 			])
 			->where([
