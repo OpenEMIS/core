@@ -18,13 +18,17 @@ namespace App\View\Helper;
 
 use Cake\View\Helper;
 use Cake\Utility\Inflector;
+use App\Model\Traits\MessagesTrait;
 
 class LabelHelper extends Helper {
-	public $messages = [
+	use MessagesTrait;
+
+	public $messagesOld = [
 		'general' => [
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
+			'view' => 'View',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'reorder' => 'Reorder',
@@ -122,24 +126,6 @@ class LabelHelper extends Helper {
 			'total_fte' => 'Total FTE',
 			'fte' => 'FTE'
 		],
-		'InstitutionSitePositions' => [
-			'title' => 'Positions',
-			'position_no' => 'Position No',
-			'status' => 'Status',
-			'type' => 'Type',
-			'staff_position_title_id' => 'Title',
-			'staff_position_grade_id' => 'Grade'
-		],
-		'InstitutionSiteSections' => [
-			'name' => 'Section Name',
-			'institution_site_shift_id' => 'Shift',
-			'security_user_id' => 'Home Room Teacher',
-			'single_grade_field' => 'Sections',
-			'multi_grade_field' => 'Education Grades',
-		],
-		'InstitutionSiteShifts' => [
-			'location_institution_site_id' => 'Location'
-		],
 		'InfrastructureTypes' => [
 			'infrastructure_level_id' => 'Level Name'
 		],
@@ -181,23 +167,23 @@ class LabelHelper extends Helper {
 		]
 	];
 
-	public function endsWith($haystack, $needle) {
-		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
-	}
+	// public function endsWith($haystack, $needle) {
+	// 	return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	// }
 	
-	public function get($code) {
-		$index = explode('.', $code);
-		$message = $this->messages;
-		foreach($index as $i) {
-			if(isset($message[$i])) {
-				$message = $message[$i];
-			} else {
-				$message = false;
-				break;
-			}
-		}
-		return !is_bool($message) ? __($message) : $message;
-	}
+	// public function get($code) {
+	// 	$index = explode('.', $code);
+	// 	$message = $this->messages;
+	// 	foreach($index as $i) {
+	// 		if(isset($message[$i])) {
+	// 			$message = $message[$i];
+	// 		} else {
+	// 			$message = false;
+	// 			break;
+	// 		}
+	// 	}
+	// 	return !is_bool($message) ? __($message) : $message;
+	// }
 	
 	public function getLabel($model, $key, $attr) {
 		$labelKey = $model;
@@ -213,7 +199,13 @@ class LabelHelper extends Helper {
 			if ($this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
+		} elseif ($label == '[Message Not Found]' || is_array($label)) {
+			$label = $this->get($code.'.label');
 		}
 		return $label;
+	}
+	
+	public function get($code) {
+		return $this->getMessage($code);
 	}
 }

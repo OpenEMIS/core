@@ -2,14 +2,14 @@
 
 	<hr>
 
-	<h3><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></h3>
+	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
 
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">
 	<?php
 		echo $this->Form->input('student_id', array(
 			'options' => $attr['data']['studentOptions'],
-			'label' => 'Add Student',
+			'label' => $this->Label->get('Users.add_student'),
 			'onchange' => "$('#reload').val('add').click();"
 		));
 		?>
@@ -20,12 +20,12 @@
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<th><?php echo $this->Label->get('general.openemisId'); ?></th>
-					<th><?php echo $this->Label->get('general.name'); ?></th>
-					<th><?php echo $this->Label->get('general.gender'); ?></th>
-					<th><?php echo $this->Label->get('general.date_of_birth'); ?></th>
-					<th><?php echo $this->Label->get('general.education_grade'); ?></th>
-					<th><?php echo $this->Label->get('general.category'); ?></th>
+					<th><?= $this->Label->get('Users.openemis_no'); ?></th>
+					<th><?= $this->Label->get('Users.name'); ?></th>
+					<th><?= $this->Label->get('Users.gender'); ?></th>
+					<th><?= $this->Label->get('Users.date_of_birth'); ?></th>
+					<th><?= $this->Label->get($attr['model'] . '.education_grade'); ?></th>
+					<th><?= $this->Label->get('Users.student_category'); ?></th>
 					<th class="cell-delete"></th>
 				</tr>
 			</thead>

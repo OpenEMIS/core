@@ -3,7 +3,7 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
-<?php //pr($data);?>
+
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
 	<div class="table-in-view col-md-4 table-responsive">
@@ -25,7 +25,7 @@
 					$institutionSiteGradeId = false;
 					if (isset($attr['selected']) && array_key_exists($obj->id, $attr['selected'])) {
 						$selected = true;
-					}
+					} 
 					if (isset($attr['recorded']) && array_key_exists($obj->id, $attr['recorded'])) {
 						$institutionSiteGradeId = $attr['recorded'][$obj->id];
 					}
@@ -51,6 +51,12 @@
 
 <?php else : ?>
 
-
+<?php 
+	$grades = [];
+	foreach ($data->institution_site_grades as $grade) {
+		$grades[] = $grade->education_grade->name;
+	}
+	echo implode(', ', $grades);
+?>
 
 <?php endif ?>

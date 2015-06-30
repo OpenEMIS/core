@@ -10,11 +10,13 @@ class AssessmentsController extends AppController
 	public function initialize() {
 		parent::initialize();
 
+		$this->ControllerAction->model('Assessment.Assessments');
 		$this->ControllerAction->models = [
-			'Types' => ['className' => 'Assessment.AssessmentItemTypes'],
-			'Items' => ['className' => 'Assessment.AssessmentItems'],
-			'Results' => ['className' => 'Assessment.AssessmentResults'],
-			'ItemResults' => ['className' => 'Assessment.AssessmentItemResults']
+			'GradingTypes'		=> ['className' => 'Assessment.AssessmentGradingTypes'],
+			'GradingOptions'	=> ['className' => 'Assessment.AssessmentGradingOptions'],
+			// 'Items' => ['className' => 'Assessment.AssessmentItems'],
+			// 'Results' => ['className' => 'Assessment.AssessmentResults'],
+			// 'ItemResults' => ['className' => 'Assessment.AssessmentItemResults']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -26,35 +28,28 @@ class AssessmentsController extends AppController
 
     	$header = __('Assessment');
     	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-    		$header .= ' - ' . Inflector::humanize(Inflector::underscore($model->alias));
+  //   	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
+  //   		$header .= ' - ' . Inflector::humanize(Inflector::underscore($model->alias));
 
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
+		// 	$controller->set('contentHeader', $header);
+		// };
 
 		$this->set('contentHeader', $header);
 
+		$plugin = $this->plugin;
+
 		$tabElements = [
-			'Types' => [
-				'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Types'],
-				'text' => __('Types')
+			'Assessments' => [
+				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'index'],
+				'text' => __('Assessments')
 			],
-			'Items' => [
-				'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Items'],
-				'text' => __('Items')
+			'GradingTypes' => [
+				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
+				'text' => __('Grading Types')
 			],
-			'Results' => [
-				'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Results'],
-				'text' => __('Results')
-			],
-			'ItemResults' => [
-				'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'ItemResults'],
-				'text' => __('Item Results')
+			'GradingOptions' => [
+				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'GradingOptions'],
+				'text' => __('Grading Options')
 			]
 		];
 

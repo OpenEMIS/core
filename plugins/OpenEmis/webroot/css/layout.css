@@ -693,17 +693,34 @@ button[colorpicker] {
 	color: #FFF;	
 }
 
+.font-size-select {
+	position: relative;
+	display: inline;
+	margin-bottom: 0 !important;
+}
+
+.font-size-select:after {
+	top: 35% !important;
+}
+
 .font-size {
-	width: 20%;
+	width: 20% !important;
 	height: 25px !important;
-	padding: 4px !important;
+	padding: 4px 15px 4px 0 !important;
 	font-size: 12px !important;
 	display: inline;
 	margin-top: -2px;
+	clear: left;
+	margin: 0 !important;
 }
 
 .chrome .font-size {
 	height: 24px !important;
+}
+
+.panel-toolbar .format-item .input-select-wrapper {
+	height: 40px;
+	margin-bottom: 15px;
 }
 
 textarea {
@@ -824,7 +841,9 @@ input[type="checkbox"] {
 }
 
 .move-action i {
+	display: inline;
 	font-size: 14px !important;
+	margin: 0 2px;
 }
 
 .selected:focus,
@@ -872,6 +891,11 @@ input[type="checkbox"] {
 
 .toolbar .search .btn:focus {
 	outline: 0;
+}
+
+.toolbar .icon-big i {
+	font-size: 16px;
+	padding: 4px 7px 5px;
 }
 
 /* OVERRIDE FROM BOOTSTRAP HOVER STATE */
@@ -1269,6 +1293,14 @@ table .input-select-wrapper {
     padding: 10px 0;
 }
 
+.table-thumb {
+	border: 1px solid #DDD;
+	padding: 4px;
+	width: 70px;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
 .table-thumb img {
     z-index: 0;
     -webkit-border-radius: 5px;
@@ -1299,10 +1331,10 @@ table .input-select-wrapper {
     left: 16px; 
 }
 
-.profile-image {
+.profile-image-thumbnail {
 	display: table;
 	width: 60px;
-	height: 60px;
+	height: 77px;
 	background-color: #EEEEEE;
 	-webkit-border-radius: 5px;
 	        border-radius: 5px;
@@ -1310,13 +1342,32 @@ table .input-select-wrapper {
 	cursor: default;
 }
 
-.profile-image i {
+.profile-image {
+	display: table;
+	width: 80px;
+	height: 105px;
+	background-color: #EEEEEE;
+	-webkit-border-radius: 5px;
+	        border-radius: 5px;
+	opacity: 1;
+	cursor: default;	
+}
+
+.profile-image i,
+.profile-image-thumbnail i {
 	display: table-cell;
 	color: #BBB;
-	font-size: 35px;
 	padding: 5px;
 	vertical-align: middle;
 	text-align: center;
+}
+
+.profile-image-thumbnail i {
+	font-size: 45px;
+}
+
+.profile-image i {
+	font-size: 70px;
 }
 
 .table-icons i {
@@ -1587,6 +1638,7 @@ table tr.sorting-row td {background-color: #8b8;}
 	content: ":";
 	position: absolute;
 	right: 0;
+	top: 0;
 	color: #BBB;
 	font-weight: 300;
 }
@@ -1594,6 +1646,7 @@ table tr.sorting-row td {background-color: #8b8;}
 .form-input {
 	min-height: 30px;
 	padding: 5px 0;
+	float: left;
 }
 
 .form-horizontal label,
@@ -1658,6 +1711,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .fileinput {
 	position: relative;
+	margin-bottom: 15px !important;
 }
 
 .fileinput .btn-file {
@@ -1768,7 +1822,8 @@ select {
 	width: 100%;
 }
 
-.input-select-wrapper:after {
+.input-select-wrapper:after,
+.font-size-select:after {
     border-left: 5px solid rgba(0, 0, 0, 0);
     border-right: 5px solid rgba(0, 0, 0, 0);
     border-top: 5px solid;
