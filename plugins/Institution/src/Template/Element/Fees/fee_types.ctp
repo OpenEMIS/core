@@ -1,7 +1,7 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
+	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-in-view col-md-4 table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
