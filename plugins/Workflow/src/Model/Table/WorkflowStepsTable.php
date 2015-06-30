@@ -28,7 +28,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->fields['stage']['visible'] = false;
 
 		$this->ControllerAction->addField('security_roles', [
-			'type' => 'chosen_select',
+			'type' => 'chosenSelect',
 			'fieldNameKey' => 'security_roles',
 			'fieldName' => $this->alias() . '.security_roles._ids',
 			'placeholder' => __('Select Security Roles'),
