@@ -31,7 +31,6 @@ class StaffBehavior extends Behavior {
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
-			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect'
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -118,14 +117,5 @@ class StaffBehavior extends Behavior {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
-	}
-
-	public function addAfterSaveRedirect($action) {
-		$action = [];
-		if ($this->_table->Session->check('InstitutionSiteStaff.add.'.$this->_table->request->query['new'])) {
-			$action = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'];
-		}
-
-		return $action;
 	}
 }
