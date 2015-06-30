@@ -1227,6 +1227,18 @@ class ControllerActionComponent extends Component {
 		}
 		$this->model->fields = $fields;
 	}
+
+	public function setFieldVisible($actions, $fields) {
+		foreach ($this->model->fields as $key => $attr) {
+			if (in_array($key, $fields)) {
+				foreach ($actions as $action) {
+					$this->model->fields[$key]['visible'][$action] = true;
+				}
+			} else {
+				$this->model->fields[$key]['visible'] = false;
+			}
+		}
+	}
 	
 	public static function sortFields($a, $b) {
 		if (isset($a['order']) && isset($b['order'])) {

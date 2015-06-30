@@ -13,7 +13,7 @@ class EducationGradesTable extends AppTable {
 
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
-			'joinTable' => 'education_grade_subjects',
+			'joinTable' => 'education_grades_subjects',
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id'
 		]);
