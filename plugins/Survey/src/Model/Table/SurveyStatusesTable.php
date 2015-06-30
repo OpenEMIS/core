@@ -15,6 +15,7 @@ class SurveyStatusesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('AcademicPeriodLevels', ['className' => 'AcademicPeriod.AcademicPeriodLevels']);
+		$this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'foreignKey' => 'survey_status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('AcademicPeriods', [
 			'className' => 'AcademicPeriod.AcademicPeriods',
 			'joinTable' => 'survey_status_periods',
@@ -25,7 +26,7 @@ class SurveyStatusesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->addField('academic_periods', [
-			'type' => 'chosen_select',
+			'type' => 'chosenSelect',
 			'fieldNameKey' => 'academic_periods',
 			'fieldName' => $this->alias() . '.academic_periods._ids',
 			'placeholder' => __('Select Academic Periods'),

@@ -82,10 +82,6 @@ class ControllerActionHelper extends Helper {
 		echo '</div>';
 	}
 
-	public function renderElement($element, $attr) {
-		return $this->_View->element($element, $attr);
-	}
-
 	public function highlight($needle, $haystack){
 		// to cater for photos returning resource
 		if (is_resource($haystack)) { return $haystack; }
@@ -221,21 +217,8 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 
-			// trigger event for custom field types
-			$method = 'onGet' . Inflector::camelize($type) . 'Element';
-			$eventKey = 'ControllerAction.Model.' . $method;
-			$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'index', 'entity' => $obj, 'attr' => $attr, 'form' => $this->Form]);
-			
-			if (!empty($event->result)) {
-				$value = $event->result;
-			} else {
-				if (!$associatedFound) {
-					// mapped to a current function in this class
-					$function = 'get' . Inflector::camelize($type) . 'Element';
-					if (method_exists($this, $function)) {
-						$value = $this->$function('index', $obj, $attr);
-					}
-				}
+			if (!$associatedFound) {
+				$value = $this->HtmlField->render($type, 'index', $obj, $attr);
 			}
 
 			if (isset($attr['tableRowClass'])) {
@@ -375,7 +358,7 @@ class ControllerActionHelper extends Helper {
 		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
 		$_valueClass = array('form-input'); // default bootstrap class for values
 
-		$allowTypes = array('element', 'disabled', 'chosen_select');
+		$allowTypes = array('element', 'disabled', 'chosenSelect');
 
 		$displayFields = $_fields;
 

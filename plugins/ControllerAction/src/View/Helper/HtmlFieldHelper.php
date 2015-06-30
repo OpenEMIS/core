@@ -37,6 +37,10 @@ class HtmlFieldHelper extends Helper {
 		]
 	];
 
+	public function renderElement($element, $attr) {
+		return $this->_View->element($element, $attr);
+	}
+
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
 		$eventMap = $subject->implementedEvents();
 		$event = new Event($eventKey, $this, $params);
@@ -49,7 +53,7 @@ class HtmlFieldHelper extends Helper {
 		return $subject->eventManager()->dispatch($event);
 	}
 	
-	public function render($type, $action, Entity $data, array $attr, array $options) {
+	public function render($type, $action, Entity $data, array $attr, array $options = []) {
 		$html = '';
 
 		if (is_null($this->table)) {
