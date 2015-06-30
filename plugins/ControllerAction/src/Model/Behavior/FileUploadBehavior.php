@@ -204,17 +204,19 @@ class FileUploadBehavior extends Behavior {
 		$fileContentField = $this->config('content');
 
 		$file = $entity->$fileContentField;
-		$entity->$fileNameField =  null;
-		$entity->$fileContentField =  null;
-		// $errors = $validator->errors($entity);
-		// if (!empty($errors)) {
-		//     pr($errors);
-		// }
 		
-		//if (!is_null($file)) { 
+		$proceed = false;
+		if ($entity->isNew()) {
+			$proceed = true;
+		} elseif (!$entity->isNew() && !empty($file) && !empty($file['tmp_name'])) {
+			$proceed = true;
+		}
 
-		if (!empty($file)) {
+		if ($proceed) {
 			if ($file['error'] == 0) { // success
+				$entity->$fileNameField =  null;
+				$entity->$fileContentField =  null;
+				
 				if ($this->config('useDefaultName')) {
 					$entity->$fileNameField = $file['name'];
 				} else {
@@ -223,10 +225,11 @@ class FileUploadBehavior extends Behavior {
 				}
 				
 				$entity->$fileContentField = file_get_contents($file['tmp_name']);
+
 			}
+		} else {
+			$entity->unsetProperty($fileNameField);
+			$entity->unsetProperty($fileContentField);
 		}
-		// if (empty($entity->$fileNameField)) {
-		// 	return false;
-		// }
 	}
 }
