@@ -72,6 +72,10 @@ trait MessagesTrait {
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
 		],
+		'Assessments' => [
+			'noGrades' => 'No Available Grades',
+			'noGradingTypes' => 'You need to configure Grading Types first.'
+		],
 		'UserGroups' => [
 			'tabTitle' => 'User Groups'
 		],

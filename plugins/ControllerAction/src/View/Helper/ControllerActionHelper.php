@@ -649,6 +649,21 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
+	public function getIntegerElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = $data->$attr['field'];
+		} else if ($action == 'edit') {
+			$options['type'] = 'number';
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
+		}
+		return $value;
+	}
+
 	public function getPasswordElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
