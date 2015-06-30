@@ -90,9 +90,6 @@ class ControllerActionComponent extends Component {
 
 						$actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
 
-						if (!in_array($currentAction, $actions)) {
-							return $this->controller->redirect(['action' => $action]);
-						}
 						$this->model($attr['className'], $actions);
 						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
@@ -391,6 +388,8 @@ class ControllerActionComponent extends Component {
 				} else {
 					if (in_array($this->currentAction, $this->defaultActions)) {
 						$result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
+					} else {
+						return $this->controller->redirect(['action' => $this->model->alias]);
 					}
 				}
 			}
