@@ -49,10 +49,6 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function beforeAction(Event $event) {
-
-		// var_dump($this->_table->hasBehavior('User'));
-
-
 		$this->_table->fields['super_admin']['visible'] = false;
 		$this->_table->fields['status']['visible'] = false;
 		$this->_table->fields['date_of_death']['visible'] = false;
@@ -63,7 +59,6 @@ class StudentBehavior extends Behavior {
 	public function indexBeforeAction(Event $event) {
 		$this->_table->ControllerAction->addField('photo_content', [
 			'type' => 'image',
-			//'element' => 'Student.Students/picture'
 		]);
 
 		$this->_table->fields['first_name']['visible'] = false;
@@ -96,7 +91,6 @@ class StudentBehavior extends Behavior {
 	public function addBeforePatch($event, $entity, $data, $options) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
-
 				$institutionStudentData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
 
 				if (array_key_exists($this->_table->alias(), $data)) {
@@ -105,6 +99,7 @@ class StudentBehavior extends Behavior {
 						$data[$this->_table->alias()]['institution_site_students'][0] = [];
 					}
 					$data[$this->_table->alias()]['institution_site_students'][0]['institution_site_id'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['institution_site_id'];
+
 					$data[$this->_table->alias()]['institution_site_students'][0]['student_status_id'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['student_status_id'];
 					$data[$this->_table->alias()]['institution_site_students'][0]['education_programme_id'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['education_programme_id'];
 
@@ -128,8 +123,6 @@ class StudentBehavior extends Behavior {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {

@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 
 class UserBehavior extends Behavior {
+	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	private $associatedModel;
 	public function initialize(array $config) {
 		$this->associatedModel = (array_key_exists('associatedModel', $config))? $config['associatedModel']: null;
@@ -27,20 +28,36 @@ class UserBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$newEvent = [
+		$newEvents = [
 			// 'ControllerAction.Model.beforeAction' => 'beforeAction',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
-			// 'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect'
-			'ControllerAction.Model.onUpdateFieldAcademicPeriod' => 'onUpdateFieldAcademicPeriod',
-			'ControllerAction.Model.onUpdateFieldEducationProgrammeId' => 'onUpdateFieldEducationProgrammeId',
-			'ControllerAction.Model.onUpdateFieldEducationGrade' => 'onUpdateFieldEducationGrade',
-			'ControllerAction.Model.onUpdateFieldSection' => 'onUpdateFieldSection',
-			'ControllerAction.Model.onUpdateFieldStudentStatusId' => 'onUpdateFieldStudentStatusId',
-
 		];
-		$events = array_merge($events,$newEvent);
+
+		$roleEvents = [];
+
+		if ($this->_table->hasBehavior('Student')) {
+			$roleEvents = [
+				'ControllerAction.Model.onUpdateFieldAcademicPeriod' => 'onUpdateFieldAcademicPeriod',
+				'ControllerAction.Model.onUpdateFieldEducationProgrammeId' => 'onUpdateFieldEducationProgrammeId',
+				'ControllerAction.Model.onUpdateFieldEducationGrade' => 'onUpdateFieldEducationGrade',
+				'ControllerAction.Model.onUpdateFieldSection' => 'onUpdateFieldSection',
+				'ControllerAction.Model.onUpdateFieldStudentStatusId' => 'onUpdateFieldStudentStatusId',
+			];
+		}
+
+		if ($this->_table->hasBehavior('Staff')) {
+			$roleEvents = [
+				'ControllerAction.Model.onUpdateFieldInstitutionSitePositionId' => 'onUpdateFieldInstitutionSitePositionId',
+				'ControllerAction.Model.onUpdateFieldStartDate' => 'onUpdateFieldStartDate',
+				'ControllerAction.Model.onUpdateFieldFTE' => 'onUpdateFieldFTE',
+				'ControllerAction.Model.onUpdateFieldStaffTypeID' => 'onUpdateFieldStaffTypeID',
+			];
+		}
+
+		$newEvents = array_merge($newEvents, $roleEvents);
+		$events = array_merge($events,$newEvents);
 		return $events;
 	}
 
@@ -51,26 +68,42 @@ class UserBehavior extends Behavior {
 			foreach ($this->_table->fields as $key => $value) {
 				$this->_table->fields[$key]['visible'] = false;
 			}
-
-			$associationString = $this->_table->alias().'.'.Inflector::tableize($this->associatedModel->alias()).'.0.';
-
-			$this->_table->ControllerAction->field('academic_period', ['fieldName' => $associationString.'academic_period']);
-			$this->_table->ControllerAction->field('education_programme_id', ['fieldName' => $associationString.'education_programme_id']);
-			$this->_table->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
-			$this->_table->ControllerAction->field('section', ['fieldName' => $associationString.'section']);
-			$this->_table->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
-			$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
-			$this->_table->ControllerAction->field('end_date', ['type' => 'Date', 'fieldName' => $associationString.'end_date']);
-
 			$session = $this->_table->request->session();
 			$institutionsId = $session->read('Institutions.id');
+			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
 			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);
-			// $this->_table->ControllerAction->field('search');
 
-			$this->_table->ControllerAction->setFieldOrder([
-					'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
-				// , 'search'
-				]);	
+			if ($this->_table->hasBehavior('Student')) {
+				$this->_table->ControllerAction->field('academic_period', ['fieldName' => $associationString.'academic_period']);
+				$this->_table->ControllerAction->field('education_programme_id', ['fieldName' => $associationString.'education_programme_id']);
+				$this->_table->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
+				$this->_table->ControllerAction->field('section', ['fieldName' => $associationString.'section']);
+				$this->_table->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
+				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->field('end_date', ['type' => 'Date', 'fieldName' => $associationString.'end_date']);
+				// $this->_table->ControllerAction->field('search');
+
+				$this->_table->ControllerAction->setFieldOrder([
+						'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
+					// , 'search'
+					]);	
+			}
+
+			if ($this->_table->hasBehavior('Staff')) {
+				$this->_table->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
+				$this->_table->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
+				$this->_table->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
+				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->setFieldOrder([
+					'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
+					// , 'search'
+					]);
+
+			}
+
+
+			
 		}
 	}
 
@@ -195,9 +228,130 @@ class UserBehavior extends Behavior {
 		return $attr;
 	}
 
+	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
+		$session = $this->_table->request->session();
+		$institutionsId = $session->read('Institutions.id');
 
+		$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
+		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionsId, true);
 
-	// need to intercept the add
+		$attr['type'] = 'select';
+		$attr['options'] = $list;
+		$attr['onChangeReload'] = 'true';
+
+		return $attr;
+	}
+
+	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
+		$attr['onChangeReload'] = 'true';
+		return $attr;
+	}
+
+	public function onUpdateFieldFTE(Event $event, array $attr, $action, $request) {
+		if (array_key_exists('institution_site_position_id', $this->_table->fields)) {
+			if (array_key_exists('options', $this->_table->fields['institution_site_position_id'])) {
+				$positionId = key($this->_table->fields['institution_site_position_id']['options']);
+				if ($this->_table->request->data($this->_table->aliasField('institution_site_position_id'))) {
+					$positionId = $this->_table->request->data($this->_table->aliasField('institution_site_position_id'));
+				}
+			}
+		}
+
+		$startDate = null;
+		if ($this->_table->request->data($this->_table->aliasField('start_date'))) {
+			$startDate = $this->_table->request->data($this->_table->aliasField('start_date'));
+		}
+
+		$attr['type'] = 'select';
+		$attr['options'] = $this->getFTEOptions($positionId, ['startDate' => $startDate]);
+		return $attr;
+	}
+
+	public function getFTEOptions($positionId, $options = []) {
+		$options['showAllFTE'] = !empty($options['showAllFTE']) ? $options['showAllFTE'] : false;
+		$options['includeSelfNum'] = !empty($options['includeSelfNum']) ? $options['includeSelfNum'] : false;
+		$options['FTE_value'] = !empty($options['FTE_value']) ? $options['FTE_value'] : 0;
+		$options['startDate'] = !empty($options['startDate']) ? date('Y-m-d', strtotime($options['startDate'])) : null;
+		$options['endDate'] = !empty($options['endDate']) ? date('Y-m-d', strtotime($options['endDate'])) : null;
+		$currentFTE = !empty($options['currentFTE']) ? $options['currentFTE'] : 0;
+
+		if ($options['showAllFTE']) {
+			foreach ($this->fteOptions as $obj) {
+				$filterFTEOptions[$obj] = $obj;
+			}
+		} else {
+			$query = $this->_table->InstitutionSiteStaff->find();
+			$query->where(['AND' => ['institution_site_position_id' => $positionId]]);
+
+			if (!empty($options['startDate'])) {
+				$query->where(['AND' => ['OR' => [
+					'end_date >= ' => $options['startDate'],
+					'end_date is null'
+					]]]);
+			}
+
+			if (!empty($options['endDate'])) {
+				$query->where(['AND' => ['start_date <= ' => $options['endDate']]]);
+			}
+
+			$query->select([
+					// todo:mlee unable to implement 'COALESCE(SUM(FTE),0) as totalFTE'
+					'totalFTE' => $query->func()->sum('FTE'),
+					'institution_site_position_id'
+				])
+				->group('institution_site_position_id')
+			;
+
+			if (is_object($query)) {
+				$data = $query->toArray();
+				$totalFTE = empty($data[0]->totalFTE) ? 0 : $data[0]->totalFTE * 100;
+				$remainingFTE = 100 - intval($totalFTE);
+				$remainingFTE = ($remainingFTE < 0) ? 0 : $remainingFTE;
+
+				if ($options['includeSelfNum']) {
+					$remainingFTE +=  $options['FTE_value'];
+				}
+				$highestFTE = (($remainingFTE > $options['FTE_value']) ? $remainingFTE : $options['FTE_value']);
+
+				$filterFTEOptions = [];
+
+				foreach ($this->fteOptions as $obj) {
+					if ($highestFTE >= $obj) {
+						$objLabel = number_format($obj / 100, 2);
+						$filterFTEOptions[$obj] = $objLabel;
+					}
+				}
+
+				if(!empty($currentFTE) && !in_array($currentFTE, $filterFTEOptions)){
+					if($remainingFTE > 0) {
+						$newMaxFTE = $currentFTE + $remainingFTE;
+					}else{
+						$newMaxFTE = $currentFTE;
+					}
+					
+					foreach ($this->fteOptions as $obj) {
+						if ($obj <= $newMaxFTE) {
+							$objLabel = number_format($obj / 100, 2);
+							$filterFTEOptions[$obj] = $objLabel;
+						}
+					}
+				}
+
+			}
+
+			if (count($filterFTEOptions)==0) {
+				$filterFTEOptions = array(''=>__('No available FTE'));
+			}
+		}
+		return $filterFTEOptions;
+	}
+
+	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'select';
+		$attr['options'] = $this->_table->InstitutionSiteStaff->StaffTypes->getList();
+
+		return $attr;
+	}
 
 
 }
