@@ -48,6 +48,16 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteClasses', 'name', NULL, 'Class Name'),
 ('InstitutionSiteClasses', 'education_subject_id', NULL, 'Subject Name'),
 ('InstitutionSiteClasses', 'education_subject_code', NULL, 'Subject Code'),
+-- InstitutionSiteStaff
+('InstitutionSiteStaff', 'staff_institution_name', NULL, 'Institution'),
+('InstitutionSiteStaff', 'start_date', NULL, 'Start Date'),
+('InstitutionSiteStaff', 'end_date', NULL, 'End Date'),
+('InstitutionSiteStaff', 'photo_content', NULL, 'Profile Image'),
+-- StaffBehaviours
+('StaffBehaviours', 'date_of_behaviour', NULL, 'Date'),
+('StaffBehaviours', 'staff_behaviour_category_id', NULL, 'Category'),
+('StaffBehaviours', 'institution_site_id', NULL, 'Institution'),
+('StaffBehaviours', 'security_user_id', NULL, 'Staff'),
 -- Users
 ('Users', 'photo_content', NULL, 'Profile Image');
 
