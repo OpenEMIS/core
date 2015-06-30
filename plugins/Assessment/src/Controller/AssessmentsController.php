@@ -14,9 +14,7 @@ class AssessmentsController extends AppController
 		$this->ControllerAction->models = [
 			'GradingTypes'		=> ['className' => 'Assessment.AssessmentGradingTypes'],
 			'GradingOptions'	=> ['className' => 'Assessment.AssessmentGradingOptions'],
-			// 'Items' => ['className' => 'Assessment.AssessmentItems'],
-			// 'Results' => ['className' => 'Assessment.AssessmentResults'],
-			// 'ItemResults' => ['className' => 'Assessment.AssessmentItemResults']
+			'Status'			=> ['className' => 'Assessment.AssessmentStatuses']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -45,6 +43,10 @@ class AssessmentsController extends AppController
 			'GradingOptions' => [
 				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'GradingOptions'],
 				'text' => __('Grading Options')
+			],
+			'Status' => [
+				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'Status'],
+				'text' => __('Status')
 			]
 		];
 
