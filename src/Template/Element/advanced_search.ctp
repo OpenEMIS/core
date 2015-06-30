@@ -3,12 +3,13 @@
 	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
 	<h4>Advanced Search</h4>
 
-	<form action="/styleguide/users/add" novalidate="novalidate" class="form-horizontal" accept-charset="utf-8" method="post">
+	<form id="search-form" action="/styleguide/users/add" novalidate="novalidate" class="form-horizontal" accept-charset="utf-8" method="post">
+
 		<div class="input select">
 		  <label class="form-label">Education Programme:</label>
 		  <div class="input-select-wrapper">	 
 			  <select>
-			    <option>Pre-Primary</option>
+			    <option></option>
 			    <option>Primary</option>
 			    <option>Secondary 1 - 2 Expres or Normal (Academic)</option>
 			    <option>Secondary 1 - 2 Normal (Technical) or equivalent</option>
@@ -20,30 +21,50 @@
 
 		<div class="input select">
 		  <label class="form-label">Country:</label>
-		  <div class="input-select-wrapper">
+		  <div class="input-select-wrapper">	 
 			  <select>
+			    <option></option>
 			    <option>Singapore</option>
 			    <option>Malaysia</option>
 			    <option>Indonesia</option>
 			    <option>Australia</option>
-			    <option>Vietnam</option>
-			    <option>Thailand</option>		    
+			    <option>Vietnam</option>		    
 			  </select>
-		  </div>
+		   </div>	  
 		</div>
 
 		<div class="input text">
-		  <label class="form-label">Area:</label>
-		  <input type="text">
-		</div>
+			<label class="form-label">Custom Field:</label>
+			<input type="text" id="" maxlength="150" name="">
+		</div>	
 
-		<div class="input text">
-		  <label class="form-label">Custom Field:</label>
-		  <input type="text">
-		</div>
+		<hr>
+
+		<div class="input">
+			<label class="form-label">Filter by:</label>
+			<div class="input-checkbox-inline">
+				<div class="input">
+					<input class="icheck-input" type="checkbox"><label class="checkbox-label">Area</label>
+				</div>
+				<div class="input">
+					<input class="icheck-input" type="checkbox"><label class="checkbox-label">Topic</label>
+				</div>
+				<div class="input">
+					<input class="icheck-input" type="checkbox"><label class="checkbox-label">Region</label>
+				</div>
+				<div class="input">
+					<input class="icheck-input" type="checkbox"><label class="checkbox-label">Location</label>
+				</div>
+				<div class="input">
+					<input class="icheck-input" type="checkbox"><label class="checkbox-label">Country</label>
+				</div>
+			</div>
+		</div>		
+
 	</form>
 	
-	<a class="btn btn-default btn-xs" href="">Search</a>		
+	<button class="btn btn-default btn-xs" href="">Search</button>
+	<button id="reset" class="btn btn-default btn-xs" type="reset" value="Reset" href="">Reset</button>		
 
 </div>
 
@@ -52,4 +73,12 @@
 	$('button#search-toggle').on('click', function () {
 	  box.toggleClass('hidden');
 	});
+
+
+	//reset form 
+	$("#reset").click(function(){
+	    $("#search-form").find('input:text, select').val('');
+	    $(".icheckbox_minimal-grey").removeClass("checked");
+	});
+
 </script>
