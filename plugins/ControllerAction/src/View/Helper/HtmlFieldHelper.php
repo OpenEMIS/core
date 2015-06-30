@@ -241,8 +241,7 @@ class HtmlFieldHelper extends Helper {
 		if ($action == 'view') {
 			$value = $attr['value'];
 		} else if ($action == 'edit') {
-			$this->disabled($action, $data, $attr, $options);
-			$value = $this->Form->input($attr['field'], $options);
+			$value = $this->disabled($action, $data, $attr, $options);
 			unset($options['disabled']);
 			unset($options['value']);
 			$value .= $this->hidden($action, $data, $attr, $options);
@@ -287,18 +286,10 @@ class HtmlFieldHelper extends Helper {
 			$src = $data->photo_content;
 			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
 			if(!empty($src)){
-				$value = (is_resource($src)) ? '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($src) ).'" style="'.$style.' class="profile-image" "/>' : $this->Html->image($src, ['plugin' => true]);
+				$value = (base64_decode($src, true)) ? '<img src="data:image/jpeg;base64,'.$src.'" style="'.$style.' class="profile-image" "/>' : $this->Html->image($src, ['plugin' => true]);
+				//$value = (is_resource($src)) ? '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($src) ).'" style="'.$style.' class="profile-image" "/>' : $this->Html->image($src, ['plugin' => true]);
 			}	
 		} else if ($action == 'edit') {
-			// $imageAttr = $attr['attr'];
-			// $imageAttr['field'] = $_field;
-			// $imageAttr['label'] = $label;
-			// if (isset($data->{$_field . '_name'}) && isset($data->$_field)) {
-			// 	$imageAttr['src'] = $this->Image->getBase64($data->{$_field . '_name'}, $data->$_field);
-			// }
-			// echo $this->_View->element('layout/file_upload_preview', $imageAttr);
-
-			//$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
 			$defaultImageFromHolder = '<img data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" alt="...">';
 			$showRemoveButton = false;
 

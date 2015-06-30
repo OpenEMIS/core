@@ -14,7 +14,7 @@ trait OptionsTrait {
 			'Absence' => [
 				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
 			],
-			'Assessment' => [
+			'Assessments' => [
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
 			]
 		];

@@ -423,6 +423,7 @@ class ControllerActionHelper extends Helper {
 				$event = $this->dispatchEvent($table, $eventKey, $method, ['entity' => $data]);
 				// end attach event
 
+				$associatedFound = false;
 				if ($event->result) {
 					$value = $event->result;
 					$data->$_field = $event->result;
@@ -432,10 +433,13 @@ class ControllerActionHelper extends Helper {
 					
 					if ($data->has($associatedObject)) {
 						$value = $data->$associatedObject->name;
+						$associatedFound = true;
 					}
 				}
 
-				$value = $this->HtmlField->render($_type, 'view', $data, $_fieldAttr, $options);
+				if (!$associatedFound) {
+					$value = $this->HtmlField->render($_type, 'view', $data, $_fieldAttr, $options);
+				}
 
 				if (is_string($value) && strlen(trim($value)) == 0) {
 					$value = '&nbsp;';

@@ -15,10 +15,10 @@ use App\Model\Traits\OptionsTrait;
 class UsersTable extends AppTable {
 	use OptionsTrait;
 
-	const defaultWidth = 90;
-	const defaultHeight = 115;
-	const defaultStudentProfile = "Student.default_student_profile.jpg";
-	const defaultStaffProfile = "Staff.default_staff_profile.jpg";
+	private $defaultWidth = 90;
+	private $defaultHeight = 115;
+	private $defaultStudentProfile = "Student.default_student_profile.jpg";
+	private $defaultStaffProfile = "Staff.default_staff_profile.jpg";
 	private $specialFields = ['default_identity_type'];
 
 	public function initialize(array $config) {
@@ -297,12 +297,12 @@ class UsersTable extends AppTable {
 		if(empty($fileContent) && is_null($fileContent)) {
 			$controllerName = $this->controller->name;	
 			if($controllerName == "Students"){
-				$value = self::defaultStudentProfile;
+				$value = $this->defaultStudentProfile;
 			} else if($controllerName == "Staff") {
-				$value = self::defaultStaffProfile;
+				$value = $this->defaultStaffProfile;
 			}
 		} else {
-			$value = $fileContent;
+			$value = base64_encode( stream_get_contents($fileContent) );//$fileContent;
 		}
 
 		return $value;
