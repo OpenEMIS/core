@@ -236,11 +236,11 @@ class HtmlFieldHelper extends Helper {
 		if ($action == 'view') {
 			$value = $attr['value'];
 		} else if ($action == 'edit') {
-			$this->getDisabledElement($action, $data, $attr, $options);
+			$this->disabled($action, $data, $attr, $options);
 			$value = $this->Form->input($attr['field'], $options);
 			unset($options['disabled']);
 			unset($options['value']);
-			$value .= $this->getHiddenElement($action, $data, $attr, $options);
+			$value .= $this->hidden($action, $data, $attr, $options);
 		}
 		return $value;
 	}
