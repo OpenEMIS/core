@@ -197,7 +197,9 @@ class FileUploadBehavior extends Behavior {
 	}
 
 
-
+	/**
+	 * @todo if user wants the file or image to be removed, it should be emptied from the record.
+	 */
 	public function beforeSave(Event $event, Entity $entity) {
 
 		$fileNameField = $this->config('name');
@@ -210,26 +212,31 @@ class FileUploadBehavior extends Behavior {
 			$proceed = true;
 		} elseif (!$entity->isNew() && !empty($file) && !empty($file['tmp_name'])) {
 			$proceed = true;
+		} elseif(empty($file)) {
+			$entity->$fileNameField =  null;
+			$entity->$fileContentField =  null;
 		}
 
-		if ($proceed) {
-			if ($file['error'] == 0) { // success
-				$entity->$fileNameField =  null;
-				$entity->$fileContentField =  null;
-				
-				if ($this->config('useDefaultName')) {
-					$entity->$fileNameField = $file['name'];
-				} else {
-					$pathInfo = pathinfo($file['name']);
-					$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
-				}
-				
-				$entity->$fileContentField = file_get_contents($file['tmp_name']);
+		if (!empty($file)) {
+			if ($proceed) {
+				if ($file['error'] == 0) { // success
+					$entity->$fileNameField =  null;
+					$entity->$fileContentField =  null;
+					
+					if ($this->config('useDefaultName')) {
+						$entity->$fileNameField = $file['name'];
+					} else {
+						$pathInfo = pathinfo($file['name']);
+						$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
+					}
+					
+					$entity->$fileContentField = file_get_contents($file['tmp_name']);
 
+				}
+			} else {
+				$entity->unsetProperty($fileNameField);
+				$entity->unsetProperty($fileContentField);
 			}
-		} else {
-			$entity->unsetProperty($fileNameField);
-			$entity->unsetProperty($fileContentField);
 		}
 	}
 }
