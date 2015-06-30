@@ -64,7 +64,6 @@ class UsersTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('photo_content', ['visible' => false]);
 		$this->ControllerAction->field('address', ['visible' => false]);
 		$this->ControllerAction->field('postal_code', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['visible' => false]);
