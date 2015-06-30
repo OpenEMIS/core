@@ -1221,4 +1221,7 @@ UPDATE `institution_site_classes` SET `education_subject_id`=1 WHERE `institutio
 -- 29th June 2015
 ALTER TABLE `assessments` DROP `institution_site_id` ;
 ALTER TABLE `assessments` DROP `academic_period_id` ;
+ALTER TABLE `assessment_items` DROP `education_grade_subject_id` ;
+
+
 
