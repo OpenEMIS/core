@@ -32,8 +32,6 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteProgrammes', 'modified_user_id', NULL, 'Modified By'),
 ('InstitutionSiteProgrammes', 'created_user_id', NULL, 'Created By'),
 ('InstitutionSiteProgrammes', 'education_programme_id', NULL, 'Programme'),
-('InstitutionSiteProgrammes', 'education_grades', NULL, 'Education Grade(s)'),
-('InstitutionSiteProgrammes', 'education_grade', NULL, 'Education Grade'),
 ('InstitutionSiteProgrammes', 'openemis_no', NULL, 'OpenEMIS ID'),
 -- InstitutionSiteShifts
 ('InstitutionSiteShifts', 'name', NULL, 'Shift Name'),
@@ -46,7 +44,6 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteSections', 'name', NULL, 'Section Name'),
 ('InstitutionSiteSections', 'security_user_id', NULL, 'Home Room Teacher'),
 ('InstitutionSiteSections', 'institution_site_shift_id', NULL, 'Shift'),
-('InstitutionSiteSections', 'education_grades', NULL, 'Education Grade(s)'),
 -- InstitutionSiteClasses
 ('InstitutionSiteClasses', 'name', NULL, 'Class Name'),
 ('InstitutionSiteClasses', 'education_subject_id', NULL, 'Subject Name'),
