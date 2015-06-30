@@ -82,7 +82,10 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
 				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
 				$this->_table->ControllerAction->field('end_date', ['type' => 'Date', 'fieldName' => $associationString.'end_date']);
-				// $this->_table->ControllerAction->field('search');
+				$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
+															     'placeholder' => 'openEMIS ID or Name',
+															     'url' => '/Institutions/Students/autoCompleteUserList',
+															     'length' => 3 ]);
 
 				$this->_table->ControllerAction->setFieldOrder([
 						'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
