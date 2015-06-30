@@ -1,13 +1,13 @@
 <?php
 namespace Survey\Model\Table;
 
-use App\Model\Table\AppTable;
+use CustomField\Model\Table\CustomFormFieldsTable;
 
-class SurveyFormQuestionsTable extends AppTable {
+class SurveyFormQuestionsTable extends CustomFormFieldsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
-		$this->belongsTo('SurveyQuestions', ['className' => 'Survey.SurveyQuestions']);
+		$this->belongsTo('CustomForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
+		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 	}
 }

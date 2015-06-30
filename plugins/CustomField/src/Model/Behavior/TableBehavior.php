@@ -89,9 +89,9 @@ class TableBehavior extends Behavior {
 							$CustomTableCells->aliasField('text_value'),
 						])
 						->where([
-							$CustomTableCells->aliasField('custom_field_id') => $fieldId,
-							$CustomTableCells->aliasField('custom_table_column_id') => $tableColumnId,
-							$CustomTableCells->aliasField('custom_table_row_id') => $tableRowId,
+							$CustomTableCells->aliasField($attr['fieldKey']) => $fieldId,
+							$CustomTableCells->aliasField($attr['tableColumnKey']) => $tableColumnId,
+							$CustomTableCells->aliasField($attr['tableRowKey']) => $tableRowId,
 							$CustomTableCells->aliasField($attr['recordKey']) => $entity->id
 						])
 						->all();
@@ -108,10 +108,9 @@ class TableBehavior extends Behavior {
 				}
 
 				$cellInput .= $form->input($fieldPrefix.".text_value", $cellOptions);
-				$cellInput .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $fieldId]);
-				$cellInput .= $form->hidden($fieldPrefix.".custom_table_column_id", ['value' => $tableColumnId]);
-				$cellInput .= $form->hidden($fieldPrefix.".custom_table_row_id", ['value' => $tableRowId]);
-				
+				$cellInput .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $fieldId]);
+				$cellInput .= $form->hidden($fieldPrefix.".".$attr['tableColumnKey'], ['value' => $tableColumnId]);
+				$cellInput .= $form->hidden($fieldPrefix.".".$attr['tableRowKey'], ['value' => $tableRowId]);				
 
 				if ($action == 'view') {
 					$rowData[$colKey] = $cellValue;

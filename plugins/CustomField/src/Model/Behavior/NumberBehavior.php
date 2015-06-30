@@ -20,7 +20,7 @@ class NumberBehavior extends Behavior {
 
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
             $value = $form->input($fieldPrefix.".number_value", $options);
-            $value .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $attr['customField']->id]);
+            $value .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
             if (!is_null($attr['id'])) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $attr['id']]);
             }
