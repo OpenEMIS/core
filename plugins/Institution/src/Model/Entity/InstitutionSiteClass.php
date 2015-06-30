@@ -7,7 +7,9 @@ use Cake\ORM\Query;
 
 class InstitutionSiteClass extends Entity
 {
-	protected $_virtual = ['male_students', 'female_students', 'teachers', 'education_subject_code', 'section_name'];
+	protected $_virtual = ['male_students', 'female_students', 
+    'teachers', 
+    'education_subject_code', 'section_name'];
 	
     protected function _getMaleStudents() {
         $gender_id = 1; // male
@@ -36,24 +38,25 @@ class InstitutionSiteClass extends Entity
         return $count;
     }
 
-    protected function _getTeachers() {
-        $value = '';
-        $table = TableRegistry::get('Institution.InstitutionSiteClassStaff');
-        $rawList = $table
-                    ->find()
-                    ->contain('Users')
-                    ->where([$table->aliasField('institution_site_class_id') => $this->id])
-                    ->where([$table->aliasField('status') .' > 0'])
-                    ->toArray();
-        $list = [];
-        foreach ($rawList as $staff) {
-            $list[$staff->user->id] = $staff->user->name;
-        }
-        if (!empty($list)) {
-            $value = implode(', ', $list);
-        }
-        return $value;
-    }
+    // protected function _getTeachers() {
+    //     pr($this);die;
+        // $value = '';
+        // $table = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+        // $rawList = $table
+        //             ->find()
+        //             ->contain('Users')
+        //             ->where([$table->aliasField('institution_site_class_id') => $this->id])
+        //             ->where([$table->aliasField('status') .' > 0'])
+        //             ->toArray();
+        // $list = [];
+        // foreach ($rawList as $staff) {
+        //     $list[$staff->user->id] = $staff->user->name;
+        // }
+        // if (!empty($list)) {
+        //     $value = implode(', ', $list);
+        // }
+        // return $value;
+    // }
 
     protected function _getEducationSubjectCode() {
         $value = '';
