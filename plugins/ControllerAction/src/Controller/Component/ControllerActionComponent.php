@@ -303,7 +303,29 @@ class ControllerActionComponent extends Component {
 			}
 
 			if ($action != 'index') {
+				/**
+				 * @link(PHPOE-1511, https://kordit.atlassian.net/browse/PHPOE-1511)
+				 */
+				// if ($action == 'view') {pr('pass is empty'.$this->currentAction);pr($pass);}
+				if ($this->currentAction != 'index') {
+					$model = $this->model;
+					$primaryKey = $model->primaryKey();
+					$idKey = $model->aliasField($primaryKey);
+					if (empty($pass)) {
+						// if ($action == 'view') {echo 'pass is empty'.$this->currentAction;pr($pass);}
+						if ($this->Session->check($idKey)) {
+							$pass = [$this->Session->read($idKey)];
+						}
+					} elseif (isset($pass[0]) && $pass[0]==$action) {				
+						// if ($action == 'view') {echo 'pass[0] is equals to action'.$this->currentAction;pr($pass);}
+						if ($this->Session->check($idKey)) {
+							$pass[1] = $this->Session->read($idKey);
+						}		
+					}
+				}
+				// if ($action == 'view') {echo 'after massage'.$this->currentAction;pr($actionUrl);}
 				$actionUrl = array_merge($actionUrl, $pass);
+				// if ($action == 'view') {echo 'after merge'.$this->currentAction;pr($actionUrl);}
 			}
 			$actionUrl = array_merge($actionUrl, $named);
 			if ($action != 'remove') {
