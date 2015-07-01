@@ -356,7 +356,7 @@ RENAME TABLE z_1461_staff_details_custom_field_options TO staff_details_custom_f
 RENAME TABLE z_1461_staff_details_custom_values TO staff_details_custom_values;
 
 -- 1st July 2000hrs
--- Revert for Rubrics Status
+-- Revert for Rubric Status
 DROP TABLE IF EXISTS `rubric_statuses`;
 DROP TABLE IF EXISTS `rubric_status_periods`;
 DROP TABLE IF EXISTS `rubric_status_programmes`;
@@ -366,3 +366,7 @@ RENAME TABLE z_1461_quality_statuses TO quality_statuses;
 RENAME TABLE z_1461_quality_status_periods TO quality_status_periods;
 RENAME TABLE z_1461_quality_status_programmes TO quality_status_programmes;
 RENAME TABLE z_1461_quality_status_roles TO quality_status_roles;
+
+-- 1st July 2100hrs
+-- Revert for Survey Status
+ALTER TABLE `survey_statuses` ADD `academic_period_level_id` INT(11) NOT NULL AFTER `date_disabled`;

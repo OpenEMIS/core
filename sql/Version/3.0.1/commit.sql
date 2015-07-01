@@ -1319,7 +1319,7 @@ ALTER TABLE `staff_custom_table_cells`
 ALTER TABLE `institution_site_attachments` CHANGE `file_content` `file_content` LONGBLOB NULL;  
 
 -- 1st July 2000hrs
--- Update for Rubrics Status
+-- Update for Rubric Status
 RENAME TABLE quality_statuses TO z_1461_quality_statuses;
 RENAME TABLE quality_status_periods TO z_1461_quality_status_periods;
 RENAME TABLE quality_status_programmes TO z_1461_quality_status_programmes;
@@ -1382,3 +1382,7 @@ CREATE TABLE IF NOT EXISTS `rubric_status_roles` (
 
 ALTER TABLE `rubric_status_roles`
   ADD PRIMARY KEY (`id`), ADD KEY `rubric_status_id` (`rubric_status_id`), ADD KEY `security_role_id` (`security_role_id`);
+
+-- 1st July 2100hrs
+-- Update for Survey Status
+ALTER TABLE `survey_statuses` DROP `academic_period_level_id`;
