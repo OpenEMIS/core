@@ -91,8 +91,8 @@
 												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.order", ['value' => $columnOrder]);
 												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.visible");
 											?>
-											<button onclick="jsTable.doRemoveColumn(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
-												<i class="fa fa-trash"></i> <span>Delete</span>
+											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemoveColumn(this);">
+												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
 											</button>
 										</div>
 									</th>
@@ -121,8 +121,8 @@
 												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.order", ['value' => $rowOrder]);
 												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.visible");
 											?>
-											<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
-												<i class="fa fa-trash"></i> <span>Delete</span>
+											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
 											</button>
 										</td>
 										<?php
