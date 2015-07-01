@@ -99,7 +99,7 @@ class MandatoryBehavior extends Behavior {
 		]);
 	}
 
-	public function addOnChangeNationality(Event $event, Entity $entity, array $data, array $options) {
+	public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$Countries = TableRegistry::get('FieldOption.Countries');
 		$countryId = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
 		$country = $Countries->findById($countryId)->first();
