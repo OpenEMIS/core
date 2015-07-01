@@ -111,6 +111,7 @@ hr {
     border-radius: 15%;
     font-size: 38px;
     color: #FFF;
+    float: left;
 }
 
 .navbar-left {
@@ -128,6 +129,7 @@ hr {
 	color: #FFF;
 	margin: 0;
 	font-size: 24px;
+	padding: 6px 0;
 }
 
 .navbar-right {
@@ -1444,6 +1446,7 @@ table tr.sorting-row td {background-color: #8b8;}
 .search form {
 	padding-bottom: 0;
 	display: inline-block;
+	width: 250px;
 }
 
 .search i {
