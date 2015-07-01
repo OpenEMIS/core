@@ -14,7 +14,6 @@ class AbsencesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
-		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
 	}
 
@@ -42,23 +41,21 @@ class AbsencesTable extends AppTable {
 		// $this->controller->set('selectedAcademicPeriod', $selectedAcademicPeriod);
 		// $this->controller->set('selectedMonth', $selectedMonth);
 
-		$this->fields['last_date_absent']['visible'] = false;
-		$this->fields['full_day_absent']['visible'] = false;
-		$this->fields['start_time_absent']['visible'] = false;
-		$this->fields['end_time_absent']['visible'] = false;
+		$this->fields['end_date']['visible'] = false;
+		$this->fields['full_day']['visible'] = false;
+		$this->fields['start_time']['visible'] = false;
+		$this->fields['end_time']['visible'] = false;
 		$this->fields['comment']['visible'] = false;
 		$this->fields['security_user_id']['visible'] = false;
-		$this->fields['institution_site_section_id']['visible'] = false;
 
 		$this->ControllerAction->addField('days', []);
 		$this->ControllerAction->addField('time', []);
 
 		$order = 0;
-		$this->ControllerAction->setFieldOrder('first_date_absent', $order++);
+		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('days', $order++);
 		$this->ControllerAction->setFieldOrder('time', $order++);
 		$this->ControllerAction->setFieldOrder('student_absence_reason_id', $order++);
-		$this->ControllerAction->setFieldOrder('absence_type', $order++);
 	}
 
 	// public function generateMonthOptions(){

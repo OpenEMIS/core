@@ -73,19 +73,61 @@ class ContactsTable extends AppTable {
 			->add('value', 'ruleValidateFax',  [
 				'rule' => ['numeric', 'notBlank'],
 				'on' => function ($context) {
-					return ($context['data']['contact_option_id'] == 3);
+					$contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
+					if (is_null($contactOptionId)) {
+						if (array_key_exists('contact_type_id', $context['data'])) {
+							$contactTypeId = $context['data']['contact_type_id'];
+							$query = $this->ContactTypes
+								->find()
+								->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
+								->first();
+								;
+							if ($query) {
+								$contactOptionId = $query->contact_option_id;
+							}
+						}
+					}
+					return ($contactOptionId == 3);
 				},
 			])
 			->add('value', 'ruleValidateEmail',  [
 				'rule' => ['email', 'notBlank'],
 				'on' => function ($context) {
-					return ($context['data']['contact_option_id'] == 4);
+					$contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
+					if (is_null($contactOptionId)) {
+						if (array_key_exists('contact_type_id', $context['data'])) {
+							$contactTypeId = $context['data']['contact_type_id'];
+							$query = $this->ContactTypes
+								->find()
+								->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
+								->first();
+								;
+							if ($query) {
+								$contactOptionId = $query->contact_option_id;
+							}
+						}
+					}
+					return ($contactOptionId == 4);
 				},
 			])
 			->add('value', 'ruleValidateEmergency',  [
 				'rule' => 'notBlank',
 				'on' => function ($context) {
-					return ($context['data']['contact_option_id'] == 5);
+					$contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
+					if (is_null($contactOptionId)) {
+						if (array_key_exists('contact_type_id', $context['data'])) {
+							$contactTypeId = $context['data']['contact_type_id'];
+							$query = $this->ContactTypes
+								->find()
+								->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
+								->first();
+								;
+							if ($query) {
+								$contactOptionId = $query->contact_option_id;
+							}
+						}
+					}
+					return ($contactOptionId == 5);
 				},
 			])
 			// end of value validators
@@ -93,6 +135,7 @@ class ContactsTable extends AppTable {
 				'rule' => ['validatePreferred'],
 			])
 			;
+
 
 		return $validator;
 	}
