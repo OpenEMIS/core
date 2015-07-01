@@ -185,25 +185,25 @@ class LabelHelper extends Helper {
 	// 	return !is_bool($message) ? __($message) : $message;
 	// }
 	
-	// public function getLabel($model, $key, $attr) {
-	// 	$labelKey = $model;
-	// 	if (array_key_exists('labelKey', $attr)) {
-	// 		$labelKey = $attr['labelKey'];
-	// 	}
-	// 	$code = $labelKey .'.'. $key;
-	// 	$label = $this->get($code);
+	public function getLabel($model, $key, $attr) {
+		$labelKey = $model;
+		if (array_key_exists('labelKey', $attr)) {
+			$labelKey = $attr['labelKey'];
+		}
+		$code = $labelKey .'.'. $key;
+		$label = $this->get($code);
 		
-	// 	if($label === false) {
-	// 		$label = __(Inflector::humanize($key));
+		if($label === false) {
+			$label = __(Inflector::humanize($key));
 
-	// 		if ($this->endsWith($label, ' Id')) {
-	// 			$label = str_replace(' Id', '', $label);
-	// 		}
-	// 	} elseif ($label == '[Message Not Found]' || is_array($label)) {
-	// 		$label = $this->get($code.'.label');
-	// 	}
-	// 	return $label;
-	// }
+			if ($this->endsWith($label, ' Id')) {
+				$label = str_replace(' Id', '', $label);
+			}
+		} elseif ($label == '[Message Not Found]' || is_array($label)) {
+			$label = $this->get($code.'.label');
+		}
+		return $label;
+	}
 	
 	public function get($code) {
 		return $this->getMessage($code);
