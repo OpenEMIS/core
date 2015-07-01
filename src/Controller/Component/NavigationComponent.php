@@ -236,6 +236,7 @@ class NavigationComponent extends Component {
 						'Special Needs' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'SpecialNeeds']],
 						'Awards' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Awards']],
 						'Attachments' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Attachments']],
+						'History' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'History']]
 						// 'More' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'additional']]
 					]
 				],
@@ -300,6 +301,7 @@ class NavigationComponent extends Component {
 									'Special Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'SpecialNeeds']],
 									'Awards' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Awards']],
 									'Attachments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Attachments']],
+									'History' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'History']]
 									// 'More' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'additional']]
 								]
 							],

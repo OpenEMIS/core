@@ -40,7 +40,8 @@ class StaffController extends AppController {
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
 			'Licenses' => ['className' => 'Staff.Licenses'],
-			'BankAccounts' => ['className' => 'User.BankAccounts']
+			'BankAccounts' => ['className' => 'User.BankAccounts'],
+			'History' 			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
 		];
 
 		$this->set('contentHeader', 'Staff');
