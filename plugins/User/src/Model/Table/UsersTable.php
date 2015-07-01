@@ -25,13 +25,13 @@ class UsersTable extends AppTable {
 		$this->table('security_users');
 		parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', [
-			'name' => 'photo_name',
-			'content' => 'photo_content',
-			'size' => '2MB',
-			'allowEmpty' => true,
-			'useDefaultName' => false
-		]);
+		// $this->addBehavior('ControllerAction.FileUpload', [
+		// 	'name' => 'photo_name',
+		// 	'content' => 'photo_content',
+		// 	'size' => '2MB',
+		// 	'allowEmpty' => true,
+		// 	'useDefaultName' => false
+		// ]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -41,7 +41,7 @@ class UsersTable extends AppTable {
 		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('user_Nationalities', 		['className' => 'User.user_Nationalities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
 
@@ -151,6 +151,7 @@ class UsersTable extends AppTable {
 
 	public function addEditBeforeAction(){
 		$this->fields['photo_content']['type'] = 'image';
+		$this->fields['photo_content']['visible'] = false;
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
 		$this->fields['gender_id']['type'] = 'select';
