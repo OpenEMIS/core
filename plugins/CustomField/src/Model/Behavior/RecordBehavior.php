@@ -79,7 +79,13 @@ class RecordBehavior extends Behavior {
 				])
 				->all();
 
-			if (!$genaralResults->isEmpty()) {
+			if ($genaralResults->isEmpty()) {
+				$customFieldQuery = $CustomFormFields
+					->find('all')
+					->find('order')
+					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+					->where([$CustomFormFields->aliasField($this->config('formKey') . ' IN') => $customFormIds]);
+			} else {
 				$genaralData = $genaralResults->first();
 				$generalId = $genaralData->{$this->config('formKey')};
 

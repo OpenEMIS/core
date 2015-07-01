@@ -63,10 +63,19 @@ class InstitutionSurveysTable extends AppTable {
 			->where([$this->SurveyForms->aliasField('custom_module_id') => $customModuleId])
 			->toArray();
 
+		//delete all New Survey by Institution Id and reinsert
+		$this->deleteAll([
+			$this->aliasField('institution_site_id') => $institutionId,
+			$this->aliasField('status') => 0
+		]);
+
 		foreach ($surveyForms as $surveyFormId => $surveyForm) {
 			$surveyStatuesIds = $SurveyStatuses
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-				->where([$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId])
+				->where([
+					$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
+					$SurveyStatuses->aliasField('date_disabled >=') => $todayDate
+				])
 				->toArray();
 
 			$academicPeriodIds = $SurveyStatusPeriods
@@ -81,8 +90,7 @@ class InstitutionSurveysTable extends AppTable {
 						->where([
 							$this->aliasField('academic_period_id') => $academicPeriodId,
 							$this->aliasField('survey_form_id') => $surveyFormId,
-							$this->aliasField('institution_site_id') => $institutionId,
-							//$this->aliasField('status IN') => [1, 2]
+							$this->aliasField('institution_site_id') => $institutionId
 						])
 						->all();
 
@@ -103,13 +111,37 @@ class InstitutionSurveysTable extends AppTable {
 		}
 	}
 
+	public function reject() {
+		$this->ControllerAction->autoRender = false;
+		$request = $this->ControllerAction->request;
+
+		$id = $request->params['pass'][1];
+
+		$InstitutionSurvey = $this->newEntity();
+		$InstitutionSurvey->id = $id;
+		$InstitutionSurvey->status = 1;
+
+		if ($this->save($InstitutionSurvey)) {
+			$this->Alert->success('general.delete.success');
+		} else {
+			$this->Alert->success('general.delete.failed');
+			$this->log($InstitutionSurvey->errors(), 'debug');
+		}
+		$action = $this->ControllerAction->buttons['index']['url'];
+		$action['status'] = 2;
+		return $this->controller->redirect($action);
+	}
+
 	public function onGetSurveyFormId(Event $event, Entity $entity) {
+		list(, $selectedStatus) = array_values($this->getSelectOptions());
+
 		return $event->subject()->Html->link($entity->survey_form->name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
 			'edit',
-			$entity->id
+			$entity->id,
+			'status' => $selectedStatus
 		]);
 	}
 
@@ -122,8 +154,30 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
-		$value = '';
-		return $value;
+		$academicPeriodId = $entity->academic_period_id;
+		$surveyFormId = $entity->survey_form->id;
+
+		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
+		$results = $SurveyStatuses
+			->find('all')
+			->select([
+				$SurveyStatuses->aliasField('date_disabled')
+			])
+			->where([
+				$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId
+			])
+			->join([
+				'table' => 'survey_status_periods',
+				'alias' => 'SurveyStatusPeriods',
+				'conditions' => [
+					'SurveyStatusPeriods.survey_status_id =' . $SurveyStatuses->aliasField('id'),
+					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
+				]
+			])
+			->first()
+			->toArray();
+
+		return $results['date_disabled'];
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
@@ -137,6 +191,16 @@ class InstitutionSurveysTable extends AppTable {
 		} else if ($selectedStatus == 1) {
 		} else if ($selectedStatus == 2) {
 			unset($buttons['edit']);
+			unset($buttons['delete']);
+			$buttons['reject'] = [
+				'class' => 'fa fa-trash',
+				'url' => [
+					'plugin' => $this->controller->plugin,
+					'controller' => $this->controller->name,
+					'action' => $this->alias,
+					'reject'
+				]
+			];
 		}
 		return $buttons;
 	}
