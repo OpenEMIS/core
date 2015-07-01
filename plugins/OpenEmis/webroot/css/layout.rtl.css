@@ -528,6 +528,7 @@ html {
 .rtl .display-limit span, 
 .rtl .display-limit p {
     margin-left: 5px;
+    margin-right: 0;
 }
 
 .rtl .display-limit .input-select-wrapper {
@@ -811,7 +812,7 @@ html {
     } 
 
     .rtl .display-limit span {
-        margin: 0 0 0 5px;
+        margin: 0 0 0 0;
         float: right;
     }
 }
