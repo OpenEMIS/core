@@ -13,6 +13,12 @@ class MembershipsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 	}
 
+	public function beforeAction() {
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
