@@ -15,23 +15,30 @@ use App\Model\Traits\OptionsTrait;
 class UsersTable extends AppTable {
 	use OptionsTrait;
 
-	private $defaultWidth = 90;
-	private $defaultHeight = 115;
-	private $defaultStudentProfile = "Student.default_student_profile.jpg";
-	private $defaultStaffProfile = "Staff.default_staff_profile.jpg";
+	// private $defaultStudentProfile = "Student.default_student_profile.jpg";
+	// private $defaultStaffProfile = "Staff.default_staff_profile.jpg";
+
+	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
+	private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
+	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
+	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
+	private $defaultImgIndexClass = "profile-image-thumbnail";
+	private $defaultImgViewClass= "profile-image";
+	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px</p><p>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+
 	private $specialFields = ['default_identity_type'];
 
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
 
-		// $this->addBehavior('ControllerAction.FileUpload', [
-		// 	'name' => 'photo_name',
-		// 	'content' => 'photo_content',
-		// 	'size' => '2MB',
-		// 	'allowEmpty' => true,
-		// 	'useDefaultName' => false
-		// ]);
+		$this->addBehavior('ControllerAction.FileUpload', [
+			'name' => 'photo_name',
+			'content' => 'photo_content',
+			'size' => '2MB',
+			'allowEmpty' => true,
+			'useDefaultName' => false
+		]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -97,6 +104,10 @@ class UsersTable extends AppTable {
 		} else {
 			$id = $this->Session->read($roleName.'.security_user_id');
 		}
+
+		$this->ControllerAction->field('photo_content', [
+			'type' => 'image',
+		]);
 	}
 
 	public function setTabElements() {
@@ -151,7 +162,6 @@ class UsersTable extends AppTable {
 
 	public function addEditBeforeAction(){
 		$this->fields['photo_content']['type'] = 'image';
-		$this->fields['photo_content']['visible'] = false;
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
 		$this->fields['gender_id']['type'] = 'select';
@@ -297,10 +307,14 @@ class UsersTable extends AppTable {
 
 		if(empty($fileContent) && is_null($fileContent)) {
 			$controllerName = $this->controller->name;	
-			if($controllerName == "Students"){
-				$value = $this->defaultStudentProfile;
-			} else if($controllerName == "Staff") {
-				$value = $this->defaultStaffProfile;
+			if(($controllerName == "Students") && ($this->request->action == "index")){
+				$value = $this->defaultStudentProfileIndex;
+			} else if(($controllerName == "Staff") && ($this->request->action == "index")){
+				$value = $this->defaultStaffProfileIndex;
+			} else if(($controllerName == "Students") && ($this->request->action == "view")){
+				$value = $this->defaultStudentProfileView;
+			} else if(($controllerName == "Staff") && ($this->request->action == "view")){
+				$value = $this->defaultStaffProfileView;
 			}
 		} else {
 			$value = base64_encode( stream_get_contents($fileContent) );//$fileContent;
@@ -327,5 +341,28 @@ class UsersTable extends AppTable {
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
+	}
+
+	public function getDefaultImgMsg(){
+		return $this->defaultImgMsg;
+	}
+
+	public function getDefaultImgIndexClass(){
+		return $this->defaultImgIndexClass;
+	}
+
+	public function getDefaultImgViewClass(){
+		return $this->defaultImgViewClass;
+	}
+
+	public function getDefaultImgView(){
+		$value = "";
+		$controllerName = $this->controller->name;	
+		if($controllerName == "Students"){
+			$value = $this->defaultStudentProfileView;
+		} else if($controllerName == "Staff"){
+			$value = $this->defaultStaffProfileView;
+		}
+		return $value;
 	}
 }
