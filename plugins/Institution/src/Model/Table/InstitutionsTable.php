@@ -69,12 +69,11 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteClassStudents', 		['className' => 'Institution.InstitutionSiteClassStudents']);
 		$this->hasMany('InstitutionSiteSectionClasses', 	['className' => 'Institution.InstitutionSiteSectionClasses']);
 
-		$this->hasMany('CustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
 		// pr($this->validator());
 		$this->addBehavior('CustomField.Record', [
-			'recordKey' => 'institution_site_id'
+			'recordKey' => 'institution_site_id',
+			'fieldValueKey' => ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellKey' => ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
 	}
