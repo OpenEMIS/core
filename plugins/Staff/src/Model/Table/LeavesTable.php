@@ -25,6 +25,10 @@ class LeavesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('date_to', $order++);
 		$this->ControllerAction->setFieldOrder('number_of_days', $order++);
 		$this->ControllerAction->setFieldOrder('comments', $order++);
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 	public function validationDefault(Validator $validator) {

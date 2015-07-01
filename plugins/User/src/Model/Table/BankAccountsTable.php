@@ -23,6 +23,10 @@ class BankAccountsTable extends AppTable {
 			->find('order')
 			->toArray();
 		$this->ControllerAction->addField('bank_name',['type' => 'select','options'=>$bankOptions]);
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
