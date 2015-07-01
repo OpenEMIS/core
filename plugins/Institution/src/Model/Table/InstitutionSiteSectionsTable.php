@@ -378,9 +378,13 @@ class InstitutionSiteSectionsTable extends AppTable {
 				$action = $this->ControllerAction->buttons['index']['url'];
 				return $this->controller->redirect($action);
 			} else {
-				// pr($error);
+				foreach ($this->fields as $value) {
+					if ($value['field'] != 'name') {
+						$this->validator()->remove($value['field']);
+					}
+				}
 				$this->log($error, 'debug');
-				$this->Alert->error('general.add.failed');
+				$this->Alert->error($this->alias().'.add.emptyName');
 			}
 		} else {
 			foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {

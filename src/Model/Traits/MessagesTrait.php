@@ -106,7 +106,10 @@ trait MessagesTrait {
 			'security_user_id' => 'Home Room Teacher',
 			'section' => 'Section',
 			'single_grade_field' => 'Single Grade Sections',
-			'multi_grade_field' => 'Multi-Grades Section'
+			'multi_grade_field' => 'Multi-Grades Section',
+			'add' => [
+				'emptyName' => 'Section name should not be empty'
+			]
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Sections',
