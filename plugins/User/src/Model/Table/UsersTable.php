@@ -65,9 +65,50 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
 		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active')]);
+	}
+
+	public function afterAction(Event $event) {
 		if (in_array($this->action, ['view', 'edit'])) {
 			$this->setTabElements();
 		}
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
+	}
+
+	public function setTabElements() {
+		if ($this->controller->name == 'Institutions') return;
+		
+		$plugin = $this->controller->plugin;
+		$name = $this->controller->name;
+		$id = $this->controller->viewVars['_buttons']['edit']['url'][0];
+		if ($id=='view' || $id=='edit') {
+			if (isset($this->controller->viewVars['_buttons']['edit']['url'][1])) {
+				$id = $this->controller->viewVars['_buttons']['edit']['url'][1];
+			}
+		}
+
+		$tabElements = [
+			$this->alias => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		if (!in_array($this->controller->name, ['Students', 'Staff'])) {
+			$tabElements[$this->alias] = [
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $id],
+				'text' => __('Details')
+			];
+		}
+
+		$this->controller->set('selectedAction', $this->alias);
+        $this->controller->set('tabElements', $tabElements);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -108,42 +149,6 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('photo_content', [
 			'type' => 'image',
 		]);
-	}
-
-	public function setTabElements() {
-		if ($this->controller->name == 'Institutions') return;
-		
-		$plugin = $this->controller->plugin;
-		$name = $this->controller->name;
-
-		if (array_key_exists('pass', $this->request->params)) {
-			if (in_array($this->controller->name, ['Students', 'Staff'])) {
-				$id = $this->request->params['pass'][0];
-			} else {
-				$id = $this->request->params['pass'][1];
-			}
-		}
-
-		$tabElements = [
-			$this->alias => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
-				'text' => __('Details')
-			],
-			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
-			]
-		];
-
-		if (!in_array($this->controller->name, ['Students', 'Staff'])) {
-			$tabElements[$this->alias] = [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view',$id],
-				'text' => __('Details')
-			];
-		}
-
-		$this->controller->set('selectedAction', $this->alias);
-        $this->controller->set('tabElements', $tabElements);
 	}
 
 	public function addBeforeAction(Event $event) {

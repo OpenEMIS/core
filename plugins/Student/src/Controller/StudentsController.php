@@ -51,11 +51,14 @@ class StudentsController extends AppController {
 
 		if ($action == 'index') {
 			$session->delete('Student.security_user_id');
+			$session->delete('Users.id');
 		}
-		if ($session->check('Student.security_user_id') || $action == 'view') {
-			$id = 0;
+		if ($session->check('Student.security_user_id') || $session->check('Users.id') || $action == 'view') {
+			// $id = 0;
 			if ($session->check('Student.security_user_id')) {
 				$id = $session->read('Student.security_user_id');
+			} else if ($session->check('Users.id')) {
+				$id = $session->read('Users.id');
 			} else if (isset($this->request->pass[0])) {
 				$id = $this->request->pass[0];
 			}
@@ -64,10 +67,9 @@ class StudentsController extends AppController {
 				$name = $obj->name;
 				$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
 			} else {
-				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+				// return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
 			}
 		}
-
     	$header = __('Student');
     	$this->set('contentHeader', $header);
     }
@@ -109,4 +111,9 @@ class StudentsController extends AppController {
 		}
 		return $options;
 	}
+
+	public function afterFilter(Event $event) {
+		$session = $this->request->session();
+	}
+
 }

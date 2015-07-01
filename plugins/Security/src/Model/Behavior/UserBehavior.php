@@ -27,10 +27,11 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['gender_id']['visible'] = false;
 		$this->_table->fields['date_of_birth']['visible'] = false;
 
+		$this->_table->fields['username']['visible'] = true;
+
 		$this->_table->ControllerAction->field('name', []);
 
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'last_login', 'status']);
-
+			'username', 'name', 'last_login', 'status']);
 	}
 }
