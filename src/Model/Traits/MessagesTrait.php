@@ -57,7 +57,9 @@ trait MessagesTrait {
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
-			'default' => 'Default'
+			'default' => 'Default',
+			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
