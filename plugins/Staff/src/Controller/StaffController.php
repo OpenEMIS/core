@@ -12,6 +12,12 @@ class StaffController extends AppController {
 		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Staff.Staff');
 		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+		$this->ControllerAction->model()->addBehavior('CustomField.Record', [
+			'behavior' => 'Staff',
+			'recordKey' => 'security_user_id',
+			'fieldValueKey' => ['className' => 'Staff.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellKey' => ['className' => 'Staff.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+		]);
 
 		$this->ControllerAction->models = [
 			'Accounts' => ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],

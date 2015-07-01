@@ -610,9 +610,6 @@ class ControllerActionComponent extends Component {
 			$event = new Event('ControllerAction.Model.view.afterAction', $this, ['entity' => $data]);
 			$event = $model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				$data = $event->result;
-			}
 
 			$this->Session->write($idKey, $id);
 			$modal = $this->getModalOptions('remove');
