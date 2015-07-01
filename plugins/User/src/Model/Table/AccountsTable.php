@@ -71,6 +71,10 @@ class AccountsTable extends AppTable {
 
 		$this->fields['password']['type'] = 'password';
 		$this->ControllerAction->setFieldOrder(['username', 'password']);
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 	public function editBeforeAction($event)  {
