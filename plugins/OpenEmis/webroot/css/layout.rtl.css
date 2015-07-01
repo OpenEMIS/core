@@ -756,6 +756,10 @@ html {
     .rtl .button-label {
         text-align: right !important;    
     }
+
+    .rtl .action-dropdown {
+        right: -5px;
+    }
 }
 
 @media (min-width: 320px) and (max-width: 765px) {
