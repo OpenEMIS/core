@@ -3,18 +3,10 @@
 
     $('#removeBtn').click(function() {
       $("#removeBtn").css("display", "none");
-      
-      var image = $("<img>").attr({
-        "data-src": "holder.js/90x115"
-      })
-
-      Holder.run({
-          images: image[0]
-      });
 
       $("#existingImage").remove();
       $("img").remove();
-      $("#toggleImage").append(image);
+      $("#toggleImage").append("<?= $defaultImgView?>");
 
     });
 
@@ -35,6 +27,9 @@
       $('#removeBtn').css('display', btnShowStatus); 
     });
 
+    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });
+
+
   });
 </script>
 <div class="input string" >
@@ -45,6 +40,7 @@
     </div>
     <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: <?= $defaultWidth; ?>px; max-height: <?= $defaultHeight; ?>px;"></div>
       <div class="file-input-buttons">
+        <?= $defaultImgMsg ?>
         <span class="btn btn-default btn-file">
           <span class="fileinput-new">
             <i class="fa fa-folder"></i> 

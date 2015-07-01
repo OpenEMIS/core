@@ -277,31 +277,33 @@ class HtmlFieldHelper extends Helper {
 		$defaultWidth = 90;
 		$defaultHeight = 115;
 
-		//Get image default width and height if specified in entity class
-		//else default values
-		//$defaultWidth = ($data::imageWidth > 0) ? ($data::imageWidth) : $defaultWidth;
-		//$defaultHeight = ($data::imageHeight > 0) ? ($data::imageHeight) : $defaultHeight;
-		
 		if ($action == 'index' || $action == 'view') {
 			$src = $data->photo_content;
+			$imgClass = ($action == "index") ?  $this->table->getDefaultImgIndexClass() : $this->table->getDefaultImgViewClass();
 			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
+
+			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
+			echo $jsFunc;
+
 			if(!empty($src)){
-				$value = (base64_decode($src, true)) ? '<img src="data:image/jpeg;base64,'.$src.'" style="'.$style.' class="profile-image" "/>' : $this->Html->image($src, ['plugin' => true]);
-				//$value = (is_resource($src)) ? '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($src) ).'" style="'.$style.' class="profile-image" "/>' : $this->Html->image($src, ['plugin' => true]);
+				$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:60px;" /></div>' : $src;
 			}	
 		} else if ($action == 'edit') {
-			$defaultImageFromHolder = '<img data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" alt="...">';
+			$defaultImgViewClass = $this->table->getDefaultImgViewClass();
+			$defaultImgMsg = $this->table->getDefaultImgMsg();
+			$defaultImgView = $this->table->getDefaultImgView();
+			
 			$showRemoveButton = false;
 
 			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
 			$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
 
-			$src = (!empty($tmp_file_read)) ? '<img id="existingImage" data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImageFromHolder;
+			$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
 			$showRemoveButton = (!empty($tmp_file)) ? true : false; 
 
 			if(!is_array($data[$attr['field']])) {
 			  $imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
-			  $src = (!empty($imageContent)) ? '<img id="existingImage" data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImageFromHolder;
+			  $src = (!empty($imageContent)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImgView;
 			  $showRemoveButton = true;	
 			}
 
@@ -309,10 +311,11 @@ class HtmlFieldHelper extends Helper {
 
 			$this->includes['jasny']['include'] = true;
 			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src, 
-																							'defaultImageFromHolder' => $defaultImageFromHolder, 
 																							'defaultWidth' => $defaultWidth,
 																							'defaultHeight' => $defaultHeight,
-																							'showRemoveButton' => $showRemoveButton]);
+																							'showRemoveButton' => $showRemoveButton,
+																							'defaultImgMsg' => $defaultImgMsg,
+																							'defaultImgView' => $defaultImgView]);
 
 		} 
 		return $value;
@@ -476,20 +479,11 @@ class HtmlFieldHelper extends Helper {
 			'multiple' => true
 		];
 
-		if ($action == 'index') {
+		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
 			$chosenSelectList = [];
 			if (!empty($value)) {
 				foreach ($value as $obj) {
-					$chosenSelectList[] = $obj->name;
-				}
-			}
-
-			$value = implode(', ', $chosenSelectList);
-		} else if ($action == 'view') {
-			$chosenSelectList = [];
-			if (!empty($data->$attr['fieldNameKey'])) {
-				foreach ($data->$attr['fieldNameKey'] as $obj) {
 					$chosenSelectList[] = $obj->name;
 				}
 			}
@@ -504,6 +498,8 @@ class HtmlFieldHelper extends Helper {
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
+			} else {
+				$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}

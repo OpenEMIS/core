@@ -13,8 +13,6 @@ class CustomRecordsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomForms', ['className' => 'CustomField.CustomForms']);
-		$this->hasMany('CustomFieldValues', ['className' => 'CustomField.CustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableCells', ['className' => 'CustomField.CustomTableCells', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->addBehavior('CustomField.Record');
 	}
 

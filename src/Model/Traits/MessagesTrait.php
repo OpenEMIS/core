@@ -3,6 +3,26 @@ namespace App\Model\Traits;
 
 trait MessagesTrait {
 	public $messages = [
+		'Attachments' => [
+			'date_on_file' => 'Date On File',
+		],
+		'Assessments' => [
+			'noGrades' => 'No Available Grades',
+			'noGradingTypes' => 'You need to configure Grading Types first.'
+		],
+		'CustomGroups' => [
+			'custom_modules' => 'Module'
+		],
+		'date' => [
+			'start' => 'Start Date',
+			'end' => 'End Date',
+			'from' => 'From',
+			'to' => 'To'
+		],
+		'gender' => [
+			'm' => 'Male',
+			'f' => 'Female'
+		],
 		'general' => [
 			'notExists' => 'The record does not exist.',
 			'notEditable' => 'This record is not editable',
@@ -35,35 +55,15 @@ trait MessagesTrait {
 			'invalidUrl' => 'You have entered an invalid url.',
 			'notSelected' => 'No Record has been selected/saved.'
 		],
-		'date' => [
-			'start' => 'Start Date',
-			'end' => 'End Date',
-			'from' => 'From',
-			'to' => 'To'
-		],
-		'time' => [
-			'start' => 'Start Time',
-			'end' => 'End Time',
-			'from' => 'From',
-			'to' => 'To'
-		],
-		'gender' => [
-			'm' => 'Male',
-			'f' => 'Female'
-		],
-		'password'=> [
-			'oldPassword' => 'Current Password',
-			'retypePassword' => 'Retype New Password',
-		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
-		'security' => [
-			'login' => [
-				'fail' => 'You have entered an invalid username or password.'
-			],
-			'noAccess' => 'You do not have access to this location.'
+		'InfrastructureTypes' => [
+			'infrastructure_level_id' => 'Level Name'
+		],
+		'InfrastructureCustomFields' => [
+			'infrastructure_level_id' => 'Level Name'
 		],
 		'Institutions' => [
 			'date_opened' => 'Date Opened',
@@ -114,6 +114,37 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
+		'InstitutionSiteStaffAbsences' => [
+			'first_date_absent' => 'First Day Of Absence',
+			'last_date_absent' => 'Last Day Of Absence'
+		],
+		'InstitutionSurvey' => [
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			],
+		],
+		'password'=> [
+			'oldPassword' => 'Current Password',
+			'retypePassword' => 'Retype New Password',
+		],
+		'RubricSections' => [
+			'rubric_template_id' => 'Rubric Template'
+		],
+		'RubricCriterias' => [
+			'rubric_section_id' => 'Rubric Section',
+			'criterias' => 'Criterias'
+		],
+		'RubricTemplateOptions' => [
+			'rubric_template_id' => 'Rubric Template',
+			'weighting' => 'Weighting'
+		],
+		'security' => [
+			'login' => [
+				'fail' => 'You have entered an invalid username or password.'
+			],
+			'noAccess' => 'You do not have access to this location.'
+		],
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
 		],
@@ -121,25 +152,26 @@ trait MessagesTrait {
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time',
 		],
-		'InstitutionSiteStaffAbsences' => [
-			'first_date_absent' => 'First Day Of Absence',
-			'last_date_absent' => 'Last Day Of Absence'
-		],
-		'Assessments' => [
-			'noGrades' => 'No Available Grades',
-			'noGradingTypes' => 'You need to configure Grading Types first.'
-		],
-		'UserGroups' => [
-			'tabTitle' => 'User Groups'
-		],
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
 		],
-		'UserRoles' => [
-			'tabTitle' => 'User Roles'
-		],
 		'SystemRoles' => [
 			'tabTitle' => 'System Roles'
+		],
+		'SurveyTemplates' => [
+			'survey_module_id' => 'Module'
+		],
+		'SurveyQuestions' => [
+			'survey_template_id' => 'Survey Template'
+		],
+		'SurveyStatuses' => [
+			'survey_template_id' => 'Survey Template'
+		],
+		'time' => [
+			'start' => 'Start Time',
+			'end' => 'End Time',
+			'from' => 'From',
+			'to' => 'To'
 		],
 		'Users' => [
 			'photo_content' => 'Photo Image',
@@ -157,34 +189,11 @@ trait MessagesTrait {
 			'select_teacher' => 'Select Teacher',
 			'add_teacher' => 'Add Teacher'
 		],
-		'InfrastructureTypes' => [
-			'infrastructure_level_id' => 'Level Name'
+		'UserRoles' => [
+			'tabTitle' => 'User Roles'
 		],
-		'InfrastructureCustomFields' => [
-			'infrastructure_level_id' => 'Level Name'
-		],
-		'CustomGroups' => [
-			'custom_modules' => 'Module'
-		],
-		'SurveyTemplates' => [
-			'survey_module_id' => 'Module'
-		],
-		'SurveyQuestions' => [
-			'survey_template_id' => 'Survey Template'
-		],
-		'SurveyStatuses' => [
-			'survey_template_id' => 'Survey Template'
-		],
-		'RubricSections' => [
-			'rubric_template_id' => 'Rubric Template'
-		],
-		'RubricCriterias' => [
-			'rubric_section_id' => 'Rubric Section',
-			'criterias' => 'Criterias'
-		],
-		'RubricTemplateOptions' => [
-			'rubric_template_id' => 'Rubric Template',
-			'weighting' => 'Weighting'
+		'UserGroups' => [
+			'tabTitle' => 'User Groups'
 		],
 		'Workflows' => [
 			'workflow_model_id' => 'Form'
@@ -193,7 +202,9 @@ trait MessagesTrait {
 			'next_step' => 'Next Step',
 			'comment_required' => 'Comment Required'
 		],
-		
+
+
+
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
@@ -376,6 +387,7 @@ trait MessagesTrait {
 				]
 			],
 			'Attachments' => [
+				'date_on_file' => 'Date On File',
 				'name' => [
 					'ruleNotBlank' => 'Please enter a File name'
 				]
