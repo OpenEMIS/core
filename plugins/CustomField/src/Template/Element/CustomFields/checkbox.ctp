@@ -1,7 +1,3 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
-
 <?php $CustomFields = $attr['model']; ?>
 <?php if ($action == 'view') : ?>
 	<div class="table-responsive">
@@ -33,7 +29,13 @@
 <?php else : ?>
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
-		<div class="col-md-6">
+		<div class="table-toolbar">
+			<button onclick="$('#reload').val('addCheckboxOption').click();" class="btn btn-default btn-xs">
+				<i class="fa fa-plus"></i>
+				<span><?= __('Add');?></span>
+			</button>
+		</div>
+		<div class="table-in-view col-md-4 table-responsive">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
@@ -41,7 +43,7 @@
 							<th><?= $this->Label->get('general.visible'); ?></th>
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
-						<th><?= $this->Label->get('general.delete'); ?></th>
+						<th></th>
 					</tr>
 				</thead>
 				<?php if (!empty($data->custom_field_options)) : ?>
@@ -63,14 +65,15 @@
 									?>
 								</td>
 								<td>
-									<span class="fa fa-minus-circle" style="cursor: pointer;" title="<?php echo $this->Label->get('general.delete'); ?>" onclick="jsTable.doRemove(this);"></span>
+									<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+										<i class="fa fa-trash"></i><span><?= __('Delete')?></span>
+									</button>
 								</td>
 							</tr>
 						<?php endforeach ?>
 					</tbody>
 				<?php endif ?>
 			</table>
-			<span class="fa fa-plus" style="cursor: pointer;" onclick="$('#reload').val('addCheckboxOption').click();"></span>
 		</div>
 	</div>
 <?php endif ?>

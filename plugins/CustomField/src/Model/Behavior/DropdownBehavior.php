@@ -7,6 +7,12 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 
 class DropdownBehavior extends Behavior {
+	protected $_defaultConfig = [
+		'events' => [
+			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch'
+		]
+	];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		if (isset($config['setup']) && $config['setup'] == true) {
@@ -19,15 +25,20 @@ class DropdownBehavior extends Behavior {
         }
     }
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events = array_merge($events, $this->config('events'));
+    	return $events;
+	}
+
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (isset($data[$this->_table->alias()]['is_default']) && !empty($data[$this->_table->alias()]['custom_field_options'])) {
 			$defaultKey = $data[$this->_table->alias()]['is_default'];
 			$data[$this->_table->alias()]['custom_field_options'][$defaultKey]['is_default'] = 1;
 		}
-    	return compact('entity', 'data', 'options');
     }
 
-    public function addEditOnAddDropdownOption(Event $event, Entity $entity, array $data, array $options) {
+    public function addEditOnAddDropdownOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$fieldOptions = [
 			'name' => '',
 			'visible' => 1
@@ -38,8 +49,6 @@ class DropdownBehavior extends Behavior {
 		$options['associated'] = [
 			'CustomFieldOptions' => ['validate' => false]
 		];
-
-		return compact('entity', 'data', 'options');
 	}
 
     public function onGetCustomDropdownElement(Event $event, $action, $entity, $attr, $options=[]) {
