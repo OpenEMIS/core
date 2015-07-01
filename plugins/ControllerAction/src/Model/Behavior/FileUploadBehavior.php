@@ -228,6 +228,8 @@ class FileUploadBehavior extends Behavior {
 						$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
 					}					
 					$entity->$fileContentField = file_get_contents($file['tmp_name']);
+				} else {
+					$entity->$fileContentField = null;
 				}
 			} else {
 				/**
