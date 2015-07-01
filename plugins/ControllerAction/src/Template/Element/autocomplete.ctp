@@ -122,7 +122,7 @@ var Autocomplete = {
 $loadingImg =  $this->Html->image('OpenEmis.icons/loader.gif', ['plugin' => true]);
 ?>
 <div class="input text">
-	<label for="<?= $attr['field'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr)  ?></label>
+	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<input type="text" name="searchField" url="<?= $options['url'] ?>" class="<?= $options['class'] ?>" placeholder="<?= $options['placeholder'] ?>" id="searchInput">
 	<input type="hidden" name="<?= $attr['model'] ?>[<?= $attr['field'] ?>]" value="" id="hiddenSearchField"/>
 	<span class="loading_img"><?= $loadingImg ?></span>
