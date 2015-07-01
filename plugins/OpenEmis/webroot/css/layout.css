@@ -1309,11 +1309,6 @@ table .input-select-wrapper {
             border-radius: 5px;
 }
 
-.table-thumb img:hover {
-    opacity: 0;  
-    transition: all 0.5s ease;     
-}
-
 .view-image {
     position: relative;
     z-index: 2;
@@ -1761,6 +1756,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .fileinput-preview {
 	width: 30%;
+	clear: both;
 }
 
 .fileinput-preview .btn-file {
@@ -1786,6 +1782,10 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .form-horizontal .input-group-addon span {
 	width: 15px;
+}
+
+.table-full-width {
+	width: 70%;
 }
 
 .table-in-view {
@@ -1889,6 +1889,17 @@ label + select {
 	text-align: left;
 	margin-top: 30px;
 	clear: both !important;
+}
+
+.image-error {
+	clear: both;
+	float: none;
+}
+
+.image-error .error-message {
+	margin: 0;
+	display: block;
+	float: none;
 }
 
 .error-message {
@@ -2508,7 +2519,8 @@ footer {
 
 	/* FORM */
 	
-	.table-in-view {
+	.table-in-view,
+	.table-full-width {
 		width: 30%;
 		clear: both;
 	}
@@ -2522,10 +2534,11 @@ footer {
 	.form-horizontal input[type="string"],
 	.form-horizontal input[type="text"],
 	.form-horizontal input[type="password"],
+	.form-horizontal input[type="number"],
 	.form-horizontal select,
 	.form-horizontal textarea,
 	.form-horizontal .file {
-		width: 100%;
+		width: 100% !important;
 	}
 
 	.form-horizontal .file label {
@@ -2640,7 +2653,8 @@ footer {
 
 	.input-checkbox-inline,
 	.input-checkbox,
-	.table-in-view {
+	.table-in-view,
+	.table-full-width {
 		width: 100% !important;
 	}			
 }
@@ -2664,7 +2678,8 @@ footer {
 	
 	.input-checkbox-inline,
 	.input-checkbox,
-	.table-in-view {
+	.table-in-view,
+	.table-full-width {
 		width: 100%;
 	}
 }
@@ -2701,6 +2716,8 @@ footer {
 	}
 
 	.form-horizontal input[type="string"],
+	.form-horizontal input[type="number"],
+	.form-horizontal textarea,
 	.form-horizontal input[disabled],
 	.form-horizontal .chosen-container,
 	.input-checkbox-inline,

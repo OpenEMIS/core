@@ -35,6 +35,9 @@
 <div class="input string" >
   <label for="<?= $attr['field'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
   <div class="fileinput fileinput-new fileinput-preview" data-provides="fileinput">
+    <div class="image-error">
+      <?= $this->Form->error($attr['field']) ?>
+    </div>
     <div class="fileinput-new thumbnail" style="width: <?= $defaultWidth; ?>px; height: <?= $defaultHeight; ?>px;" id="toggleImage">
       <?= $src ?>
     </div>
@@ -58,8 +61,5 @@
             </a>
           </span>
     </div>
-  </div>
-  <div>
-    <?= $this->Form->error($attr['field']) ?>
   </div>
 </div>
