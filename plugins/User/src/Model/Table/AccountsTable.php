@@ -31,30 +31,51 @@ class AccountsTable extends AppTable {
 	private function setTabElements() {
 		if ($this->controller->name == 'Institutions') return;
 
-		if (array_key_exists('pass', $this->request->params)) {
-			$id = $this->request->params['pass'][1];
+		$plugin = $this->controller->plugin;
+		$name = $this->controller->name;
+		$id = $this->controller->viewVars['_buttons']['edit']['url'][0];
+		if ($id=='view' || $id=='edit') {
+			if (isset($this->controller->viewVars['_buttons']['edit']['url'][1])) {
+				$id = $this->controller->viewVars['_buttons']['edit']['url'][1];
+			}
 		}
 
 		$tabElements = [
 			'Details' => [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'view',$id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
 				'text' => __('Details')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Accounts','view',$id],
-				'text' => __('Account')
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
 			]
 		];
 
 		if (!in_array($this->controller->name, ['Students', 'Staff', 'Institutions'])) {
 			$tabElements['Details'] = [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users', 'view',$id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $id],
 				'text' => __('Details')
 			];
 		}
 
+		$back = $this->controller->viewVars['_buttons']['back'];
+		if ($back['url']['action'] == 'Accounts' && $back['url'][0] == 'index') {
+			if ($back['url']['controller'] == 'Securities') {
+				$back['url']['action'] = 'Users';
+				$back['url'][0] = 'index';
+			} else {
+				$back['url']['action'] = 'index';
+				unset($back['url'][0]);
+			}
+			$this->controller->viewVars['_buttons']['back'] = $back;
+		}
+
 		$this->controller->set('selectedAction', $this->alias);
         $this->controller->set('tabElements', $tabElements);
+	}
+
+	public function afterAction(Event $event) {
+		$this->setTabElements();
 	}
 
 	public function beforeAction() {
@@ -67,10 +88,12 @@ class AccountsTable extends AppTable {
 			}
 		}
 
-		$this->setTabElements();
-
 		$this->fields['password']['type'] = 'password';
 		$this->ControllerAction->setFieldOrder(['username', 'password']);
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 	public function editBeforeAction($event)  {
