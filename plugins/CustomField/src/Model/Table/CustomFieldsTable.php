@@ -71,10 +71,6 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if ($this->behaviors()->hasMethod('addEditBeforePatch')) {
-			list($entity, $data, $options) = array_values($this->behaviors()->call('addEditBeforePatch', [$event, $entity, $data, $options]));
-		}
-
 		//Required by patchEntity for associated data
 		$newOptions = [];
 		$newOptions['associated'] = $this->_contain;

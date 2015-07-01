@@ -1,6 +1,7 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -18,7 +19,7 @@ class CheckboxBehavior extends Behavior {
 		}
     }
 
-    public function addEditOnAddCheckboxOption(Event $event, Entity $entity, array $data, array $options) {
+    public function addEditOnAddCheckboxOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$fieldOptions = [
 			'name' => '',
 			'visible' => 1
@@ -29,8 +30,6 @@ class CheckboxBehavior extends Behavior {
 		$options['associated'] = [
 			'CustomFieldOptions' => ['validate' => false]
 		];
-
-		return compact('entity', 'data', 'options');
 	}
 
     public function onGetCustomCheckboxElement(Event $event, $action, $entity, $attr, $options=[]) {
