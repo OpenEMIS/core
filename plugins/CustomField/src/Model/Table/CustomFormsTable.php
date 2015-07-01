@@ -57,18 +57,16 @@ class CustomFormsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->addField('apply_to_all', [
+		$this->ControllerAction->field('apply_to_all', [
 			'type' => 'select',
-			'order' => 2,
 			'visible' => true
 		]);
 
-		$this->ControllerAction->addField('custom_fields', [
+		$this->ControllerAction->field('custom_fields', [
 			'type' => 'chosenSelect',
 			'fieldNameKey' => 'custom_fields',
 			'fieldName' => $this->alias() . '.custom_fields._ids',
 			'placeholder' => __('Select Fields'),
-			'order' => 5,
 			'visible' => true
 		]);
 	}
@@ -94,6 +92,19 @@ class CustomFormsTable extends AppTable {
 		return $options;
 	}
 
+	public function indexAfterAction(Event $event, $data) {
+		list(, $selectedModule) = array_values($this->getSelectOptions());
+		$filter = $this->CustomModules->findById($selectedModule)->first()->filter;
+
+		if (is_null($filter)) {
+			$this->fields['apply_to_all']['visible'] = false;
+		} else {
+			$this->fields['apply_to_all']['visible'] = true;
+		}
+
+		return $data;
+	}
+
 	public function viewBeforeAction(Event $event) {
 		$this->setFieldOrder();
 	}
@@ -106,9 +117,9 @@ class CustomFormsTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$selectedModule = $entity->custom_module_id;
-		$fieldOption = $this->CustomModules->findById($selectedModule)->first()->field_option;
+		$filter = $this->CustomModules->findById($selectedModule)->first()->filter;
 
-		if (is_null($fieldOption)) {
+		if (is_null($filter)) {
 			$this->fields['apply_to_all']['visible'] = false;
 		} else {
 			$this->fields['apply_to_all']['visible'] = true;
@@ -121,7 +132,6 @@ class CustomFormsTable extends AppTable {
 		//Setup fields
 		list($moduleOptions, , $applyToAllOptions) = array_values($this->getSelectOptions());
 
-		$this->fields['custom_module_id']['type'] = 'select';
 		$this->fields['custom_module_id']['options'] = $moduleOptions;
 		$this->fields['custom_module_id']['onChangeReload'] = true;
 
@@ -130,8 +140,8 @@ class CustomFormsTable extends AppTable {
 			'onchange' => 'if(this.value == 1){$("#customforms-field-option-values-ids").val("").trigger("chosen:updated");};'
 		];
 
-		$fieldOptions = $this->CustomFields->find('list')->toArray();
-		$this->fields['custom_fields']['options'] = $fieldOptions;
+		$customFieldOptions = $this->CustomFields->find('list')->toArray();
+		$this->fields['custom_fields']['options'] = $customFieldOptions;
 
 		$this->setFieldOrder();
 	}
@@ -148,25 +158,25 @@ class CustomFormsTable extends AppTable {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$selectedModule = $entity->custom_module_id;
-		$fieldOption = $this->CustomModules->findById($selectedModule)->first()->field_option;
+		$filter = $this->CustomModules->findById($selectedModule)->first()->filter;
 
-		if (is_null($fieldOption)) {
+		if (is_null($filter)) {
 			$this->fields['apply_to_all']['visible'] = false;
 		} else {
 			$this->fields['apply_to_all']['visible'] = true;
 
-			$modelAlias = $this->ControllerAction->getModel($fieldOption)['model'];
+			$modelAlias = $this->ControllerAction->getModel($filter)['model'];
 			$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
 
-			$fieldOptionTable = TableRegistry::get($fieldOption);
-			$fieldOptions = $fieldOptionTable->getList()->toArray();
+			$filterOptionTable = TableRegistry::get($filter);
+			$filterOptions = $filterOptionTable->getList()->toArray();
 
 			$this->ControllerAction->addField($labelText, [
 				'type' => 'chosenSelect',
 				'fieldNameKey' => 'field_option_values',
 				'fieldName' => $this->alias() . '.field_option_values._ids',
 				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),
-				'options' => $fieldOptions,
+				'options' => $filterOptions,
 				'order' => 3,
 				'visible' => true,
 				'attr' => [
@@ -243,7 +253,7 @@ class CustomFormsTable extends AppTable {
 		//Return all required options and their key
 		$query = $this->request->query;
 
-		$moduleOptions = $this->CustomModules->find('list', ['keyField' => 'id', 'valueField' => 'description'])->toArray();
+		$moduleOptions = $this->CustomModules->find('list')->toArray();
 		$selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
 
 		$applyToAllOptions = [0 => __('No'), 1 => __('Yes')];
@@ -253,10 +263,8 @@ class CustomFormsTable extends AppTable {
 	}
 
 	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('custom_module_id', $order++);
-		$this->ControllerAction->setFieldOrder('apply_to_all', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder('custom_fields', $order++);
+		$this->ControllerAction->setFieldOrder([
+			'custom_module_id', 'apply_to_all', 'name', 'custom_fields'
+		]);
 	}
 }
