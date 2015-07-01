@@ -22,16 +22,15 @@ class InstitutionSurveysTable extends AppTable {
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('CustomFieldValues', ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
 		$this->addBehavior('CustomField.Record', [
-			'recordKey' => 'institution_site_survey_id',
 			'moduleKey' => null,
 			'fieldKey' => 'survey_question_id',
 			'formKey' => 'survey_form_id',
 			'tableColumnKey' => 'survey_table_column_id',
-			'tableRowKey' => 'survey_table_row_id'
+			'tableRowKey' => 'survey_table_row_id',
+			'recordKey' => 'institution_site_survey_id',
+			'fieldValueKey' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellKey' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 
@@ -41,10 +40,10 @@ class InstitutionSurveysTable extends AppTable {
 			->find('all')
 			->select([
 				$CustomModules->aliasField('id'),
-				$CustomModules->aliasField('field_option')
+				$CustomModules->aliasField('filter')
 			])
 			->where([
-				$CustomModules->aliasField('model') => $this->request->params['controller']
+				$CustomModules->aliasField('model') => $this->request->params['plugin'] .'.'. $this->request->params['controller']
 			])
 			->first();
 		$customModuleId = $customModuleResults->id;
@@ -122,9 +121,9 @@ class InstitutionSurveysTable extends AppTable {
 		$InstitutionSurvey->status = 1;
 
 		if ($this->save($InstitutionSurvey)) {
-			$this->Alert->success('general.delete.success');
+			$this->Alert->success('InstitutionSurvey.reject.success');
 		} else {
-			$this->Alert->success('general.delete.failed');
+			$this->Alert->success('InstitutionSurvey.reject.failed');
 			$this->log($InstitutionSurvey->errors(), 'debug');
 		}
 		$action = $this->ControllerAction->buttons['index']['url'];
@@ -265,14 +264,6 @@ class InstitutionSurveysTable extends AppTable {
 		return $options;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('viewAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('viewAfterAction', [$event, $entity]));
-		}
-
-		return $entity;
-	}
-
 	public function addEditBeforeAction(Event $event) {
 		$this->fields['status']['type'] = 'hidden';
 		$this->fields['academic_period_id']['type'] = 'hidden';
@@ -283,13 +274,6 @@ class InstitutionSurveysTable extends AppTable {
 		$status = $data[$this->alias()]['status'] == 0 ? 1 : 2;
 		$data[$this->alias()]['status'] = $status;
     }
-
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('addEditAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('addEditAfterAction', [$event, $entity]));
-		}
-		return $entity;
-	}
 
 	public function getSelectOptions() {
 		//Return all required options and their key

@@ -74,7 +74,7 @@ class NavigationComponent extends Component {
 								'Assessments' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'index'],
-									'selected' => ['index', 'add', 'view', 'edit', 'GradingTypes', 'GradingOptions']
+									'selected' => ['index', 'add', 'view', 'edit', 'GradingTypes', 'GradingOptions', 'Status']
 								],
 								'Field Options' => [
 									'collapse' => true,

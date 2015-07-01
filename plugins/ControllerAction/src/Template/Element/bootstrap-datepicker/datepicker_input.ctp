@@ -1,5 +1,5 @@
 <div class="input date<?= $attr['null'] == false ? ' required' : '' ?>">
-	<label for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
+	<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="input-group date" id="<?= $attr['id'] ?>">
 		<?php 
 
