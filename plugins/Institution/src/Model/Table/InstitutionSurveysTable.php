@@ -121,9 +121,9 @@ class InstitutionSurveysTable extends AppTable {
 		$InstitutionSurvey->status = 1;
 
 		if ($this->save($InstitutionSurvey)) {
-			$this->Alert->success('InstitutionSurvey.reject.success');
+			$this->Alert->success('InstitutionSurveys.reject.success');
 		} else {
-			$this->Alert->success('InstitutionSurvey.reject.failed');
+			$this->Alert->success('InstitutionSurveys.reject.failed');
 			$this->log($InstitutionSurvey->errors(), 'debug');
 		}
 		$action = $this->ControllerAction->buttons['index']['url'];

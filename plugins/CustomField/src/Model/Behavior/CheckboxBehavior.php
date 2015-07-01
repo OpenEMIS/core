@@ -14,7 +14,8 @@ class CheckboxBehavior extends Behavior {
 	            'type' => 'element',
 	            'order' => 5,
 	            'element' => 'CustomField.CustomFields/checkbox',
-	            'visible' => true
+	            'visible' => true,
+	            'valueClass' => 'table-full-width'
 	        ]);
 		}
     }

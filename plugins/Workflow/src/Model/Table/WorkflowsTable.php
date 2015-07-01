@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 
 class WorkflowsTable extends AppTable {
 	private $_contain = ['FieldOptionValues'];
+	private $_fieldOrder = ['workflow_model_id'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -24,10 +25,6 @@ class WorkflowsTable extends AppTable {
 			'foreignKey' => 'workflow_id',
 			'targetForeignKey' => 'submodel_reference'
 		]);
-	}
-
-	public function validationDefault(Validator $validator) {
-		return $validator;
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -71,15 +68,16 @@ class WorkflowsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		//Add new fields
-		$this->ControllerAction->addField('apply_to_all', [
+		$this->ControllerAction->field('apply_to_all', [
 			'type' => 'select',
-			'order' => 2,
 			'visible' => true
 		]);
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->setFieldOrder();
+	public function afterAction(Event $event) {
+		$this->_fieldOrder[] = 'code';
+		$this->_fieldOrder[] = 'name';
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
@@ -115,9 +113,8 @@ class WorkflowsTable extends AppTable {
 				]
 			]);
 
-			$order = 2;
-			$this->ControllerAction->setFieldOrder('apply_to_all', $order++);
-			$this->ControllerAction->setFieldOrder($labelText, $order++);
+			$this->_fieldOrder[] = 'apply_to_all';
+			$this->_fieldOrder[] = $labelText;
 		}
 	}
 
@@ -125,7 +122,6 @@ class WorkflowsTable extends AppTable {
 		//Setup fields
 		list($modelOptions, , $applyToAllOptions) = array_values($this->getSelectOptions());
 
-		$this->fields['workflow_model_id']['type'] = 'select';
 		$this->fields['workflow_model_id']['options'] = $modelOptions;
 		$this->fields['workflow_model_id']['onChangeReload'] = true;
 
@@ -133,8 +129,6 @@ class WorkflowsTable extends AppTable {
 		$this->fields['apply_to_all']['attr'] = [
 			'onchange' => 'if(this.value == 1){$("#workflows-field-option-values-ids").val("").trigger("chosen:updated");};'
 		];
-
-		$this->setFieldOrder();
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -147,9 +141,8 @@ class WorkflowsTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$options['associated'] = $this->_contain;
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
@@ -173,16 +166,14 @@ class WorkflowsTable extends AppTable {
 				'fieldName' => $this->alias() . '.field_option_values._ids',
 				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),
 				'options' => $submodelOptions,
-				'order' => 3,
 				'visible' => true,
 				'attr' => [
 					'onchange' => 'if($(this).val()){$("#workflows-apply-to-all").val(0);};'
 				]
 			]);
 
-			$order = 2;
-			$this->ControllerAction->setFieldOrder('apply_to_all', $order++);
-			$this->ControllerAction->setFieldOrder($labelText, $order++);
+			$this->_fieldOrder[] = 'apply_to_all';
+			$this->_fieldOrder[] = $labelText;
 		}
 
 		return $entity;
@@ -193,6 +184,26 @@ class WorkflowsTable extends AppTable {
 		list(, $selectedModel, ,$selectedApplyToAll) = array_values($this->getSelectOptions());
 
 		$entity->workflow_model_id = $selectedModel;
+		$entity->apply_to_all = $selectedApplyToAll;
+
+		return $entity;
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		//Initialize field values
+		list(, , , $selectedApplyToAll) = array_values($this->getSelectOptions());
+
+		$results = $this->WorkflowSubmodels
+			->find('all')
+			->where([
+				$this->WorkflowSubmodels->aliasField('workflow_id') => $entity->id,
+				$this->WorkflowSubmodels->aliasField('submodel_reference') => 0		
+			]);
+
+		if (!$results->isEmpty()) {
+			$selectedApplyToAll = 1;
+		}
+		$entity->apply_to_all = $selectedApplyToAll;
 
 		return $entity;
 	}
@@ -203,6 +214,28 @@ class WorkflowsTable extends AppTable {
 		return compact('query', 'contain');
 	}
 
+    public function onGetApplyToAll(Event $event, Entity $entity) {
+    	$list = [];
+		if (!empty($entity->field_option_values)) {
+			foreach ($entity->field_option_values as $obj) {
+				$list[] = $obj->name;
+			}
+		} else {
+			$results = $this->WorkflowSubmodels
+				->find('all')
+				->where([
+					$this->WorkflowSubmodels->aliasField('workflow_id') => $entity->id,
+					$this->WorkflowSubmodels->aliasField('submodel_reference') => 0
+				]);
+
+			if (!$results->isEmpty()) {
+				$list[] = __('Apply To All');
+			}
+		}
+
+        return implode(', ', $list);
+    }
+
 	public function getSelectOptions() {
 		//Return all required options and their key
 		$modelOptions = $this->WorkflowModels->find('list')->toArray();
@@ -212,13 +245,5 @@ class WorkflowsTable extends AppTable {
 		$selectedApplyToAll = key($applyToAllOptions);
 
 		return compact('modelOptions', 'selectedModel', 'applyToAllOptions', 'selectedApplyToAll');
-	}
-
-	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('workflow_model_id', $order++);
-		$this->ControllerAction->setFieldOrder('apply_to_all', $order++);
-		$this->ControllerAction->setFieldOrder('code', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
 	}
 }

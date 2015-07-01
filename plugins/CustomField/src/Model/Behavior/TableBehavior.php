@@ -14,7 +14,8 @@ class TableBehavior extends Behavior {
 	            'type' => 'element',
 	            'order' => 5,
 	            'element' => 'CustomField.CustomFields/table',
-	            'visible' => true
+	            'visible' => true,
+	            'valueClass' => 'table-full-width'
 	        ]);
 		}
     }
@@ -121,7 +122,6 @@ class TableBehavior extends Behavior {
 
     	$attr['tableHeaders'] = $tableHeaders;
     	$attr['tableCells'] = $tableCells;
-
 
 		if ($action == 'view') {
 			$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
