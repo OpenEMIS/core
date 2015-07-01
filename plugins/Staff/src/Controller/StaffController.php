@@ -54,11 +54,14 @@ class StaffController extends AppController {
 
 		if ($action == 'index') {
 			$session->delete('Staff.security_user_id');
+			$session->delete('Users.id');
 		}
-		if ($session->check('Staff.security_user_id') || $action == 'view') {
-			$id = 0;
+		if ($session->check('Staff.security_user_id') || $session->check('Users.id') || $action == 'view') {
+			// $id = 0;
 			if ($session->check('Staff.security_user_id')) {
 				$id = $session->read('Staff.security_user_id');
+			} else if ($session->check('Users.id')) {
+				$id = $session->read('Users.id');
 			} else if (isset($this->request->pass[0])) {
 				$id = $this->request->pass[0];
 			}
@@ -67,7 +70,7 @@ class StaffController extends AppController {
 				$name = $obj->name;
 				$this->Navigation->addCrumb($name, ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]);
 			} else {
-				return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+				// return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
 			}
 		}
 
