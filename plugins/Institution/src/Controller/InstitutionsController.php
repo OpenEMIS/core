@@ -29,7 +29,7 @@ class InstitutionsController extends AppController  {
 			'StaffAbsences' 	=> ['className' => 'Institution.InstitutionSiteStaffAbsences'],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
-			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
+			'Results'			=> ['className' => 'Institution.StudentResults'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
