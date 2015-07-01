@@ -536,10 +536,11 @@ UPDATE `workflow_models` SET `submodel` = 'FieldOption.StaffLeaveTypes' WHERE `w
 DROP TABLE IF EXISTS `custom_modules`;
 CREATE TABLE IF NOT EXISTS `custom_modules` (
   `id` int(11) NOT NULL,
+  `code` varchar(100) NOT NULL,
   `name` varchar(250) NOT NULL,
-  `description` text DEFAULT NULL,
   `model` varchar(200),
-  `field_option` varchar(200),
+  `behavior` varchar(200) DEFAULT NULL,
+  `filter` varchar(200) DEFAULT NULL,
   `parent_id` int(11) DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -556,10 +557,10 @@ ALTER TABLE `custom_modules`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 TRUNCATE TABLE `custom_modules`;
-INSERT INTO `custom_modules` (`id`, `name`, `description`, `model`, `field_option`, `parent_id`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 'Institution - Overview', 'Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
-(2, 'Student', 'Student - Overview', '', NULL, 0, 1, '0000-00-00 00:00:00'),
-(3, 'Staff', 'Staff - Overview', '', NULL, 0, 1, '0000-00-00 00:00:00');
+INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `behavior`, `filter`, `parent_id`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 'Institution - Overview', 'Institution.Institutions', NULL, 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
+(2, 'Student', 'Student - Overview', 'User.Users', 'Student', NULL, 0, 1, '0000-00-00 00:00:00'),
+(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
@@ -1224,5 +1225,100 @@ ALTER TABLE `assessments` DROP `academic_period_id` ;
 ALTER TABLE `assessment_items` DROP `education_grade_subject_id` ;
 ALTER TABLE `assessment_statuses` DROP `academic_period_level_id` ;
 
+-- 1st July 1000hrs
+-- Update for Students and Staff Custom Fields
+RENAME TABLE student_custom_fields TO z_1461_student_custom_fields;
+RENAME TABLE student_custom_field_options TO z_1461_student_custom_field_options;
+RENAME TABLE student_custom_values TO z_1461_student_custom_values;
+RENAME TABLE student_custom_value_history TO z_1461_student_custom_value_history;
+RENAME TABLE student_details_custom_fields TO z_1461_student_details_custom_fields;
+RENAME TABLE student_details_custom_field_options TO z_1461_student_details_custom_field_options;
+RENAME TABLE student_details_custom_values TO z_1461_student_details_custom_values;
+
+RENAME TABLE staff_custom_fields TO z_1461_staff_custom_fields;
+RENAME TABLE staff_custom_field_options TO z_1461_staff_custom_field_options;
+RENAME TABLE staff_custom_values TO z_1461_staff_custom_values;
+RENAME TABLE staff_custom_value_history TO z_1461_staff_custom_value_history;
+RENAME TABLE staff_details_custom_fields TO z_1461_staff_details_custom_fields;
+RENAME TABLE staff_details_custom_field_options TO z_1461_staff_details_custom_field_options;
+RENAME TABLE staff_details_custom_values TO z_1461_staff_details_custom_values;
+
+-- New table - student_custom_field_values
+DROP TABLE IF EXISTS `student_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `student_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+ALTER TABLE `student_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - student_custom_table_cells
+DROP TABLE IF EXISTS `student_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `student_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `custom_table_column_id` int(11) NOT NULL,
+  `custom_table_row_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - staff_custom_field_values
+DROP TABLE IF EXISTS `staff_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `staff_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - staff_custom_table_cells
+DROP TABLE IF EXISTS `staff_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `staff_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `custom_table_column_id` int(11) NOT NULL,
+  `custom_table_row_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
