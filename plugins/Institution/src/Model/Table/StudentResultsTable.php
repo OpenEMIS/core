@@ -30,13 +30,14 @@ class StudentResultsTable extends AppTable {
 		return rand(0, 100);
 	}
 
+	public function onGetGrade(Event $event, Entity $entity) {
+		$grades = ['A', 'B', 'C', 'D', 'E'];
+		return $grades[rand(0, 4)];
+	}
+
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'security_user_id') {
 			return 'Student';
-		} else if ($field == 'institution_site_section_id') {
-			return 'Section';
-		} else if ($field == 'institution_site_class_id') {
-			return 'Class';
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
@@ -51,7 +52,10 @@ class StudentResultsTable extends AppTable {
 
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('status', ['visible' => false]);
+		$this->ControllerAction->field('institution_site_class_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
 		$this->ControllerAction->field('marks');
+		$this->ControllerAction->field('grade');
 
 		$this->ControllerAction->setFieldOrder([
 			'openemis_no', 'security_user_id', 
