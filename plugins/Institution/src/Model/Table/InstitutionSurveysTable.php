@@ -121,9 +121,9 @@ class InstitutionSurveysTable extends AppTable {
 		$InstitutionSurvey->status = 1;
 
 		if ($this->save($InstitutionSurvey)) {
-			$this->Alert->success('general.delete.success');
+			$this->Alert->success('InstitutionSurvey.reject.success');
 		} else {
-			$this->Alert->success('general.delete.failed');
+			$this->Alert->success('InstitutionSurvey.reject.failed');
 			$this->log($InstitutionSurvey->errors(), 'debug');
 		}
 		$action = $this->ControllerAction->buttons['index']['url'];
@@ -264,14 +264,6 @@ class InstitutionSurveysTable extends AppTable {
 		return $options;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('viewAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('viewAfterAction', [$event, $entity]));
-		}
-
-		return $entity;
-	}
-
 	public function addEditBeforeAction(Event $event) {
 		$this->fields['status']['type'] = 'hidden';
 		$this->fields['academic_period_id']['type'] = 'hidden';
@@ -282,13 +274,6 @@ class InstitutionSurveysTable extends AppTable {
 		$status = $data[$this->alias()]['status'] == 0 ? 1 : 2;
 		$data[$this->alias()]['status'] = $status;
     }
-
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('addEditAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('addEditAfterAction', [$event, $entity]));
-		}
-		return $entity;
-	}
 
 	public function getSelectOptions() {
 		//Return all required options and their key

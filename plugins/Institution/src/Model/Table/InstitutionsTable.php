@@ -225,19 +225,6 @@ class InstitutionsTable extends AppTable  {
 		return $options;
 	}
 
-
-/******************************************************************************************************************
-**
-** addEdit action methods
-**
-******************************************************************************************************************/
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('addEditAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('addEditAfterAction', [$event, $entity]));
-		}
-		return $entity;
-	}
-
 /******************************************************************************************************************
 **
 ** view action methods
@@ -254,13 +241,5 @@ class InstitutionsTable extends AppTable  {
 
 			'contact_person', 'telephone', 'fax', 'email', 'website'
 		]);
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('viewAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('viewAfterAction', [$event, $entity]));
-		}
-
-		return $entity;
 	}
 }
