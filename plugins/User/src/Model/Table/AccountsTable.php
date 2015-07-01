@@ -29,12 +29,10 @@ class AccountsTable extends AppTable {
 	}
 
 	private function setTabElements() {
+		if ($this->controller->name == 'Institutions') return;
+
 		if (array_key_exists('pass', $this->request->params)) {
-			if ($this->controller->name == 'Securities') {
-				$id = $this->request->params['pass'][1];
-			} else {
-				$id = $this->request->params['pass'][0];
-			}	
+			$id = $this->request->params['pass'][1];
 		}
 
 		$tabElements = [
@@ -48,7 +46,7 @@ class AccountsTable extends AppTable {
 			]
 		];
 
-		if ($this->controller->name == 'Securities') {
+		if (!in_array($this->controller->name, ['Students', 'Staff', 'Institutions'])) {
 			$tabElements['Details'] = [
 				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users', 'view',$id],
 				'text' => __('Details')

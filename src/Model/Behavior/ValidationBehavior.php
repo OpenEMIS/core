@@ -4,6 +4,7 @@ namespace App\Model\Behavior;
 use DateTime;
 use Exception;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -174,32 +175,40 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function validatePreferred($field, array $globalData) {
 		$flag = false;
-		// foreach ($check1 as $key => $value1) {
-			$preferred = $field;
-			$contactOption = $globalData['data']['contact_option_id'];
-			if ($preferred == "0" && $contactOption != "5") {
-				if (!$globalData['newRecord']) {
-					// todo:mlee: not converted yet
-					$contactId = $globalData['data']['id'];
-					$count = $this->find('count', array('conditions' => array('ContactType.contact_option_id' => $contactOption, array('NOT' => array('StaffContact.id' => array($contactId))))));
-					if ($count != 0) {
-						$flag = true;
-					}
-				} else {
-					$query = $model->find();
-					$query->matching('ContactTypes', function ($q) {
-						return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-					});
-					$count = $query->count();
+		$preferred = $field;
+		$contactOption = $globalData['data']['contact_option_id'];
+		$userId = $globalData['data']['security_user_id'];
 
-					if ($count != 0) {
-						$flag = true;
-					}
-				}
-			} else {
+		if ($preferred == "0" && $contactOption != "5") {
+			$Contacts = TableRegistry::get('User.Contacts');
+			$contactId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
+
+			$query = $Contacts->find();
+			$query->matching('ContactTypes', function ($q) use ($contactOption) {
+				return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+			});
+
+			if (!empty($contactId)) {
+				$query->where([$Contacts->aliasField($Contacts->primaryKey()) .'!='. $contactId]);
+			}
+
+			$query->where([$Contacts->aliasField('preferred') => 1]);
+			$query->where([$Contacts->aliasField('security_user_id') => $userId]);
+			$count = $query->count();
+
+			if ($count != 0) {
 				$flag = true;
 			}
-		// }
+		} else {
+			$flag = true;
+		}
+		return $flag;
+	}
+
+	public static function contactValueValidate($field, array $globalData) {
+		$flag = false;
+		$contactOption = $globalData['data']['contact_option_id'];
+
 		return $flag;
 	}
 
