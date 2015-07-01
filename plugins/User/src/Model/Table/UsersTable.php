@@ -52,13 +52,20 @@ class UsersTable extends AppTable {
 		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
 
+		$this->hasMany('StudentActivities', 		['className' => 'Student.StudentActivities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id']);
+
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'through' => 'Security.SecurityGroupUsers'
 		]);
+
 	}
 
 	public function beforeAction(Event $event) {
+		$modelName = inflector::singularize($this->controller->name);
+        $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		
 		$this->ControllerAction->field('username', ['visible' => false]);
 
 		$this->ControllerAction->field('super_admin', ['visible' => false]);

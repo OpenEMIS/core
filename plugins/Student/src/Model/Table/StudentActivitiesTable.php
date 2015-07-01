@@ -1,16 +1,16 @@
 <?php
-namespace Institution\Model\Table;
+namespace Student\Model\Table;
 
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSiteActivitiesTable extends AppTable {
+class StudentActivitiesTable extends AppTable {
 	public function initialize(array $config) {
         parent::initialize($config);
 
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey'=>'institution_site_id']);
-		$this->belongsTo('CreatedUser',  ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
+		$this->belongsTo('Users', 		['className' => 'User.Users', 'foreignKey'=>'security_user_id']);
+		$this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
     }
 
 	public function beforeAction(Event $event) {
