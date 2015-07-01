@@ -38,6 +38,9 @@ trait UtilityTrait {
 			if (is_array(current($options))) {
 				$current = current($options);
 				$value = key($current);
+				if (array_key_exists('value', $current) && array_key_exists('text', $current)) {
+					$value = key($options);
+				}
 				if (isset($query[$key])) {
 					$value = $query[$key];
 				}

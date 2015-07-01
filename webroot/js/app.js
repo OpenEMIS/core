@@ -245,11 +245,16 @@ var jsForm = {
 
 	change: function(obj) {
 		var ret = [];
-		$("select[data-named-key]").each(
-			function() {
-				ret.push(encodeURIComponent($(this).attr('data-named-key')) + "=" + encodeURIComponent($(this).val()));
+		var key = $(obj).attr('data-named-key');
+		var group = $(obj).attr('data-named-group');
+		ret.push(encodeURIComponent($(obj).attr('data-named-key')) + "=" + encodeURIComponent($(obj).val()));
+
+		if (group != undefined) {
+			var groupArray = group.split(',');
+			for (var i in groupArray) {
+				ret.push(encodeURIComponent(groupArray[i]) + "=" + encodeURIComponent($('select[data-named-key=' + groupArray[i] + ']').val()));
 			}
-		);
+		}
 		var url = window.location.origin + $(obj).attr('url');
 		window.location.href = url+'?'+ret.join("&");
 	},
