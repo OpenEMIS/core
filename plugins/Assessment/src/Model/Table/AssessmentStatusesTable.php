@@ -19,7 +19,7 @@ class AssessmentStatusesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
-		// $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
+		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
 
 		$this->belongsToMany('AcademicPeriods', [
 			'className' => 'AcademicPeriod.AcademicPeriods',
@@ -31,16 +31,54 @@ class AssessmentStatusesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('assessment_id', ['type' => 'select']);
-		$this->ControllerAction->field('academic_period_level_id', ['type' => 'select']);
-		$this->ControllerAction->field('academic_periods', [
-			'type' => 'chosenSelect',
-			'fieldNameKey' => 'academic_periods',
-			'fieldName' => $this->alias() . '.academic_periods._ids',
-			// 'placeholder' => $this->getMessage('Users.select_teacher')
-		]);
+		$this->ControllerAction->field('academic_period_level');
+		$this->ControllerAction->field('academic_periods');
 
 		$this->ControllerAction->setFieldOrder([
-			'assessment_id', 'date_enabled', 'date_disabled', 'academic_period_level_id'
+			'assessment_id', 'date_enabled', 'date_disabled', 'academic_period_level', 'academic_periods'
 		]);
+	}
+
+	public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request) {
+		$AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
+		$levelOptions = $AcademicPeriodLevels->getList()->toArray();
+
+		$attr['options'] = $levelOptions;
+		$attr['onChangeReload'] = 'changePeriod';
+		if ($action != 'add') {
+			$attr['visible'] = false;
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action, Request $request) {
+		$selectedLevel = key($this->fields['academic_period_level']['options']);
+		if ($request->is('post')) {
+			$selectedLevel = $request->data($this->aliasField('academic_period_level'));
+		}
+
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$periodOptions = $AcademicPeriods
+			->find('list')
+			->find('visible')
+			->find('order')
+			->where([$AcademicPeriods->aliasField('academic_period_level_id') => $selectedLevel])
+			->toArray();
+		
+		$attr['type'] = 'chosenSelect';
+		$attr['options'] = $periodOptions;
+		return $attr;
+	}
+
+	// contain is necessary for chosenSelect
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+		$options['contain'][] = 'AcademicPeriods';
+		return $options;
+	}
+
+	// contain is necessary for chosenSelect
+	public function viewEditBeforeQuery(Event $event, Query $query, array $contain) {
+		$contain[] = 'AcademicPeriods';
+		return compact('query', 'contain');
 	}
 }

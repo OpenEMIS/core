@@ -476,20 +476,11 @@ class HtmlFieldHelper extends Helper {
 			'multiple' => true
 		];
 
-		if ($action == 'index') {
+		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
 			$chosenSelectList = [];
 			if (!empty($value)) {
 				foreach ($value as $obj) {
-					$chosenSelectList[] = $obj->name;
-				}
-			}
-
-			$value = implode(', ', $chosenSelectList);
-		} else if ($action == 'view') {
-			$chosenSelectList = [];
-			if (!empty($data->$attr['fieldNameKey'])) {
-				foreach ($data->$attr['fieldNameKey'] as $obj) {
 					$chosenSelectList[] = $obj->name;
 				}
 			}
@@ -504,6 +495,8 @@ class HtmlFieldHelper extends Helper {
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
+			} else {
+				$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}
