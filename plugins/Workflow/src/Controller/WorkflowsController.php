@@ -19,8 +19,4 @@ class WorkflowsController extends AppController
         $this->Navigation->addCrumb('Workflow', ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'index']);
         $this->set('contentHeader', $header);
 	}
-
-    public function beforePaginate($event, $model, $options) {
-		return $options;
-    }
 }

@@ -171,11 +171,11 @@ class RecordBehavior extends Behavior {
 			$customFields = $customFieldQuery
 				->toArray();
 
-			//get the order of the last static fields
-			$order = 0;
+			$fieldOrder = [];
+			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 			foreach ($this->_table->fields as $fieldName => $field) {
-				if (!in_array($fieldName, ['id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created'])) {
-					$order = $field['order'] > $order ? $field['order'] : $order;
+				if (!in_array($fieldName, $ignoreFields)) {
+					$fieldOrder[] = $fieldName;
 				}
 			}
 
@@ -225,9 +225,12 @@ class RecordBehavior extends Behavior {
 					'CustomField.'.Inflector::camelize(strtolower($_field_type))
 				);
 
-				$this->_table->ControllerAction->field("custom_".$key."_field", [
+				$fieldName = "custom_".$key."_field";
+				$fieldOrder[] = $fieldName;
+				$valueClass = strtolower($_field_type) == 'table' ? 'table-full-width' : '';
+
+				$this->_table->ControllerAction->field($fieldName, [
 		            'type' => 'custom_'. strtolower($_field_type),
-		            'order' => ++$order,
 		            'visible' => true,
 		            'field' => $key,
 		            'attr' => $_attr,
@@ -237,9 +240,15 @@ class RecordBehavior extends Behavior {
 		            'tableRowKey' => $this->config('tableRowKey'),
 		            'customField' => $_customField,
 		            'id' => $_id,
-		            'value' => $_value
+		            'value' => $_value,
+		            'valueClass' => $valueClass
 		        ]);
 			}
+
+			foreach ($ignoreFields as $key => $field) {
+				$fieldOrder[] = $field;
+			}
+			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
 		}
 	}
 }

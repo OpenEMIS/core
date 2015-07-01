@@ -1,11 +1,11 @@
 <?php if ($action == 'view') : ?>
-	<div class="table-responsive">
+	<div class="table-in-view table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('general.name'); ?></th>
 					<th><?= $this->Label->get('general.description'); ?></th>
-					<th><?= $this->Label->get('RubricTemplateOption.weighting'); ?></th>
+					<th><?= $this->Label->get('RubricTemplateOptions.weighting'); ?></th>
 				</tr>
 			</thead>
 			<?php if (!empty($data->rubric_criteria_options)) : ?>
@@ -24,15 +24,13 @@
 <?php else : ?>
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
-		<div class="col-md-6">
+		<div class="table-in-view col-md-4 table-responsive">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
-				<thead>
-					<tr>
-						<th><?= $this->Label->get('general.name'); ?></th>
-						<th><?= $this->Label->get('general.description'); ?></th>
-						<th><?= $this->Label->get('RubricTemplateOptions.weighting'); ?></th>
-					</tr>
-				</thead>
+				<tr>
+					<th><?= $this->Label->get('general.name'); ?></th>
+					<th><?= $this->Label->get('general.description'); ?></th>
+					<th><?= $this->Label->get('RubricTemplateOptions.weighting'); ?></th>
+				</tr>
 				<?php if (!empty($data->rubric_criteria_options)) : ?>
 					<tbody>
 						<?php foreach ($data->rubric_criteria_options as $key => $obj) : ?>

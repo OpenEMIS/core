@@ -57,7 +57,9 @@ trait MessagesTrait {
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
+			'description' => 'Description',
 			'default' => 'Default',
+			'reject' => 'Reject',
 			'noSections' => 'No Sections',
 			'noClasses' => 'No Classes'
 		],
@@ -124,7 +126,7 @@ trait MessagesTrait {
 			'first_date_absent' => 'First Day Of Absence',
 			'last_date_absent' => 'Last Day Of Absence'
 		],
-		'InstitutionSurvey' => [
+		'InstitutionSurveys' => [
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'

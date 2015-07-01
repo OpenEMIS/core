@@ -17,12 +17,6 @@ class NoticesController extends AppController {
     	$this->Navigation->addCrumb('Notices', ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']);
 
     	$header = __('Notices');
-		$this->set('contentHeader', $header);
-
-		if ($this->request->action == 'index') {
-			$order = 1;
-			$this->ControllerAction->setFieldOrder('created', $order++);
-			$this->ControllerAction->setFieldOrder('message', $order++);
-		};	
+		$this->set('contentHeader', $header);	
     }
 }
