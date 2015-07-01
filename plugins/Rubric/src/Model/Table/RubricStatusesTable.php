@@ -5,8 +5,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Event\Event;
 
 class RubricStatusesTable extends AppTable {
 	private $_contain = ['AcademicPeriods', 'SecurityRoles', 'Programmes'];
@@ -75,6 +75,12 @@ class RubricStatusesTable extends AppTable {
 		$this->fields['programmes']['options'] = $programmeOptions;
 	}
 
+	public function editBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
+	}
+
 	public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request) {
 		$AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
 		$levelOptions = $AcademicPeriodLevels->getList()->toArray();
@@ -104,12 +110,6 @@ class RubricStatusesTable extends AppTable {
 		$attr['type'] = 'chosenSelect';
 		$attr['options'] = $periodOptions;
 		return $attr;
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
 	public function getSelectOptions() {
