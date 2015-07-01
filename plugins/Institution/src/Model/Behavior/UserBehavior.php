@@ -20,7 +20,12 @@ class UserBehavior extends Behavior {
 		$session = $this->_table->request->session();
 		if ($session->check('Institutions.id')) {
 			$institutionId = $session->read('Institutions.id');
-		} 
+		} else {
+			/**
+			 * this should be something else
+			 */
+			$institutionId = 0;
+		}
 		$query
 			->where(['institution_site_id = '.$institutionId])
 			;
