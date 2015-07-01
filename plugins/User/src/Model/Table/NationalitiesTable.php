@@ -6,6 +6,7 @@ use Cake\Validation\Validator;
 
 class NationalitiesTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('user_nationalities');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);

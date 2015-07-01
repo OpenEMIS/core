@@ -23,7 +23,7 @@ class AccountsTable extends AppTable {
 		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('user_Nationalities', ['className' => 'User.user_Nationalities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
 	}
