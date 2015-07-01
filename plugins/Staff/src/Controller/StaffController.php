@@ -42,7 +42,7 @@ class StaffController extends AppController {
 
 	public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Staff', ['plugin' => 'Staff', 'controller' => 'Staffs', 'action' => 'index']);
+    	$this->Navigation->addCrumb('Staff', ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
     	$session = $this->request->session();
 		$action = $this->request->params['action'];
 
@@ -59,9 +59,9 @@ class StaffController extends AppController {
 			if (!empty($id)) {
 				$obj = $this->Users->get($id);
 				$name = $obj->name;
-				$this->Navigation->addCrumb($name, ['plugin' => 'Staff', 'controller' => 'Staffs', 'action' => 'view', $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]);
 			} else {
-				return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staffs', 'action' => 'index']);
+				return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
 			}
 		}
 

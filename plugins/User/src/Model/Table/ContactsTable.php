@@ -1,9 +1,11 @@
 <?php
 namespace User\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
@@ -55,53 +57,39 @@ class ContactsTable extends AppTable {
 	public function beforeAction() {
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
-		if ($this->action == 'index') {
-			// todo-mlee: need to implement virtual fields using ContactType Entity _getFullContactTypeName 'full_contact_type_name'
-		}		
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-
+		// pr('validationDefault');
+		// var_dump($validator->hasField('value'));
+		$validator->remove('value', 'notBlank');
 		$validator
-			// ->add('value', 'ruleMoney',  [
-			// 	'rule' => 'tester',
-			// 	'provider' => 'custom'
-			// ])
+			// ->allowEmpty('value')
+			->add('value', 'ruleValidateFax',  [
+				'rule' => ['numeric', 'notBlank'],
+				'on' => function ($context) {
+					return ($context['data']['contact_option_id'] == 3);
+				},
+			])
+			->add('value', 'ruleValidateEmail',  [
+				'rule' => ['email', 'notBlank'],
+				'on' => function ($context) {
+					return ($context['data']['contact_option_id'] == 4);
+				},
+			])
+			->add('value', 'ruleValidateEmergency',  [
+				'rule' => 'notBlank',
+				'on' => function ($context) {
+					return ($context['data']['contact_option_id'] == 5);
+				},
+			])
+			// end of value validators
 			->add('preferred', 'ruleValidatePreferred', [
 				'rule' => ['validatePreferred'],
 			])
 			;
 
-		return $validator;
-	}
-
-	public function validationMandatory(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-
-		$validator
-			// ->add('value', 'ruleMoney',  [
-			// 	'rule' => ['money'],
-			// ])
-			->add('preferred', 'ruleValidatePreferred', [
-				'rule' => ['validatePreferred'],
-			])
-			;
-		pr('reached mandatory');
-		return $validator;
-	}
-
-	public function validationNonMandatory(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-
-		$validator
-			// ->add('value', 'ruleMoney',  [
-			// 	'rule' => ['money']
-			// ])
-			->add('preferred', 'ruleValidatePreferred', [
-				'rule' => ['validatePreferred'],
-			])
-			;
 		return $validator;
 	}
 
