@@ -52,9 +52,9 @@ trait UtilityTrait {
 					}
 				} else {
 					$value = key($options);
-					$request->query[$key] = $value;
 				}
 			}
+			$request->query[$key] = $value;
 		}
 		return $value;
 	}

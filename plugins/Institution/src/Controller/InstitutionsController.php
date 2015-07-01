@@ -30,12 +30,11 @@ class InstitutionsController extends AppController  {
 			'StaffAbsences' 	=> ['className' => 'Institution.InstitutionSiteStaffAbsences'],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
-			'Results'			=> ['className' => 'Institution.StudentResults'],
-
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendance' => ['className' => 'Institution.StudentAttendance', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
+			'StudentResults'	=> ['className' => 'Institution.StudentResults', 'actions' => ['index']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],

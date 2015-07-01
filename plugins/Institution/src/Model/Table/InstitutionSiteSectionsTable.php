@@ -28,6 +28,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades']);
 		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents']);
 
+		$this->belongsToMany('InstitutionSiteClasses', [
+			'className' => 'Institution.InstitutionSiteClasses',
+			'joinTable' => 'institution_site_section_classes',
+			'foreignKey' => 'institution_site_section_id',
+			'targetForeignKey' => 'institution_site_class_id'
+		]);
 
 		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
 		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
