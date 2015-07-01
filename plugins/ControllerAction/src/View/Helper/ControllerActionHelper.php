@@ -329,7 +329,7 @@ class ControllerActionHelper extends Helper {
 				}
 
 				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
+				$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
 				$event = $table->eventManager()->dispatch($event);
 				// end attach event
 
@@ -337,6 +337,7 @@ class ControllerActionHelper extends Helper {
 					$label = $event->result;
 				}
 				if ($label !== false) {
+					$_fieldAttr['label'] = $label;
 					$options['label'] = $label;
 				}
 

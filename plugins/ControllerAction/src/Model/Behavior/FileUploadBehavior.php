@@ -26,8 +26,7 @@ class FileUploadBehavior extends Behavior {
 		'name' => 'file_name',
 		'content' => 'file_content',
 		'size' => '1MB',
-		'allowEmpty' => false,
-		'useDefaultName' => true
+		'allowEmpty' => false
 	];
 
 	public $fileImagesMap = array(
@@ -196,7 +195,6 @@ class FileUploadBehavior extends Behavior {
 		return $file;
 	}
 
-
 	/**
 	 * @todo if user wants the file or image to be removed, it should be emptied from the record.
 	 */
@@ -213,6 +211,9 @@ class FileUploadBehavior extends Behavior {
 		} elseif (!$entity->isNew() && !empty($file) && !empty($file['tmp_name'])) {
 			$proceed = true;
 		} elseif(empty($file)) {
+			/**
+			 * if user wants the file or image to be removed, it should be emptied from the record.
+			 */
 			$entity->$fileNameField =  null;
 			$entity->$fileContentField =  null;
 		}
@@ -220,20 +221,18 @@ class FileUploadBehavior extends Behavior {
 		if (!empty($file)) {
 			if ($proceed) {
 				if ($file['error'] == 0) { // success
-					$entity->$fileNameField =  null;
-					$entity->$fileContentField =  null;
-					
 					if ($this->config('useDefaultName')) {
 						$entity->$fileNameField = $file['name'];
 					} else {
 						$pathInfo = pathinfo($file['name']);
 						$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
-					}
-					
+					}					
 					$entity->$fileContentField = file_get_contents($file['tmp_name']);
-
 				}
 			} else {
+				/**
+				 * unset this two entities so that no changes will be made on the uploaded record
+				 */
 				$entity->unsetProperty($fileNameField);
 				$entity->unsetProperty($fileContentField);
 			}

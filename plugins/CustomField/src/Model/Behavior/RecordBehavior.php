@@ -8,26 +8,40 @@ use Cake\Utility\Inflector;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
-		'recordKey' => 'custom_record_id',
+		'events' => [
+			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
+			'ControllerAction.Model.addEdit.afterAction' => 'addEditAfterAction'
+		],
+		'behavior' => null,
 		'moduleKey' => 'custom_module_id',
 		'fieldKey' => 'custom_field_id',
+		'fieldOptionKey' => 'custom_field_option_id',
 		'formKey' => 'custom_form_id',
 		'tableColumnKey' => 'custom_table_column_id',
-		'tableRowKey' => 'custom_table_row_id'
+		'tableRowKey' => 'custom_table_row_id',
+		'recordKey' => 'custom_record_id',
+		'fieldValueKey' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
+		'tableCellKey' => ['className' => 'CustomField.CustomTableCells', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true]
 	];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->_table->hasMany('CustomFieldValues', $this->config('fieldValueKey'));
+		$this->_table->hasMany('CustomTableCells', $this->config('tableCellKey'));
     }
+
+    public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events = array_merge($events, $this->config('events'));
+    	return $events;
+	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
-    	return compact('entity');
     }
 
     public function addEditAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
-    	return compact('entity');
 	}
 
 	public function getCustomFieldQuery($entity) {
@@ -43,6 +57,7 @@ class RecordBehavior extends Behavior {
 		$CustomFormFields = $CustomForms->CustomFormFields;
 
 		$customFieldQuery = null;
+		//For Institution Survey
 		if (is_null($this->config('moduleKey'))) {
 			$customFormId = $entity->{$this->config('formKey')};
 
@@ -54,16 +69,21 @@ class RecordBehavior extends Behavior {
 					->where([$CustomFormFields->aliasField($this->config('formKey')) => $customFormId]);
 			}
 		} else {
+			$where = [$CustomModules->aliasField('model') => $this->_table->registryAlias()];
+			if ($this->config('behavior')) {
+				$where[$CustomModules->aliasField('behavior')] = $this->config('behavior');
+			}
+
 			$customModuleResults = $CustomModules
 				->find('all')
 				->select([
 					$CustomModules->aliasField('id'),
-					$CustomModules->aliasField('field_option')
+					$CustomModules->aliasField('filter')
 				])
-				->where([$CustomModules->aliasField('model') => $this->_table->alias()])
+				->where($where)
 				->first();
 			$customModuleId = $customModuleResults->id;
-			$fieldOption = $customModuleResults->field_option;
+			$filter = $customModuleResults->filter;
 
 			$customFormIds = $CustomForms
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -96,17 +116,17 @@ class RecordBehavior extends Behavior {
 					->where([$CustomFormFields->aliasField($this->config('formKey')) => $generalId]);
 			}
 
-			if (!is_null($fieldOption)) {
-				$modelAlias = $this->_table->ControllerAction->getModel($fieldOption)['model'];
-				$fieldOptionKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+			if (!is_null($filter)) {
+				$modelAlias = $this->_table->ControllerAction->getModel($filter)['model'];
+				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 
-				$fieldOptionId = $entity->$fieldOptionKey;
+				$filterId = $entity->$filterKey;
 				$typedResults = $CustomFormTypes
 					->find('all')
 					->select([$CustomFormTypes->aliasField($this->config('formKey'))])
 					->where([
 						$CustomFormTypes->aliasField($this->config('formKey').' IN') => $customFormIds,
-						$CustomFormTypes->aliasField('custom_type_id') => $fieldOptionId
+						$CustomFormTypes->aliasField('custom_type_id') => $filterId
 					])
 					->all();
 
@@ -205,7 +225,7 @@ class RecordBehavior extends Behavior {
 					'CustomField.'.Inflector::camelize(strtolower($_field_type))
 				);
 
-				$this->_table->ControllerAction->field($key.".value", [
+				$this->_table->ControllerAction->field("custom_".$key."_field", [
 		            'type' => 'custom_'. strtolower($_field_type),
 		            'order' => ++$order,
 		            'visible' => true,

@@ -12,7 +12,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->addBehavior('ControllerAction.FileUpload');
+		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB']);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
@@ -23,33 +23,20 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-		$this->ControllerAction->field('file_content', ['visible' => ['edit' => true], 'type' => 'binary']);
-		$this->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'visible' => ['add' => true, 'edit' => true]]);
+		$this->ControllerAction->field('institution_site_id', 	['type' => 'hidden', 'visible' => ['edit' => true]]);
 
-		$this->ControllerAction->field('modified_user_id', ['visible' => ['view' => true]]);
-		$this->ControllerAction->field('modified', ['visible' => ['view' => true]]);
-		$this->ControllerAction->field('created_user_id', ['visible' => ['view' => true]]);
+		$this->ControllerAction->field('modified', 				['visible' => ['view' => true]]);
+		$this->ControllerAction->field('modified_user_id', 		['visible' => ['view' => true]]);
+		$this->ControllerAction->field('created', 				['type' => 'datetime', 'visible' => ['index'=>true, 'view'=>true]]);
+		$this->ControllerAction->field('created_user_id', 		['visible' => ['view' => true]]);
 
-		$this->ControllerAction->field('file_name', ['visible' => false]);
+		$this->ControllerAction->field('file_name', 			['visible' => false]);
+		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
 
-		$this->ControllerAction->field('created', [
-			'visible' => ['index'=>true, 'view'=>true],
-			'type' => 'datetime',
-		]);
+		$this->ControllerAction->field('name', 					['type' => 'string', 'visible' => true]);
+		$this->ControllerAction->field('description', 			['type' => 'text', 'visible' => true]);
 
-		$this->ControllerAction->field('name', [
-			'visible' => true,
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('description', [
-			'visible' => true,
-			'type' => 'select'
-		]);
-
-		$this->ControllerAction->field('file_type', [
-			'visible' => ['index'=>true],
-			'type' => 'string'
-		]);
+		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
@@ -76,39 +63,10 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ** view action logics
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction($event) {
-	
-		$this->fields['file_name']['visible']['view'] = false;
-		$this->fields['file_content']['visible']['view'] = false;
-		
-		$session = $this->request->session();
-		$primaryKey = $this->primaryKey();
-		$idKey = $this->aliasField($primaryKey);
-		$id = $session->check($idKey) ? $session->read($idKey) : false ;
-		if ($id) {
-			$this->fields['name']['type'] = 'download';
-			$this->fields['name']['attr']['url'] = array(
-				'plugin' => 'Institution',
-				'controller' => $this->controller->name,
-				'action' => 'Attachments',
-				'download',
-				$id
-			);
-
-			// $this->fields['file_content']['visible'] = true;
-			// $this->fields['file_content']['type']
-
-		} else {
-			$this->controller->redirect(array(
-				'plugin' => 'Institution',
-				'controller' => $this->controller->name,
-				'action' => 'Attachments'
-			));
-		}
-
-    }
-
     public function viewAfterAction(Event $event, Entity $entity) {
+		$this->fields['name']['type'] = 'download';
+		$this->fields['name']['attr']['url'] = $this->controller->viewVars['_buttons']['download']['url'];
+    	
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
@@ -123,10 +81,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function editBeforeAction($event) {
-	
-		// $this->fields['file_content']['visible'] = false;
-		unset($this->fields['file_content']);
-		
+		unset($this->fields['file_content']);	
     }
 
     public function editBeforePatch($event, $entity, $data, $options) {
@@ -136,17 +91,6 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 
 		return compact('entity', 'data', 'options');
     }
-
-
-/******************************************************************************************************************
-**
-** add action logics
-**
-******************************************************************************************************************/
-	// public function addBeforePatch($event, $entity, $data, $options) {
-
- // 		return compact('entity', 'data', 'options');
- //    }
 
 
 /******************************************************************************************************************
