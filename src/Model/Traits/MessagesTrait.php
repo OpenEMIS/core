@@ -53,7 +53,13 @@ trait MessagesTrait {
 			],
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
-			'notSelected' => 'No Record has been selected/saved.'
+			'notSelected' => 'No Record has been selected/saved.',
+			'order' => 'Order',
+			'visible' => 'Visible',
+			'name' => 'Name',
+			'default' => 'Default',
+			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
