@@ -2108,7 +2108,7 @@ a.thumbnail:hover {
 }
 
 .display-limit form {
-	width: 90px;
+	width: 95px;
 	height: 30px;
 	text-align: right;
 }
@@ -2584,6 +2584,10 @@ footer {
 		margin: 0;
 		padding: 0;
 		width: 138px;
+	}
+
+	.display-limit form {
+		width: 90px;
 	}
 
 	.advanced-search-wrapper .input {
