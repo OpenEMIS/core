@@ -32,7 +32,7 @@
 	</div>
 <?php else : ?>
 	<div class="input">
-		<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
+		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="col-md-6">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
