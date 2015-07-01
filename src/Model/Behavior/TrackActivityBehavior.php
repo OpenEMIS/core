@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Behavior;
 
+use DateTime;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -31,7 +32,6 @@ class TrackActivityBehavior extends Behavior {
 	}
 
 	public function beforeSave(Event $event, Entity $entity) {
-
 		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity) { // edit operation
 			$model = $this->_table;
 			foreach ($model->fields as $key=>$field) {
@@ -53,22 +53,23 @@ class TrackActivityBehavior extends Behavior {
 
 		    			$oldValue = $entity->getOriginal($field);
 						
+						/**
+		    			 * Added extra condition to convert old field data to db date format since the new data is in db date format else, 
+		    			 * there will always be a new history record for date fields even though the date is the same.
+		    			 */
+		    			$proceed = true;
+						if (in_array($field, $this->_dateFields)) {
+							$oldValue = date('Y-m-d', strtotime($oldValue));
+							if ($oldValue == $entity->$field) {
+								$proceed = false;
+							}
+						}
+		    			
 		    			/**
 		    			 * Added extra conditions; if oldData is 'World' and newData is an empty string, skip it as location 'World' is the same as an empty string on user views.
 		    			 */
-		    			if ($oldValue != 'World' && $entity->$field != '') {
+		    			if ($oldValue != 'World' && $entity->$field != '' && $proceed) {
 
-							/**
-			    			 * Added extra condition to convert old field data to db date format since the new data is in db date format else, 
-			    			 * there will always be a new history record for date fields even though the date is the same.
-			    			 */
-							// if (in_array($field, $this->_dateFields)) {
-							// 	$oldValue = date('Y-m-d', strtotime($oldValue));
-								// pr($oldValue);die;
-								// $oldValueTimeObj = new Time($oldValue);
-								// pr($oldValueTimeObj->nice());die;
-							// }
-		    			
 							$relatedModel = $model->ControllerAction->getAssociatedBelongsToModel($field);
 							
 							// check if related model's table is actually field_option_values by reading its useTable instance
@@ -83,7 +84,23 @@ class TrackActivityBehavior extends Behavior {
 							}
 							$obj['field'] = $field;
 								
-							$allData = ['old'=>$oldValue, 'new'=>$entity->$field];
+							/**
+			    			 * Added extra condition to convert both old field data and new field data to selected system date format before saving its value.
+			    			 */
+							if (in_array($field, $this->_dateFields)) {
+								$ConfigItem = TableRegistry::get('ConfigItems');
+								$format = $ConfigItem->value('date_format');
+
+								$oldValue = new Time($oldValue);
+								$oldValue = $oldValue->format($format);
+
+								$newValue = new Time($entity->$field);
+								$newValue = $newValue->format($format);
+							} else {
+								$newValue = $entity->$field;
+							}
+
+							$allData = ['old'=>$oldValue, 'new'=>$newValue];
 							foreach ($allData as $allDataKey=>$allDataValue) {
 
 								// if related model exists, get related data
