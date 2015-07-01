@@ -68,6 +68,10 @@ class UsersTable extends AppTable {
 		if (in_array($this->action, ['view', 'edit'])) {
 			$this->setTabElements();
 		}
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
