@@ -6,7 +6,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status', 'staff_status', 'staff_institution_name'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status', 'staff_status', 'staff_institution_name', 'programmeSection'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -174,4 +174,16 @@ class User extends Entity {
 
         return $data;
     }
+
+    // protected function _getProgrammeSection(){
+    // 	$data = "";
+
+    // 	$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
+
+
+    // 	$tdata = $InstitutionSiteProgrammes->getProgrammeOptions(1);
+    // 	// pr($tdata);
+
+    // 	return $data;
+    // }
 }

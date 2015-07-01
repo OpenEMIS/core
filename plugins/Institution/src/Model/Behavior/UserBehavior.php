@@ -31,10 +31,20 @@ class UserBehavior extends Behavior {
 			;
 	}
 
+	public function indexBeforeAction(Event $event) {
+		if ($this->_table->hasBehavior('Student')) {
+
+			$this->_table->fields['institution_name']['visible'] = false;
+			$this->_table->ControllerAction->field('programmeSection', []);
+			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
+			'name', 'default_identity_type', 'programmeSection', 'student_status']);
+		}
+	}
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvents = [
-			// 'ControllerAction.Model.beforeAction' => 'beforeAction',
+			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
