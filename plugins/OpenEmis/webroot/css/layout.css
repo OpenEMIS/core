@@ -1756,6 +1756,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .fileinput-preview {
 	width: 30%;
+	clear: both;
 }
 
 .fileinput-preview .btn-file {
@@ -1886,8 +1887,15 @@ label + select {
 	clear: both !important;
 }
 
+.image-error {
+	clear: both;
+	float: none;
+}
+
 .image-error .error-message {
 	margin: 0;
+	display: block;
+	float: none;
 }
 
 .error-message {
