@@ -7,11 +7,11 @@ $homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
 
 $dropdown = [
 	'About' => [
-		'url' => ['plugin' => false, 'controller' => 'Config', 'action' => 'about'], 
+		'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'], 
 		'icon' => 'fa-info-circle'
 	],
 	'Preferences' => [
-		'url' => ['plugin' => false, 'controller' => 'Admin', 'action' => 'edit', $userId], 
+		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index/account'], 
 		'icon' => 'fa-cog'
 	],
 	'_divider',
