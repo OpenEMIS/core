@@ -1,6 +1,5 @@
 DROP TABLE IF EXISTS `institutions`;
 
-ALTER TABLE `institution_sites` DROP `institution_id`;
 ALTER TABLE `institution_site_attachments` DROP `visible`;
 ALTER TABLE `institution_site_attachments` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
 
@@ -1049,11 +1048,6 @@ CREATE TABLE IF NOT EXISTS `labels` (
 -- June 18 1730hrs
 -- Update for Institution - Custom Fields
 
-RENAME TABLE institution_custom_fields TO z_1461_institution_custom_fields;
-RENAME TABLE institution_custom_field_options TO z_1461_institution_custom_field_options;
-RENAME TABLE institution_custom_values TO z_1461_institution_custom_values;
-RENAME TABLE institution_custom_value_history TO z_1461_institution_custom_value_history;
-
 RENAME TABLE institution_site_custom_fields TO z_1461_institution_site_custom_fields;
 RENAME TABLE institution_site_custom_field_options TO z_1461_institution_site_custom_field_options;
 RENAME TABLE institution_site_custom_values TO z_1461_institution_site_custom_values;
@@ -1126,7 +1120,6 @@ ALTER TABLE `config_items` ADD `code` VARCHAR( 50 ) NOT NULL AFTER `name` ;
 UPDATE `config_items` SET code = name;
 ALTER TABLE `config_items` ADD UNIQUE (`code`);
 ALTER TABLE `config_items` DROP INDEX name;
-ALTER TABLE `config_items` DROP INDEX name_2;
 UPDATE `config_items` SET name = label;
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_width';
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_height';
