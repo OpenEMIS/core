@@ -24,7 +24,7 @@ class UsersTable extends AppTable {
 	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px</p><p>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
 	private $specialFields = ['default_identity_type'];
 
