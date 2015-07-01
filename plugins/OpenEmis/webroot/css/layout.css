@@ -1784,6 +1784,10 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 15px;
 }
 
+.table-full-width {
+	width: 70%;
+}
+
 .table-in-view {
 	padding: 0;
 	margin-bottom: 15px;
@@ -2515,7 +2519,8 @@ footer {
 
 	/* FORM */
 	
-	.table-in-view {
+	.table-in-view,
+	.table-full-width {
 		width: 30%;
 		clear: both;
 	}
@@ -2648,7 +2653,8 @@ footer {
 
 	.input-checkbox-inline,
 	.input-checkbox,
-	.table-in-view {
+	.table-in-view,
+	.table-full-width {
 		width: 100% !important;
 	}			
 }
@@ -2672,7 +2678,8 @@ footer {
 	
 	.input-checkbox-inline,
 	.input-checkbox,
-	.table-in-view {
+	.table-in-view,
+	.table-full-width {
 		width: 100%;
 	}
 }
