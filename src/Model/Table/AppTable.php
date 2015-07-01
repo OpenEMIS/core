@@ -3,19 +3,21 @@ namespace App\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Table;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Log\LogTrait;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\UtilityTrait;
+use ControllerAction\Model\Traits\ControllerActionTrait;
 
 class AppTable extends Table {
 	use ControllerActionTrait;
 	use UtilityTrait;
+	use LogTrait;
 
 	public function initialize(array $config) {
 		$_config = [
