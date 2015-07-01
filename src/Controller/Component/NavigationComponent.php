@@ -135,10 +135,6 @@ class NavigationComponent extends Component {
 								'Rubrics' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates']
-								],
-								'Status' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Rubric', 'controller' => 'RubricStatuses', 'action' => 'index']
 								]
 							]
 						],

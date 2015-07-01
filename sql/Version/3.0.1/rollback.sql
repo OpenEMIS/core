@@ -354,3 +354,15 @@ RENAME TABLE z_1461_staff_custom_value_history TO staff_custom_value_history;
 RENAME TABLE z_1461_staff_details_custom_fields TO staff_details_custom_fields;
 RENAME TABLE z_1461_staff_details_custom_field_options TO staff_details_custom_field_options;
 RENAME TABLE z_1461_staff_details_custom_values TO staff_details_custom_values;
+
+-- 1st July 2000hrs
+-- Revert for Rubrics Status
+DROP TABLE IF EXISTS `rubric_statuses`;
+DROP TABLE IF EXISTS `rubric_status_periods`;
+DROP TABLE IF EXISTS `rubric_status_programmes`;
+DROP TABLE IF EXISTS `rubric_status_roles`;
+
+RENAME TABLE z_1461_quality_statuses TO quality_statuses;
+RENAME TABLE z_1461_quality_status_periods TO quality_status_periods;
+RENAME TABLE z_1461_quality_status_programmes TO quality_status_programmes;
+RENAME TABLE z_1461_quality_status_roles TO quality_status_roles;
