@@ -12,6 +12,12 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Student.Student');
 		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+		$this->ControllerAction->model()->addBehavior('CustomField.Record', [
+			'behavior' => 'Student',
+			'recordKey' => 'security_user_id',
+			'fieldValueKey' => ['className' => 'Student.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellKey' => ['className' => 'Student.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+		]);
 
 		$this->ControllerAction->models = [
 			'Accounts' => ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],

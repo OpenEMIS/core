@@ -38,12 +38,10 @@ class RecordBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
-    	return compact('entity');
     }
 
     public function addEditAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
-    	return compact('entity');
 	}
 
 	public function getCustomFieldQuery($entity) {
@@ -227,7 +225,7 @@ class RecordBehavior extends Behavior {
 					'CustomField.'.Inflector::camelize(strtolower($_field_type))
 				);
 
-				$this->_table->ControllerAction->field($key.".value", [
+				$this->_table->ControllerAction->field("custom_".$key."_field", [
 		            'type' => 'custom_'. strtolower($_field_type),
 		            'order' => ++$order,
 		            'visible' => true,

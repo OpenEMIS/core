@@ -118,6 +118,12 @@ trait MessagesTrait {
 			'first_date_absent' => 'First Day Of Absence',
 			'last_date_absent' => 'Last Day Of Absence'
 		],
+		'InstitutionSurvey' => [
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			],
+		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
