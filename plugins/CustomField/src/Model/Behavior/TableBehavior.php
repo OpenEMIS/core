@@ -1,6 +1,7 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -18,7 +19,7 @@ class TableBehavior extends Behavior {
 		}
     }
 
-	public function addEditOnAddColumn(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$columnOptions = [
 			'name' => '',
 			'visible' => 1
@@ -30,11 +31,9 @@ class TableBehavior extends Behavior {
 			'CustomTableColumns' => ['validate' => false],
 			'CustomTableRows' => ['validate' => false]
 		];
-
-		return compact('entity', 'data', 'options');
 	}
 
-	public function addEditOnAddRow(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$rowOptions = [
 			'name' => '',
 			'visible' => 1
@@ -46,8 +45,6 @@ class TableBehavior extends Behavior {
 			'CustomTableColumns' => ['validate' => false],
 			'CustomTableRows' => ['validate' => false]
 		];
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function onGetCustomTableElement(Event $event, $action, $entity, $attr, $options=[]) {

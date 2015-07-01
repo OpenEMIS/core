@@ -337,8 +337,12 @@ class ControllerActionHelper extends Helper {
 					$label = $event->result;
 				}
 				if ($label !== false) {
-					$_fieldAttr['label'] = $label;
-					$options['label'] = $label;
+					if (!array_key_exists('label', $options)) {
+						$_fieldAttr['label'] = $label;
+						$options['label'] = $label;
+					} else {
+						$_fieldAttr['label'] = $options['label'];
+					}
 				}
 
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
