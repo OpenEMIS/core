@@ -13,7 +13,6 @@ class StaffSectionsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('InstitutionSiteShifts', ['className' => 'Institution.InstitutionSiteShifts']);
 	}
 
@@ -28,7 +27,6 @@ class StaffSectionsTable extends AppTable {
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
 		$this->ControllerAction->setFieldOrder('institution_site_id', $order++);
-		$this->ControllerAction->setFieldOrder('education_grade_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
 		$this->ControllerAction->setFieldOrder('male_students', $order++);
 		$this->ControllerAction->setFieldOrder('female_students', $order++);
