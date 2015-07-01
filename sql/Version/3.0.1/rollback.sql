@@ -332,3 +332,25 @@ UPDATE `institution_site_classes` LEFT JOIN `z_1458_institution_site_classes` ON
 	WHERE `institution_site_classes`.`id` = `z_1458_institution_site_classes`.`id`;
 DROP TABLE `z_1458_institution_site_classes`;
 
+-- 1st July 1000hrs
+-- Revert Students and Staff Custom Fields
+DROP TABLE IF EXISTS `student_custom_field_values`;
+DROP TABLE IF EXISTS `student_custom_table_cells`;
+DROP TABLE IF EXISTS `staff_custom_field_values`;
+DROP TABLE IF EXISTS `staff_custom_table_cells`;
+
+RENAME TABLE z_1461_student_custom_fields TO student_custom_fields;
+RENAME TABLE z_1461_student_custom_field_options TO student_custom_field_options;
+RENAME TABLE z_1461_student_custom_values TO student_custom_values;
+RENAME TABLE z_1461_student_custom_value_history TO student_custom_value_history;
+RENAME TABLE z_1461_student_details_custom_fields TO student_details_custom_fields;
+RENAME TABLE z_1461_student_details_custom_field_options TO student_details_custom_field_options;
+RENAME TABLE z_1461_student_details_custom_values TO student_details_custom_values;
+
+RENAME TABLE z_1461_staff_custom_fields TO staff_custom_fields;
+RENAME TABLE z_1461_staff_custom_field_options TO staff_custom_field_options;
+RENAME TABLE z_1461_staff_custom_values TO staff_custom_values;
+RENAME TABLE z_1461_staff_custom_value_history TO staff_custom_value_history;
+RENAME TABLE z_1461_staff_details_custom_fields TO staff_details_custom_fields;
+RENAME TABLE z_1461_staff_details_custom_field_options TO staff_details_custom_field_options;
+RENAME TABLE z_1461_staff_details_custom_values TO staff_details_custom_values;
