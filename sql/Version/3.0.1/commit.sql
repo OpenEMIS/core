@@ -1322,3 +1322,5 @@ CREATE TABLE IF NOT EXISTS `staff_custom_table_cells` (
 
 ALTER TABLE `staff_custom_table_cells`
   ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `institution_site_attachments` CHANGE `file_content` `file_content` LONGBLOB NULL;  
