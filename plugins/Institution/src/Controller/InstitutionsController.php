@@ -25,6 +25,7 @@ class InstitutionsController extends AppController  {
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
 
+			// 'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffAbsences' 	=> ['className' => 'Institution.InstitutionSiteStaffAbsences'],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],

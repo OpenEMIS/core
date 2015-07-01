@@ -100,14 +100,16 @@ class UsersTable extends AppTable {
 	}
 
 	public function setTabElements() {
+		if ($this->controller->name == 'Institutions') return;
+		
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
 
 		if (array_key_exists('pass', $this->request->params)) {
-			if ($this->controller->name == 'Securities') {
-				$id = $this->request->params['pass'][1];
-			} else {
+			if (in_array($this->controller->name, ['Students', 'Staff'])) {
 				$id = $this->request->params['pass'][0];
+			} else {
+				$id = $this->request->params['pass'][1];
 			}
 		}
 
@@ -121,6 +123,13 @@ class UsersTable extends AppTable {
 				'text' => __('Account')	
 			]
 		];
+
+		if (!in_array($this->controller->name, ['Students', 'Staff'])) {
+			$tabElements[$this->alias] = [
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view',$id],
+				'text' => __('Details')
+			];
+		}
 
 		$this->controller->set('selectedAction', $this->alias);
         $this->controller->set('tabElements', $tabElements);
@@ -202,26 +211,14 @@ class UsersTable extends AppTable {
 						'rule' => 'notBlank',
 					]
 				])
-			->add('middle_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('third_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
+			->allowEmpty('middle_name')
+			->allowEmpty('third_name')
 			->add('last_name', [
 					'ruleCheckIfStringGotNoNumber' => [
 						'rule' => 'checkIfStringGotNoNumber',
 					]
 				])
-			->add('preferred_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
+			->allowEmpty('preferred_name')
 			->add('openemis_no', [
 					'ruleUnique' => [
 						'rule' => 'validateUnique',

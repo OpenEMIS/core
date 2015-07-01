@@ -11,7 +11,7 @@ class SecuritiesController extends AppController {
 
 		$this->ControllerAction->models = [
 			'Accounts'		=> ['className' => 'User.Accounts', ['view', 'edit']],
-			'Users'			=> ['className' => 'User.Users'],
+			'Users'			=> ['className' => 'Security.Users'],
 			'UserGroups'	=> ['className' => 'Security.UserGroups'],
 			'SystemGroups'	=> ['className' => 'Security.SystemGroups'],
 			'UserRoles'		=> ['className' => 'Security.UserRoles'],
