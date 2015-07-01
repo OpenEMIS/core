@@ -59,8 +59,8 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('StaffBehaviours', 'institution_site_id', NULL, 'Institution'),
 ('StaffBehaviours', 'security_user_id', NULL, 'Staff'),
 -- Users
-('Users', 'name', NULL, 'User'),
-('Users', 'username', NULL, 'User'),
+('Users', 'name', NULL, 'Name'),
+('Users', 'username', NULL, 'User Name'),
 ('Users', 'openemis_no', NULL, 'Openemis'),
 ('Users', 'first_name', NULL, 'First'),
 ('Users', 'middle_name', NULL, 'Middle'),
