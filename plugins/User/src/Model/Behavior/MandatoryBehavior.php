@@ -32,7 +32,6 @@ class MandatoryBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
-			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.onChangeNationality' => 'addOnChangeNationality',
 			'ControllerAction.Model.onUpdateFieldContactType' => 'onUpdateFieldContactType',
@@ -100,20 +99,9 @@ class MandatoryBehavior extends Behavior {
 		]);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$newOptions = [];
-		$newOptions['associated'] = ['Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
-
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
-
-		return compact('entity', 'data', 'options');
-	}
-
 	public function addOnChangeNationality(Event $event, Entity $entity, array $data, array $options) {
 		$Countries = TableRegistry::get('FieldOption.Countries');
-		$countryId = $data[$this->_table->alias()]['user_nationalities'][0]['country_id'];
+		$countryId = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
 		$country = $Countries->findById($countryId)->first();
 		$defaultIdentityType = $country->identity_type_id;
 		if (is_null($defaultIdentityType)) {
@@ -121,7 +109,7 @@ class MandatoryBehavior extends Behavior {
 			$defaultIdentityType = $IdentityTypes->getDefaultValue();
 		}
 		
-		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['user_nationalities'][0]['country_id'];
+		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
 
 		// overriding the  previous input to put in default identities
 		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
@@ -166,7 +154,7 @@ class MandatoryBehavior extends Behavior {
 		$attr['type'] = 'select';
 		$attr['options'] = $nationalityOptions;
 		$attr['onChangeReload'] = 'changeNationality';
-		$attr['fieldName'] = $this->_table->alias().'.user_nationalities.0.country_id';
+		$attr['fieldName'] = $this->_table->alias().'.nationalities.0.country_id';
 
 		return $attr;
 	}
