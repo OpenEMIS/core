@@ -5,8 +5,9 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 
 class InstitutionSiteSectionsTable extends AppTable {
@@ -168,7 +169,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['byGrades' => []];
 		$paginateOptions['conditions'][][$this->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
 		return $paginateOptions;
