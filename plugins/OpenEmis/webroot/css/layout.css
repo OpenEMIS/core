@@ -1278,9 +1278,13 @@ input[type="checkbox"] {
 	cursor: default;
 }
 
-.table tbody tr:hover {
+.table tbody[data-link="row"] tr:hover {
     background-color: #F9F9F9 !important;
-    cursor: pointer;
+}
+
+.table tbody[data-link="row"]:hover {
+	cursor: pointer;
+	background-color: #F9F9F9 !important;	
 }
 
 .table tfoot tr {
