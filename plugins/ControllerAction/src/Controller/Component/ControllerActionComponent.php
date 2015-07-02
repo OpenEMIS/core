@@ -506,7 +506,7 @@ class ControllerActionComponent extends Component {
 			$order = [$this->model->aliasField($this->orderField) => 'asc'];
 		}
 
-		$paginateOptions = ['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions];
+		$paginateOptions = new ArrayObject(['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions]);
 		if (!empty($contain)) {
 			$paginateOptions['contain'] = $contain;
 		}
@@ -520,17 +520,12 @@ class ControllerActionComponent extends Component {
 		$event = new Event('ControllerAction.Controller.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
 		$event = $this->controller->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		if (!empty($event->result)) {
-			$paginateOptions = $event->result;
-		}
+
 		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['request' => $this->request, 'options' => $paginateOptions]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		if (!empty($event->result)) {
-			$paginateOptions = $event->result;
-		}
 
-		$data = $this->Paginator->paginate($model, $paginateOptions);
+		$data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
 
 		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, ['data' => $data]);
 		$event = $this->model->eventManager()->dispatch($event);
@@ -585,7 +580,7 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
-
+		
 		// Event: viewBeforeAction
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeAction');
 		if ($event->isStopped()) { return $event->result; }

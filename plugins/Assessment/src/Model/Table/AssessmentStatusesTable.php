@@ -71,7 +71,7 @@ class AssessmentStatusesTable extends AppTable {
 	}
 
 	// contain is necessary for chosenSelect
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['contain'][] = 'AcademicPeriods';
 		return $options;
 	}

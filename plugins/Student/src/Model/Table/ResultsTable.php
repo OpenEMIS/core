@@ -1,6 +1,7 @@
 <?php
 namespace Student\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -43,7 +44,7 @@ class ResultsTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$contain = $options['contain'];
 		foreach ($contain as $i => $association) {
 			if ($association == 'AssessmentItems') {
