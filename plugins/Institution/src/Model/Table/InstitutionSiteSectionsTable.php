@@ -100,7 +100,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('grade_type', $query)) {
     		unset($this->ControllerAction->buttons['index']['url']['grade_type']);
@@ -195,7 +195,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction($event) {
+    public function viewBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		if (array_key_exists('academic_period_id', $query)) {
@@ -214,18 +214,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	}
 
-	public function viewBeforeQuery($event, $query, $contain) {
-		$contain = [
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain([
 			'AcademicPeriods',
 			'InstitutionSiteShifts',
 			'Staff',
 			'InstitutionSiteSectionGrades',
-			'InstitutionSiteSectionStudents' => ['EducationGrades', 'Users'=>['Genders']]
-		];
-		return [$query, $contain];
+			'InstitutionSiteSectionStudents.EducationGrades.Users.Genders'
+		]);
 	}
 
-	public function viewAfterAction($event, $entity) {
+	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->fields['students']['data']['students'] = $entity->institution_site_section_students;
 		$this->fields['education_grades']['data']['grades'] = $entity->institution_site_section_grades;
 
@@ -238,7 +237,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-    public function addBeforeAction($event) {
+    public function addBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		if (array_key_exists('academic_period_id', $query)) {
@@ -348,7 +347,7 @@ class InstitutionSiteSectionsTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function addBeforePatch($event, $entity, $data, $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$commonData = $data['InstitutionSiteSections'];
 
 		if ($this->_selectedGradeType == 'single') {
@@ -391,11 +390,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 			foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {
 				$data['InstitutionSiteSections']['institution_site_section_grades'][$key]['status'] = 1;
 			}
-			return compact('entity', 'data', 'options');
 		}
 	}
 
-	public function addAfterAction($event, $entity) {
+	public function addAfterAction(Event $event, Entity $entity) {
         $this->controller->set('selectedAction', $this->_selectedGradeType);
 
 		// if ($entity->academic_period_id == '') {
@@ -420,24 +418,13 @@ class InstitutionSiteSectionsTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-	public function editBeforeAction($event) {
+	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'name', 'institution_site_shift_id', 'security_user_id', 'students',
 		]);
 	}
 
-	public function editBeforeQuery($event, $query, $contain) {
-		$contain = [
-			'AcademicPeriods',
-			'InstitutionSiteShifts',
-			'Staff',
-			'InstitutionSiteSectionGrades',
-			'InstitutionSiteSectionStudents' => ['EducationGrades', 'Users'=>['Genders']]
-		];
-		return [$query, $contain];
-	}
-
-	public function editBeforePatch($event, $entity, $data, $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		/**
 		 * Unable to utilise updateAll for this scenario.
 		 * Only new student records will be saved as status=1 at the later part of this scope.
@@ -468,11 +455,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
-		// pr($data);die;
-		return compact('entity', 'data', 'options');
 	}
 
-	public function editAfterAction($event, $entity) {
+	public function editAfterAction(Event $event, Entity $entity) {
 		$students = $entity->institution_site_section_students;
 		$studentOptions = $this->getStudentsOptions($entity);
 		/**
@@ -867,3 +852,4 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $multiGradeData->toArray();
 	}
 }
+	

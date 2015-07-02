@@ -601,25 +601,19 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id);
+			$query = $model->findById($id)->contain($contain);
 
 			// Event: viewEditBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
 			// Event: viewBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
-			$data = $query->contain($contain)->first();
+			$data = $query->first();
 
 			if (empty($data)) {
 				$this->Alert->warning('general.notExists');
@@ -694,12 +688,9 @@ class ControllerActionComponent extends Component {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
 					
-					// Event: addAfterSaveRedirect
-					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSaveRedirect', null, ['action' => $action]);
+					// Event: addAfterSave
+					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, ['controller' => $this->controller]);
 					if ($event->isStopped()) { return $event->result; }
-					if (!empty($event->result)) {
-						$action = $event->result;
-					}
 					// End Event
 
 					return $this->controller->redirect($action);
@@ -749,7 +740,6 @@ class ControllerActionComponent extends Component {
 		$request = $this->request;
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
-		$contain = [];
 
 		// Event: addEditBeforeAction
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
@@ -765,22 +755,16 @@ class ControllerActionComponent extends Component {
 			$query = $model->findById($id);
 
 			// Event: viewEditBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
 			// Event: editBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
-			$data = $query->contain($contain)->first();
+			$data = $query->first();
 
 			if (empty($data)) {
 				$this->Alert->warning('general.notExists');
@@ -820,12 +804,9 @@ class ControllerActionComponent extends Component {
 						$this->Alert->success('general.edit.success');
 						$action = $this->buttons['view']['url'];
 
-						// Event: editAfterSaveRedirect
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSaveRedirect', null, ['action' => $action]);
+						// Event: editAfterSave
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, ['controller' => $this->controller]);
 						if ($event->isStopped()) { return $event->result; }
-						if (!empty($event->result)) {
-							$action = $event->result;
-						}
 						// End Event
 						
 						return $this->controller->redirect($action);
