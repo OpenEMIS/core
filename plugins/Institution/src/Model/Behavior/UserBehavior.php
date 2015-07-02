@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Network\Request;
+use Cake\Controller\Controller;
 
 class UserBehavior extends Behavior {
 	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
@@ -39,7 +40,11 @@ class UserBehavior extends Behavior {
 			$this->_table->ControllerAction->field('programmeSection', []);
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programmeSection', 'student_status']);
-		}
+		} else if ($this->_table->hasBehavior('Staff')) {
+			$this->_table->fields['institution_name']['visible'] = false;
+			$this->_table->ControllerAction->field('position', []);
+
+		}	
 	}
 
 	public function implementedEvents() {
@@ -79,6 +84,7 @@ class UserBehavior extends Behavior {
 		return $events;
 	}
 
+
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		if ($this->_table->Session->check('Institutions.id')) {
 			$institutionId = $this->_table->Session->read('Institutions.id');
@@ -99,7 +105,6 @@ class UserBehavior extends Behavior {
 	}
 
 
-
 	public function addBeforeAction(Event $event) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 
@@ -110,9 +115,10 @@ class UserBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$institutionsId = $session->read('Institutions.id');
 			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
-			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);
+			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);			
 
 			if ($this->_table->hasBehavior('Student')) {
+
 				$this->_table->ControllerAction->field('academic_period', ['fieldName' => $associationString.'academic_period']);
 				$this->_table->ControllerAction->field('education_programme_id', ['fieldName' => $associationString.'education_programme_id']);
 				$this->_table->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
@@ -159,8 +165,6 @@ class UserBehavior extends Behavior {
 			$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 			$options->exchangeArray($arrayOptions);
 		}
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -193,18 +197,17 @@ class UserBehavior extends Behavior {
 
 			}
 		}
-		
-		return compact('entity', 'data', 'options');
 	}
 
-	public function addAfterSaveRedirect($event, $action) {
+	public function addAfterSave(Event $event, Controller $controller) {
 		if (array_key_exists('new', $action)) {
-			$session = $this->_table->request->session();
+			$session = $controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
 			$session->delete($sessionVar);
 			unset($action['new']);
 		}
-		return $action;
+		$event->stopPropagation();
+		return $controller->redirect($action);
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {

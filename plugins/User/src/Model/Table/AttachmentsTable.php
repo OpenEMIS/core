@@ -27,7 +27,7 @@ class AttachmentsTable extends AppTable {
 			;
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('security_user_id', 		['type' => 'hidden', 'visible' => ['edit' => true]]);
 
 		$this->ControllerAction->field('visible', 				['visible' => false]);
@@ -56,7 +56,7 @@ class AttachmentsTable extends AppTable {
 ** index action logics
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event) {
 	
 		$this->ControllerAction->setFieldOrder([
 			'name', 'description', 'file_type', 'date_on_file', 'created'
@@ -87,19 +87,18 @@ class AttachmentsTable extends AppTable {
 ** edit action logics
 **
 ******************************************************************************************************************/
-    public function editBeforeAction($event) {
+    public function editBeforeAction(Event $event) {
 		$this->fields['date_on_file']['visible'] = false;
 		unset($this->fields['file_content']);
     }
 
-    public function editBeforePatch($event, $entity, $data, $options) {
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (isset($data[$this->aliasField('file_content')])) {
 			unset($data[$this->aliasField('file_content')]);
 		}
 		if (isset($data[$this->aliasField('date_on_file')])) {
 			unset($data[$this->aliasField('date_on_file')]);
 		}
-		return compact('entity', 'data', 'options');
     }
 
 
