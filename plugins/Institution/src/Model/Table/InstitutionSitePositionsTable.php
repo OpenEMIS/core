@@ -12,7 +12,8 @@ use App\Model\Traits\OptionsTrait;
 
 class InstitutionSitePositionsTable extends AppTable {
 	use OptionsTrait;
-
+	private $_institutionId = 0;
+	
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
@@ -27,6 +28,17 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
+		if ($this->Session->check('Institutions.id')) {
+			$this->_institutionId = $this->Session->read('Institutions.id');
+		} else {
+			$this->Alert->warning('Institution.Institutions.noActiveInstitution');
+			$this->controller->redirect([
+				'plugin' => $this->controller->plugin, 
+				'controller' => $this->controller->name, 
+				'action' => 'index'
+			]);
+		}
+
 		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('position_no', ['visible' => true]);
