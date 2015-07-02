@@ -84,7 +84,7 @@ class StaffBehavior extends Behavior {
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
-	public function addBeforePatch($event, $entity, $data, $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStaffData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
@@ -106,7 +106,6 @@ class StaffBehavior extends Behavior {
 				}
 			}
 		}
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

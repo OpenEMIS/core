@@ -79,7 +79,7 @@ class SalariesTable extends AppTable {
 		$entity = $this->patchEntity($entity, $data);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, $data, $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (array_key_exists($this->alias(), $data)) {
 			if (!array_key_exists('salary_additions', $data[$this->alias()])) {
 				$data[$this->alias()]['salary_additions'] = [];
@@ -88,8 +88,6 @@ class SalariesTable extends AppTable {
 				$data[$this->alias()]['salary_deductions'] = [];
 			}
 		}
-		
-		return compact('entity', 'data', 'options');
 	}
 
 
@@ -104,11 +102,11 @@ class SalariesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('net_salary', $order++);
 	}
 
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain[] = 'SalaryAdditions'; 
-		$contain[] = 'SalaryDeductions'; 
-		return compact('query', 'contain');
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain([
+			'SalaryAdditions',
+			'SalaryDeductions'
+		]);
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -151,25 +149,20 @@ class SalariesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
-	public function addEditOnAddRow(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$data[$this->alias()]['salary_additions'][] = ['amount' => 0];
 		$options['associated'] = [
 			'SalaryAdditions' => ['validate' => false],
 			//'SalaryDeductions' => ['validate' => false]
 		];
-		
-		return compact('entity', 'data', 'options');
 	}
 
-
-	public function addEditOnDeductRow(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$data[$this->alias()]['salary_deductions'][] = ['amount' => 0];
 		$options['associated'] = [
 			//'SalaryAdditions' => ['validate' => false],
 			'SalaryDeductions' => ['validate' => false]
 		];
-		
-		return compact('entity', 'data', 'options');
 	}
 
 	public function validationDefault(Validator $validator) {

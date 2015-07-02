@@ -58,10 +58,8 @@ class WorkflowStepsTable extends AppTable {
 		return $options;
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -122,12 +120,6 @@ class WorkflowStepsTable extends AppTable {
 		$entity->workflow_id = $selectedWorkflow;
 
 		return $entity;
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
 	public function getSelectOptions() {

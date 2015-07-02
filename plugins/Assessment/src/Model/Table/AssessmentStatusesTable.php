@@ -77,8 +77,7 @@ class AssessmentStatusesTable extends AppTable {
 	}
 
 	// contain is necessary for chosenSelect
-	public function viewEditBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain[] = 'AcademicPeriods';
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain('AcademicPeriods');
 	}
 }

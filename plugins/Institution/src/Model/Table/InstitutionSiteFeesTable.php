@@ -103,15 +103,14 @@ class InstitutionSiteFeesTable extends AppTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction($event) {
+    public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'fee_types'
 		]);
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain = array_merge($contain, ['InstitutionSiteFeeTypes'=>['FeeTypes']]);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain('InstitutionSiteFeeTypes.FeeTypes');
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
@@ -134,7 +133,7 @@ class InstitutionSiteFeesTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-    public function editBeforeAction($event) {
+    public function editBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id'
 		]);
@@ -143,14 +142,8 @@ class InstitutionSiteFeesTable extends AppTable {
 		$this->fields['education_grade_id']['type'] = 'readonly';
 	}
 
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain = array_merge($contain, ['InstitutionSiteFeeTypes'=>['FeeTypes']]);
-		return compact('query', 'contain');
-	}
-
-	public function editBeforePatch($event, $entity, $data, $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$this->cleanFeeTypes($data);
- 		return compact('entity', 'data', 'options');
     }
 
     public function editAfterAction(Event $event, Entity $entity) {
@@ -212,13 +205,8 @@ class InstitutionSiteFeesTable extends AppTable {
 
 	}
 
-	public function addBeforeQuery(Event $event, Query $query, array $contain) {
-		return compact('query', 'contain');
-	}
-
-	public function addBeforePatch($event, $entity, $data, $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$this->cleanFeeTypes($data);
- 		return compact('entity', 'data', 'options');
     }
 
     public function addAfterAction(Event $event, Entity $entity) {

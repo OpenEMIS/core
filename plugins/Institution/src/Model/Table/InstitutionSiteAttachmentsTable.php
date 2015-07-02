@@ -22,7 +22,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 				->allowEmpty('file_content');
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('institution_site_id', 	['type' => 'hidden', 'visible' => ['edit' => true]]);
 
 		$this->ControllerAction->field('modified', 				['visible' => ['view' => true]]);
@@ -49,7 +49,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ** index action logics
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event) {
 	
 		$this->ControllerAction->setFieldOrder([
 			'name', 'description', 'file_type', 'created'
@@ -80,16 +80,14 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ** edit action logics
 **
 ******************************************************************************************************************/
-    public function editBeforeAction($event) {
+    public function editBeforeAction(Event $event) {
 		unset($this->fields['file_content']);	
     }
 
-    public function editBeforePatch($event, $entity, $data, $options) {
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (isset($data[$this->aliasField('file_content')])) {
 			unset($data[$this->aliasField('file_content')]);
 		}
-
-		return compact('entity', 'data', 'options');
     }
 
 

@@ -70,21 +70,19 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 
 /******************************************************************************************************************
 **
-** view action methods
+** viewEdit action methods
 **
 ******************************************************************************************************************/
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain = array_merge($contain, ['BankBranches'=>['Banks']]);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain('BankBranches.Banks');
 	}
-
 
 /******************************************************************************************************************
 **
 ** addEdit action methods
 **
 ******************************************************************************************************************/
-    public function addEditBeforeAction($event) {
+    public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'bank', 'bank_branch_id', 'account_name', 'account_number', 'active', 'remarks'
 		]);
@@ -96,13 +94,8 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-    public function editBeforeAction($event) {
+    public function editBeforeAction(Event $event) {
     	$this->fields['bank']['type'] = 'disabled';
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain = array_merge($contain, ['BankBranches'=>['Banks']]);
-		return compact('query', 'contain');
 	}
 
     public function editAfterAction(Event $event, Entity $entity) {
