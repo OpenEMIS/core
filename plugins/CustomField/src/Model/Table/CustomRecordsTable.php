@@ -1,6 +1,7 @@
 <?php
 namespace CustomField\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -25,7 +26,7 @@ class CustomRecordsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list($moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
 
         $this->controller->set(compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
@@ -33,14 +34,10 @@ class CustomRecordsTable extends AppTable {
         	$this->aliasField('custom_form_id') => $selectedForm
         ];
         $options['contain'] = array_merge($options['contain'], $this->_contain);
-
-		return $options;
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -66,12 +63,6 @@ class CustomRecordsTable extends AppTable {
 		list(, , , $selectedModule) = array_values($this->getSelectOptions());
 		$entity->custom_form_id = $selectedModule;
 		return $entity;
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
 	public function getSelectOptions() {

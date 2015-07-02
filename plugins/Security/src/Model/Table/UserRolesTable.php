@@ -1,6 +1,7 @@
 <?php
 namespace Security\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -77,7 +78,7 @@ class UserRolesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$selectedGroup = $request->query['security_group_id'];
 
 		$options['conditions'][$this->aliasField('security_group_id')] = $selectedGroup;

@@ -81,7 +81,7 @@ class InstitutionSiteStaffTable extends AppTable {
 			]);
 	}
 
-	public function addAfterPatch(Event $event, Entity $entity, array $data, array $options) {
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$timeNow = strtotime("now");
 		$sessionVar = $this->alias().'.add.'.strtotime("now");
 		$this->Session->write($sessionVar, $this->request->data);
@@ -90,8 +90,6 @@ class InstitutionSiteStaffTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
 		}
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {

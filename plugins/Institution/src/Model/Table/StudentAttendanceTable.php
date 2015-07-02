@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -196,7 +197,7 @@ class StudentAttendanceTable extends AppTable {
 		// End setup sections
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$sectionId = $request->query('section_id');
 		$week = $request->query('week');
 		$day = $request->query('day');

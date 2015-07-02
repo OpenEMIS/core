@@ -59,10 +59,8 @@ class RubricCriteriasTable extends AppTable {
 		$this->setFieldOrder();
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -158,12 +156,6 @@ class RubricCriteriasTable extends AppTable {
 				];
 			}
 		}
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
     public function onGetType(Event $event, Entity $entity) {

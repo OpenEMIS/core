@@ -5,9 +5,10 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 class InstitutionSiteClassesTable extends AppTable {
 	private $_selectedSectionId = 0;
@@ -116,7 +117,7 @@ class InstitutionSiteClassesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event) {
 		$Classes = $this;
 		$Sections = $this->InstitutionSiteSections;
  		$institutionsId = $this->Session->read('Institutions.id');
@@ -195,7 +196,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			]);
     }
 
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['bySections' => []];
 		$paginateOptions['contain'][] = 'Teachers';
 		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriodId;
@@ -208,7 +209,7 @@ class InstitutionSiteClassesTable extends AppTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction($event) {
+    public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'section_name',
 			'name', 'education_subject_code', 'education_subject_id', 
@@ -216,15 +217,12 @@ class InstitutionSiteClassesTable extends AppTable {
 		]);
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, $contain) {
-		$contain = array_merge([
-			'InstitutionSiteSectionClasses' => ['InstitutionSiteSections'],
-
+	public function viewBeforeQuery(Event $event, Query $query) {
+		$query->contain([
+			'InstitutionSiteSectionClasses.InstitutionSiteSections',
 			'Teachers',
-			'InstitutionSiteClassStaff',
-
-		], $contain);
-		return compact('query', 'contain');
+			'InstitutionSiteClassStaff'
+		]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -257,7 +255,7 @@ class InstitutionSiteClassesTable extends AppTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-	public function addBeforeAction($event) {
+	public function addBeforeAction(Event $event) {
 		$this->fields['name']['visible'] = false;
 		$this->fields['teachers']['visible'] = false;
 		$this->fields['students']['visible'] = false;
@@ -295,7 +293,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	}
 
-	public function addBeforePatch($event, $entity, $data, $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$commonData = $data['InstitutionSiteClasses'];
 		$data['InstitutionSiteClasses'] = [];
 		foreach ($data['MultiClasses'] as $key=>$class) {
@@ -376,19 +374,18 @@ class InstitutionSiteClassesTable extends AppTable {
 		]);
 	}
 
-	public function editBeforeQuery(Event $event, Query $query, $contain) {
-		$contain = array_merge([
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain([
 			'AcademicPeriods', 
 			'EducationSubjects',
 			'Teachers',
 			'InstitutionSiteClassStaff',
-			'InstitutionSiteClassStudents'=>['Users'=>['Genders']],
+			'InstitutionSiteClassStudents.Users.Genders',
 			'InstitutionSiteSectionClasses'
-		], $contain);
-		return compact('query', 'contain');
+		]);
 	}
 
-	public function editBeforePatch($event, $entity, $data, $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// pr($entity);
 		// pr($data);
 		/**
@@ -458,8 +455,6 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 		unset($data[$this->alias()]['teachers']);
-		// pr($data);die;
-		return compact('entity', 'data', 'options');
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {

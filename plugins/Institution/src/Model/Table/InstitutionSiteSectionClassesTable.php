@@ -1,11 +1,13 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 class InstitutionSiteSectionClassesTable extends AppTable {
 	private $_selectedSection = 0;
@@ -73,7 +75,7 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 
 		$paginateOptions['contain']['InstitutionSiteClasses'] = ['EducationSubjects'];
 		$paginateOptions['conditions'][] = ['institution_site_section_id' => $this->_selectedSection];

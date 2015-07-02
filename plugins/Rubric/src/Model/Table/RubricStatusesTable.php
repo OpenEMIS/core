@@ -1,6 +1,7 @@
 <?php
 namespace Rubric\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -56,15 +57,13 @@ class RubricStatusesTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['contain'] = array_merge($options['contain'], $this->_contain);
 		return $options;
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
@@ -73,12 +72,6 @@ class RubricStatusesTable extends AppTable {
 
 		$this->fields['security_roles']['options'] = $securityRoleOptions;
 		$this->fields['programmes']['options'] = $programmeOptions;
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
 	public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request) {
