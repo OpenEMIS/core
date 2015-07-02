@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
@@ -55,7 +56,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->fields['comment']['visible'] = false;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
 
         $options['conditions'][] = [
@@ -63,7 +64,6 @@ class InstitutionInfrastructuresTable extends AppTable {
         ];
 
 		$this->controller->set(compact('levelOptions', 'selectedLevel'));
-		return $options;
 	}
 
 	public function addEditBeforeAction(Event $event) {
