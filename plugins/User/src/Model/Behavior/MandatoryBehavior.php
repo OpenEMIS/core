@@ -85,7 +85,7 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addBeforeAction(Event $event) {
-		$orderData = ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth'];
+		$orderData = $this->_table->fieldOrder1->getArrayCopy();
 
 		// mandatory associated fields
 		if (array_key_exists('Contacts', $this->_info) && $this->_info['Contacts'] != 'Excluded') {
@@ -114,12 +114,12 @@ class MandatoryBehavior extends Behavior {
 			$orderData[] = 'special_need_comment';
 		}
 
-		$orderData = array_merge($orderData, ['status','modified_user_id','modified','created_user_id','created']);
+		$orderData = array_merge($orderData, $this->_table->fieldOrder2->getArrayCopy());
 		
 		$this->_table->ControllerAction->setFieldOrder($orderData);
 	}
 
-		public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
 
 		$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
