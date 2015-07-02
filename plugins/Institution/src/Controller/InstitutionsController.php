@@ -23,7 +23,7 @@ class InstitutionsController extends AppController  {
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
 			// 'Classes' 			=> ['className' => 'Institution.InstitutionSiteSectionClasses'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
-			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
 
 			// 'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Staff' 			=> ['className' => 'Institution.Staff'],
