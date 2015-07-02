@@ -688,12 +688,9 @@ class ControllerActionComponent extends Component {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
 					
-					// Event: addAfterSaveRedirect
-					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSaveRedirect', null, ['action' => $action]);
+					// Event: addAfterSave
+					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, ['controller' => $this->controller]);
 					if ($event->isStopped()) { return $event->result; }
-					if (!empty($event->result)) {
-						$action = $event->result;
-					}
 					// End Event
 
 					return $this->controller->redirect($action);
@@ -807,12 +804,9 @@ class ControllerActionComponent extends Component {
 						$this->Alert->success('general.edit.success');
 						$action = $this->buttons['view']['url'];
 
-						// Event: editAfterSaveRedirect
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSaveRedirect', null, ['action' => $action]);
+						// Event: editAfterSave
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, ['controller' => $this->controller]);
 						if ($event->isStopped()) { return $event->result; }
-						if (!empty($event->result)) {
-							$action = $event->result;
-						}
 						// End Event
 						
 						return $this->controller->redirect($action);
