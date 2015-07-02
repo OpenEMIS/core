@@ -2,20 +2,14 @@
 namespace Infrastructure\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\ORM\Table;
-use Cake\ORM\Entity;
-//use Cake\ORM\Query;
 use Cake\Event\Event;
 
 class InfrastructureTypesTable extends AppTable {
-	private $visible = array(
-		1 => array('id' => 1, 'name' => 'Yes'),
-		2 => array('id' => 0, 'name' => 'No')
-	);
+	private $_fieldOrder = ['infrastructure_level_id', 'name'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('InfrastructureLevels', ['className' => 'Infrastructure.InfrastructureLevels']);
+		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -29,47 +23,35 @@ class InfrastructureTypesTable extends AppTable {
 
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
-		list($levelOptions, , $visibleOptions) = array_values($this->getSelectOptions());
+		list(, $selectedLevel) = array_values($this->getSelectOptions());
+		$this->fields['infrastructure_level_id']['type'] = 'hidden';
+		$this->fields['infrastructure_level_id']['attr']['value'] = $selectedLevel;
 
-		$this->fields['infrastructure_level_id']['type'] = 'select';
-		$this->fields['infrastructure_level_id']['options'] = $levelOptions;
+		$LevelName = $this->Levels
+			->find('all')
+			->select([$this->Levels->aliasField('name')])
+			->where([$this->Levels->aliasField('id') => $selectedLevel])
+			->first();
+		$this->ControllerAction->field('level_name', [
+			'type' => 'readonly',
+			'attr' => ['value' => $LevelName->name]
+		]);
 
-		$this->fields['visible']['type'] = 'select';
-		$this->fields['visible']['options'] = $visibleOptions;
-
+		array_unshift($this->_fieldOrder, "level_name");
 		$this->setFieldOrder();
-	}
-
-	public function addOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, $selectedLevel, , $selectedVisible) = array_values($this->getSelectOptions());
-
-		$entity->infrastructure_level_id = $selectedLevel;
-		$entity->visible = $selectedVisible;
-
-		return $entity;
 	}
 
 	public function getSelectOptions() {
 		//Return all required options and their key
-		$query = $this->request->query;
+		$levelId = $this->request->query('level');
 
-		$levelOptions = $this->InfrastructureLevels->find('list')->toArray();
-		$selectedLevel = isset($query['level']) ? $query['level'] : key($levelOptions);
+		$levelOptions = $this->Levels->find('list')->toArray();
+		$selectedLevel = !is_null($levelId) ? $levelId : key($levelOptions);
 
-		$visibleOptions = [];
-		foreach ($this->visible as $key => $visible) {
-			$visibleOptions[$visible['id']] = __($visible['name']);
-		}
-		$selectedVisible = key($visibleOptions);
-
-		return compact('levelOptions', 'selectedLevel', 'visibleOptions', 'selectedVisible');
+		return compact('levelOptions', 'selectedLevel');
 	}
 
 	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('infrastructure_level_id', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder('visible', $order++);
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 }

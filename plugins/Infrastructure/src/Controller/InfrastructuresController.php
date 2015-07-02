@@ -52,7 +52,13 @@ class InfrastructuresController extends AppController
     }
 
     public function beforePaginate(Event $event, Table $model, array $options) {
-    	if ($model->alias == 'Types' || $model->alias == 'CustomFields') {
+    	if ($model->alias == 'Levels') {
+			$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
+
+			$options['conditions'][] = [
+	        	$model->aliasField('parent_id') => $parentId
+	        ];
+    	} else if ($model->alias == 'Types' || $model->alias == 'CustomFields') {
 			$query = $this->request->query;
 
 			$levelOptions = TableRegistry::get('Infrastructure.InfrastructureLevels')->find('list')->toArray();
