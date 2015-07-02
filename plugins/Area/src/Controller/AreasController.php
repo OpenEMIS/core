@@ -54,7 +54,7 @@ class AreasController extends AppController
 			],
 			'AreaAdministratives' => [
 				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministratives'],
-				'text' => __('Area Levels (Administrative)')
+				'text' => __('Areas (Administrative)')
 			]
 		];
 

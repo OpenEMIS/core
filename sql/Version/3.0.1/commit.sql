@@ -560,7 +560,7 @@ INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `behavior`, `filter
 (1, 'Institution', 'Institution - Overview', 'Institution.Institutions', NULL, 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
 (2, 'Student', 'Student - Overview', 'User.Users', 'Student', NULL, 0, 1, '0000-00-00 00:00:00'),
 (3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00'),
-(4, 'Infrastructure', 'Institution - Infrastructure', 'Institution.InstitutionInfrastructures', NULL, 'Infrastructure.InfrastructureLevels', 0, 1, '0000-00-00 00:00:00');
+(4, 'Infrastructure', 'Institution - Infrastructure', 'Institution.InstitutionInfrastructures', NULL, 'Infrastructure.InfrastructureLevels', 1, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
