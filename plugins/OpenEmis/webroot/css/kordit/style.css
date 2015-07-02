@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?r4557i');
-	src:url('fonts/kordit-fonts.eot?#iefixr4557i') format('embedded-opentype'),
-		url('fonts/kordit-fonts.ttf?r4557i') format('truetype'),
-		url('fonts/kordit-fonts.woff?r4557i') format('woff'),
-		url('fonts/kordit-fonts.svg?r4557i#kordit-fonts') format('svg');
+	src:url('fonts/kordit-fonts.eot?-j2g72x');
+	src:url('fonts/kordit-fonts.eot?#iefix-j2g72x') format('embedded-opentype'),
+		url('fonts/kordit-fonts.ttf?-j2g72x') format('truetype'),
+		url('fonts/kordit-fonts.woff?-j2g72x') format('woff'),
+		url('fonts/kordit-fonts.svg?-j2g72x#kordit-fonts') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,11 +23,14 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.kd-staff:before {
-	content: "\e60c";
+.kd-institutions:before {
+	content: "\e60d";
 }
 .kd-students:before {
 	content: "\e60b";
+}
+.kd-staff:before {
+	content: "\e60c";
 }
 .kd-dashboard:before {
 	content: "\e636";
@@ -157,9 +160,6 @@
 }
 .kd-items:before {
 	content: "\e615";
-}
-.kd-institutions:before {
-	content: "\e616";
 }
 .kd-data_management_icon:before {
 	content: "\e617";
