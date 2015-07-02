@@ -42,7 +42,6 @@ class StaffBehavior extends Behavior {
 			'type' => 'hidden', 
 			'value' => 0
 		]);
-		$this->_table->fields['openemis_no']['attr']['readonly'] = true;
 		$this->_table->fields['openemis_no']['attr']['value'] = $this->_table->getUniqueOpenemisId(['model'=>Inflector::singularize('Staff')]);
 	}
 

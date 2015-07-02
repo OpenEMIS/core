@@ -182,22 +182,6 @@ class UsersTable extends AppTable {
 	}
 
 	public function addBeforeAction(Event $event) {
-		// if ($this->Session->check('Institutions.id')) {
-		// 	$institutionId = $this->Session->read('Institutions.id');
-		// } else {
-		// 	// todo-mlee need to put correct alert saying need to select institution first
-
-		// $name = $this->controller->name;
-		// if (in_array($name, ['Students', 'Staff'])) {
-		// 	$this->ControllerAction->addField('institution_site_'.strtolower($name).'.0.institution_site_id', [
-		// 		'type' => 'hidden', 
-		// 		'value' => 0
-		// 	]);
-		// 	$this->fields['openemis_no']['attr']['readonly'] = true;
-		// 	$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($name)]);
-		// }
-
-
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth',
 			// mandatory fields inserted here if behavior attached
 			'status','modified_user_id','modified','created_user_id','created'
@@ -205,6 +189,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function addEditBeforeAction(){
+		$this->fields['openemis_no']['attr']['readonly'] = true;
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
