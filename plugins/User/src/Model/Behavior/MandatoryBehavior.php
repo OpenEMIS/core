@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\ORM\RulesChecker;
+use Cake\Utility\Inflector;
 
 class MandatoryBehavior extends Behavior {
 	protected $_userRole;
@@ -23,7 +24,7 @@ class MandatoryBehavior extends Behavior {
 		$this->_info = [];
 		foreach ($this->_roleFields as $key => $value) {
 			$currModelName = $this->_userRole.$value;
-			$this->_info[$currModelName] = $this->getOptionValue($currModelName);
+			$this->_info[$value] = $this->getOptionValue($currModelName);
 		}
 		// pr($this->_info);
 	}
@@ -32,6 +33,7 @@ class MandatoryBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
+			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.onChangeNationality' => 'addOnChangeNationality',
 			'ControllerAction.Model.onUpdateFieldContactType' => 'onUpdateFieldContactType',
@@ -83,20 +85,78 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addBeforeAction(Event $event) {
-		// mandatory associated fields
-		$this->_table->ControllerAction->field('contact_type');
-		$this->_table->ControllerAction->field('contact_value');
-		$this->_table->ControllerAction->field('nationality');
-		$this->_table->ControllerAction->field('identity_type');
-		$this->_table->ControllerAction->field('identity_number');
-		$this->_table->ControllerAction->field('special_need');
-		$this->_table->ControllerAction->field('special_need_comment');
+		$orderData = ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth'];
 
-		$this->_table->ControllerAction->setFieldOrder(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth',
-			// mandatory fields inserted here if behavior attached
-			'contact_type', 'contact_value', 'nationality', 'identity_type', 'identity_number', 'special_need', 'special_need_comment', 
-			'status','modified_user_id','modified','created_user_id','created'
-		]);
+		// mandatory associated fields
+		if (array_key_exists('Contacts', $this->_info) && $this->_info['Contacts'] != 'Excluded') {
+			$this->_table->ControllerAction->field('contact_type');
+			$orderData[] = 'contact_type';
+			$this->_table->ControllerAction->field('contact_value');
+			$orderData[] = 'contact_value';
+		}
+
+		if (array_key_exists('Nationalities', $this->_info) && $this->_info['Nationalities'] != 'Excluded') {
+			$this->_table->ControllerAction->field('nationality');
+			$orderData[] = 'nationality';
+		}
+
+		if (array_key_exists('Identities', $this->_info) && $this->_info['Identities'] != 'Excluded') {
+			$this->_table->ControllerAction->field('identity_type');
+			$orderData[] = 'identity_type';
+			$this->_table->ControllerAction->field('identity_number');
+			$orderData[] = 'identity_number';
+		}
+
+		if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
+			$this->_table->ControllerAction->field('special_need');
+			$orderData[] = 'special_need';
+			$this->_table->ControllerAction->field('special_need_comment');
+			$orderData[] = 'special_need_comment';
+		}
+
+		$orderData = array_merge($orderData, ['status','modified_user_id','modified','created_user_id','created']);
+		
+		$this->_table->ControllerAction->setFieldOrder($orderData);
+	}
+
+		public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$newOptions = [];
+
+		$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
+
+		foreach ($this->_info as $key => $value) {
+			// default validation is 'Mandatory'
+			if ($value == 'Non-Mandatory') {
+				$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
+				// also need to remove the data if the field is empty
+				$tableName = Inflector::tableize($key);
+
+				if (array_key_exists($tableName, $data[$this->_table->alias()])) {
+					if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) {
+						// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
+						$incompleteField = false;
+						foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) {
+							if (empty($check)) {
+								$incompleteField = true;
+							}
+						}
+						if ($incompleteField) {
+							unset($data[$this->_table->alias()][$tableName]);
+						}
+					}
+				}
+			} else {
+				if ($value != 'Excluded') {
+					$newOptions['associated'][] = $key;
+				}
+			}
+		}
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
+
+		return compact('entity', 'data', 'options');
 	}
 
 	public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -119,7 +179,7 @@ class MandatoryBehavior extends Behavior {
 			'InstitutionSiteStudents' => ['validate' => false],
 			'InstitutionSiteStaff' => ['validate' => false],
 			'Identities' => ['validate' => false],
-			'UserNationalities' => ['validate' => false],
+			'Nationalities' => ['validate' => false],
 			'SpecialNeeds' => ['validate' => false],
 			'Contacts' => ['validate' => false]
 		];

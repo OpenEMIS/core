@@ -34,7 +34,12 @@ class SpecialNeedsTable extends AppTable {
 
 		return $validator
 			->allowEmpty('special_need_date')
+			->add('comment', [])
 		;
 	}
 
+	public function validationNonMandatory(Validator $validator) {
+		$this->validationDefault($validator);
+		return $validator->allowEmpty('comment');
+	}
 }
