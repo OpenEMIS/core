@@ -50,8 +50,4 @@ class AcademicPeriodsController extends AppController
 
 		$this->set('contentHeader', $header);
     }
-
-    public function beforePaginate($event, $model, $options) {
-    	return $options;
-    }
 }

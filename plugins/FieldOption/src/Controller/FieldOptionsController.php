@@ -48,8 +48,4 @@ class FieldOptionsController extends AppController {
 	public function onInitialize(Event $event, $model) {
 		
 	}
-
-	public function beforePaginate(Event $event, Table $table, $options) {
-		
-	}
 }
