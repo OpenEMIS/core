@@ -46,7 +46,6 @@ class UsersTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
@@ -75,6 +74,7 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
 		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->field('photo_content', ['type' => 'image']);
 	}
 
 	public function afterAction(Event $event) {
@@ -175,10 +175,6 @@ class UsersTable extends AppTable {
 		} else {
 			$id = $this->Session->read($roleName.'.security_user_id');
 		}
-
-		$this->ControllerAction->field('photo_content', [
-			'type' => 'image',
-		]);
 	}
 
 	public function addBeforeAction(Event $event) {
@@ -321,16 +317,15 @@ class UsersTable extends AppTable {
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		$fileContent = $entity->photo_content;
 		$value = "";
-
 		if(empty($fileContent) && is_null($fileContent)) {
 			$controllerName = $this->controller->name;	
-			if(($controllerName == "Students") && ($this->request->action == "index")){
+			if(($this->hasBehavior('Student')) && ($this->action == "index")){
 				$value = $this->defaultStudentProfileIndex;
-			} else if(($controllerName == "Staff") && ($this->request->action == "index")){
+			} else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
 				$value = $this->defaultStaffProfileIndex;
-			} else if(($controllerName == "Students") && ($this->request->action == "view")){
+			} else if(($this->hasBehavior('Student')) && ($this->action == "view")){
 				$value = $this->defaultStudentProfileView;
-			} else if(($controllerName == "Staff") && ($this->request->action == "view")){
+			} else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
 				$value = $this->defaultStaffProfileView;
 			}
 		} else {
@@ -375,9 +370,9 @@ class UsersTable extends AppTable {
 	public function getDefaultImgView(){
 		$value = "";
 		$controllerName = $this->controller->name;	
-		if($controllerName == "Students"){
+		if($this->hasBehavior('Student')){
 			$value = $this->defaultStudentProfileView;
-		} else if($controllerName == "Staff"){
+		} else if($this->hasBehavior('Staff')){
 			$value = $this->defaultStaffProfileView;
 		}
 		return $value;

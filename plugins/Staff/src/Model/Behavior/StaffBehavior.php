@@ -54,9 +54,6 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->_table->ControllerAction->addField('photo_content', [
-			'type' => 'image',
-		]);
 		$this->_table->fields['first_name']['visible'] = false;
 		$this->_table->fields['middle_name']['visible'] = false;
 		$this->_table->fields['third_name']['visible'] = false;
@@ -97,7 +94,10 @@ class StaffBehavior extends Behavior {
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
 
 					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE']/100;
+
+
 					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
+					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
 
 					// start (date and year) handling
 					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
