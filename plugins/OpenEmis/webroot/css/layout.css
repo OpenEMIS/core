@@ -479,6 +479,14 @@ body.large {
 	        border-radius: 50%;
 }
 
+.overview-wrapper .icon {
+	background: none !important;
+	border: 0 !important;
+	color: #555;
+	padding: 0 10px;
+	font-size: 78px;
+}
+
 .data-section {
 	position: relative;
 	padding: 0 auto;

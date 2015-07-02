@@ -33,7 +33,7 @@ class StudentsController extends AppController {
 			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
-			'Results' 			=> ['className' => 'Student.StudentAssessments', 'actions' => ['index']],
+			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
