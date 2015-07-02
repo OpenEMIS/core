@@ -194,7 +194,8 @@ class UsersTable extends AppTable {
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
 		$this->fields['gender_id']['type'] = 'select';
-		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();//
+		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
+		$this->fields['address']['type'] = 'text';
 	}
 
 	public function getUniqueOpenemisId($options = []) {
