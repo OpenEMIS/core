@@ -1,11 +1,13 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
 class InstitutionSiteBankAccountsTable extends AppTable {
@@ -56,7 +58,7 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['withBanks' => []];
 		return $paginateOptions;
 	}
@@ -68,21 +70,19 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 
 /******************************************************************************************************************
 **
-** view action methods
+** viewEdit action methods
 **
 ******************************************************************************************************************/
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain = array_merge($contain, ['BankBranches'=>['Banks']]);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain('BankBranches.Banks');
 	}
-
 
 /******************************************************************************************************************
 **
 ** addEdit action methods
 **
 ******************************************************************************************************************/
-    public function addEditBeforeAction($event) {
+    public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'bank', 'bank_branch_id', 'account_name', 'account_number', 'active', 'remarks'
 		]);
@@ -94,13 +94,8 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-    public function editBeforeAction($event) {
+    public function editBeforeAction(Event $event) {
     	$this->fields['bank']['type'] = 'disabled';
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		$contain = array_merge($contain, ['BankBranches'=>['Banks']]);
-		return compact('query', 'contain');
 	}
 
     public function editAfterAction(Event $event, Entity $entity) {

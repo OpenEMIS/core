@@ -81,15 +81,13 @@ class WorkflowsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['contain'] = array_merge($options['contain'], $this->_contain);
 		return $options;
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -212,12 +210,6 @@ class WorkflowsTable extends AppTable {
 		$entity->apply_to_all = $selectedApplyToAll;
 
 		return $entity;
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
     public function onGetApplyToAll(Event $event, Entity $entity) {

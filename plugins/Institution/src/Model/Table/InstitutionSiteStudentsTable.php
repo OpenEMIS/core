@@ -85,8 +85,6 @@ class InstitutionSiteStudentsTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?new='.$timeNow]);
 		}
-		
-		return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {

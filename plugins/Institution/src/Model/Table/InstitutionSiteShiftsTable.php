@@ -91,7 +91,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 **
 ******************************************************************************************************************/
 
-	public function addEditBeforeAction($event) {
+	public function addEditBeforeAction(Event $event) {
 
 		$this->fields['period']['visible'] = false;
 
@@ -108,17 +108,13 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	}
 
-	public function addEditBeforePatch($event, $entity, $data, $options) {
-		return compact('entity', 'data', 'options');
-	}
-
 /******************************************************************************************************************
 **
 ** field specific methods
 **
 ******************************************************************************************************************/
 
-	public function onGetPeriod($event, $entity) {
+	public function onGetPeriod(Event $event, Entity $entity) {
 		return $entity->start_time . ' - ' .$entity->end_time;
 	}
 

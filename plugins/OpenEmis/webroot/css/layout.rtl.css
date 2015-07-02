@@ -249,6 +249,10 @@ html {
     width: 180px;
 }
 
+.rtl #wrapper.toggled #page-content-wrapper {
+    margin-right: 0;
+}
+
 .rtl .sidebar-nav {
     width: 180px;
 }
@@ -295,6 +299,7 @@ html {
     font-size: 0.6em;
     margin: 0 2px;
     padding-left: 5px;
+    color: #999;
 }
 
 /* PAGE HEADER & TOOLBAR */
@@ -375,7 +380,7 @@ html {
 .rtl .btn-reset, 
 .rtl .btn-reset:hover {
     margin-left: 0 !important;
-    margin-right: -34px !important;
+    margin-right: -18px !important;
 }
 
 .rtl .input-group-btn:last-child > .btn:not(:last-child):not(.dropdown-toggle) {
@@ -726,11 +731,6 @@ html {
 }
 
 /* MEDIA QUERIES */
-@media (min-width:768px) {
-    .rtl #menu-toggle .fa {
-        height: 50px !important;
-    }
-}
 
 @media (min-width: 320px) and (max-width: 480px) {
     .rtl .search {
@@ -836,7 +836,13 @@ html {
     }
 }
 
-@media(min-width:768px) {
+@media (min-width:768px) {
+    .rtl #menu-toggle .fa {
+        height: 50px !important;
+    }
+
+    /* SIMPLE SIDEBAR MEDIA QUERIES */
+
     .rtl #wrapper {
         padding-right: 180px;
         padding-left: 0;
@@ -861,6 +867,6 @@ html {
 
     .rtl #wrapper.toggled #page-content-wrapper {
         position: relative;
-        margin-left: 0;
+        margin-right: 0;
     }
 }

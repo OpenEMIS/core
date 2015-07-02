@@ -155,7 +155,9 @@ class HtmlFieldHelper extends Helper {
 						$value = $value['text'];
 					}
 				}
-			} else {
+			}
+			
+			if (empty($value)) {
 				$value = $data->$field;
 			}
 		} else if ($action == 'edit') {

@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -130,7 +131,7 @@ class StudentResultsTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforePaginate
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$sectionId = $request->query('section_id');
 		$classId = $request->query('class_id');
 		

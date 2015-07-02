@@ -78,7 +78,7 @@ class AccountsTable extends AppTable {
 		$this->setTabElements();
 	}
 
-	public function beforeAction() {
+	public function beforeAction(Event $event) {
 		$fieldsNeeded = ['username','password'];
 		foreach ($this->fields as $key => $value) {
 			if (!in_array($key, $fieldsNeeded)) {
@@ -96,20 +96,19 @@ class AccountsTable extends AppTable {
 		}
 	}
 
-	public function editBeforeAction($event)  {
+	public function editBeforeAction(Event $event)  {
 		$this->ControllerAction->addField('retype_password', []);
 		$this->fields['retype_password']['type'] = 'password';
 
 		$this->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 	}
 
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
+	public function editBeforeQuery(Event $event, Query $query) {
 		// not retrieving password so the field wil be empty. not needed anyway.
 		$query->select([$this->primaryKey(), 'username']);
-		return compact('query', 'contain');
 	}
 
-	// public function editAfterSaveRedirect($action) {
+	// public function editAfterSave(Event $event, Controller $controller) {
 	// 	$id = '';
 	// 	if (array_key_exists('pass', $this->request->params)) {
 	// 		$id = $this->request->params['pass'][1];

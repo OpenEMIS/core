@@ -588,7 +588,7 @@ body.large {
 
 .toolbar-wrapper .form-control {
 	height: 25px;
-	padding: 2px 25px 2px 2px;
+	padding: 2px 25px 2px 6px;
 	font-size: 11px;
 	margin: 4px 0;
 }
@@ -759,6 +759,10 @@ input[type="checkbox"] {
 .format-lists {
 	max-height: 300px;
 	overflow: auto;
+}
+
+.format-lists textarea {
+	margin: 10px 0;
 }
 
 .chart-wrapper i,
@@ -977,10 +981,6 @@ input[type="checkbox"] {
 /* buttons, toolbar and page-header alignments in chrome */
 .chrome .page-header h2 {
 	padding: 8px 10px 6px 0;
-}
-
-.chrome .btn-dropdown {
-	padding: 3px 22px 3px 10px;
 }
 
 /* buttons, toolbar and page-header alignments in safari */
@@ -1278,9 +1278,13 @@ input[type="checkbox"] {
 	cursor: default;
 }
 
-.table tbody tr:hover {
+.table tbody[data-link="row"] tr:hover {
     background-color: #F9F9F9 !important;
-    cursor: pointer;
+}
+
+.table tbody[data-link="row"]:hover {
+	cursor: pointer;
+	background-color: #F9F9F9 !important;	
 }
 
 .table tfoot tr {
@@ -1293,9 +1297,11 @@ th > a:hover,
 th > a:active { color: #444; }
 
 table input,
-table .input-select-wrapper {
+table .input-select-wrapper,
+.table-in-view .input-select-wrapper {
 	width: 100% !important;
 	margin: 0 !important;
+	min-width: 185px;
 }
 
 .table-sortable th > a {
@@ -1820,7 +1826,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .table-in-view .btn-reset {
 	margin-left: -20px !important;
-	padding: 4px 0;
+	padding: 6px 0;
 }
 
 .table-toolbar {
@@ -2384,9 +2390,16 @@ footer {
 		width: 80%;
 	}
 
-	#menu-toggle .fa {
-		height: 38px;
-		padding: 12px 14px;
+	#menu-toggle .fa,
+	#menu-toggle .fa:hover {
+		height: 40px;
+		padding: 14px;
+		border-bottom: 0;
+		border-top: 0;
+	}
+
+	#menu-toggle .fa:hover {
+		height: 41px;
 	}
 
 	#chart-area {
@@ -2713,7 +2726,7 @@ footer {
 	}	
 }
 
-@media (min-width: 478px) and (max-width: 1055px){
+@media (min-width: 485px) and (max-width: 1055px){
 	.input-select-wrapper {
 		width: 60%;
 	}	
@@ -2839,9 +2852,13 @@ footer {
 	}
 
 	#menu-toggle .fa {
-		height: 37px;
-		padding: 12px 14px;
+		height: 42px;
+		padding: 14px;
 	}	
+
+	.chrome #menu-toggle .fa {
+		height: 40px;
+	}
 
 	.navbar-left {
 		text-align: center;
