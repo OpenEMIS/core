@@ -1386,3 +1386,6 @@ ALTER TABLE `rubric_status_roles`
 -- 1st July 2100hrs
 -- Update for Survey Status
 ALTER TABLE `survey_statuses` DROP `academic_period_level_id`;
+
+-- Patch students data if status not equal 1
+UPDATE `institution_site_class_students` SET `status` = 1 WHERE `status` NOT IN (0, 1);
