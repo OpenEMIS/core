@@ -28,30 +28,22 @@ class InfrastructureCustomFieldsTable extends CustomFieldsTable {
 		parent::addEditBeforeAction($event);
 		//Setup fields
 		$levelOptions = $this->Levels->find('list')->toArray();
+		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
-		$this->fields['infrastructure_level_id']['type'] = 'select';
-		$this->fields['infrastructure_level_id']['options'] = $levelOptions;
+		$this->fields['infrastructure_level_id']['type'] = 'hidden';
+		$this->fields['infrastructure_level_id']['attr']['value'] = $selectedLevel;
 
+		$LevelName = $this->Levels
+			->find('all')
+			->select([$this->Levels->aliasField('name')])
+			->where([$this->Levels->aliasField('id') => $selectedLevel])
+			->first();
+		$this->ControllerAction->field('level_name', [
+			'type' => 'readonly',
+			'attr' => ['value' => $LevelName->name]
+		]);
+
+		array_unshift($this->_fieldOrder, "level_name");
 		$this->setFieldOrder();
-	}
-
-	public function addOnInitialize(Event $event, Entity $entity) {
-		parent::addOnInitialize($event, $entity);
-		$query = $this->request->query;
-		$levelOptions = $this->Levels->find('list')->toArray();
-		$selectedLevel = isset($query['level']) ? $query['level'] : key($levelOptions);
-		
-		$entity->infrastructure_level_id = $selectedLevel;
-
-		return $entity;
-	}
-
-	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('infrastructure_level_id', $order++);
-		$this->ControllerAction->setFieldOrder('field_type', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder('is_mandatory', $order++);
-		$this->ControllerAction->setFieldOrder('is_unique', $order++);
 	}
 }
