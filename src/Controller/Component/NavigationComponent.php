@@ -118,42 +118,18 @@ class NavigationComponent extends Component {
 						],
 						'Survey' => [
 							'collapse' => true,
-							'items' => [
-								'Questions' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions']
-								],
-								'Status' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Survey', 'controller' => 'SurveyStatuses', 'action' => 'index']
-								]
-							]
+							'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
+							'selected' => ['Questions', 'Forms', 'Status']
 						],
 						'Rubric' => [
 							'collapse' => true,
-							'items' => [
-								'Rubrics' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates']
-								],
-								'Status' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Rubric', 'controller' => 'RubricStatuses', 'action' => 'index']
-								]
-							]
+							'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates'],
+							'selected' => ['Sections', 'Criterias', 'Options', 'Status']
 						],
 						'Workflow' => [
 							'collapse' => true,
-							'items' => [
-								'Workflows' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'index']
-								],
-								'Steps' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps', 'action' => 'index']
-								]
-							]
+							'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Workflows'],
+							'selected' => ['Workflows', 'Steps']
 						]
 					]
 				]

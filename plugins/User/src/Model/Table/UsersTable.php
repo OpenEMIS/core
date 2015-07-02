@@ -64,6 +64,9 @@ class UsersTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$modelName = inflector::singularize($this->controller->name);
+		if (strtolower($modelName)=='institution') {
+			$modelName = inflector::singularize($this->alias());
+		}
         $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 		
 		$this->ControllerAction->field('username', ['visible' => false]);

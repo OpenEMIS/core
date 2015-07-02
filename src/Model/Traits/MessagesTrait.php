@@ -57,7 +57,9 @@ trait MessagesTrait {
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
+			'description' => 'Description',
 			'default' => 'Default',
+			'reject' => 'Reject',
 			'noSections' => 'No Sections',
 			'noClasses' => 'No Classes'
 		],
@@ -104,7 +106,10 @@ trait MessagesTrait {
 			'security_user_id' => 'Home Room Teacher',
 			'section' => 'Section',
 			'single_grade_field' => 'Single Grade Sections',
-			'multi_grade_field' => 'Multi-Grades Section'
+			'multi_grade_field' => 'Multi-Grades Section',
+			'add' => [
+				'emptyName' => 'Section name should not be empty'
+			]
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Sections',
@@ -124,7 +129,7 @@ trait MessagesTrait {
 			'first_date_absent' => 'First Day Of Absence',
 			'last_date_absent' => 'Last Day Of Absence'
 		],
-		'InstitutionSurvey' => [
+		'InstitutionSurveys' => [
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'

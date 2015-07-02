@@ -56,6 +56,12 @@ class RubricTemplatesTable extends AppTable {
 		$this->fields['weighting_type']['options'] = $weightingTypeOptions;
 	}
 
+    public function onGetWeightingType(Event $event, Entity $entity) {
+    	list($weightingTypeOptions) = array_values($this->getSelectOptions());
+
+        return $weightingTypeOptions[$entity->weighting_type];
+    }
+
 	public function getSelectOptions() {
 		//Return all required options and their key
 		$weightingTypeOptions = [];

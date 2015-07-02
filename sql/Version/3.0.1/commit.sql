@@ -1318,3 +1318,75 @@ ALTER TABLE `staff_custom_table_cells`
 
 ALTER TABLE `institution_site_attachments` CHANGE `file_content` `file_content` LONGBLOB NULL;  
 ALTER TABLE `user_attachments` CHANGE `file_content` `file_content` LONGBLOB NULL;
+
+-- 1st July 2000hrs
+-- Update for Rubric Status
+RENAME TABLE quality_statuses TO z_1461_quality_statuses;
+RENAME TABLE quality_status_periods TO z_1461_quality_status_periods;
+RENAME TABLE quality_status_programmes TO z_1461_quality_status_programmes;
+RENAME TABLE quality_status_roles TO z_1461_quality_status_roles;
+
+-- New table - rubric_statuses
+DROP TABLE IF EXISTS `rubric_statuses`;
+CREATE TABLE IF NOT EXISTS `rubric_statuses` (
+  `id` int(11) NOT NULL,
+  `date_enabled` date NOT NULL,
+  `date_disabled` date NOT NULL,
+  `status` int(1) NOT NULL DEFAULT '1',
+  `rubric_template_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `rubric_statuses`
+  ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
+
+
+ALTER TABLE `rubric_statuses`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - rubric_status_periods
+DROP TABLE IF EXISTS `rubric_status_periods`;
+CREATE TABLE IF NOT EXISTS `rubric_status_periods` (
+  `id` char(36) NOT NULL,
+  `academic_period_id` int(11) NOT NULL,
+  `rubric_status_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `rubric_status_periods`
+  ADD PRIMARY KEY (`id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `rubric_status_id` (`rubric_status_id`);
+
+-- New table - rubric_status_programmes
+DROP TABLE IF EXISTS `rubric_status_programmes`;
+CREATE TABLE IF NOT EXISTS `rubric_status_programmes` (
+  `id` char(36) NOT NULL,
+  `education_programme_id` int(11) NOT NULL,
+  `rubric_status_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `rubric_status_programmes`
+  ADD PRIMARY KEY (`id`), ADD KEY `education_programme_id` (`education_programme_id`), ADD KEY `rubric_status_id` (`rubric_status_id`);
+
+-- New table - rubric_status_roles
+DROP TABLE IF EXISTS `rubric_status_roles`;
+CREATE TABLE IF NOT EXISTS `rubric_status_roles` (
+  `id` char(36) NOT NULL,
+  `rubric_status_id` int(11) NOT NULL,
+  `security_role_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `rubric_status_roles`
+  ADD PRIMARY KEY (`id`), ADD KEY `rubric_status_id` (`rubric_status_id`), ADD KEY `security_role_id` (`security_role_id`);
+
+-- 1st July 2100hrs
+-- Update for Survey Status
+ALTER TABLE `survey_statuses` DROP `academic_period_level_id`;
+
+-- Patch students data if status not equal 1
+UPDATE `institution_site_class_students` SET `status` = 1 WHERE `status` NOT IN (0, 1);
