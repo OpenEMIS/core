@@ -1,6 +1,7 @@
 <?php
 namespace Survey\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
@@ -50,7 +51,7 @@ class SurveysController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function beforePaginate(Event $event, Table $model, array $options) {
+    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
     	if ($model->alias == 'Status') {
 	        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
 	        $this->set(compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
@@ -63,7 +64,6 @@ class SurveysController extends AppController
 	        ];
 	        $options['conditions'][] = ($selectedStatus == 1) ? [$model->aliasField('date_disabled >=') => $todayTimestamp] : [$model->aliasField('date_disabled <') => $todayTimestamp];
     	}
-    	return $options;
     }
 
     public function getSelectOptions() {
