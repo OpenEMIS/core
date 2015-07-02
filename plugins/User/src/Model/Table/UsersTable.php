@@ -127,6 +127,26 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, array $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
+
+		// have to slot here because $options is not an array object
+		if ($this->controller->name == 'Institutions') {
+			if ($this->Session->check('Institutions.id')) {
+				$institutionId = $this->Session->read('Institutions.id');
+			}
+			if ($this->alias() == 'Students') {
+				$options['contain'] = [
+					'InstitutionSiteStudents' => [
+						'conditions' => [
+							'InstitutionSiteStudents.institution_site_id' => $institutionId
+						]
+					]
+				];
+			}
+			// if ($this->alias() == 'Staff') {
+			// 	$options['contain'] = ['InstitutionSiteStaff' => ['conditions' => ['InstitutionSiteStudents.institution_site_id' => $institutionId]]];
+			// }
+		}
+		
 		return $options;
 	}
 
