@@ -40,8 +40,11 @@ class UserBehavior extends Behavior {
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programmeSection', 'student_status']);
 		} else if ($this->_table->hasBehavior('Staff')) {
-			$this->_table->ControllerAction->field('position', []);
+			$this->_table->fields['staff_institution_name']['visible'] = false;
 
+			$this->_table->ControllerAction->field('position', []);
+			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
+			'name', 'default_identity_type', 'position', 'staff_status']);
 		}	
 	}
 
