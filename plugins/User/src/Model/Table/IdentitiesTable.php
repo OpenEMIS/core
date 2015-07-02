@@ -40,6 +40,12 @@ class IdentitiesTable extends AppTable {
 			])
 			->add('expiry_date',  [
 			])
+			->add('number', [])
 		;
+	}
+	
+	public function validationNonMandatory(Validator $validator) {
+		$this->validationDefault($validator);
+		return $validator->allowEmpty('number');
 	}
 }
