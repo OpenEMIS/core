@@ -197,7 +197,7 @@ class User extends Entity {
     		->first()
     	;
 
-    	$sectionName = ''
+    	$sectionName = '';
     	if ($query) {
     		$sectionName = ($query->institution_site_section)? $query->institution_site_section->name: '';
     	}
