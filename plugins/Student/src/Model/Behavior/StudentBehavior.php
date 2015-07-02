@@ -31,6 +31,7 @@ class StudentBehavior extends Behavior {
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
+			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -112,6 +113,15 @@ class StudentBehavior extends Behavior {
 			}
 		}
 		return compact('entity', 'data', 'options');
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$newOptions = [];
+		$options['associated'] = ['InstitutionSiteStudents'];
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
