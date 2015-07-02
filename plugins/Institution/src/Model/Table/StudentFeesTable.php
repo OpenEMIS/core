@@ -1,13 +1,15 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 class StudentFeesTable extends AppTable {
 	private $_selectedAcademicPeriodId = 0;
@@ -110,7 +112,7 @@ class StudentFeesTable extends AppTable {
 		
 	}
 
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		// $paginateOptions['finder'] = ['withProgrammes' => []];
 		return $paginateOptions;
 	}

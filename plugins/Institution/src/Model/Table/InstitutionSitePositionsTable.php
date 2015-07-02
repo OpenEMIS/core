@@ -98,7 +98,7 @@ class InstitutionSitePositionsTable extends AppTable {
 **
 ******************************************************************************************************************/
 
-	public function addEditBeforeAction($event) {
+	public function addEditBeforeAction(Event $event) {
 
 		$this->fields['current_staff_list']['visible'] = false;
 		$this->fields['past_staff_list']['visible'] = false;
@@ -116,13 +116,8 @@ class InstitutionSitePositionsTable extends AppTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-	// public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		// pr($contain);
-		// $contain = array_merge($contain, ['BankBranches'=>['Banks']]);
-	// 	return compact('query', 'contain');
-	// }
 
-	public function viewBeforeAction($event) {
+	public function viewBeforeAction(Event $event) {
 
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 

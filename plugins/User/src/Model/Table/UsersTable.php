@@ -28,9 +28,15 @@ class UsersTable extends AppTable {
 
 	private $specialFields = ['default_identity_type'];
 
+	public $fieldOrder1;
+	public $fieldOrder2;
+
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
+
+		$this->fieldOrder1 = new ArrayObject(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
+		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
 			'name' => 'photo_name',
@@ -128,38 +134,16 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
-
-		// have to slot here because $options is not an array object
-		if ($this->controller->name == 'Institutions') {
-			if ($this->Session->check('Institutions.id')) {
-				$institutionId = $this->Session->read('Institutions.id');
-			}
-			if ($this->alias() == 'Students') {
-				$options['contain'] = [
-					'InstitutionSiteStudents' => [
-						'conditions' => [
-							'InstitutionSiteStudents.institution_site_id' => $institutionId
-						]
-					]
-				];
-			}
-			// if ($this->alias() == 'Staff') {
-			// 	$options['contain'] = ['InstitutionSiteStaff' => ['conditions' => ['InstitutionSiteStudents.institution_site_id' => $institutionId]]];
-			// }
-		}
-		
-		return $options;
 	}
 
 	public function findNotSuperAdmin(Query $query, array $options) {
 		return $query->where([$this->aliasField('super_admin') => 0]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query, array $contain) {
+	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->find('notSuperAdmin');
-		return [$query, $contain];
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -177,20 +161,17 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth',
-			// mandatory fields inserted here if behavior attached
-			'status','modified_user_id','modified','created_user_id','created'
-		]);
-	}
-
-	public function addEditBeforeAction(){
+	public function addEditBeforeAction(Event $event) {
 		$this->fields['openemis_no']['attr']['readonly'] = true;
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
 		$this->fields['gender_id']['type'] = 'select';
-		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();//
+		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
+		$this->fields['address']['type'] = 'text';
+
+		$fieldOrder = array_merge($this->fieldOrder1->getArrayCopy(), $this->fieldOrder2->getArrayCopy());
+		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 
 	public function getUniqueOpenemisId($options = []) {
@@ -261,6 +242,7 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('username')
+			->add('address', [])
 			->add('password', [
 				// 'ruleUnique' => [
 				// 	'rule' => 'validateUnique',

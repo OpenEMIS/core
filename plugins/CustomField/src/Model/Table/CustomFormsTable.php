@@ -80,7 +80,7 @@ class CustomFormsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list($moduleOptions, $selectedModule) = array_values($this->getSelectOptions());
 
         $this->controller->set(compact('moduleOptions', 'selectedModule'));
@@ -88,8 +88,6 @@ class CustomFormsTable extends AppTable {
         	$this->aliasField('custom_module_id') => $selectedModule
         ];
         $options['contain'] = array_merge($options['contain'], $this->_contain);
-
-		return $options;
 	}
 
 	public function indexAfterAction(Event $event, $data) {
@@ -109,10 +107,8 @@ class CustomFormsTable extends AppTable {
 		$this->setFieldOrder();
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -219,12 +215,6 @@ class CustomFormsTable extends AppTable {
 		$entity->apply_to_all = $selectedApplyToAll;
 
 		return $entity;
-	}
-
-	public function editBeforeQuery(Event $event, Query $query, array $contain) {
-		//Retrieve associated data
-		$contain = array_merge($contain, $this->_contain);
-		return compact('query', 'contain');
 	}
 
     public function onGetApplyToAll(Event $event, Entity $entity) {

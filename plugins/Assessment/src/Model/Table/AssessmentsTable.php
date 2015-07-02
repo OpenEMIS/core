@@ -113,11 +113,8 @@ class AssessmentsTable extends AppTable {
 		return $attr;
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query, array $contain) {
-		$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-
-		$contain[] = 'AssessmentItems.EducationSubjects';
-		return [$query, $contain];
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain('AssessmentItems.EducationSubjects');
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
