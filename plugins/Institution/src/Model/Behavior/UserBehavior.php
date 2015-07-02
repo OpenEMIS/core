@@ -38,7 +38,11 @@ class UserBehavior extends Behavior {
 			$this->_table->ControllerAction->field('programmeSection', []);
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programmeSection', 'student_status']);
-		}
+		} else if ($this->_table->hasBehavior('Staff')) {
+			$this->_table->fields['institution_name']['visible'] = false;
+			$this->_table->ControllerAction->field('position', []);
+
+		}	
 	}
 
 	public function implementedEvents() {
@@ -77,6 +81,8 @@ class UserBehavior extends Behavior {
 		return $events;
 	}
 
+
+
 	public function addBeforeAction(Event $event) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 
@@ -87,9 +93,10 @@ class UserBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$institutionsId = $session->read('Institutions.id');
 			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
-			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);
+			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);			
 
 			if ($this->_table->hasBehavior('Student')) {
+
 				$this->_table->ControllerAction->field('academic_period', ['fieldName' => $associationString.'academic_period']);
 				$this->_table->ControllerAction->field('education_programme_id', ['fieldName' => $associationString.'education_programme_id']);
 				$this->_table->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);

@@ -115,7 +115,7 @@ class User extends Entity {
         $InstitutionSite = $InstitutionSiteStudents
                 ->find()
                 ->contain(['Institutions'])
-                ->where(['security_user_id' => $this->id])
+                ->where(['security_user_id' => $securityUserId])
                 ->first();
 
         if(!empty($InstitutionSite->institution))
@@ -132,7 +132,7 @@ class User extends Entity {
         $StudentStatus = $InstitutionSiteStudents
                 ->find()
                 ->contain(['StudentStatuses'])
-                ->where(['security_user_id' => $this->id])
+                ->where(['security_user_id' => $securityUserId])
                 ->first();
      
         if(!empty($StudentStatus->student_status))
@@ -149,7 +149,7 @@ class User extends Entity {
         $StaffStatus = $InstitutionSiteStudents
                 ->find()
                 ->contain(['StaffStatuses'])
-                ->where(['security_user_id' => $this->id])
+                ->where(['security_user_id' => $securityUserId])
                 ->first();
      
         if(!empty($StaffStatus->staff_status))
@@ -166,7 +166,7 @@ class User extends Entity {
         $InstitutionSite = $InstitutionSiteStaff
                 ->find()
                 ->contain(['Institutions'])
-                ->where(['security_user_id' => $this->id])
+                ->where(['security_user_id' => $securityUserId])
                 ->first();
 
         if(!empty($InstitutionSite->institution))
@@ -203,4 +203,36 @@ class User extends Entity {
 
     	return $educationProgrammeName . ' - ' . $sectionName;
     }
+
+    // protected function _getPosition() {
+    //     $data = "";
+    //     $securityUserId = $this->id;
+    //     $InstitutionSiteStaffTable = TableRegistry::get('Institution.InstitutionSiteStaff');
+    //     // $InstitutionSitePositions  = $InstitutionSiteStaffTable->find()
+    //     //                              ->contain(['Positions'])
+    //     //                              ->where([$InstitutionSiteStaffTable->aliasField('security_user_id') => $securityUserId, 'Positions.institution_site_id' => $InstitutionSiteStaffTable->aliasField('id')])
+    //     //                              ->first();    
+
+    //     $sitestaff =  $InstitutionSiteStaffTable
+    //                   ->find()
+    //                   ->contain(['Positions'])
+    //                   ->where([
+    //                   //   'AND' => [
+    //                   //       'Positions.institution_site_id' => $InstitutionSiteStaffTable->aliasField('institution_site_id'), 
+    //                         $InstitutionSiteStaffTable->aliasField('security_user_id') => $securityUserId
+    //                   //   ] 
+    //                     ])
+    //                   ->first()
+    //                 ;                       
+
+    //    // pr($sitestaff);                                              
+    //   /* foreach($sitestaff as $staff){
+    //         pr($staff);
+    //    }*/
+    //    // var_dump($InstitutionSitePositions); die;                             
+    //    // var_dump($query->first_name); die;
+    //     return "hey";
+
+    // }
+
 }
