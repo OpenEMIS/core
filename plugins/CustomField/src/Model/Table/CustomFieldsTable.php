@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 
 class CustomFieldsTable extends AppTable {
 	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows'];
+	protected $_fieldOrder = ['field_type', 'name', 'is_mandatory', 'is_unique'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -117,11 +118,7 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('field_type', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder('is_mandatory', $order++);
-		$this->ControllerAction->setFieldOrder('is_unique', $order++);
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
 	public function loadBehavior($selectedFieldType) {
