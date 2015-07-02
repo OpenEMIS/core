@@ -63,6 +63,16 @@ class ContactsTable extends AppTable {
 		}
 	}
 
+	// public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	// 	//Required by patchEntity for associated data
+	// 	$newOptions = [];
+	// 	$newOptions['validate'] = 'default';
+
+	// 	$arrayOptions = $options->getArrayCopy();
+	// 	$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+	// 	$options->exchangeArray($arrayOptions);
+	// }
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		// pr('validationDefault');
@@ -140,6 +150,9 @@ class ContactsTable extends AppTable {
 		return $validator;
 	}
 
-
+	public function validationNonMandatory(Validator $validator) {
+		$this->validationDefault($validator);
+		return $validator->allowEmpty('value');
+	}
 
 }

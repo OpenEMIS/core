@@ -369,32 +369,33 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		return $query->toArray();
 	}
 
-	public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
-		$conditions = [$this->aliasField('institution_site_id') => $institutionSiteId];
+	// not fully implemented
+	// public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
+	// 	$conditions = [$this->aliasField('institution_site_id') => $institutionSiteId];
 
-		if(!is_null($academicPeriodId)) {
-			$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
-		}
+	// 	if(!is_null($academicPeriodId)) {
+	// 		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+	// 	}
 		
-		$query = $this->find();
-		$query->contain(['EducationProgrammes' => ['EducationCycles']]);
+	// 	$query = $this->find();
+	// 	$query->contain(['EducationProgrammes' => ['EducationCycles']]);
 
-		$query->where($conditions);
-		$query->order($this->aliasField($this->primaryKey()));
+	// 	$query->where($conditions);
+	// 	$query->order($this->aliasField($this->primaryKey()));
 
-		$list = array();
-		foreach ($query as $key => $value) {
-			// pr($value);	
-			$list[$query->education_programme->id] = $query->education_programme->education_cycle->name;
-		}
+	// 	$list = array();
+	// 	foreach ($query as $key => $value) {
+	// 		// pr($value);	
+	// 		$list[$query->education_programme->id] = $query->education_programme->education_cycle->name;
+	// 	}
 
 		
-		// foreach($data as $obj) {
-		// 	$list[$obj['EducationProgramme']['id']] = $obj['EducationProgramme']['cycle_programme_name'];
-		// }
+	// 	// foreach($data as $obj) {
+	// 	// 	$list[$obj['EducationProgramme']['id']] = $obj['EducationProgramme']['cycle_programme_name'];
+	// 	// }
 
-		return $list;
-	}
+	// 	return $list;
+	// }
 
 	public function getSiteProgrammeOptions($institutionSiteId, $academicPeriodId) {
 		$list = [];

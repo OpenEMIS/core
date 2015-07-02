@@ -6,7 +6,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status', 'staff_status', 'staff_institution_name', 'programmeSection'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status', 'staff_status', 'staff_institution_name'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -175,15 +175,32 @@ class User extends Entity {
         return $data;
     }
 
-    // protected function _getProgrammeSection(){
-    // 	$data = "";
+    protected function _getProgrammeSection(){
+    	if ($this->institution_site_students) {
+    		$education_programme_id = $this->institution_site_students[0]->education_programme_id;
+    	}
 
-    // 	$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
+    	$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+    	$query = $EducationProgrammes
+    		->find()
+    		->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $education_programme_id])
+    		->first();
 
+    	$educationProgrammeName = ($query)? $query->name: '';
 
-    // 	$tdata = $InstitutionSiteProgrammes->getProgrammeOptions(1);
-    // 	// pr($tdata);
+    	$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+    	$query = $InstitutionSiteSectionStudents
+    		->find()
+    		->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $this->id])
+    		->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc')
+    		->contain('InstitutionSiteSections')
+    		->first()
+    	;
 
-    // 	return $data;
-    // }
+    	if ($query) {
+    		$sectionName = ($query->institution_site_section)? $query->institution_site_section->name: '';
+    	}
+
+    	return $educationProgrammeName . ' - ' . $sectionName;
+    }
 }
