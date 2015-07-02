@@ -108,7 +108,7 @@ class AccountsTable extends AppTable {
 		$query->select([$this->primaryKey(), 'username']);
 	}
 
-	// public function editAfterSaveRedirect($action) {
+	// public function editAfterSave(Event $event, Controller $controller) {
 	// 	$id = '';
 	// 	if (array_key_exists('pass', $this->request->params)) {
 	// 		$id = $this->request->params['pass'][1];
