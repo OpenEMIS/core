@@ -8,9 +8,6 @@ html {
 .rtl .title i {
 }
 
-.rtl .login-box {
-}
-
 .rtl .title-wrapper {
     display: block;
     margin: 0 auto;
@@ -380,7 +377,7 @@ html {
 .rtl .btn-reset, 
 .rtl .btn-reset:hover {
     margin-left: 0 !important;
-    margin-right: -18px !important;
+    margin-right: -34px !important;
 }
 
 .rtl .input-group-btn:last-child > .btn:not(:last-child):not(.dropdown-toggle) {
