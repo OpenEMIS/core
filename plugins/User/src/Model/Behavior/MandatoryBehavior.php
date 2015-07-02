@@ -244,7 +244,7 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldSpecialNeedComment(Event $event, array $attr, $action, $request) {
-		$attr['type'] = 'string';
+		$attr['type'] = 'text';
 		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.comment';
 
 		return $attr;
