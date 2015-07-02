@@ -2839,9 +2839,13 @@ footer {
 	}
 
 	#menu-toggle .fa {
-		height: 37px;
+		height: 42px;
 		padding: 12px 14px;
 	}	
+
+	.chrome #menu-toggle .fa {
+		height: 41px;
+	}
 
 	.navbar-left {
 		text-align: center;
