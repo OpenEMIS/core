@@ -2343,6 +2343,10 @@ footer {
 	padding: 10px 0 10px 41px;
 }
 
+.safari .login-box select {
+    padding: 5px 35px 5px 40px;
+}
+
 .login-box select {
 	color: #555;
 	height: 40px;
