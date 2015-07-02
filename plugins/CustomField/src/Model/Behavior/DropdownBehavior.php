@@ -20,7 +20,8 @@ class DropdownBehavior extends Behavior {
 	            'type' => 'element',
 	            'order' => 5,
 	            'element' => 'CustomField.CustomFields/dropdown',
-	            'visible' => true
+	            'visible' => true,
+	            'valueClass' => 'table-full-width'
 	        ]);
         }
     }

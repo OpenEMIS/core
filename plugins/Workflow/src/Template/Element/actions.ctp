@@ -1,7 +1,3 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
-
 <?php if ($action == 'view') : ?>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
@@ -42,6 +38,12 @@
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+		<div class="table-toolbar">
+			<button onclick="$('#reload').val('addAction').click();" class="btn btn-default btn-xs">
+				<i class="fa fa-plus"></i>
+				<span><?= __('Add');?></span>
+			</button>
+		</div>
 		<div class="table-in-view col-md-4 table-responsive">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
@@ -54,39 +56,40 @@
 						<th><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
 						<th></th>
 					</tr>
+					<?php if (!empty($data->workflow_actions)) : ?>
+						<tbody>
+							<?php foreach ($data->workflow_actions as $key => $obj) : ?>
+								<tr>
+									<?php if ($action == 'edit') : ?>
+										<td class="checkbox-column">
+											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
+										</td>
+									<?php endif ?>
+										<td>
+											<?php
+												if(isset($obj->id)) {
+													echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.id");
+												}
+												echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false]);
+											?>
+										</td>
+										<td>
+											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
+										</td>
+										<td>
+											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
+										</td>
+										<td>
+											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
+											</button>
+										</td>
+								</tr>
+							<?php endforeach ?>
+						</tbody>
+					<?php endif ?>
 				</thead>
-				<?php if (!empty($data->workflow_actions)) : ?>
-					<tbody>
-						<?php foreach ($data->workflow_actions as $key => $obj) : ?>
-							<tr>
-								<?php if ($action == 'edit') : ?>
-									<td class="checkbox-column">
-										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
-									</td>
-								<?php endif ?>
-									<td>
-										<?php
-											if(isset($obj->id)) {
-												echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.id");
-											}
-											echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false]);
-										?>
-									</td>
-									<td>
-										<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
-									</td>
-									<td>
-										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
-									</td>
-									<td>
-										<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="Remove" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i> Remove</button>
-									</td>
-							</tr>
-						<?php endforeach ?>
-					</tbody>
-				<?php endif ?>
 			</table>
-			<span class="btn btn-default fa fa-plus" style="cursor: pointer;" onclick="$('#reload').val('addAction').click();"></span>
 		</div>
 	</div>
 <?php endif ?>

@@ -16,7 +16,8 @@ class RubricsController extends AppController
 			'Templates' => ['className' => 'Rubric.RubricTemplates'],
 			'Sections' => ['className' => 'Rubric.RubricSections'],
 			'Criterias' => ['className' => 'Rubric.RubricCriterias'],
-			'Options' => ['className' => 'Rubric.RubricTemplateOptions']
+			'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
+			'Status' => ['className' => 'Rubric.RubricStatuses']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -40,6 +41,10 @@ class RubricsController extends AppController
 			'Options' => [
 				'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Options'],
 				'text' => __('Options')
+			],
+			'Status' => [
+				'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Status'],
+				'text' => __('Status')
 			]
 		];
 
