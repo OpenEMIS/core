@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Network\Request;
+use Cake\Controller\Controller;
 
 class UserBehavior extends Behavior {
 	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
@@ -193,14 +194,15 @@ class UserBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSaveRedirect($event, $action) {
+	public function addAfterSave(Event $event, Controller $controller) {
 		if (array_key_exists('new', $action)) {
-			$session = $this->_table->request->session();
+			$session = $controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
 			$session->delete($sessionVar);
 			unset($action['new']);
 		}
-		return $action;
+		$event->stopPropagation();
+		return $controller->redirect($action);
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
