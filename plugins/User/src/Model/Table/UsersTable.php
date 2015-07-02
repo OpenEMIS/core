@@ -136,27 +136,6 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
-
-		// have to slot here because $options is not an array object
-		if ($this->controller->name == 'Institutions') {
-			if ($this->Session->check('Institutions.id')) {
-				$institutionId = $this->Session->read('Institutions.id');
-			}
-			if ($this->alias() == 'Students') {
-				$options['contain'] = [
-					'InstitutionSiteStudents' => [
-						'conditions' => [
-							'InstitutionSiteStudents.institution_site_id' => $institutionId
-						]
-					]
-				];
-			}
-			// if ($this->alias() == 'Staff') {
-			// 	$options['contain'] = ['InstitutionSiteStaff' => ['conditions' => ['InstitutionSiteStudents.institution_site_id' => $institutionId]]];
-			// }
-		}
-		
-		return $options;
 	}
 
 	public function findNotSuperAdmin(Query $query, array $options) {
@@ -268,6 +247,7 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('username')
+			->add('address', [])
 			->add('password', [
 				// 'ruleUnique' => [
 				// 	'rule' => 'validateUnique',
