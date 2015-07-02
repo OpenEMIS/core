@@ -1,7 +1,7 @@
 <div class="overview-wrapper alert overview-box">
 	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
 	<div class="data-section">
-		<i class="kd-students"></i>
+		<i class="kd-students icon"></i>
 		<div class="data-field">
 			<h4>Total Students:</h4>
 			<h1 class="data-header"><?= $this->Paginator->counter('{{count}}') ?></h1>

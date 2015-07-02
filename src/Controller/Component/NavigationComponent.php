@@ -57,19 +57,23 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Administrative Boundaries' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas']
+									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas'],
+									'selected' => ['AreaLevels', 'AreaAdministrativeLevels', 'AreaAdministratives']
 								],
 								'Academic Periods' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods']
+									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods'],
+									'selected' => ['Levels']
 								],
 								'Education Structure' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems']
+									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems'],
+									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Subjects']
 								],
 								'Infrastructure' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels']
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
+									'selected' => ['Types', 'CustomFields']
 								],
 								'Assessments' => [
 									'collapse' => true,
@@ -87,7 +91,8 @@ class NavigationComponent extends Component {
 								// ],
 								'Custom Field' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields']
+									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
+									'selected' => ['Pages']
 								],
 								'System Configurations' => [
 									'collapse' => true,
@@ -129,7 +134,7 @@ class NavigationComponent extends Component {
 						'Workflow' => [
 							'collapse' => true,
 							'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Workflows'],
-							'selected' => ['Workflows', 'Steps']
+							'selected' => ['Steps']
 						]
 					]
 				]
