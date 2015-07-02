@@ -9,7 +9,7 @@ class ConfigurationsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('ConfigItems');
+		$this->ControllerAction->model('ConfigItems', ['index', 'view', 'edit']);
 	}
 
 	public function beforeFilter(Event $event) {
