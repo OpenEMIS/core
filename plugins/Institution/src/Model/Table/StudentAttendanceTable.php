@@ -101,7 +101,7 @@ class StudentAttendanceTable extends AppTable {
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}

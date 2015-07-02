@@ -379,7 +379,8 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto'
+			'orientation' => 'top auto',
+			'autoclose' => true,
 		];
 
 		if (!isset($attr['date_options'])) {

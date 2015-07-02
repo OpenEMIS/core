@@ -38,11 +38,11 @@ class RubricCriteriasTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		//Add new fields
-		$this->ControllerAction->addField('criterias', [
+		$this->ControllerAction->field('criterias', [
 			'type' => 'element',
-			'order' => 5,
 			'element' => 'Rubric.criterias',
-			'visible' => false
+			'visible' => false,
+			'valueClass' => 'table-full-width'
 		]);
 	}
 
@@ -123,7 +123,7 @@ class RubricCriteriasTable extends AppTable {
 		return $entity;
 	}
 
-	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$selectedSection = $data[$this->alias()]['rubric_section_id'];
 		$selectedCriteriaType = $data[$this->alias()]['type'];
 		$selectedTemplate = $this->RubricSections->find('all')->where([$this->RubricSections->aliasField('id') => $selectedSection])->first()->rubric_template_id;
@@ -158,8 +158,6 @@ class RubricCriteriasTable extends AppTable {
 				];
 			}
 		}
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, array $contain) {
@@ -167,6 +165,12 @@ class RubricCriteriasTable extends AppTable {
 		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
 	}
+
+    public function onGetType(Event $event, Entity $entity) {
+    	list(, , $criteriaTypeOptions, ) = array_values($this->getSelectOptions());
+
+        return $criteriaTypeOptions[$entity->type];
+    }
 
 	public function getSelectOptions() {
 		//Return all required options and their key
@@ -191,10 +195,8 @@ class RubricCriteriasTable extends AppTable {
 	}
 
 	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('rubric_section_id', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
-		$this->ControllerAction->setFieldOrder('type', $order++);
-		$this->ControllerAction->setFieldOrder('criterias', $order++);
+		$this->ControllerAction->setFieldOrder([
+			'rubric_section_id', 'name', 'type', 'criterias'
+		]);
 	}
 }

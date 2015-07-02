@@ -26,22 +26,22 @@ class WorkflowStepsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->fields['stage']['visible'] = false;
-
 		$this->ControllerAction->addField('security_roles', [
 			'type' => 'chosenSelect',
-			'fieldNameKey' => 'security_roles',
-			'fieldName' => $this->alias() . '.security_roles._ids',
 			'placeholder' => __('Select Security Roles'),
-			'order' => 3,
 			'visible' => true
 		]);
 
 		$this->ControllerAction->addField('actions', [
 			'type' => 'element',
-			'order' => 4,
 			'element' => 'Workflow.actions',
-			'visible' => true
+			'visible' => true,
+			'valueClass' => 'table-full-width'
 		]);
+
+		$this->ControllerAction->setFieldOrder([
+			'workflow_id', 'name', 'security_roles', 'actions'
+		]);		
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -68,12 +68,8 @@ class WorkflowStepsTable extends AppTable {
 		//Setup fields
 		list($workflowOptions, , $securityRoleOptions) = array_values($this->getSelectOptions());
 
-		$this->fields['workflow_id']['type'] = 'select';
 		$this->fields['workflow_id']['options'] = $workflowOptions;
-
 		$this->fields['security_roles']['options'] = $securityRoleOptions;
-
-		$this->ControllerAction->setFieldOrder('workflow_id', 1);
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -86,7 +82,7 @@ class WorkflowStepsTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function addEditOnAddAction(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnAddAction(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$actionOptions = [
 			'name' => '',
 			'visible' => 1,
@@ -98,8 +94,6 @@ class WorkflowStepsTable extends AppTable {
 		$options['associated'] = [
 			'WorkflowActions' => ['validate' => false]
 		];
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {

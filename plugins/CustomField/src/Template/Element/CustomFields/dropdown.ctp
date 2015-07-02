@@ -85,7 +85,7 @@
 								</td>
 								<td>
 									<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-										<i class="fa fa-trash"></i><span><?= __('Delete')?></span>
+										<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
 									</button>
 								</td>
 							</tr>
