@@ -27,12 +27,11 @@ class StudentResultsTable extends AppTable {
 	}
 
 	public function onGetMarks(Event $event, Entity $entity) {
-		return rand(0, 100);
+		return rand(50, 100);
 	}
 
 	public function onGetGrade(Event $event, Entity $entity) {
-		$grades = ['A', 'B', 'C', 'D', 'E'];
-		return $grades[rand(0, 4)];
+		return 'Pass';
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
