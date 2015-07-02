@@ -1,6 +1,7 @@
 <?php
 namespace Rubric\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -56,7 +57,7 @@ class RubricStatusesTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['contain'] = array_merge($options['contain'], $this->_contain);
 		return $options;
 	}

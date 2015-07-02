@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -217,7 +218,7 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$query = $request->query;
 		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
 			$options['order'][$this->aliasField('name')] = 'asc';

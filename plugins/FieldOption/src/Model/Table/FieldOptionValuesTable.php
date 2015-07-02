@@ -1,6 +1,7 @@
 <?php
 namespace FieldOption\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -34,7 +35,7 @@ class FieldOptionValuesTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$fieldOptions = [];
 		$data = $this->FieldOptions
 			->find('all')

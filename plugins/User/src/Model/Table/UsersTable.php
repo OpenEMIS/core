@@ -128,7 +128,7 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
 
 		// have to slot here because $options is not an array object
