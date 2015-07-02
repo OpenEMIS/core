@@ -54,9 +54,6 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->_table->ControllerAction->addField('photo_content', [
-			'type' => 'image',
-		]);
 		$this->_table->fields['first_name']['visible'] = false;
 		$this->_table->fields['middle_name']['visible'] = false;
 		$this->_table->fields['third_name']['visible'] = false;
@@ -84,7 +81,7 @@ class StaffBehavior extends Behavior {
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
-	public function addBeforePatch($event, $entity, $data, $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStaffData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
@@ -97,7 +94,10 @@ class StaffBehavior extends Behavior {
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
 
 					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE']/100;
+
+
 					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
+					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
 
 					// start (date and year) handling
 					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
@@ -106,7 +106,6 @@ class StaffBehavior extends Behavior {
 				}
 			}
 		}
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

@@ -299,6 +299,7 @@ html {
     font-size: 0.6em;
     margin: 0 2px;
     padding-left: 5px;
+    color: #999;
 }
 
 /* PAGE HEADER & TOOLBAR */
@@ -379,7 +380,7 @@ html {
 .rtl .btn-reset, 
 .rtl .btn-reset:hover {
     margin-left: 0 !important;
-    margin-right: -34px !important;
+    margin-right: -18px !important;
 }
 
 .rtl .input-group-btn:last-child > .btn:not(:last-child):not(.dropdown-toggle) {

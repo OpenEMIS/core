@@ -88,6 +88,8 @@
             border-radius: 0;
     padding: 17px 14px 18px;
     height: 50px;
+    border-bottom: 0;
+    border-top: 0;    
 }
 
 #menu-toggle .fa:hover {
@@ -167,10 +169,6 @@
     line-height: 1.2em;
     color: #333;    
     border-top: 1px solid #DDD;
-}
-
-.chrome .nav > li > a {
-    padding: 11px 11px;
 }
 
 .nav-active,
