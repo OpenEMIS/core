@@ -21,7 +21,10 @@ class AttachmentsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-				->allowEmpty('file_content');
+				->allowEmpty('file_content')
+				->allowEmpty('description')
+				->allowEmpty('date_on_file')
+			;
 	}
 
 	public function beforeAction(Event $event) {
