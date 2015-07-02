@@ -80,7 +80,7 @@ class CustomFormsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list($moduleOptions, $selectedModule) = array_values($this->getSelectOptions());
 
         $this->controller->set(compact('moduleOptions', 'selectedModule'));

@@ -1,11 +1,13 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
 class InstitutionSiteBankAccountsTable extends AppTable {
@@ -56,7 +58,7 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['withBanks' => []];
 		return $paginateOptions;
 	}
