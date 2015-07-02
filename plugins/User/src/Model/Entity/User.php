@@ -205,35 +205,17 @@ class User extends Entity {
     	return $educationProgrammeName . ' - ' . $sectionName;
     }
 
-    // protected function _getPosition() {
-    //     $data = "";
-    //     $securityUserId = $this->id;
-    //     $InstitutionSiteStaffTable = TableRegistry::get('Institution.InstitutionSiteStaff');
-    //     // $InstitutionSitePositions  = $InstitutionSiteStaffTable->find()
-    //     //                              ->contain(['Positions'])
-    //     //                              ->where([$InstitutionSiteStaffTable->aliasField('security_user_id') => $securityUserId, 'Positions.institution_site_id' => $InstitutionSiteStaffTable->aliasField('id')])
-    //     //                              ->first();    
-
-    //     $sitestaff =  $InstitutionSiteStaffTable
-    //                   ->find()
-    //                   ->contain(['Positions'])
-    //                   ->where([
-    //                   //   'AND' => [
-    //                   //       'Positions.institution_site_id' => $InstitutionSiteStaffTable->aliasField('institution_site_id'), 
-    //                         $InstitutionSiteStaffTable->aliasField('security_user_id') => $securityUserId
-    //                   //   ] 
-    //                     ])
-    //                   ->first()
-    //                 ;                       
-
-    //    // pr($sitestaff);                                              
-    //   /* foreach($sitestaff as $staff){
-    //         pr($staff);
-    //    }*/
-    //    // var_dump($InstitutionSitePositions); die;                             
-    //    // var_dump($query->first_name); die;
-    //     return "hey";
-
-    // }
+    protected function _getPosition() {
+        $data = "";
+        $securityUserId = $this->id;
+        $InstitutionSiteStaffTable = TableRegistry::get('Institution.InstitutionSiteStaff');
+        $sitestaff =  $InstitutionSiteStaffTable
+                      ->find()
+                      ->contain(['Positions.StaffPositionTitles'])
+                      ->where([$InstitutionSiteStaffTable->aliasField('security_user_id') => $securityUserId])
+                      ->first();
+        $data = (!empty($sitestaff['position'])) ? $sitestaff['position']['staff_position_title']['name']: "";     
+        return $data;
+    }
 
 }
