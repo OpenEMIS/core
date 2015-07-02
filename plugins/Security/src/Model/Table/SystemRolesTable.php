@@ -1,6 +1,7 @@
 <?php
 namespace Security\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -54,7 +55,7 @@ class SystemRolesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['conditions'][$this->aliasField('security_group_id')] = [0, -1];
 		return $options;
 	}

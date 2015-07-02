@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -63,7 +64,7 @@ class ConfigItemsTable extends AppTable {
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$type = $request->query['type_value'];
 		$options['finder'] = ['visible' => []];
 		$options['conditions'][$this->aliasField('type')] = $type;

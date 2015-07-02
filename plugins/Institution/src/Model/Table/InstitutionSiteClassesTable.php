@@ -5,9 +5,10 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 class InstitutionSiteClassesTable extends AppTable {
 	private $_selectedSectionId = 0;
@@ -195,7 +196,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			]);
     }
 
-	public function indexBeforePaginate($event, $request, $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['bySections' => []];
 		$paginateOptions['contain'][] = 'Teachers';
 		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriodId;
