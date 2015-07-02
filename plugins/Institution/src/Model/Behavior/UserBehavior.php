@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Network\Request;
 
 class UserBehavior extends Behavior {
 	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
@@ -49,6 +50,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
 			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 		];
 
 		$roleEvents = [];
@@ -76,6 +78,27 @@ class UserBehavior extends Behavior {
 		$events = array_merge($events,$newEvents);
 		return $events;
 	}
+
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+		if ($this->_table->Session->check('Institutions.id')) {
+			$institutionId = $this->_table->Session->read('Institutions.id');
+			if ($this->_table->alias() == 'Students') {
+				$options['contain'] = [
+					'InstitutionSiteStudents' => [
+						'conditions' => [
+							'InstitutionSiteStudents.institution_site_id' => $institutionId
+						]
+					]
+				];
+			}
+		}
+		
+		// if ($this->alias() == 'Staff') {
+		// 	$options['contain'] = ['InstitutionSiteStaff' => ['conditions' => ['InstitutionSiteStudents.institution_site_id' => $institutionId]]];
+		// }
+	}
+
+
 
 	public function addBeforeAction(Event $event) {
 		if (array_key_exists('new', $this->_table->request->query)) {
