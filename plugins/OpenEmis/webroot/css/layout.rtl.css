@@ -249,6 +249,10 @@ html {
     width: 180px;
 }
 
+.rtl #wrapper.toggled #page-content-wrapper {
+    margin-right: 0;
+}
+
 .rtl .sidebar-nav {
     width: 180px;
 }
@@ -726,11 +730,6 @@ html {
 }
 
 /* MEDIA QUERIES */
-@media (min-width:768px) {
-    .rtl #menu-toggle .fa {
-        height: 50px !important;
-    }
-}
 
 @media (min-width: 320px) and (max-width: 480px) {
     .rtl .search {
@@ -836,7 +835,13 @@ html {
     }
 }
 
-@media(min-width:768px) {
+@media (min-width:768px) {
+    .rtl #menu-toggle .fa {
+        height: 50px !important;
+    }
+
+    /* SIMPLE SIDEBAR MEDIA QUERIES */
+
     .rtl #wrapper {
         padding-right: 180px;
         padding-left: 0;
@@ -861,6 +866,6 @@ html {
 
     .rtl #wrapper.toggled #page-content-wrapper {
         position: relative;
-        margin-left: 0;
+        margin-right: 0;
     }
 }

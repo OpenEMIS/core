@@ -1,6 +1,7 @@
 <?php
 namespace Security\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -41,7 +42,7 @@ class SystemGroupsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['name', 'no_of_users']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$query = $request->query;
 		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
 			$options['order'][$this->aliasField('name')] = 'asc';

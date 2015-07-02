@@ -2,10 +2,10 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use App\Model\Table\AppTable;
 
 class InstitutionSurveysTable extends AppTable {
 	private $status = [
@@ -254,7 +254,7 @@ class InstitutionSurveysTable extends AppTable {
         $this->fields['status']['visible'] = false;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->getSelectOptions());
 		$options['conditions'][$this->aliasField('status')] = $selectedStatus;
 		$options['order'] = [
