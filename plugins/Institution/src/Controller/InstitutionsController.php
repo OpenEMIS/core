@@ -1,8 +1,10 @@
 <?php
 namespace Institution\Controller;
 
-use Institution\Controller\AppController;
+use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Table;
+use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController  {
 	public function initialize() {
@@ -84,7 +86,7 @@ class InstitutionsController extends AppController  {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model) {
 		$session = $this->request->session();
 		$header = __('Institution');
 
@@ -99,11 +101,28 @@ class InstitutionsController extends AppController  {
 				$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
 			}
 		}
+
+		if ($model->hasField('institution_site_id')) {
+			if (count($this->request->pass) > 1) {
+				$institutionId = $session->read('Institutions.id');
+				$modelId = $this->request->pass[1]; // id of the model
+
+				$exists = $model->exists([
+					$model->aliasField($model->primaryKey()) => $modelId,
+					$model->aliasField('institution_site_id') => $institutionId
+				]);
+
+				if (!$exists) {
+					$this->Alert->warning('general.notExists');
+					return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+				}
+			}
+		}
 		
 		$this->set('contentHeader', $header);
 	}
 
-	public function beforePaginate($event, $model, $options) {
+	public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
 		$session = $this->request->session();
 
 		if (array_key_exists('institution_site_id', $model->fields)) {

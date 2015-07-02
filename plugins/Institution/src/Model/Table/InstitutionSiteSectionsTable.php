@@ -6,17 +6,17 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use App\Model\Traits\MessagesTrait;
 
 class InstitutionSiteSectionsTable extends AppTable {
-	use MessagesTrait;
 
 	private $_selectedGradeType = 'single';
-	private $_selectedAcademicPeriodId = 0;
+	private $_selectedAcademicPeriodId = -1;
 	private $_selectedEducationGradeId = 0;
 	private $_numberOfSections = 1;
+	private $_institutionId = 0;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -46,6 +46,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		if ($this->Session->check('Institutions.id')) {
+			$this->_institutionId = $this->Session->read('Institutions.id');
+		} else {
+			$this->Alert->warning('Institution.Institutions.noActiveInstitution');
+			$this->controller->redirect([
+				'plugin' => $this->controller->plugin, 
+				'controller' => $this->controller->name, 
+				'action' => 'index'
+			]);
+		}
+
 		$this->ControllerAction->field('section_number', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('modified', ['visible' => false]);
@@ -109,24 +120,24 @@ class InstitutionSiteSectionsTable extends AppTable {
     	}
 
 		$Sections = $this;
- 		$institutionsId = $this->Session->read('Institutions.id');
 
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
+			'InstitutionSiteProgrammes.institution_site_id' => $this->_institutionId
 		);
 		$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
+		$institutionId = $this->_institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-			'callable' => function($id) use ($Sections, $institutionsId) {
-				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionsId, $id)->count();
+			'callable' => function($id) use ($Sections, $institutionId) {
+				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->_institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {
 			$this->Alert->warning('Institutions.noGrades');
@@ -134,7 +145,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-			'callable' => function($id) use ($Sections, $institutionsId, $selectedAcademicPeriodId) {
+			'callable' => function($id) use ($Sections, $institutionId, $selectedAcademicPeriodId) {
 				$query = $Sections->find()
 									->join([
 										[
@@ -147,7 +158,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 										]
 									])
 									->where([
-										$Sections->aliasField('institution_site_id') => $institutionsId,
+										$Sections->aliasField('institution_site_id') => $institutionId,
 										$Sections->aliasField('academic_period_id') => $selectedAcademicPeriodId,
 									]);
 				return $query->count();
@@ -196,6 +207,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function viewBeforeAction(Event $event) {
+		if ($this->_selectedAcademicPeriodId == -1) {
+			return $this->controller->redirect([
+				'plugin' => $this->controller->plugin, 
+				'controller' => $this->controller->name, 
+				'action' => 'Sections'
+			]);
+		}
+
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		if (array_key_exists('academic_period_id', $query)) {
@@ -219,8 +238,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'AcademicPeriods',
 			'InstitutionSiteShifts',
 			'Staff',
-			'InstitutionSiteSectionGrades',
-			'InstitutionSiteSectionStudents.EducationGrades.Users.Genders'
+			'InstitutionSiteSectionGrades.EducationGrades',
+			'InstitutionSiteSectionStudents.Users.Genders'
 		]);
 	}
 
@@ -253,10 +272,17 @@ class InstitutionSiteSectionsTable extends AppTable {
     		$this->_selectedGradeType = $this->ControllerAction->buttons['add']['url']['grade_type'];
     	}
 
+		if ($this->_selectedAcademicPeriodId == -1) {
+			return $this->controller->redirect([
+				'plugin' => $this->controller->plugin, 
+				'controller' => $this->controller->name, 
+				'action' => 'Sections'
+			]);
+		}
+
 		/**
 		 * add/edit form setup
 		 */
-		$institutionsId = $this->Session->read('Institutions.id');
 		$staffOptions = $this->getStaffOptions();
 		if ($this->_selectedGradeType == 'single') {
 	    	if (array_key_exists($this->alias(), $this->request->data)) {
@@ -268,7 +294,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			/**
 			 * education_grade field setup
 			 */
-			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId);
+			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->_institutionId, $this->_selectedAcademicPeriodId);
 			if ($this->_selectedEducationGradeId != 0) {
 				if (!array_key_exists($this->_selectedEducationGradeId, $gradeOptions)) {
 					$this->_selectedEducationGradeId = key($gradeOptions);
@@ -295,8 +321,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 				    'contain' => ['EducationProgrammes']
 				])->toArray();
 			}
-			// $startingSectionNumber = $this->getNewSectionNumber($institutionsId, $this->_selectedEducationGradeId);	
-			$startingSectionNumber = $this->getNewSectionNumber($institutionsId);	
+			$startingSectionNumber = $this->getNewSectionNumber();	
 			$this->ControllerAction->field('single_grade_field', [
 				'type' => 'element', 
 				'element' => 'Institution.Sections/single_grade',
@@ -316,7 +341,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
     	} else {
 
-			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId, false);
+			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->_institutionId, $this->_selectedAcademicPeriodId, false);
 			$this->ControllerAction->field('multi_grade_field', [
 				'type' => 'element', 
 				'element' => 'Institution.Sections/multi_grade',
@@ -378,17 +403,32 @@ class InstitutionSiteSectionsTable extends AppTable {
 				$action = $this->ControllerAction->buttons['index']['url'];
 				return $this->controller->redirect($action);
 			} else {
+				$errorMessage='';
+				foreach ($error as $key=>$value) {
+					$errorMessage .= Inflector::classify($key);
+				}
+				$this->log($error, 'debug');
+				/**
+				 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
+				 */
 				foreach ($this->fields as $value) {
 					if ($value['field'] != 'name') {
 						$this->validator()->remove($value['field']);
 					}
 				}
-				$this->log($error, 'debug');
-				$this->Alert->error($this->alias().'.add.emptyName');
+				$this->Alert->error('Institution.'.$this->alias().'.empty'.$errorMessage);
 			}
 		} else {
-			foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {
-				$data['InstitutionSiteSections']['institution_site_section_grades'][$key]['status'] = 1;
+			if (isset($data['InstitutionSiteSections']['institution_site_section_grades']) && count($data['InstitutionSiteSections']['institution_site_section_grades'])>0) {
+				foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {
+					$data['InstitutionSiteSections']['institution_site_section_grades'][$key]['status'] = 1;
+				}
+			} else {
+				/**
+				 * set institution_site_id to empty to trigger validation error in ControllerActionComponent
+				 */
+				$data['InstitutionSiteSections']['institution_site_id'] = '';
+				$this->Alert->error('Institution.'.$this->alias().'.noGrade');
 			}
 		}
 	}
@@ -419,6 +459,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function editBeforeAction(Event $event) {
+		if ($this->_selectedAcademicPeriodId == -1) {
+			return $this->controller->redirect([
+				'plugin' => $this->controller->plugin, 
+				'controller' => $this->controller->name, 
+				'action' => 'Sections'
+			]);
+		}
+
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'name', 'institution_site_shift_id', 'security_user_id', 'students',
 		]);
@@ -520,13 +568,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
 		}
 		if ($action == 'edit') {
-
+		
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $academicPeriodOptions[$this->_selectedAcademicPeriodId];
+			if ($this->_selectedAcademicPeriodId > -1) {
+				$attr['attr']['value'] = $academicPeriodOptions[$this->_selectedAcademicPeriodId];
+			}
 
 		} elseif ($action == 'add') {
 
-			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
 			$attr['options'] = $academicPeriodOptions;
 			$attr['onChangeReload'] = true;
 		
@@ -539,11 +588,15 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * institution_site_shift_id field setup
 	 */
 	public function onUpdateFieldInstitutionSiteShiftId(Event $event, array $attr, $action, $request) {
-		$institutionsId = $this->Session->read('Institutions.id');
+		
 		if ($action == 'edit' || $action == 'add') {
 
-			$this->InstitutionSiteShifts->createInstitutionDefaultShift($institutionsId, $this->_selectedAcademicPeriodId);
-			$shiftOptions = $this->InstitutionSiteShifts->getShiftOptions($institutionsId, $this->_selectedAcademicPeriodId);
+			if ($this->_selectedAcademicPeriodId > -1) {
+				$this->InstitutionSiteShifts->createInstitutionDefaultShift($this->_institutionId, $this->_selectedAcademicPeriodId);
+				$shiftOptions = $this->InstitutionSiteShifts->getShiftOptions($this->_institutionId, $this->_selectedAcademicPeriodId);
+			} else {
+				$shiftOptions = [];
+			}
 			$attr['options'] = $shiftOptions;
 
 		}
@@ -557,7 +610,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 
-			$attr['options'] = $this->getStaffOptions();
+			if ($this->_selectedAcademicPeriodId > -1) {
+				$attr['options'] = $this->getStaffOptions();
+			}
 
 		} elseif ($action == 'add') {
 
@@ -566,8 +621,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 		} elseif ($action == 'view') {
 
 			// $attr['type'] = 'select';
-			$attr['options'] = $this->getStaffOptions();
-
+			if ($this->_selectedAcademicPeriodId > -1) {
+				$attr['options'] = $this->getStaffOptions();
+			}
+			
 		}
 
 		return $attr;
@@ -597,7 +654,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	protected function getStudentsOptions($sectionEntity) {
-		$institutionsId = $this->Session->read('Institutions.id');
+		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
         $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
@@ -612,7 +669,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$query = $students->find();
 		$query = $query->contain(['Users', 'EducationProgrammes'=>['EducationGrades']]);
 		$query = $query->where([
-				$students->aliasField('institution_site_id') => $institutionsId,
+				$students->aliasField('institution_site_id') => $this->_institutionId,
 				'OR' => array(
 					'OR' => array(
 						array(
@@ -657,20 +714,20 @@ class InstitutionSiteSectionsTable extends AppTable {
 				if (isset($obj->user)) {
 					$studentOptions[$obj->user->id] = $obj->user->name_with_id;
 				} else {
-					$this->log('Data corrupted with no security user for student id: '. $obj->id, 'debug');
+					$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
 				}
 			}
 		}
 
-		$studentOptions = $this->attachSectionInfo($sectionEntity->id, $studentOptions, $institutionsId, $this->_selectedAcademicPeriodId);
+		$studentOptions = $this->attachSectionInfo($sectionEntity->id, $studentOptions, $this->_institutionId, $this->_selectedAcademicPeriodId);
 		return $studentOptions;
 	}
 
-	public function attachSectionInfo($id, $studentOptions, $institutionsId, $periodId) {
+	public function attachSectionInfo($id, $studentOptions, $institutionId, $periodId) {
 		$query = $this->InstitutionSiteSectionStudents->find()
 					->contain(['InstitutionSiteSections'])
 					->where([
-						$this->aliasField('institution_site_id') => $institutionsId,
+						$this->aliasField('institution_site_id') => $this->_institutionId,
 						$this->aliasField('academic_period_id') => $periodId,
 					])
 					->where([
@@ -692,7 +749,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	protected function getStaffOptions() {
-		$institutionsId = $this->Session->read('Institutions.id');
+		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
         $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
@@ -703,7 +760,7 @@ class InstitutionSiteSectionsTable extends AppTable {
         $Staff = $this->Institutions->InstitutionSiteStaff;
 		$query = $Staff->find('all')
 						->find('withBelongsTo')
-						->find('byInstitution', ['Institutions.id'=>$institutionsId])
+						->find('byInstitution', ['Institutions.id'=>$this->_institutionId])
 						->where([
 							$Staff->aliasField('end_date') . ' IS NULL',
 							$Staff->aliasField('start_date') . ' >= ' . $endDate
@@ -736,7 +793,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $options;
 	}
 
-	public function numberOfSectionsOptions() {
+	private function numberOfSectionsOptions() {
 		$total = 10;
 		$options = array();
 		for($i=1; $i<=$total; $i++){
@@ -746,11 +803,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $options;
 	}
 	
-	// public function getNewSectionNumber($institutionSiteId, $gradeId) {
-	public function getNewSectionNumber($institutionsId) {
+	private function getNewSectionNumber() {
 		$data = $this->find()
 					->where([
-						'institution_site_id' => $institutionsId,
+						'institution_site_id' => $this->_institutionId,
 						// 'education_grade_id' => $gradeId
 					])
 					->order(['section_number DESC'])
@@ -793,15 +849,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	private function getAcademicPeriodOptions() {
-		$institutionsId = $this->Session->read('Institutions.id');
+		
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
+			'InstitutionSiteProgrammes.institution_site_id' => $this->_institutionId
 		);
-		$list = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
-		if (empty($list)) {
-			$this->Alert->warning('Institutions.noProgramme');
-			return $this->redirect($this->ControllerAction->buttons['index']['url']);
-		} else {
+		$list = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($this->Alert, $conditions);
+		if (!empty($list)) {
 			if ($this->_selectedAcademicPeriodId != 0) {
 				if (!array_key_exists($this->_selectedAcademicPeriodId, $list)) {
 					$this->_selectedAcademicPeriodId = key($list);
@@ -814,12 +867,19 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	}
 	
-	public function getSectionOptions($academicPeriodId, $institutionsId, $gradeId=false) {
+	/**
+	 * Used by Institution/UserBehavior && Institution/InstitutionSiteStudentsTable
+	 * @param  [integer]  $academicPeriodId [description]
+	 * @param  [integer]  $institutionId    [description]
+	 * @param  boolean $gradeId          [description]
+	 * @return [type]                    [description]
+	 */
+	public function getSectionOptions($academicPeriodId, $institutionId, $gradeId=false) {
 	// 	$singleGradeOptions = array(
 	// 		'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
 	// 		'conditions' => array(
 	// 			'InstitutionSiteSections.academic_period_id' => $academicPeriodId,
-	// 			'InstitutionSiteSections.institution_site_id' => $institutionsId
+	// 			'InstitutionSiteSections.institution_site_id' => $institutionId
 	// 		),
 	// 		'order' => array('InstitutionSiteSections.name')
 	// 	);
@@ -828,7 +888,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
 			'conditions' => array(
 				'InstitutionSiteSections.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteSections.institution_site_id' => $institutionsId
+				'InstitutionSiteSections.institution_site_id' => $institutionId
 			),
 			'order' => array('InstitutionSiteSections.name')
 		);
