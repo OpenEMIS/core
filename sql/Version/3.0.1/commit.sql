@@ -1317,3 +1317,4 @@ ALTER TABLE `staff_custom_table_cells`
   ADD PRIMARY KEY (`id`);
 
 ALTER TABLE `institution_site_attachments` CHANGE `file_content` `file_content` LONGBLOB NULL;  
+ALTER TABLE `user_attachments` CHANGE `file_content` `file_content` LONGBLOB NULL;
