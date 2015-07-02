@@ -159,8 +159,6 @@ class UserBehavior extends Behavior {
 			$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 			$options->exchangeArray($arrayOptions);
 		}
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -193,8 +191,6 @@ class UserBehavior extends Behavior {
 
 			}
 		}
-		
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addAfterSaveRedirect($event, $action) {

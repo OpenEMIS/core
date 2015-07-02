@@ -93,12 +93,11 @@ class InstitutionSiteProgrammesTable extends AppTable {
 
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query, $contain) {
-		$contain = array_merge([
-			'EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems']]],
-			'InstitutionSiteGrades' => ['EducationGrades']
-		], $contain);
-		return compact('query', 'contain');
+	public function viewBeforeQuery(Event $event, Query $query) {
+		$query->contain([
+			'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems',
+			'InstitutionSiteGrades.EducationGrades'
+		]);
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
@@ -115,7 +114,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 ** addEdit action methods
 **
 ******************************************************************************************************************/
-	public function addEditBeforeAction($event) {
+	public function addEditBeforeAction(Event $event) {
 
 		$this->ControllerAction->setFieldOrder([
 			'education_level', 'education_programme_id', 
@@ -124,7 +123,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 
 	}
 
-	public function addEditBeforePatch($event, $entity, $data, $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// pr('addEditBeforePatch');
 		// pr($data);
 		foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
@@ -139,8 +138,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 				}
 			}
 		}
-		// pr($data);die;
-		return compact('entity', 'data', 'options');
 	}
 
 
@@ -149,13 +146,14 @@ class InstitutionSiteProgrammesTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-	public function editBeforeQuery(Event $event, Query $query, $contain) {
-		$contain[] = 'EducationProgrammes';
-		$contain[] = 'InstitutionSiteGrades';
-		return compact('query', 'contain');
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain([
+			'EducationProgrammes',
+			'InstitutionSiteGrades'
+		]);
 	}
 
-	public function editAfterAction($event, $entity) {
+	public function editAfterAction(Event $event, Entity $entity) {
 		$recorded = [];
 		$selected = [];
 		foreach ($entity->institution_site_grades as $key=>$value) {
@@ -200,7 +198,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-	public function addAfterAction($event, $entity) {
+	public function addAfterAction(Event $event, Entity $entity) {
 		/**
 		 * @todo - To be done in a dynamic way so that the format is consistent throughout the whole system.
 		 */

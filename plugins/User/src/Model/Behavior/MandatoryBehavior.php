@@ -155,8 +155,6 @@ class MandatoryBehavior extends Behavior {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -183,8 +181,6 @@ class MandatoryBehavior extends Behavior {
 			'SpecialNeeds' => ['validate' => false],
 			'Contacts' => ['validate' => false]
 		];
-		
-		return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldContactType(Event $event, array $attr, $action, $request) {

@@ -142,9 +142,8 @@ class UsersTable extends AppTable {
 		return $query->where([$this->aliasField('super_admin') => 0]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query, array $contain) {
+	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->find('notSuperAdmin');
-		return [$query, $contain];
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -166,7 +165,7 @@ class UsersTable extends AppTable {
 		]);
 	}
 
-	public function addEditBeforeAction(){
+	public function addEditBeforeAction(Event $event) {
 		$this->fields['openemis_no']['attr']['readonly'] = true;
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';

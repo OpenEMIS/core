@@ -601,25 +601,19 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id);
+			$query = $model->findById($id)->contain($contain);
 
 			// Event: viewEditBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
 			// Event: viewBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
-			$data = $query->contain($contain)->first();
+			$data = $query->first();
 
 			if (empty($data)) {
 				$this->Alert->warning('general.notExists');
@@ -749,7 +743,6 @@ class ControllerActionComponent extends Component {
 		$request = $this->request;
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
-		$contain = [];
 
 		// Event: addEditBeforeAction
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
@@ -765,22 +758,16 @@ class ControllerActionComponent extends Component {
 			$query = $model->findById($id);
 
 			// Event: viewEditBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
 			// Event: editBeforeQuery
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeQuery', null, compact('query', 'contain'));
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeQuery', null, compact('query'));
 			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				list($query, $contain) = array_values($event->result);
-			}
 			// End Event
 
-			$data = $query->contain($contain)->first();
+			$data = $query->first();
 
 			if (empty($data)) {
 				$this->Alert->warning('general.notExists');
