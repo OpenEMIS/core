@@ -6,6 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -78,6 +79,11 @@ class WorkflowsTable extends AppTable {
 		$this->_fieldOrder[] = 'code';
 		$this->_fieldOrder[] = 'name';
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+		$options['contain'] = array_merge($options['contain'], $this->_contain);
+		return $options;
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
