@@ -761,6 +761,10 @@ input[type="checkbox"] {
 	overflow: auto;
 }
 
+.format-lists textarea {
+	margin: 10px 0;
+}
+
 .chart-wrapper i,
 .format-wrapper i {
 	color: #FFF;
@@ -977,10 +981,6 @@ input[type="checkbox"] {
 /* buttons, toolbar and page-header alignments in chrome */
 .chrome .page-header h2 {
 	padding: 8px 10px 6px 0;
-}
-
-.chrome .btn-dropdown {
-	padding: 3px 22px 3px 10px;
 }
 
 /* buttons, toolbar and page-header alignments in safari */
