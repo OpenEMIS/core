@@ -94,6 +94,15 @@ hr {
 	list-style-position: inside;
 }
 
+.divider:after {
+	font-family: "Helvetica Neue";
+	content: "|";
+	font-size: 12px;
+	font-weight: bold;
+	color: #AAA;
+	margin: 0 8px;
+}
+
 /* TOP HEADER */
 
 .navbar {
