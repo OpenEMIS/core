@@ -75,7 +75,7 @@ class StudentsController extends AppController {
 				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
 			}
 		}
-		
+
     	$this->set('contentHeader', $header);
     }
 
@@ -92,7 +92,7 @@ class StudentsController extends AppController {
 			}
 
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
 				if (strtolower($action) != 'index')	{
 					$this->Navigation->addCrumb(ucwords($action));
 				}
@@ -100,8 +100,7 @@ class StudentsController extends AppController {
 				$this->Navigation->addCrumb($model->getHeader($model->alias));
 			}
 
-			$header = __($this->_studentObj->name);
-			$header .= ' - ' . $model->getHeader($model->alias);
+			$header = $this->_studentObj->name . ' - ' . $model->getHeader($model->alias);
 
 			if ($model->hasField('security_user_id') && !is_null($this->_studentObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
