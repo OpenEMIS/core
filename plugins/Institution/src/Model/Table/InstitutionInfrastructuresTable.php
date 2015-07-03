@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
@@ -37,6 +38,8 @@ class InstitutionInfrastructuresTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('infrastructure_level_id');
 		$this->ControllerAction->field('infrastructure_type_id');
+		$this->ControllerAction->field('year_acquired');
+		$this->ControllerAction->field('year_disposed');
 
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
@@ -105,6 +108,28 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$attr['options'] = $typeOptions;
 
 		return $attr;
+	}
+
+	public function onUpdateFieldYearAcquired(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getYearOptionsByConfig();
+		return $attr;
+	}
+
+	public function onUpdateFieldYearDisposed(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getYearOptionsByConfig();
+		return $attr;
+	}
+
+	public function getYearOptionsByConfig() {
+		$ConfigItems = TableRegistry::get('ConfigItems');
+		$lowestYear = $ConfigItems->value('lowest_year');
+		$currentYear = date("Y");
+		
+		for($i=$currentYear; $i >= $lowestYear; $i--){
+			$yearOptions[$i] = $i;
+		}
+
+		return $yearOptions;
 	}
 
 	public function getSelectOptions() {
