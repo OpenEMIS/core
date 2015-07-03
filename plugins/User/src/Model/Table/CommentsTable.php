@@ -13,11 +13,7 @@ class CommentsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 	}
 
-	public function beforeAction() {
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
-	}
+	public function beforeAction() {}
 
 	public function indexBeforeAction(Event $event) {
 		$order = 0;

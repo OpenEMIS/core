@@ -6,6 +6,8 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class StudentsController extends AppController {
+	private $_studentObj = null;
+
 	public function initialize() {
 		parent::initialize();
 
@@ -50,48 +52,84 @@ class StudentsController extends AppController {
     	$this->Navigation->addCrumb('Student', ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
     	$session = $this->request->session();
 		$action = $this->request->params['action'];
+    	$header = __('Students');
 
 		if ($action == 'index') {
 			$session->delete('Student.security_user_id');
 			$session->delete('Users.id');
-		}
-		if ($session->check('Student.security_user_id') || $session->check('Users.id') || $action == 'view') {
-			// $id = 0;
-			if ($session->check('Student.security_user_id')) {
+		} elseif ($session->check('Student.security_user_id') || $session->check('Users.id') || $action == 'view' || $action == 'edit') {
+			$id = 0;
+			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
+				$id = $this->request->pass[0];
+			} else if ($session->check('Student.security_user_id')) {
 				$id = $session->read('Student.security_user_id');
 			} else if ($session->check('Users.id')) {
 				$id = $session->read('Users.id');
-			} else if (isset($this->request->pass[0])) {
-				$id = $this->request->pass[0];
 			}
 			if (!empty($id)) {
-				$obj = $this->Users->get($id);
-				$name = $obj->name;
+				$this->_studentObj = $this->Users->get($id);
+				$name = $this->_studentObj->name;
+				$header = $name .' - Overview';
 				$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
 			} else {
-				// return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
 			}
 		}
-    	$header = __('Student');
+
     	$this->set('contentHeader', $header);
     }
 
 	public function onInitialize($event, $model) {
-		$session = $this->request->session();
-		$header = __('Student');
-
-		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
-
-		if (array_key_exists('security_user_id', $model->fields)) {
-			if (!$session->check('Student.security_user_id')) {
-				$this->Alert->warning('general.notExists');
+		/**
+		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
+		 */
+		if (!is_null($this->_studentObj)) {
+			$session = $this->request->session();
+			$action = false;
+			$params = $this->request->params;
+			if (isset($params['pass'][0])) {
+				$action = $params['pass'][0];
 			}
-			$model->fields['security_user_id']['type'] = 'hidden';
-			$model->fields['security_user_id']['value'] = $session->read('Student.security_user_id');
+
+			if ($action) {
+				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+				if (strtolower($action) != 'index')	{
+					$this->Navigation->addCrumb(ucwords($action));
+				}
+			} else {
+				$this->Navigation->addCrumb($model->getHeader($model->alias));
+			}
+
+			$header = $this->_studentObj->name . ' - ' . $model->getHeader($model->alias);
+
+			if ($model->hasField('security_user_id') && !is_null($this->_studentObj)) {
+				$model->fields['security_user_id']['type'] = 'hidden';
+				$model->fields['security_user_id']['value'] = $this->_studentObj->id;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('security_user_id') => $this->_studentObj->id
+					]);
+				
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+					}
+				}
+			}
+
+			$this->set('contentHeader', $header);
+		} else {
+			$this->Alert->warning('general.notExists');
+			$event->stopPropagation();
+			return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
 		}
-		
-		$this->set('contentHeader', $header);
 	}
 
 

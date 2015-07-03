@@ -37,7 +37,8 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.viewEdit.beforeQuery'		=> 'viewEditBeforeQuery',
 		'ControllerAction.Model.addEdit.beforeAction'		=> 'addEditBeforeAction',
 		'ControllerAction.Model.addEdit.beforePatch'		=> 'addEditBeforePatch',
-		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction'
+		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction',
+		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete'
 	];
 
 	public function getControllerActionEvents() {

@@ -23,10 +23,6 @@ class UserLanguagesTable extends AppTable {
 		$this->fields['reading']['options'] = $gradeOptions;
 		$this->fields['writing']['type'] = 'select';
 		$this->fields['writing']['options'] = $gradeOptions;
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	public function getGradeOptions() {

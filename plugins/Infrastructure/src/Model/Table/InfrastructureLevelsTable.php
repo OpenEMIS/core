@@ -1,36 +1,62 @@
 <?php
 namespace Infrastructure\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
+use CustomField\Model\Table\CustomFormsTable;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\Event\Event;
 
-class InfrastructureLevelsTable extends AppTable {
-	private $_fieldOrder = ['parent_id', 'name'];
+class InfrastructureLevelsTable extends CustomFormsTable {
+	private $_fieldOrder = ['parent_id', 'name', 'description', 'custom_fields'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Infrastructure.InfrastructureLevels']);
+		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('InfrastructureTypes', ['className' => 'Infrastructure.InfrastructureTypes']);
-	}
-
-	public function beforeAction(Event $event) {
-		$this->fields['international_code']['visible'] = false;
-		$this->fields['national_code']['visible'] = false;
-	}
-
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
-			'visible', 'name', 'parent_id'
+		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures']);
+		$this->hasMany('CustomFormFields', ['className' => 'Infrastructure.InfrastructureLevelFields', 'foreignKey' => 'infrastructure_level_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('CustomFields', [
+			'className' => 'Infrastructure.InfrastructureCustomFields',
+			'joinTable' => 'infrastructure_level_fields',
+			'foreignKey' => 'infrastructure_level_id',
+			'targetForeignKey' => 'infrastructure_custom_field_id'
 		]);
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->setFieldOrder();
+	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function indexBeforeAction(Event $event) {
+		parent::indexBeforeAction($event);
+		$this->_fieldOrder = ['name', 'description', 'custom_fields', 'parent_id'];
+		$this->ControllerAction->setFieldOrder([
+			'name', 'parent_id'
+		]);
+
+		// Hide controls filter
+		$toolbarElements = [];
+		$this->controller->set('toolbarElements', $toolbarElements);
+		$this->fields['custom_module_id']['visible'] = 'false';
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+		parent::indexBeforePaginate($event, $request, $options);
+		$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
+
+		$options['conditions'][] = [
+        	$this->aliasField('parent_id') => $parentId
+        ];
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		//Setup fields
+		parent::addEditBeforeAction($event);
+		// Setup fields
+		// Hide Custom Module
+		$this->fields['custom_module_id']['type'] = 'hidden';
+		
 		$parentId = $this->request->query('parent_id');
 		$this->fields['parent_id']['type'] = 'hidden';
 
@@ -49,13 +75,6 @@ class InfrastructureLevelsTable extends AppTable {
 			]);
 			array_unshift($this->_fieldOrder, "parent_name");
 		}
-
-		$this->setFieldOrder();
-	}
-
-	public function onGetParentId(Event $event, Entity $entity) {
-		$value = $entity->parent_id == 0 ? ' ' : $entity->parent->name;
-		return $value;
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
@@ -68,7 +87,21 @@ class InfrastructureLevelsTable extends AppTable {
 		]);
 	}
 
-	public function setFieldOrder() {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function onGetParentId(Event $event, Entity $entity) {
+		$value = $entity->parent_id == 0 ? ' ' : $entity->parent->name;
+		return $value;
+	}
+
+	public function getSelectOptions() {
+		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::getSelectOptions());
+
+		$moduleOptions = $this->CustomModules
+			->find('list')
+			->find('visible')
+			->where([$this->CustomModules->aliasField('model') => $this->InstitutionInfrastructures->registryAlias()])
+			->toArray();
+		$selectedModule = !is_null($this->request->query('module')) ? $this->request->query('module') : key($moduleOptions);
+
+		return compact('moduleOptions', 'selectedModule', 'applyToAllOptions', 'selectedApplyToAll');
 	}
 }
