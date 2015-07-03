@@ -57,17 +57,10 @@ class CustomFormsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('apply_to_all', [
-			'type' => 'select',
-			'visible' => true
-		]);
-
+		$this->ControllerAction->field('apply_to_all', ['type' => 'select']);
 		$this->ControllerAction->field('custom_fields', [
 			'type' => 'chosenSelect',
-			'fieldNameKey' => 'custom_fields',
-			'fieldName' => $this->alias() . '.custom_fields._ids',
-			'placeholder' => __('Select Fields'),
-			'visible' => true
+			'placeholder' => __('Select Fields')
 		]);
 	}
 
@@ -82,8 +75,8 @@ class CustomFormsTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list($moduleOptions, $selectedModule) = array_values($this->getSelectOptions());
-
         $this->controller->set(compact('moduleOptions', 'selectedModule'));
+
 		$options['conditions'][] = [
         	$this->aliasField('custom_module_id') => $selectedModule
         ];
@@ -243,7 +236,10 @@ class CustomFormsTable extends AppTable {
 		//Return all required options and their key
 		$query = $this->request->query;
 
-		$moduleOptions = $this->CustomModules->find('list')->toArray();
+		$moduleOptions = $this->CustomModules
+			->find('list')
+			->find('visible')
+			->toArray();
 		$selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
 
 		$applyToAllOptions = [0 => __('No'), 1 => __('Yes')];
