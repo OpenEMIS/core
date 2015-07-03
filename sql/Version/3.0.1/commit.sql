@@ -540,6 +540,7 @@ CREATE TABLE IF NOT EXISTS `custom_modules` (
   `model` varchar(200),
   `behavior` varchar(200) DEFAULT NULL,
   `filter` varchar(200) DEFAULT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
   `parent_id` int(11) DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -556,10 +557,11 @@ ALTER TABLE `custom_modules`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 TRUNCATE TABLE `custom_modules`;
-INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `behavior`, `filter`, `parent_id`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 'Institution - Overview', 'Institution.Institutions', NULL, 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
-(2, 'Student', 'Student - Overview', 'User.Users', 'Student', NULL, 0, 1, '0000-00-00 00:00:00'),
-(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00');
+INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `behavior`, `filter`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 'Institution - Overview', 'Institution.Institutions', NULL, 'FieldOption.InstitutionSiteTypes', 1, 0, 1, '0000-00-00 00:00:00'),
+(2, 'Student', 'Student - Overview', 'User.Users', 'Student', NULL, 1, 0, 1, '0000-00-00 00:00:00'),
+(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 1, 0, 1, '0000-00-00 00:00:00'),
+(4, 'Infrastructure', 'Institution - Infrastructure', 'Institution.InstitutionInfrastructures', NULL, NULL, 0, 1, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
@@ -806,7 +808,6 @@ CREATE TABLE IF NOT EXISTS `infrastructure_custom_fields` (
   `field_type` varchar(100) NOT NULL,
   `is_mandatory` int(1) NOT NULL DEFAULT '0',
   `is_unique` int(1) NOT NULL DEFAULT '0',
-  `infrastructure_level_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -1393,8 +1394,47 @@ UPDATE `institution_site_class_students` SET `status` = 1 WHERE `status` NOT IN 
 
 -- 2nd July 2100hrs
 -- Update Institution - Infrastructure
+RENAME TABLE infrastructure_levels TO z_1461_infrastructure_levels;
 RENAME TABLE institution_site_infrastructures TO z_1461_institution_site_infrastructures;
 RENAME TABLE institution_site_infrastructure_custom_values TO z_1461_institution_site_infrastructure_custom_values;
+
+-- New table - infrastructure_levels
+DROP TABLE IF EXISTS `infrastructure_levels`;
+CREATE TABLE IF NOT EXISTS `infrastructure_levels` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `parent_id` int(11) DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_levels`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_levels`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - infrastructure_level_fields
+DROP TABLE IF EXISTS `infrastructure_level_fields`;
+CREATE TABLE IF NOT EXISTS `infrastructure_level_fields` (
+  `id` char(36) NOT NULL,
+  `infrastructure_level_id` int(11) NOT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_level_fields`
+  ADD PRIMARY KEY (`id`);
 
 -- New table - institution_site_infrastructures
 DROP TABLE IF EXISTS `institution_site_infrastructures`;
