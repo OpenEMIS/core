@@ -1,9 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
+use CustomField\Model\Table\CustomTableCellsTable;
 
-class InstitutionInfrastructureCustomTableCellsTable extends AppTable {
+class InstitutionInfrastructureCustomTableCellsTable extends CustomTableCellsTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_infrastructure_custom_table_cells');
 
