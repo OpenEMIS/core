@@ -58,10 +58,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'education_programme_id', 'education_level', 'start_date', 'end_date', 'education_grade',
 		]);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 

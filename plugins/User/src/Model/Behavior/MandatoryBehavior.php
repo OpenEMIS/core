@@ -117,6 +117,20 @@ class MandatoryBehavior extends Behavior {
 		$orderData = array_merge($orderData, $this->_table->fieldOrder2->getArrayCopy());
 		
 		$this->_table->ControllerAction->setFieldOrder($orderData);
+
+		// need to set the handling for non-mandatory require = false here
+		foreach ($this->_info as $key => $value) {
+			if ($value == 'Non-Mandatory') {
+				// need to set the relevant non-mandatory fields and set it to required = false to remove *
+				$singularAndLowerKey = strtolower(Inflector::singularize(Inflector::tableize($key)));
+				foreach ($event->subject()->model->fields as $fkey => $fvalue) {
+					if (strpos($fkey, $singularAndLowerKey)!==false) {
+						$event->subject()->model->fields[$fkey]['attr']['required'] = false;
+					}
+				}
+			}
+		}
+
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

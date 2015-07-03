@@ -142,6 +142,7 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 -- Students
 ('Students', 'photo_content', NULL, 'Photo ID'),
 ('Students', 'openemis_no', NULL, 'OpenEMIS ID'),
+('Students', 'ProgrammeSection', NULL, 'Programme - Section'),
 ('Staff', 'photo_content', NULL, 'Photo ID'),
 ('Staff', 'openemis_no', NULL, 'OpenEMIS ID')
 ;

@@ -34,7 +34,6 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-
     	$this->ControllerAction->field('account_name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('account_number', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('active', ['type' => 'select', 'options' => $this->getSelectOptions('general.active'), 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
@@ -46,10 +45,6 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'active', 'account_name', 'account_number', 'bank', 'bank_branch_id',
 		]);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 

@@ -48,10 +48,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'name', 'period', 'location_institution_site_id',
 		]);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 
