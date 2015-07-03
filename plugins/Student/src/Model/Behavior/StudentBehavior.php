@@ -72,11 +72,11 @@ class StudentBehavior extends Behavior {
 
 		$this->_table->ControllerAction->field('name', []);
 		$this->_table->ControllerAction->field('default_identity_type', []);
-		$this->_table->ControllerAction->field('institution_name', []);
+		$this->_table->ControllerAction->field('student_institution_name', []);
 		$this->_table->ControllerAction->field('student_status', []);
 
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'institution_name', 'student_status']);
+			'name', 'default_identity_type', 'student_institution_name', 'student_status']);
 
 		$indexDashboard = 'Student.Students/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
