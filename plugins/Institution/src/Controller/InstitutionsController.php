@@ -93,74 +93,72 @@ class InstitutionsController extends AppController  {
 	}
 
 	public function onInitialize(Event $event, Table $model) {
-		$session = $this->request->session();
-		$action = false;
-		$params = $this->request->params;
-		if (isset($params['pass'][0])) {
-			$action = $params['pass'][0];
-		}
-
-		$persona = false;
-		if ($action) {
-			$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-			if (strtolower($action) != 'index')	{
-				if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
-					if (isset($params['pass'][1])) {
-						$persona = $model->get($params['pass'][1]);
-						if (is_object($persona)) {
-							$this->Navigation->addCrumb($persona->name);
-						}
-					}
-				} else {
-					$this->Navigation->addCrumb(ucwords($action));
-				}
-			}
-		} else {
-			$this->Navigation->addCrumb($model->getHeader($model->alias));
-		}
-
-		$header = __('Institution');
 		if (!is_null($this->_institutionObj)) {
-			$header = __($this->_institutionObj->name);
-		}
-		if ($persona) {
-			$header .= ' - ' . $persona->name;
-		} else {
-			$header .= ' - ' . $model->getHeader($model->alias);
-		}
+			$session = $this->request->session();
+			$action = false;
+			$params = $this->request->params;
+			if (isset($params['pass'][0])) {
+				$action = $params['pass'][0];
+			}
 
-		if (array_key_exists('institution_site_id', $model->fields)) {
-			if (!$session->check('Institutions.id')) {
-				$this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+			$persona = false;
+			if ($action) {
+				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+				if (strtolower($action) != 'index')	{
+					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
+						if (isset($params['pass'][1])) {
+							$persona = $model->get($params['pass'][1]);
+							if (is_object($persona)) {
+								$this->Navigation->addCrumb($persona->name);
+							}
+						}
+					} else {
+						$this->Navigation->addCrumb(ucwords($action));
+					}
+				}
 			} else {
+				$this->Navigation->addCrumb($model->getHeader($model->alias));
+			}
+
+			$header = __($this->_institutionObj->name);
+			if ($persona) {
+				$header .= ' - ' . $persona->name;
+			} else {
+				$header .= ' - ' . $model->getHeader($model->alias);
+			}
+
+			if ($model->hasField('institution_site_id') && !is_null($this->_institutionObj)) {
 				$model->fields['institution_site_id']['type'] = 'hidden';
 				$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
-			}
-		}
+				/**
+				 * set sub model's institution id here
+				 */
+				$model->institutionId = $this->_institutionObj->id;
 
-		if ($model->hasField('institution_site_id')) {
-			$institutionId = $session->read('Institutions.id');
-			$model->institutionId = $institutionId;
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
 
-			if (count($this->request->pass) > 1) {
-				$modelId = $this->request->pass[1]; // id of the model
-
-				$exists = $model->exists([
-					$model->aliasField($model->primaryKey()) => $modelId,
-					$model->aliasField('institution_site_id') => $institutionId
-				]);
-			
-				if (!$exists) {
-					$this->Alert->warning('general.notExists');
-					return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('institution_site_id') => $this->_institutionObj->id
+					]);
+				
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+					}
 				}
 			}
+
+			$this->set('contentHeader', $header);
+		} else {
+			$this->Alert->warning('general.notExists');
+			$event->stopPropagation();
+			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		}
-		
-
-
-
-		$this->set('contentHeader', $header);
 	}
 
 	public function beforePaginate(Event $event, Table $model, ArrayObject $options) {

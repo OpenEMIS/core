@@ -59,10 +59,6 @@ class ContactsTable extends AppTable {
 	public function beforeAction() {
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
-		
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	// public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
