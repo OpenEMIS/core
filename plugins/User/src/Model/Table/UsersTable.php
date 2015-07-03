@@ -149,6 +149,7 @@ class UsersTable extends AppTable {
 	public function viewBeforeAction(Event $event) {
 		if (array_key_exists('pass', $this->request->params)) {
 			$id = reset($this->request->params['pass']);
+			$this->ControllerAction->setFieldOrder(['photo_content']);
 		}
 
 		// would be 'Student' or 'Staff'
