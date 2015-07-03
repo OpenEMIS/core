@@ -53,7 +53,7 @@ class RecordBehavior extends Behavior {
 
 		$CustomForms = $CustomFields->CustomForms;
 		$CustomModules = $CustomForms->CustomModules;
-		$CustomFormTypes = $CustomForms->CustomFormTypes;
+		$CustomFormFilters = $CustomForms->CustomFormFilters;
 		$CustomFormFields = $CustomForms->CustomFormFields;
 
 		$customFieldQuery = null;
@@ -90,12 +90,12 @@ class RecordBehavior extends Behavior {
 				->where([$CustomForms->aliasField($this->config('moduleKey')) => $customModuleId])
 				->toArray();
 
-			$genaralResults = $CustomFormTypes
+			$genaralResults = $CustomFormFilters
 				->find('all')
-				->select([$CustomFormTypes->aliasField($this->config('formKey'))])
+				->select([$CustomFormFilters->aliasField($this->config('formKey'))])
 				->where([
-					$CustomFormTypes->aliasField($this->config('formKey').' IN') => $customFormIds,
-					$CustomFormTypes->aliasField('custom_type_id') => 0
+					$CustomFormFilters->aliasField($this->config('formKey').' IN') => $customFormIds,
+					$CustomFormFilters->aliasField('custom_filter_id') => 0
 				])
 				->all();
 
@@ -123,12 +123,12 @@ class RecordBehavior extends Behavior {
 				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 
 				$filterId = $entity->$filterKey;
-				$typedResults = $CustomFormTypes
+				$typedResults = $CustomFormFilters
 					->find('all')
-					->select([$CustomFormTypes->aliasField($this->config('formKey'))])
+					->select([$CustomFormFilters->aliasField($this->config('formKey'))])
 					->where([
-						$CustomFormTypes->aliasField($this->config('formKey').' IN') => $customFormIds,
-						$CustomFormTypes->aliasField('custom_type_id') => $filterId
+						$CustomFormFilters->aliasField($this->config('formKey').' IN') => $customFormIds,
+						$CustomFormFilters->aliasField('custom_filter_id') => $filterId
 					])
 					->all();
 
@@ -166,7 +166,7 @@ class RecordBehavior extends Behavior {
 
 		$CustomForms = $CustomFields->CustomForms;
 		$CustomModules = $CustomForms->CustomModules;
-		$CustomFormTypes = $CustomForms->CustomFormTypes;
+		$CustomFormFilters = $CustomForms->CustomFormFilters;
 		$CustomFormFields = $CustomForms->CustomFormFields;
 
 		if (isset($customFieldQuery)) {
