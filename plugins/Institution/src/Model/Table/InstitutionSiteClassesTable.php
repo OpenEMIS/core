@@ -2,16 +2,19 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+
 use App\Model\Table\AppTable;
 
 class InstitutionSiteClassesTable extends AppTable {
-	private $_institutionId = 0;
+	public $institutionId = 0;
+	private $public = 0;
 	private $_selectedSectionId = 0;
 	private $_academicPeriodOptions = [];
 	private $_selectedAcademicPeriodId = -1;
@@ -51,17 +54,6 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-		if ($this->Session->check('Institutions.id')) {
-			$this->_institutionId = $this->Session->read('Institutions.id');
-		} else {
-			$this->Alert->warning('Institution.Institutions.noActiveInstitution');
-			$this->controller->redirect([
-				'plugin' => $this->controller->plugin, 
-				'controller' => $this->controller->name, 
-				'action' => 'index'
-			]);
-		}
-
     	$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
     	$this->ControllerAction->field('created', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('created_user_id', ['type' => 'string', 'visible' => false]);
@@ -140,7 +132,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$Sections = $this->InstitutionSiteSections;
 
 		$academicPeriodOptions = $this->_academicPeriodOptions;
-		$institutionId = $this->_institutionId;
+		$institutionId = $this->institutionId;
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
@@ -299,7 +291,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 		$Sections = $this->InstitutionSiteSections;
 
-		$institutionId = $this->_institutionId;
+		$institutionId = $this->institutionId;
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
 		$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
@@ -312,7 +304,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$sectionOptions = $Sections->find('list')
 									->where([
 										'academic_period_id'=>$this->_selectedAcademicPeriodId, 
-										'institution_site_id'=>$this->_institutionId
+										'institution_site_id'=>$this->institutionId
 									])
 									->toArray();
 		$this->_selectedSectionId = $this->postString('section_name', $sectionOptions);
@@ -392,7 +384,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				->InstitutionSiteStaff
 				->find()
 				->contain(['Users'])
-				->where(['InstitutionSiteStaff.institution_site_id'=>$this->_institutionId])
+				->where(['InstitutionSiteStaff.institution_site_id'=>$this->institutionId])
 				->toArray();
 		$teachers = [];
 		foreach ($query as $key => $value) {
@@ -647,7 +639,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	private function getAcademicPeriodOptions() {
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->_institutionId
+			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
 		);
 		$list = $this->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($this->Alert, $conditions);
 		if (!empty($list)) {
