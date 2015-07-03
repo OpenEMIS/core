@@ -145,6 +145,13 @@ class MandatoryBehavior extends Behavior {
 						}
 					}
 				}
+				// need to set the relevant non-mandatory fields and set it to required = false to remove *
+				$singularAndLowerKey = strtolower(Inflector::singularize(Inflector::tableize($key)));
+				foreach ($event->subject()->model->fields as $fkey => $fvalue) {
+					if (strpos($fkey, $singularAndLowerKey)!==false) {
+						$event->subject()->model->fields[$fkey]['attr']['required'] = false;
+					}
+				}
 			} else {
 				if ($value != 'Excluded') {
 					$newOptions['associated'][] = $key;
