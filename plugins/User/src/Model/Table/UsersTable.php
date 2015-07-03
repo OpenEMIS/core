@@ -244,32 +244,7 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->add('address', [])
-			->add('password', [
-				// 'ruleUnique' => [
-				// 	'rule' => 'validateUnique',
-				// 	'provider' => 'table',
-				// ],
-				// 'ruleAlphanumeric' => [
-				//     'rule' => 'alphanumeric',
-				// ]
-
-
-				// 'ruleChangePassword' => [
-				// 	'rule' => array('changePassword',false),
-				// 	 // authenticate changePassword ('new password', retyped password) // validate behaviour
-				// 	// 'on' => 'update',
-				// ],
-				// 'ruleCheckUsernameExists' => array(
-				// 	'rule' => array('checkUsernameExists'),
-				// 	'message' => 'Please enter a valid password'
-				// ),
-				// 'ruleMinLength' => array(
-				// 	'rule' => array('minLength', 6),
-				// 	'on' => 'create',
-				// 	'allowEmpty' => true,
-				// 	'message' => 'Password must be at least 6 characters'
-				// )
-			])
+			->add('password', [])
 			->allowEmpty('photo_content')
 				->add('photo_content', [
 					'ruleCheckSelectedFileAsImage' => [
@@ -281,19 +256,7 @@ class UsersTable extends AppTable {
 							'message' => 'Uploaded file exceeds 2MB in size.'
 					]
 				])
-// password
-// newPassword
-// retypeNewPassword
-
-				// todo-mlee: sort out saving for user name and password
 			;
-
-			// ->requirePresence('username',false);
-
-			
-
-			
-
 		return $validator;
 	}
 
