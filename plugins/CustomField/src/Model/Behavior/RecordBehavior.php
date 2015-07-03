@@ -1,16 +1,19 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class RecordBehavior extends Behavior {
+	protected $_contain = ['CustomFieldValues', 'CustomTableCells'];
 	protected $_defaultConfig = [
 		'events' => [
-			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
-			'ControllerAction.Model.addEdit.afterAction' => 'addEditAfterAction'
+			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
+			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
+			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction'
 		],
 		'behavior' => null,
 		'moduleKey' => 'custom_module_id',
@@ -38,6 +41,12 @@ class RecordBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	$associatedOptions = $options->offsetExists('associated') ? $options->offsetGet('associated') : [];
+    	$associatedOptions = array_merge_recursive($associatedOptions, $this->_contain);
+    	$options->offsetSet('associated', $associatedOptions);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity) {
@@ -250,7 +259,7 @@ class RecordBehavior extends Behavior {
 			}
 
 			foreach ($ignoreFields as $key => $field) {
-				$fieldOrder[$order++] = $field;
+				$fieldOrder[++$order] = $field;
 			}
 			ksort($fieldOrder);
 			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
