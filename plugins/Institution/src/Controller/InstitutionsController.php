@@ -120,7 +120,7 @@ class InstitutionsController extends AppController  {
 				$this->Navigation->addCrumb($model->getHeader($model->alias));
 			}
 
-			$header = __($this->_institutionObj->name);
+			$header = $this->_institutionObj->name;
 			if ($persona) {
 				$header .= ' - ' . $persona->name;
 			} else {
