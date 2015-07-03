@@ -413,9 +413,22 @@ body.large {
 }
 
 .breadcrumb-active,
-.panel-breadcrumb a:hover {
+.panel-breadcrumb a:hover,
+.treemap-breadcrumb li a:hover {
     color: #999;
     font-weight: normal;
+}
+
+.treemap-breadcrumb {
+	background: none;
+	margin: 0;
+	padding: 5px;
+}
+
+.treemap-breadcrumb li a,
+.treemap-breadcrumb li a:hover {
+	padding: 0;
+	background: none;
 }
 
 /* CONTENT HEADER */
@@ -586,7 +599,7 @@ body.large {
 .toolbar-responsive {
 	min-height: 0.01%;
 	padding: 5px !important;
-	margin-bottom: 20px;
+	margin-bottom: 5px;
 }
 
 .toolbar-wrapper .input{
@@ -1238,7 +1251,8 @@ input[type="checkbox"] {
     display: inline;
 }
 
-.table thead {
+.table thead,
+.table thead tr {
     border: 1px solid #CCC;
 }
 
@@ -1907,7 +1921,8 @@ label + select {
 	padding: 5px 10px;
 }
 
-.form-buttons {
+.form-buttons,
+.footer-buttons {
 	width: 100%;
 	text-align: left;
 	margin-top: 30px;
@@ -1969,10 +1984,29 @@ input[readonly] {
 	background: #999;
 }
 
+.fuelux .wizard {
+	-webkit-box-shadow: none !important;
+	        box-shadow: none !important;
+	border: 0;    
+	background-color: #FFF;
+}
+
+.fuelux .wizard .step-content {
+	background-color: #FFF;
+	padding: 0;
+	border-top: 0;
+}
+
+.fuelux .wizard .steps-container {
+	border: 1px solid #CCC;
+	margin-bottom: 5px;
+}
+
 .fuelux .wizard > ul.steps li, 
 .fuelux .wizard > .steps-container > ul.steps li {
 	font-size: 12px;
 	padding: 0 10px 0 30px;
+	background-color: #EFEFEF;
 }
 
 .fuelux .wizard > .steps-container > ul.steps li {
@@ -1982,10 +2016,97 @@ input[readonly] {
 
 .fuelux .wizard > .actions {
 	line-height: 31px !important;
+	border: 1px solid #CCC;
 }
 
 .fuelux .wizard > .steps-container > ul.steps li .chevron {
 	top: -8px;
+}
+
+.fuelux .wizard > .steps-container > ul.steps li .chevron:before {
+	border-left: 14px solid #EFEFEF;
+}
+
+.fuelux .wizard > ul.steps li.complete, 
+.fuelux .wizard > .steps-container > ul.steps li.complete {
+	color: #6B6B6B;
+	background-color: #FFF;
+}
+
+/* On hover */
+.fuelux .wizard > ul.steps li.complete:hover .chevron:before, 
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
+	border-left: 14px solid #6B6B6B;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover, 
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover {
+	background-color: #6B6B6B;
+	color: #FFF;
+	-webkit-border-bottom-left-radius: 0;
+	        border-bottom-left-radius: 0;
+}
+
+/* On active */
+
+.fuelux .wizard > ul.steps li.active, 
+.fuelux .wizard > .steps-container > ul.steps li.active {
+	color: #999;	
+	background-color: #FFF;
+}
+
+.fuelux .wizard > ul.steps li.active .chevron:before, 
+.fuelux .wizard > .steps-container > ul.steps li.active .chevron:before,
+.fuelux .wizard > ul.steps li.complete .chevron:before, 
+.fuelux .wizard > .steps-container > ul.steps li.complete .chevron:before {
+	border-left: 14px solid #FFF;
+}
+
+/* ACCORDION */
+.accordion-toggle:focus {
+	text-decoration: none;
+}
+
+.accordion-group {
+	margin: 0 0 5px;	
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+.accordion-inner {
+	background-color: #FFF;
+	padding: 0 0 10px;
+}
+
+.accordion-heading {
+	background-color: #EFEFEF;	
+	border: 1px solid #CCC;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+	margin-bottom: 5px;
+}
+
+.accordion-heading a {
+	display: block;
+	width: 100%;
+	font-weight: 500;
+	padding: 6px 10px;
+}
+
+.accordion .accordion-toggle:after, 
+.accordion .accordion-toggle.collapsed:after {
+	position: absolute;
+	right: 12px;
+}
+
+.accordion .accordion-toggle:after {
+	font-family: "FontAwesome";
+	content: "\f0d7";
+}
+
+.accordion .accordion-toggle.collapsed:after {
+	font-family: "FontAwesome";
+	content: "\f0da";
 }
 
 /* TAGS */
