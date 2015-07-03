@@ -348,7 +348,7 @@ trait MessagesTrait {
 				],
 				'value' => [
 					'ruleNotBlank' => 'Please enter a valid value',
-					'ruleValidateFax' => 'Please enter a valid Numeric value',
+					'ruleValidateNumeric' => 'Please enter a valid Numeric value',
 					'ruleValidateEmail' => 'Please enter a valid Email',
 					'ruleValidateEmergency' => 'Please enter a valid Value',
 				],
