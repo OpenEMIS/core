@@ -52,6 +52,8 @@ class ContactsTable extends AppTable {
 		
 		$this->ControllerAction->addField('contact_option_id',['type' => 'select','options'=>$contactOptions]);
 		$this->fields['contact_option_id']['attr'] = ['onchange' => "$('#reload').click()"];
+		$this->fields['contact_option_id']['attr']['required'] = true;
+		
 	}
 
 	public function beforeAction() {
