@@ -23,7 +23,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 
 		$this->addBehavior('CustomField.Record', [
+			'moduleKey' => null,
 			'fieldKey' => 'infrastructure_custom_field_id',
+			'formKey' => 'infrastructure_level_id',
 			'tableColumnKey' => 'infrastructure_custom_table_column_id',
 			'tableRowKey' => 'infrastructure_custom_table_row_id',
 			'recordKey' => 'institution_site_infrastructure_id',
@@ -101,7 +103,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 			->where([$this->Types->aliasField('infrastructure_level_id') => $selectedLevel])
 			->toArray();
 		$attr['options'] = $typeOptions;
-		$attr['onChangeReload'] = true;
 
 		return $attr;
 	}
@@ -111,8 +112,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$levelId = $this->request->query('level');
 		$levelOptions = $this->Levels
 			->find('list')
-			->find('visible')
-			->find('order')
 			->toArray();
 		$selectedLevel = !is_null($levelId) ? $levelId : key($levelOptions);
 

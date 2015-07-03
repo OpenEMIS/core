@@ -24,5 +24,11 @@
 		/>
 		<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
 	</div>
-	<?= $this->Form->error($attr['field']) ?>
+	<?php
+	if (array_key_exists('fieldName', $attr)) {
+		echo $this->Form->error($attr['fieldName']);
+	} else {
+		echo $this->Form->error($attr['field']);
+	}
+	?>
 </div>

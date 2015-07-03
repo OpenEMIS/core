@@ -52,15 +52,13 @@ class ContactsTable extends AppTable {
 		
 		$this->ControllerAction->addField('contact_option_id',['type' => 'select','options'=>$contactOptions]);
 		$this->fields['contact_option_id']['attr'] = ['onchange' => "$('#reload').click()"];
+		$this->fields['contact_option_id']['attr']['required'] = true;
+		
 	}
 
 	public function beforeAction() {
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
-		
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	// public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

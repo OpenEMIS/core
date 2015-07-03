@@ -35,13 +35,10 @@ class UserBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event) {
 		if ($this->_table->hasBehavior('Student')) {
-			$this->_table->fields['institution_name']['visible'] = false;
-			$this->_table->ControllerAction->field('programmeSection', []);
+			$this->_table->ControllerAction->field('programme_section', []);
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'programmeSection', 'student_status']);
+			'name', 'default_identity_type', 'programme_section', 'student_status']);
 		} else if ($this->_table->hasBehavior('Staff')) {
-			$this->_table->fields['staff_institution_name']['visible'] = false;
-
 			$this->_table->ControllerAction->field('position', []);
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'position', 'staff_status']);

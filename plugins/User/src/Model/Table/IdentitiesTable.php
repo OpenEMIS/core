@@ -18,10 +18,6 @@ class IdentitiesTable extends AppTable {
 
 	public function beforeAction($event) {
 		$this->fields['identity_type_id']['type'] = 'select';
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	public function indexBeforeAction(Event $event) {

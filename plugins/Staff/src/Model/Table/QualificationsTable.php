@@ -20,10 +20,6 @@ class QualificationsTable extends AppTable {
 		$this->fields['qualification_level_id']['type'] = 'select';
 		$this->fields['qualification_specialisation_id']['type'] = 'select';
 		$this->fields['qualification_institution_id']['type'] = 'select';
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	public function indexBeforeAction(Event $event) {

@@ -6,7 +6,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status', 'staff_status', 'staff_institution_name'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'staff_status', 'programme_section'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -107,12 +107,29 @@ class User extends Entity {
         return $data;
     }
 
-    protected function _getInstitutionName(){
+    protected function _getStudentInstitutionName(){
         $data = "";
         $securityUserId = $this->id;
 
         $InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
         $InstitutionSite = $InstitutionSiteStudents
+                ->find()
+                ->contain(['Institutions'])
+                ->where(['security_user_id' => $securityUserId])
+                ->first();
+
+        if(!empty($InstitutionSite->institution))
+            $data = $InstitutionSite->institution->name;
+
+        return $data;
+    }
+
+    protected function _getStaffInstitutionName(){
+        $data = "";
+        $securityUserId = $this->id;
+
+        $InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+        $InstitutionSite = $InstitutionSiteStaff
                 ->find()
                 ->contain(['Institutions'])
                 ->where(['security_user_id' => $securityUserId])
@@ -158,24 +175,8 @@ class User extends Entity {
         return $data;
     }
 
-    protected function _getStaffInstitutionName(){
-        $data = "";
-        $securityUserId = $this->id;
-
-        $InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
-        $InstitutionSite = $InstitutionSiteStaff
-                ->find()
-                ->contain(['Institutions'])
-                ->where(['security_user_id' => $securityUserId])
-                ->first();
-
-        if(!empty($InstitutionSite->institution))
-            $data = $InstitutionSite->institution->name;
-
-        return $data;
-    }
-
     protected function _getProgrammeSection(){
+        $education_programme_id = "";
     	if ($this->institution_site_students) {
     		$education_programme_id = $this->institution_site_students[0]->education_programme_id;
     	}
