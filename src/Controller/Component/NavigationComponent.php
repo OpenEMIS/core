@@ -23,6 +23,16 @@ class NavigationComponent extends Component {
 		$this->breadcrumbs[] = $item;
 	}
 
+	public function substituteCrumb($oldTitle, $title, $options=array()) {
+		foreach ($this->breadcrumbs as $key=>$value) {
+			if ($value['title'] == __($oldTitle)) {
+				unset($this->breadcrumbs[$key]);
+				break;
+			}
+		}
+		$this->addCrumb($title, $options);
+	}
+
 	public function beforeRender(Event $event) {
 		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
 

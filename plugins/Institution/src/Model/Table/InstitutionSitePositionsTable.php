@@ -65,11 +65,6 @@ class InstitutionSitePositionsTable extends AppTable {
 			'element' => 'Institution.Positions/past',
 			'visible' => true
 		]);
-
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 

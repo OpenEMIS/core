@@ -89,10 +89,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'name', 'security_user_id', 
 			'male_students', 'female_students', 'classes',
 		]);
-
-		if (strtolower($this->action) != 'index' && strtolower($this->action) != 'add') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 
@@ -347,7 +343,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
     	}
 
-		$this->Navigation->addCrumb(ucwords(strtolower($this->action)).' '.ucwords(strtolower($this->_selectedGradeType)).' Grade');
+		$this->Navigation->substituteCrumb(ucwords(strtolower($this->action)), ucwords(strtolower($this->action)).' '.ucwords(strtolower($this->_selectedGradeType)).' Grade');
 
 		$tabElements = [
 			'single' => [
