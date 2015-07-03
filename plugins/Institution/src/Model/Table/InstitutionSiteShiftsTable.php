@@ -2,15 +2,17 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
+use App\Model\Table\AppTable;
+
 class InstitutionSiteShiftsTable extends AppTable {
-	private $_institutionId = 0;
+	public $institutionId = 0;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -35,17 +37,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		if ($this->Session->check('Institutions.id')) {
-			$this->_institutionId = $this->Session->read('Institutions.id');
-		} else {
-			$this->Alert->warning('Institution.Institutions.noActiveInstitution');
-			$this->controller->redirect([
-				'plugin' => $this->controller->plugin, 
-				'controller' => $this->controller->name, 
-				'action' => 'index'
-			]);
-		}
-
 		$this->ControllerAction->field('start_time', ['type' => 'string', 'visible' => false]);
 		$this->ControllerAction->field('end_time', ['type' => 'string', 'visible' => false]);
 
