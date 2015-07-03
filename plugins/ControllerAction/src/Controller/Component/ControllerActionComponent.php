@@ -289,9 +289,9 @@ class ControllerActionComponent extends Component {
 		if ($this->triggerFrom == 'Model') {
 			unset($pass[0]);
 		}
-		$defaultUrl = ['plugin' => $this->request->params['plugin'], 'controller' => $controller->name];
+		$defaultUrl = ['plugin' => $controller->plugin, 'controller' => $controller->name];
 
-		$buttons = [];
+		$buttons = new ArrayObject([]);
 
 		foreach ($this->defaultActions as $action) {
 			$actionUrl = $defaultUrl;
@@ -323,16 +323,16 @@ class ControllerActionComponent extends Component {
 						}		
 					}
 				}
-				// if ($action == 'view') {echo 'after massage'.$this->currentAction;pr($actionUrl);}
 				$actionUrl = array_merge($actionUrl, $pass);
-				// if ($action == 'view') {echo 'after merge'.$this->currentAction;pr($actionUrl);}
 			}
 			$actionUrl = array_merge($actionUrl, $named);
-			if ($action != 'remove') {
-				$buttons[$action] = array('url' => $actionUrl);
-			} else {
-				$buttons['delete'] = array('url' => $actionUrl);
-			}
+			$buttons[$action] = array('url' => $actionUrl);
+
+			// if ($action != 'remove') {
+			// 	$buttons[$action] = array('url' => $actionUrl);
+			// } else {
+			// 	$buttons['delete'] = array('url' => $actionUrl);
+			// }
 		}
 
 		$backAction = 'index';
@@ -351,9 +351,11 @@ class ControllerActionComponent extends Component {
 		}
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
-		if (in_array('remove', $this->defaultActions)) {
-			$buttons['delete']['removeStraightAway'] = $this->removeStraightAway;
-		}
+
+		$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
+		// if (in_array('remove', $this->defaultActions)) {
+		// 	$buttons['delete']['removeStraightAway'] = $this->removeStraightAway;
+		// }
 
 		// logic for Reorder buttons
 		$schema = $this->getSchema($this->model);
@@ -366,22 +368,27 @@ class ControllerActionComponent extends Component {
 			unset($buttons['reorder']);
 		}
 		
-		$this->buttons = $buttons;
-		$controller->set('_buttons', $buttons);
-		foreach ($this->indexActions as $action => $attr) {
-			if (array_key_exists($action, $buttons)) {
-				$this->indexActions[$action] = array_merge($this->indexActions[$action], $buttons[$action]);
-			} else {
-				unset($this->indexActions[$action]);
-			}
-		}
-		$event = new Event('ControllerAction.Model.index.onInitializeButtons', $this, ['actions' => $this->indexActions]);
-		$event = $this->model->eventManager()->dispatch($event);
+		$params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
 		if ($event->isStopped()) { return $event->result; }
-		if (!is_null($event->result)) {
-			$this->indexActions = $event->result;
-		}
-		$controller->set('_indexActions', $this->indexActions);
+
+		$this->buttons = $buttons->getArrayCopy();
+
+		// $controller->set('_buttons', $buttons);
+		// foreach ($this->indexActions as $action => $attr) {
+		// 	if (array_key_exists($action, $buttons)) {
+		// 		$this->indexActions[$action] = array_merge($this->indexActions[$action], $buttons[$action]);
+		// 	} else {
+		// 		unset($this->indexActions[$action]);
+		// 	}
+		// }
+		// $event = new Event('ControllerAction.Model.index.onInitializeButtons', $this, ['actions' => $this->indexActions]);
+		// $event = $this->model->eventManager()->dispatch($event);
+		// if ($event->isStopped()) { return $event->result; }
+		// if (!is_null($event->result)) {
+		// 	$this->indexActions = $event->result;
+		// }
+		// $controller->set('_indexActions', $this->indexActions);
 	}
 
 	private function initComponentsForModel() {
@@ -450,7 +457,7 @@ class ControllerActionComponent extends Component {
 			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
-			$action = $this->triggerFrom == 'Controller' ? $this->buttons['delete']['url']['action'] : $this->buttons['delete']['url']['action'].'/'.$this->buttons['delete']['url'][0];
+			$action = $this->triggerFrom == 'Controller' ? $this->buttons['remove']['url']['action'] : $this->buttons['remove']['url']['action'].'/'.$this->buttons['remove']['url'][0];
 			$modal['formOptions'] = ['type' => 'delete', 'action' => $action];
 			$modal['fields'] = [
 				'id' => array('type' => 'hidden', 'id' => 'recordId')

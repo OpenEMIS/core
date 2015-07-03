@@ -12,7 +12,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.onFormatDate'				=> 'onFormatDate', // called before displaying date fields
 		'ControllerAction.Model.onFormatTime'				=> 'onFormatTime', // called before displaying time fields
 		'ControllerAction.Model.onFormatDateTime'			=> 'onFormatDateTime', // called before displaying datetime fields
-		'ControllerAction.Model.index.onInitializeButtons' 	=> 'indexOnInitializeButtons',
+		'ControllerAction.Model.onInitializeButtons'		=> 'onInitializeButtons',
 		'ControllerAction.Model.index.beforeAction'			=> 'indexBeforeAction',
 		'ControllerAction.Model.index.beforePaginate'		=> 'indexBeforePaginate',
 		'ControllerAction.Model.index.afterPaginate'		=> 'indexAfterPaginate',
