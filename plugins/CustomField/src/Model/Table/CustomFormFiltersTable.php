@@ -3,7 +3,7 @@ namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class CustomFormTypesTable extends AppTable {
+class CustomFormFiltersTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
