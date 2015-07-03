@@ -13,9 +13,9 @@ class InfrastructuresController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
+			'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
 			'Levels' => ['className' => 'Infrastructure.InfrastructureLevels'],
-			'Types' => ['className' => 'Infrastructure.InfrastructureTypes'],
-			'CustomFields' => ['className' => 'Infrastructure.InfrastructureCustomFields']
+			'Types' => ['className' => 'Infrastructure.InfrastructureTypes']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -24,6 +24,10 @@ class InfrastructuresController extends AppController
     	parent::beforeFilter($event);
 
 		$tabElements = [
+			'Fields' => [
+				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+				'text' => __('Fields')
+			],
 			'Levels' => [
 				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
 				'text' => __('Levels')
@@ -31,10 +35,6 @@ class InfrastructuresController extends AppController
 			'Types' => [
 				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Types'],
 				'text' => __('Types')
-			],
-			'CustomFields' => [
-				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'CustomFields'],
-				'text' => __('Custom Fields')
 			]
 		];
 
@@ -50,25 +50,5 @@ class InfrastructuresController extends AppController
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);
-    }
-
-    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
-    	if ($model->alias == 'Levels') {
-			$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
-
-			$options['conditions'][] = [
-	        	$model->aliasField('parent_id') => $parentId
-	        ];
-    	} else if ($model->alias == 'Types' || $model->alias == 'CustomFields') {
-			$query = $this->request->query;
-
-			$levelOptions = TableRegistry::get('Infrastructure.InfrastructureLevels')->find('list')->toArray();
-	        $selectedLevel = isset($query['level']) ? $query['level'] : key($levelOptions);
-	        $options['conditions'][] = [
-	        	$model->aliasField('infrastructure_level_id') => $selectedLevel
-	        ];
-
-			$this->set(compact('levelOptions', 'selectedLevel'));
-    	}
     }
 }

@@ -22,10 +22,6 @@ class SalariesTable extends AppTable {
 	public function beforeAction() {
 		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
 		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {

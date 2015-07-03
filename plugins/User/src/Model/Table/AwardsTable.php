@@ -18,9 +18,6 @@ class AwardsTable extends AppTable {
 		// $this->fields['issuer']['attr']['onfocus'] = 'jsForm.autocomplete(this)';
 		// $this->fields['issuer']['attr']['autocompleteURL'] = $this->controller->name.'/'.$this->alias.'/autocompleteIssuer';
 
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	public function validationDefault(Validator $validator) {
