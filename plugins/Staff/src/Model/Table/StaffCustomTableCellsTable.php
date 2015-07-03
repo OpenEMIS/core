@@ -1,9 +1,9 @@
 <?php
 namespace Staff\Model\Table;
 
-use App\Model\Table\AppTable;
+use CustomField\Model\Table\CustomTableCellsTable;
 
-class StaffCustomTableCellsTable extends AppTable {
+class StaffCustomTableCellsTable extends CustomTableCellsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);

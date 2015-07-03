@@ -44,6 +44,50 @@ class RecordBehavior extends Behavior {
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	// Checking : skip insert if value is empty
+    	if (array_key_exists('custom_field_values', $data[$this->_table->alias()]) || array_key_exists('custom_table_cells', $data[$this->_table->alias()])) {
+			$CustomFields = $this->_table->CustomFieldValues->CustomFields;
+			$CustomFieldTypes = $CustomFields->CustomFieldTypes;
+			$fieldTypes = $CustomFieldTypes
+				->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+				->toArray();
+		}
+
+		if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
+			foreach ($data[$this->_table->alias()]['custom_field_values'] as $key => $obj) {
+				$fieldType = $CustomFields
+					->find('all')
+					->select([$CustomFields->aliasField('field_type')])
+					->where([$CustomFields->aliasField('id') => $obj[$this->config('fieldKey')]])
+					->first()
+					->field_type;
+
+				$fieldValue = $fieldTypes[$fieldType];
+
+				if (strlen($obj[$fieldValue]) == 0) {
+					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
+				}
+			}
+		}
+
+		if (array_key_exists('custom_table_cells', $data[$this->_table->alias()])) {
+			foreach ($data[$this->_table->alias()]['custom_table_cells'] as $key => $obj) {
+				$fieldType = $CustomFields
+					->find('all')
+					->select([$CustomFields->aliasField('field_type')])
+					->where([$CustomFields->aliasField('id') => $obj[$this->config('fieldKey')]])
+					->first()
+					->field_type;
+
+				$fieldValue = $fieldTypes[$fieldType];
+
+				if (strlen($obj[$fieldValue]) == 0) {
+					unset($data[$this->_table->alias()]['custom_table_cells'][$key]);
+				}
+			}
+		}
+		// End Checking
+
     	$associatedOptions = $options->offsetExists('associated') ? $options->offsetGet('associated') : [];
     	$associatedOptions = array_merge_recursive($associatedOptions, $this->_contain);
     	$options->offsetSet('associated', $associatedOptions);

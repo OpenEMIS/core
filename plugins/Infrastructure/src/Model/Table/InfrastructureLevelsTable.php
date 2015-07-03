@@ -97,7 +97,6 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 
 		$moduleOptions = $this->CustomModules
 			->find('list')
-			->find('visible')
 			->where([$this->CustomModules->aliasField('model') => $this->InstitutionInfrastructures->registryAlias()])
 			->toArray();
 		$selectedModule = !is_null($this->request->query('module')) ? $this->request->query('module') : key($moduleOptions);
