@@ -1,6 +1,7 @@
 <?php
 namespace Rubric\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -62,7 +63,7 @@ class RubricsController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function beforePaginate(Event $event, Table $model, array $options) {
+    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
     	if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
 			$query = $this->request->query;
 
@@ -98,7 +99,5 @@ class RubricsController extends AppController
 	        $this->set('selectedTemplate', $selectedTemplate);
 	        $this->set('templateOptions', $templateOptions);
     	}
-
-    	return $options;
     }
 }

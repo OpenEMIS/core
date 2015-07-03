@@ -56,8 +56,4 @@ class CustomFieldsController extends AppController
 
 		$this->set('contentHeader', $header);
     }
-
-    public function beforePaginate(Event $event, Table $model, array $options) {
-    	return $options;
-    }
 }

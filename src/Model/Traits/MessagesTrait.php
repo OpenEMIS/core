@@ -107,9 +107,11 @@ trait MessagesTrait {
 			'section' => 'Section',
 			'single_grade_field' => 'Single Grade Sections',
 			'multi_grade_field' => 'Multi-Grades Section',
-			'add' => [
-				'emptyName' => 'Section name should not be empty'
-			]
+			
+			'emptyName' => 'Section name should not be empty',
+			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
+			'emptyNameSecurityUserId' => 'Section name and Home Roome Teacher should not be empty',
+			'emptySecurityUserIdName' => 'Section name and Home Roome Teacher should not be empty'
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Sections',
@@ -219,13 +221,25 @@ trait MessagesTrait {
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
-				'noProgrammes' => 'There is no available Programme set for this Institution',
-				'noSections' => 'There is no available Section under the selected Academic Period',
+				'noActiveInstitution' => 'There is no active institution',
+				'noSubjectsInSection' => 'There is no subject in the selected section',
+				'noSubjectSelected' => 'There is no subject selected',
+				'noProgrammes' => 'There is no programme set for this institution',
+				'noSections' => 'There is no section under the selected academic period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
 				]
 			],
+			
+			'InstitutionSiteSections' => [
+				'noGrade' => 'There is no grade selected',
+				'emptyName' => 'Section name should not be empty',
+				'emptySecurityUserId' => 'Home Room Teacher should not be empty',
+				'emptyNameSecurityUserId' => 'Section name and Home Room Teacher should not be empty',
+			],
+
 			'InstitutionSiteProgrammes' => [
+				'noGrade' => 'There is no grade selected',
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]

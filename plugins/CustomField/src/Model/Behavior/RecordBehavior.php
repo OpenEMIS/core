@@ -100,11 +100,13 @@ class RecordBehavior extends Behavior {
 				->all();
 
 			if ($genaralResults->isEmpty()) {
-				$customFieldQuery = $CustomFormFields
-					->find('all')
-					->find('order')
-					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-					->where([$CustomFormFields->aliasField($this->config('formKey') . ' IN') => $customFormIds]);
+				if (is_null($filter)) {
+					$customFieldQuery = $CustomFormFields
+						->find('all')
+						->find('order')
+						->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+						->where([$CustomFormFields->aliasField($this->config('formKey') . ' IN') => $customFormIds]);
+				}
 			} else {
 				$genaralData = $genaralResults->first();
 				$generalId = $genaralData->{$this->config('formKey')};
@@ -171,11 +173,13 @@ class RecordBehavior extends Behavior {
 			$customFields = $customFieldQuery
 				->toArray();
 
+			$order = 0;
 			$fieldOrder = [];
 			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 			foreach ($this->_table->fields as $fieldName => $field) {
 				if (!in_array($fieldName, $ignoreFields)) {
-					$fieldOrder[] = $fieldName;
+					$order = $field['order'] > $order ? $field['order'] : $order;
+					$fieldOrder[$field['order']] = $fieldName;
 				}
 			}
 
@@ -226,7 +230,7 @@ class RecordBehavior extends Behavior {
 				);
 
 				$fieldName = "custom_".$key."_field";
-				$fieldOrder[] = $fieldName;
+				$fieldOrder[$order++] = $fieldName;
 				$valueClass = strtolower($_field_type) == 'table' ? 'table-full-width' : '';
 
 				$this->_table->ControllerAction->field($fieldName, [
@@ -246,8 +250,9 @@ class RecordBehavior extends Behavior {
 			}
 
 			foreach ($ignoreFields as $key => $field) {
-				$fieldOrder[] = $field;
+				$fieldOrder[$order++] = $field;
 			}
+			ksort($fieldOrder);
 			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
 		}
 	}

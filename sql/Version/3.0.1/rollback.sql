@@ -370,3 +370,12 @@ RENAME TABLE z_1461_quality_status_roles TO quality_status_roles;
 -- 1st July 2100hrs
 -- Revert for Survey Status
 ALTER TABLE `survey_statuses` ADD `academic_period_level_id` INT(11) NOT NULL AFTER `date_disabled`;
+
+-- 2nd July 2100hrs
+-- Update Institution - Infrastructure
+DROP TABLE IF EXISTS `institution_site_infrastructures`;
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_field_values`;
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_table_cells`;
+
+RENAME TABLE z_1461_institution_site_infrastructures TO institution_site_infrastructures;
+RENAME TABLE z_1461_institution_site_infrastructure_custom_values TO institution_site_infrastructure_custom_values;

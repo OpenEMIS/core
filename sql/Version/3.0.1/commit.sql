@@ -559,7 +559,8 @@ TRUNCATE TABLE `custom_modules`;
 INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `behavior`, `filter`, `parent_id`, `created_user_id`, `created`) VALUES
 (1, 'Institution', 'Institution - Overview', 'Institution.Institutions', NULL, 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
 (2, 'Student', 'Student - Overview', 'User.Users', 'Student', NULL, 0, 1, '0000-00-00 00:00:00'),
-(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00');
+(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00'),
+(4, 'Infrastructure', 'Institution - Infrastructure', 'Institution.InstitutionInfrastructures', NULL, 'Infrastructure.InfrastructureLevels', 1, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
@@ -1390,3 +1391,77 @@ ALTER TABLE `survey_statuses` DROP `academic_period_level_id`;
 
 -- Patch students data if status not equal 1
 UPDATE `institution_site_class_students` SET `status` = 1 WHERE `status` NOT IN (0, 1);
+
+-- 2nd July 2100hrs
+-- Update Institution - Infrastructure
+RENAME TABLE institution_site_infrastructures TO z_1461_institution_site_infrastructures;
+RENAME TABLE institution_site_infrastructure_custom_values TO z_1461_institution_site_infrastructure_custom_values;
+
+-- New table - institution_site_infrastructures
+DROP TABLE IF EXISTS `institution_site_infrastructures`;
+CREATE TABLE IF NOT EXISTS `institution_site_infrastructures` (
+  `id` int(11) NOT NULL,
+  `code` varchar(100) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `year_acquired` year(4) DEFAULT NULL,
+  `year_disposed` year(4) DEFAULT NULL,
+  `comment` text,
+  `size` float DEFAULT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `infrastructure_level_id` int(11) NOT NULL,
+  `infrastructure_type_id` int(11) NOT NULL,
+  `infrastructure_ownership_id` int(11) NOT NULL,
+  `infrastructure_condition_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_infrastructures`
+  ADD PRIMARY KEY (`id`), ADD KEY `code` (`code`), ADD KEY `name` (`name`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
+
+
+ALTER TABLE `institution_site_infrastructures`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_site_infrastructure_custom_field_values
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `institution_site_infrastructure_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `institution_site_infrastructure_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_infrastructure_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - institution_site_infrastructure_custom_table_cells
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `institution_site_infrastructure_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `infrastructure_custom_table_column_id` int(11) NOT NULL,
+  `infrastructure_custom_table_row_id` int(11) NOT NULL,
+  `institution_site_infrastructure_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_infrastructure_custom_table_cells`
+  ADD PRIMARY KEY (`id`);

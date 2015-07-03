@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Exception;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -9,6 +10,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class InstitutionSiteProgrammesTable extends AppTable {
+	private $_institutionId = 0;
 	private $_levelOptions;
 	private $_programmeOptions;
 
@@ -43,6 +45,17 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		if ($this->Session->check('Institutions.id')) {
+			$this->_institutionId = $this->Session->read('Institutions.id');
+		} else {
+			$this->Alert->warning('Institution.Institutions.noActiveInstitution');
+			$this->controller->redirect([
+				'plugin' => $this->controller->plugin, 
+				'controller' => $this->controller->name, 
+				'action' => 'index'
+			]);
+		}
+
 		/**
 		 * Set default_date to false to show a blank date input on page load
 		 */
@@ -53,8 +66,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->ControllerAction->field('education_grade', ['type' => 'element', 'element' => 'Institution.Programmes/grades']);
 
 		$this->ControllerAction->setFieldOrder([
-			'education_programme_id', 'education_level', 
-			'start_date', 'end_date', 'education_grade',
+			'education_programme_id', 'education_level', 'start_date', 'end_date', 'education_grade',
 		]);
 
 		if (strtolower($this->action) != 'index') {
@@ -124,19 +136,25 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// pr('addEditBeforePatch');
-		// pr($data);
-		foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
-			if (isset($row['education_grade_id'])) {
-				$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
-				$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
-			} else {
-				if ($row['id']!='') {
-					$data[$this->alias()]['institution_site_grades'][$key]['status'] = 0;
+		if (isset($data[$this->alias()]['institution_site_grades']) && count($data[$this->alias()]['institution_site_grades']>0)) {
+			foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
+				if (isset($row['education_grade_id'])) {
+					$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
+					$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
 				} else {
-					unset($data[$this->alias()]['institution_site_grades'][$key]);
+					if ($row['id']!='') {
+						$data[$this->alias()]['institution_site_grades'][$key]['status'] = 0;
+					} else {
+						unset($data[$this->alias()]['institution_site_grades'][$key]);
+					}
 				}
 			}
+		} else {
+			/**
+			 * set institution_site_id to empty to trigger validation error in ControllerActionComponent
+			 */
+			$data[$this->alias()]['institution_site_id'] = '';
+			$this->Alert->error('Institution.'.$this->alias().'.noGrade');
 		}
 	}
 
@@ -312,13 +330,11 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	 * Used by InstitutionSiteSectionsTable & InstitutionSiteClassesTable.
 	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date' 
 	 * of registered Programmes in the Institution. 
-	 * @param  integer $institutionsId           [description]
-	 * @param  integer $selectedAcademicPeriodId [description]
+	 * @param  integer $model           		 [description]
 	 * @param  array   $conditions               [description]
 	 * @return [type]                            [description]
 	 */
-	public function getAcademicPeriodOptions($conditions=[]) {
-
+	public function getAcademicPeriodOptions($Alert, $conditions=[]) {
 		$query = $this->find('all')
 					->select(['start_date', 'end_date'])
 					->where($conditions)
@@ -364,7 +380,13 @@ class InstitutionSiteProgrammesTable extends AppTable {
 										->where($academicPeriodConditions)
 										->order('`order`')
 										;
-		return $query->toArray();
+		$result = $query->toArray();
+		if (empty($result)) {
+			$Alert->warning('Institution.Institutions.noProgrammes');
+			return [];
+		} else {
+			return $result;
+		}
 	}
 
 	// not fully implemented
