@@ -1320,11 +1320,14 @@ th > a:hover,
 th > a:active { color: #444; }
 
 table input,
-table .input-select-wrapper,
-.table-in-view .input-select-wrapper {
+table .input-select-wrapper {
 	width: 100% !important;
 	margin: 0 !important;
 	min-width: 185px;
+}
+
+.table-in-view .input-select-wrapper {
+	min-width: 100%;
 }
 
 .table-sortable th > a {
