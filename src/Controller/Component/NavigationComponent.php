@@ -82,8 +82,8 @@ class NavigationComponent extends Component {
 								],
 								'Infrastructure' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
-									'selected' => ['Types', 'CustomFields']
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+									'selected' => ['Levels', 'Types']
 								],
 								'Assessments' => [
 									'collapse' => true,

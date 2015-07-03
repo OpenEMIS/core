@@ -373,9 +373,12 @@ ALTER TABLE `survey_statuses` ADD `academic_period_level_id` INT(11) NOT NULL AF
 
 -- 2nd July 2100hrs
 -- Update Institution - Infrastructure
+DROP TABLE IF EXISTS `infrastructure_levels`;
+DROP TABLE IF EXISTS `infrastructure_level_fields`;
 DROP TABLE IF EXISTS `institution_site_infrastructures`;
 DROP TABLE IF EXISTS `institution_site_infrastructure_custom_field_values`;
 DROP TABLE IF EXISTS `institution_site_infrastructure_custom_table_cells`;
 
+RENAME TABLE z_1461_infrastructure_levels TO infrastructure_levels;
 RENAME TABLE z_1461_institution_site_infrastructures TO institution_site_infrastructures;
 RENAME TABLE z_1461_institution_site_infrastructure_custom_values TO institution_site_infrastructure_custom_values;

@@ -15,10 +15,6 @@ class LicensesTable extends AppTable {
 
 	public function beforeAction() {
 		$this->fields['license_type_id']['type'] = 'select';
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 	public function validationDefault(Validator $validator) {
