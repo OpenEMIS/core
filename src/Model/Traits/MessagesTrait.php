@@ -353,7 +353,7 @@ trait MessagesTrait {
 					'ruleValidateEmergency' => 'Please enter a valid Value',
 				],
 				'preferred' => [
-					'ruleValidatePreferred' => 'Please select a preferred for the selected contact type'
+					'ruleValidatePreferred' => 'Please select a preferred contact type'
 				],
 			],
 			'Identities' => [
