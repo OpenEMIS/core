@@ -559,8 +559,7 @@ TRUNCATE TABLE `custom_modules`;
 INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `behavior`, `filter`, `parent_id`, `created_user_id`, `created`) VALUES
 (1, 'Institution', 'Institution - Overview', 'Institution.Institutions', NULL, 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
 (2, 'Student', 'Student - Overview', 'User.Users', 'Student', NULL, 0, 1, '0000-00-00 00:00:00'),
-(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00'),
-(4, 'Infrastructure', 'Institution - Infrastructure', 'Institution.InstitutionInfrastructures', NULL, 'Infrastructure.InfrastructureLevels', 1, 1, '0000-00-00 00:00:00');
+(3, 'Staff', 'Staff - Overview', 'User.Users', 'Staff', NULL, 0, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
@@ -720,16 +719,16 @@ CREATE TABLE IF NOT EXISTS `custom_form_fields` (
 ALTER TABLE `custom_form_fields`
   ADD PRIMARY KEY (`id`);
 
--- New table - custom_form_types
-DROP TABLE IF EXISTS `custom_form_types`;
-CREATE TABLE IF NOT EXISTS `custom_form_types` (
+-- New table - custom_form_filters
+DROP TABLE IF EXISTS `custom_form_filters`;
+CREATE TABLE IF NOT EXISTS `custom_form_filters` (
   `id` char(36) NOT NULL,
   `custom_form_id` int(11) NOT NULL,
-  `custom_type_id` int(11) NOT NULL
+  `custom_filter_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `custom_form_types`
+ALTER TABLE `custom_form_filters`
   ADD PRIMARY KEY (`id`);
 
 -- New table - custom_records
