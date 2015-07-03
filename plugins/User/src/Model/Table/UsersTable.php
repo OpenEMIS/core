@@ -132,6 +132,12 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('postal_code', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['visible' => false]);
 		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
+
+		$this->ControllerAction->field('staff_institution_name', ['visible' => false]);
+		$this->ControllerAction->field('student_institution_name', ['visible' => false]);
+
+		$this->fields['name']['sort'] = true;
+		$this->fields['default_identity_type']['sort'] = true;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {

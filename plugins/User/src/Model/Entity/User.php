@@ -176,11 +176,10 @@ class User extends Entity {
     }
 
     protected function _getProgrammeSection(){
+        $education_programme_id = "";
     	if ($this->institution_site_students) {
     		$education_programme_id = $this->institution_site_students[0]->education_programme_id;
     	}
-
-        $education_programme_id = "";
 
     	$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
     	$query = $EducationProgrammes
