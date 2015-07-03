@@ -69,6 +69,7 @@ class StudentBehavior extends Behavior {
 		$this->_table->fields['birthplace_area_id']['visible'] = false;
 		$this->_table->fields['status']['visible'] = false;
 		$this->_table->fields['photo_content']['visible'] = true;
+		$this->_table->fields['student_institution_name']['visible'] = true;
 
 		$this->_table->ControllerAction->field('name', []);
 		$this->_table->ControllerAction->field('default_identity_type', []);
