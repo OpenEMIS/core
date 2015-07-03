@@ -115,10 +115,6 @@ class InstitutionSiteClassesTable extends AppTable {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $this->_academicPeriodOptions);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 
