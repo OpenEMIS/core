@@ -1,5 +1,5 @@
 <div class="search">
-	<?= $this->Form->create(NULL, ['url' => $_buttons['index']['url']]) ?>
+	<?= $this->Form->create(NULL, ['url' => $url]) ?>
 		<div class="input-group">
 			<?= 
 			$this->Form->input('Search.searchField', [

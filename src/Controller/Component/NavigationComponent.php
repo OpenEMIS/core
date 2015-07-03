@@ -127,7 +127,8 @@ class NavigationComponent extends Component {
 								],
 								'Roles' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserRoles']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserRoles'],
+									'selected' => ['UserRoles', 'SystemRoles']
 								]
 							]
 						],
@@ -188,7 +189,7 @@ class NavigationComponent extends Component {
 						'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']],
 						'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 						'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendance'], 'selected' => ['StudentAttendance', 'StudentAbsences']],
-						'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentResults']]
+						'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments']]
 					]
 				],
 
