@@ -80,7 +80,7 @@ class ContactsTable extends AppTable {
 		$validator->remove('value', 'notBlank');
 		$validator
 			// ->allowEmpty('value')
-			->add('value', 'ruleValidateFax',  [
+			->add('value', 'ruleValidateNumeric',  [
 				'rule' => ['numeric', 'notBlank'],
 				'on' => function ($context) {
 					$contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
@@ -97,7 +97,7 @@ class ContactsTable extends AppTable {
 							}
 						}
 					}
-					return ($contactOptionId == 3);
+					return in_array($contactOptionId, [1,2,3]);
 				},
 			])
 			->add('value', 'ruleValidateEmail',  [
