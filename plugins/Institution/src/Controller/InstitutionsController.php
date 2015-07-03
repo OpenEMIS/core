@@ -66,7 +66,7 @@ class InstitutionsController extends AppController  {
 			$session->delete('Institutions.id');
 		}
 
-		if ($session->check('Institutions.id') || $action == 'view') {
+		if ($session->check('Institutions.id') || $action == 'view' || $action == 'edit') {
 			$id = 0;
 			if ($session->check('Institutions.id')) {
 				$id = $session->read('Institutions.id');
@@ -76,7 +76,7 @@ class InstitutionsController extends AppController  {
 			if (!empty($id)) {
 				$obj = $this->Institutions->get($id);
 				$name = $obj->name;
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}
@@ -103,15 +103,17 @@ class InstitutionsController extends AppController  {
 		}
 
 		if ($model->hasField('institution_site_id')) {
+			$institutionId = $session->read('Institutions.id');
+			$model->institutionId = $institutionId;
+
 			if (count($this->request->pass) > 1) {
-				$institutionId = $session->read('Institutions.id');
 				$modelId = $this->request->pass[1]; // id of the model
 
 				$exists = $model->exists([
 					$model->aliasField($model->primaryKey()) => $modelId,
 					$model->aliasField('institution_site_id') => $institutionId
 				]);
-
+			
 				if (!$exists) {
 					$this->Alert->warning('general.notExists');
 					return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);

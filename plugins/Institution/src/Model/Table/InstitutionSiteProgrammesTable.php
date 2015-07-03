@@ -1,16 +1,17 @@
 <?php
 namespace Institution\Model\Table;
 
-use Exception;
 use ArrayObject;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
+use App\Model\Table\AppTable;
+
 class InstitutionSiteProgrammesTable extends AppTable {
-	private $_institutionId = 0;
+	public $institutionId = 0;
 	private $_levelOptions;
 	private $_programmeOptions;
 
@@ -45,17 +46,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		if ($this->Session->check('Institutions.id')) {
-			$this->_institutionId = $this->Session->read('Institutions.id');
-		} else {
-			$this->Alert->warning('Institution.Institutions.noActiveInstitution');
-			$this->controller->redirect([
-				'plugin' => $this->controller->plugin, 
-				'controller' => $this->controller->name, 
-				'action' => 'index'
-			]);
-		}
-
 		/**
 		 * Set default_date to false to show a blank date input on page load
 		 */
@@ -456,6 +446,9 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		if (is_null($a)) {
 			return $b;
 		}
+		if (is_null($b)) {
+			return $a;
+		}
 		return (($a->toUnixString() <= $b->toUnixString()) ? $a : $b);
 	}
 
@@ -468,6 +461,9 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	private function getHigherDate($a, $b) {
 		if (is_null($a)) {
 			return $b;
+		}
+		if (is_null($b)) {
+			return $a;
 		}
 		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
 	}
