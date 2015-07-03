@@ -12,28 +12,30 @@ $id = $obj->$primaryKey;
 		<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>
 
 		<?php
-		foreach ($_indexActions as $action => $attr) : 
-			$icon = sprintf('<i class="%s"></i>%s', $attr['class'], $this->ControllerAction->getLabel('general', $action));
-			$options = array(
-				'role' => 'menuitem',
-				'tabindex' => '-1',
-				'escape' => false
-			);
 
-			if (array_key_exists('removeStraightAway', $attr) && $attr['removeStraightAway']) {
-				$options['data-toggle'] = 'modal';
-				$options['data-target'] = '#delete-modal';
-				$options['field-target'] = '#recordId';
-				$options['field-value'] = $obj->$primaryKey;
-				$options['onclick'] = 'ControllerAction.fieldMapping(this)';
-			}
+		foreach ($indexButtons as $key => $btn) {
+			echo '<li role="presentation">';
+			echo $this->Html->link($btn['label'], $btn['url'], $btn['attr']);
+			echo '</li>';
+		}
+		// foreach ($_indexActions as $action => $attr) : 
+		// 	$icon = sprintf('<i class="%s"></i>%s', $attr['class'], $this->ControllerAction->getLabel('general', $action));
+		// 	$options = array(
+		// 		'role' => 'menuitem',
+		// 		'tabindex' => '-1',
+		// 		'escape' => false
+		// 	);
 
-			$url = $attr['url'];
-			$url[] = $id;
+		// 	if (array_key_exists('removeStraightAway', $attr) && $attr['removeStraightAway']) {
+		// 		$options['data-toggle'] = 'modal';
+		// 		$options['data-target'] = '#delete-modal';
+		// 		$options['field-target'] = '#recordId';
+		// 		$options['field-value'] = $obj->$primaryKey;
+		// 		$options['onclick'] = 'ControllerAction.fieldMapping(this)';
+		// 	}
+
+		// 	$url = $attr['url'];
+		// 	$url[] = $id;
 		?>
-		<li role="presentation">
-			<?= $this->Html->link($icon, $url, $options) ?>
-		</li>
-		<?php endforeach ?>
 	</ul>
 </div>
