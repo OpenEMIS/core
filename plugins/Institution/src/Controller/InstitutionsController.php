@@ -2,11 +2,16 @@
 namespace Institution\Controller;
 
 use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\Utility\Inflector;
+
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController  {
+	private $_institutionObj = null;
+
 	public function initialize() {
 		parent::initialize();
 
@@ -61,6 +66,7 @@ class InstitutionsController extends AppController  {
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
+		$header = __('Institutions');
 
 		if ($action == 'index') {
 			$session->delete('Institutions.id');
@@ -68,30 +74,60 @@ class InstitutionsController extends AppController  {
 
 		if ($session->check('Institutions.id') || $action == 'view' || $action == 'edit') {
 			$id = 0;
-			if ($session->check('Institutions.id')) {
-				$id = $session->read('Institutions.id');
-			} else if (isset($this->request->pass[0])) {
+			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
+			} else if ($session->check('Institutions.id')) {
+				$id = $session->read('Institutions.id');
 			}
 			if (!empty($id)) {
-				$obj = $this->Institutions->get($id);
-				$name = $obj->name;
+				$this->_institutionObj = $this->Institutions->get($id);
+				$name = $this->_institutionObj->name;
+				$header = $name .' - Overview';
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}
 		}
 
-		$header = __('Institution');
 		$this->set('contentHeader', $header);
 	}
 
 	public function onInitialize(Event $event, Table $model) {
 		$session = $this->request->session();
-		$header = __('Institution');
+		$action = false;
+		$params = $this->request->params;
+		if (isset($params['pass'][0])) {
+			$action = $params['pass'][0];
+		}
 
-		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+		$persona = false;
+		if ($action) {
+			$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+			if (strtolower($action) != 'index')	{
+				if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
+					if (isset($params['pass'][1])) {
+						$persona = $model->get($params['pass'][1]);
+						if (is_object($persona)) {
+							$this->Navigation->addCrumb($persona->name);
+						}
+					}
+				} else {
+					$this->Navigation->addCrumb(ucwords($action));
+				}
+			}
+		} else {
+			$this->Navigation->addCrumb($model->getHeader($model->alias));
+		}
+
+		$header = __('Institution');
+		if (!is_null($this->_institutionObj)) {
+			$header = __($this->_institutionObj->name);
+		}
+		if ($persona) {
+			$header .= ' - ' . $persona->name;
+		} else {
+			$header .= ' - ' . $model->getHeader($model->alias);
+		}
 
 		if (array_key_exists('institution_site_id', $model->fields)) {
 			if (!$session->check('Institutions.id')) {
@@ -121,6 +157,9 @@ class InstitutionsController extends AppController  {
 			}
 		}
 		
+
+
+
 		$this->set('contentHeader', $header);
 	}
 
