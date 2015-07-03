@@ -75,7 +75,7 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('Users', 'date_of_birth', NULL, 'Date Of Birth'),
 ('Users', 'date_of_death', NULL, 'Date Of Death'),
 ('Users', 'status', NULL, 'Status'),
-('Users', 'photo_content', NULL, 'Profile Image'),
+('Users', 'photo_content', NULL, 'Photo ID'),
 -- Contacts
 ('Contacts', 'contact_type_id', NULL, 'Description'),
 ('Contacts', 'contact_option_id', NULL, 'Type'),
@@ -138,8 +138,10 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('Positions', 'name', NULL, 'Position'),
 ('Positions', 'teaching', NULL, 'Teaching'),
 ('Positions', 'number', NULL, 'Number'),
-('Positions', 'institution_site_position_id', NULL, 'Position')
-
-
+('Positions', 'institution_site_position_id', NULL, 'Position'),
+-- Students
+('Students', 'photo_content', NULL, 'Photo ID'),
+('Students', 'openemis_no', NULL, 'OpenEMIS ID'),
+('Staff', 'photo_content', NULL, 'Photo ID'),
+('Staff', 'openemis_no', NULL, 'OpenEMIS ID')
 ;
-
