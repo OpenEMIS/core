@@ -167,6 +167,61 @@ class AppTable extends Table {
 		return $label;
 	}
 
+	// Event: 'ControllerAction.Model.onInitializeButtons'
+	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+		$controller = $event->subject()->_registry->getController();
+
+		$toolbarButtons = [];
+		$indexButtons = [];
+
+		$toolbarAttr = [
+			'class' => 'btn btn-xs btn-default',
+			'data-toggle' => 'tooltip',
+			'data-placement' => 'bottom',
+			'escape' => false
+		];
+		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
+		if ($buttons->offsetExists('add')) {
+			$toolbarButtons['add'] = $buttons['add'];
+			$toolbarButtons['add']['type'] = 'button';
+			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
+			$toolbarButtons['add']['attr'] = $toolbarAttr;
+			$toolbarButtons['add']['attr']['title'] = 'Add';
+		}
+
+		if ($buttons->offsetExists('view')) {
+			$indexButtons['view'] = $buttons['view'];
+			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>View';
+			$indexButtons['view']['attr'] = $indexAttr;
+		}
+
+		if ($buttons->offsetExists('edit')) {
+			$indexButtons['edit'] = $buttons['edit'];
+			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>Edit';
+			$indexButtons['edit']['attr'] = $indexAttr;
+		}
+
+		if ($buttons->offsetExists('remove')) {
+			$indexButtons['remove'] = $buttons['remove'];
+			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>Delete';
+			$indexButtons['remove']['attr'] = $indexAttr;
+		}
+
+		$toolbarButtons['search'] = [
+			'type' => 'element', 
+			'element' => 'ControllerAction.search',
+			'data' => ['url' => $buttons['index']['url']],
+			'options' => []
+		];
+
+// pr($toolbarButtons);
+// pr($indexButtons);
+		$controller->set(compact('toolbarButtons', 'indexButtons'));
+
+		return compact('toolbarButtons', 'indexButtons');
+	}
+
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
 	}

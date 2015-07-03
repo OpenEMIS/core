@@ -5,8 +5,8 @@ echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.m
 $dataKeys = array();
 $tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
 
-$displayAction = !empty($_indexActions);
-$displayReorder = array_key_exists('reorder', $_buttons) && count($data) > 1;
+$displayAction = !empty($indexButtons);
+$displayReorder = array_key_exists('reorder', $indexButtons) && count($data) > 1;
 
 if ($displayAction) {
 	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
@@ -42,7 +42,7 @@ foreach ($data as $obj) {
 $tableClass = ''; //isset($data['tableClass']) ? $data['tableClass'] : '';
 
 if(isset($moreRows) && $moreRows) {
-	$formOptions = $this->ControllerAction->getFormOptions($_buttons[$action]['url']);
+	$formOptions = $this->ControllerAction->getFormOptions($buttons[$action]['url']);
 	echo $this->Form->create($model, $formOptions);
 }
 
