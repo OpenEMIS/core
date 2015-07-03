@@ -1,6 +1,7 @@
 <?php
 namespace Workflow\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
@@ -46,7 +47,7 @@ class WorkflowsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforePaginate($event, $model, $options) {
+    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
         if ($model->alias == 'Steps') {
             list($workflowOptions, $selectedWorkflow) = array_values($this->WorkflowSteps->getSelectOptions());
 
@@ -55,7 +56,5 @@ class WorkflowsController extends AppController
                 $model->aliasField('workflow_id') => $selectedWorkflow
             ];
         }
-
-        return $options;
     }
 }

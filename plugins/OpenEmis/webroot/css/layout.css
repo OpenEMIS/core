@@ -1960,6 +1960,25 @@ input[readonly] {
 	background: #999;
 }
 
+.fuelux .wizard > ul.steps li, 
+.fuelux .wizard > .steps-container > ul.steps li {
+	font-size: 12px;
+	padding: 0 10px 0 30px;
+}
+
+.fuelux .wizard > .steps-container > ul.steps li {
+	height: 31px !important;
+	line-height: 32px !important;
+}
+
+.fuelux .wizard > .actions {
+	line-height: 31px !important;
+}
+
+.fuelux .wizard > .steps-container > ul.steps li .chevron {
+	top: -8px;
+}
+
 /* TAGS */
 .tags {
 	-webkit-border-radius: 3px;

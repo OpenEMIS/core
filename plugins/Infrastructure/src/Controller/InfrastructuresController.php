@@ -1,6 +1,7 @@
 <?php
 namespace Infrastructure\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -51,7 +52,7 @@ class InfrastructuresController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function beforePaginate(Event $event, Table $model, array $options) {
+    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
     	if ($model->alias == 'Levels') {
 			$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
 
@@ -69,7 +70,5 @@ class InfrastructuresController extends AppController
 
 			$this->set(compact('levelOptions', 'selectedLevel'));
     	}
-
-    	return $options;
     }
 }

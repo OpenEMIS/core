@@ -35,13 +35,13 @@ class UserBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event) {
 		if ($this->_table->hasBehavior('Student')) {
-
 			$this->_table->fields['institution_name']['visible'] = false;
 			$this->_table->ControllerAction->field('programmeSection', []);
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programmeSection', 'student_status']);
 		} else if ($this->_table->hasBehavior('Staff')) {
 			$this->_table->fields['staff_institution_name']['visible'] = false;
+
 			$this->_table->ControllerAction->field('position', []);
 			$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'position', 'staff_status']);
@@ -235,13 +235,17 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('academic_period', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['academic_period'])) {
 				$this->academicPeriodId = key($this->_table->fields['academic_period']['options']);
-				if ($this->_table->request->data($this->associatedModel->aliasField('academic_period'))) {
-					$this->academicPeriodId = $this->_table->request->data($this->associatedModel->aliasField('academic_period'));
+				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period']) {
+						$this->academicPeriodId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period'];
+					}
 				}
+
 			}
 		}
 		$attr['type'] = 'select';
 		$attr['onChangeReload'] = 'true';
+
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
 			$attr['options'] = $InstitutionSiteProgrammes->getSiteProgrammeOptions($institutionsId, $this->academicPeriodId);
@@ -257,8 +261,10 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('education_programme_id', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_programme_id'])) {
 				$this->educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
-				if ($this->_table->request->data($this->associatedModel->aliasField('education_programme_id'))) {
-					$this->educationProgrammeId = $this->_table->request->data($this->associatedModel->aliasField('education_programme_id'));
+				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
+						$this->educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+					}
 				}
 			}
 		}
@@ -280,8 +286,10 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('education_grade', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_grade'])) {
 				$this->education_grade = key($this->_table->fields['education_grade']['options']);
-				if ($this->_table->request->data($this->associatedModel->aliasField('education_grade'))) {
-					$this->education_grade = $this->_table->request->data($this->associatedModel->aliasField('education_grade'));
+				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']) {
+						$this->education_grade = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade'];
+					}
 				}
 			}
 		}
@@ -325,15 +333,19 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('institution_site_position_id', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['institution_site_position_id'])) {
 				$positionId = key($this->_table->fields['institution_site_position_id']['options']);
-				if ($this->_table->request->data($this->_table->aliasField('institution_site_position_id'))) {
-					$positionId = $this->_table->request->data($this->_table->aliasField('institution_site_position_id'));
+				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id']) {
+						$positionId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id'];
+					}
 				}
 			}
 		}
 
 		$startDate = null;
-		if ($this->_table->request->data($this->_table->aliasField('start_date'))) {
-			$startDate = $this->_table->request->data($this->_table->aliasField('start_date'));
+		if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+			if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date']) {
+				$startDate = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date'];
+			}
 		}
 
 		$attr['type'] = 'select';
