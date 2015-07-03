@@ -49,7 +49,6 @@ class StudentFeesTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-
     	$this->ControllerAction->field('amount', ['type' => 'float', 					'visible' => ['index'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('payment_date', ['type' => 'date', 				'visible' => ['edit'=>true]]);
     	$this->ControllerAction->field('comments', ['type' => 'string', 				'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
@@ -71,10 +70,6 @@ class StudentFeesTable extends AppTable {
  		$institutionsId = $this->Session->read('Institutions.id');
 		$this->_gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId);
 		$this->_selectedGradeId = $this->queryString('grade_id', $this->_gradeOptions);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 
