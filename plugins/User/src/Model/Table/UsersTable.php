@@ -26,7 +26,7 @@ class UsersTable extends AppTable {
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
-	private $specialFields = ['default_identity_type'];
+	private $specialFields = ['default_identity_type','student_status','staff_status','student_institution_name','staff_institution_name','programme_section'];
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -132,6 +132,12 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('postal_code', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['visible' => false]);
 		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
+
+		$this->ControllerAction->field('staff_institution_name', ['visible' => false]);
+		$this->ControllerAction->field('student_institution_name', ['visible' => false]);
+
+		$this->fields['name']['sort'] = true;
+		$this->fields['default_identity_type']['sort'] = true;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
@@ -244,32 +250,7 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->add('address', [])
-			->add('password', [
-				// 'ruleUnique' => [
-				// 	'rule' => 'validateUnique',
-				// 	'provider' => 'table',
-				// ],
-				// 'ruleAlphanumeric' => [
-				//     'rule' => 'alphanumeric',
-				// ]
-
-
-				// 'ruleChangePassword' => [
-				// 	'rule' => array('changePassword',false),
-				// 	 // authenticate changePassword ('new password', retyped password) // validate behaviour
-				// 	// 'on' => 'update',
-				// ],
-				// 'ruleCheckUsernameExists' => array(
-				// 	'rule' => array('checkUsernameExists'),
-				// 	'message' => 'Please enter a valid password'
-				// ),
-				// 'ruleMinLength' => array(
-				// 	'rule' => array('minLength', 6),
-				// 	'on' => 'create',
-				// 	'allowEmpty' => true,
-				// 	'message' => 'Password must be at least 6 characters'
-				// )
-			])
+			->add('password', [])
 			->allowEmpty('photo_content')
 				->add('photo_content', [
 					'ruleCheckSelectedFileAsImage' => [
@@ -281,19 +262,7 @@ class UsersTable extends AppTable {
 							'message' => 'Uploaded file exceeds 2MB in size.'
 					]
 				])
-// password
-// newPassword
-// retypeNewPassword
-
-				// todo-mlee: sort out saving for user name and password
 			;
-
-			// ->requirePresence('username',false);
-
-			
-
-			
-
 		return $validator;
 	}
 
@@ -332,6 +301,12 @@ class UsersTable extends AppTable {
 					$value = $defaultIdentity->name;
 
 				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+			} else if($field == 'student_status' || $field == 'staff_status') {
+				return 'Status';
+			} else if($field == 'student_institution_name' || $field == 'staff_institution_name') {
+				return 'Institution Name';
+			} else if($field == 'programme_section') {
+				return 'Programme<span class="divider"></span>Section';
 			}	
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);

@@ -44,10 +44,6 @@ class AttachmentsTable extends AppTable {
 		$this->ControllerAction->field('date_on_file', 			['type' => 'date', 'visible' => true]);
 
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
-
-		if (strtolower($this->action) != 'index') {
-			$this->Navigation->addCrumb($this->getHeader($this->action));
-		}
 	}
 
 

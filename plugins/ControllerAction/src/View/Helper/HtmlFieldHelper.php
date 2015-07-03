@@ -8,7 +8,11 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 
+use Cake\View\Helper\IdGeneratorTrait;
+
 class HtmlFieldHelper extends Helper {
+	use IdGeneratorTrait;
+
 	public $table = null;
 
 	public $helpers = ['Html', 'Form', 'Url'];
@@ -406,6 +410,10 @@ class HtmlFieldHelper extends Helper {
 			}
 		} else if ($action == 'edit') {
 			$attr['id'] = $attr['model'] . '_' . $field;
+			if (array_key_exists('fieldName', $attr)) {
+				$attr['id'] = $this->_domId($attr['fieldName']);
+			}
+
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
 			if (!is_null($value)) {
 				$attr['value'] = date('d-m-Y', strtotime($value));
