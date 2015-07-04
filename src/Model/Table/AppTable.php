@@ -172,7 +172,7 @@ class AppTable extends Table {
 		$controller = $event->subject()->_registry->getController();
 
 		$toolbarButtons = [];
-		$indexButtons = [];
+		$indexButtons = new ArrayObject([]);
 
 		$toolbarAttr = [
 			'class' => 'btn btn-xs btn-default',
@@ -215,11 +215,30 @@ class AppTable extends Table {
 			'options' => []
 		];
 
-// pr($toolbarButtons);
-// pr($indexButtons);
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 
-		return compact('toolbarButtons', 'indexButtons');
+		// return compact('toolbarButtons', 'indexButtons');
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, ArrayObject $buttons) {
+		$primaryKey = $this->primaryKey();
+		$id = $entity->$primaryKey;
+		
+		if ($buttons->offsetExists('view')) {
+			$buttons['view']['url'][] = $id;
+		}
+		if ($buttons->offsetExists('edit')) {
+			$buttons['edit']['url'][] = $id;
+		}
+		if ($buttons->offsetExists('remove')) {
+			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+				$buttons['remove']['attr']['data-toggle'] = 'modal';
+				$buttons['remove']['attr']['data-target'] = '#delete-modal';
+				$buttons['remove']['attr']['field-target'] = '#recordId';
+				$buttons['remove']['attr']['field-value'] = $id;
+				$buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+			}
+		}
 	}
 
 	public function findVisible(Query $query, array $options) {

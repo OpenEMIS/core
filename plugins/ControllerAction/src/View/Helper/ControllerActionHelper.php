@@ -23,15 +23,18 @@ class ControllerActionHelper extends Helper {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
 
-	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
+	public function onEvent($subject, $eventKey, $method) {
 		$eventMap = $subject->implementedEvents();
-		$event = new Event($eventKey, $this, $params);
-
 		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
 			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
 				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
 			}
 		}
+	}
+
+	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
+		$this->onEvent($subject, $eventKey, $method);
+		$event = new Event($eventKey, $this, $params);
 		return $subject->eventManager()->dispatch($event);
 	}
 
@@ -156,11 +159,7 @@ class ControllerActionHelper extends Helper {
 					
 					$method = 'onGet' . Inflector::camelize($field);
 					$eventKey = 'ControllerAction.Model.' . $method;
-
-					$event = new Event($eventKey, $this);
-					if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
-						$table->eventManager()->on($eventKey, [], [$table, $method]);
-		            }
+					$this->onEvent($table, $eventKey, $method);
 
 					if (isset($attr['tableHeaderClass'])) {
 						$tableHeaders[] = array($label => array('class' => $attr['tableHeaderClass']));
@@ -174,8 +173,8 @@ class ControllerActionHelper extends Helper {
 		return $tableHeaders;
 	}
 
-	public function getTableRow($obj, $fields) {
-		$row = array();
+	public function getTableRow(Entity $entity, array $fields) {
+		$row = [];
 
 		$search = '';
 		if (isset($this->request->data['Search']) && array_key_exists('searchField', $this->request->data['Search'])) {
@@ -186,7 +185,7 @@ class ControllerActionHelper extends Helper {
 
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
-			$value = $obj->$field;
+			$value = $entity->$field;
 			$type = $attr['type'];
 
 			if (!empty($search)) {
@@ -198,27 +197,27 @@ class ControllerActionHelper extends Helper {
 			}
 
 			// attach event for index columns
+			// EventManager->on is triggered at getTableHeader()
 			$method = 'onGet' . Inflector::camelize($field);
 			$eventKey = 'ControllerAction.Model.' . $method;
-
-			$event = new Event($eventKey, $this, ['entity' => $obj]);
+			$event = new Event($eventKey, $this, [$entity]);
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
 				$value = $event->result;
-				$obj->$field = $value;
+				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
-				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
-					$value = $obj->$associatedObject->name;
+				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
+					$value = $entity->$associatedObject->name;
 					$associatedFound = true;
 				}
 			}
 
 			if (!$associatedFound) {
-				$value = $this->HtmlField->render($type, 'index', $obj, $attr);
+				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
 			}
 
 			if (isset($attr['tableRowClass'])) {
