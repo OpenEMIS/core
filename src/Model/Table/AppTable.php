@@ -206,7 +206,7 @@ class AppTable extends Table {
 			$toolbarButtons['back']['attr'] = $toolbarAttr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
 
-			if ($action == 'edit') {
+			if ($action == 'edit' && $buttons->offsetExists('index')) {
 				$toolbarButtons['list'] = $buttons['index'];
 				$toolbarButtons['list']['type'] = 'button';
 				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';

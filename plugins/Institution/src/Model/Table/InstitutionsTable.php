@@ -225,7 +225,6 @@ class InstitutionsTable extends AppTable  {
 		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
-		return $options;
 	}
 
 /******************************************************************************************************************

@@ -82,7 +82,6 @@ class UserRolesTable extends AppTable {
 		$selectedGroup = $request->query['security_group_id'];
 
 		$options['conditions'][$this->aliasField('security_group_id')] = $selectedGroup;
-		return $options;
 	}
 
 	public function addBeforeAction(Event $event) {

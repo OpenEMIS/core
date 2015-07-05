@@ -202,7 +202,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		$paginateOptions['finder'] = ['bySections' => []];
 		$paginateOptions['contain'][] = 'Teachers';
 		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriodId;
-		return $paginateOptions;
 	}
 
 

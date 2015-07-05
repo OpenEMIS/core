@@ -85,7 +85,6 @@ class InstitutionSiteFeesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['withProgrammes' => []];
-		return $paginateOptions;
 	}
 
     public function findWithProgrammes(Query $query, array $options) {
