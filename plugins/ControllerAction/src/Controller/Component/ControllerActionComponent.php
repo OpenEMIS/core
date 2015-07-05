@@ -691,7 +691,7 @@ class ControllerActionComponent extends Component {
 					$this->Alert->error('general.add.failed');
 				}
 			} else {
-				$params['options']['validate'] = false;
+				$patchOptions['validate'] = false;
 				$methodKey = 'on' . ucfirst($submit);
 
 				// Event: addEditOnReload

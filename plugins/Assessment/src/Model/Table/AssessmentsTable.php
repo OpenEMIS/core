@@ -148,6 +148,13 @@ class AssessmentsTable extends AppTable {
 		}
 	}
 
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+		foreach ($entity->assessment_items as $item) {
+			$item->education_subject = $EducationSubjects->get($item->education_subject_id);
+		}
+	}
+
 	public function addOnChangeProgrammes(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$gradeId = key($this->fields['education_grade_id']['options']);
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
