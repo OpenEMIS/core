@@ -169,6 +169,7 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
 	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+		// needs clean up
 		$controller = $event->subject()->_registry->getController();
 
 		$toolbarButtons = [];
@@ -182,42 +183,91 @@ class AppTable extends Table {
 		];
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
-		if ($buttons->offsetExists('add')) {
-			$toolbarButtons['add'] = $buttons['add'];
-			$toolbarButtons['add']['type'] = 'button';
-			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
-			$toolbarButtons['add']['attr'] = $toolbarAttr;
-			$toolbarButtons['add']['attr']['title'] = 'Add';
+		if ($action == 'index') {
+			if ($buttons->offsetExists('add')) {
+				$toolbarButtons['add'] = $buttons['add'];
+				$toolbarButtons['add']['type'] = 'button';
+				$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
+				$toolbarButtons['add']['attr'] = $toolbarAttr;
+				$toolbarButtons['add']['attr']['title'] = __('Add');
+			}
+			if ($buttons->offsetExists('search')) {
+				$toolbarButtons['search'] = [
+					'type' => 'element', 
+					'element' => 'OpenEmis.search',
+					'data' => ['url' => $buttons['index']['url']],
+					'options' => []
+				];
+			}
+		} else if ($action == 'add' || $action == 'edit') {
+			$toolbarButtons['back'] = $buttons['back'];
+			$toolbarButtons['back']['type'] = 'button';
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr'] = $toolbarAttr;
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+
+			if ($action == 'edit') {
+				$toolbarButtons['list'] = $buttons['index'];
+				$toolbarButtons['list']['type'] = 'button';
+				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
+				$toolbarButtons['list']['attr'] = $toolbarAttr;
+				$toolbarButtons['list']['attr']['title'] = __('List');
+			}
+		} else if ($action == 'view') {
+			// back button
+			$toolbarButtons['back'] = $buttons['back'];
+			$toolbarButtons['back']['type'] = 'button';
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr'] = $toolbarAttr;
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+
+			// edit button
+			if ($buttons->offsetExists('edit')) {
+				$toolbarButtons['edit'] = $buttons['edit'];
+				$toolbarButtons['edit']['type'] = 'button';
+				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+				$toolbarButtons['edit']['attr'] = $toolbarAttr;
+				$toolbarButtons['edit']['attr']['title'] = __('Edit');
+			}
+
+			// delete button
+			// disabled for now until better solution
+			// if ($buttons->offsetExists('remove')) {
+			// 	$toolbarButtons['remove'] = $buttons['remove'];
+			// 	$toolbarButtons['remove']['type'] = 'button';
+			// 	$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
+			// 	$toolbarButtons['remove']['attr'] = $toolbarAttr;
+			// 	$toolbarButtons['remove']['attr']['title'] = __('Delete');
+
+			// 	if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+			// 		$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
+			// 		$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
+			// 		$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
+			// 		// $toolbarButtons['remove']['attr']['field-value'] = $id;
+			// 		$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+			// 	}
+			// }
 		}
 
 		if ($buttons->offsetExists('view')) {
 			$indexButtons['view'] = $buttons['view'];
-			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>View';
+			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View');
 			$indexButtons['view']['attr'] = $indexAttr;
 		}
 
 		if ($buttons->offsetExists('edit')) {
 			$indexButtons['edit'] = $buttons['edit'];
-			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>Edit';
+			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit');
 			$indexButtons['edit']['attr'] = $indexAttr;
 		}
 
 		if ($buttons->offsetExists('remove')) {
 			$indexButtons['remove'] = $buttons['remove'];
-			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>Delete';
+			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		$toolbarButtons['search'] = [
-			'type' => 'element', 
-			'element' => 'OpenEmis.search',
-			'data' => ['url' => $buttons['index']['url']],
-			'options' => []
-		];
-
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
-
-		// return compact('toolbarButtons', 'indexButtons');
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, ArrayObject $buttons) {

@@ -1,3 +1,8 @@
+<?php
+$totalRecords = $this->Paginator->counter('{{count}}');
+?>
+
+<?php if ($totalRecords > 0) : ?>
 <div class="pagination-wrapper">
 	<?php
 	$totalPages = $this->Paginator->counter('{{pages}}');
@@ -19,3 +24,4 @@
 	</div>
 	<div class="display-limit"><?php echo $this->ControllerAction->getPageOptions() ?></div>
 </div>
+<?php endif ?>

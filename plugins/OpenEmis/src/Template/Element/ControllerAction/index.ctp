@@ -5,7 +5,7 @@ echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.m
 $dataKeys = [];
 $tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
 
-$displayAction = !empty($indexButtons);
+$displayAction = $indexButtons->count() > 0;
 $displayReorder = array_key_exists('reorder', $indexButtons) && $data->count() > 1;
 
 if ($displayAction) {

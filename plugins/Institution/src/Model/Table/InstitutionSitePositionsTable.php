@@ -85,11 +85,6 @@ class InstitutionSitePositionsTable extends AppTable {
 
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		return $data;
-	}
-
-
 /******************************************************************************************************************
 **
 ** addEdit action methods
