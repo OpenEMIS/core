@@ -214,8 +214,6 @@ class StudentAttendanceTable extends AppTable {
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
 		}
-
-		return $options;
 	}
 
 	public function indexAfterPaginate(Event $event, $data) {

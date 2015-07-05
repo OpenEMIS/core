@@ -33,10 +33,12 @@ class AccountsTable extends AppTable {
 
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
-		$id = $this->controller->viewVars['_buttons']['edit']['url'][0];
+
+		// needs a better solution to handle buttons
+		$id = $this->ControllerAction->buttons['view']['url'][0];
 		if ($id=='view' || $id=='edit') {
-			if (isset($this->controller->viewVars['_buttons']['edit']['url'][1])) {
-				$id = $this->controller->viewVars['_buttons']['edit']['url'][1];
+			if (isset($this->ControllerAction->buttons['view']['url'][1])) {
+				$id = $this->ControllerAction->buttons['view']['url'][1];
 			}
 		}
 
@@ -58,7 +60,7 @@ class AccountsTable extends AppTable {
 			];
 		}
 
-		$back = $this->controller->viewVars['_buttons']['back'];
+		$back = $this->controller->viewVars['toolbarButtons']['back'];
 		if ($back['url']['action'] == 'Accounts' && $back['url'][0] == 'index') {
 			if ($back['url']['controller'] == 'Securities') {
 				$back['url']['action'] = 'Users';
@@ -67,7 +69,7 @@ class AccountsTable extends AppTable {
 				$back['url']['action'] = 'index';
 				unset($back['url'][0]);
 			}
-			$this->controller->viewVars['_buttons']['back'] = $back;
+			$this->controller->viewVars['toolbarButtons']['back'] = $back;
 		}
 
 		$this->controller->set('selectedAction', $this->alias);

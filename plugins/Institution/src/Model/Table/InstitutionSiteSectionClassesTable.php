@@ -76,10 +76,8 @@ class InstitutionSiteSectionClassesTable extends AppTable {
     }
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-
 		$paginateOptions['contain']['InstitutionSiteClasses'] = ['EducationSubjects'];
 		$paginateOptions['conditions'][] = ['institution_site_section_id' => $this->_selectedSection];
-		return $paginateOptions;
 	}
 
 }

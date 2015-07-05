@@ -68,6 +68,5 @@ class ConfigItemsTable extends AppTable {
 		$type = $request->query['type_value'];
 		$options['finder'] = ['visible' => []];
 		$options['conditions'][$this->aliasField('type')] = $type;
-		return $options;
 	}
 }

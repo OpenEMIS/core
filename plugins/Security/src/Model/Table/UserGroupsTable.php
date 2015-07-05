@@ -51,7 +51,6 @@ class UserGroupsTable extends AppTable {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
 		$options['finder'] = ['notInInstitutions' => []];
-		return $options;
 	}
 
 	public function findNotInInstitutions(Query $query, array $options) {

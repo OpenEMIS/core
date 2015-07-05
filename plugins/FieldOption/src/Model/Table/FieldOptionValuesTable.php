@@ -58,7 +58,6 @@ class FieldOptionValuesTable extends AppTable {
 		$this->controller->set('selectedOption', $selectedOption);
 
 		$options['conditions'][$this->aliasField('field_option_id')] = $selectedOption;
-		return $options;
 	}
 
 	public function viewBeforeAction(Event $event) {

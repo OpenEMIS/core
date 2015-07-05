@@ -260,8 +260,6 @@ class InstitutionSurveysTable extends AppTable {
 		$options['order'] = [
 			$this->AcademicPeriods->aliasField('order')
 		];
-
-		return $options;
 	}
 
 	public function addEditBeforeAction(Event $event) {
