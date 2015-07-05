@@ -2,8 +2,8 @@
 namespace Area\Controller;
 
 use App\Controller\AppController;
+use Cake\ORM\Table;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
 
 class AreasController extends AppController
 {
@@ -11,49 +11,32 @@ class AreasController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'AreaLevels' => ['className' => 'Area.AreaLevels'],
+			'Levels' => ['className' => 'Area.AreaLevels'],
 			'Areas' => ['className' => 'Area.Areas'],
-			'AreaAdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels'],
-			'AreaAdministratives' => ['className' => 'Area.AreaAdministratives']
+			'AdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels'],
+			'Administratives' => ['className' => 'Area.AreaAdministratives']
 		];
 		$this->loadComponent('Paginator');
     }
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Administrative Boundaries', ['plugin' => 'Area', 'controller' => 'Areas', 'action' => $this->request->action]);
-		$this->Navigation->addCrumb(Inflector::humanize(Inflector::underscore($this->request->action)));
-
-    	$header = __('Area');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . Inflector::humanize(Inflector::underscore($model->alias));
-
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
-
-		$this->set('contentHeader', $header);
 
 		$tabElements = [
-			'AreaLevels' => [
-				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaLevels'],
+			'Levels' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Levels'],
 				'text' => __('Area Levels (Education)')
 			],
 			'Areas' => [
 				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas'],
 				'text' => __('Areas (Education)')
 			],
-			'AreaAdministrativeLevels' => [
-				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministrativeLevels'],
+			'AdministrativeLevels' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AdministrativeLevels'],
 				'text' => __('Area Levels (Administrative)')
 			],
-			'AreaAdministratives' => [
-				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministratives'],
+			'Administratives' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Administratives'],
 				'text' => __('Areas (Administrative)')
 			]
 		];
@@ -61,4 +44,14 @@ class AreasController extends AppController
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
+
+	public function onInitialize(Event $event, Table $model) {
+		$header = __('Area');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb('Area', ['plugin' => 'Area', 'controller' => 'Areas', 'action' => $model->alias]);
+		$this->Navigation->addCrumb($model->getHeader($model->alias));
+
+		$this->set('contentHeader', $header);
+    }
 }
