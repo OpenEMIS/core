@@ -91,9 +91,7 @@
 												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.order", ['value' => $columnOrder]);
 												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.visible");
 											?>
-											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemoveColumn(this);">
-												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-											</button>
+											<button class="btn btn-xs btn-reset" onclick="jsTable.doRemoveColumn(this);"><i class="fa fa-close"></i></button>
 										</div>
 									</th>
 								<?php
@@ -121,9 +119,7 @@
 												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.order", ['value' => $rowOrder]);
 												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.visible");
 											?>
-											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-											</button>
+											<button class="btn btn-xs btn-reset" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i></button>
 										</td>
 										<?php
 											if(!empty($data->custom_table_columns)) :
