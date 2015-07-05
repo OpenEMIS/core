@@ -23,6 +23,14 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 			'foreignKey' => 'infrastructure_level_id',
 			'targetForeignKey' => 'infrastructure_custom_field_id'
 		]);
+		$this->addBehavior('Tree');
+	}
+
+	public function beforeAction(Event $event) {
+		parent::beforeAction($event);
+		$this->fields['custom_module_id']['visible'] = false;
+		$this->fields['lft']['visible'] = false;
+		$this->fields['rght']['visible'] = false;
 	}
 
 	public function afterAction(Event $event) {
@@ -32,14 +40,20 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 	public function indexBeforeAction(Event $event) {
 		parent::indexBeforeAction($event);
 		$this->_fieldOrder = ['name', 'description', 'custom_fields', 'parent_id'];
-		$this->ControllerAction->setFieldOrder([
-			'name', 'parent_id'
-		]);
 
-		// Hide controls filter
-		$toolbarElements = [];
+		// Hide controls filter and add breadcrumb
+		$toolbarElements = [
+            ['name' => 'Infrastructure.breadcrumb', 'data' => [], 'options' => []]
+        ];
 		$this->controller->set('toolbarElements', $toolbarElements);
-		$this->fields['custom_module_id']['visible'] = 'false';
+
+		$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
+		if ($parentId != 0) {
+			$crumbs = $this
+				->find('path', ['for' => $parentId])
+				->toArray();
+			$this->controller->set('crumbs', $crumbs);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {

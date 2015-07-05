@@ -1406,6 +1406,8 @@ CREATE TABLE IF NOT EXISTS `infrastructure_levels` (
   `description` text DEFAULT NULL,
   `custom_module_id` int(11) NOT NULL,
   `parent_id` int(11) DEFAULT '0',
+  `lft` int(11) DEFAULT NULL,
+  `rght` int(11) DEFAULT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
