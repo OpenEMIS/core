@@ -536,14 +536,14 @@ class ControllerActionComponent extends Component {
 		}
 		$modal = $this->getModalOptions('remove');
 
-		$indexElements = array(
-			array('name' => 'ControllerAction.index', 'data' => array(), 'options' => array())
-		);
+		$indexElements = [
+			['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []]
+		];
 
 		if ($data->count() == 0) {
 			$this->Alert->info('general.noData');
 		} else {
-			$indexElements[] = array('name' => 'ControllerAction.pagination', 'data' => array(), 'options' => array());
+			$indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []];
 		}
 
 		$event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
