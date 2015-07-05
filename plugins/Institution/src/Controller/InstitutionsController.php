@@ -18,7 +18,7 @@ class InstitutionsController extends AppController  {
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
-			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['index']],
+			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
 
 			// 'InstitutionSiteCustomField',
 			// 'InstitutionSiteCustomFieldOption',
@@ -42,14 +42,14 @@ class InstitutionsController extends AppController  {
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'StudentResults'	=> ['className' => 'Institution.StudentResults', 'actions' => ['index']],
 
-			'Assessments'		=> ['className' => 'Institution.Assessments', 'actions' => ['index', 'view']],
+			'Assessments'		=> ['className' => 'Institution.AssessmentStatuses', 'actions' => ['index', 'view']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
 			'StudentFees' 		=> ['className' => 'Institution.StudentFees'],
 
 			// Surveys
-			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
+			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['!add']],
 
 			// Quality
 			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
@@ -165,11 +165,11 @@ class InstitutionsController extends AppController  {
 	public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
 		$session = $this->request->session();
 
-		if (array_key_exists('institution_site_id', $model->fields)) {
+		if ($model->hasField('institution_site_id')) {
 			if (!$session->check('Institutions.id')) {
 				$this->Alert->error('general.notExists');
 			}
-			$options['conditions'][] = ['Institutions.id' => $session->read('Institutions.id')];
+			$options['conditions'][$model->aliasField('institution_site_id')] = $session->read('Institutions.id');
 		}
 		
 		return $options;

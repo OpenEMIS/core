@@ -270,17 +270,17 @@ class AppTable extends Table {
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, ArrayObject $buttons) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$primaryKey = $this->primaryKey();
 		$id = $entity->$primaryKey;
-		
-		if ($buttons->offsetExists('view')) {
-			$buttons['view']['url'][] = $id;
+
+		if (array_key_exists('view', $buttons)) {
+			$buttons['view']['url'][1] = $id;
 		}
-		if ($buttons->offsetExists('edit')) {
-			$buttons['edit']['url'][] = $id;
+		if (array_key_exists('edit', $buttons)) {
+			$buttons['edit']['url'][1] = $id;
 		}
-		if ($buttons->offsetExists('remove')) {
+		if (array_key_exists('remove', $buttons)) {
 			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
 				$buttons['remove']['attr']['data-toggle'] = 'modal';
 				$buttons['remove']['attr']['data-target'] = '#delete-modal';
@@ -289,6 +289,7 @@ class AppTable extends Table {
 				$buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
 			}
 		}
+		return $buttons;
 	}
 
 	public function findVisible(Query $query, array $options) {
