@@ -24,9 +24,13 @@ foreach ($data as $entity) {
 	$row = $this->ControllerAction->getTableRow($entity, $dataKeys);
 
 	if ($displayAction) {
-		$this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons]);
+		$buttons = $indexButtons->getArrayCopy();
+		$event = $this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons->getArrayCopy()]);
+		if (!empty($event->result)) {
+			$buttons = $event->result;
+		}
 
-		$row[] = [$this->element('OpenEmis.actions', ['entity' => $entity, 'buttons' => $indexButtons]), ['class' => 'rowlink-skip']];
+		$row[] = [$this->element('OpenEmis.actions', ['entity' => $entity, 'buttons' => $buttons]), ['class' => 'rowlink-skip']];
 	}
 	if ($displayReorder) {
 		$row[] = [$this->element('OpenEmis.reorder', ['entity' => $entity]), ['class' => 'sorter rowlink-skip']];

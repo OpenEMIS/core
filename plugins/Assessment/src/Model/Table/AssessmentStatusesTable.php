@@ -19,7 +19,6 @@ class AssessmentStatusesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
-		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
 
 		$this->belongsToMany('AcademicPeriods', [
 			'className' => 'AcademicPeriod.AcademicPeriods',
