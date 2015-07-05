@@ -1,6 +1,4 @@
 <?php
-use Cake\Event\Event;
-
 echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 
 //ControllerActionComponent - Version 1.0.4

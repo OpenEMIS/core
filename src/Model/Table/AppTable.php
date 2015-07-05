@@ -210,7 +210,7 @@ class AppTable extends Table {
 
 		$toolbarButtons['search'] = [
 			'type' => 'element', 
-			'element' => 'ControllerAction.search',
+			'element' => 'OpenEmis.search',
 			'data' => ['url' => $buttons['index']['url']],
 			'options' => []
 		];
