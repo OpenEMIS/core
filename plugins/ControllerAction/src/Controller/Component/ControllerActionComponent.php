@@ -31,7 +31,7 @@ class ControllerActionComponent extends Component {
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
-	private $defaultActions = ['index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
+	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
 
 	public $model = null;
 	public $models = [];
@@ -42,11 +42,6 @@ class ControllerActionComponent extends Component {
 	public $removeStraightAway = true;
 	public $ignoreFields = ['modified', 'created'];
 	public $templatePath = '/ControllerAction/';
-	// public $indexActions = [
-	// 	'view' => array('class' => 'fa fa-eye'),
-	// 	'edit' => array('class' => 'fa fa-pencil'),
-	// 	'delete' => array('class' => 'fa fa-trash')
-	// ];
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
 
@@ -192,7 +187,22 @@ class ControllerActionComponent extends Component {
 			return $this->model;
 		} else {
 			if (!empty($actions)) {
-				$this->defaultActions = $actions;
+				// removing actions
+				// may not be the perfect solution yet
+				foreach ($actions as $action) {
+					$splitStr = str_split($action);
+					if ($splitStr[0] == '!') {
+						foreach ($this->defaultActions as $i => $val) {
+							if ($val == substr($action, 1, strlen($action))) {
+								unset($this->defaultActions[$i]);
+								break;
+							}
+						}
+					} else {
+						$this->defaultActions = $actions;
+						break;
+					}
+				}
 			}
 			$this->plugin = $this->getPlugin($model);
 			$this->model = $this->controller->loadModel($model);
@@ -344,7 +354,9 @@ class ControllerActionComponent extends Component {
 		}
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
-		$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
+		if ($buttons->offsetExists('remove')) {
+			$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
+		}
 
 		// logic for Reorder buttons
 		$schema = $this->getSchema($this->model);
@@ -354,7 +366,9 @@ class ControllerActionComponent extends Component {
 			$reorderUrl = array_merge($reorderUrl, $named, $pass);
 			$buttons['reorder'] = array('url' => $reorderUrl);
 		} else {
-			unset($buttons['reorder']);
+			if (array_key_exists('reorder', $buttons)) {
+				unset($buttons['reorder']);
+			}
 		}
 		
 		$params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
@@ -450,7 +464,7 @@ class ControllerActionComponent extends Component {
 		$search = $this->Session->check($alias.'.search.key') ? $this->Session->read($alias.'.search.key') : '';
 		$schema = $this->getSchema($model);
 
-		if ($request->is(array('post', 'put'))) {
+		if ($request->is(['post', 'put'])) {
 			if (isset($request->data['Search'])) {
 				if (array_key_exists('searchField', $request->data['Search'])) {
 					$search = trim($request->data['Search']['searchField']);
@@ -473,9 +487,11 @@ class ControllerActionComponent extends Component {
 
 		// all string fields are searchable by default
 		$OR = isset($conditions['OR']) ? $conditions['OR'] : [];
-		foreach($schema as $name => $obj) {
-			if ($obj['type'] == 'string' && $name != 'password') {
-				$OR["$alias.$name LIKE"] = '%' . $search . '%';
+		if (!empty($search)) {
+			foreach($schema as $name => $obj) {
+				if ($obj['type'] == 'string' && $name != 'password') {
+					$OR["$alias.$name LIKE"] = '%' . $search . '%';
+				}
 			}
 		}
 		if (!empty($OR)) {
@@ -504,7 +520,6 @@ class ControllerActionComponent extends Component {
 		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $paginateOptions]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-
 		$data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
 
 		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
@@ -534,24 +549,20 @@ class ControllerActionComponent extends Component {
 			}
 			return $this->controller->redirect($action);
 		}
-		$modal = $this->getModalOptions('remove');
-
-		$indexElements = [
-			['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []]
-		];
-
+		
 		if ($data->count() == 0) {
 			$this->Alert->info('general.noData');
-		} else {
-			$indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []];
 		}
 
 		$event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
 		$event = $model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		if (!is_null($event->result)) {
-			$data = $event->result;
-		}
+
+		$modal = $this->getModalOptions('remove');
+		$indexElements = [
+			['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []],
+			['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []]
+		];
 
 		$this->controller->set(compact('data', 'modal', 'indexElements'));
 	}
@@ -1215,7 +1226,7 @@ class ControllerActionComponent extends Component {
 				}
 			}
 			$fields[$field]['order'] = $order;
-			uasort($fields, array($this, 'sortFields'));
+			uasort($fields, [$this, 'sortFields']);
 		}
 		$this->model->fields = $fields;
 	}

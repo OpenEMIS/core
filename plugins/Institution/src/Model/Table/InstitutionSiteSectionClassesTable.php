@@ -82,10 +82,4 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		return $paginateOptions;
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		// pr($data->toArray());die;
-		return $data;
-	}
-
-
 }

@@ -73,11 +73,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		unset($this->fields['education_level']['options']);
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		return $data;
-	}
-
-
 /******************************************************************************************************************
 **
 ** view action methods
