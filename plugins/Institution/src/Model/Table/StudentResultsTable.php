@@ -139,8 +139,6 @@ class StudentResultsTable extends AppTable {
 		$options['conditions'][$this->aliasField('institution_site_section_id')] = $sectionId;
 		$options['conditions'][$this->aliasField('institution_site_class_id')] = $classId;
 		$options['finder'] = ['withResults' => []];
-
-		return $options;
 	}
 
 	public function findWithResults(Query $query, array $options) {

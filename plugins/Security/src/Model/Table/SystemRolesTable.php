@@ -57,7 +57,6 @@ class SystemRolesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['conditions'][$this->aliasField('security_group_id')] = [0, -1];
-		return $options;
 	}
 
 	public function addBeforeAction(Event $event) {

@@ -55,7 +55,6 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 ******************************************************************************************************************/
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$paginateOptions['finder'] = ['withBanks' => []];
-		return $paginateOptions;
 	}
 
     public function findWithBanks(Query $query, array $options) {

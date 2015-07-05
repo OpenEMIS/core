@@ -25,7 +25,8 @@ class AssessmentStatusesTable extends AppTable {
 			'className' => 'AcademicPeriod.AcademicPeriods',
 			'joinTable' => 'assessment_status_periods',
 			'foreignKey' => 'assessment_status_id',
-			'targetForeignKey' => 'academic_period_id'
+			'targetForeignKey' => 'academic_period_id',
+			'dependent' => true
 		]);
 	}
 
@@ -73,7 +74,6 @@ class AssessmentStatusesTable extends AppTable {
 	// contain is necessary for chosenSelect
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['contain'][] = 'AcademicPeriods';
-		return $options;
 	}
 
 	// contain is necessary for chosenSelect

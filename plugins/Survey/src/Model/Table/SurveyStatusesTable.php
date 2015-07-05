@@ -44,7 +44,6 @@ class SurveyStatusesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['contain'] = array_merge($options['contain'], $this->_contain);
-		return $options;
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

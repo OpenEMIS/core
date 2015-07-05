@@ -48,7 +48,6 @@ class SystemGroupsTable extends AppTable {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
 		$options['finder'] = ['inInstitutions' => []];
-		return $options;
 	}
 
 	public function findInInstitutions(Query $query, array $options) {

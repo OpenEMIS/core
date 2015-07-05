@@ -53,6 +53,5 @@ class ResultsTable extends AppTable {
 			}
 		}
 		$options['contain'] = $contain;
-		return $options;
 	}
 }

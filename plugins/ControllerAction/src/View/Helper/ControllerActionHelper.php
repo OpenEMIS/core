@@ -76,7 +76,8 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getFormButtons() {
-		$buttons = $this->_View->get('_buttons');
+		// needs a better solution
+		$buttons = $this->_View->get('toolbarButtons');
 	
 		echo '<div class="form-buttons"><div class="button-label"></div>';
 		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save'));
