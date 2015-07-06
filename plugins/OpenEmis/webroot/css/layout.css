@@ -1773,9 +1773,19 @@ table tr.sorting-row td {background-color: #8b8;}
 	margin-bottom: 15px !important;
 }
 
+.fileinput .form-control {
+	-webkit-border-radius: 3px !important;
+	        border-radius: 3px !important;
+}
+
 .fileinput .btn-file {
 	position: absolute;
-	right: 0;
+	right: -1px;
+	top: -1px;
+	height: 34px !important;
+	width: 52px !important;
+	padding: 8px;
+	cursor: pointer;
 }
 
 .fileinput .btn-file-cancel {
@@ -1783,8 +1793,10 @@ table tr.sorting-row td {background-color: #8b8;}
 	padding: 8px 14px 9px;
 	border-radius: 0;
 	border-right: 0 !important;
-	right: 0;
-	top: 0;
+	right: 50px;
+	top: -1px;
+	height: 34px !important;
+	width: 52px !important;	
 }
 
 .fileinput-filename {
@@ -1794,10 +1806,19 @@ table tr.sorting-row td {background-color: #8b8;}
     width: 100%;
     position: absolute;
     left: 0;
- 	padding: 0 0 0 25px;
+ 	padding: 0 102px 0 25px;
     white-space: nowrap;
     text-overflow: ellipsis;
 } 
+
+.fileinput .btn-file .fileinput-new {
+	cursor: pointer !important;
+}
+
+.file-input-text {
+	clear: both;
+	padding: 8px 0 0;
+}
 
 .fileinput-preview {
 	width: 30%;
