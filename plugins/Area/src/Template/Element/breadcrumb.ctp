@@ -13,7 +13,7 @@
 				<?php if ($crumb === end($crumbs)) : ?>
 		    		<li class="active"><?= $crumb->name; ?></li>
 		    	<?php else : ?>
-					<li><a href="<?= $baseUrl . "?parent_id=" . $crumb->id; ?>"><?= $crumb->name; ?></a></li>
+					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id; ?>"><?= $crumb->name; ?></a></li>
 				<?php endif ?>
 			<?php endforeach ?>
 		</ul>
