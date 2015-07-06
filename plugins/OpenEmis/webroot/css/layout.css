@@ -1827,6 +1827,18 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .fileinput-preview .btn-file {
 	position: relative;
+	width: inherit !important;
+	height: 30px !important;
+}
+
+.fileinput-preview .btn-file a {
+	cursor: pointer !important;
+	height: 34px;
+}
+
+.fileinput-preview #removeBtn a {
+	margin-top: -2px;
+	line-height: 1.4em;
 }
 
 .fileinput-preview .btn-default {
