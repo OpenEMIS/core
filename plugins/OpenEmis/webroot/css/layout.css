@@ -1610,6 +1610,10 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 275px;
 }
 
+.bootstrap-timepicker-widget table input {
+	min-width: inherit;
+}
+
 .form-horizontal {
 	padding: 15px 0;
 }
@@ -1842,7 +1846,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .fileinput-preview .btn-default {
-	line-height: 1.25em;
+	line-height: 1em;
 }
 
 .form-horizontal .datetime select {
