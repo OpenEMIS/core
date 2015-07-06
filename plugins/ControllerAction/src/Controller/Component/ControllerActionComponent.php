@@ -1019,23 +1019,29 @@ class ControllerActionComponent extends Component {
 	*/
 
 	public function reorder() {
-		$model = $this->model;
-		$request = $this->request;
-		$primaryKey = $model->primaryKey();
-		$orderField = $this->orderField;
-		$ids = json_decode($request->data('ids'));
-		$order = 1;
-		$entity = $model->newEntity();
-
-		foreach ($ids as $id) {
-			$entity->$primaryKey = $id;
-			$entity->$orderField = $order++;
-			$model->save($entity);
-		}
 		$this->autoRender = false;
-		$this->controller->autoRender = false;
-	}
+		$this->controller->autoRender=false;
 
+		if ($this->request->is('ajax')) {
+			$model = $this->model;
+			$request = $this->request;
+			$primaryKey = $model->primaryKey();
+			$orderField = $this->orderField;
+			$order = 1;
+			
+			if($request->is( 'post' )) {
+				$ids = json_decode($request->data("ids"));
+				$entity = $model->newEntity();
+
+				foreach($ids as $id){
+					$entity->$primaryKey = $id;
+					$entity->$orderField = $order++;
+					$model->save($entity);
+				}
+			}
+		}
+	}
+	
 	public function fixOrder($conditions) {
 		$model = $this->model;
 		$count = $model->find('count', array('conditions' => $conditions));
