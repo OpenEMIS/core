@@ -90,6 +90,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$attr['default'] = $selectedLevel;
 		$attr['onChangeReload'] = true;
 
+		if (array_key_exists($this->alias(), $request->data)) {
+			if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
+				unset($request->data[$this->alias()]['custom_field_values']);
+			}
+			if (array_key_exists('custom_table_cells', $request->data[$this->alias()])) {
+				unset($request->data[$this->alias()]['custom_table_cells']);
+			}
+		}
+
 		return $attr;
 	}
 

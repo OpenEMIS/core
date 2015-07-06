@@ -13,20 +13,6 @@ class AreaLevelsTable extends AppTable {
 		$this->hasMany('Areas', ['className' => 'Area.Areas']);
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$levels = $this
-			->find()
-			->order(['level' => 'ASC']);
-
-		foreach ($levels as $key => $level) {
-			$query = $this->query();
-			$query->update()
-			    ->set(['level' => ++$key])
-			    ->where(['id' => $level->id])
-				->execute();
-		}
-	}
-
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('level');
 		$this->ControllerAction->setFieldOrder('level', 'name');
