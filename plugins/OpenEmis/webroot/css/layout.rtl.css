@@ -292,7 +292,7 @@ html {
 
 .rtl .breadcrumb > li + li::after {
     font-family: 'FontAwesome';
-    content: "\f054";
+    content: "\f053";
     font-size: 0.6em;
     margin: 0 2px;
     padding-left: 5px;
