@@ -1,5 +1,10 @@
 <?php
 $fieldName = '%s[%s]';
+if (isset($attr['null']) && empty($attr['null'])) {
+	$required = 'required';
+} else {
+	$required = '';
+}
 ?>
 
 <div class="input file">
@@ -15,5 +20,10 @@ $fieldName = '%s[%s]';
 				<input type="file" name="<?= sprintf($fieldName, $attr['model'], $attr['field']) ?>">
 			</span>	
 		</div>
+		<div class="file-input-text">
+			<p><?= $attr['comment'] ?></p>
+		</div>
 	</div>
+	<?php echo $this->Form->error($attr['field']);?>
+
 </div>
