@@ -227,6 +227,7 @@ class ControllerActionHelper extends Helper {
 				$row[] = $value;
 			}
 		}
+		$row[0] = [$row[0], ['data-row-id' => $entity->id]];
 		return $row;
 	}
 

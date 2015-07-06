@@ -1018,52 +1018,22 @@ class ControllerActionComponent extends Component {
 	}
 	*/
 
-	public function reorder($id=0) {
+	public function reorder() {
 		$model = $this->model;
+		$request = $this->request;
+		$primaryKey = $model->primaryKey();
+		$orderField = $this->orderField;
+		$ids = json_decode($request->data('ids'));
+		$order = 1;
+		$entity = $model->newEntity();
 
-		if ($id != 0) {
-			$named = $this->controller->params['named'];
-			$move = $named['move'];
-
-			$actionUrl = array('action' => 'index');
-			if ($this->triggerFrom == 'Model') {
-				$actionUrl['action'] = $this->model->alias();
-				$actionUrl[] = $action;
-			}
-			unset($named['move']);
-			$actionUrl = array_merge($actionUrl, $named);
-			
-			$conditions = array();
-			//$conditions = isset($this->controller->viewVars['conditions']) ? $this->controller->viewVars['conditions'] : array();
-			$this->fixOrder($conditions);
-			
-			$idField = $model->alias().'.'.$model->primaryKey();
-			$orderField = $model->alias() . '.' . $this->orderField;
-			$order = $model->field($this->orderField, array($model->primaryKey() => $id));
-			$idConditions = array_merge(array($idField => $id), $conditions);
-			$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
-
-			if($move === 'up') {
-				$model->updateAll(array($orderField => $order-1), $idConditions);
-				$updateConditions[$orderField] = $order-1;
-				$model->updateAll(array($orderField => $order), $updateConditions);
-			} else if($move === 'down') {
-				$model->updateAll(array($orderField => $order+1), $idConditions);
-				$updateConditions[$orderField] = $order+1;
-				$model->updateAll(array($orderField => $order), $updateConditions);
-			} else if($move === 'first') {
-				$model->updateAll(array($orderField => 1), $idConditions);
-				$updateConditions[$orderField . ' <'] = $order;
-				$model->updateAll(array($orderField => '`'.$orderField . '` + 1'), $updateConditions);
-			} else if($move === 'last') {
-				$count = $model->find('count', array('conditions' => $conditions));
-				$model->updateAll(array($orderField => $count), $idConditions);
-				$updateConditions[$orderField . ' >'] = $order;
-				$model->updateAll(array($orderField => '`'.$orderField . '` - 1'), $updateConditions);
-			}
+		foreach ($ids as $id) {
+			$entity->$primaryKey = $id;
+			$entity->$orderField = $order++;
+			$model->save($entity);
 		}
-
-		return $this->controller->redirect($actionUrl);
+		$this->autoRender = false;
+		$this->controller->autoRender = false;
 	}
 
 	public function fixOrder($conditions) {
