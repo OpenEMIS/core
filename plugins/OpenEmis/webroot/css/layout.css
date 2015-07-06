@@ -400,7 +400,7 @@ body.large {
     background-color: #FFF;
     border-bottom: 1px solid #DDD;
     border-radius: 0;
-    padding: 9px 0 9px;
+    padding: 10px 0;
     margin: 0;
 }
 
@@ -2667,7 +2667,7 @@ footer {
 	}
 
 	#sidebar-wrapper {
-		top: 19px;
+		top: 21px;
 	}
 
 	.toolbar-btn::after {
@@ -2993,7 +2993,7 @@ footer {
 	}
 
 	#sidebar-wrapper {
-		top: 17px;
+		top: 21px;
 	}
 
 	.search input {
@@ -3155,7 +3155,7 @@ footer {
 	/* CONTENT */
 
 	.content-wrapper {
-		padding: 69px 0 0;
+		padding: 70px 0 0;
 	}
 
 	.navbar-right .username {
