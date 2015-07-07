@@ -210,8 +210,8 @@ class NavigationComponent extends Component {
 				'Quality' => [
 					'collapse' => true,
 					'items' => [
-						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics']],
+						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Visits']]
 					]
 				]
 			];

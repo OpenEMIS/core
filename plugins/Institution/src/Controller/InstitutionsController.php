@@ -52,9 +52,8 @@ class InstitutionsController extends AppController  {
 			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['!add']],
 
 			// Quality
-			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
-			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
-
+			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['!add']],
+			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits']
 		];
 
 		$this->loadComponent('Paginator');
@@ -84,7 +83,7 @@ class InstitutionsController extends AppController  {
 				$this->_institutionObj = $this->Institutions->get($id);
 				$name = $this->_institutionObj->name;
 				$header = $name .' - Overview';
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}
