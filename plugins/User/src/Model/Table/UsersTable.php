@@ -2,18 +2,20 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-use Cake\Validation\Validator;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\UserTrait;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
+	use UserTrait;
 
 	// private $defaultStudentProfile = "Student.default_student_profile.jpg";
 	// private $defaultStaffProfile = "Staff.default_staff_profile.jpg";
@@ -65,16 +67,10 @@ class UsersTable extends AppTable {
 			'className' => 'Security.SecurityRoles',
 			'through' => 'Security.SecurityGroupUsers'
 		]);
-
+		
 	}
 
 	public function beforeAction(Event $event) {
-		$modelName = inflector::singularize($this->controller->name);
-		if (strtolower($modelName)=='institution') {
-			$modelName = inflector::singularize($this->alias());
-		}
-        $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		
 		$this->ControllerAction->field('username', ['visible' => false]);
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
@@ -160,7 +156,91 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
+		$query = $request->query;
+
+		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
+			$options['order'][$this->aliasField('name')] = 'asc';
+		}
+
+		if(array_key_exists('sort', $query) && $query['sort'] == 'name'){
+			$options['finder'] = ['withName' => ['direction' => $query['direction']]];
+			$options['order'][$this->aliasField('name')] = $query['direction'];
+		}
+
+		if(array_key_exists('sort', $query) && $query['sort'] == 'default_identity_type'){
+			$options['finder'] = ['withDefaultIdentityType' => ['direction' => $query['direction']]];
+			$options['order'][$this->aliasField('default_identity_type')] = $query['direction'];
+			$request->query['sort'] = 'Users.default_identity_type';
+		}
+
 	}
+
+	public function findWithName(Query $query, array $options) {
+		$name = '';
+        $separator = ", ";
+        $keys = $this->getNameKeys();
+        foreach($keys as $k=>$v){
+            if(!is_null($this->aliasField($k))&&$v){
+                if($k!='last_name'){
+                    if($k=='preferred_name'){
+                        $name .= $separator . '('. $this->aliasField($k) .')';
+                    } else {
+                        $name .= $this->aliasField($k) . $separator;
+                    }
+                } else {
+                    $name .= $this->aliasField($k);
+                }
+            }
+        }
+        $name = trim(sprintf('%s', $name));
+        $name = str_replace($this->alias,"inner_users",$name);
+			
+		return $query
+			->join([
+					'table' => 'security_users',
+					'alias' => 'inner_users',
+					'type'  => 'left',
+					'select' => 'CONCAT('.$name.') AS inner_name',
+					'conditions' => ['inner_users.id' => $this->aliasField('id')],
+					'order' => ['inner_users.inner_name' => $options['direction']]
+				])
+			->order([$this->aliasField('first_name') => $options['direction']]);	   
+			
+		// return $query
+		// 		->order([$this->aliasField('first_name') => $options['direction'],
+		// 				$this->aliasField('middle_name') => $options['direction'],
+		// 				$this->aliasField('third_name') => $options['direction'],
+		// 				$this->aliasField('last_name') => $options['direction']
+		// 			]);	
+	}	
+
+	public function findWithDefaultIdentityType(Query $query, array $options) {
+		return $query
+			->join([
+				[
+					'table' => 'user_identities',
+					'alias' => 'Identities',
+					'select' => ['*'],
+					'type' => 'left',
+					'group by' => ['Identities.number'],
+					'conditions' => [
+						'Identities.security_user_id' => $this->aliasField('id')
+					]
+				]
+			])
+			->contain([
+					'Identities' => function ($q) {
+					   return $q
+							->select(['IdentityTypes.id'])
+							->contain(['IdentityTypes'])
+							->where(['IdentityTypes.default' => 1, 'Identities.identity_type_id' => 'IdentityTypes.id'])
+							->order(['IdentityTypes.default DESC']);
+					}
+				])
+			->group(['Identities.number'])
+			->order(['Identities.number' => $options['direction']]);	   
+	}	
+
 
 	public function findNotSuperAdmin(Query $query, array $options) {
 		return $query->where([$this->aliasField('super_admin') => 0]);
