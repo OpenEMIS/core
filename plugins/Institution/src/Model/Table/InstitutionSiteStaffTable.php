@@ -58,28 +58,28 @@ class InstitutionSiteStaffTable extends AppTable {
 
 	// }
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('institution');
-		$this->ControllerAction->field('institution_site_position_id');
-		$this->ControllerAction->field('start_date');
-		$this->ControllerAction->field('FTE');
-		$this->ControllerAction->field('staff_type_id');
-		// $this->ControllerAction->field('search');
+	// public function addBeforeAction(Event $event) {
+	// 	$this->ControllerAction->field('institution');
+	// 	$this->ControllerAction->field('institution_site_position_id');
+	// 	$this->ControllerAction->field('start_date');
+	// 	$this->ControllerAction->field('FTE');
+	// 	$this->ControllerAction->field('staff_type_id');
+	// 	// $this->ControllerAction->field('search');
 
-		$this->fields['start_year']['visible'] = false;
-		$this->fields['end_year']['visible'] = false;
-		$this->fields['end_date']['visible'] = false;
-		$this->fields['staff_status_id']['visible'] = false;
+	// 	$this->fields['start_year']['visible'] = false;
+	// 	$this->fields['end_year']['visible'] = false;
+	// 	$this->fields['end_date']['visible'] = false;
+	// 	$this->fields['staff_status_id']['visible'] = false;
 
-		// initializing to bypass validation - will be modified later when appropriate
-		$this->fields['security_user_id']['type'] = 'hidden';
-		$this->fields['security_user_id']['value'] = 0;
+	// 	// initializing to bypass validation - will be modified later when appropriate
+	// 	$this->fields['security_user_id']['type'] = 'hidden';
+	// 	$this->fields['security_user_id']['value'] = 0;
 
-		$this->ControllerAction->setFieldOrder([
-			'institution', 'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
-			// , 'search'
-			]);
-	}
+	// 	$this->ControllerAction->setFieldOrder([
+	// 		'institution', 'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
+	// 		// , 'search'
+	// 		]);
+	// }
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$timeNow = strtotime("now");

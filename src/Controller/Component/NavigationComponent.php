@@ -55,6 +55,10 @@ class NavigationComponent extends Component {
 					'collapse' => true,
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
+				// 'Guardians' => [
+				// 	'collapse' => true,
+				// 	'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
+				// ],
 				'Reports' => [
 					'collapse' => true,
 					'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
@@ -234,7 +238,7 @@ class NavigationComponent extends Component {
 				'Details' => [
 					'collapse' => true,
 					'items' => [
-						// 'Guardians' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']],
+						// 'Guardians' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Guardians']],
 						'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes']],
 						'Sections' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
 						'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],
@@ -298,6 +302,23 @@ class NavigationComponent extends Component {
 						'Bank Accounts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']],
 					]
 				]
+			];
+		} else if ($controller->name == 'Guardian' && $action != 'index') {
+			$navigations['items']['Guardian']['items'] = [
+				'General' => [
+					'collapse' => true,
+					'items' => [
+						'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'view']],
+						'Contacts' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Contacts']],
+						'Identities' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Identities']],
+						'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Languages']],
+						'Comments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Comments']],
+						// 'Special Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'SpecialNeeds']],
+						// 'Awards' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Awards']],
+						// 'Attachments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Attachments']],
+						// 'History' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'History']]
+					]
+				],
 			];
 		} else {
 			
