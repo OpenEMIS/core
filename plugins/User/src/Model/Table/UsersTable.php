@@ -144,7 +144,66 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
+		$query = $request->query;
+
+		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
+			$options['order'][$this->aliasField('name')] = 'asc';
+		}
+
+		if(array_key_exists('sort', $query) && $query['sort'] == 'name'){
+			$options['finder'] = ['withName' => ['direction' => $query['direction']]];
+			$options['order'][$this->aliasField('name')] = $query['direction'];
+		}
+
+		if(array_key_exists('sort', $query) && $query['sort'] == 'default_identity_type'){
+			$options['finder'] = ['withDefaultIdentityType' => ['direction' => $query['direction']]];
+			$options['order'][$this->aliasField('default_identity_type')] = $query['direction'];
+			$request->query['sort'] = 'Users.default_identity_type';
+//$request->query['sort'] = 'number';
+			//$options['sort'] = 'Users.default_identity_type';
+		}
+
+
+		//pr($options);
 	}
+
+	public function findWithName(Query $query, array $options) {
+		return $query
+				->select(['CONCAT('.$this->aliasField('first_name').', '.$this->aliasField('middle_name').')']);
+				//->order(['CONCAT(first_name, middle_name)' => $options['direction']]);	
+				
+
+	}	
+
+	public function findWithDefaultIdentityType(Query $query, array $options) {
+		return $query
+			->join([
+				[
+					'table' => 'user_identities',
+					'alias' => 'Identities',
+					'select' => ['*'],
+					'type' => 'left',
+					'group by' => ['Identities.number'],
+					'conditions' => [
+						'Identities.security_user_id' => $this->aliasField('id')
+					]
+				]
+			])
+			->contain([
+					'Identities' => function ($q) {
+					   return $q
+							->select(['IdentityTypes.id'])
+							->contain(['IdentityTypes'])
+							->where(['IdentityTypes.default' => 1])
+							->order(['IdentityTypes.default DESC'])
+							->where(['Identities.identity_type_id' => 'IdentityTypes.id']);
+					}
+				])
+			->group(['Identities.number'])
+			->order(['Identities.number' => $options['direction']]);	   
+
+	}	
+
 
 	public function findNotSuperAdmin(Query $query, array $options) {
 		return $query->where([$this->aliasField('super_admin') => 0]);

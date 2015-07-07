@@ -52,7 +52,7 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteStaff', 'staff_institution_name', NULL, 'Institution'),
 ('InstitutionSiteStaff', 'start_date', NULL, 'Start Date'),
 ('InstitutionSiteStaff', 'end_date', NULL, 'End Date'),
-('InstitutionSiteStaff', 'photo_content', NULL, 'Profile Image'),
+('InstitutionSiteStaff', 'photo_content', NULL, 'Photo'),
 -- StaffBehaviours
 ('StaffBehaviours', 'date_of_behaviour', NULL, 'Date'),
 ('StaffBehaviours', 'staff_behaviour_category_id', NULL, 'Category'),
@@ -75,7 +75,7 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('Users', 'date_of_birth', NULL, 'Date Of Birth'),
 ('Users', 'date_of_death', NULL, 'Date Of Death'),
 ('Users', 'status', NULL, 'Status'),
-('Users', 'photo_content', NULL, 'Photo ID'),
+('Users', 'photo_content', NULL, 'Photo'),
 -- Contacts
 ('Contacts', 'contact_type_id', NULL, 'Description'),
 ('Contacts', 'contact_option_id', NULL, 'Type'),
@@ -140,8 +140,8 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('Positions', 'number', NULL, 'Number'),
 ('Positions', 'institution_site_position_id', NULL, 'Position'),
 -- Students
-('Students', 'photo_content', NULL, 'Photo ID'),
+('Students', 'photo_content', NULL, 'Photo'),
 ('Students', 'openemis_no', NULL, 'OpenEMIS ID'),
-('Staff', 'photo_content', NULL, 'Photo ID'),
+('Staff', 'photo_content', NULL, 'Photo'),
 ('Staff', 'openemis_no', NULL, 'OpenEMIS ID')
 ;
