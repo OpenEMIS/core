@@ -65,25 +65,9 @@ class UsersTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers'
 		]);
 		
-		/**
-		 * we have to add TrackActivityBehavior in this function so that this model will be able to utilise public instances and function in the behavior
-		 */
-        $this->addBehavior('TrackActivity');
 	}
 
 	public function beforeAction(Event $event) {
-		/**
-		 * we can only only detect the type of persona behavior attached to this model during this time (not during inititalize()), and then update TrackActivity configurations according
-		 */
-		if (in_array('Staff', $this->behaviors()->loaded())) {
-			$modelName = 'Staff';
-		} else if (in_array('Student', $this->behaviors()->loaded())) {
-			$modelName = 'Student';
-		}
-        $this->updateTrackActivityConfig(['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		/**
-		 */
-
 		$this->ControllerAction->field('username', ['visible' => false]);
 
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
