@@ -61,7 +61,8 @@ class ControllerActionHelper extends Helper {
 			'novalidate' => true
 		];
 
-		$fields = $this->_View->get('_fields');
+		$config = $this->_View->get('ControllerAction');
+		$fields = $config['fields'];
 		if (!empty($fields)) {
 			$types = ['binary','image'];
 			foreach ($fields as $key => $attr) {
@@ -262,8 +263,10 @@ class ControllerActionHelper extends Helper {
 
 	public function getPageOptions() {
 		$html = '';
-		if (!is_null($this->_View->get('pageOptions'))) {
-			$pageOptions = $this->_View->get('pageOptions');
+		$config = $this->_View->get('ControllerAction');
+
+		if (!is_null($config['pageOptions'])) {
+			$pageOptions = $config['pageOptions'];
 			
 			if (!empty($pageOptions)) {
 				$html = '<span>' . __('Display') . '</span>';
@@ -282,10 +285,11 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getEditElements(Entity $data, $fields = [], $exclude = []) {
-		$_fields = $this->_View->get('_fields');
+		$config = $this->_View->get('ControllerAction');
+		$_fields = $config['fields'];
 
 		$html = '';
-		$model = $this->_View->get('model');
+		$model = $config['table']->alias();
 		$displayFields = $_fields;
 
 		if (!empty($fields)) { // if we only want specific fields to be displayed
@@ -356,7 +360,8 @@ class ControllerActionHelper extends Helper {
 	public function getViewElements(Entity $data, $fields = [], $exclude = []) {
 		//  1. implemented override param for nav_tabs to omit label
 		//  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
-		$_fields = $this->_View->get('_fields');
+		$config = $this->_View->get('ControllerAction');
+		$_fields = $config['fields'];
 
 		$html = '';
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';

@@ -18,7 +18,20 @@ $this->start('panelBody');
 		}
 	}
 
+	if ($ControllerAction['form']) {
+		$formOptions = $this->ControllerAction->getFormOptions();
+		if (isset($ControllerAction['url'])) {
+			$formOptions['url'] = $ControllerAction['url'];
+		}
+		echo $this->Form->create($ControllerAction['table']->newEntity(), $formOptions);
+	}
+
 	foreach ($indexElements as $element) {
 		echo $this->element($element['name'], $element['data'], $element['options']);
+	}
+
+	if ($ControllerAction['form']) {
+		echo $this->ControllerAction->getFormButtons();
+		echo $this->Form->end();
 	}
 $this->end();

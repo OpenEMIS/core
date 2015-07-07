@@ -172,7 +172,7 @@ class AppTable extends Table {
 		// needs clean up
 		$controller = $event->subject()->_registry->getController();
 
-		$toolbarButtons = [];
+		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
 		$toolbarAttr = [
@@ -270,6 +270,9 @@ class AppTable extends Table {
 		if ($buttons->offsetExists('reorder')) {
 			$controller->set('reorder', true);
 		}
+
+		$event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
+		$this->eventManager()->dispatch($event);
 
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
