@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -151,12 +152,33 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_id', ['type' => 'select']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'target_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('area_id', ['type' => 'area', 'target_model' => 'Area.Areas']);
 
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
+	}
+
+	public function onGetAreaElement(Event $event, $action, Entity $entity, $attr, $options) {
+		$includes = [
+			'area' => ['include' => true, 'js' => 'area']
+		];
+
+		$HtmlField = $event->subject();
+		$Form = $HtmlField->Form;
+
+		$targetModel = $attr['target_model'];
+		$targetTable = TableRegistry::get($targetModel);
+		//pr($targetTable->find('list')->toArray());
+
+		$HtmlField->includes = array_merge($HtmlField->includes, $includes);
+
+		$fieldName = $attr['model'] . '.' . $attr['field'];
+		// $options['onchange'] = "alert('asd')";
+		$options['class'] = 'areapicker';
+		$value = $Form->input($fieldName, $options);
+		return $value;
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
