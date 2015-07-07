@@ -7,7 +7,7 @@ class EducationSubjectsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('StudentClasses', ['className' => 'Student.StudentClasses']);
 		$this->hasMany('EducationGradesSubjects', ['className' => 'Education.EducationGradesSubjects']);
+		$this->hasMany('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses']);
 	}
 }
