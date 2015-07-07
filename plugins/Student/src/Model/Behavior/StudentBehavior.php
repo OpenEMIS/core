@@ -17,9 +17,9 @@ class StudentBehavior extends Behavior {
 		$query
 			->join([
 				'table' => 'institution_site_students',
-				'alias' => 'InstututionSiteStudents',
+				'alias' => 'InstitutionSiteStudents',
 				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstututionSiteStudents.security_user_id']
+				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStudents.security_user_id']
 			])
 			->group($this->_table->aliasField('id'));
 	}
@@ -27,7 +27,6 @@ class StudentBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'ControllerAction.Model.beforeAction' => 'beforeAction',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
@@ -46,29 +45,7 @@ class StudentBehavior extends Behavior {
 		$this->_table->fields['openemis_no']['attr']['value'] = $this->_table->getUniqueOpenemisId(['model'=>Inflector::singularize('Student')]);
 	}
 
-	public function beforeAction(Event $event) {
-		$this->_table->fields['super_admin']['visible'] = false;
-		$this->_table->fields['status']['visible'] = false;
-		$this->_table->fields['date_of_death']['visible'] = false;
-		$this->_table->fields['last_login']['visible'] = false;
-		$this->_table->fields['photo_name']['visible'] = false;
-	}
-
 	public function indexBeforeAction(Event $event) {
-		$this->_table->fields['first_name']['visible'] = false;
-		$this->_table->fields['middle_name']['visible'] = false;
-		$this->_table->fields['third_name']['visible'] = false;
-		$this->_table->fields['last_name']['visible'] = false;
-		$this->_table->fields['preferred_name']['visible'] = false;
-		$this->_table->fields['address']['visible'] = false;
-		$this->_table->fields['postal_code']['visible'] = false;
-		$this->_table->fields['address_area_id']['visible'] = false;
-		$this->_table->fields['gender_id']['visible'] = false;
-		$this->_table->fields['date_of_birth']['visible'] = false;
-		$this->_table->fields['username']['visible'] = false;
-		$this->_table->fields['birthplace_area_id']['visible'] = false;
-		$this->_table->fields['status']['visible'] = false;
-		$this->_table->fields['photo_content']['visible'] = true;
 		$this->_table->fields['student_institution_name']['visible'] = true;
 
 		$this->_table->ControllerAction->field('name', []);

@@ -52,6 +52,7 @@ class UsersTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
@@ -75,12 +76,12 @@ class UsersTable extends AppTable {
         $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 		
 		$this->ControllerAction->field('username', ['visible' => false]);
-
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
-		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active'), 'visible' => false]);
 		$this->ControllerAction->field('photo_content', ['type' => 'image']);
+		$this->ControllerAction->field('last_login', ['visible' => false]);
 	}
 
 	public function afterAction(Event $event) {
@@ -118,7 +119,7 @@ class UsersTable extends AppTable {
 			]
 		];
 
-		if (!in_array($this->controller->name, ['Students', 'Staff'])) {
+		if (!in_array($this->controller->name, ['Students', 'Staff', 'Guardians'])) {
 			$tabElements[$this->alias] = [
 				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $id],
 				'text' => __('Details')
@@ -130,6 +131,21 @@ class UsersTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('first_name', ['visible' => false]);
+		$this->ControllerAction->field('middle_name', ['visible' => false]);
+		$this->ControllerAction->field('third_name', ['visible' => false]);
+		$this->ControllerAction->field('last_name', ['visible' => false]);
+		$this->ControllerAction->field('preferred_name', ['visible' => false]);
+		$this->ControllerAction->field('address', ['visible' => false]);
+		$this->ControllerAction->field('postal_code', ['visible' => false]);
+		$this->ControllerAction->field('address_area_id', ['visible' => false]);
+		$this->ControllerAction->field('gender_id', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', ['visible' => false]);
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
+		$this->ControllerAction->field('status', ['visible' => false]);
+		$this->ControllerAction->field('photo_content', ['visible' => true]);
+
 		$this->ControllerAction->field('address', ['visible' => false]);
 		$this->ControllerAction->field('postal_code', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['visible' => false]);
