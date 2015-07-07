@@ -90,22 +90,24 @@ class User extends Entity {
     //     return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['openemis_no'], $name)) : trim(sprintf('%s', $name));
     // }
 
-    protected function _getDefaultIdentityType(){
-        $data = "";
-        $securityUserId = $this->id;
+	protected function _getDefaultIdentityType(){
+		$data = "";
+		$securityUserId = $this->id;
 
-        $UserIdentities = TableRegistry::get('User.Identities');
-        $UserIdentity = $UserIdentities
-                ->find()
-                ->contain(['Users'])
-                ->where(['security_user_id' => $this->id])
-                ->first();
+		$UserIdentities = TableRegistry::get('User.Identities');
+		$UserIdentity = $UserIdentities
+				->find()
+				->contain(['IdentityTypes'])
+				->where(['security_user_id' => $this->id, 'IdentityTypes.default' => 1])
+				->order(['IdentityTypes.default DESC'])
+				->first();
 
-        if(!empty($UserIdentity))
-            $data = $UserIdentity->number;
+		if(!empty($UserIdentity)) {
+			$data = $UserIdentity->number;
+		}
 
-        return $data;
-    }
+		return $data;
+	}
 
     protected function _getStudentInstitutionName(){
         $data = "";

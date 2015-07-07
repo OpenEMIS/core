@@ -2,13 +2,13 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-use Cake\Validation\Validator;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -64,16 +64,26 @@ class UsersTable extends AppTable {
 			'className' => 'Security.SecurityRoles',
 			'through' => 'Security.SecurityGroupUsers'
 		]);
-
+		
+		/**
+		 * we have to add TrackActivityBehavior in this function so that this model will be able to utilise public instances and function in the behavior
+		 */
+        $this->addBehavior('TrackActivity');
 	}
 
 	public function beforeAction(Event $event) {
-		$modelName = inflector::singularize($this->controller->name);
-		if (strtolower($modelName)=='institution') {
-			$modelName = inflector::singularize($this->alias());
+		/**
+		 * we can only only detect the type of persona behavior attached to this model during this time (not during inititalize()), and then update TrackActivity configurations according
+		 */
+		if (in_array('Staff', $this->behaviors()->loaded())) {
+			$modelName = 'Staff';
+		} else if (in_array('Student', $this->behaviors()->loaded())) {
+			$modelName = 'Student';
 		}
-        $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		
+        $this->updateTrackActivityConfig(['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		/**
+		 */
+
 		$this->ControllerAction->field('username', ['visible' => false]);
 
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
@@ -144,7 +154,66 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$options['finder'] = ['notSuperAdmin' => []];
+		$query = $request->query;
+
+		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
+			$options['order'][$this->aliasField('name')] = 'asc';
+		}
+
+		if(array_key_exists('sort', $query) && $query['sort'] == 'name'){
+			$options['finder'] = ['withName' => ['direction' => $query['direction']]];
+			$options['order'][$this->aliasField('name')] = $query['direction'];
+		}
+
+		if(array_key_exists('sort', $query) && $query['sort'] == 'default_identity_type'){
+			$options['finder'] = ['withDefaultIdentityType' => ['direction' => $query['direction']]];
+			$options['order'][$this->aliasField('default_identity_type')] = $query['direction'];
+			$request->query['sort'] = 'Users.default_identity_type';
+//$request->query['sort'] = 'number';
+			//$options['sort'] = 'Users.default_identity_type';
+		}
+
+
+		//pr($options);
 	}
+
+	public function findWithName(Query $query, array $options) {
+		return $query
+				->select(['CONCAT('.$this->aliasField('first_name').', '.$this->aliasField('middle_name').')']);
+				//->order(['CONCAT(first_name, middle_name)' => $options['direction']]);	
+				
+
+	}	
+
+	public function findWithDefaultIdentityType(Query $query, array $options) {
+		return $query
+			->join([
+				[
+					'table' => 'user_identities',
+					'alias' => 'Identities',
+					'select' => ['*'],
+					'type' => 'left',
+					'group by' => ['Identities.number'],
+					'conditions' => [
+						'Identities.security_user_id' => $this->aliasField('id')
+					]
+				]
+			])
+			->contain([
+					'Identities' => function ($q) {
+					   return $q
+							->select(['IdentityTypes.id'])
+							->contain(['IdentityTypes'])
+							->where(['IdentityTypes.default' => 1])
+							->order(['IdentityTypes.default DESC'])
+							->where(['Identities.identity_type_id' => 'IdentityTypes.id']);
+					}
+				])
+			->group(['Identities.number'])
+			->order(['Identities.number' => $options['direction']]);	   
+
+	}	
+
 
 	public function findNotSuperAdmin(Query $query, array $options) {
 		return $query->where([$this->aliasField('super_admin') => 0]);
