@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -163,7 +164,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangePeriod(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$periodId = $data[$this->alias()]['academic_period'];
 
@@ -189,7 +190,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		$this->fields['security_user_id']['options'] = $students;
 	}
 
-	public function addEditOnChangeSection(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditOnChangeSection(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$sectionId = $data[$this->alias()]['section'];
 		
 		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
