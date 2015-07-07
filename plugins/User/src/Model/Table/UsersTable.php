@@ -11,9 +11,11 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\UserTrait;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
+	use UserTrait;
 
 	// private $defaultStudentProfile = "Student.default_student_profile.jpg";
 	// private $defaultStaffProfile = "Staff.default_staff_profile.jpg";
@@ -159,20 +161,47 @@ class UsersTable extends AppTable {
 			$options['finder'] = ['withDefaultIdentityType' => ['direction' => $query['direction']]];
 			$options['order'][$this->aliasField('default_identity_type')] = $query['direction'];
 			$request->query['sort'] = 'Users.default_identity_type';
-//$request->query['sort'] = 'number';
-			//$options['sort'] = 'Users.default_identity_type';
 		}
 
-
-		//pr($options);
 	}
 
 	public function findWithName(Query $query, array $options) {
+		$name = '';
+        $separator = ", ";
+        $keys = $this->getNameKeys();
+        foreach($keys as $k=>$v){
+            if(!is_null($this->aliasField($k))&&$v){
+                if($k!='last_name'){
+                    if($k=='preferred_name'){
+                        $name .= $separator . '('. $this->aliasField($k) .')';
+                    } else {
+                        $name .= $this->aliasField($k) . $separator;
+                    }
+                } else {
+                    $name .= $this->aliasField($k);
+                }
+            }
+        }
+        $name = trim(sprintf('%s', $name));
+        $name = str_replace($this->alias,"inner_users",$name);
+			
 		return $query
-				->select(['CONCAT('.$this->aliasField('first_name').', '.$this->aliasField('middle_name').')']);
-				//->order(['CONCAT(first_name, middle_name)' => $options['direction']]);	
-				
-
+			->join([
+					'table' => 'security_users',
+					'alias' => 'inner_users',
+					'type'  => 'left',
+					'select' => 'CONCAT('.$name.') AS inner_name',
+					'conditions' => ['inner_users.id' => $this->aliasField('id')],
+					'order' => ['inner_users.inner_name' => $options['direction']]
+				])
+			->order([$this->aliasField('first_name') => $options['direction']]);	   
+			
+		// return $query
+		// 		->order([$this->aliasField('first_name') => $options['direction'],
+		// 				$this->aliasField('middle_name') => $options['direction'],
+		// 				$this->aliasField('third_name') => $options['direction'],
+		// 				$this->aliasField('last_name') => $options['direction']
+		// 			]);	
 	}	
 
 	public function findWithDefaultIdentityType(Query $query, array $options) {
@@ -194,14 +223,12 @@ class UsersTable extends AppTable {
 					   return $q
 							->select(['IdentityTypes.id'])
 							->contain(['IdentityTypes'])
-							->where(['IdentityTypes.default' => 1])
-							->order(['IdentityTypes.default DESC'])
-							->where(['Identities.identity_type_id' => 'IdentityTypes.id']);
+							->where(['IdentityTypes.default' => 1, 'Identities.identity_type_id' => 'IdentityTypes.id'])
+							->order(['IdentityTypes.default DESC']);
 					}
 				])
 			->group(['Identities.number'])
 			->order(['Identities.number' => $options['direction']]);	   
-
 	}	
 
 
