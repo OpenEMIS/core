@@ -57,10 +57,9 @@ class LocalizationComponent extends Component {
 			$lang = $session->read('System.language');
 
 		}
+		I18n::locale($lang);
 		$this->language = $lang;
 		$this->Session = $session;
-		// Set Locale
-		I18n::locale($lang);
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
