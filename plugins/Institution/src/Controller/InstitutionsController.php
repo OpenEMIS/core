@@ -83,7 +83,7 @@ class InstitutionsController extends AppController  {
 				$this->_institutionObj = $this->Institutions->get($id);
 				$name = $this->_institutionObj->name;
 				$header = $name .' - Overview';
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}

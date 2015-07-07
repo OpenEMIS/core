@@ -158,6 +158,21 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * Check if user input for date is valid
+	 * @param  [type] $field      [description]
+	 * @param  [type] $globalData [description]
+	 * @return [type]             [description]
+	 */
+	public static function checkDateInput($field, $globalData) {
+		try {
+			$field = new DateTime($field);
+			return true;
+		} catch (Exception $e) {
+			return __('Please input a proper value');
+		}
+	}
+
+	/**
 	 * [checkIfStringGotNoNumber description]
 	 * @param  [type] $check      [description]
 	 * @param  array  $globalData [description]
