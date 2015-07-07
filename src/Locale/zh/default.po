@@ -11,6 +11,10 @@ msgstr ""
 "Language: chi\n"
 "X-Generator: Poedit 1.6.4\n"
 
+#: Controller/NoticesController.php:19
+msgid "Notices"
+msgstr "启事"
+
 msgid "Home"
 msgstr "首页"
 
@@ -27,7 +31,7 @@ msgid "Logout"
 msgstr "登出"
 
 msgid "Institutions"
-msgstr "机构 Hello world"
+msgstr "机构"
 
 msgid "Students"
 msgstr "学生"

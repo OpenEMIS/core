@@ -50,10 +50,6 @@ class ControllerActionComponent extends Component {
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
-		// Testing out the localisation <<Zack>>
-		$locale = $this->request->session()->read("System.language");
-		I18n::locale($locale);
-		// END: Testing out the localisation <<Zack>>
 		if (array_key_exists('templates', $config)) {
 			$this->templatePath = $config['templates'];
 		}
