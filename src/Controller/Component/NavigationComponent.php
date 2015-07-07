@@ -68,7 +68,7 @@ class NavigationComponent extends Component {
 								'Administrative Boundaries' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas'],
-									'selected' => ['AreaLevels', 'AreaAdministrativeLevels', 'AreaAdministratives']
+									'selected' => ['Levels', 'AdministrativeLevels', 'Administratives']
 								],
 								'Academic Periods' => [
 									'collapse' => true,
@@ -210,8 +210,8 @@ class NavigationComponent extends Component {
 				'Quality' => [
 					'collapse' => true,
 					'items' => [
-						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics']],
+						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Visits']]
 					]
 				]
 			];

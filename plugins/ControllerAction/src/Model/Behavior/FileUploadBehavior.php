@@ -14,8 +14,12 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
+/**
+ * Depends on @link[ControllerActionComponent] events heavily.
+ */
 namespace ControllerAction\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
@@ -26,7 +30,8 @@ class FileUploadBehavior extends Behavior {
 		'name' => 'file_name',
 		'content' => 'file_content',
 		'size' => '1MB',
-		'allowEmpty' => false
+		'contentEditable' => true,
+		'allowable_file_types' => 'all'
 	];
 
 	public $fileImagesMap = array(
@@ -52,110 +57,244 @@ class FileUploadBehavior extends Behavior {
 		'zip' 	=> 'application/zip',
 	);
 
-	public $fileTypesMap = array();
+	public $fileTypesMap = [];
+	private $allowableFileTypes = [];
 
 	private $_validator;
 
 	public function initialize(array $config) {
-		$this->_defaultConfig = array_merge($this->_defaultConfig, $config);
-		$this->config($this->_defaultConfig);
-
+		$this->config(array_merge($this->_defaultConfig, $config));
 		$this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
 
-		// $this->_validator = new Validator();
-
-		// $this->_validator
-		//     ->requirePresence($this->_defaultConfig['name'])
-		//     ->notEmpty($this->_defaultConfig['name'], 'Please upload a file');
-		    // ->add('title', [
-		    //     'length' => [
-		    //         'rule' => ['minLength', 10],
-		    //         'message' => 'Titles need to be at least 10 characters long',
-		    //     ]
-		    // ])
-		    // ->allowEmpty('published')
-		    // ->add('published', 'boolean', [
-		    //     'rule' => 'boolean'
-		    // ])
-		    // ->requirePresence('body')
-		    // ->add('body', 'length', [
-		    //     'rule' => ['minLength', 50],
-		    //     'message' => 'Articles must have a substantial body.'
-		    // ]);
-		
-		/*
-		$validate = array(
-			'ruleExtension' => array(
-				'rule' => array('extension', array('gif', 'jpeg', 'png', 'jpg')),
-				'message' => __('Please upload a valid file type.')
-			),
-			'ruleFileSize' => array(
-				'rule' => array('fileSize', '<=')
-			)
-		);
-		
-		if (!isset($this->settings[$model->alias])) {
-			$this->settings[$model->alias] = array();
+		if ($this->config('allowable_file_types')=='image') {
+			$this->allowableFileTypes = $this->fileImagesMap;
+		} else if ($this->config('allowable_file_types')=='document') {
+			$this->allowableFileTypes = $this->fileDocumentsMap;
+		} else {
+			$this->allowableFileTypes = $this->fileTypesMap;
 		}
-		$this->settings[$model->alias] = array_merge($this->settings[$model->alias], (array)$settings);
-		if(!empty($this->settings[$model->alias])) {
-			$fields = $this->settings[$model->alias];
-			foreach($fields as $field) {
-				$fieldName = $field['content'];
-				if(!isset($model->validate[$fieldName])) {
-					$size = isset($field['size']) ? $field['size'] : '1MB';
-					$validate['ruleFileSize']['rule'][] = $size;
-					$validate['ruleFileSize']['message'] = __('File size must be less than ') . $size;
-					$model->validate[$fieldName] = $validate;
-				}
-			}
-		}
-		*/
-	
 	}
 	
-	/*
-	public function beforeValidate(Model $model, $options = array()) {
-		$fields = $this->settings[$model->alias];
-		$alias = $model->alias;
-		foreach($fields as $field) {
-			$fieldName = $field['content'];
-			if(!empty($model->data[$alias][$fieldName])) {
-				$file = $model->data[$alias][$fieldName];
-				if($file['error'] == 4 && $field['allowEmpty'] == true) {
-					unset($model->data[$alias][$fieldName]);
+
+/******************************************************************************************************************
+**
+** Link/Map ControllerActionComponent events
+**
+******************************************************************************************************************/
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
+			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
+			'ControllerAction.Model.edit.beforeAction' => 'editBeforeAction',
+			'ControllerAction.Model.afterAction' => 'afterAction'
+		];
+		$events = array_merge($events,$newEvent);
+		return $events;
+	}
+
+
+/******************************************************************************************************************
+**
+** ControllerActionComponent events
+**
+******************************************************************************************************************/
+	public function afterAction(Event $event) {
+		if (isset($this->_table->fields[$this->config('content')])) {
+			// pr();
+			$comment = '* File size should not be larger than ' . $this->config('size');
+			$comment .= '<br/>* Format Supported: ' . $this->fileTypesForView();
+			$this->_table->fields[$this->config('content')]['comment'] = $comment ;
+		}
+	}
+
+    public function editBeforeAction(Event $event) {
+    	if (!$this->config('contentEditable')) {
+			unset($this->_table->fields[$this->config('content')]);	
+    	}
+    }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if (!$this->config('contentEditable')) {
+			if (isset($data[$this->_table->aliasField($this->config('content'))])) {
+				unset($data[$this->_table->aliasField($this->config('content'))]);
+			}	
+		}
+    }
+
+	/**
+	 * @todo if user wants the file or image to be removed, it should be emptied from the record.
+	 */
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+
+		$fileNameField = $this->config('name');
+		$fileContentField = $this->config('content');
+		$contentEditable = $this->config('contentEditable');
+		$fileContentFieldRules = $this->_table->validator()->field($fileContentField);
+		$model = $this->_table;
+
+		$file = isset($data[$model->alias()][$fileContentField]) ? $data[$model->alias()][$fileContentField] : [];
+
+		if ($entity->isNew()) {
+			if (!empty($file) && $file['error'] == 0) { // success
+		
+				if ($this->uploadedFileIsAllowed($file)) {
+					if ($this->uploadedFileSizeIsAcceptable($file)) {
+						$data = $this->parseUploadInput($data, $file);
+					} else {
+						$entity->errors($fileContentField, ['File size should not be more than ' . $this->config('size')]);
+						unset($data[$model->alias()][$fileContentField]);
+					}
+				} else {
+					$entity->errors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView()]);
+					unset($data[$model->alias()][$fileContentField]);
 				}
-			} else { // if the file is null, remove validation
-				unset($model->validate[$fieldName]);
-				if(isset($field['name'])) {
-					$model->data[$alias][$field['name']] = null;
+		
+			} elseif ($fileContentFieldRules->isEmptyAllowed()) {
+				$this->unsetProperties($entity, $data);
+			} else {
+				// pr('should throw an error here');
+				$entity->errors($fileContentField, ['File attachment is required']);
+				unset($data[$model->alias()][$fileContentField]);
+			}
+		} else {
+			if ($contentEditable) {
+
+				if (!empty($file) && $file['error'] == 0) { // success
+					// pr('parseUploadInput');
+					$data = $this->parseUploadInput($data, $file);
+				} elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file) ) {
+					// pr('content allowed to be empty');
+					$this->unsetProperties($entity, $data);
+				} elseif ($fileContentFieldRules->isEmptyAllowed()) {
+					/**
+					 * columns set as nullable in db
+					 */
+					$data[$model->alias()][$fileNameField] = null;
+					$data[$model->alias()][$fileContentField] = null;
+				} else {
+					/**
+					 * columns set as NOT nullable in db
+					 */
+					// die('dun know what to do yet');
 				}
-				$model->data[$alias][$fieldName] = null;
-				return true;
+
+			} else {
+				// pr('content not editable');
+				$this->unsetProperties($entity, $data);
 			}
 		}
-		return parent::beforeValidate($model, $options);
+
+		// die();
 	}
-	*/
-	
-	// public function validationDefault(Validator $validator) {
-	// 	$validator
-	// 	->requirePresence('name')
-	// 	->notEmpty('name', 'Please enter a name.')
- //    	->add('name', [
- //    		'unique' => [
-	// 	        'rule' => ['validateUnique', ['scope' => 'survey_module_id']],
-	// 	        'provider' => 'table',
-	// 	        'message' => 'This name is already exists in the system'
-	// 	    ]
-	//     ])
-	//     ->requirePresence('survey_module_id')
-	// 	->notEmpty('survey_module_id', 'Please select a module.')
-	//     ;
 
-	// 	return $validator;
-	// }
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
+	private function unsetProperties($entity, $data) {
+		/**
+		 * unset this two entities so that no changes will be made on the uploaded record
+		 */
 
+		$model = $this->_table;
+		$fileNameField = $this->config('name');
+		$fileContentField = $this->config('content');
+
+		if (isset($data[$model->alias()][$fileNameField])) {
+			unset($data[$model->alias()][$fileNameField]);
+		}
+		if (isset($data[$model->alias()][$fileContentField])) {
+			unset($data[$model->alias()][$fileContentField]);
+		}
+		$entity->unsetProperty($fileNameField);
+		$entity->unsetProperty($fileContentField);
+
+	}
+
+	/**
+	 * http://codereview.stackexchange.com/questions/6476/quick-way-to-convert-bytes-to-a-more-readable-format
+	 * @param  [type] $bytes [description]
+	 * @return [type]        [description]
+	 */
+	private function bytesToReadableFormat($bytes) {
+		if ($bytes < $KILO) {
+	        return $bytes . 'B';
+	    }
+	    if ($bytes < $MEGA) {
+	        return round($bytes / $KILO, 2) . 'KB';
+	    }
+	    if ($bytes < $GIGA) {
+	        return round($bytes / $MEGA, 2) . 'MB';
+	    }
+	    if ($bytes < $TERA) {
+	        return round($bytes / $GIGA, 2) . 'GB';
+	    }
+	    return round($bytes / $TERA, 2) . 'TB';
+	}
+
+	private function readableFormatToBytes() {
+		$KILO = 1024;
+		$MEGA = $KILO * 1024;
+		$GIGA = $MEGA * 1024;
+		$TERA = $GIGA * 1024;
+
+		if (substr_count(strtolower($this->config('size')), 'kb')) {
+			$size = intval(str_replace('kb', '', (strtolower($this->config('size')))));
+			return $size * $KILO;
+		}
+		if (substr_count(strtolower($this->config('size')), 'mb')) {
+			$size = intval(str_replace('mb', '', (strtolower($this->config('size')))));
+			return $size * $MEGA;
+		}
+		if (substr_count(strtolower($this->config('size')), 'gb')) {
+			$size = intval(str_replace('gb', '', (strtolower($this->config('size')))));
+			return $size * $GIGA;
+		}
+		$size = intval($this->config('size'));
+		return $size * $TERA;
+	}
+
+	public function uploadedFileIsAllowed($file) {
+		$isValid = true;
+
+		if(isset($file['type']) && !in_array($file['type'], $this->allowableFileTypes)){
+			$isValid = false;
+		} 
+		return $isValid;
+	}
+
+	public function uploadedFileSizeIsAcceptable($file) {
+		$isValid = true;
+		$restrictedSize = $this->readableFormatToBytes();
+
+		// pr($file['size'] .' <> '. $restrictedSize);die;
+
+		if(isset($file['type']) && ($file['size'] > $restrictedSize)){
+			$isValid = false;
+		}
+		return $isValid;
+	}
+
+	private function parseUploadInput($data, $file) {
+		$fileNameField = $this->config('name');
+		$fileContentField = $this->config('content');
+		$model = $this->_table;
+
+		if ($this->config('useDefaultName')) {
+			$data[$model->alias()][$fileNameField] = $file['name'];
+		} else {
+			$pathInfo = pathinfo($file['name']);
+			$data[$model->alias()][$fileNameField] = uniqid() . '.' . $pathInfo['extension'];
+		}
+		$data[$model->alias()][$fileContentField] = file_get_contents($file['tmp_name']);
+		return $data;
+	}
+
+	public function fileTypesForView() {
+		return implode(', .', array_keys($this->allowableFileTypes));
+	}
 
 	public function getFileTypeForView($filename) {
 		$exp = explode('.', $filename);
@@ -195,49 +334,4 @@ class FileUploadBehavior extends Behavior {
 		return $file;
 	}
 
-	/**
-	 * @todo if user wants the file or image to be removed, it should be emptied from the record.
-	 */
-	public function beforeSave(Event $event, Entity $entity) {
-
-		$fileNameField = $this->config('name');
-		$fileContentField = $this->config('content');
-
-		$file = $entity->$fileContentField;
-		
-		$proceed = false;
-		if ($entity->isNew()) {
-			$proceed = true;
-		} elseif (!$entity->isNew() && !empty($file) && !empty($file['tmp_name'])) {
-			$proceed = true;
-		} elseif(empty($file)) {
-			/**
-			 * if user wants the file or image to be removed, it should be emptied from the record.
-			 */
-			$entity->$fileNameField =  null;
-			$entity->$fileContentField =  null;
-		}
-
-		if (!empty($file)) {
-			if ($proceed) {
-				if ($file['error'] == 0) { // success
-					if ($this->config('useDefaultName')) {
-						$entity->$fileNameField = $file['name'];
-					} else {
-						$pathInfo = pathinfo($file['name']);
-						$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
-					}					
-					$entity->$fileContentField = file_get_contents($file['tmp_name']);
-				} else {
-					$entity->$fileContentField = null;
-				}
-			} else {
-				/**
-				 * unset this two entities so that no changes will be made on the uploaded record
-				 */
-				$entity->unsetProperty($fileNameField);
-				$entity->unsetProperty($fileContentField);
-			}
-		}
-	}
 }

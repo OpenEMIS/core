@@ -267,6 +267,10 @@ class AppTable extends Table {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
+		if ($buttons->offsetExists('reorder')) {
+			$controller->set('reorder', true);
+		}
+
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 

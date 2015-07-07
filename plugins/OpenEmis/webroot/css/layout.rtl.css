@@ -292,7 +292,7 @@ html {
 
 .rtl .breadcrumb > li + li::after {
     font-family: 'FontAwesome';
-    content: "\f054";
+    content: "\f053";
     font-size: 0.6em;
     margin: 0 2px;
     padding-left: 5px;
@@ -622,6 +622,13 @@ html {
 
 .rtl .fileinput .btn-file-cancel {
     border-right: 1px solid #6B6B6B !important;
+    left: 50px;
+    right: auto;
+}
+
+.rtl .fileinput .btn-file {
+    left: -1px;
+    right: auto;
 }
 
 .rtl .input-checkbox-inline,
@@ -662,7 +669,7 @@ html {
 }
 
 .rtl .fileinput-filename {
-    padding: 0 25px 0 0;
+    padding: 0 25px 0 102px;
 }
 
 .rtl .btn-file-cancel {
@@ -812,6 +819,10 @@ html {
         margin: 0 0 0 0;
         float: right;
     }
+
+    .rtl #sidebar-wrapper {
+        top: 23px;
+    }    
 }
 
 @media(max-width: 585px) {
