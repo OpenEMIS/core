@@ -17,15 +17,21 @@ switch ($fieldName) {
 $totalAmount = 0;
 
 ?>
-
 <div class="input">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
-	<div class="col-md-6">
+	<div class="table-toolbar">
+		<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()">
+			<i class="fa fa-plus"></i> 
+			<span>Add</span>
+		</button>
+	</div>
+	<div class="table-in-view col-md-4 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?= $this->Label->get('general.type'); ?></th>
-					<th><?= $this->Label->get('general.amount'); ?></th>
+					<th><?= $this->Label->get($attr['model'].'.type'); ?></th>
+					<th><?= $this->Label->get($attr['model'].'.amount'); ?></th>
+					<th></th>
 				</tr>
 			</thead>
 			<?php if (!empty($data->$fieldName)) : ?>
@@ -69,11 +75,12 @@ $totalAmount = 0;
 									$optionsArray['data-compute-operand'] = $operand;
 									echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.amount', $optionsArray);
 								 ?>
-								
-								
 							</td>
 							<td> 
-								<span class="fa fa-minus-circle" style="cursor: pointer;" title="<?php echo $this->Label->get('general.delete'); ?>" onclick="$(this).closest('tr').remove();"></span>
+								<button onclick="jsTable.doRemove(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
+									<i class="fa fa-trash"></i>
+									<span>Delete</span>
+								</button>
 							</td>
 						</tr>
 					<?php endforeach ?>
@@ -88,7 +95,5 @@ $totalAmount = 0;
 				</tr>
 			</tfoot>
 		</table>
-		
-		<a class="void icon_plus" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()"><i class="fa fa-plus"></i></a>
 	</div>
 </div>
