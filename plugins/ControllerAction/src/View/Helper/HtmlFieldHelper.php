@@ -389,19 +389,28 @@ class HtmlFieldHelper extends Helper {
 			'autoclose' => true,
 		];
 
+		$field = $attr['field'];
+		$table = TableRegistry::get($attr['className']);
+		$schema = $table->schema();
+
+		$columnAttr = $schema->column($field);
+		$defaultDate = true;
+		if ($columnAttr['null'] == true) {
+			$defaultDate = false;
+		}
+
 		if (!isset($attr['date_options'])) {
 			$attr['date_options'] = [];
 		}
+		
 		if (!isset($attr['default_date'])) {
-			$attr['default_date'] = true;
+			$attr['default_date'] = $defaultDate;
 		}
-
-		$field = $attr['field'];
+		
 		$value = $data->$field;
-
+		
 		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
-				$table = TableRegistry::get($attr['className']);
 				$event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
 				$event = $table->eventManager()->dispatch($event);
 				if (strlen($event->result) > 0) {
@@ -409,7 +418,7 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field;
+			$attr['id'] = $attr['model'] . '_' . $field; 
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}

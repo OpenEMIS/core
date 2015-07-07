@@ -527,6 +527,13 @@ trait MessagesTrait {
 				]
 			],
 		],
+		'AcademicPeriod' => [
+			'AcademicPeriods' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
+		],
 	];
 
 	public function getMessage($code) {
