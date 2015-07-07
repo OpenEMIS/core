@@ -2,13 +2,13 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-use Cake\Validation\Validator;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
@@ -66,16 +66,10 @@ class UsersTable extends AppTable {
 			'className' => 'Security.SecurityRoles',
 			'through' => 'Security.SecurityGroupUsers'
 		]);
-
+		
 	}
 
 	public function beforeAction(Event $event) {
-		$modelName = inflector::singularize($this->controller->name);
-		if (strtolower($modelName)=='institution') {
-			$modelName = inflector::singularize($this->alias());
-		}
-        $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		
 		$this->ControllerAction->field('username', ['visible' => false]);
 
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
