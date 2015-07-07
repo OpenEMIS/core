@@ -28,7 +28,6 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 
 	public function beforeAction(Event $event) {
 		parent::beforeAction($event);
-		$this->fields['custom_module_id']['visible'] = false;
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
@@ -39,6 +38,7 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 
 	public function indexBeforeAction(Event $event) {
 		parent::indexBeforeAction($event);
+		$this->fields['custom_module_id']['visible'] = false;
 		$this->_fieldOrder = ['name', 'description', 'custom_fields', 'parent_id'];
 
 		// Hide controls filter and add breadcrumb
@@ -47,10 +47,11 @@ class InfrastructureLevelsTable extends CustomFormsTable {
         ];
 		$this->controller->set('toolbarElements', $toolbarElements);
 
-		$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
 		if ($parentId != 0) {
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
+				->order([$this->aliasField('lft')])
 				->toArray();
 			$this->controller->set('crumbs', $crumbs);
 		}
@@ -58,7 +59,7 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		parent::indexBeforePaginate($event, $request, $options);
-		$parentId = !is_null($this->request->query('parent_id')) ? $this->request->query('parent_id') : 0;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
 
 		$options['conditions'][] = [
         	$this->aliasField('parent_id') => $parentId
@@ -71,7 +72,7 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 		// Hide Custom Module
 		$this->fields['custom_module_id']['type'] = 'hidden';
 		
-		$parentId = $this->request->query('parent_id');
+		$parentId = $this->request->query('parent');
 		$this->fields['parent_id']['type'] = 'hidden';
 
 		if (is_null($parentId)) {
@@ -97,7 +98,7 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
 			'index',
-			'parent_id' => $entity->id
+			'parent' => $entity->id
 		]);
 	}
 

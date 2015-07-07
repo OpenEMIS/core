@@ -42,8 +42,8 @@ class UsersTable extends AppTable {
 			'name' => 'photo_name',
 			'content' => 'photo_content',
 			'size' => '2MB',
-			'allowEmpty' => true,
-			'useDefaultName' => false
+			'contentEditable' => true,
+			'allowable_file_types' => 'image'
 		]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);

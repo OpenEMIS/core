@@ -52,9 +52,8 @@ class InstitutionsController extends AppController  {
 			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['!add']],
 
 			// Quality
-			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
-			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
-
+			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['!add']],
+			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits']
 		];
 
 		$this->loadComponent('Paginator');
