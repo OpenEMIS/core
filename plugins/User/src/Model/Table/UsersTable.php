@@ -2,13 +2,13 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-use Cake\Validation\Validator;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -64,16 +64,26 @@ class UsersTable extends AppTable {
 			'className' => 'Security.SecurityRoles',
 			'through' => 'Security.SecurityGroupUsers'
 		]);
-
+		
+		/**
+		 * we have to add TrackActivityBehavior in this function so that this model will be able to utilise public instances and function in the behavior
+		 */
+        $this->addBehavior('TrackActivity');
 	}
 
 	public function beforeAction(Event $event) {
-		$modelName = inflector::singularize($this->controller->name);
-		if (strtolower($modelName)=='institution') {
-			$modelName = inflector::singularize($this->alias());
+		/**
+		 * we can only only detect the type of persona behavior attached to this model during this time (not during inititalize()), and then update TrackActivity configurations according
+		 */
+		if (in_array('Staff', $this->behaviors()->loaded())) {
+			$modelName = 'Staff';
+		} else if (in_array('Student', $this->behaviors()->loaded())) {
+			$modelName = 'Student';
 		}
-        $this->addBehavior('TrackActivity', ['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		
+        $this->updateTrackActivityConfig(['target' => $modelName.'.'.$modelName.'Activities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		/**
+		 */
+
 		$this->ControllerAction->field('username', ['visible' => false]);
 
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
