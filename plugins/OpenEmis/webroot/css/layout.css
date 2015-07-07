@@ -1230,6 +1230,8 @@ input[type="checkbox"] {
 /* TABLE */
 .table-responsive {
 	border: 0;
+	-ms-overflow-y: hidden;
+	    overflow-y: hidden;	
 }
 
 .ng-scope table > thead:first-child > tr:first-child > th {
@@ -1874,9 +1876,13 @@ table tr.sorting-row td {background-color: #8b8;}
 	padding: 0;
 	margin-bottom: 15px;
 	width: 70%;
-	border: 1px solid #CCC;
-	-webkit-border-radius: 5px;
-	        border-radius: 5px;	
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;	
+}
+
+.table-in-view table tbody {
+	border-left: 1px solid #CCC;
+	border-right: 1px solid #CCC;
 }
 
 .table-in-view .btn-default {

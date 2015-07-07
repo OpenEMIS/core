@@ -1506,3 +1506,14 @@ CREATE TABLE IF NOT EXISTS `institution_site_infrastructure_custom_table_cells` 
 
 ALTER TABLE `institution_site_infrastructure_custom_table_cells`
   ADD PRIMARY KEY (`id`);
+
+
+-- 6 July 2015 12:56pm
+ALTER TABLE `institution_site_attachments` ADD `date_on_file` DATE NOT NULL AFTER `file_content`;
+ALTER TABLE `institution_site_attachments` CHANGE `file_content` `file_content` LONGBLOB NOT NULL;  
+ALTER TABLE `user_attachments` DROP `visible`;
+ALTER TABLE `user_attachments` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+ALTER TABLE `user_attachments` CHANGE `file_content` `file_content` LONGBLOB NOT NULL;
+
+
+
