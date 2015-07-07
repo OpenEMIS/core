@@ -23,6 +23,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
+use Cake\I18n\I18n;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -49,6 +50,10 @@ class ControllerActionComponent extends Component {
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
+		// Testing out the localisation <<Zack>>
+		$locale = $this->request->session()->read("System.language");
+		I18n::locale($locale);
+		// END: Testing out the localisation <<Zack>>
 		if (array_key_exists('templates', $config)) {
 			$this->templatePath = $config['templates'];
 		}
@@ -534,7 +539,6 @@ class ControllerActionComponent extends Component {
 
 	public function index() {
 		$model = $this->model;
-
 		$event = new Event('ControllerAction.Model.index.beforeAction', $this);
 		$event = $model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
