@@ -1516,4 +1516,9 @@ ALTER TABLE `user_attachments` CHANGE `description` `description` TEXT CHARACTER
 ALTER TABLE `user_attachments` CHANGE `file_content` `file_content` LONGBLOB NOT NULL;
 
 
+-- 7 July 2015 
+ALTER TABLE `institution_site_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
+ALTER TABLE `student_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
+ALTER TABLE `staff_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
+
 

@@ -13,7 +13,6 @@ use App\Model\Table\AppTable;
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
-        $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         parent::initialize($config); 
 
 		/**
@@ -79,12 +78,19 @@ class InstitutionsTable extends AppTable  {
 			'tableCellKey' => ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
+        $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator
-			->add('date_opened', 'ruleCompare', [
-					'rule' => array('comparison', 'notequal', '0000-00-00'),
+			->add('date_opened', [
+					'ruleCompare' => [
+						'rule' => ['comparison', 'notequal', '0000-00-00'],
+					],
+					'ruleCheckDateInput' => [
+			            'rule' => ['checkDateInput'],
+		        		'last' => true
+		    	    ]
 				])
 
 	        ->allowEmpty('date_closed')
