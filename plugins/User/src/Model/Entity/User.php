@@ -4,35 +4,15 @@ namespace User\Model\Entity;
 use Cake\ORM\Entity;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
+use App\Model\Traits\UserTrait;
 
 class User extends Entity {
+	use UserTrait;
+
     protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'staff_status', 'programme_section'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
-    }
-
-    protected function getNameDefaults() {
-        /* To create option field for Administration to set these default values for system wide use */
-        return array(
-            'middle'    => true,
-            'third'     => true,
-            'preferred' => false
-        );
-    }
-
-    protected function getNameKeys($otherNames=[]) {
-        $defaults = $this->getNameDefaults();
-        $middle = (isset($otherNames['middle'])&&is_bool($otherNames['middle'])&&$otherNames['middle']) ? $otherNames['middle'] : $defaults['middle'];
-        $third = (isset($otherNames['third'])&&is_bool($otherNames['third'])&&$otherNames['third']) ? $otherNames['third'] : $defaults['third'];
-        $preferred = (isset($otherNames['preferred'])&&is_bool($otherNames['preferred'])&&$otherNames['preferred']) ? $otherNames['preferred'] : $defaults['preferred'];
-        return array(
-            'first_name'    =>  true,
-            'middle_name'   =>  $middle,
-            'third_name'    =>  $third,
-            'last_name'     =>  true,
-            'preferred_name'=>  $preferred
-        );
     }
 
     /**
