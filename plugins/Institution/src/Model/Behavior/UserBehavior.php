@@ -23,9 +23,6 @@ class UserBehavior extends Behavior {
 		if ($session->check('Institutions.id')) {
 			$institutionId = $session->read('Institutions.id');
 		} else {
-			/**
-			 * this should be something else
-			 */
 			$institutionId = 0;
 		}
 		$query
