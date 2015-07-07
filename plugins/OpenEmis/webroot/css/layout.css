@@ -917,7 +917,7 @@ input[type="checkbox"] {
 .toolbar .btn i {
 	display: table-cell;
 	font-size: 11px;
-	padding: 7px 9px;
+	padding: 8px 9px 7px;
 	vertical-align: middle;
 }
 
@@ -1448,7 +1448,7 @@ table tr.sorting-row td {background-color: #8b8;}
 .table-sortable th > a.desc:after { content: "\f0de"; }
 .rtl .table-sortable th > a:after { float: left; }
 
-.highlight { background-color: #FBFF5E; }
+.highlight { background-color: #FFEA57; }
 
 
 /* SEARCH */
@@ -2030,6 +2030,78 @@ input[readonly] {
 	cursor: not-allowed;
 }
 
+/* WORKFLOW */
+.transition-container {
+	margin: 10px 0;
+	padding: 20px 0;
+}
+
+.transition-arrow:after {
+	font-family: "FontAwesome";
+	content: "\f178";
+	margin: 0 5px;
+	color: #999;
+}
+
+.transition-container .fa {
+	display: inline-block;
+	/*font-size: 16px;*/
+	color: #999;
+	margin: 0 0px 1px 8px;
+	vertical-align: middle;
+}
+
+.transition-container th {
+	min-width: 160px;
+}
+
+.status {
+	display: inline-block;	
+	color: #333;
+	font-weight: bold;
+	padding: 2px 5px;
+	margin: 0 0 4px;
+	border: 1px solid #F2DC45;
+	-webkit-border-radius: 2px;
+		    border-radius: 2px;	
+}
+
+.status:before {
+	font-family: "kordit-fonts";
+	content: "";
+}
+
+.custom-buttons {
+	display: inline-block;
+	width: 425px;
+	padding: 6px 12px;
+}
+
+.custom-buttons span {
+	display: block;
+	padding: 4px 8px;
+}
+
+.custom-buttons .btn {
+	margin: 0;
+}
+
+.past {
+	background-color: #EFEFEF !important;
+	border-color: #E9E9E9 !important;
+	border: 1px solid #DDD !important;
+}
+
+.button-responsive button {
+	float: left;
+}
+
+.button-responsive	{
+	display: inline-block;
+	margin: -6px 10px;	 
+	border-left: 1px solid #DDD;	   
+}
+
 /* WIZARD */
 .btn-default[disabled] {
 	background: #999;
@@ -2065,9 +2137,30 @@ input[readonly] {
 	line-height: 32px !important;
 }
 
-.fuelux .wizard > .actions {
+.fuelux .wizard-buttons {
+	position: fixed;
+	display: block;	
+	bottom: 20px;
+	right: 0;
 	line-height: 31px !important;
-	border: 1px solid #CCC;
+	margin: 10px 0;
+	padding: 20px;
+	width: 20%;
+	background-color: #FFF;
+	-webkit-border-bottom-right-radius: 3px !important;
+	        border-bottom-right-radius: 3px !important;
+	-webkit-border-bottom-left-radius: 3px !important;
+	        border-bottom-left-radius: 3px !important;	
+	-webkit-border-top-right-radius: 0 !important;
+	        border-top-right-radius: 0 !important;		
+}
+
+.fuelux .wizard-buttons .btn-next i {
+	margin: 0 0 0 4px;
+}
+
+.fuelux .wizard-buttons .btn-prev i {
+	margin: 0 4px 0 0;
 }
 
 .fuelux .wizard > .steps-container > ul.steps li .chevron {
@@ -2909,7 +3002,7 @@ footer {
 	}
 }
 
-@media (max-width: 585px) {
+@media (max-width: 1198px) {
 	.page-header h2 {
 		width: 100%;	
 		float: none;
@@ -3343,5 +3436,16 @@ footer {
 @media (max-width: 509px) {
 	.page-header {
 		border: 0;
+	}
+}
+
+@media (max-width: 1050px) {
+	.button-responsive	{
+		max-width: 74%;
+		-ms-overflow-y: scroll;
+		    overflow-y: scroll;
+		display: inline-block;
+		margin: -6px 0 0 10px !important;	 
+		border-left: 1px solid #DDD;	   
 	}
 }
