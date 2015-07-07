@@ -174,6 +174,11 @@ hr {
 
 .header-navigation .fa-home {
 	font-size: 18px;
+	margin-top: 2px;
+}
+
+.header-navigation .kd-grid {
+	margin-top: 4px;
 }
 
 .header-navigation .fa-caret-up,
@@ -395,7 +400,7 @@ body.large {
     background-color: #FFF;
     border-bottom: 1px solid #DDD;
     border-radius: 0;
-    padding: 9px 0 9px;
+    padding: 10px 0;
     margin: 0;
 }
 
@@ -1225,6 +1230,8 @@ input[type="checkbox"] {
 /* TABLE */
 .table-responsive {
 	border: 0;
+	-ms-overflow-y: hidden;
+	    overflow-y: hidden;	
 }
 
 .ng-scope table > thead:first-child > tr:first-child > th {
@@ -1605,6 +1612,10 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 275px;
 }
 
+.bootstrap-timepicker-widget table input {
+	min-width: inherit;
+}
+
 .form-horizontal {
 	padding: 15px 0;
 }
@@ -1768,9 +1779,19 @@ table tr.sorting-row td {background-color: #8b8;}
 	margin-bottom: 15px !important;
 }
 
+.fileinput .form-control {
+	-webkit-border-radius: 3px !important;
+	        border-radius: 3px !important;
+}
+
 .fileinput .btn-file {
 	position: absolute;
-	right: 0;
+	right: -1px;
+	top: -1px;
+	height: 34px !important;
+	width: 52px !important;
+	padding: 8px;
+	cursor: pointer;
 }
 
 .fileinput .btn-file-cancel {
@@ -1778,8 +1799,10 @@ table tr.sorting-row td {background-color: #8b8;}
 	padding: 8px 14px 9px;
 	border-radius: 0;
 	border-right: 0 !important;
-	right: 0;
-	top: 0;
+	right: 50px;
+	top: -1px;
+	height: 34px !important;
+	width: 52px !important;	
 }
 
 .fileinput-filename {
@@ -1789,10 +1812,19 @@ table tr.sorting-row td {background-color: #8b8;}
     width: 100%;
     position: absolute;
     left: 0;
- 	padding: 0 0 0 25px;
+ 	padding: 0 102px 0 25px;
     white-space: nowrap;
     text-overflow: ellipsis;
 } 
+
+.fileinput .btn-file .fileinput-new {
+	cursor: pointer !important;
+}
+
+.file-input-text {
+	clear: both;
+	padding: 8px 0 0;
+}
 
 .fileinput-preview {
 	width: 30%;
@@ -1801,10 +1833,22 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .fileinput-preview .btn-file {
 	position: relative;
+	width: inherit !important;
+	height: 30px !important;
+}
+
+.fileinput-preview .btn-file a {
+	cursor: pointer !important;
+	height: 34px;
+}
+
+.fileinput-preview #removeBtn a {
+	margin-top: -2px;
+	line-height: 1.4em;
 }
 
 .fileinput-preview .btn-default {
-	line-height: 1.25em;
+	line-height: 1em;
 }
 
 .form-horizontal .datetime select {
@@ -1832,9 +1876,13 @@ table tr.sorting-row td {background-color: #8b8;}
 	padding: 0;
 	margin-bottom: 15px;
 	width: 70%;
-	border: 1px solid #CCC;
-	-webkit-border-radius: 5px;
-	        border-radius: 5px;	
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;	
+}
+
+.table-in-view table tbody {
+	border-left: 1px solid #CCC;
+	border-right: 1px solid #CCC;
 }
 
 .table-in-view .btn-default {
@@ -2625,7 +2673,7 @@ footer {
 	}
 
 	#sidebar-wrapper {
-		top: 19px;
+		top: 21px;
 	}
 
 	.toolbar-btn::after {
@@ -2951,7 +2999,7 @@ footer {
 	}
 
 	#sidebar-wrapper {
-		top: 17px;
+		top: 21px;
 	}
 
 	.search input {
@@ -3113,7 +3161,7 @@ footer {
 	/* CONTENT */
 
 	.content-wrapper {
-		padding: 69px 0 0;
+		padding: 70px 0 0;
 	}
 
 	.navbar-right .username {

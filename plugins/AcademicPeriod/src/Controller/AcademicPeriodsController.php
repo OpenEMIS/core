@@ -16,13 +16,6 @@ class AcademicPeriodsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
-    public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['ControllerAction.onInitialize'] = 'onInitialize';
-    	$events['ControllerAction.beforePaginate'] = 'beforePaginate';
-    	return $events;
-    }
-
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 

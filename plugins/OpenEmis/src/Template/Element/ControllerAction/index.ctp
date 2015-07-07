@@ -6,12 +6,14 @@ $dataKeys = [];
 $tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
 
 $displayAction = $indexButtons->count() > 0;
-$displayReorder = array_key_exists('reorder', $indexButtons) && $data->count() > 1;
+$displayReorder = isset($reorder) && $reorder && $data->count() > 1;
 
 if ($displayAction) {
 	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
 }
 if ($displayReorder) {
+	echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
+	echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
 	$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 }
 
@@ -37,10 +39,26 @@ foreach ($data as $entity) {
 	}
 	$tableData[] = $row;
 }
-$tableClass = ''; //isset($data['tableClass']) ? $data['tableClass'] : '';
+
+$tableClass = 'table table-striped table-hover table-bordered table-sortable';
+
+$url = [
+	'plugin' => $this->request->params['plugin'],
+	'controller' => $this->request->params['controller'],
+	'action' => $this->request->params['action']
+];
+
+if ($this->request->params['action'] == 'index') {
+	$url['action'] = 'reorder';
+} else {
+	$url[] = 'reorder';
+}
+
+$baseUrl = $this->Url->build($url);
 ?>
+
 <div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered table-sortable <?php echo $tableClass ?>">
+	<table class="<?= $tableClass ?>" <?= $displayReorder ? 'id="sortable" url="' . $baseUrl . '"' : '' ?>>
 		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 		<tbody <?= $displayAction ? 'data-link="row"' : '' ?>><?php echo $this->Html->tableCells($tableData) ?></tbody>
 	</table>
