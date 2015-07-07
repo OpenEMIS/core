@@ -28,10 +28,6 @@ class TrackActivityBehavior extends Behavior {
 		$this->_table->trackActivity = true;
 	}
 
-	public function updateTrackActivityConfig(array $config) {
-		$this->config(array_merge($this->_defaultConfig, $config));
-	}
-
 	
 /******************************************************************************************************************
 **
