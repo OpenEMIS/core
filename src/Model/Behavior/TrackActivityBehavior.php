@@ -1,14 +1,12 @@
 <?php
 namespace App\Model\Behavior;
 
-use DateTime;
 use Cake\I18n\Time;
-use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Network\Session;
-use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Session;
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
@@ -19,7 +17,6 @@ class TrackActivityBehavior extends Behavior {
 		'key' => '',
 		'session' => ''
 	];
-	private $_dateFields = [];
 	private $_exclude = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 	private $_excludeType = ['binary'];
 	private $_session;
@@ -31,16 +28,22 @@ class TrackActivityBehavior extends Behavior {
 		$this->_table->trackActivity = true;
 	}
 
+	public function updateTrackActivityConfig(array $config) {
+		$this->config(array_merge($this->_defaultConfig, $config));
+	}
+
+	
+/******************************************************************************************************************
+**
+** CakePhp events
+**
+******************************************************************************************************************/
 	public function beforeSave(Event $event, Entity $entity) {
 		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity) { // edit operation
 			$model = $this->_table;
-			foreach ($model->fields as $key=>$field) {
-				if (substr_count($field['type'], 'date')>0) {
-					$this->_dateFields[] = $key;
-				}
-			}
 		    $schema = $model->schema();
 		    $session = $this->_session->read($this->config('session'));
+		    $ActivityModel = TableRegistry::get($this->config('target'));
 		    $obj = [
 		    	'model' => $model->alias(),
 		    	'model_reference' => $entity->id,
@@ -57,18 +60,20 @@ class TrackActivityBehavior extends Behavior {
 		    			 * Added extra condition to convert old field data to db date format since the new data is in db date format else, 
 		    			 * there will always be a new history record for date fields even though the date is the same.
 		    			 */
-		    			$proceed = true;
-						if (in_array($field, $this->_dateFields)) {
-							$oldValue = date('Y-m-d', strtotime($oldValue));
-							if ($oldValue == $entity->$field) {
-								$proceed = false;
-							}
+		    			$fieldType = $model->fields[$field]['type'];
+						if (array_key_exists($fieldType, $ActivityModel->dateTypes)) {
+							$dateType = $ActivityModel->dateTypes[$fieldType];
+							$oldValue = date($dateType, strtotime($oldValue));
+							$newValue = date($dateType, strtotime($entity->$field));
+							$dateType = null;
+						} else {
+							$newValue = $entity->$field;
 						}
 		    			
 		    			/**
 		    			 * Added extra conditions; if oldData is 'World' and newData is an empty string, skip it as location 'World' is the same as an empty string on user views.
 		    			 */
-		    			if ($oldValue != 'World' && $entity->$field != '' && $proceed) {
+		    			if ($oldValue != 'World' && $newValue != '' && $oldValue != $newValue) {
 
 							$relatedModel = $model->ControllerAction->getAssociatedBelongsToModel($field);
 							
@@ -83,23 +88,11 @@ class TrackActivityBehavior extends Behavior {
 								}
 							}
 							$obj['field'] = $field;
-								
 							/**
-			    			 * Added extra condition to convert both old field data and new field data to selected system date format before saving its value.
-			    			 */
-							if (in_array($field, $this->_dateFields)) {
-								$ConfigItem = TableRegistry::get('ConfigItems');
-								$format = $ConfigItem->value('date_format');
-
-								$oldValue = new Time($oldValue);
-								$oldValue = $oldValue->format($format);
-
-								$newValue = new Time($entity->$field);
-								$newValue = $newValue->format($format);
-							} else {
-								$newValue = $entity->$field;
-							}
-
+							 * saves the field type so that if a field is date, time or datetime type, we will convert it to show the system's selected date config using formatToSystemConfig()
+							 */
+							$obj['field_type'] = $fieldType;
+								
 							$allData = ['old'=>$oldValue, 'new'=>$newValue];
 							foreach ($allData as $allDataKey=>$allDataValue) {
 
@@ -124,7 +117,6 @@ class TrackActivityBehavior extends Behavior {
 							}
 
 							$obj['operation'] = 'edit';
-						    $ActivityModel = TableRegistry::get($this->config('target'));
 							$data = $ActivityModel->newEntity();
 							$data = $ActivityModel->patchEntity($data, $obj);
 							$ActivityModel->save($data);
