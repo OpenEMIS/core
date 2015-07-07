@@ -20,6 +20,7 @@ class StaffController extends AppController {
 			'fieldValueKey' => ['className' => 'Staff.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellKey' => ['className' => 'Staff.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+        $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Staff.StaffActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
 		$this->ControllerAction->models = [
 			'Accounts' => ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
