@@ -8,138 +8,134 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: chi\n"
+"Language: spa\n"
 "X-Generator: Poedit 1.6.4\n"
 
-#: Controller/NoticesController.php:19
-msgid "Notices"
-msgstr "启事"
-
 msgid "Home"
-msgstr "首页"
+msgstr "Inicio"
 
 msgid "Welcome"
-msgstr "欢迎"
+msgstr "Bienvenido"
 
 msgid "Account"
-msgstr "帐户"
+msgstr "Cuenta"
 
 msgid "Help"
-msgstr "帮助"
+msgstr "Ayuda"
 
 msgid "Logout"
-msgstr "登出"
+msgstr "Cerrar sesión"
 
 msgid "Institutions"
-msgstr "机构"
+msgstr "Instituciones"
 
 msgid "Students"
-msgstr "学生"
+msgstr "Estudiantes"
 
 msgid "Teachers"
-msgstr "教师"
+msgstr "Maestros"
 
 msgid "Staff"
-msgstr "工作人员"
+msgstr "Personal"
 
 msgid "REPORTS"
-msgstr "报告"
+msgstr "Informes"
 
 msgid "Settings"
-msgstr "设置"
+msgstr "Configuración"
 
 msgid "Administration"
-msgstr "管理"
+msgstr "Administración"
 
 msgid "Demo"
-msgstr "试用版"
+msgstr "Demo"
 
 msgid "--Select--"
-msgstr "--选项--"
+msgstr "-Seleccione-"
 
 msgid "Day"
-msgstr "日"
+msgstr "Día"
 
 msgid "Month"
-msgstr "月"
+msgstr "Mes"
 
 msgid "Year"
-msgstr "年"
+msgstr "Año"
 
 msgid "Male"
-msgstr "男"
+msgstr "Masculino"
 
 msgid "Female"
-msgstr "女"
+msgstr "Femenino"
 
 msgid "Unisex"
-msgstr "不分"
+msgstr "Unisex"
 
 msgid "Select file"
-msgstr "选择文件"
+msgstr "Seleccionar archivo"
 
 msgid "Edit"
-msgstr "编辑"
+msgstr "Editar"
 
 msgid "View"
-msgstr "阅览"
+msgstr "Ver"
 
 msgid "Delete"
-msgstr "删除"
+msgstr "Eliminar"
 
 msgid "History"
-msgstr "历史记录"
+msgstr "Historia"
 
 msgid "Save"
-msgstr "存档"
+msgstr "Guardar"
 
 msgid "Cancel"
-msgstr "取消"
+msgstr "Cancelar"
 
 msgid "Update"
-msgstr "更新"
+msgstr "Actualizar"
 
 msgid "Previous"
-msgstr "上一页"
+msgstr "Anterior"
 
 msgid "Next"
-msgstr "下一页"
+msgstr "Siguiente"
 
 msgid "Statistics"
-msgstr "统计"
+msgstr "Estadísticas"
 
 msgid "Institutions Sites"
-msgstr "机构分校"
+msgstr "Ubicación de Instituciones"
 
 msgid "Activities"
-msgstr "动态"
+msgstr "Actividades"
 
 msgid "Student"
-msgstr "学生"
+msgstr "Estudiante"
 
 msgid "has been edited"
-msgstr "被编辑"
+msgstr "había sido editado"
 
 msgid "has been deleted"
-msgstr "被删除"
+msgstr "había sido eliminado"
 
 msgid "has been added to the List of"
-msgstr "已经被添加到——"
+msgstr "ha sido añadido a la lista de"
 
 msgid "by"
-msgstr " ——"
+msgstr "por"
 
 msgid "Notice"
-msgstr "启事"
+msgstr "Aviso"
 
 msgid "Note: Max upload file size is 2MB."
-msgstr "注意：最大的文件上传容量为 2MB。"
+msgstr "Nota: Tamaño máximo de carga de archivos es de 2MB."
 
 msgid "Image"
-msgstr "图片"
+msgstr "Imagen"
 
 msgid "Document"
-msgstr "文件"
+msgstr "Documento"
 
 msgid "Excel"
 msgstr "Excel"
@@ -148,97 +144,97 @@ msgid "Powerpoint"
 msgstr "Powerpoint"
 
 msgid "File is deleted successfully."
-msgstr "文件已删除。"
+msgstr "El archivo ha sido eliminado exitosamente."
 
 msgid "File was deleted successfully."
-msgstr "文件已删除。"
+msgstr "El archivo ha sido eliminado exitosamente."
 
 msgid "Error occurred while deleting file."
-msgstr "删除文件时出现错误。"
+msgstr "Ocurrió un error al eliminar el archivo."
 
 msgid "Files have been saved successfully."
-msgstr "文件已被保存。"
+msgstr "Los archivos han sido guardado exitosamente."
 
 msgid "Some errors have been encountered while saving files."
-msgstr "文件保存时出现错误。"
+msgstr "Se han encontrado algunos errores al guardar los archivos"
 
 msgid "Records have been added/updated successfully."
-msgstr "记录已被更新."
+msgstr "Los registros  han sido añadidos / modificados exitosamente."
 
 msgid "Records have been deleted successfully."
-msgstr "记录已被删除"
+msgstr "Los registros han sido eliminados exitosamente."
 
 msgid "Error occurred while deleting record."
-msgstr "删除时出现错误。"
+msgstr "Ocurrió un error al eliminar registros."
 
 msgid " have been deleted successfully."
-msgstr "已被成功删除。"
+msgstr "Se han eliminado exitosamente "
 
 msgid "Searching..."
-msgstr "搜索中…"
+msgstr "Buscando ..."
 
 msgid "%s have been deleted successfully."
-msgstr "% 已被成功删除。"
+msgstr "%s ha sido eliminado correctamente."
 
 msgid "Please enter a unique Identification No"
-msgstr "请输入没有被使用的证件号码"
+msgstr "Por favor, introduzca un número de identificación único no"
 
 msgid "Please enter a unique Code"
-msgstr "请输入没有被使用的代码"
+msgstr "Por favor, introduzca un código único"
 
 msgid "List of Students"
-msgstr "学生名单"
+msgstr "Lista de Estudiantes"
 
 msgid "Add new Student"
-msgstr "添加新学生"
+msgstr "Añadir nuevo Estudiante"
 
 msgid "DETAILS"
-msgstr "详细资料"
+msgstr "Detalles"
 
 msgid "Attachments"
-msgstr "附件"
+msgstr "Archivos adjuntos"
 
 msgid "Overview"
-msgstr ""
+msgstr "Visión "
 
 msgid "More"
-msgstr ""
+msgstr "Más"
 
 msgid "Additional Info"
-msgstr "附加信息"
+msgstr "Información Adicional"
 
 msgid "STUDENT INFORMATION"
-msgstr "学生资料"
+msgstr "INFORMACIÓN  DEL ESTUDIANTE "
 
 msgid "Static fields"
 msgstr ""
 
 msgid "Field Options"
-msgstr ""
+msgstr "Opciones de Campo"
 
 msgid "National Assessments"
-msgstr ""
+msgstr "Evaluaciones Nacionales"
 
 msgid "ASSESSMENT"
-msgstr "评估"
+msgstr "EVALUACIÓN"
 
 msgid "Assessment Results"
-msgstr "评估结果"
+msgstr "Resultados de la Evaluación"
 
 msgid "Student Details"
-msgstr "学生资料"
+msgstr "Detalles del Estudiante"
 
 msgid "Student History"
-msgstr "历史学生记录"
+msgstr "Historial del Estudiante"
 
 msgid "Add"
-msgstr "添加"
+msgstr "Añadir"
 
 msgid "Attachment"
-msgstr "附件"
+msgstr "Archivo adjunto"
 
 msgid "Student Identification No, First Name or Last Name"
-msgstr "学生证件号码、名字或姓氏"
+msgstr "No. de Identificación del Estudiante, Nombre o Apellido"
 
 msgid "Student Identification"
 msgstr "Student Identification"
@@ -250,277 +246,277 @@ msgid "Staff Identification"
 msgstr "Staff Identification"
 
 msgid "Identification No."
-msgstr "证件号码"
+msgstr "No. de identificación"
 
 msgid "Identification No"
-msgstr "证件号码"
+msgstr "No. de identificación"
 
 msgid "First Name"
-msgstr "名字"
+msgstr "Nombre"
 
 msgid "Last Name"
-msgstr "姓氏"
+msgstr "Apellidos"
 
 msgid "Gender"
-msgstr "性别"
+msgstr "Género"
 
 msgid "Date Of Birth"
-msgstr "出生日期"
+msgstr "Fecha de Nacimiento"
 
 msgid "File"
-msgstr "文档"
+msgstr "Archivo"
 
 msgid "Description"
-msgstr "描述"
+msgstr "Descripción"
 
 msgid "File Type"
-msgstr "文件类型"
+msgstr "Tipo de Archivo"
 
 msgid "Uploaded On"
-msgstr "上传时间"
+msgstr "Subida el"
 
 msgid "Institution"
-msgstr "学院"
+msgstr "Institución"
 
 msgid "Start Date"
-msgstr "起始日期"
+msgstr "Fecha de Inicio"
 
 msgid "End Date"
-msgstr "结束日期"
+msgstr "Fecha de finalización"
 
 msgid "Address"
-msgstr "地址"
+msgstr "Dirección"
 
 msgid "Address Area"
-msgstr "地址 区域"
+msgstr "Dirección Áreas"
 
 msgid "Birth Place Area"
 msgstr "Birth Place Area"
 
 msgid "Postal Code"
-msgstr "邮政编码"
+msgstr "Código Postal"
 
 msgid "Telephone"
-msgstr "电话"
+msgstr "Teléfono"
 
 msgid "Email"
-msgstr "电子邮件"
+msgstr "Correo electrónico"
 
 msgid "E-mail"
-msgstr "电子邮件"
+msgstr "Correo electrónico"
 
 msgid "GENERAL"
-msgstr "基本资料"
+msgstr "General"
 
 msgid "Contact"
-msgstr "联络"
+msgstr "Contacto"
 
 msgid "No Student found."
-msgstr "没有学生记录。"
+msgstr "No se ha encontrado ningún estudiante"
 
 msgid "No history found."
-msgstr "没有历史纪录。"
+msgstr "No se encontró un historial"
 
 msgid "List of Staff"
-msgstr "工作人员名单"
+msgstr "Lista del personal"
 
 msgid "Add new Staff"
-msgstr "添加新工作人员"
+msgstr "Añadir nuevo Personal"
 
 msgid "STAFF INFORMATION"
-msgstr "工作人员资料"
+msgstr "INFORMACIÓN DEL PERSONAL "
 
 msgid "Staff Details"
-msgstr "工作人员详细资料"
+msgstr "Detalles del personal"
 
 msgid "No Staff found."
-msgstr "无相关工作人员。"
+msgstr "No se ha encontrado ningun Personal"
 
 msgid "Staff History"
-msgstr "历史工作人员记录"
+msgstr "Historial del Personal"
 
 msgid "List of Teachers"
-msgstr "教师名单"
+msgstr "Lista de Maestros"
 
 msgid "Add new Teacher"
-msgstr "添加教师"
+msgstr "Añadir Maestro nuevo "
 
 msgid "Qualifications"
-msgstr "资格"
+msgstr "Calificaciones"
 
 msgid "TRAINING"
-msgstr "培训"
+msgstr "Entrenamiento"
 
 msgid "Teacher Information"
-msgstr "教师资料"
+msgstr "INFORMACIÓN  DE MAESTRO"
 
 msgid "OTHER INFORMATION"
-msgstr "其他资料"
+msgstr "OTRA INFORMACIÓN"
 
 msgid "Teacher Details"
-msgstr "教师详细资料"
+msgstr "Detalles de Maestros"
 
 msgid "Teacher History"
-msgstr "历史教师纪录"
+msgstr "Historial del profesor"
 
 msgid "Date of Issue"
-msgstr "签发日期"
+msgstr "Fecha de Emisión"
 
 msgid "Certificate"
-msgstr "证书"
+msgstr "Certificado"
 
 msgid "Certificate No."
-msgstr "证书编号"
+msgstr "No. de Certificado"
 
 msgid "Issued By"
-msgstr "发出机构"
+msgstr "emitidas por"
 
 msgid "Completed Date"
-msgstr "完成日期"
+msgstr "Completed Date"
 
 msgid "Category"
-msgstr "类别"
+msgstr "Categoría"
 
 msgid "Certifications"
-msgstr "证书"
+msgstr "Certificaciones"
 
 msgid "No Teacher found."
-msgstr "没有教师记录。"
+msgstr "No se ha encontrado ningun Maestro"
 
 msgid "Teacher"
-msgstr "教师"
+msgstr "Maestro"
 
 msgid "Please enter a valid First Name"
-msgstr "请输入一个有效的名字"
+msgstr "Por favor ingrese un nombre válido"
 
 msgid "Please enter a valid Last Name"
-msgstr "请输入一个有效的姓氏"
+msgstr "Por favor, ingrese un apellido válido"
 
 msgid "Please enter a valid Identification No"
-msgstr "请输入一个有效的证件号码"
+msgstr "Por favor, introduzca un número de identificación válido No"
 
 msgid "Please select a Gender"
-msgstr "请选择性别"
+msgstr "Seleccione un género"
 
 msgid "Please enter a valid Address"
-msgstr "请输入一个有效的地址"
+msgstr "Por favor, ingrese una dirección válida"
 
 msgid "Please enter a valid Postal Code"
-msgstr "请输入有效的邮政编码"
+msgstr "Ingrese un código postal válido"
 
 msgid "Please select a Date of Birth"
-msgstr "请选择出生日期"
+msgstr "Por favor, seleccione una fecha de nacimiento"
 
 msgid "Please enter a valid Email"
-msgstr "请输入一个有效的电子邮件"
+msgstr "Por favor, introduzca un correo electrónico válido"
 
 msgid "Please enter a valid username"
-msgstr "请输入有效的用户名"
+msgstr "Por favor ingrese un nombre de usuario válido"
 
 msgid "This username is already in use."
-msgstr "此用户名已被使用。"
+msgstr "Este nombre de usuario ya está en uso."
 
 msgid "Password must be at least 6 characters"
-msgstr "密码必须至少有6个字符"
+msgstr "La contraseña debe tener al menos 6 caracteres"
 
 msgid "Please enter a valid password"
-msgstr "请输入一个有效的密码"
+msgstr "Por favor ingrese una contraseña válida"
 
 msgid "You need to assign a role to the user"
-msgstr "你需要为用户设立任务"
+msgstr "Debe asignar un rol al usuario"
 
 msgid "No Institution Sites"
-msgstr "无学院分校"
+msgstr "No hay ubicación de instituciones "
 
 msgid "No Areas"
-msgstr "无区域"
+msgstr "No hay Áreas"
 
 msgid "Permissions"
-msgstr "权限"
+msgstr "Permisos"
 
 msgid "Edit Permissions"
-msgstr "更改权限"
+msgstr "Editar permisos"
 
 msgid "Edit Role - Area Restricted"
-msgstr "编辑任务 - 区域限制"
+msgstr "Editar Rol - Zona Restringida"
 
 msgid "Role - Area Restricted"
-msgstr "任务 - 区域限制"
+msgstr "Rol - Zona Restringida"
 
 msgid "Edit Role Assignment"
-msgstr "编辑任务分配"
+msgstr "Editar asignación de funciones"
 
 msgid "Role Assignment"
-msgstr "任务分配"
+msgstr "Asignación de funciones"
 
 msgid "Edit Roles"
-msgstr "编辑任务"
+msgstr "Editar Roles"
 
 msgid "Users"
-msgstr "用户"
+msgstr "Usuarios"
 
 msgid "Add User"
-msgstr "添加用户"
+msgstr "Añadir usuario"
 
 msgid "Roles"
-msgstr "任务"
+msgstr "Roles"
 
 msgid "Edit Details"
-msgstr "编辑详细资料"
+msgstr "Editar detalles"
 
 msgid "Edit Additional Info"
-msgstr "编辑附加资料"
+msgstr "Editar información adicional"
 
 msgid "Edit Programmes"
-msgstr "编辑教育计划"
+msgstr "Editar programas"
 
 msgid "Add Institution"
-msgstr "添加新的学院"
+msgstr "Añadir Institución"
 
 msgid "Name"
-msgstr "名称"
+msgstr "Nombre"
 
 msgid "Area"
-msgstr "区域"
+msgstr "Área"
 
 msgid "Site Type"
-msgstr "学院分校类型"
+msgstr "Tipo de ubicación "
 
 msgid "Site Code"
-msgstr "学院分校代码"
+msgstr "Codigo de ubicación "
 
 msgid "Code"
-msgstr "代码"
+msgstr "Código"
 
 msgid "Institution Name"
-msgstr "学院名称"
+msgstr "Nombre de la Institución"
 
 msgid "Sector"
-msgstr "单位"
+msgstr "Sector"
 
 msgid "Provider"
-msgstr "提供者"
+msgstr "Proveedor"
 
 msgid "Site Name"
-msgstr "学院分校名称"
+msgstr "Nombre de ubicación "
 
 msgid "Type"
-msgstr "类型"
+msgstr "Tipo"
 
 msgid "Ownership"
-msgstr "所有权"
+msgstr "Propiedad"
 
 msgid "Country"
-msgstr "国家"
+msgstr "País"
 
 msgid "Province"
-msgstr "省份"
+msgstr "Provincia"
 
 msgid "District"
-msgstr "区域"
+msgstr "Distrito"
 
 msgid "LLG"
-msgstr "地方一级政府"
+msgstr "LLG"
 
 msgid "Ward"
 msgstr "Ward"
@@ -535,1100 +531,1109 @@ msgid "Axis"
 msgstr "Axis"
 
 msgid "State"
-msgstr "State"
+msgstr "Calle"
 
 msgid "Locality"
-msgstr "地点"
+msgstr "Localidad"
 
 msgid "Latitude"
-msgstr "纬度"
+msgstr "latitud"
 
 msgid "Longitude"
-msgstr "经度"
+msgstr "Longitud"
 
 msgid "No Institution Sites."
-msgstr "没有学院分校记录。"
+msgstr "No hay ubicación de instituciónes"
 
 msgid "Institution Site Details"
-msgstr "学院分校详细资料"
+msgstr "Información sobre la ubicación de instituciónes "
 
 msgid "Institution Site Code"
-msgstr "学院分校详细资料"
+msgstr "Información sobre la ubicación de instituciónes "
 
 msgid "Please enter a valid Name"
-msgstr "请输入有效名称"
+msgstr "Por favor ingrese un nombre válido"
 
 msgid "Please enter a valid Code"
-msgstr "请输入有效代码"
+msgstr "Por favor, introduzca un código válido"
 
 msgid "Please select a Provider"
-msgstr "请选择提供者"
+msgstr "Seleccione un proveedor"
 
 msgid "Please select a Status"
-msgstr "请选择状态"
+msgstr "Seleccione un estado"
 
 msgid "Please select the Date Opened"
-msgstr "请选择起始日期"
+msgstr "Por favor seleccione la fecha de apertura"
 
 msgid "Please select a Site Type"
-msgstr "请选择学院分校"
+msgstr "Por favor seleccione un tipo de Ubicación "
 
 msgid "Please select an Ownership"
-msgstr "请选择学院所有权"
+msgstr "Por favor, seleccione una Propiedad"
 
 msgid "Please select an Area"
-msgstr "请选择地区"
+msgstr "Por favor, seleccione un área"
 
 msgid "Institution Code"
-msgstr "学院代码"
+msgstr "Código de Institución "
 
 msgid "Institution Name or Code"
-msgstr "学院名称或学院代码"
+msgstr "Nombre o Código de la Institución "
 
 msgid "Status"
-msgstr "状态"
+msgstr "Estado"
 
 msgid "Date Opened"
-msgstr "起始日期"
+msgstr "Fecha de Apertura"
 
 msgid "Date Closed"
-msgstr "结束日期"
+msgstr "Fecha de Clausura"
 
 msgid "Location"
-msgstr "位置"
+msgstr "Ubicación"
 
 msgid "Contact Person"
-msgstr "联系人"
+msgstr "Contacto"
 
 msgid "Fax"
-msgstr "传真"
+msgstr "Fax"
 
 msgid "Website"
-msgstr "网站"
+msgstr "Sitio Web"
 
 msgid "Add New"
-msgstr "添加"
+msgstr "Agregar nuevo"
 
 msgid "Active"
-msgstr "动态"
+msgstr "Activa"
 
 msgid "Account Name"
-msgstr "帐户名字"
+msgstr "Nombre de cuenta"
 
 msgid "Account Number"
-msgstr "帐户号码"
+msgstr "Número de cuenta"
 
 msgid "Bank"
-msgstr "银行"
+msgstr "Banco"
 
 msgid "Branch"
-msgstr "分行"
+msgstr "Rama"
 
 msgid "Bank Details"
-msgstr "银行资料"
+msgstr "Detalles del Banco"
 
 msgid "National Education System"
-msgstr "全国教育系统"
+msgstr "Sistema Nacional Educativo"
 
 msgid "Grade"
-msgstr "年级"
+msgstr "Grado"
 
 msgid "Seats"
-msgstr "座椅"
+msgstr "Asientos"
 
 msgid "age"
-msgstr "年龄"
+msgstr "edad"
 
 msgid "Attendance"
-msgstr "Attendance"
+msgstr "Asistencia"
 
 msgid "Behaviour"
-msgstr "Behaviour"
+msgstr "Comportamiento "
 
 msgid "Results"
-msgstr "Results"
+msgstr "Resultados"
 
 msgid "Totals"
-msgstr "总数"
+msgstr "TOTALES"
 
 msgid "Total"
-msgstr "总数"
+msgstr "Total"
 
 msgid "Source"
-msgstr "来源"
+msgstr "Fuente"
 
 msgid "Nature"
-msgstr "性质"
+msgstr "Naturaleza"
 
 msgid "Amount"
-msgstr "数目"
+msgstr "Cantidad"
 
 msgid "Edit Teachers"
-msgstr "编辑教师"
+msgstr "Editar Maestros"
 
 msgid "Edit Training"
-msgstr "编辑培训"
+msgstr "Editar Entrenamiento"
 
 msgid "Edit Bank Accounts"
-msgstr "编辑银行帐户"
+msgstr "Editar cuentas bancarias"
 
 msgid "Edit Classes"
-msgstr "编辑班级"
+msgstr "Editar Clases"
 
 msgid "Edit Finances"
-msgstr "编辑财政"
+msgstr "Editar Finanzas"
 
 msgid "Edit Other Forms"
-msgstr "编辑其他表格"
+msgstr "Editar Otros Formularios"
 
 msgid "Edit Infrastructure"
-msgstr "编辑基础设施"
+msgstr "Editar infraestructura"
 
 msgid "Trained Teachers"
-msgstr "经过培训的教师"
+msgstr "Maestros capacitados"
 
 msgid "No Available Programmes"
-msgstr "无可用计划"
+msgstr "No hay programas disponibles"
 
 msgid "Institution History"
-msgstr "历史学院记录"
+msgstr "Institución Historia"
 
 msgid "Institution Site History"
-msgstr "历史学院分校记录"
+msgstr "Institución Histórico Sitio"
 
 msgid "My Details"
-msgstr "我的资料"
+msgstr "Mis datos"
 
 msgid "has been updated successfully."
-msgstr "已被修改。"
+msgstr "se ha actualizado exitosamente."
 
 msgid "Change Password"
-msgstr "更改密码"
+msgstr "Cambiar contraseña"
 
 msgid "successfully updated."
-msgstr "更新完成。"
+msgstr "se ha actualizado exitosamente."
 
 msgid "Please try again later."
-msgstr "请稍后再试。"
+msgstr "Por favor, inténtelo de nuevo más tarde."
 
 msgid "Please enter your current password"
-msgstr "请输入当前密码"
+msgstr "Por favor, introduzca su contraseña actual"
 
 msgid "Current password does not match."
-msgstr "当前密码错误。"
+msgstr "La contraseña actual no coincide"
 
 msgid "New password required."
-msgstr "请输入新密码。"
+msgstr "Nueva contraseña requerida"
 
 msgid "Please enter a min of 6 alpha numeric characters."
-msgstr "请输入至少6个字母。"
+msgstr "Por favor ingrese un mínimo de 6 caracteres alfanuméricos"
 
 msgid "Please enter alpha numeric characters."
-msgstr "请输入字母字符。"
+msgstr "Introduzca caracteres alfanuméricos"
 
 msgid "Passwords do not match."
-msgstr "密码错误。"
+msgstr "Las contraseñas no coinciden"
 
 msgid "System Information"
-msgstr "系统资料"
+msgstr "Información de Sistema"
 
 msgid "support"
-msgstr "支援"
+msgstr "Soporte"
 
 msgid "License"
-msgstr "许可证"
+msgstr "Licencia"
 
 msgid "Edit My Details"
-msgstr "编辑我的资料"
+msgstr "Modificar mis datos"
 
 msgid "Finance"
-msgstr "财政"
+msgstr "Finanzas"
 
 msgid "Total Public Expenditure"
-msgstr "公共开支总额"
+msgstr "Gasto Público Total"
 
 msgid "NATIONAL DENOMINATORS"
-msgstr "国家分母"
+msgstr "Denominadores Nacionales"
 
 msgid "Select"
-msgstr "选项"
+msgstr "Seleccionar"
 
 msgid "Total Public Expenditure Per Education Level"
-msgstr "人均教育水平的公共开支总额"
+msgstr "El gasto público total por nivel de educación"
 
 msgid "System"
-msgstr "系统"
+msgstr "Sistema"
 
 msgid "Level"
-msgstr "级别"
+msgstr "Nivel"
 
 msgid "Cycle"
-msgstr "周期"
+msgstr "Ciclo"
 
 msgid "Programme"
-msgstr "计划"
+msgstr "Programa"
 
 msgid "Orientation"
-msgstr "方向"
+msgstr "Orientación"
 
 msgid "Field Of Study"
-msgstr "研究领域"
+msgstr "campo de estudio"
 
 msgid "Certification"
-msgstr "证书"
+msgstr "Certificación"
 
 msgid "Subject"
-msgstr "科目"
+msgstr "Asunto"
 
 msgid "January"
-msgstr "一月"
+msgstr "Enero"
 
 msgid "February"
-msgstr "二月"
+msgstr "Febrero"
 
 msgid "March"
-msgstr "三月"
+msgstr "Marzo"
 
 msgid "April"
-msgstr "四月"
+msgstr "Abril"
 
 msgid "May"
-msgstr "五月"
+msgstr "Mayo"
 
 msgid "June"
-msgstr "六月"
+msgstr "Junio"
 
 msgid "July"
-msgstr "七月"
+msgstr "Julio"
 
 msgid "August"
-msgstr "八月"
+msgstr "Agosto"
 
 msgid "September"
-msgstr "九月"
+msgstr "Septiembre"
 
 msgid "October"
-msgstr "十月"
+msgstr "Octubre"
 
 msgid "November"
-msgstr "十一月"
+msgstr "Noviembre"
 
 msgid "December"
-msgstr "十二月"
+msgstr "Diciembre"
 
 msgid "Your session is timed out. Please login again."
-msgstr "你操作超时，请重新登陆。"
+msgstr "Su sesión ha caducado. Por favor, ingrese de nuevo."
 
 msgid "You are not an authorized user."
-msgstr "你不是授权管理人员"
+msgstr "Usted no es un usuario autorizado."
 
 msgid ""
 "You have encountered an unexpected error. Please contact the system "
 "administrator for assistance."
-msgstr "你遇到意外错误。请联络系统管理员求助"
+msgstr ""
+"Se ha producido un error inesperado. Por favor contactar al administrador de "
+"sistema para obtener ayuda."
 
 msgid "Host Unreachable"
-msgstr "无法访问主机"
+msgstr " Destino inalcanzable "
 
 msgid "Host is unreachable, please check your internet connection."
-msgstr "无法访问主机，请检查您的网络连接。"
+msgstr "Destino inalcanzable, por favor, compruebe su conexión a Internet."
 
 msgid "Session Timed Out"
-msgstr "操作超时"
+msgstr "Tiempo de sesión ha caducado"
 
 msgid "Page not found"
-msgstr "页面无法打开"
+msgstr "Página no encontrada"
 
 msgid "The requested page cannot be found."
-msgstr "页面无法打开。"
+msgstr "La página solicitada no fue encontrada."
 
 msgid "Please contact the administrator for assistance."
-msgstr "请联络管理员求助"
+msgstr "Por favor, contactar al administrador para obtener ayuda."
 
 msgid "An unexpected error has occurred."
-msgstr "出现意外错误。"
+msgstr "Un error inesperado ha ocurrido."
 
 msgid "JSON parse failed"
-msgstr "JSON解析失败"
+msgstr "Error sintáctico JSON "
 
 msgid "Invalid JSON data."
-msgstr "无效的JSON数据。"
+msgstr "Datos JSON Inválidos ."
 
 msgid "Request Timeout"
-msgstr "请求超时"
+msgstr "Solicitud ha caducado"
 
 msgid "Request Aborted"
-msgstr "请求已中止"
+msgstr "Solicitud Abortada"
 
 msgid "Your request has been aborted."
-msgstr "您的请求已中止。"
+msgstr "Su solicitud ha sido abortada"
 
 msgid "Unexpected Error"
-msgstr "意外错误 "
+msgstr "Error inesperado"
 
 msgid "Edit System Configurations"
-msgstr "编辑系统配置"
+msgstr "Editar Configuraciones del sistema"
 
 msgid "File is updated successfully."
-msgstr "文件已更新."
+msgstr "El archivo se ha actualizado exitosamente."
 
 msgid "Error occurred while updating file."
-msgstr "更新文件时出现错误。"
+msgstr "Ocurrió un error al actualizar el archivo."
 
 msgid "File have been updated successfully."
-msgstr "文件已更新."
+msgstr "El archivo ha sido actualizado exitosamente."
 
 msgid "File has not been updated successfully."
-msgstr "文件无法更新."
+msgstr "El archivo no se ha actualizado correctamente."
 
 msgid "File format not supported."
-msgstr "文件格式不支持。"
+msgstr "Formato de archivo no admitido"
 
 msgid "Image has exceeded the allow file size of"
-msgstr "图片超出允许文件大小"
+msgstr "La imagen ha superado el tamaño de archivo permitido"
 
 msgid "Please reduce file size."
-msgstr "请缩小文件大小"
+msgstr "Por favor, reducir el tamaño del archivo."
 
 msgid "Image resolution is too small."
-msgstr "图片像素太低"
+msgstr "Resolución de la imagen es demasiado pequeña."
 
 msgid "Error"
-msgstr "错误"
+msgstr "Error"
 
 msgid "log does not exists"
-msgstr "日志不存在"
+msgstr "registro no existe"
 
 msgid "Add new Institution"
-msgstr "添加新的学院"
+msgstr "Añadir nueva institución"
 
 msgid "Institution Details"
-msgstr "学院资料"
+msgstr "Detalles de Institución"
 
 msgid "SITE INFORMATION"
-msgstr "分校信息"
+msgstr "INFORMACIÓN DE LA SEDE"
 
 msgid "Add New Institution Site"
-msgstr "添加学院分校"
+msgstr "Añadir nueva sede de institución"
 
 msgid "Bank Accounts"
-msgstr "银行帐户"
+msgstr "Cuentas bancarias"
 
 msgid "Bank Account"
-msgstr "银行帐户"
+msgstr "Cuenta bancaria"
 
 msgid "Census"
-msgstr "人口调查"
+msgstr "Censo"
 
 msgid "Enrolment"
-msgstr "报名"
+msgstr "Inscripción"
 
 msgid "Programmes"
-msgstr "计划"
+msgstr "Programas"
 
 msgid "Classes"
-msgstr "班级"
+msgstr "Clases"
 
 msgid "Textbooks"
-msgstr "教科书"
+msgstr "Libros"
 
 msgid "Infrastructure"
-msgstr "基础设施"
+msgstr "Infraestructura"
 
 msgid "Finances"
-msgstr "财政"
+msgstr "Finanzas"
 
 msgid "Other Forms"
-msgstr "其他表格"
+msgstr "Otras Planillas"
 
 msgid "SYSTEM SETUP"
-msgstr "系统设置"
+msgstr "Configuración de sistema"
 
 msgid "Administrative Boundaries"
-msgstr "行政区域界线"
+msgstr "Limites administrativos"
 
 msgid "Education Structure"
-msgstr "教育结构"
+msgstr "Estructura Educativa"
 
 msgid "Setup Variables"
-msgstr "设置选项"
+msgstr "Configuración de Variables"
 
 msgid "Edit Setup Variables"
-msgstr "编辑设置选项"
+msgstr "Editar Configuración de Variables"
 
 msgid "Custom Fields"
-msgstr "自定义项"
+msgstr "Campos Personalizables"
 
 msgid "Edit Custom Fields"
-msgstr "编辑自定义项"
+msgstr "Editar Custom Fields"
 
 msgid "Custom Table"
-msgstr "定义表格"
+msgstr "Tabla personalizada"
 
 msgid "Edit Custom Table"
-msgstr "编辑自定义表"
+msgstr "Editar tabla personalizada"
 
 msgid "System Configurations"
-msgstr "系统配置"
+msgstr "Configuraciones del sistema"
 
 msgid "Accounts &amp; Security"
-msgstr "帐户号码和安全系统"
+msgstr "Cuentas y seguridad"
 
 msgid "ACCOUNTS & SECURITY"
-msgstr "帐目及安全性"
+msgstr "Cuentas y seguridad"
 
 msgid "Population"
-msgstr "人口"
+msgstr "Población"
 
 msgid "Data Processing"
-msgstr "数据处理"
+msgstr "Procesamiento de datos"
 
 msgid "Generate Reports"
-msgstr "生成报告"
+msgstr "Generar Reportes"
 
 msgid "Export Indicators"
-msgstr "输出指标"
+msgstr "Exportar Indicadores"
 
 msgid "Processes"
-msgstr "流程"
+msgstr "Procesos"
 
 msgid "Database"
-msgstr "数据库"
+msgstr "Base de datos"
 
 msgid "Backup"
-msgstr "备份"
+msgstr "Copia de seguridad"
 
 msgid "Restore"
-msgstr "修复"
+msgstr "Restaurar"
 
 msgid "Setup"
-msgstr "设置"
+msgstr "Configuración"
 
 msgid "The census data has been updated successfully."
-msgstr "普查数据已被更新。"
+msgstr "Los datos del censo se han actualizado exitosamente."
 
 msgid "Graduates not required."
-msgstr "暂无毕业生。"
+msgstr "No se requieren graduados."
 
 msgid "No Custom Census Table."
-msgstr "没有自定义调查表格。"
+msgstr "No hay tabla del censo actualizada="
 
 msgid "Message Not Found."
-msgstr "无信息"
+msgstr "Mensaje no encontrado."
 
 msgid "Good"
-msgstr "好"
+msgstr "Buenas Condiciones"
 
 msgid "Fair"
-msgstr "中等"
+msgstr "Condiciones nomarles "
 
 msgid "Poor"
-msgstr "差"
+msgstr "Pobres condiciones"
 
 msgid "Current Password"
-msgstr "当前密码"
+msgstr "Contraseña actual"
 
 msgid "New Password"
-msgstr "新密码"
+msgstr "Contraseña nueva"
 
 msgid "Retype New Password"
-msgstr "重新输入新密码"
+msgstr "Vuelva a introducir la contraseña nueva"
 
 msgid "Username"
-msgstr "用户名"
+msgstr "Nombre de usuario"
 
 msgid "Last Login"
-msgstr "最后登录"
+msgstr "Ultimo Ingreso"
 
 msgid "Please enter your current password."
-msgstr "请输入您当前的密码。"
+msgstr "Por favor, introduzca su contraseña actual"
 
 msgid "Areas"
 msgstr ""
 
 msgid "Visible"
-msgstr "显示"
+msgstr "Visible"
 
 msgid "Area Level"
-msgstr "区域级别"
+msgstr "Nivel de Área "
 
 msgid "Area Levels"
 msgstr ""
 
 msgid "Edit Area Levels"
-msgstr "编辑区域级别"
+msgstr "Editar niveles de área"
 
 msgid "Structure"
-msgstr "结构"
+msgstr "Estructura"
 
 msgid "Education"
 msgstr ""
 
 msgid "Education Level"
-msgstr "教育程度"
+msgstr "Nivel educativo"
 
 msgid "Education System"
-msgstr "教育系统"
+msgstr "Sistema Educativo"
 
 msgid "Admission Age"
-msgstr "入学年龄"
+msgstr "Edad de Ingreso"
 
 msgid "Programme Orientation"
-msgstr "计划方向"
+msgstr "Programa de Orientación"
 
 msgid "Order"
-msgstr "秩序"
+msgstr "Orden"
 
 msgid "ISCED Level"
-msgstr "ISCED 水准"
+msgstr "Nivel ISCED"
 
 msgid "Subjects"
-msgstr "科目"
+msgstr "Temas"
 
 msgid "Duration"
-msgstr "为期"
+msgstr "Duración"
 
 msgid "Grades"
-msgstr "年级"
+msgstr "Grados"
 
 msgid "Grade Subject"
-msgstr "年级主题"
+msgstr "Tema del Grado"
 
 msgid "Back to Programmes"
-msgstr "编辑教育计划"
+msgstr "Volver a los Programas "
 
 msgid "Back to Grades"
-msgstr "返回到列表"
+msgstr "Volver a las notas"
 
 msgid "Graduates"
-msgstr "毕业生"
+msgstr "Graduados"
 
 msgid "Please select a programme first."
-msgstr "请先选择一个教育计划。"
+msgstr "Por favor selecciona un programa primero"
 
 msgid "Option"
-msgstr "选项"
+msgstr "Opción"
 
 msgid "an option"
-msgstr "选项"
+msgstr "una opción"
 
 msgid "School Year"
-msgstr "学年"
+msgstr "Año Escolar"
 
 msgid "Current"
-msgstr "目前的"
+msgstr "Actual"
 
 msgid "Available"
-msgstr "可用的"
+msgstr "Disponible"
 
 msgid "Categories"
-msgstr "类别"
+msgstr "Categorías"
 
 msgid "Buildings"
-msgstr "房屋"
+msgstr "Construcciones"
 
 msgid "Materials"
-msgstr "物料"
+msgstr "Materiales"
 
 msgid "Resources"
-msgstr "来源"
+msgstr "Recursos"
 
 msgid "Furniture"
-msgstr "家具"
+msgstr "Muebles"
 
 msgid "Energy"
-msgstr "能源"
+msgstr "Energía"
 
 msgid "Rooms"
-msgstr "教室"
+msgstr "Rooms"
 
 msgid "Sanitation"
-msgstr "卫生"
+msgstr "Saneamiento"
 
 msgid "Water"
-msgstr "水源"
+msgstr "Agua"
 
 msgid "Banks"
-msgstr "银行"
+msgstr "Bancos"
 
 msgid "Capital Income"
-msgstr "资本收入"
+msgstr " Ingreso Capital "
 
 msgid "Capital Expenditure"
-msgstr "资本开支"
+msgstr "Gastos de Capital"
 
 msgid "Recurrent Income"
-msgstr "经常性收入"
+msgstr "ingresos recurrentes"
 
 msgid "Recurrent Expenditure"
-msgstr "经常开支"
+msgstr "Gastos recurrentes"
 
 msgid "Other"
-msgstr "其他"
+msgstr "Otros"
 
 msgid "Instructional"
-msgstr "教学"
+msgstr "Instrucción"
 
 msgid "Support Services"
-msgstr "支援服务"
+msgstr "Servicios de Soporte"
 
 msgid "Facilities"
-msgstr "设备"
+msgstr "Instalaciones"
 
 msgid "Qualification Certificates"
-msgstr "资历类别"
+msgstr "Certificados de Calificación"
 
 msgid "Qualification Categories"
-msgstr "资历类别"
+msgstr "Categoría de Calificación"
 
 msgid "Qualification Institutions"
-msgstr "资质认证学院"
+msgstr "calificación de Instituciones "
 
 msgid "Training Categories"
-msgstr "培训类别"
+msgstr "Categorías de Formación"
 
 msgid "Sources"
-msgstr "来源"
+msgstr "Fuentes"
 
 msgid "Branches"
-msgstr "分行"
+msgstr "Sucursal"
 
 msgid "Sanitations"
-msgstr "卫生"
+msgstr "Saneamientos"
 
 msgid "Section Break"
-msgstr "分节符"
+msgstr "Salto de sección"
 
 msgid "Single Line Text"
-msgstr "单行文本"
+msgstr "Texto de una Línea"
 
 msgid "Multi Line Text"
-msgstr "多行文本"
+msgstr " Texto de Líneas Multiples "
 
 msgid "Dropdown List"
-msgstr "下拉列表"
+msgstr "Lista desplegable"
 
 msgid "Checkboxes"
-msgstr "复选框"
+msgstr "Casillas"
 
 msgid "Institution Custom Fields"
-msgstr "学院自定项"
+msgstr "Campos personalizados para Institución "
 
 msgid "Institution Site Custom Fields"
-msgstr "学院分校自定项"
+msgstr "Campos personalizados para la sede de la Institución "
 
 msgid "Census Custom Fields"
-msgstr "人口调查自定项"
+msgstr "Campo personalizado para el Censo"
 
 msgid "Student Custom Fields"
-msgstr "学生自定项"
+msgstr "Campos personalizados para Estudiantes"
 
 msgid "Teacher Custom Fields"
-msgstr "教师自定义项"
+msgstr "Campos personalizados para Maestro"
 
 msgid "Staff Custom Fields"
-msgstr "职员自定项"
+msgstr "Campos personalizados para personal"
 
 msgid "Census Custom Tables"
-msgstr "人口调查自定义表袼"
+msgstr "Tablas personalizadas para el Censo"
 
 msgid "Field Label"
-msgstr "项标签"
+msgstr "Etiqueta de Campo"
 
 msgid "List of Custom Census Table"
-msgstr "自定义人口调查列表"
+msgstr "Lista de cuadros personalizados del Censo "
 
 msgid "Filter by"
-msgstr "筛选"
+msgstr "Filtrar por"
 
 msgid "X Category"
-msgstr "X 类别"
+msgstr "Categoría X"
 
 msgid "Y Category"
-msgstr "Y 类别"
+msgstr "Categoría Y"
 
 msgid "List"
-msgstr "列表"
+msgstr "Lista"
 
 msgid "Dashboard Image"
-msgstr "板图相片"
+msgstr "Imagen del Dashboard"
 
 msgid "Back to Config"
-msgstr "返回到配置"
+msgstr "Volver a Config"
 
 msgid "Title"
-msgstr "标题"
+msgstr "Título"
 
 msgid "Date Format"
-msgstr "日期格式"
+msgstr "Formato de la fecha"
 
 msgid "Currency"
-msgstr "货币"
+msgstr "Moneda"
 
 msgid "Language"
-msgstr "语言"
+msgstr "Idioma"
 
 msgid "Back to List"
-msgstr "返回到列表"
+msgstr "Volver a la lista"
 
 msgid "Reconnecting..."
-msgstr "重新连接…"
+msgstr "Reconectando..."
 
 msgid "Password"
-msgstr "密码"
+msgstr "Contraseña"
 
 msgid "Login"
-msgstr "登录"
+msgstr "Login"
 
 msgid "Education Management Information System"
-msgstr "教育管理信息系统（Education Management Information System）"
+msgstr "Sistema información para la Gestión del Sistema Educativo"
 
 msgid "Function"
-msgstr "功能"
+msgstr "Función"
 
 msgid "INSTITUTION SITE"
-msgstr "学院分校"
+msgstr "Instituciones"
 
 msgid "Export Indicator"
-msgstr "出口指标"
+msgstr "Exportar Indicador"
 
 msgid "Custom Tables"
-msgstr "自定义表"
+msgstr "Tablas personalizadas"
 
 msgid "Configurations"
-msgstr "系统配置"
+msgstr "Configuraciones"
 
 msgid "Role"
-msgstr "任务"
+msgstr "Rol"
 
 msgid "Modules"
-msgstr "模块"
+msgstr "Módulos"
 
 msgid "Add New User"
-msgstr "添加用户"
+msgstr "Añadir nuevo usuario"
 
 msgid "Inactive"
-msgstr "待用"
+msgstr "Inactivo"
 
 msgid "Retype Password"
-msgstr "重新输入密码"
+msgstr "Repita la contraseña"
 
 msgid "User Details"
-msgstr "用户资料"
+msgstr "Detalles de usuario"
 
 msgid "Full access on all modules"
-msgstr "所有模件均可进入"
+msgstr "Acceso completo a todos los módulos"
 
 msgid "Back to Roles"
-msgstr "返回到列表"
+msgstr "Volver a Funciones"
 
 msgid "PHP Version"
-msgstr "PHP版本"
+msgstr "Version PHP "
 
 msgid "Web Server"
-msgstr "服务器"
+msgstr "Servidor Web "
 
 msgid "Operating System"
-msgstr "操作系统"
+msgstr "Sistema Operativo"
 
 msgid "Data not available."
-msgstr "数据不详。"
+msgstr "Datos no disponibles"
 
 msgid "The selected report is currently being processed."
-msgstr "所选的报告正在处理中"
+msgstr "El informe seleccionado está siendo procesado actualmente."
 
 msgid "Institution Reports"
-msgstr "学院报告"
+msgstr "Informes de Institución "
 
 msgid "Student Reports"
-msgstr "学生报告"
+msgstr "Informes de Estudiantes"
 
 msgid "Teacher Reports"
-msgstr "教师报告"
+msgstr "Informes de Maestros"
 
 msgid "Staff Reports"
-msgstr "职员报告"
+msgstr "Informes de Personal"
 
 msgid "Consolidated Reports"
-msgstr "综合报道"
+msgstr "Informes Consolidados"
 
 msgid "Indicator Reports"
-msgstr "指标报告"
+msgstr "Informes de Indicador"
 
 msgid "Data Quality Reports"
-msgstr "数据质量报告"
+msgstr "Informes de calidad de datos"
 
 msgid "DataQuality Reports"
-msgstr "数据质量报告"
+msgstr "Informes  de calidad de datos"
 
 msgid "Custom Reports"
-msgstr "自定义报告"
+msgstr "Informes Personalizados"
 
 msgid "Please contact"
-msgstr "请联系"
+msgstr "Por favor contactar a"
 
 msgid "for more information on Custom Reports."
-msgstr "更多的资讯请浏览自定义报告。"
+msgstr "para obtener más información sobre el Informes Personalizados"
 
 msgid "Last Run"
-msgstr "上次运行"
+msgstr "Última ejecución"
 
 msgid "Types"
-msgstr "类型"
+msgstr "Tipos"
 
 msgid "Institution Report"
-msgstr "学院报告"
+msgstr "Informes de Institución "
 
 msgid "List of Institutions"
-msgstr "学院名单"
+msgstr "Lista de Instituciones"
 
 msgid "Institution Additional Info Report"
-msgstr "学院其它信息列表"
+msgstr "Lista de Información adicional de la Institución"
 
 msgid "List of Institutions with additional info"
-msgstr "学院分校额外信息报告"
+msgstr "Lista de instituciones con información adicional"
 
 msgid "Institution Site Report"
-msgstr "学院报告"
+msgstr "Informes de la sede de la Institución "
 
 msgid "List of Institution Sites"
-msgstr "学院分校名单"
+msgstr "Lista de sedes de las Instituciones"
 
 msgid "Institution Site Additional Info Report"
-msgstr "学院分校其它信息列表"
+msgstr "Lista de Información adicional de la ubicación de Instituciones "
 
 msgid "List of Institution Sites with additional info"
-msgstr "学院分校额外信息报告"
+msgstr "Lista de información adicional de las sedes de la Institución"
 
 msgid "Institution Site Programme Report"
-msgstr "学院分校教育计划"
+msgstr "Reporte de los programas de la sede de la Institución"
 
 msgid "List of Institution Sites with programmes"
-msgstr "学院分校计划列表"
+msgstr "Lista de instituciones con los programas ofrecidos"
 
 msgid "Institution Site Bank Account Report"
-msgstr "学院分校银行帐户"
+msgstr "Cuentas bancarios de la sede de la Institución"
 
 msgid "List of Institution Sites with bank accounts"
-msgstr "学院分校的银行帐户名单"
+msgstr "Lista de las sedes de las Instituciones con sus cuentas bancarias"
 
 msgid "Enrolment Report"
-msgstr "报名摘要"
+msgstr "Informe de Matriculación"
 
 msgid "Summary of enrolment from census"
-msgstr "报名总结报告"
+msgstr "Resumen de matriculación según el censo"
 
 msgid "Class Report"
-msgstr "班级报告"
+msgstr "Informe de clases"
 
 msgid "Summary of classes from census"
-msgstr "班级总结报告"
+msgstr "Resumen de las clases según el censo"
 
 msgid "Textbook Report"
-msgstr "教科书报告"
+msgstr "Informe de Libros"
 
 msgid "Summary of textbooks from census"
-msgstr "教科书总结报告"
+msgstr "Resumen de los libros según el censo"
 
 msgid "Teacher Report"
-msgstr "教师报告"
+msgstr "Informe de maestros"
 
 msgid "Summary of teachers from census"
-msgstr "教师总结报告"
+msgstr "Resumen de maestros según el censo"
 
 msgid "Training Report"
-msgstr "培训报告"
+msgstr "Informe de Formaciones"
 
 msgid "Summary of teacher training from census"
-msgstr "教师培训总结报告"
+msgstr "Resumen de la formación de maestros según el censo"
 
 msgid "Staff Report"
-msgstr "职员报告"
+msgstr "Informe del Personal"
 
 msgid "Summary of staff from census"
-msgstr "职员总结报告"
+msgstr "Resumen de empleados según el censo"
 
 msgid "Census Additional Info Report"
-msgstr "人口调查附加信息"
+msgstr "Informe de información adicional según el Censo"
 
 msgid "Summary of additional info from census"
-msgstr "统计附加信息里有关于注册的汇总报告"
+msgstr "Resumen de la información adicional del censo"
 
 msgid "Census Tables"
-msgstr "人口调查表袼"
+msgstr "Tablas del censo"
 
 msgid "Summary of additional info tables from census"
-msgstr "统计附加信息里有关于注册的汇总报告"
+msgstr "Resumen de las tablas de información adicional según el censo"
 
 msgid "Income Report"
-msgstr "收入报告"
+msgstr "Informe de Ingreso"
 
 msgid "Summary of income from census"
-msgstr "收入总结报告"
+msgstr "Resumen de los ingresos según el censo"
 
 msgid "Expenditure Report"
-msgstr "支出报告"
+msgstr "Reporte de Gastos"
 
 msgid "Summary of expenditure from census"
-msgstr "支出总结报告"
+msgstr "Resumen de los gastos según el censo"
 
 msgid "Building Report"
-msgstr "建筑物报告"
+msgstr "Informe del Edificio"
 
 msgid "Summary of buildings and condition from census"
-msgstr "建筑物的总结报告"
+msgstr ""
+"Resumen de las condiciones de los edificios y sus condiciones según el censo"
 
 msgid "Rooms Report"
-msgstr "教室报告"
+msgstr "Reporte de las aulas"
 
 msgid "Summary of rooms and condition from census"
-msgstr "教室和条件报告"
+msgstr "Resumen de las aulas y su condición según el censo"
 
 msgid "Sanitation Report"
-msgstr "卫生报告"
+msgstr "Informe de Saneamiento "
 
 msgid "Summary of sanitation, gender and condition from census"
-msgstr "卫生设施，性别和条件报告"
+msgstr ""
+"Resumen de los servicios de saneamiento, género y condición según el censo"
 
 msgid "Furniture Report"
-msgstr "家具报告"
+msgstr "Reporte de Muebles "
 
 msgid "Summary of furniture and condition from census"
-msgstr "家具数量和条件的报告"
+msgstr "Resumen de los muebles y sus condiciones según el censo"
 
 msgid "Resource Report"
-msgstr "资源报告"
+msgstr "Reporte de recursos"
 
 msgid "Summary of resources and condition from census"
-msgstr "资源数量和种类以及条件状态的报告"
+msgstr "Resumen de los recursos y la situación del censo"
 
 msgid "Energy Report"
-msgstr "能源报告"
+msgstr "Informe de energía"
 
 msgid "Summary of power and condition from census"
-msgstr "电力的类型和条件报告"
+msgstr "Resumen de energía y sus condición según el censo"
 
 msgid "Water Report"
-msgstr "水源报告"
+msgstr "Reporte del agua"
 
 msgid "Summary of water and condition from census"
-msgstr "状态，数字，水源机构类别报告"
+msgstr "Resumen del agua y las condiciones de censo"
 
 msgid "Student Report"
-msgstr "学生报告"
+msgstr "Informe del Estudiante"
 
 msgid "Report on student"
-msgstr "学生报告"
+msgstr "Informe sobre los estudiantes"
 
 msgid "Students Additional Info Report"
-msgstr "学生的附加信息报告"
+msgstr "Los Estudiantes reportan información Adicional"
 
 msgid "List of Students with additional info"
-msgstr "学生的附加信息列表"
+msgstr "Lista de Alumnos con información adicional"
 
 msgid "Teacher List"
-msgstr "老师名单"
+msgstr "Lista de maestro"
 
 msgid "Report on Teachers"
-msgstr "教师报告"
+msgstr "Informe sobre los maestros"
 
 msgid "Teachers Additional Info Report"
-msgstr "教师附加信息报告"
+msgstr "Los maestros reportan información adicional"
 
 msgid "List of Teachers with additional info"
-msgstr "教师附加信息列表"
+msgstr "Lista de Maestros con información adicional"
 
 msgid "Staff List"
-msgstr "工作人员名单"
+msgstr "Lista de Personal"
 
 msgid "Report on Staff"
-msgstr "工作人员名单报告"
+msgstr "Informe sobre el personal"
 
 msgid "Staff Additional Info Report"
-msgstr "工作人员的附加信息报告"
+msgstr "Staff Report Información adicional"
 
 msgid "List of Staff with additional info"
-msgstr "员工的附加信息列表"
+msgstr "Lista de Personal con información adicional"
 
 msgid "Wheres My School Report"
-msgstr "我的学校在哪里报告"
+msgstr "Dónde está Mi Escuela?"
 
 msgid ""
 "A Google Earth (KML) file containing all the location of all Institution "
 "Sites"
-msgstr "一个Google Earth (KML)语法规则文件包含所有学校的地点"
+msgstr ""
+"Archivo de Google Earth (KML) que contiene la ubicación de todas las sedes "
+"de las Instituciones"
 
 msgid "Year Book Report"
-msgstr "年鉴报告"
+msgstr "Reporte del Anuario"
 
 msgid "Formatted summary of census data for a given year"
-msgstr "某年人口普查数据的格式化摘要"
+msgstr "Resumen forrajeado de los datos cendales para un año determinado"
 
 msgid "Return Rate"
-msgstr "归还率"
+msgstr "Tasa de Retorno"
 
 msgid "Census Discrepancy"
-msgstr "人口调查差异数据"
+msgstr "Discrepancia de los datos del censo"
 
 msgid "Backup files found."
-msgstr "找到备份文件。"
+msgstr "Copia de seguridad encontrada"
 
 msgid "Custom"
-msgstr "定义表格"
+msgstr "Personalizado"
 
 msgid "Consolidated"
-msgstr "综合"
+msgstr "Consolidado"
 
 msgid "Data Quality"
-msgstr "数据质量"
+msgstr "Calidad de los datos"
 
 msgid "Summary of School's Census Data"
-msgstr "学校人口普查数据摘要"
+msgstr "Resumen de los datos censales de la escuela"
 
 msgid "Non-Responsive Schools Report"
-msgstr "无回复的学校报告"
+msgstr "Informe de escuelas sin responder "
 
 msgid ""
 "List of Institution Sites that do not contain census data for a given year"
-msgstr "本列表包含在今年没有提交统计数据的学院机构"
+msgstr ""
+"Lista de sedes que no contienen los datos cendales para un año determinado"
 
 msgid "Data Discrepancy Report"
-msgstr "数据差异报告"
+msgstr "Informe de la discrepancia de datos"
 
 msgid ""
 "List of Institution Sites with questionable census data compared to the "
 "previous year"
-msgstr "本列表包含与上一年对比有疑问的统计数据"
+msgstr ""
+"Lista de sedes institucionales con los datos del censo cuestionables con "
+"respecto al año anterior"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
-msgstr "学生人数（入学）按性别，年岁，地区和年级"
+msgstr "Número de alumnos (matrícula) por sexo, edad, localidad y grado"
 
 msgid "Number of teachers by sex, locality and grade"
-msgstr "教师人数按性别，地区和年级"
+msgstr "Número de profesores por sexo, localidad y grado"
 
 msgid "Number of staff by sex and locality"
-msgstr "员工人数按性别和地区"
+msgstr "Número de empleados por sexo y localidad"
 
 msgid "Institutions Report"
-msgstr "学院报告"
+msgstr "Informe de Instituciones "
 
 msgid "Number of institutions by provider and sector"
-msgstr "机构数量按提供者和单位"
+msgstr "Número de instituciones según proveedor y sector"
 
 msgid "Institution Sites Report"
-msgstr "学院分校报告"
+msgstr "Informe de las sedes de las instituciones "
 
 msgid "Number of institution sites by locality and type"
-msgstr "学院分校地点和类别"
+msgstr "Número de sedes de la institución por localidad y tipo"
 
 msgid "Population Report"
-msgstr "人口报告"
+msgstr "Informe de Población"
 
 msgid "Number of people by sex and age"
-msgstr "人数按性别和年龄"
+msgstr "Número de personas por sexo y edad"
 
 msgid "Net Enrolment Rate Report"
-msgstr "净入学率报告"
+msgstr "Informe de la  tasa neta de la matrícula"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled who are of the official "
@@ -1636,14 +1641,17 @@ msgid ""
 "group and multiply the result by 100. This indicator has dimension values of "
 "sex, locality and grade."
 msgstr ""
-"以同年龄组别受教育程为总人数， 除以达到入学年龄的注册学生人数，再乘以结果的"
-"100。该指标包含性别，地区和年级数据。"
+"Se divide el número de alumnos (o estudiantes) matriculados que son del "
+"grupo de edad oficial para un determinado nivel de educación por el total de "
+"la población para el mismo grupo de edad y se multiplica el resultado por "
+"100. Este indicador tiene valores en las dimensiones de género, localidad y "
+"grado."
 
 msgid "Gross Enrolment Rate Report"
-msgstr "毛入学率报告"
+msgstr "Informe de la tasa bruta de matrícula "
 
 msgid "Net Intake Rate Report"
-msgstr "净录取率报告"
+msgstr "Informe de la tasa neta de ingreso "
 
 msgid ""
 "Divide the number of children of official primary school-entrance age who "
@@ -1651,11 +1659,13 @@ msgid ""
 "population of the same age, and multiply the result by 100. This indicator "
 "has dimension values of sex and locality."
 msgstr ""
-"正式的小学入学年龄的儿童进入小学一年级的小学教育，第一次由同年龄的人口数除"
-"以，然后将结果乘以100。该指标包含性别和地区数据。"
+"Se divide el número de niños de edad para entrar a primaria que ingresan al "
+"primer grado por primera vez por la población de la misma edad, y se "
+"multiplica el resultado por 100. Este indicador tiene valores en las "
+"dimensiones de sexo y localidad."
 
 msgid "Gross Intake Rate Report"
-msgstr "毛入学率报告"
+msgstr "Informe Tasa Bruta de Admisión"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in a given level of "
@@ -1664,19 +1674,24 @@ msgid ""
 "result by 100. This indicator has dimension values of sex, locality and "
 "grade."
 msgstr ""
-"划分的学生人数（或学生）参加在给定的教育水平，不论年龄由年龄组正式对应于给定"
-"的受教育程度的人口，将结果乘以100。该指标包含性别，地区和年级数据。"
+"Se divide el número de alumnos (o estudiantes) matriculados en un "
+"determinado nivel de educación, independientemente de la edad, por el numero "
+"total de la población de la edad que oficialmente corresponde al nivel de "
+"educación dado, y  se multiplica el resultado por 100. Este indicador tiene "
+"valores en las dimensiones de género, localidad y grado."
 
 msgid ""
 "Divide the number of new entrants in grade 1, irrespective of age, by the "
 "population of official school-entrance age, and multiply the result by 100. "
 "This indicator has dimension values of sex, locality and grade."
 msgstr ""
-"新进入者的数量除以1级，不论年龄大小，人口的官方学校 - 入学年龄，并且将结果乘"
-"以100。该指标包含性别和地区数据。"
+"Se divide el número de entrantes en primer grado, independiente de la edad, "
+"por la población total de edad para ingresar a la de la escuela y se "
+"multiplica el resultado por 100. Este indicador tiene valores en las "
+"dimensiones de género, localidad y grado."
 
 msgid "Repetition Rate Report"
-msgstr "重读率报告"
+msgstr " Informe de tasa de repetición "
 
 msgid ""
 "Divide the number of repeaters in a given grade in school year t+1 by the "
@@ -1684,22 +1699,26 @@ msgid ""
 "previous school year t . This indicator has dimension values of sex, "
 "locality, sector and grade."
 msgstr ""
-"中继器的数量在一个给定的等级，在学年 t +1分的学生人数从同一队列登记在同一个档"
-"次上一学年度。该指标包含性别，地区，单位和年级数据。"
+"Se divide el número de repetidores en un grado dado en un año escolar t +1 "
+"por el número de alumnos del mismo cohorte matriculados en el mismo grado en "
+"la escuela año anterior, t. Este indicador tiene valores en las dimensiones "
+"del sexo, localidad, sector y grado."
 
 msgid "Completion Rate Report"
-msgstr "完成率报告"
+msgstr "Informe de tasa de finalización"
 
 msgid ""
 "Divide the number of primary graduates, irrespective of age, by the "
 "population of theoretical primary graduation, and multiply the result by "
 "100. This indicator has dimension values of sex, locality and sector."
 msgstr ""
-"将这个数字的小学毕业生，不论年龄大小，人口理论小学毕业，并且将结果乘以100。该"
-"指标包含性别，地区和单位数据。"
+"Se divide el número de graduados de primaria, independientemente de su edad, "
+"por la población teóricamente graduada de primaria,  y se multiplica el "
+"resultado por 100. Este indicador tiene valores en las dimensiónes de "
+"género, localidad y sector."
 
 msgid "Survival Rate Report"
-msgstr "存活率报告"
+msgstr "Informe de la Tasa de Supervivencia "
 
 msgid ""
 "Divide the total number of pupils belonging to a school-cohort who reached "
@@ -1710,13 +1729,17 @@ msgid ""
 "uses data on enrolment and repeaters for two consecutive years. This "
 "indicator has dimension values of sex, locality and sector."
 msgstr ""
-"分属于一所学校？队列，每个学校的学生人数在连续级指定的受教育程度达到学生总人"
-"数的吗？队列即那些原本就读于一年级的小学教育，将结果乘以100。生存率的计算方法"
-"的基础上重建队列方法，它使用了连续两年的入学和中继器的数据。该指标包含性别，"
-"地区和单位数据。"
+"Se divide el número total de alumnos que pertenecen a un cohorte escolar que "
+"alcanzó cada grado sucesivo del nivel educativo especificado por el número "
+"de alumnos en la cohorte escolar es decir, aquellos originalmente inscrito "
+"en el primer grado de educación primaria, y se multiplica el resultado por "
+"100. La tasa de supervivencia se calcula sobre la base del método de cohorte "
+"reconstruida, que utiliza los datos de matrícula y repetidores por dos años "
+"consecutivos. Este indicador tiene valores en las dimensiónes de género, "
+"localidad y sector."
 
 msgid "Transition Rate Report"
-msgstr "转校率报告"
+msgstr "Informe de Tasa de Transición "
 
 msgid ""
 "Divide the number of new entrants in the first grade of the specified higher "
@@ -1725,33 +1748,39 @@ msgid ""
 "school year, and multiply by 100. This indicator has dimension values of "
 "sex, locality, sector and grade."
 msgstr ""
-"数除以一年级的新进入者在指定的周期或受教育程度的学生被纳入最终成绩的前一个周"
-"期或在上一学年的教育水平，再乘以100。该指标包含性别，地区，单位和年级数据。"
+"Se divide el número de nuevos ingresos en el primer grado del ciclo o nivel "
+"superior educativo especificado  por el número de alumnos que se "
+"inscribieron en grado final del ciclo anterior o el nivel de educación en el "
+"anterior año escolar, y se multiplica por 100. Este indicador tiene valores "
+"en las dimensiones del sexo, localidad, sector y grado."
 
 msgid "Pupil Teacher Ratio Report"
-msgstr "学生与教师的比率报告"
+msgstr "Informe de proporción profesor-alumno"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of teachers at the same level. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"总数除以学生人数在指定的受教育程度在同级别的教师人数。该指标包含地区，单位和"
-"教育程度数据。"
+"Se divide el número total de alumnos matriculados en el nivel especificado "
+"de la educación por el número de profesores en el mismo nivel. Este "
+"indicador tiene valores en las dimensiónes de la localidad, sector y nivel "
+"de educación."
 
 msgid "Pupil Class Ratio Report"
-msgstr "学生与班级的比率报告"
+msgstr "Informe de proporción de Clase a Alumno"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of classes at the same level. This indicator has "
 "dimension values of locality and sector."
 msgstr ""
-"总数除以学生人数在指定的受教育程度在同级别的班级数目。该指标包含地区和单位数"
-"据。"
+"Se divide el número total de alumnos matriculados en el nivel especificado "
+"de la educación por el número de clases en el mismo nivel. Este indicador "
+"tiene valores de la dimensión de la localidad y sector."
 
 msgid "Trained Teachers Report"
-msgstr "经过培训的教师报告"
+msgstr "Informe de los Maestros Capacitados "
 
 msgid ""
 "Divide the number of teachers of the specified level of education who have "
@@ -1760,22 +1789,26 @@ msgid ""
 "This indicator has dimension values of locality, sector and level of "
 "education."
 msgstr ""
-"数除以教师指定级别的教育已经收到了教师总人数的最低要求教师培训在同等水平的教"
-"育，然后将结果乘以100。该指标包含地区，单位和教育程度数据。"
+"Se divide el número de profesores del nivel especificado de la educación que "
+"han recibido la formación mínima requerida por el número total de docentes "
+"en el mismo nivel de educación, y se multiplica el resultado por 100. Este "
+"indicador tiene valores de la dimensión de la localidad, sector y nivel de "
+"educación."
 
 msgid "Gender Parity Index (Students) Report"
-msgstr "性别平均指数（学生）报告"
+msgstr "Informe Índice de Paridad de Género (Estudiantes) "
 
 msgid ""
 "Divide the number of female students by the number of male students. This "
 "indicator has dimension values of sex, locality, sector and level of "
 "education."
 msgstr ""
-"划分的女性价值的一个给定指标的男性。该指标包含性别，地区，单位和教育程度数"
-"据。"
+"Dividir el número de estudiantes de sexo femenino por el número de "
+"estudiantes de sexo masculino. Este indicador tiene valores en las "
+"dimensiónes del sexo, localidad, sector y nivel de educación."
 
 msgid "Female Students Report"
-msgstr "女学生报告"
+msgstr "Informe de Estudiantes Femeninos "
 
 msgid ""
 "Divide the number of female tertiary students enrolled in a specified ISCED "
@@ -1783,11 +1816,14 @@ msgid ""
 "given academic-year, and multiply the result by 100. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"ISCED水平在指定的学生总人数（男加女），在一个给定的学术年就读于女性大专学生，"
-"将这个数字将结果乘以100。该指标包含地区，单位和教育程度数据。"
+"Se divide el número de mujeres estudiantes de nivel terciario matriculados "
+"en un determinado nivel ISCED por el número total de estudiantes (hombres, "
+"más mujeres) en ese nivel en un determinado año académico, y se multiplica "
+"el resultado por 100. Este indicador tiene valores en las dimensiónes de la "
+"localidad, sector y nivel de educación."
 
 msgid "Female Teachers Report"
-msgstr "女教师报告"
+msgstr "Informe Profesoras "
 
 msgid ""
 "Divide the total number of female teachers at a given level of education by "
@@ -1795,11 +1831,13 @@ msgid ""
 "school year, and multiply by 100. This indicator has dimension values of "
 "locality, sector and level of education."
 msgstr ""
-"女教师总数除以在给定的教育水平在同级别中一个学年的教师总人数（男，女），再乘"
-"以100。该指标包含地区，单位和教育程度数据。"
+"Se divide el número total de mujeres docentes en un nivel educativo "
+"determinado por el número total de maestros (hombres y mujeres) en el mismo "
+"nivel en un año escolar dado, y se multiplica por 100. Este indicador tiene "
+"valores en las dimensiones de la localidad, sector y nivel de educación."
 
 msgid "Private Enrolment Report"
-msgstr "私人入学报名"
+msgstr "Reporte de Matrícula Privada"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in private educational "
@@ -1807,585 +1845,614 @@ msgid ""
 "private) at the same level of education, and multiply the result by 100. "
 "This indicator has dimension values of sex, locality and level of education."
 msgstr ""
-"划分的学生人数（或学生）就读于私立教育机构在给定的教育水平同等水平的教育总入"
-"学率（公共和私人），然后将结果乘以100。该指标包含性别，地区和教育程度数据。"
+"Se divide el número de alumnos (o estudiantes) matriculados en instituciones "
+"educativas privadas en un determinado nivel de educación por la matrícula "
+"total (público y privado) en el mismo nivel de educación, y multiplicar el "
+"resultado por 100. Este indicador tiene valores de las dimensiónes de "
+"género, localidad y nivel de educación."
 
 msgid "Pupil Textbook Ratio Report"
-msgstr "学生与教材比例报告"
+msgstr "Informe de proporción de Libros a  alumnos"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of textbooks at the same level. This indicator has "
 "dimension values of locality, and sector."
 msgstr ""
-"总数除以学生人数在指定的受教育程度在同级别的教科书由数量。该指标包含地区和单"
-"位数据。"
+"Se divide el número total de alumnos matriculados en un nivel especificado "
+"de la educación por el número de libros de texto en el mismo nivel. Este "
+"indicador tiene valores en las dimensiones de la localidad y sector."
 
 msgid "Water Sources Report"
-msgstr "水源报告"
+msgstr "Informe sobre Fuentes de Agua "
 
 msgid ""
 "Number of water sources by type. This indicator has dimension values of "
 "locality, sector and condition."
-msgstr "水源数量按类型。该指标包含地区，单位和条件数据。"
+msgstr ""
+"Número de fuentes de agua por tipo. Este indicador tiene valores en las "
+"dimensiónes de la localidad, sector y condición."
 
 msgid "Sanitation Facilities Report"
-msgstr "卫生设施报告"
+msgstr "Informe sobre de las Instalaciones Sanitarias "
 
 msgid ""
 "Number of sanitation facilities by type. This indicator has dimension values "
 "of locality, sector and condition."
-msgstr "卫生设施数量按类型。该指标包含地区，单位和条件数据。"
+msgstr ""
+"Número de instalaciones de saneamiento por tipo. Este indicador tiene "
+"valores en las dimensiónes de la localidad, sector y condición."
 
 msgid "Public Expenditure per Education Level Report"
-msgstr "公共教育支出按教育程度报告"
+msgstr "Informe del Gasto Público por Nivel de Educación"
 
 msgid ""
 "Divide total public expenditure for each level of education in a given "
 "financial year by the total public expenditure on education for the same "
 "financial year and multiply the result by 100. "
 msgstr ""
-"教育所产生的所有政府机构/部门在给定的财政年度的政府总开支为同一财政年度的公共"
-"开支总额除以再乘以100。"
+"Se divide el gasto público total para cada nivel de la educación en un "
+"determinado año fiscal por el gasto público total en educación para el mismo "
+"año fiscal  y multiplicar el resultado por 100."
 
 msgid "Public Expenditure on Education Report"
-msgstr "公共教育开支报告"
+msgstr "Informe de Gasto Público en Educación "
 
 msgid ""
 "Divide total public expenditure on education incurred by all government "
 "agencies/departments in a given financial year by the total government "
 "expenditure for the same financial year and multiply by 100."
 msgstr ""
-"教育所产生的所有政府机构/部门在给定的财政年度的政府总开支为同一财政年度的公共"
-"开支总额除以再乘以100。"
+"Se divide el gasto público total en educación realizados por todas las "
+"agencias / departamentos gubernamentales en un año fiscal determinado por el "
+"gasto público total para el mismo año y se multiplica por 100."
 
 msgid "Public Expenditure on Education by GNP Report"
-msgstr "公共教育开支按 GNP 报告"
+msgstr "Informe de Gasto Público en Educación por PNB "
 
 msgid ""
 "Divide total public expenditure on education in a given financial year by "
 "the Gross National Product (GNP) or Gross National Income (GNI) of the "
 "country for the corresponding year and multiply by 100."
 msgstr ""
-"在一个给定的财政年度教育的公共开支总额除以相应年度的国家的国民总收入，再乘以"
-"100。"
+"Se divide el gasto público total en educación en un  dado  año fiscal  por "
+"el producto nacional bruto (PNB) o la Renta Nacional Bruta (RNB) del país "
+"para el año correspondiente y se multiplica por 100."
 
 msgid "Public Expenditure per Pupil Report"
-msgstr "公共支出的每名学生人均国民生产报告"
+msgstr "Informe de Gasto Público por Alumno "
 
 msgid ""
 "Divide per pupil public current expenditure on each level of education in a "
 "given year by the GNI per capita for the same year and multiply by 100. This "
 "indicator has dimension values of level of education."
 msgstr ""
-"每个在某一年的教育水平，人均国民总收入为同年除以每个学生的公共经常性支出，再"
-"乘以100。该指标包含教育程度数据。"
+"Se divide por alumno  gasto público actual en todos los niveles de la "
+"educación en un año determinado por el INB per cápita en el mismo año y se "
+"multiplica por 100. Este indicador tiene valores  en las dimensiones de "
+"nivel de eduación."
 
 msgid "Process"
-msgstr "流程"
+msgstr "Proceso"
 
 msgid "Abort All"
-msgstr "全部中止"
+msgstr "Cancelar todo"
 
 msgid "Clear All"
-msgstr "全部清除"
+msgstr "Borrar todo"
 
 msgid "Started By"
-msgstr "启动者"
+msgstr "Comenzado por"
 
 msgid "Started Date"
-msgstr "开始日期"
+msgstr "Fecha Iniciado"
 
 msgid "Finished Date"
-msgstr "结束日期"
+msgstr "Fecha Culminado"
 
 msgid "Log"
-msgstr "记录"
+msgstr "Registro"
 
 msgid "Processing"
-msgstr "处理"
+msgstr "Procesando"
 
 msgid "Pending"
-msgstr "等待"
+msgstr "Pendiente"
 
 msgid "Aborted"
-msgstr "中止"
+msgstr "Cancelado"
 
 msgid "Completed"
-msgstr "完成"
+msgstr "Completado"
 
 msgid "Export To"
-msgstr "导出到"
+msgstr "Exportar a"
 
 msgid "Export"
-msgstr "导出"
+msgstr "Exportar"
 
 msgid "No Data"
-msgstr "无资料"
+msgstr "No hay datos"
 
 msgid "GNP"
-msgstr "GNP"
+msgstr "PNB"
 
 msgid "Total Public Expenditure For Education"
-msgstr "公共教育开支总额"
+msgstr "El gasto público total en educación"
 
 msgid "No Available Finance Records"
-msgstr "没有财务记录"
+msgstr "No hay registros financieros disponibles"
 
 msgid "Gender Parity Index"
-msgstr "性别平等指数"
+msgstr "Índice de Paridad de Género"
 
 msgid "Click the Generate button to create a restore point."
-msgstr "点击生成按钮，创建修复。"
+msgstr "Haga clic en el botón Generar para crear un punto de restauración"
 
 msgid "All data will be backed up except for following tables:"
-msgstr "所有的数据将被备份，除了以下列表："
+msgstr "Todos los datos serán copiados a excepción de las siguientes tablas:"
 
 msgid "Security Users, Roles, and Functions"
-msgstr "安全用户、任务和功能"
+msgstr "Seguridad, roles y funciones de usuarios "
 
 msgid "System Configuration Values"
-msgstr "系统配置数据"
+msgstr "Valores de configuración del sistema"
 
 msgid "Security"
-msgstr "安全"
+msgstr "Seguridad"
 
 msgid "Please note that it may take sometime for the backup process to finish."
-msgstr "请注意备份处理需要一段时间。"
+msgstr ""
+"Por favor, tenga en cuenta que el proceso de crear una copia de seguridad "
+"puede demorarse"
 
 msgid "Run Reports"
-msgstr "生成报告"
+msgstr "Ejecutar Informes "
 
 msgid "Select All"
-msgstr "全选"
+msgstr "Seleccionar todo"
 
 msgid "De-Select All"
-msgstr "取消全选"
+msgstr "Anular toda la selección "
 
 msgid "Generate"
-msgstr "生成"
+msgstr "Generar"
 
 msgid "Generated Files"
-msgstr "生成 文档"
+msgstr "Generado Archivos"
 
 msgid ""
 "The system will %s the current data and restore to your previous data based "
 "on the restore point you selected."
-msgstr "系统将以你选择的修复点进行修复，并显示当前所完成修复数据的百分比。"
+msgstr ""
+"El sistema %s los datos actuales y se restaurará a los datos anteriores "
+"basados ​​en el punto de restauración seleccionado."
 
 msgid "Please note that the system will not restore the following tables:"
-msgstr "请注意，系统不会恢复以下列表："
+msgstr ""
+"Por favor, tenga en cuenta que el sistema no restaurará las siguientes "
+"tablas:"
 
 msgid ""
 "Below are the list of available backup dates, please choose a restore point."
-msgstr "以下列表是可备份的日期，请选择一个修复点。"
+msgstr ""
+"A continuación está la lista de las fechas de copia de seguridad "
+"disponibles, por favor elija un punto de restauración."
 
 msgid "Files"
-msgstr "文档"
+msgstr "Archivos"
 
 msgid "Format not support."
-msgstr "格式不支持。"
+msgstr "Formato no compatible"
 
 msgid "Image filesize too large."
-msgstr "图片过大。"
+msgstr "Archivo de Imagen es demasiado grande "
 
 msgid "Resolution too large."
-msgstr "解像度太大。"
+msgstr "Resolución demasiado grande."
 
 msgid "File uploaded with success."
-msgstr "已成功更新文件。"
+msgstr "Archivo subido con exitosamente"
 
 msgid "Image exceeds system max filesize."
-msgstr "图像超出系统允许的最佳文件容量。"
+msgstr "La imagen sobrepasa tamaño de archivo máximo del sistema."
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr "图像超出HTML格式的最大文件容量。"
+msgstr "La imagen excede el tamaño máximo del archivo en el formulario HTML."
 
 msgid "Image was only partially uploaded."
-msgstr "部分图像已上传。"
+msgstr "La imagen fue sólo parcialmente cargada."
 
 msgid "No image was uploaded."
-msgstr "没有图像完成上传"
+msgstr "No se ha cargado la imagen"
 
 msgid "Missing a temporary folder."
-msgstr "缺少临时文件夹。"
+msgstr "Falta una carpeta temporal."
 
 msgid "Failed to write file to disk."
-msgstr "文件写入磁盘失败。"
+msgstr "No se pudo escribir el archivo en el disco."
 
 msgid "A PHP extension stopped the file upload."
-msgstr "一个PHP扩展停止文件上传。"
+msgstr "La extensión PHP paró la carga de archivos."
 
 msgid "Max Resolution:"
-msgstr "最大解像度："
+msgstr "Resolución máxima:"
 
 msgid "Max File Size:"
-msgstr "最大文件大小:"
+msgstr "Tamaño máximo de archivo:"
 
 msgid "Format Supported:"
-msgstr "支持格式:"
+msgstr "Formato admitido:"
 
 msgid "Profile Image"
-msgstr "头像"
+msgstr " Imagen de Perfil "
 
 msgid "Please enter the code for the Area."
-msgstr "请输入有效验证码。"
+msgstr "Por favor, introduzca el código para el area"
 
 msgid "There are duplicate area code."
-msgstr "有重复的区号。"
+msgstr "Hay códigos de areas duplicados"
 
 msgid "Please enter the name for the Area."
-msgstr "请输入区域名称。"
+msgstr "Introduzca el nombre de la zona"
 
 msgid "Please supply a valid image."
-msgstr "请提供有效图像。"
+msgstr "Por favor proporcione una imagen válida."
 
 msgid "Please enter a name for the Field of Study."
-msgstr "请进入研究领域的名称。"
+msgstr "Por favor ingrese un nombre para el campo de estudio."
 
 msgid "This Field of Study already exists in the system."
-msgstr "这一研究领域已经存在于系统中。"
+msgstr "Este campo de estudio ya existe en el sistema."
 
 msgid "Please select the programme orientation."
-msgstr "请选择计划的方向。"
+msgstr "Por favor, seleccione la orientación del programa."
 
 msgid "Please enter a name for the Subject."
-msgstr "请输入一个科目标题。"
+msgstr "Por favor, introduzca un nombre para el tema"
 
 msgid "This subject already exists in the system."
-msgstr "这个科目是已经存在于系统中。"
+msgstr "Este tema ya existe en el sistema."
 
 msgid "You have entered an invalid username or password."
-msgstr "您输入了一个无效的用户名或密码。"
+msgstr "Ha introducido un nombre de usuario o contraseña inválido"
 
 msgid "Please enter a duration."
-msgstr "请输入期限。"
+msgstr "Por favor introduzca una duración."
 
 msgid "Add Programme"
-msgstr "添加计划"
+msgstr "Agregar programa"
 
 msgid ""
 "You are able to delete this record in the database. <br><br>All related "
 "information of this record will also be deleted.<br><br>Are you sure you "
 "want to do this?"
 msgstr ""
-"您可以在数据库中删除这条记录。参考此记录的所有相关信息也将被删除。<br><br>您"
-"确定要删除吗？"
+"Usted puede eliminar este registro en la base de datos. <br> Toda la "
+"información relacionada de este registro también serán borrados. <br> "
+"¿Seguro que quiere hacer esto?"
 
 msgid "Deleting attachment..."
-msgstr "删除附件…"
+msgstr "Eliminando  archivo adjunto ..."
 
 msgid "Delete Attachment"
-msgstr "删除附件"
+msgstr "Eliminar archivo adjunto"
 
 msgid "Do you wish to delete this record?"
-msgstr "你要删除这条记录吗？"
+msgstr "¿Desea eliminar este registro?"
 
 msgid "Updating attachment..."
-msgstr "更新附件…"
+msgstr "Actualizando archivo adjunto ..."
 
 msgid "Bank Branch is required!"
-msgstr "请输入银行分行！"
+msgstr "!Sucursal del Banco es necesario!"
 
 msgid "value"
-msgstr "数据"
+msgstr "valor"
 
 msgid "Unsaved Data"
-msgstr "未保存的数据"
+msgstr "Datos sin guardar"
 
 msgid "Please save your data before proceed. <br><br>Do you want to save now?"
-msgstr "请先妥善保存您的数据再进行其他修改。<br><br>你现在要保存吗？"
+msgstr ""
+"Por favor, guarde los datos antes de proceder. <br> ¿Quiere guardar ahora?"
 
 msgid "Are you sure you want to leave?"
-msgstr "您确定要离开吗？"
+msgstr "¿Está seguro de que quieres salir?"
 
 msgid "GNP value is required."
-msgstr "请输入GNP值。"
+msgstr "Valor de PNB es necesario."
 
 msgid "Category is required!"
-msgstr "请输入分类！"
+msgstr "!Categoría requerida!"
 
 msgid "Certificate is required!"
-msgstr "请输入证书！"
+msgstr "!Certificado es necesario!"
 
 msgid "Institute is required!"
-msgstr "请输入学院！"
+msgstr "!Instituto es necesario!"
 
 msgid "Please select a country before adding new records."
-msgstr "请选择一个国家，然后再添加新的记录。"
+msgstr "Seleccione un país antes de añadir nuevos registros"
 
 msgid "Error has occurred."
-msgstr "发生错误。"
+msgstr "Error ha ocurrido."
 
 msgid "Age cannot be empty."
-msgstr "请输入年龄"
+msgstr "La edad no puede estar vacía"
 
 msgid "Age must be more then 0."
-msgstr "年龄必须大于0。"
+msgstr "La edad debe ser más que 0."
 
 msgid "No"
-msgstr "否"
+msgstr "No"
 
 msgid "Yes"
-msgstr "是"
+msgstr "Sí"
 
 msgid "Dialog"
-msgstr "对话"
+msgstr "Dialogo"
 
 msgid "Required Field"
-msgstr "必填项"
+msgstr "Campo obligatorio"
 
 msgid "Retrieving..."
-msgstr "搜索中…"
+msgstr "Recuperando ..."
 
 msgid "Adding row..."
-msgstr "添加行…"
+msgstr "Añadiendo fila ..."
 
 msgid "Adding option..."
-msgstr "添加选项…"
+msgstr "Añadiendo opción ..."
 
 msgid "Loading..."
-msgstr "载入…"
+msgstr "Cargando ..."
 
 msgid "Loading list..."
-msgstr "载入列表…"
+msgstr "Cargar lista ..."
 
 msgid "File is required!"
-msgstr "请输入文件！"
+msgstr "!El archivo es necesario!"
 
 msgid "Status is required!"
-msgstr "请输入状态"
+msgstr "!Estado es necesario!"
 
 msgid "Move Up"
-msgstr "上移"
+msgstr "Mover hacia arriba"
 
 msgid "Move Down"
-msgstr "下移"
+msgstr "Mover hacia abajo"
 
 msgid "Toggle this field active/inactive"
-msgstr "激活运作/非运作按钮"
+msgstr "Alternar este campo activo / inactivo"
 
 msgid "Delete Confirmation"
-msgstr "确认删除"
+msgstr "Confirmar eliminación"
 
 msgid "Click to dismiss"
-msgstr "点击关闭"
+msgstr "Haga clic para ignorar"
 
 msgid "Unable to add Areas.<br/>Please create Area Level before adding Areas."
-msgstr "无法添加地区。<br/>请创建区域列表再添加地区。"
+msgstr ""
+"No se puede añadir áreas. <br/> por favor, crear Nivel de Área antes de "
+"añadir áreas"
 
 msgid "Saving please wait..."
-msgstr "正在保存，请稍候…"
+msgstr "Guardando por favor espere ..."
 
 msgid "Loading Areas"
-msgstr "没有区域"
+msgstr "Cargando las áreas "
 
 msgid "Batch executed successfully."
-msgstr "成功处理。"
+msgstr "Lote ejecutado con éxito."
 
 msgid "Running batch..."
-msgstr "运行中…"
+msgstr "Ejecutando Lote..."
 
 msgid "Adding Field..."
-msgstr "附加项"
+msgstr "Agregando campo ..."
 
 msgid "Please select a valid Start Date"
-msgstr "请选择有效起始日期"
+msgstr "Por favor, seleccione una fecha de inicio válida"
 
 msgid "Please select a valid End Date"
-msgstr "请选择有效结束日期"
+msgstr "Por favor, seleccione una fecha de finalización válida"
 
 msgid "Please add a programme to this institution site."
-msgstr "请为此学院分校添加教育计划。"
+msgstr "Por favor agregar un programa a esta sede de institución."
 
 msgid "Missing Coordinates Report"
-msgstr "缺少坐标报告"
+msgstr "Informe de coordenadas ausentes"
 
 msgid ""
 "List of Institution Sites with latitude and/or longitude values of 0 or null"
-msgstr "机构网站和纬度/经度值是0或空列表"
+msgstr ""
+"Lista de sedes de institución con los valores de latitud y / o longitud de 0 "
+"o nulo"
 
 msgid "OLAP Report"
-msgstr "OLAP 报告"
+msgstr "Informes OLAP"
 
 msgid "OLAP Reports"
 msgstr ""
 
 msgid "Generated"
-msgstr "生成"
+msgstr "Generado"
 
 msgid "Generating OLAP Report..."
-msgstr "生成 OLAP 报告..."
+msgstr "Generación de informes OLAP…"
 
 msgid "Indicator"
-msgstr "指标"
+msgstr "Indicador"
 
 msgid "Sub Groups"
-msgstr "子分组"
+msgstr "Subgrupo"
 
 msgid "Time Period"
-msgstr "时期"
+msgstr "Período de tiempo"
 
 msgid "Data Value"
-msgstr "数据值"
+msgstr "Información del valor"
 
 msgid "Classification"
-msgstr "分类"
+msgstr "Clasificación"
 
 msgid "Information"
-msgstr "资料"
+msgstr "Información"
 
 msgid "Area Name"
-msgstr "区域名称"
+msgstr "Nombre de zona"
 
 msgid "Education Programme Name"
-msgstr "教育计划名称"
+msgstr "Nombre del Programa de Educación"
 
 msgid "Bank Account Name"
-msgstr "银行帐户名字"
+msgstr "Nombre de la cuenta bancaria"
 
 msgid "Bank Account Number"
-msgstr "银行帐户号码"
+msgstr "Número de cuenta bancaria"
 
 msgid "Bank Account Active"
-msgstr "银行帐户动态"
+msgstr "Cuenta de banco activa"
 
 msgid "Bank Branch Name"
-msgstr "银行分行名字"
+msgstr "Nombre de sucursal del Banco "
 
 msgid "Academic Year"
-msgstr "学术年"
+msgstr "Año escolar"
 
 msgid "Education Grade Name"
-msgstr "教育年级名称"
+msgstr "Nombre  de grado educativo "
 
 msgid "Class"
-msgstr "班级"
+msgstr "Clase"
 
 msgid "Education Subject Name"
-msgstr "教育科目名称"
+msgstr "Nombre de tema educativo "
 
 msgid "No Of Textbooks"
-msgstr "教科书数量"
+msgstr "Número de libros"
 
 msgid "Grid X Category"
-msgstr "格框 X 类别"
+msgstr "Categoría de cuadrícula X"
 
 msgid "Grid Y Category"
-msgstr "格框 Y 类别"
+msgstr "Categoría de cuadrícula Y"
 
 msgid "Building"
-msgstr "房屋"
+msgstr "Construcciones"
 
 msgid "Material"
-msgstr "物料"
+msgstr "Material"
 
 msgid "Room"
-msgstr "教室"
+msgstr "Salon"
 
 msgid "Resource"
-msgstr "来源"
+msgstr "Recurso"
 
 msgid "Student Name"
-msgstr "学生姓名"
+msgstr "Nombre del Estudiante"
 
 msgid "Teacher Name"
-msgstr "教师姓名"
+msgstr "Nombre del Maestro"
 
 msgid "Staff Name"
-msgstr "工作人员姓名"
+msgstr "Nombre del Personal"
 
 msgid "Available Variables"
-msgstr "可用选项"
+msgstr "Variables disponibles"
 
 msgid "Selected Variables"
-msgstr "所选的选项"
+msgstr "Las variables seleccionadas"
 
 msgid "Institution Provider"
-msgstr "机构提供者"
+msgstr "Institución de Proveedores"
 
 msgid "Institution Status"
-msgstr "机构状态"
+msgstr "Estado de la Institución"
 
 msgid "Institution Site Locality"
-msgstr "学院分校地点"
+msgstr "Ubicación de la sede de la institución "
 
 msgid "Institution Site Type"
-msgstr "学院分校类型"
+msgstr "Tipo de sede de la Institución "
 
 msgid "Institution Site Ownership"
-msgstr "学院分校所有权"
+msgstr "Propiedad de la sede de la Institución "
 
 msgid "Institution Site Status"
-msgstr "学院分校状态"
+msgstr "Estado de la sede de la Institución "
 
 msgid "Education Programme"
-msgstr "教育计划"
+msgstr "Programa de educación"
 
 msgid "Education Grade"
-msgstr "教育年级"
+msgstr "Grado educativo "
 
 msgid "Student Category"
-msgstr "学生类别"
+msgstr "Categoría de estudiantes"
 
 msgid "No backup files found."
-msgstr ""
+msgstr "No hay archivos de copia de seguridad encontrados."
 
 msgid "Yearbook"
-msgstr "年鉴"
+msgstr "Anuario"
 
 msgid "Organization Name"
-msgstr "机构名称"
+msgstr "Nombre de la Organización"
 
 msgid "Publication Date"
-msgstr "资历类别"
+msgstr "Año de Publicación"
 
 msgid "Logo"
-msgstr "标志"
+msgstr "Logo"
 
 msgid "Data Outliers"
-msgstr "数据野值"
+msgstr "Datos atípicos "
 
 msgid ""
 "Census Numbers that have age or total of male and female numbers beyond the "
 "specified range in settings."
-msgstr "人口普查数字超出规定的范围内设置有年龄的男性和女性的数字或总。"
+msgstr ""
+"Números del censo que tienen edad o total de masculino y femenino más allá "
+"del rango especificado en la configuración."
 
 msgid "Page Orientation"
-msgstr "页面方向"
+msgstr "Orientación de página"
 
 msgid "Yearbook Logo"
-msgstr "年鉴标志"
+msgstr "Logo de Anuario"
 
 msgid "Maximum Student Age"
-msgstr "学生年龄上限"
+msgstr "Edad máxima del estudiante"
 
 msgid "Minimum Student Age"
-msgstr "最小入学年龄"
+msgstr "Edad mínima del estudiante"
 
 msgid "Maximum Student Number"
-msgstr "最大学生数"
+msgstr "Número máximo de estudiantes"
 
 msgid "Minimum Student Number"
-msgstr "最低学生人数"
+msgstr "Número de estudiantes mínimo"
 
 msgid "Data Discrepancy"
-msgstr "数据差异"
+msgstr "Discrepancia de datos"
 
 msgid "Data Discrepancy Variation(%)"
-msgstr "数据差异的变化（％）"
+msgstr "Variación de discrepancia de datos (%)"
 
 msgid "Previous Year"
-msgstr "上年度"
+msgstr "Año Anterior"
 
 msgid "Previous Year Male"
-msgstr "上年度男"
+msgstr "Año Anterior Masculino"
 
 msgid "Previous Year Female"
-msgstr "上一年级的女"
+msgstr "Año Anterior Femenino"
 
 msgid "Data Discrepancy Reports"
-msgstr "数据差异报告"
+msgstr "Informes de discrepancia de datos"
 
 msgid "Rubrics"
 msgstr ""
@@ -2894,13 +2961,13 @@ msgid "Max Resolution"
 msgstr ""
 
 msgid "Your request has been timed out. Please try again."
-msgstr "您的请求已超时。请再试一次。"
+msgstr "Su solicitud ha caducado. Por favor, inténtelo de nuevo."
 
 msgid "OVERWRITE ALL"
-msgstr "覆盖所有"
+msgstr "SOBREESCRIBIR TODO"
 
 msgid "Max Resolution: %s pixels"
-msgstr "最大解像度：%s 像素"
+msgstr "Resolución máxima: pixeles %s"
 
 msgid "Choose File"
 msgstr ""
