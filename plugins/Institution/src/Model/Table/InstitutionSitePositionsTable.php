@@ -120,7 +120,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		]);
 
 		$viewVars = $this->ControllerAction->vars();
-		$id = $viewVars['_buttons']['view']['url'][1];
+		$id = $viewVars['buttons']['view']['url'][1];
 
 		$session = $this->controller->request->session();
 
