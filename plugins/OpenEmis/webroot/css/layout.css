@@ -1909,6 +1909,10 @@ label + select {
 	float: left;
 }
 
+.fileinput.input-group {
+	display: inline-block !important;
+}
+
 .fileinput {
 	position: relative;
 	margin-bottom: 15px !important;
@@ -1917,27 +1921,39 @@ label + select {
 .fileinput .form-control {
 	-webkit-border-radius: 3px !important;
 	        border-radius: 3px !important;
+	width: 87%; 
+	margin-right: -1px; 
+	margin-top: -1px !important;  
+	z-index: 0 !important;
+	-webkit-border-top-right-radius: 0px !important;
+	        border-top-right-radius: 0px !important;
+	-webkit-border-bottom-right-radius: 0px !important;
+	        border-bottom-right-radius: 0px !important;	
 }
 
 .fileinput .btn-file {
-	position: absolute;
+	position: absolute !important;
 	right: -1px;
 	top: -1px;
 	height: 34px !important;
-	width: 52px !important;
+	width: 55px !important;
 	padding: 8px;
 	cursor: pointer;
+	-webkit-border-top-right-radius: 3px !important;
+	        border-top-right-radius: 3px !important;
+	-webkit-border-bottom-right-radius: 3px !important;
+	        border-bottom-right-radius: 3px !important;	   
 }
 
 .fileinput .btn-file-cancel {
-	position: absolute;
+	display: inline-block;
+	margin-left: -50px;
+	margin-top: -1px;
 	padding: 8px 14px 9px;
 	border-radius: 0;
 	border-right: 0 !important;
-	right: 50px;
-	top: -1px;
 	height: 34px !important;
-	width: 52px !important;	
+	width: 51px !important;	
 }
 
 .fileinput-filename {
@@ -1976,7 +1992,7 @@ label + select {
 }
 
 .fileinput-preview .btn-file {
-	position: relative;
+	position: relative !important;
 	width: inherit !important;
 	height: 30px !important;
 }
