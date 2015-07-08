@@ -57,7 +57,7 @@ class SecurityRolesTable extends AppTable {
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
-			$this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
+			$this->ControllerAction->setFieldOrder(['visible', 'name']);
 		} else {
 			$this->ControllerAction->setFieldOrder(['security_group_id', 'name', 'visible']);
 		}
@@ -98,6 +98,26 @@ class SecurityRolesTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('order', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		
+		$attr = ['plugin', 'controller', 'action', 'security_group_id', 0, 1];
+		$permissionBtn = ['permissions' => $buttons['view']];
+		$permissionBtn['permissions']['url']['action'] = 'Permissions';
+		$permissionBtn['permissions']['url'][0] = 'index';
+		$permissionBtn['permissions']['label'] = __('Permissions');
+
+		// foreach ($permissionBtn['permissions']['url'] as $key => $val) {
+		// 	if (!in_array($key, $attr)) {
+		// 		unset($permissionBtn['permissions']['url'][$key]);
+		// 	}
+		// }
+
+		$buttons = array_merge($permissionBtn, $buttons);
+		// pr($buttons);
+		return $buttons;
 	}
 
 	public function findByInstitution(Query $query, $options) {
