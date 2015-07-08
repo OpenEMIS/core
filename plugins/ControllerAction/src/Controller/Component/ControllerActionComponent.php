@@ -889,15 +889,15 @@ class ControllerActionComponent extends Component {
 		
 		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
 			$id = $request->data[$primaryKey];
-			$entity = $model->get($id);
 			$deleteOptions = new ArrayObject([]);
 
-			$process = function () use ($model, $entity, $deleteOptions) {
+			$process = function () use ($model, $deleteOptions) {
+				$entity = $model->get($id);
 				return $model->delete($entity, $deleteOptions->getArrayCopy());
 			};
 
 			// Event: onBeforeDelete
-			$params = [$entity, $deleteOptions, $id];
+			$params = [$deleteOptions, $id];
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.onBeforeDelete', null, $params);
 			if ($event->isStopped()) { return $event->result; }
 			if (is_callable($event->result)) {

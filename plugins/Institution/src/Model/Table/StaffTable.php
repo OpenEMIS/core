@@ -1,8 +1,11 @@
 <?php
 namespace Institution\Model\Table;
 
-use User\Model\Table\UsersTable as BaseTable;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\Validation\Validator;
+use User\Model\Table\UsersTable as BaseTable;
 
 class StaffTable extends BaseTable {
 	public function initialize(array $config) {
@@ -12,6 +15,15 @@ class StaffTable extends BaseTable {
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStaff]);
 	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function() use ($id, $options) {
+			$entity = $this->InstitutionSiteStaff->get($id);
+			return $this->InstitutionSiteStaff->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
+	}
+
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
 			$this->layout = 'ajax';
