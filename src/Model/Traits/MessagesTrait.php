@@ -64,7 +64,9 @@ trait MessagesTrait {
 			'default' => 'Default',
 			'reject' => 'Reject',
 			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes'
+			'noClasses' => 'No Classes',
+			'type' => 'Type',
+			'amount' => 'Amount'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
