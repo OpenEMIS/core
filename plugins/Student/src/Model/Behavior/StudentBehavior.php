@@ -77,7 +77,6 @@ class StudentBehavior extends Behavior {
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStudentData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
-
 				if (array_key_exists($this->_table->alias(), $data)) {
 					if (!array_key_exists('institution_site_students', $data[$this->_table->alias()])) {
 						$data[$this->_table->alias()]['institution_site_students'] = [];
@@ -91,13 +90,14 @@ class StudentBehavior extends Behavior {
 					// start and end (date and year) handling
 					$data[$this->_table->alias()]['institution_site_students'][0]['start_date'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['start_date'];
 					$data[$this->_table->alias()]['institution_site_students'][0]['end_date'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['end_date'];
-					$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
-					$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
-					$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
-					$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
 				}
 			}
 		}
+
+		$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
+		$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+		$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
+		$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
