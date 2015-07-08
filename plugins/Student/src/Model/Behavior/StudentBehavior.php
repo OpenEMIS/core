@@ -31,6 +31,7 @@ class StudentBehavior extends Behavior {
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
+			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -56,15 +57,26 @@ class StudentBehavior extends Behavior {
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'student_institution_name', 'student_status']);
 
-		$indexDashboard = 'Student.Students/dashboard';
-		$this->_table->controller->set('indexDashboard', $indexDashboard);
+		// $indexDashboard = 'Student.Students/dashboard';
+		// $this->_table->controller->set('indexDashboard', $indexDashboard);
+	}
+
+	public function afterAction(Event $event) {
+		if ($this->_table->action == 'index') {
+			$indexDashboard = 'Student.Students/dashboard';
+			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStudentData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
-
 				if (array_key_exists($this->_table->alias(), $data)) {
 					if (!array_key_exists('institution_site_students', $data[$this->_table->alias()])) {
 						$data[$this->_table->alias()]['institution_site_students'] = [];
@@ -78,13 +90,14 @@ class StudentBehavior extends Behavior {
 					// start and end (date and year) handling
 					$data[$this->_table->alias()]['institution_site_students'][0]['start_date'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['start_date'];
 					$data[$this->_table->alias()]['institution_site_students'][0]['end_date'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['end_date'];
-					$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
-					$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
-					$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
-					$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
 				}
 			}
 		}
+
+		$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
+		$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+		$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
+		$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

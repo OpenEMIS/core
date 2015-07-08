@@ -2,20 +2,21 @@
 
 $fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: null;
 $operation = (array_key_exists('operation', $attr))? $attr['operation']: null;
+$totalAmount = 0;
 
 switch ($fieldName) {
 	case 'salary_additions':
 	$operand = 'plus';
 	$optionName = 'salary_addition';
+	$totalAmount = $data->additions;
 	break;
 
 	case 'salary_deductions':
 	$operand = 'minus';
 	$optionName = 'salary_deduction';
+	$totalAmount = $data->deductions;
 	break;
-}
-$totalAmount = 0;
-
+}	
 ?>
 <div class="input">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
@@ -29,8 +30,8 @@ $totalAmount = 0;
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?= $this->Label->get($attr['model'].'.type'); ?></th>
-					<th><?= $this->Label->get($attr['model'].'.amount'); ?></th>
+					<th><?= $this->Label->get('general.type'); ?></th>
+					<th><?= $this->Label->get('general.amount'); ?></th>
 					<th></th>
 				</tr>
 			</thead>
@@ -66,7 +67,7 @@ $totalAmount = 0;
 									$optionsArray['label'] = false;
 									$optionsArray['computeType'] = 'total_salary_'.$fieldName.'s';
 									$optionsArray['onkeypress'] = 'return utility.floatCheck(event)';
-									$optionsArray['onkeyup'] = 'jsTable.computeTotal(this); jsForm.compute(this); ';
+									$optionsArray['onkeyup'] = 'jsTable.computeTotalForMoney(this); jsForm.compute(this); ';
 									$optionsArray['allowNull'] = true;
 									$optionsArray['onfocus'] = '$(this).select();';
 									$optionsArray['before'] = false;
@@ -77,7 +78,7 @@ $totalAmount = 0;
 								 ?>
 							</td>
 							<td> 
-								<button onclick="jsTable.doRemove(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
+								<button onclick="jsTable.doRemove(this);jsTable.computeTotalForMoney(this);jsForm.compute(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
 									<i class="fa fa-trash"></i>
 									<span>Delete</span>
 								</button>
@@ -97,3 +98,8 @@ $totalAmount = 0;
 		</table>
 	</div>
 </div>
+<script type="text/javascript">
+	$(function(){ 
+		$(".total_salary_<?= $fieldName; ?>s").val(<?= $totalAmount; ?>);
+	});
+</script>

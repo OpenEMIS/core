@@ -641,8 +641,7 @@ body.large {
 
 .panel-toolbar {
 	border: 1px solid #CCC !important;
-	/*min-height: 60px;*/
-	/*padding: 20px 0;*/
+	margin-top: -1px;	
 }
 
 .panel-toolbar a {
@@ -1210,7 +1209,7 @@ input[type="checkbox"] {
 	border-bottom: 0;
 	background-color: #FFF !important;
 	margin-top: -1px;
-	padding: 7px 10px !important;
+	padding: 7px 10px 6px !important;
 }
 
 .nav-tabs > li.active > a:focus {
@@ -1667,6 +1666,11 @@ table tr.sorting-row td {background-color: #8b8;}
 	background: #FFF;
 }
 
+.form-control:focus {
+	-webkit-box-shadow: none !important;
+	        box-shadow: none !important;
+}
+
 select {
     background: none;	
     position: relative;
@@ -1804,6 +1808,15 @@ label + select {
 	top: 6px !important;
 }
 
+.chosen-container .chosen-results li.active-result:hover {
+	border-left: 0 !important;
+	border-right: 0 !important;
+}
+
+.chosen-container .chosen-results li {
+	font-size: 12px !important;
+}
+
 .form-horizontal .input-group {
 	width: 30%;	
 	margin: 0 0 15px;
@@ -1834,6 +1847,11 @@ label + select {
 }
 
 /* Autocomplete */
+.ui-autocomplete {
+	max-height: 120px !important;
+	overflow: scroll;
+}
+
 .ui-widget-content {
 	background-color: #FFF !important;
 	border: 1px solid #CCC !important;
@@ -1844,9 +1862,15 @@ label + select {
 .ui-widget input, 
 .ui-widget select, 
 .ui-widget textarea, 
-.ui-widget button {
+.ui-widget button,
+.ui-widget {
 	font-family: "Helvetica Neue" !important;
-	color: #555 !important;
+	color: #333 !important;
+	font-weight: normal !important;
+}
+
+.ui-widget label {
+	font-size: 12px !important;
 }
 
 .ui-menu-item {
@@ -1860,11 +1884,18 @@ label + select {
 .ui-state-focus:hover,
 .ui-state-focus:focus,
 .ui-state-focus:visited,
-.ui-state-focus:active {
+.ui-state-focus:active,
+.chosen-container .chosen-results li.highlighted,
+.chosen-container .chosen-results li.active-result:hover {
+	background: none !important;	
 	background-color: #EEE !important;
 	color: #555 !important;
 	border: 1px solid #CCC !important;
 	font-size: 12px !important;
+}
+
+.ui-widget input:focus {
+	outline: none !important;
 }
 
 /* File Input and File Input with Preview */
@@ -1878,6 +1909,10 @@ label + select {
 	float: left;
 }
 
+.fileinput.input-group {
+	display: inline-block !important;
+}
+
 .fileinput {
 	position: relative;
 	margin-bottom: 15px !important;
@@ -1886,27 +1921,39 @@ label + select {
 .fileinput .form-control {
 	-webkit-border-radius: 3px !important;
 	        border-radius: 3px !important;
+	width: 87%; 
+	margin-right: -1px; 
+	margin-top: -1px !important;  
+	z-index: 0 !important;
+	-webkit-border-top-right-radius: 0px !important;
+	        border-top-right-radius: 0px !important;
+	-webkit-border-bottom-right-radius: 0px !important;
+	        border-bottom-right-radius: 0px !important;	
 }
 
 .fileinput .btn-file {
-	position: absolute;
+	position: absolute !important;
 	right: -1px;
 	top: -1px;
 	height: 34px !important;
-	width: 52px !important;
+	width: 55px !important;
 	padding: 8px;
 	cursor: pointer;
+	-webkit-border-top-right-radius: 3px !important;
+	        border-top-right-radius: 3px !important;
+	-webkit-border-bottom-right-radius: 3px !important;
+	        border-bottom-right-radius: 3px !important;	   
 }
 
 .fileinput .btn-file-cancel {
-	position: absolute;
+	display: inline-block;
+	margin-left: -50px;
+	margin-top: -1px;
 	padding: 8px 14px 9px;
 	border-radius: 0;
 	border-right: 0 !important;
-	right: 50px;
-	top: -1px;
 	height: 34px !important;
-	width: 52px !important;	
+	width: 51px !important;	
 }
 
 .fileinput-filename {
@@ -1921,13 +1968,22 @@ label + select {
     text-overflow: ellipsis;
 } 
 
-.fileinput .btn-file .fileinput-new {
+.fileinput .btn-file .fileinput-new,
+.fileinput .btn-file .fileinput-new:before {
 	cursor: pointer !important;
 }
 
 .file-input-text {
 	clear: both;
+}
+
+.file-input-text p,
+.file-input-buttons p {
+	clear: both;
 	padding: 8px 0 0;
+	font-style: italic;
+	font-size: 11px !important;
+	color: #777;
 }
 
 .fileinput-preview {
@@ -1936,7 +1992,7 @@ label + select {
 }
 
 .fileinput-preview .btn-file {
-	position: relative;
+	position: relative !important;
 	width: inherit !important;
 	height: 30px !important;
 }
@@ -2392,6 +2448,11 @@ tags-input .tags {
 
 .action-dropdown i {
 	margin: 5px 5px 0 0;
+}
+
+.action-dropdown .kd-download {
+	font-size: 10px;
+	margin-left: -1px;
 }
 
 .action-dropdown > li > a {
