@@ -1666,6 +1666,11 @@ table tr.sorting-row td {background-color: #8b8;}
 	background: #FFF;
 }
 
+.form-control:focus {
+	-webkit-box-shadow: none !important;
+	        box-shadow: none !important;
+}
+
 select {
     background: none;	
     position: relative;
