@@ -52,6 +52,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
+			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
 		];
 
 		$roleEvents = [];
@@ -89,6 +90,16 @@ class UserBehavior extends Behavior {
 					'InstitutionSiteStudents' => [
 						'conditions' => [
 							'InstitutionSiteStudents.institution_site_id' => $institutionId
+						]
+					]
+				];
+			}
+
+			if ($this->_table->alias() == 'Staff') {
+				$options['contain'] = [
+					'InstitutionSiteStaff' => [
+						'conditions' => [
+							'InstitutionSiteStaff.institution_site_id' => $institutionId
 						]
 					]
 				];
@@ -482,7 +493,8 @@ class UserBehavior extends Behavior {
 		$newOptions = [];
 		if ($this->_table->hasBehavior('Student')) {
 			$options['associated'] = ['InstitutionSiteStudents' => ['validate' => false]];
-		} else if ($this->_table->hasBehavior('Staff')) {
+		} 
+		if ($this->_table->hasBehavior('Staff')) {
 			$options['associated'] = ['InstitutionSiteStaff' => ['validate' => false]];
 		}
 
@@ -490,4 +502,39 @@ class UserBehavior extends Behavior {
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
 	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+
+		if ($this->_table->hasBehavior('Student')) {
+			if (array_key_exists('remove', $buttons)) {
+				if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+					// pr($entity);
+					if (isset($entity->institution_site_students)) {
+						if (array_key_exists(0, $entity->institution_site_students)) {
+							$buttons['remove']['attr']['field-value'] = $entity->institution_site_students[0]->id;
+						}
+					}
+				}
+			}
+			$event->stopPropagation();
+		}
+		if ($this->_table->hasBehavior('Staff')) {
+			if (array_key_exists('remove', $buttons)) {
+				if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+					// pr($entity);
+					if (isset($entity->institution_site_staff)) {
+						if (array_key_exists(0, $entity->institution_site_staff)) {
+							$buttons['remove']['attr']['field-value'] = $entity->institution_site_staff[0]->id;
+						}
+					}
+				}
+			}
+			$event->stopPropagation();
+		}
+		
+		
+		return $buttons;
+	}
+
 }

@@ -50,12 +50,19 @@ class AdvanceSearchBehavior extends Behavior {
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
+			$advancedSearch = false;
+			$session = $this->_table->request->session();
+			$language = $session->read('System.language');
+			
 			foreach ($this->model->fields as $key=>$value) {
 				if (!in_array($key , $this->_exclude)) {
 					if ($this->isForeignKey($key)) {
-						$label = $labels->getLabel($this->modelAlias, $key, 'en');
+						$label = $labels->getLabel($this->modelAlias, $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
 						$selected = (is_array($this->data) && isset($this->data[$key])) ? $this->data[$key] : '' ;
+						if (!empty($selected) && $advancedSearch == false) {
+							$advancedSearch = true;
+						}
 						$filters[$key] = [
 							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
 							'options' => $relatedModel->getList(),
@@ -67,7 +74,7 @@ class AdvanceSearchBehavior extends Behavior {
 
 			$this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
-	            'data' => ['filters'=>$filters],
+	            'data' => compact('filters', 'advancedSearch'),
 	            'options' => [],
 	            'order' => 0
 	        ];
@@ -85,6 +92,7 @@ class AdvanceSearchBehavior extends Behavior {
 	public function indexBeforeAction(Event $event) {
 		$this->model = $this->_table;
 		$this->modelAlias = $this->model->alias();
+		// pr($this->_table->request->data());
 		$this->data = (isset($this->_table->request->data['AdvanceSearch']) && isset($this->_table->request->data['AdvanceSearch'][$this->modelAlias])) ? $this->_table->request->data['AdvanceSearch'][$this->modelAlias] : [];
 	}
 
