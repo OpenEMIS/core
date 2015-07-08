@@ -124,6 +124,7 @@ class ControllerActionComponent extends Component {
 			$this->config['table'] = $this->model;
 			$this->config['fields'] = $this->model->fields;
 			$this->config['buttons'] = $this->buttons;
+			$this->config['formButtons'] = true; // need better solution
 
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
@@ -593,7 +594,7 @@ class ControllerActionComponent extends Component {
 		if ($event->isStopped()) { return $event->result; }
 
 		$modal = $this->getModalOptions('remove');
-		$this->config['form'] = false;
+		$this->config['form'] = true;
 		$this->controller->set(compact('data', 'modal', 'indexElements'));
 	}
 

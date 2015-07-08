@@ -206,7 +206,7 @@ class InstitutionsTable extends AppTable  {
         return true;
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
 			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
@@ -216,6 +216,7 @@ class InstitutionsTable extends AppTable  {
 	            'order' => 1
 	        ];
 	    }
+	    $config['formButtons'] = false;
 	}
 
 
