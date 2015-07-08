@@ -39,6 +39,11 @@ class NavigationComponent extends Component {
 		$controller = $this->controller;
 		$action = $this->action;
 
+		$id = false;
+		if ($this->controller->activeObj) {
+			$id = $this->controller->activeObj->id;
+		}
+
 		$navigations = [
 			'collapse' => false,
 			'items' => [
@@ -127,12 +132,12 @@ class NavigationComponent extends Component {
 								],
 								'Groups' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups'],
+									'selected' => ['UserGroups', 'SystemGroups']
 								],
 								'Roles' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserRoles'],
-									'selected' => ['UserRoles', 'SystemRoles']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']
 								]
 							]
 						],
@@ -161,7 +166,8 @@ class NavigationComponent extends Component {
 				'General' => [
 					'collapse' => true,
 					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view'], 'selected' => ['edit']],
+						'Dashboard' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $id]],
+						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id], 'selected' => ['edit']],
 						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
 						'History' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'History']]
 					]
@@ -224,7 +230,7 @@ class NavigationComponent extends Component {
 				'General' => [
 					'collapse' => true,
 					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view']],
+						'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]],
 						'Contacts' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Contacts']],
 						'Identities' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Identities']],
 						'Languages' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Languages']],
@@ -267,7 +273,7 @@ class NavigationComponent extends Component {
 				'General' => [
 					'collapse' => true,
 					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view']],
+						'Overview' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]],
 						'Contacts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Contacts']],
 						'Identities' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Identities']],
 						'Languages' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Languages']],
@@ -308,7 +314,7 @@ class NavigationComponent extends Component {
 				'General' => [
 					'collapse' => true,
 					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'view']],
+						'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'view', $id]],
 						'Contacts' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Contacts']],
 						'Identities' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Identities']],
 						'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Languages']],

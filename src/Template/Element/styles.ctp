@@ -17,3 +17,5 @@ if ($htmlLangDir == 'rtl') {
 if (isset($theme)) {
 	echo $this->Html->css($theme);
 }
+
+echo $this->Html->css('highchart-override');
