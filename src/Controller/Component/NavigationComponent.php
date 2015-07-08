@@ -137,7 +137,8 @@ class NavigationComponent extends Component {
 								],
 								'Roles' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles'],
+									'selected' => ['Roles', 'Permissions']
 								]
 							]
 						],
