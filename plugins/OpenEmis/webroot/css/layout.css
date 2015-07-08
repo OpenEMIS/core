@@ -1951,9 +1951,13 @@ label + select {
 	cursor: pointer !important;
 }
 
-.file-input-text {
+.file-input-text p,
+.file-input-buttons p {
 	clear: both;
 	padding: 8px 0 0;
+	font-style: italic;
+	font-size: 11px !important;
+	color: #777;
 }
 
 .fileinput-preview {
