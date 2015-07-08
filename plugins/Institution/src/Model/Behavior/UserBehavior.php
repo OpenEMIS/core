@@ -70,6 +70,7 @@ class UserBehavior extends Behavior {
 		if ($this->_table->hasBehavior('Staff')) {
 			$roleEvents = [
 				'ControllerAction.Model.onUpdateFieldInstitutionSitePositionId' => 'onUpdateFieldInstitutionSitePositionId',
+				'ControllerAction.Model.onUpdateFieldSecurityRoleId' => 'onUpdateFieldSecurityRoleId',
 				'ControllerAction.Model.onUpdateFieldStartDate' => 'onUpdateFieldStartDate',
 				'ControllerAction.Model.onUpdateFieldFTE' => 'onUpdateFieldFTE',
 				'ControllerAction.Model.onUpdateFieldStaffTypeID' => 'onUpdateFieldStaffTypeID',
@@ -152,6 +153,7 @@ class UserBehavior extends Behavior {
 
 			if ($this->_table->hasBehavior('Staff')) {
 				$this->_table->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
+				// $this->_table->ControllerAction->field('security_role_id', ['fieldName' => $associationString.'security_role_id']);
 				$this->_table->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
 				$this->_table->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
 				$this->_table->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
@@ -161,7 +163,9 @@ class UserBehavior extends Behavior {
 															     'url' => '/Institutions/Staff/autoCompleteUserList',
 															     'length' => 3 ]);
 				$this->_table->ControllerAction->setFieldOrder([
-					'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
+					'institution_site_position_id', 
+					// 'security_role_id', 
+					'start_date', 'FTE', 'staff_type_id'
 					, 'search'
 					]);
 
@@ -364,6 +368,22 @@ class UserBehavior extends Behavior {
 		}
 		$attr['onChangeReload'] = true;
 
+		return $attr;
+	}
+
+	public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, $request) {
+		$session = $this->_table->request->session();
+		$institutionsId = $session->read('Institutions.id');
+
+		$attr['type'] = 'select';
+
+		$data = $this->_table->SecurityRoles
+			->find('ByInstitution', ['id' => $institutionsId])
+			;
+
+			pr($data->toArray());
+
+		$attr['options'] = [];
 		return $attr;
 	}
 
