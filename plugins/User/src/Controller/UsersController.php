@@ -52,7 +52,7 @@ class UsersController extends AppController {
 					$user->password = $this->request->data('password');
 					$this->Users->save($user);
 				}
-				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+				return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 			} else {
 				$this->Alert->error('security.login.fail');
 				return $this->redirect(['action' => 'login']);
