@@ -206,6 +206,18 @@ class InstitutionsTable extends AppTable  {
         return true;
 	}
 
+	public function afterAction(Event $event) {
+		if ($this->action == 'index') {
+			$indexDashboard = 'Institution.Institutions/dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
+	}
+
 
 /******************************************************************************************************************
 **
@@ -214,9 +226,6 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
 		$this->Session->delete('Institutions.id');
-
-		$indexDashboard = 'Institution.Institutions/dashboard';
-		$this->controller->set('indexDashboard', $indexDashboard);
 
 		$this->ControllerAction->setFieldOrder([
 			'code', 'name', 'area_id', 'institution_site_type_id'
@@ -233,6 +242,7 @@ class InstitutionsTable extends AppTable  {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
 	}
+
 
 /******************************************************************************************************************
 **
