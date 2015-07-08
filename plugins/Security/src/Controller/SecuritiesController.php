@@ -14,8 +14,7 @@ class SecuritiesController extends AppController {
 			'Users'			=> ['className' => 'Security.Users'],
 			'UserGroups'	=> ['className' => 'Security.UserGroups'],
 			'SystemGroups'	=> ['className' => 'Security.SystemGroups'],
-			'UserRoles'		=> ['className' => 'Security.UserRoles'],
-			'SystemRoles'	=> ['className' => 'Security.SystemRoles']
+			'Roles'			=> ['className' => 'Security.SecurityRoles']
 		];
 	}
 
