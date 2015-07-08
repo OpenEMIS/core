@@ -1956,6 +1956,10 @@ label + select {
 	cursor: pointer !important;
 }
 
+.file-input-text {
+	clear: both;
+}
+
 .file-input-text p,
 .file-input-buttons p {
 	clear: both;
