@@ -82,7 +82,7 @@ class NavigationComponent extends Component {
 								'Education Structure' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems'],
-									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Subjects']
+									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
 								],
 								'Infrastructure' => [
 									'collapse' => true,

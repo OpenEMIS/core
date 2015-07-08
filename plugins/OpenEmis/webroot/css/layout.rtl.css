@@ -621,14 +621,19 @@ html {
 }
 
 .rtl .fileinput .btn-file-cancel {
-    border-right: 1px solid #6B6B6B !important;
-    left: 50px;
+    position: absolute;
+    left: 54px;
     right: auto;
+    top: 0;
+    margin-left: 0;
+    border-right: 1px solid #6B6B6B !important;
 }
 
 .rtl .fileinput .btn-file {
-    left: -1px;
+    left: 0;
     right: auto;
+    margin-left: 1px;
+    width: 53px !important;
 }
 
 .rtl .input-checkbox-inline,
@@ -655,6 +660,8 @@ html {
             border-top-right-radius: 3px !important;
     -webkit-border-bottom-right-radius: 3px !important;
             border-bottom-right-radius: 3px !important;
+    width: 99%;   
+    margin-left: 3px;     
 }
 
 .rtl .input-group-addon {

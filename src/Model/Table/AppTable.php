@@ -54,6 +54,10 @@ class AppTable extends Table {
 			$this->addBehavior('Visible');
 		}
 
+		if (in_array('order', $columns)) {
+			$this->addBehavior('Reorder');
+		}
+
 		$dateFields = [];
 		$timeFields = [];
 		foreach ($columns as $column) {

@@ -32,9 +32,9 @@ class AdvanceSearchBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'ControllerAction.Model.beforeAction' => 'beforeAction',
-			'ControllerAction.Model.afterAction' => 'afterAction',
+			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -46,43 +46,56 @@ class AdvanceSearchBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
-	public function beforeAction(Event $event) {
-		$this->model = $this->_table;
-		$this->modelAlias = $this->model->alias();
-		$this->data = (isset($this->_table->request->data['AdvanceSearch']) && isset($this->_table->request->data['AdvanceSearch'][$this->modelAlias])) ? $this->_table->request->data['AdvanceSearch'][$this->modelAlias] : [];
-	}
-
 	public function afterAction(Event $event) {
-	    $labels = TableRegistry::get('Labels');
-		$filters = [];
-		foreach ($this->model->fields as $key=>$value) {
-			if (!in_array($key , $this->_exclude)) {
-				if ($this->isForeignKey($key)) {
-					$label = $labels->getLabel($this->modelAlias, $key, 'en');
-					$relatedModel = $this->getAssociatedBelongsToModel($key);
-					$selected = (is_array($this->data) && isset($this->data[$key])) ? $this->data[$key] : '' ;
-					$filters[$key] = [
-						'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
-						'options' => $relatedModel->getList(),
-						'selected' => $selected
-					];
+		if ($this->_table->action == 'index') {
+		    $labels = TableRegistry::get('Labels');
+			$filters = [];
+			$advancedSearch = false;
+			$session = $this->_table->request->session();
+			$language = $session->read('System.language');
+			
+			foreach ($this->model->fields as $key=>$value) {
+				if (!in_array($key , $this->_exclude)) {
+					if ($this->isForeignKey($key)) {
+						$label = $labels->getLabel($this->modelAlias, $key, $language);
+						$relatedModel = $this->getAssociatedBelongsToModel($key);
+						$selected = (is_array($this->data) && isset($this->data[$key])) ? $this->data[$key] : '' ;
+						if (!empty($selected) && $advancedSearch == false) {
+							$advancedSearch = true;
+						}
+						$filters[$key] = [
+							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+							'options' => $relatedModel->getList(),
+							'selected' => $selected
+						];
+					}
 				}
 			}
-		}
 
-		array_unshift($this->_table->controller->viewVars['indexElements'], [
-            'name' => 'advanced_search',
-            'data' => ['filters'=>$filters],
-            'options' => []
-        ]);
+			$this->_table->controller->viewVars['indexElements']['advanced_search'] = [
+	            'name' => 'advanced_search',
+	            'data' => compact('filters', 'advancedSearch'),
+	            'options' => [],
+	            'order' => 0
+	        ];
+		// 	pr('search behavior');
+		// 	pr($this->_table->controller->viewVars['indexElements']);
+		}
 	}
 
 
 /******************************************************************************************************************
 **
-** index events
+** index action methods
 **
 ******************************************************************************************************************/
+	public function indexBeforeAction(Event $event) {
+		$this->model = $this->_table;
+		$this->modelAlias = $this->model->alias();
+		// pr($this->_table->request->data());
+		$this->data = (isset($this->_table->request->data['AdvanceSearch']) && isset($this->_table->request->data['AdvanceSearch'][$this->modelAlias])) ? $this->_table->request->data['AdvanceSearch'][$this->modelAlias] : [];
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
 		$conditions = '';
 		foreach ($this->data as $key=>$value) {
@@ -94,6 +107,12 @@ class AdvanceSearchBehavior extends Behavior {
         // pr($paginateOptions);die;
 	}
 
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
 	public function getAssociatedBelongsToModel($field) {
 		$relatedModel = null;
 		foreach ($this->model->associations() as $assoc) {
