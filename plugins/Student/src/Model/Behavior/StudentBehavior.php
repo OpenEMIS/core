@@ -31,6 +31,7 @@ class StudentBehavior extends Behavior {
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
+			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -56,8 +57,20 @@ class StudentBehavior extends Behavior {
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'student_institution_name', 'student_status']);
 
-		$indexDashboard = 'Student.Students/dashboard';
-		$this->_table->controller->set('indexDashboard', $indexDashboard);
+		// $indexDashboard = 'Student.Students/dashboard';
+		// $this->_table->controller->set('indexDashboard', $indexDashboard);
+	}
+
+	public function afterAction(Event $event) {
+		if ($this->_table->action == 'index') {
+			$indexDashboard = 'Student.Students/dashboard';
+			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

@@ -26,6 +26,17 @@ $this->start('panelBody');
 		echo $this->Form->create($ControllerAction['table']->newEntity(), $formOptions);
 	}
 
+ 	usort($indexElements, function($a, $b) { 
+ 		if (!isset($a['order']) && !isset($b['order'])) {
+ 			return 1;
+ 		} else if (!isset($a['order']) && isset($b['order'])) {
+ 			return 1;
+ 		} else if (isset($a['order']) && !isset($b['order'])) {
+ 			return -1;
+ 		} else {
+ 			return $a["order"] - $b["order"]; 
+ 		}
+ 	});
 	foreach ($indexElements as $element) {
 		echo $this->element($element['name'], $element['data'], $element['options']);
 	}
