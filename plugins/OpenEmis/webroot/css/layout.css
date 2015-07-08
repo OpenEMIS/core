@@ -1847,6 +1847,11 @@ label + select {
 }
 
 /* Autocomplete */
+.ui-autocomplete {
+	max-height: 120px !important;
+	overflow: scroll;
+}
+
 .ui-widget-content {
 	background-color: #FFF !important;
 	border: 1px solid #CCC !important;
@@ -1947,8 +1952,13 @@ label + select {
     text-overflow: ellipsis;
 } 
 
-.fileinput .btn-file .fileinput-new {
+.fileinput .btn-file .fileinput-new,
+.fileinput .btn-file .fileinput-new:before {
 	cursor: pointer !important;
+}
+
+.file-input-text {
+	clear: both;
 }
 
 .file-input-text p,
@@ -2422,6 +2432,11 @@ tags-input .tags {
 
 .action-dropdown i {
 	margin: 5px 5px 0 0;
+}
+
+.action-dropdown .kd-download {
+	font-size: 10px;
+	margin-left: -1px;
 }
 
 .action-dropdown > li > a {
