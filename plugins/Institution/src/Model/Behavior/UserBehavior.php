@@ -49,7 +49,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
-			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
+			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
@@ -213,6 +213,10 @@ class UserBehavior extends Behavior {
 	}
 
 	public function addAfterSave(Event $event, Controller $controller) {
+		// that function removes the session and makes it redirect to 
+		// index without any named params
+		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
+		$action = $this->_table->ControllerAction->buttons['index']['url'];
 		if (array_key_exists('new', $action)) {
 			$session = $controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
