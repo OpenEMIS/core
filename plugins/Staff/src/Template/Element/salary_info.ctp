@@ -30,8 +30,8 @@ switch ($fieldName) {
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?= $this->Label->get($attr['model'].'.type'); ?></th>
-					<th><?= $this->Label->get($attr['model'].'.amount'); ?></th>
+					<th><?= $this->Label->get('general.type'); ?></th>
+					<th><?= $this->Label->get('general.amount'); ?></th>
 					<th></th>
 				</tr>
 			</thead>
