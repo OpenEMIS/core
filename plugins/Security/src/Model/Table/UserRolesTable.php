@@ -47,6 +47,7 @@ class UserRolesTable extends AppTable {
 			$attr['visible'] = false;
 		}
 		// TODO-jeff: need to restrict to roles that have access to their groups
+		// if is super admin, no restriction required
 		$groupOptions = $this->SecurityGroups->find('list')
 			->find('byUser', ['userId' => $this->Auth->user('id')])
 			->toArray();

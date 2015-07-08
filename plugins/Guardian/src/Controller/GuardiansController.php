@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class GuardiansController extends AppController {
-	private $_guardianObj = null;
+	public $activeObj = null;
 
 	public function initialize() {
 		parent::initialize();
@@ -53,8 +53,8 @@ class GuardiansController extends AppController {
 				$id = $session->read('Users.id');
 			}
 			if (!empty($id)) {
-				$this->_GuardianObj = $this->Users->get($id);
-				$name = $this->_GuardianObj->name;
+				$this->activeObj = $this->Users->get($id);
+				$name = $this->activeObj->name;
 				$header = $name .' - Overview';
 				$this->Navigation->addCrumb($name, ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'view', $id]);
 			} else {
@@ -127,7 +127,7 @@ class GuardiansController extends AppController {
 		/**
 		 * if guardian object is null, it means that guardian.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
-		if (!is_null($this->_guardianObj)) {
+		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
 			$action = false;
 			$params = $this->request->params;
@@ -144,18 +144,18 @@ class GuardiansController extends AppController {
 				$this->Navigation->addCrumb($model->getHeader($model->alias));
 			}
 
-			$header = $this->_guardianObj->name . ' - ' . $model->getHeader($model->alias);
+			$header = $this->activeObj->name . ' - ' . $model->getHeader($model->alias);
 
-			if ($model->hasField('security_user_id') && !is_null($this->_guardianObj)) {
+			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
-				$model->fields['security_user_id']['value'] = $this->_guardianObj->id;
+				$model->fields['security_user_id']['value'] = $this->activeObj->id;
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
-						$model->aliasField('security_user_id') => $this->_guardianObj->id
+						$model->aliasField('security_user_id') => $this->activeObj->id
 						]);
 					
 					/**

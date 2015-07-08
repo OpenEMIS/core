@@ -200,6 +200,21 @@ var jsForm = {
 		);
 	},
 
+	submit: function() {
+		var key = 'data-input-name';
+		var form = $('form:first');
+		
+		$('[' + key + ']').each(function() {
+			form.append($('<input>').attr({
+				'type': 'hidden',
+				'name': $(this).attr(key),
+				'value': $(this).val()
+			}));
+		});
+
+		form.submit();
+	},
+
 	compute: function(obj) {
 		var total = 0;
 		$("input[data-compute-variable=true]").each(
