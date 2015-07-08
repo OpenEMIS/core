@@ -146,6 +146,9 @@ trait MessagesTrait {
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
 		],
+		'EducationGrades' => [
+			'add_subject' => 'Add Subject'
+		],
 		'RubricSections' => [
 			'rubric_template_id' => 'Rubric Template'
 		],

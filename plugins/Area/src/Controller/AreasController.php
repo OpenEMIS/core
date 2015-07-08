@@ -49,8 +49,8 @@ class AreasController extends AppController
 		$header = __('Area');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Area', ['plugin' => 'Area', 'controller' => 'Areas', 'action' => $model->alias]);
-		$this->Navigation->addCrumb($model->getHeader($model->alias));
+		$this->Navigation->addCrumb('Administrative Boundaries', ['plugin' => 'Area', 'controller' => 'Areas', 'action' => $model->alias]);
+		$this->Navigation->addCrumb($this->viewVars['tabElements'][$model->alias]['text']);
 
 		$this->set('contentHeader', $header);
     }
