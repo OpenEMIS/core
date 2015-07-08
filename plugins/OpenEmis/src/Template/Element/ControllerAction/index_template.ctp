@@ -20,6 +20,9 @@ $this->start('panelBody');
 
 	if ($ControllerAction['form']) {
 		$formOptions = $this->ControllerAction->getFormOptions();
+		if (array_key_exists('class', $formOptions)) {
+			unset($formOptions['class']);
+		}
 		if (isset($ControllerAction['url'])) {
 			$formOptions['url'] = $ControllerAction['url'];
 		}
