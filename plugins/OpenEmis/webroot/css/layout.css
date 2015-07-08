@@ -1952,7 +1952,8 @@ label + select {
     text-overflow: ellipsis;
 } 
 
-.fileinput .btn-file .fileinput-new {
+.fileinput .btn-file .fileinput-new,
+.fileinput .btn-file .fileinput-new:before {
 	cursor: pointer !important;
 }
 
@@ -2431,6 +2432,11 @@ tags-input .tags {
 
 .action-dropdown i {
 	margin: 5px 5px 0 0;
+}
+
+.action-dropdown .kd-download {
+	font-size: 10px;
+	margin-left: -1px;
 }
 
 .action-dropdown > li > a {
