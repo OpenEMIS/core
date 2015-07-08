@@ -71,6 +71,8 @@ class InstitutionSiteStaffTable extends AppTable {
 			->requirePresence('staff_status_id', 'update')
 			->add('institution_site_position_id', [
 			])
+			->add('security_role_id', [
+			])
 			->add('FTE', [
 			])
 			->add('staff_type_id', [
