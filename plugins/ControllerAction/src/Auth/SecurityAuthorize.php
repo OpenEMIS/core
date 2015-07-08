@@ -25,6 +25,12 @@ class SecurityAuthorize extends BaseAuthorize {
 			} else { // super admin have access to every functions
 				$authorized = true;
 			}
+		} else if ($user['super_admin'] == 0) { // not super admin
+			// if (isset($controller->publicActions) && in_array($action, $controller->publicActions)) {
+				// $authorized = true;
+			// }
+		} else { // super admin
+			$authorized = true;
 		}
 		if (!$authorized) {
 			$controller->Alert->error('security.noAccess');
