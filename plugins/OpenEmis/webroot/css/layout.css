@@ -1847,6 +1847,11 @@ label + select {
 }
 
 /* Autocomplete */
+.ui-autocomplete {
+	max-height: 120px !important;
+	overflow: scroll;
+}
+
 .ui-widget-content {
 	background-color: #FFF !important;
 	border: 1px solid #CCC !important;
