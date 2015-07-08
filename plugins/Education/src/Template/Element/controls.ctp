@@ -1,4 +1,4 @@
-<?php if (!empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($setupOptions)) : ?>
+<?php if (!empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($programmeOptions) || !empty($setupOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -40,6 +40,18 @@
 						'default' => $selectedCycle,
 						'url' => $baseUrl,
 						'data-named-key' => 'cycle',
+						'data-named-group' => 'level'
+					));
+				}
+
+				if (!empty($programmeOptions)) {
+					echo $this->Form->input('programmes', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $programmeOptions,
+						'default' => $selectedProgramme,
+						'url' => $baseUrl,
+						'data-named-key' => 'programme',
 						'data-named-group' => 'level'
 					));
 				}
