@@ -28,6 +28,9 @@ trait MessagesTrait {
 			'notEditable' => 'This record is not editable',
 			'exists' => 'The record is exists in the system.',
 			'noData' => 'There are no records.',
+			'select' => [
+				'noOptions' => 'No configured options'
+			],
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
 				'success' => 'The record has been added successfully.',
@@ -256,6 +259,16 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			],
+			'InstitutionSiteStudents' => [
+				'academicPeriod' => 'You need to configure Academic Periods first.',
+				'educationProgrammeId' => 'You need to configure Education Programmes first.',
+				'institutionSiteGrades' => 'You need to configure Institution Site Grades first.',
+				'studentStatusId' => 'You need to configueducationProgrammeIdre Student Statuses first.',
+			],
+			'InstitutionSiteStaff' => [
+				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
+				'FTE' => 'There are no available FTE for this position.',
 			]
 		],
 		'User' => [

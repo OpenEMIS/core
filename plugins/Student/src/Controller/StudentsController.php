@@ -25,6 +25,7 @@ class StudentsController extends AppController {
 			'tableCellKey' => ['className' => 'Student.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('AdvanceSearch');
 
 		$this->ControllerAction->models = [
 		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],

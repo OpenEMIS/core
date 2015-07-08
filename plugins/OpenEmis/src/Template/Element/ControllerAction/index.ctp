@@ -3,7 +3,8 @@ echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.m
 
 //ControllerActionComponent - Version 1.0.4
 $dataKeys = [];
-$tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
+$table = $ControllerAction['table'];
+$tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->alias(), $dataKeys);
 
 $displayAction = $indexButtons->count() > 0;
 $displayReorder = isset($reorder) && $reorder && $data->count() > 1;
@@ -19,7 +20,7 @@ if ($displayReorder) {
 
 $tableData = [];
 
-$eventKey = 'ControllerAction.Model.onUpdateActionButtons';
+$eventKey = 'Model.custom.onUpdateActionButtons';
 $this->ControllerAction->onEvent($table, $eventKey, 'onUpdateActionButtons');
 
 foreach ($data as $entity) {
