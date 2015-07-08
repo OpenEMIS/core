@@ -35,12 +35,12 @@ class SetupBehavior extends Behavior {
 		// End
 
 		// Get page options and their key
-		$pageId = $controller->request->query('setup');
+		$setupId = $controller->request->query('setup');
 		$setupOptions = [];
 		foreach ($this->setups as $setup) {
 			$setupOptions[] = __(Inflector::humanize($setup));
 		}
-		$selectedSetup = !is_null($pageId) ? $pageId : key($setupOptions);
+		$selectedSetup = !is_null($setupId) ? $setupId : key($setupOptions);
 
         $controller->set(compact('setupOptions', 'selectedSetup'));
 		// End
