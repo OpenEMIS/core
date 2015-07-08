@@ -641,8 +641,7 @@ body.large {
 
 .panel-toolbar {
 	border: 1px solid #CCC !important;
-	/*min-height: 60px;*/
-	/*padding: 20px 0;*/
+	margin-top: -1px;	
 }
 
 .panel-toolbar a {
@@ -1210,7 +1209,7 @@ input[type="checkbox"] {
 	border-bottom: 0;
 	background-color: #FFF !important;
 	margin-top: -1px;
-	padding: 7px 10px !important;
+	padding: 7px 10px 6px !important;
 }
 
 .nav-tabs > li.active > a:focus {
@@ -1667,6 +1666,11 @@ table tr.sorting-row td {background-color: #8b8;}
 	background: #FFF;
 }
 
+.form-control:focus {
+	-webkit-box-shadow: none !important;
+	        box-shadow: none !important;
+}
+
 select {
     background: none;	
     position: relative;
@@ -1804,6 +1808,15 @@ label + select {
 	top: 6px !important;
 }
 
+.chosen-container .chosen-results li.active-result:hover {
+	border-left: 0 !important;
+	border-right: 0 !important;
+}
+
+.chosen-container .chosen-results li {
+	font-size: 12px !important;
+}
+
 .form-horizontal .input-group {
 	width: 30%;	
 	margin: 0 0 15px;
@@ -1844,9 +1857,15 @@ label + select {
 .ui-widget input, 
 .ui-widget select, 
 .ui-widget textarea, 
-.ui-widget button {
+.ui-widget button,
+.ui-widget {
 	font-family: "Helvetica Neue" !important;
-	color: #555 !important;
+	color: #333 !important;
+	font-weight: normal !important;
+}
+
+.ui-widget label {
+	font-size: 12px !important;
 }
 
 .ui-menu-item {
@@ -1860,11 +1879,18 @@ label + select {
 .ui-state-focus:hover,
 .ui-state-focus:focus,
 .ui-state-focus:visited,
-.ui-state-focus:active {
+.ui-state-focus:active,
+.chosen-container .chosen-results li.highlighted,
+.chosen-container .chosen-results li.active-result:hover {
+	background: none !important;	
 	background-color: #EEE !important;
 	color: #555 !important;
 	border: 1px solid #CCC !important;
 	font-size: 12px !important;
+}
+
+.ui-widget input:focus {
+	outline: none !important;
 }
 
 /* File Input and File Input with Preview */
