@@ -132,12 +132,12 @@ class NavigationComponent extends Component {
 								],
 								'Groups' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups'],
+									'selected' => ['UserGroups', 'SystemGroups']
 								],
 								'Roles' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserRoles'],
-									'selected' => ['UserRoles', 'SystemRoles']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']
 								]
 							]
 						],
