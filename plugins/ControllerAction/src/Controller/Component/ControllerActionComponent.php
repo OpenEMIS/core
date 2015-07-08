@@ -31,6 +31,7 @@ class ControllerActionComponent extends Component {
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
+	private $config;
 	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
 
 	public $model = null;
@@ -62,6 +63,7 @@ class ControllerActionComponent extends Component {
 
 		$this->controller = $controller;
 		$this->Session = $this->request->session();
+		$this->config = new ArrayObject([]);
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
@@ -118,20 +120,24 @@ class ControllerActionComponent extends Component {
 
 			$this->renderFields();
 
-			$event = new Event('ControllerAction.Model.afterAction', $this);
+			$this->config['action'] = $this->currentAction;
+			$this->config['table'] = $this->model;
+			$this->config['fields'] = $this->model->fields;
+			$this->config['buttons'] = $this->buttons;
+
+			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
 			$this->request->params['action'] = $action;
 
 			uasort($this->model->fields, [$this, 'sortFields']);
-			$controller->set('model', $this->model->alias());
-			$controller->set('table', $this->model);
+			$this->config['fields'] = $this->model->fields;
+
+			$controller->set('ControllerAction', $this->config);
+
+			// deprecated: backward compatible
 			$controller->set('action', $this->currentAction);
-			$controller->set('_fields', $this->model->fields);
-			$controller->set('_triggerFrom', $this->triggerFrom);
-			if ($this->triggerFrom == 'Model') {
-				$controller->set('_alias', $this->model->alias);
-			}
+			$controller->set('model', $this->model->alias());
 		}
 	}
 
@@ -140,9 +146,15 @@ class ControllerActionComponent extends Component {
 			if ($key == $this->orderField) {
 				$this->model->fields[$this->orderField]['visible']['view'] = false;
 			}
-			if (array_key_exists('options', $attr) && in_array($attr['type'], ['string', 'integer'])) {
-				$this->model->fields[$key]['type'] = 'select';
+			if (array_key_exists('options', $attr)) {
+				if (in_array($attr['type'], ['string', 'integer'])) {
+					$this->model->fields[$key]['type'] = 'select';
+				}
+				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
+					$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+				}
 			}
+
 			// make field sortable by default if it is a string data-type
 			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
@@ -510,8 +522,10 @@ class ControllerActionComponent extends Component {
 		$this->Session->write($alias.'.search.key', $search);
 		$this->request->data['Search']['searchField'] = $search;
 		$this->request->data['Search']['limit'] = $limit;
-		$controller->set('search', $search);
-		$controller->set('pageOptions', $this->pageOptions);
+		// $controller->set('search', $search);
+		// $controller->set('pageOptions', $this->pageOptions);
+		$this->config['search'] = $search;
+		$this->config['pageOptions'] = $this->pageOptions;
 
 		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $paginateOptions]);
 		$event = $this->controller->eventManager()->dispatch($event);
@@ -534,13 +548,31 @@ class ControllerActionComponent extends Component {
 
 	public function index() {
 		$model = $this->model;
+		
+		$settings = new ArrayObject(['pagination' => true, 'model' => $model->registryAlias()]);
+		$query = $model->find();
 
-		$event = new Event('ControllerAction.Model.index.beforeAction', $this);
+		$event = new Event('ControllerAction.Model.index.beforeAction', $this, [$query, $settings]);
 		$event = $model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
+		if ($event->result) {
+			$query = $event->result;
+		}
+
+		$indexElements = [
+			['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []]
+		];
 
 		try {
-			$data = $this->search($model);
+			if ($settings['pagination']) {
+				if ($settings['model'] != $model->registryAlias()) {
+					$model = TableRegistry::get($settings['model']);
+				}
+				$data = $this->search($model);
+				$indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []];
+			} else {
+				$data = $query->all();
+			}
 		} catch (NotFoundException $e) {
 			$this->log($e->getMessage(), 'debug');
 			$action = $this->buttons['index']['url'];
@@ -559,11 +591,7 @@ class ControllerActionComponent extends Component {
 		if ($event->isStopped()) { return $event->result; }
 
 		$modal = $this->getModalOptions('remove');
-		$indexElements = [
-			['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []],
-			['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []]
-		];
-
+		$this->config['form'] = false;
 		$this->controller->set(compact('data', 'modal', 'indexElements'));
 	}
 
@@ -626,6 +654,7 @@ class ControllerActionComponent extends Component {
 			$action = $this->buttons['index']['url'];
 			return $this->controller->redirect($action);
 		}
+		$this->config['form'] = false;
 	}
 
 	public function add() {
@@ -723,7 +752,7 @@ class ControllerActionComponent extends Component {
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterAction', null, [$entity]);
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
-
+		$this->config['form'] = true;
 		$this->controller->set('data', $entity);
 	}
 
@@ -847,6 +876,7 @@ class ControllerActionComponent extends Component {
 			$action = $this->buttons['index']['url'];
 			return $this->controller->redirect($action);
 		}
+		$this->config['form'] = true;
 	}
 
 	public function remove() {
@@ -1021,23 +1051,21 @@ class ControllerActionComponent extends Component {
 	public function reorder() {
 		$this->autoRender = false;
 		$this->controller->autoRender=false;
+		$request = $this->request;
 
-		if ($this->request->is('ajax')) {
+		if ($request->is('ajax')) {
 			$model = $this->model;
-			$request = $this->request;
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
 			$order = 1;
 			
-			if($request->is( 'post' )) {
-				$ids = json_decode($request->data("ids"));
-				$entity = $model->newEntity();
+			$ids = json_decode($request->data("ids"));
+			$entity = $model->newEntity();
 
-				foreach($ids as $id){
-					$entity->$primaryKey = $id;
-					$entity->$orderField = $order++;
-					$model->save($entity);
-				}
+			foreach ($ids as $id) {
+				$entity->$primaryKey = $id;
+				$entity->$orderField = $order++;
+				$model->save($entity);
 			}
 		}
 	}

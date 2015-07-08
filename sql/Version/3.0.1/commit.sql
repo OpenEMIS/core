@@ -1522,3 +1522,16 @@ ALTER TABLE `student_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `f
 ALTER TABLE `staff_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
 
 
+-- 7 July 2015 by jeff
+DELETE FROM `field_options` WHERE `code` IN (
+	'InstitutionSiteCustomFields', 'CensusCustomFieldOptions', 'CensusCustomFields', 'CensusGrids', 'StudentCustomFields',
+	'StaffCustomFields', 'InfrastructureBuildings', 'InfrastructureCategories', 'InfrastructureEnergies',
+	'InfrastructureFurnitures', 'InfrastructureMaterials', 'InfrastructureResources', 'InfrastructureRooms',
+	'InfrastructureSanitations', 'InfrastructureStatuses', 'InfrastructureWaters'
+);
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.Banks"}' WHERE `field_options`.`code` = 'Banks';
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.BankBranches"}' WHERE `field_options`.`code` = 'BankBranches';
+UPDATE `field_options` SET `params` = '{"model":"User.ContactTypes"}' WHERE `field_options`.`code` = 'ContactTypes';
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.Countries"}' WHERE `field_options`.`code` = 'Countries';
+
+

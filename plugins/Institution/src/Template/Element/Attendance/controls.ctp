@@ -22,7 +22,8 @@
 				'label' => false,
 				'options' => $weekOptions,
 				'url' => $baseUrl,
-				'data-named-key' => 'week'
+				'data-named-key' => 'week',
+				'data-named-group' => 'academic_period_id'
 			));
 
 			echo $this->Form->input('days', array(
@@ -30,7 +31,8 @@
 				'label' => false,
 				'options' => $dayOptions,
 				'url' => $baseUrl,
-				'data-named-key' => 'day'
+				'data-named-key' => 'day',
+				'data-named-group' => 'academic_period_id,week'
 			));
 
 			echo $this->Form->input('sections', array(
@@ -38,7 +40,8 @@
 				'label' => false,
 				'options' => $sectionOptions,
 				'url' => $baseUrl,
-				'data-named-key' => 'section_id'
+				'data-named-key' => 'section_id',
+				'data-named-group' => 'academic_period_id,week,day'
 			));
 		?>
 	</div>
