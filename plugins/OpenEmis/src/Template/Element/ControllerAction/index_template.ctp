@@ -41,8 +41,11 @@ $this->start('panelBody');
 		echo $this->element($element['name'], $element['data'], $element['options']);
 	}
 
-	if ($ControllerAction['form']) {
+	if ($ControllerAction['formButtons']) {
 		echo $this->ControllerAction->getFormButtons();
+	}
+
+	if ($ControllerAction['form']) {
 		echo $this->Form->end();
 	}
 $this->end();
