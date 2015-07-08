@@ -272,6 +272,7 @@ trait MessagesTrait {
 			],
 			'InstitutionSiteStaff' => [
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
+				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 			]

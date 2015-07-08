@@ -5,6 +5,7 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -22,22 +23,6 @@ class SecurityRolesTable extends AppTable {
 			'className' => 'Security.SecurityFunctions',
 			'through' => 'Security.SecurityRoleFunctions'
 		]);
-	}
-
-	public function findByInstitution(Query $query, $options) {
-		pr($options);
-
-		$ids = [-1, 0];
-		if (array_key_exists('id', $options)) {
-			// need to get the security_group_id of the institution
-			$Institution = TableRegistry::get('Institution.Institutions');
-			$Institution			
-				->where($Institution->aliasField($Institution->primaryKey()))
-				;
-		} 
-
-		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
-		// return $query->where([$this->aliasField('super_admin') => 0]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -113,5 +98,24 @@ class SecurityRolesTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('order', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
+	}
+
+	public function findByInstitution(Query $query, $options) {
+		$ids = [-1, 0];
+		if (array_key_exists('id', $options)) {
+			// need to get the security_group_id of the institution
+			$Institution = TableRegistry::get('Institution.Institutions');
+			$institutionQuery = $Institution->find()
+				->where([$Institution->aliasField($Institution->primaryKey()) => $options['id']])
+				->first()
+				;
+			if ($institutionQuery) {
+				if (isset($institutionQuery->security_group_id)) {
+					$ids[] = $institutionQuery->security_group_id;
+				}
+			}
+		} 
+
+		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
 	}
 }
