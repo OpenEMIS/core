@@ -178,8 +178,10 @@ class ControllerActionComponent extends Component {
 					}
 				}
 			}
+
 			if (array_key_exists('onChangeReload', $attr)) {
-				if (!array_key_exists('attr', $attr)) {
+
+				if (!array_key_exists('attr', $this->model->fields[$key])) {
 					$this->model->fields[$key]['attr'] = [];
 				}
 				$onChange = '';
