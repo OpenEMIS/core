@@ -79,6 +79,8 @@ class StaffBehavior extends Behavior {
 					// start (date and year) handling
 					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
 					
+					$data[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'];
+					
 				}
 			}
 		}
