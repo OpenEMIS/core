@@ -124,6 +124,9 @@ class ControllerActionComponent extends Component {
 			$this->config['table'] = $this->model;
 			$this->config['fields'] = $this->model->fields;
 			$this->config['buttons'] = $this->buttons;
+			if (!array_key_exists('formButtons', $this->config)) {
+				$this->config['formButtons'] = true; // need better solution
+			}
 
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
@@ -593,7 +596,8 @@ class ControllerActionComponent extends Component {
 		if ($event->isStopped()) { return $event->result; }
 
 		$modal = $this->getModalOptions('remove');
-		$this->config['form'] = false;
+		$this->config['form'] = true;
+		$this->config['formButtons'] = false;
 		$this->controller->set(compact('data', 'modal', 'indexElements'));
 	}
 
@@ -889,15 +893,15 @@ class ControllerActionComponent extends Component {
 		
 		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
 			$id = $request->data[$primaryKey];
-			$entity = $model->get($id);
 			$deleteOptions = new ArrayObject([]);
 
-			$process = function () use ($model, $entity, $deleteOptions) {
+			$process = function () use ($model, $deleteOptions) {
+				$entity = $model->get($id);
 				return $model->delete($entity, $deleteOptions->getArrayCopy());
 			};
 
 			// Event: onBeforeDelete
-			$params = [$entity, $deleteOptions, $id];
+			$params = [$deleteOptions, $id];
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.onBeforeDelete', null, $params);
 			if ($event->isStopped()) { return $event->result; }
 			if (is_callable($event->result)) {

@@ -20,6 +20,9 @@ $this->start('panelBody');
 
 	if ($ControllerAction['form']) {
 		$formOptions = $this->ControllerAction->getFormOptions();
+		if (array_key_exists('class', $formOptions)) {
+			unset($formOptions['class']);
+		}
 		if (isset($ControllerAction['url'])) {
 			$formOptions['url'] = $ControllerAction['url'];
 		}
@@ -41,8 +44,11 @@ $this->start('panelBody');
 		echo $this->element($element['name'], $element['data'], $element['options']);
 	}
 
-	if ($ControllerAction['form']) {
+	if ($ControllerAction['formButtons']) {
 		echo $this->ControllerAction->getFormButtons();
+	}
+
+	if ($ControllerAction['form']) {
 		echo $this->Form->end();
 	}
 $this->end();

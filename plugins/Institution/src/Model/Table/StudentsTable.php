@@ -16,12 +16,12 @@ class StudentsTable extends BaseTable {
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 	}
 
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $options, $id) {
-		// $process = function() use ($id, $options) {
-		// 	$entity = $this->InstitutionSiteStudents->get($id);
-		// 	return $this->InstitutionSiteStudents->delete($entity, $options->getArrayCopy());
-		// };
-		// return $process;
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function() use ($id, $options) {
+			$entity = $this->InstitutionSiteStudents->get($id);
+			return $this->InstitutionSiteStudents->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
 	}
 
 	public function autoCompleteUserList() {

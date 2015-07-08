@@ -22,6 +22,10 @@ $totalRecords = $this->Paginator->counter('{{count}}');
 			'format' => 'Showing {{start}} to {{end}} of {{count}} records'
 		]) ?>
 	</div>
-	<div class="display-limit"><?php echo $this->ControllerAction->getPageOptions() ?></div>
+	<div class="display-limit">
+		<span><?= __('Display') ?></span>
+		<?= $this->ControllerAction->getPageOptions() ?>
+		<p><?= __('records') ?></p>
+	</div>
 </div>
 <?php endif ?>
