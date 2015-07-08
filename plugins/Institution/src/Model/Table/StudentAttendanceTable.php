@@ -62,6 +62,7 @@ class StudentAttendanceTable extends AppTable {
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->request->query('mode') == 'edit') {
 			$config['form'] = true;
+			$config['formButtons'] = true;
 			$config['url'] = $config['buttons']['index']['url'];
 			$config['url'][0] = 'indexEdit';
 		}
