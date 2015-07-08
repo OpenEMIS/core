@@ -131,6 +131,7 @@ class ControllerActionComponent extends Component {
 			$this->request->params['action'] = $action;
 
 			uasort($this->model->fields, [$this, 'sortFields']);
+			$this->config['fields'] = $this->model->fields;
 
 			$controller->set('ControllerAction', $this->config);
 
