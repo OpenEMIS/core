@@ -16,9 +16,9 @@ class StaffBehavior extends Behavior {
 		$query
 			->join([
 				'table' => 'institution_site_staff',
-				'alias' => 'InstitionSiteStaff',
+				'alias' => 'InstitutionSiteStaff',
 				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitionSiteStaff.security_user_id']
+				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStaff.security_user_id']
 			])
 			->group($this->_table->aliasField('id'));
 	}
@@ -71,19 +71,21 @@ class StaffBehavior extends Behavior {
 					}
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
 
-					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE']/100;
-
-
 					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
 
+					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE'];
+
 					// start (date and year) handling
 					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
-					$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
-					$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+					
 				}
 			}
 		}
+
+		
+		$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
+		$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

@@ -20,18 +20,35 @@ $this->start('panelBody');
 
 	if ($ControllerAction['form']) {
 		$formOptions = $this->ControllerAction->getFormOptions();
+		if (array_key_exists('class', $formOptions)) {
+			unset($formOptions['class']);
+		}
 		if (isset($ControllerAction['url'])) {
 			$formOptions['url'] = $ControllerAction['url'];
 		}
 		echo $this->Form->create($ControllerAction['table']->newEntity(), $formOptions);
 	}
 
+ 	usort($indexElements, function($a, $b) { 
+ 		if (!isset($a['order']) && !isset($b['order'])) {
+ 			return 1;
+ 		} else if (!isset($a['order']) && isset($b['order'])) {
+ 			return 1;
+ 		} else if (isset($a['order']) && !isset($b['order'])) {
+ 			return -1;
+ 		} else {
+ 			return $a["order"] - $b["order"]; 
+ 		}
+ 	});
 	foreach ($indexElements as $element) {
 		echo $this->element($element['name'], $element['data'], $element['options']);
 	}
 
-	if ($ControllerAction['form']) {
+	if ($ControllerAction['formButtons']) {
 		echo $this->ControllerAction->getFormButtons();
+	}
+
+	if ($ControllerAction['form']) {
 		echo $this->Form->end();
 	}
 $this->end();

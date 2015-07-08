@@ -16,7 +16,7 @@ class NumberBehavior extends Behavior {
             $value = !is_null($attr['value']) ? $attr['value'] : '';
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
-            $options['type'] = 'integer';
+            $options['type'] = 'number';
 
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
             $value = $form->input($fieldPrefix.".number_value", $options);

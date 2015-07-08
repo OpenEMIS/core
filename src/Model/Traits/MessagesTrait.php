@@ -64,7 +64,9 @@ trait MessagesTrait {
 			'default' => 'Default',
 			'reject' => 'Reject',
 			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes'
+			'noClasses' => 'No Classes',
+			'type' => 'Type',
+			'amount' => 'Amount'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -263,12 +265,14 @@ trait MessagesTrait {
 			'InstitutionSiteStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
-				'institutionSiteGrades' => 'You need to configure Institution Site Grades first.',
-				'studentStatusId' => 'You need to configueducationProgrammeIdre Student Statuses first.',
+				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
+				'sections' => 'You need to configure Sections first.',
+				'studentStatusId' => 'You need to configure Student Statuses first.',
 			],
 			'InstitutionSiteStaff' => [
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
 				'FTE' => 'There are no available FTE for this position.',
+				'staffTypeId' => 'You need to configure Staff Types first.',
 			]
 		],
 		'User' => [

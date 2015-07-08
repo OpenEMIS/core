@@ -20,7 +20,8 @@ class SalariesTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
+		//$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
+		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'gross', 'maxlength' => 9);
 		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 	}
 
@@ -88,14 +89,12 @@ class SalariesTable extends AppTable {
 
 
 	public function indexBeforeAction(Event $event) {
+		$this->fields['gross_salary']['type'] = 'float';
+		$this->fields['net_salary']['type'] = 'float';
+		$this->fields['additions']['type'] = 'float';
+		$this->fields['deductions']['type'] = 'float';
 		$this->fields['comment']['visible'] = false;
-
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('salary_date', $order++);
-		$this->ControllerAction->setFieldOrder('gross_salary', $order++);
-		$this->ControllerAction->setFieldOrder('additions', $order++);
-		$this->ControllerAction->setFieldOrder('deductions', $order++);
-		$this->ControllerAction->setFieldOrder('net_salary', $order++);
+		$this->ControllerAction->setFieldOrder(['salary_date', 'gross_salary', 'additions', 'deductions', 'net_salary']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {
@@ -109,8 +108,11 @@ class SalariesTable extends AppTable {
 		$this->fields['additions']['visible'] = false;
 		$this->fields['deductions']['visible'] = false;
 
-		$this->fields['gross_salary']['type'] = 'string';
-		$this->fields['net_salary']['type'] = 'string';
+		$this->fields['gross_salary']['type'] = 'float';
+		$this->fields['net_salary']['type'] = 'float';
+
+		// $this->fields['gross_salary']['options'] = ['step' => '0.01', 'min' => '0'];
+		// $this->fields['net_salary']['options'] = ['step' => '0.01', 'min' => '0'];
 
 		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
@@ -174,4 +176,10 @@ class SalariesTable extends AppTable {
 		;
 	}
 
+	public function viewBeforeAction(Event $event) {
+		$this->fields['gross_salary']['type'] = 'float';
+		$this->fields['net_salary']['type'] = 'float';
+		$this->fields['additions']['type'] = 'float';
+		$this->fields['deductions']['type'] = 'float';
+	}
 }

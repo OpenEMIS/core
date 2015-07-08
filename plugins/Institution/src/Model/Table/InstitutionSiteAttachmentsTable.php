@@ -88,4 +88,22 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 		return $this->getFileTypeForView($entity->file_name);
 	}
 
+
+/******************************************************************************************************************
+**
+** adding download button to index page
+**
+******************************************************************************************************************/
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		parent::onUpdateActionButtons($event, $entity, $buttons);
+		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
+		$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
+		$buttons['download']['attr'] = $indexAttr;
+		$buttons['download']['url']['action'] = $this->alias.'/download';
+		$buttons['download']['url'][1] = $entity->id;
+
+		return $buttons;
+	}
+
 }

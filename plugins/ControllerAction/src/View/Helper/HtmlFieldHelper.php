@@ -116,6 +116,24 @@ class HtmlFieldHelper extends Helper {
 		return $value;
 	}
 
+	public function float($action, Entity $data, $attr, $options=[]) {
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = $data->$attr['field'];
+			//check whether value is float
+			if(is_float($value))
+				$value = sprintf('%0.2f', $value);
+		} else if ($action == 'edit') {
+			$options['type'] = 'number';
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
+		}
+		return $value;
+	}
+
 	public function integer($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
