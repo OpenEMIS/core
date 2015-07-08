@@ -16,9 +16,9 @@ class StaffBehavior extends Behavior {
 		$query
 			->join([
 				'table' => 'institution_site_staff',
-				'alias' => 'InstitionSiteStaff',
+				'alias' => 'InstitutionSiteStaff',
 				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitionSiteStaff.security_user_id']
+				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStaff.security_user_id']
 			])
 			->group($this->_table->aliasField('id'));
 	}
