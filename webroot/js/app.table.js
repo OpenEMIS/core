@@ -194,6 +194,23 @@ var jsTable = {
 		});
 		table.siblings('tfoot').find('.' + type).html(total);
 	},
+
+	computeTotalForMoney: function(obj) {
+		var table = $(obj).closest('tbody');
+		var type = $(obj).attr('computeType');
+		var total = 0;
+		table.find('input[computeType="' + type + '"]').each(function() {
+			if($(this).val().isEmpty()) {
+				if($(this).attr('allowNull')==undefined) {
+					$(this).val(0);
+					total += parseFloat($(this).val()) || 0;
+				}
+			} else {
+				total += parseFloat($(this).val()) || 0;
+			}
+		});
+		$(table).siblings('tfoot').find('.' + type).html(parseFloat(total).toFixed(2));
+	},
 	
 	computeTotal: function(obj) {
 		var table = $(obj).closest('tbody');

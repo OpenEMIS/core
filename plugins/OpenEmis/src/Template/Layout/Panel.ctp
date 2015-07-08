@@ -8,13 +8,12 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
 	<div class="panel-body">
-		<!-- <?= $this->element('advanced_search') ?> -->
 		<?= $this->element('OpenEmis.alert') ?>
 		<!--?= $this->element('data_overview') ?-->
 		<?php
-		if (isset($indexDashboard)) {
-			echo $this->element($indexDashboard);
-		}
+		// if (isset($indexDashboard)) {
+		// 	echo $this->element($indexDashboard);
+		// }
 		?>
 		<?= $this->element('nav_tabs') ?>
 		<?= $this->fetch('panelBody') ?>
