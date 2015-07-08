@@ -51,6 +51,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
 			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+			'ControllerAction.Model.add.addOnReload' => 'onReload',
 		];
 
 		$roleEvents = [];
@@ -119,8 +120,14 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
 				$this->_table->ControllerAction->field('section', ['fieldName' => $associationString.'section']);
 				$this->_table->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
-				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
-				$this->_table->ControllerAction->field('end_date', ['type' => 'Date', 'fieldName' => $associationString.'end_date']);
+				$this->_table->ControllerAction->field('start_date', ['type' => 'date', 'fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->field('end_date', [
+					'type' => 'date', 
+					'fieldName' => $associationString.'end_date',
+					'date_options' => ['startDate' => '+1d']
+				]);
+				// $this->_table->fields['end_date']['value'] = '09-07-2015';
+				// $this->_table->fields['end_date’][‘date_options']['start_date'] = '+1d';
 				$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
 															     'placeholder' => 'openEMIS ID or Name',
 															     'url' => '/Institutions/Students/autoCompleteUserList',
@@ -217,7 +224,10 @@ class UserBehavior extends Behavior {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = 'true';
+		$attr['onChangeReload'] = true;
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.academicPeriod');
+		}
 
 		return $attr;
 	}
@@ -230,19 +240,24 @@ class UserBehavior extends Behavior {
 			if (array_key_exists('options', $this->_table->fields['academic_period'])) {
 				$this->academicPeriodId = key($this->_table->fields['academic_period']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period']) {
-						$this->academicPeriodId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period'];
+					if (array_key_exists('academic_period', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period']) {
+							$this->academicPeriodId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period'];
+						}
 					}
 				}
 
 			}
 		}
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = 'true';
-
+		$attr['onChangeReload'] = true;
+		$attr['options'] = [];
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
 			$attr['options'] = $InstitutionSiteProgrammes->getSiteProgrammeOptions($institutionsId, $this->academicPeriodId);
+			if (empty($attr['options'])) {
+				$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.educationProgrammeId');
+			}
 		}
 
 		return $attr;
@@ -256,18 +271,24 @@ class UserBehavior extends Behavior {
 			if (array_key_exists('options', $this->_table->fields['education_programme_id'])) {
 				$this->educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
-						$this->educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+					if (array_key_exists('education_programme_id', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
+							$this->educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+						}
 					}
 				}
 			}
 		}
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = 'true';
-
+		$attr['onChangeReload'] = true;
+		$attr['options'] = [];
 		if (isset($this->educationProgrammeId)) {
 			$InstitutionSiteGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
 			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionsId, $this->academicPeriodId, $this->educationProgrammeId);
+		}
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.institutionSiteGrades');
 		}
 
 		return $attr;
@@ -281,17 +302,23 @@ class UserBehavior extends Behavior {
 			if (array_key_exists('options', $this->_table->fields['education_grade'])) {
 				$this->education_grade = key($this->_table->fields['education_grade']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']) {
-						$this->education_grade = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade'];
+					if (array_key_exists('education_grade', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']) {
+							$this->education_grade = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade'];
+						}
 					}
 				}
 			}
 		}
 		$attr['type'] = 'select';
-
+		$attr['options'] = [];
 		if (isset($this->education_grade)) {
 			$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
 			$attr['options'] = $InstitutionSiteSections->getSectionOptions($this->academicPeriodId, $institutionsId, $this->education_grade);
+		}
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.sections');
 		}
 
 		return $attr;
@@ -300,6 +327,10 @@ class UserBehavior extends Behavior {
 	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->associatedModel->StudentStatuses->getList();
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.studentStatusId');
+		}
 
 		return $attr;
 	}
@@ -313,13 +344,16 @@ class UserBehavior extends Behavior {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = 'true';
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.institutionSitePositionId');
+		}
+		$attr['onChangeReload'] = true;
 
 		return $attr;
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = 'true';
+		$attr['onChangeReload'] = true;
 		return $attr;
 	}
 
@@ -328,8 +362,10 @@ class UserBehavior extends Behavior {
 			if (array_key_exists('options', $this->_table->fields['institution_site_position_id'])) {
 				$positionId = key($this->_table->fields['institution_site_position_id']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id']) {
-						$positionId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id'];
+					if (array_key_exists('institution_site_position_id', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id']) {
+							$positionId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id'];
+						}
 					}
 				}
 			}
@@ -337,13 +373,19 @@ class UserBehavior extends Behavior {
 
 		$startDate = null;
 		if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-			if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date']) {
-				$startDate = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date'];
+			if (array_key_exists('start_date', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+				if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date']) {
+					$startDate = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date'];
+				}
 			}
 		}
 
 		$attr['type'] = 'select';
 		$attr['options'] = $this->getFTEOptions($positionId, ['startDate' => $startDate]);
+		if (empty($attr['options'])) {
+			$attr['attr']['empty'] = __('No available FTE');
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.FTE');
+		}
 		return $attr;
 	}
 
@@ -420,7 +462,7 @@ class UserBehavior extends Behavior {
 			}
 
 			if (count($filterFTEOptions)==0) {
-				$filterFTEOptions = array(''=>__('No available FTE'));
+				$filterFTEOptions = [];
 			}
 		}
 		return $filterFTEOptions;
@@ -429,9 +471,23 @@ class UserBehavior extends Behavior {
 	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->InstitutionSiteStaff->StaffTypes->getList();
-
+		if (empty($attr['options'])){
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		}
+		
 		return $attr;
 	}
 
+	public function addOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$newOptions = [];
+		if ($this->_table->hasBehavior('Student')) {
+			$options['associated'] = ['InstitutionSiteStudents' => ['validate' => false]];
+		} else if ($this->_table->hasBehavior('Staff')) {
+			$options['associated'] = ['InstitutionSiteStaff' => ['validate' => false]];
+		}
 
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
+	}
 }
