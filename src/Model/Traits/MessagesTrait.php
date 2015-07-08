@@ -163,6 +163,10 @@ trait MessagesTrait {
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
+		'SecurityRoles' => [
+			'userRoles' => 'User Roles',
+			'systemRoles' => 'System Roles'
+		],
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
 		],
@@ -206,9 +210,6 @@ trait MessagesTrait {
 			'add_staff' => 'Add Staff',
 			'select_teacher' => 'Select Teacher',
 			'add_teacher' => 'Add Teacher'
-		],
-		'UserRoles' => [
-			'tabTitle' => 'User Roles'
 		],
 		'UserGroups' => [
 			'tabTitle' => 'User Groups'
