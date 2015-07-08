@@ -79,6 +79,7 @@ class InstitutionsTable extends AppTable  {
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
+        $this->addBehavior('AdvanceSearch');
 	}
 
 	public function validationDefault(Validator $validator) {
