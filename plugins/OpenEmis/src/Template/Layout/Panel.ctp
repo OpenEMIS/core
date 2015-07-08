@@ -8,7 +8,6 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
 	<div class="panel-body">
-		<!-- <?= $this->element('advanced_search') ?> -->
 		<?= $this->element('OpenEmis.alert') ?>
 		<!--?= $this->element('data_overview') ?-->
 		<?php

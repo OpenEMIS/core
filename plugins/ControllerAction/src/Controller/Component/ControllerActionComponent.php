@@ -131,6 +131,7 @@ class ControllerActionComponent extends Component {
 			$this->request->params['action'] = $action;
 
 			uasort($this->model->fields, [$this, 'sortFields']);
+			$this->config['fields'] = $this->model->fields;
 
 			$controller->set('ControllerAction', $this->config);
 
@@ -145,9 +146,15 @@ class ControllerActionComponent extends Component {
 			if ($key == $this->orderField) {
 				$this->model->fields[$this->orderField]['visible']['view'] = false;
 			}
-			if (array_key_exists('options', $attr) && in_array($attr['type'], ['string', 'integer'])) {
-				$this->model->fields[$key]['type'] = 'select';
+			if (array_key_exists('options', $attr)) {
+				if (in_array($attr['type'], ['string', 'integer'])) {
+					$this->model->fields[$key]['type'] = 'select';
+				}
+				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
+					$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+				}
 			}
+
 			// make field sortable by default if it is a string data-type
 			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
