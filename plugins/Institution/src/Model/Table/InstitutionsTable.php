@@ -137,6 +137,15 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
+	public function onGetName(Event $event, Entity $entity) {
+		return $event->subject()->Html->link($entity->name, [
+			'plugin' => $this->controller->plugin,
+			'controller' => $this->controller->name,
+			'action' => 'dashboard',
+			'0' => $entity->id
+		]);
+	}
+
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
@@ -262,4 +271,11 @@ class InstitutionsTable extends AppTable  {
 			'contact_person', 'telephone', 'fax', 'email', 'website'
 		]);
 	}
+
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
 }
