@@ -641,8 +641,7 @@ body.large {
 
 .panel-toolbar {
 	border: 1px solid #CCC !important;
-	/*min-height: 60px;*/
-	/*padding: 20px 0;*/
+	margin-top: -1px;	
 }
 
 .panel-toolbar a {
@@ -1210,7 +1209,7 @@ input[type="checkbox"] {
 	border-bottom: 0;
 	background-color: #FFF !important;
 	margin-top: -1px;
-	padding: 7px 10px !important;
+	padding: 7px 10px 6px !important;
 }
 
 .nav-tabs > li.active > a:focus {
