@@ -74,6 +74,26 @@ class ConfigItemsTable extends AppTable {
 	public function editBeforeAction(Event $event) {
 		$this->fields['type']['type'] = 'readonly';
 		$this->fields['label']['type'] = 'readonly';
+
+		$pass = $this->request->param('pass');
+		if (is_array($pass) && !empty($pass)) {
+			$id = $pass[0];
+			$entity = $this->get($id);
+		}
+		if (isset($entity)) {
+			/**
+			 * grab validation rules by either record code or record type
+			 */
+			$validationRules = 'validate' . Inflector::camelize($entity->code);
+			if (isset($this->$validationRules)) {
+				$this->validator()->add('value', $this->$validationRules);
+			} else {
+				$validationRules = 'validate' . Inflector::camelize($entity->type);
+				if (isset($this->$validationRules)) {
+					$this->validator()->add('value', $this->$validationRules);
+				}
+			}
+		}
 	}
 
 
@@ -114,7 +134,28 @@ class ConfigItemsTable extends AppTable {
 							->toArray();
 						$attr['options'] = $options;
 					}
-
+				} else {
+					if ($entity->code == 'start_time') {
+						$attr['type'] = 'time';
+					} else if ($entity->code == 'hours_per_day' || $entity->code == 'days_per_week') {
+						$attr['type'] = 'integer';
+						$attr['attr'] = ['min' => 1];
+					} else if ($entity->type == 'Data Discrepancy') {
+						$attr['type'] = 'integer';
+						$attr['attr'] = ['min' => 0, 'max' => 100];
+					} else if ($entity->type == 'Data Outliers') {
+						$attr['type'] = 'integer';
+						$attr['attr'] = ['min' => 1, 'max' => 100];
+					} else if ($entity->type == 'Student Admission Age') {
+						$attr['type'] = 'integer';
+						$attr['attr'] = ['min' => 1, 'max' => 100];
+					} else if ($entity->code == 'no_of_shifts') {
+						$attr['type'] = 'integer';
+						$attr['attr'] = ['min' => 1, 'max' => 10];
+					} else if ($entity->code == 'training_credit_hour') {
+						$attr['type'] = 'integer';
+						$attr['attr'] = ['min' => 0];
+					}
 				// } else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
 				// 	$exp = explode(',', $entity->value);
 				// 	if (!$exp[1]) {
@@ -137,118 +178,12 @@ class ConfigItemsTable extends AppTable {
 	}
 
 	public function onGetValue(Event $event, Entity $entity) {
-
-		if ($entity->field_type == 'Dropdown') {
-
-			$exp = explode(':', $entity->option_type);
-			/**
-			 * if options list is from a specific table
-			 */
-			if (count($exp)>0 && $exp[0]=='database') {
-				$model = Inflector::pluralize($exp[1]);
-				$model = $this->getActualModeLocation($model);
-				$optionValues = TableRegistry::get($model);
-				$value = $optionValues->get($entity->value);
-				if (is_object($value)) {
-					return $value->name;
-				} else {
-					return $entity->value;
-				}
-
-			/**
-			 * if options list is from ConfigItemOptions table
-			 */
-			} else {
-				$optionValues = TableRegistry::get('ConfigItemOptions');
-				$value = $optionValues->find()
-					->where([
-						'ConfigItemOptions.option_type' => $entity->option_type,
-						'ConfigItemOptions.value' => $entity->value,
-					])
-					->first();
-				if (is_object($value)) {
-					if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-						return date($value->value);
-					} else {
-						return $value->option;
-					}
-				} else {
-					return $entity->value;
-				}
-			}
-
-		} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
-			$exp = explode(',', $entity->value);
-			if (!$exp[1]) {
-				return __('Disabled');
-			} else {
-				return __('Enabled') . ' ('.$exp[0].')';
-			}
-		} else {
-			if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-				return date($entity->value);
-			} else {
-				return $entity->value;
-			}
-		}
+		return $this->recordValueForView('value', $entity);
 	}
 
 
 	public function onGetDefaultValue(Event $event, Entity $entity) {
-
-		if ($entity->field_type == 'Dropdown') {
-
-			$exp = explode(':', $entity->option_type);
-			/**
-			 * if options list is from a specific table
-			 */
-			if (count($exp)>0 && $exp[0]=='database') {
-				$model = Inflector::pluralize($exp[1]);
-				$model = $this->getActualModeLocation($model);
-				$optionValues = TableRegistry::get($model);
-				$value = $optionValues->get($entity->value);
-				if (is_object($value)) {
-					return $value->name;
-				} else {
-					return $entity->value;
-				}
-
-			/**
-			 * if options list is from ConfigItemOptions table
-			 */
-			} else {
-				$optionValues = TableRegistry::get('ConfigItemOptions');
-				$value = $optionValues->find()
-					->where([
-						'ConfigItemOptions.option_type' => $entity->option_type,
-						'ConfigItemOptions.value' => $entity->value,
-					])
-					->first();
-				if (is_object($value)) {
-					if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-						return date($value->value);
-					} else {
-						return $value->option;
-					}
-				} else {
-					return $entity->value;
-				}
-			}
-
-		} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
-			$exp = explode(',', $entity->value);
-			if (!$exp[1]) {
-				return __('Disabled');
-			} else {
-				return __('Enabled') . ' ('.$exp[0].')';
-			}
-		} else {
-			if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-				return date($entity->value);
-			} else {
-				return $entity->value;
-			}
-		}
+		return $this->recordValueForView('default_value', $entity);
 	}
 
 
@@ -257,6 +192,62 @@ class ConfigItemsTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
+	private function recordValueForView($valueField, $entity) {
+		if ($entity->field_type == 'Dropdown') {
+
+			$exp = explode(':', $entity->option_type);
+			/**
+			 * if options list is from a specific table
+			 */
+			if (count($exp)>0 && $exp[0]=='database') {
+				$model = Inflector::pluralize($exp[1]);
+				$model = $this->getActualModeLocation($model);
+				$optionsModel = TableRegistry::get($model);
+				$value = $optionsModel->get($entity->$valueField);
+				if (is_object($value)) {
+					return $value->name;
+				} else {
+					return $entity->$valueField;
+				}
+
+			/**
+			 * options list is from ConfigItemOptions table
+			 */
+			} else {
+				$optionsModel = TableRegistry::get('ConfigItemOptions');
+				$value = $optionsModel->find()
+					->where([
+						'ConfigItemOptions.option_type' => $entity->option_type,
+						'ConfigItemOptions.value' => $entity->$valueField,
+					])
+					->first();
+				if (is_object($value)) {
+					if ($entity->code == 'time_format' || $entity->code == 'date_format') {
+						return date($value->$valueField);
+					} else {
+						return $value->option;
+					}
+				} else {
+					return $entity->$valueField;
+				}
+			}
+
+		} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
+			$exp = explode(',', $entity->$valueField);
+			if (!$exp[1]) {
+				return __('Disabled');
+			} else {
+				return __('Enabled') . ' ('.$exp[0].')';
+			}
+		} else {
+			if ($entity->code == 'time_format' || $entity->code == 'date_format') {
+				return date($entity->$valueField);
+			} else {
+				return $entity->$valueField;
+			}
+		}
+	}
+
 	public function value($code) {
 		$value = '';
 		if (array_key_exists($code, $this->configurations)) {
@@ -301,133 +292,127 @@ class ConfigItemsTable extends AppTable {
 
 /******************************************************************************************************************
 **
+** value field validation rules based on specific codes
+** refer to editBeforeAction() on how these validation rules are loaded dynamically
+**
+******************************************************************************************************************/
+	private $validateHoursPerDay = [
+			'num' => [
+				'rule'  => ['numeric'],
+				'message' => 'Numeric Value should be between 0 to 25',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 24],
+				'message' => 'Numeric Value should be between 0 to 25',
+				'last' => true
+			]
+  		];
+	   
+	private $validateDaysPerWeek = [
+			'num' => [
+				'rule'  => ['numeric'],
+				'message' => 'Numeric Value should be between 0 to 8',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 7],
+				'message' => 'Numeric Value should be between 0 to 8',
+				'last' => true
+			]
+  		];
+	   
+	private $validateReportDiscrepancyVariationpercent = [
+			'num' => [
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between -1 to 101',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 0, 100],
+				'message' => 'Numeric Value should be between -1 to 101',
+				'last' => true
+			]
+  		];
+
+  	private $validateDataOutliers = [
+			'num' => [
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 101',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 100],
+				'message' => 'Numeric Value should be between 0 to 101',
+				'last' => true
+			]
+	  	];
+
+  	private $validateStudentAdmissionAge = [
+			'num' => [
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 101',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 100],
+				'message' => 'Numeric Value should be between 0 to 101',
+				'last' => true
+			]
+	  	];
+
+	private $validateNoOfShifts = [
+			'num' => [
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 11',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 10],
+				'message' => 'Numeric Value should be between 0 to 11',
+				'last' => true
+			]
+		];
+
+  	private $validateTrainingCreditHour = [
+  			'num' => [
+				'rule'  => 'numeric',
+	  			'message' => 'Value should be numeric'
+  			]
+  		];
+  
+	private $validateSmsRetryTime = [
+			'num' => [
+				'rule'  => 'numeric',
+				'message' =>  'Numeric Value should be between 0 to 11',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 10],
+				'message' => 'Numeric Value should be between 0 to 11',
+				'last' => true
+			]
+		];
+
+  	private $validateSmsRetryWait = [
+			'num' => [
+				'rule'  => 'numeric',
+				'message' =>  'Numeric Value should be between 0 to 61',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1, 60],
+				'message' => 'Numeric Value should be between 0 to 61',
+				'last' => true
+			]
+		];
+
+
+/******************************************************************************************************************
+**
 ** version 2 codes
 **
 ******************************************************************************************************************/
-	// public $validateDataDiscrepancy = array(
-	// 	'value' => array(
-	// 		'num'=>array(
-	// 			'rule'  => 'numeric',
-	// 			'message' => 'Numeric Value should be between 0 to 100'
-	// 		),
-	// 		'bet' => array(
-	// 			'rule'	=> array('range', -1, 101),
-	// 			'message' => 'Numeric Value should be between 0 to 100'
-	// 		)
-	// 	)
- //  	);
-
- //  	public $validateDataOutlier = array(
-	// 	'value' => array(
-	// 		'num'=>array(
-	// 			'rule'  => 'numeric',
-	// 			'message' => 'Numeric Value should be between 0 to 100'
-	// 		),
-	// 		'bet' => array(
-	// 			'rule'	=> array('range', -1, 101),
-	// 			'message' => 'Numeric Value should be between 0 to 100'
-	// 		)
-	// 	)
- //  	);
-
- //  	public $validateStudentAdmissionAge = array(
-	// 	'value' => array(
-	// 		'num'=>array(
-	// 			'rule'  => 'numeric',
-	// 			'message' => 'Numeric Value should be between 0 to 100'
-	// 		),
-	// 		'bet' => array(
-	// 			'rule'	=> array('range', -1, 101),
-	// 			'message' => 'Numeric Value should be between 0 to 100'
-	// 		)
-	// 	)
- //  	);
-
-	// public $validateNoOfShift = array(
-	// 	'value' => array(
-	// 		'num'=>array(
-	// 			'rule'  => 'numeric',
-	// 			'message' => 'Numeric Value should be between 0 to 10'
-	// 		),
-	// 		'bet' => array(
-	// 			'rule'	=> array('range', -1, 101),
-	// 			'message' => 'Numeric Value should be between 0 to 10'
-	// 		)
-	// 	)
- //  	);
-
- //  	public $validateCreditHour = array(
-	// 	'value' => array(
-	// 		'rule'  => 'numeric',
- //  			'message' => 'Value should be numeric'
- //  		)
- //  	);
-  
-	// public $validateSmsRetryTime = array(
-	// 	'value' => array(
-	// 		'num'=>array(
-	// 			'rule'  => 'numeric',
-	// 			'message' =>  'Numeric Value should be between 0 to 10'
-	// 		),
-	// 		'bet' => array(
-	// 			'rule'	=> array('range', -1, 11),
-	// 			'message' => 'Numeric Value should be between 0 to 10'
-	// 		)
-	// 	)
- //  	);
-	
- //  	public $validateSmsRetryWait = array(
-	// 	'value' => array(
-	// 		'num'=>array(
-	// 			'rule'  => 'numeric',
-	// 			'message' =>  'Numeric Value should be between 0 to 60'
-	// 		),
-	// 		'bet' => array(
-	// 			'rule'	=> array('range', -1, 61),
-	// 			'message' => 'Numeric Value should be between 0 to 60'
-	// 		)
-	// 	)
- //  	);
-	
- // 	public function beforeValidate($options = array()) {
-	// 	// We might want to check data
-	// 	if ($this->data['ConfigItem']['type']=='Data Discrepancy') {
-	// 		$this->validate = array_merge($this->validate, $this->validateDataDiscrepancy);
-	// 	} else if ($this->data['ConfigItem']['type']=='Data Outliers') {
-	// 		$this->validate = array_merge($this->validate, $this->validateDataOutlier);
-	// 	} else if ($this->data['ConfigItem']['type']=='Student Admission Age') {
-	// 		$this->validate = array_merge($this->validate, $this->validateStudentAdmissionAge);
-	// 	} else if ($this->data['ConfigItem']['name']=='no_of_shifts') {
-	// 		$this->validate = array_merge($this->validate, $this->validateNoOfShift);
-	// 	} else if ($this->data['ConfigItem']['name']=='training_credit_hour') {
-	// 		$this->validate = array_merge($this->validate, $this->validateCreditHour);
-	// 	} else if ($this->data['ConfigItem']['name']=='sms_retry_times') {
-	// 		$this->validate = array_merge($this->validate, $this->validateSmsRetryTime);
-	// 	} else if ($this->data['ConfigItem']['name']=='sms_retry_wait') {
-	// 		$this->validate = array_merge($this->validate, $this->validateSmsRetryWait);
-	// 	}
-	// 	/*
-	// 	// Maybe only on an edit action?
-	// 	// We know it's edit because there is an id
-	// 	if (isset($this->data['Post']['id'])) {
-	// 		$this->validate = array_merge($this->validate, $this->validatePost);
-	// 	}
-		
-	// 	// Perhaps we want to add a single new rule for add using the validator?
-	// 	// We know it's add because there is no id
-	// 	if (!isset($this->data['Post']['id'])) {
-	// 		$this->validator()->add('pubDate', array(
-	// 				'one' => array(
-	// 					'rule' => array('datetime', 'ymd'),
-	// 					'message' => 'Publish date must be ymd'
-	// 				)
-	// 			)
-	// 		)
-	// 	}*/
-		
-	// 	return true;
-	// }
-
 	// public function getYearbook() {
 	// 	$yearbook = array();
 	// 	$yearbook['yearbook_organization_name'] = $this->getValue('yearbook_organization_name');
