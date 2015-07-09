@@ -1082,7 +1082,7 @@ input[type="checkbox"] {
 
 .panel-body .row {
 	margin: 0;
-	padding: 5px 0;
+	padding: 2px 0 0;
 	border-top: 1px solid #FFF;
 }
 
@@ -1679,8 +1679,8 @@ table tr.sorting-row td {background-color: #8b8;}
 .form-label {
 	font-weight: bold;
 	text-align: left;
-	padding: 5px 20px;
-	font-size: 13px !important;
+	padding: 5px 10px;
+	font-size: 12px !important;
 	min-height: 30px;
 	width: 200px;
 	margin-right: 10px;
@@ -1697,8 +1697,9 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .form-input {
 	min-height: 30px;
-	padding: 5px 0;
+	padding: 7px 0;
 	float: left;
+	font-size: 12px;
 }
 
 .form-horizontal label,
@@ -1711,6 +1712,44 @@ table tr.sorting-row td {background-color: #8b8;}
 .row:nth-of-type(odd) {
 	background-color: #FFF;	
 	border-left: 2px solid #FFF;
+}
+
+.section {
+	display: inline-block;
+	width: 100%;
+	margin-bottom: 20px;
+	border: 1px solid #DDD;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+.section-header {
+	background-color: #EFEFEF;
+	border-bottom: 1px solid #DDD;
+	color: #6B6B6B;
+	font-weight: bold;
+	padding: 7px 20px 5px;
+	margin: 0;
+	-webkit-border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
+	        border-top-left-radius: 3px;
+	        border-top-right-radius: 3px;
+}
+
+.section .row:nth-of-type(even),
+.section .row:nth-of-type(odd),
+.section label {
+	background-color: #FFF !important;
+	border: 0 !important;
+}
+
+.section #googlemap {
+	padding: 4px 4px 0 4px;
+}
+
+.section #googlemap iframe {
+	height: 300px !important;
+	width: 100%;
 }
 
 .form-control {
@@ -1777,6 +1816,11 @@ label + select {
 
 .form-horizontal option {
 	padding: 5px 10px;
+}
+
+.form-horizontal input[disabled] {
+	color: #AAA;
+	background: #EFEFEF;
 }
 
 /* Time picker */
@@ -1910,6 +1954,8 @@ label + select {
 	border: 1px solid #CCC !important;
 	-webkit-box-shadow: 0 0 5px 0 rgba(0,0,0,0.1);
 	        box-shadow: 0 0 5px 0 rgba(0,0,0,0.1);
+	-ms-overflow-x: hidden;
+	    overflow-x: hidden;
 }
 
 .ui-widget input, 
@@ -1931,6 +1977,7 @@ label + select {
 	background: none !important;
 	border: 0 !important;
 	font-size: 12px !important;
+	font-weight: normal !important;
 }
 
 .ui-menu-item:hover,
@@ -1945,6 +1992,7 @@ label + select {
 	color: #555 !important;
 	border: 1px solid #CCC !important;
 	font-size: 12px !important;
+	font-weight: normal !important;
 }
 
 .ui-widget input:focus {
@@ -3034,6 +3082,10 @@ footer {
 	}
 
 	/* FORM */
+	
+	.section .form-horizontal {
+		padding: 5px 12px;
+	}	
 	
 	.table-in-view,
 	.table-full-width {
