@@ -150,7 +150,7 @@ class ControllerActionComponent extends Component {
 	public function renderFields() {
 		foreach ($this->model->fields as $key => $attr) {
 			if ($key == $this->orderField) {
-				$this->model->fields[$this->orderField]['visible']['view'] = false;
+				$this->model->fields[$this->orderField]['visible'] = ['view' => false];
 			}
 			if (array_key_exists('options', $attr)) {
 				if (in_array($attr['type'], ['string', 'integer'])) {
