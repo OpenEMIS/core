@@ -94,11 +94,11 @@ class StudentBehavior extends Behavior {
 			}
 		}
 
-		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_site_staff'][0])) {
+		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_site_students'][0])) {
 			$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
 			$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
 		}
-		if (array_key_exists('end_date', $data[$this->_table->alias()]['institution_site_staff'][0])) {
+		if (array_key_exists('end_date', $data[$this->_table->alias()]['institution_site_students'][0])) {
 			$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
 			$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
 		}
