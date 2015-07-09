@@ -162,33 +162,73 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'target_model' => 'Area.AreaAdministratives']);
-		$this->ControllerAction->field('area_id', ['type' => 'area', 'target_model' => 'Area.Areas']);
-
+		//$this->ControllerAction->field('area_id', ['type' => 'select']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model'=>'Area.AreaAdministratives']);
+		//$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('area_id', ['type' => 'area', 'source_model' => 'Area.Areas']);
+		//$this->ControllerAction->field('area_id', ['type' => 'element', 'element' => 'Institution.Institutions/area', 'valueClass' => 'table-full-width', 'id-id' => 'xxx', 'source_model' => 'Area.Areas']);
+		// pr($this->fields['area_administrative_id']);
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
+
+		$datatest = ['1' => 'data1', '2' => 'data2'];
+		$this->controller->set('datatest', $datatest);
 	}
+
+	// public function onUpdateFieldAreaAdministrativeId(Event $event, $attr) {
+	// 	$attr['type'] = 'area';
+	// 	$attr['model'] = 'something';
+	// 	return $attr;
+	// }
 
 	public function onGetAreaElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$includes = [
 			'area' => ['include' => true, 'js' => 'area']
 		];
 
+		$controller = $this->controller;
 		$HtmlField = $event->subject();
-		$Form = $HtmlField->Form;
-
-		$targetModel = $attr['target_model'];
-		$targetTable = TableRegistry::get($targetModel);
-		//pr($targetTable->find('list')->toArray());
-
 		$HtmlField->includes = array_merge($HtmlField->includes, $includes);
+		$Url = $HtmlField->Url;
+		$Form = $HtmlField->Form;
+		$targetModel = $attr['source_model'];
+		$targetTable = TableRegistry::get($targetModel);
+
+		$parentId = -1;
+		$worldRecord = "World";
+
+		$areaOptions = $targetTable
+			->find('list')
+			->where(['parent_id'=>$parentId])
+			->toArray();
+
+		//pr($areaOptions);
+		// If world record exist, update the parent ID to the world ID
+
+		//if(in_array($worldRecord, $areaOptions)){
+		if($attr['source_model']=='Area.AreaAdministratives'){
+			$parentId = key($areaOptions);
+			//pr($parentId);
+			$areaOptions = $targetTable
+			->find('list')
+			->where(['parent_id'=>$parentId])
+			->toArray();
+		}
 
 		$fieldName = $attr['model'] . '.' . $attr['field'];
-		// $options['onchange'] = "alert('asd')";
-		$options['class'] = 'areapicker';
-		$value = $Form->input($fieldName, $options);
+		$options['onchange'] = "Area.reload(this)";
+		$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
+		$options['data-source'] = $attr['source_model'];
+		//$options['class'] = 'areapicker';
+		$options['options'] = $areaOptions;
+		$options['id'] = 'areapicker';
+		$value = "<div class='areapicker'>";
+		$value .= $Form->input($fieldName, $options);
+		$value .= $Form->hidden($attr['model'].'.'.$attr['field'], ['value' => ""]);
+		$value .= "</div>";
 		return $value;
+	
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
