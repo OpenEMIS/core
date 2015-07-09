@@ -27,6 +27,8 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionSitePositions', ['className' => 'Institution.InstitutionSitePositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+
+		$this->addBehavior('AcademicPeriod.Period');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -169,166 +171,129 @@ class StaffAttendancesTable extends AppTable {
 		];
 		$this->controller->set('toolbarElements', $toolbarElements);
 
-		$institutionId = $this->Session->read('Institutions.id');
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
+
+		$Staff = $this;
+		$institutionId = $this->Session->read('Institutions.id');
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
-		$this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->findByInstitutionSiteId($institutionId)
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 		// End setup periods
 
-		// Setup week options
-		$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
-		$weekStr = 'Week %d (%s - %s)';
-		$weekOptions = [];
-		foreach ($weeks as $index => $dates) {
-			$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
-		}
-		$selectedWeek = $this->queryString('week', $weekOptions);
-		$this->advancedSelectOptions($weekOptions, $selectedWeek);
-		$this->controller->set(compact('weekOptions', 'selectedWeek'));
-		// end setup weeks
+		if ($selectedPeriod != 0) {
+			$this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
-		// Setup day options
-		$ConfigItems = TableRegistry::get('ConfigItems');
-		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
-		$daysPerWeek = $ConfigItems->value('days_per_week');
-		$schooldays = [];
+			// Setup week options
+			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
+			$weekStr = 'Week %d (%s - %s)';
+			$weekOptions = [];
+			foreach ($weeks as $index => $dates) {
+				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+			}
+			$selectedWeek = $this->queryString('week', $weekOptions);
+			$this->advancedSelectOptions($weekOptions, $selectedWeek);
+			$this->controller->set(compact('weekOptions', 'selectedWeek'));
+			// end setup weeks
 
-		for($i=0; $i<$daysPerWeek; $i++) {
-			$schooldays[] = ($firstDayOfWeek + $i) % 7;
-		}
+			// Setup day options
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+			$daysPerWeek = $ConfigItems->value('days_per_week');
+			$schooldays = [];
 
-		$week = $weeks[$selectedWeek];
-		$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
-		$firstDayOfWeek = $week[0]->copy();
-		$firstDay = -1;
-		$today = null;
+			for($i=0; $i<$daysPerWeek; $i++) {
+				$schooldays[] = ($firstDayOfWeek + $i) % 7;
+			}
 
-		do {
-			if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-				if ($firstDay == -1) {
-					$firstDay = $firstDayOfWeek->dayOfWeek;
+			$week = $weeks[$selectedWeek];
+			$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
+			$firstDayOfWeek = $week[0]->copy();
+			$firstDay = -1;
+			$today = null;
+
+			do {
+				if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
+					if ($firstDay == -1) {
+						$firstDay = $firstDayOfWeek->dayOfWeek;
+					}
+					if ($firstDayOfWeek->isToday()) {
+						$today = $firstDayOfWeek->dayOfWeek;
+					}
+					$dayOptions[$firstDayOfWeek->dayOfWeek] = [
+						'value' => $firstDayOfWeek->dayOfWeek,
+						'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
+					];
+					$this->allDayOptions[strtolower($firstDayOfWeek->format('l'))] = [
+						'date' => $firstDayOfWeek->format('Y-m-d'),
+						'text' => __($firstDayOfWeek->format('l'))
+					];
 				}
-				if ($firstDayOfWeek->isToday()) {
-					$today = $firstDayOfWeek->dayOfWeek;
+				$firstDayOfWeek->addDay();
+			} while($firstDayOfWeek->lte($week[1]));
+
+			$selectedDay = -1;
+			if (isset($this->request->query['day'])) {
+				$selectedDay = $this->request->query('day');
+				if (!array_key_exists($selectedDay, $dayOptions)) {
+					$selectedDay = $firstDay;
 				}
-				$dayOptions[$firstDayOfWeek->dayOfWeek] = [
-					'value' => $firstDayOfWeek->dayOfWeek,
-					'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
-				];
-				$this->allDayOptions[strtolower($firstDayOfWeek->format('l'))] = [
-					'date' => $firstDayOfWeek->format('Y-m-d'),
-					'text' => __($firstDayOfWeek->format('l'))
-				];
-			}
-			$firstDayOfWeek->addDay();
-		} while($firstDayOfWeek->lte($week[1]));
-
-		$selectedDay = -1;
-		if (isset($this->request->query['day'])) {
-			$selectedDay = $this->request->query('day');
-			if (!array_key_exists($selectedDay, $dayOptions)) {
-				$selectedDay = $firstDay;
-			}
-		} else {
-			if (!is_null($today)) {
-				$selectedDay = $today;
 			} else {
-				$selectedDay = $firstDay;
+				if (!is_null($today)) {
+					$selectedDay = $today;
+				} else {
+					$selectedDay = $firstDay;
+				}
 			}
-		}
-		$dayOptions[$selectedDay][] = 'selected';
-		
-		$currentDay = $week[0]->copy();
-		if ($selectedDay != -1) {
-			if ($currentDay->dayOfWeek != $selectedDay) {
-				$selectedDate = $currentDay->next($selectedDay);
+			$dayOptions[$selectedDay][] = 'selected';
+			
+			$currentDay = $week[0]->copy();
+			if ($selectedDay != -1) {
+				if ($currentDay->dayOfWeek != $selectedDay) {
+					$selectedDate = $currentDay->next($selectedDay);
+				} else {
+					$selectedDate = $currentDay;
+				}
 			} else {
-				$selectedDate = $currentDay;
+				$selectedDate = $week;
+			}
+			$this->controller->set(compact('dayOptions', 'selectedDay'));
+			// End setup days
+
+			$settings['pagination'] = false;
+			$query
+				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+				->contain(['Users'])
+				->find('withAbsence', ['date' => $selectedDate])
+				->where([$this->aliasField('institution_site_id') => $institutionId])
+				;
+
+			if ($selectedDay == -1) {
+				foreach ($this->allDayOptions as $key => $obj) {
+					$this->ControllerAction->addField($key);
+				}
+			} else {
+				$this->ControllerAction->field('type');
+				$this->ControllerAction->field('reason');
 			}
 		} else {
-			$selectedDate = $week;
-		}
-		$this->controller->set(compact('dayOptions', 'selectedDay'));
-		// End setup days
+			$settings['pagination'] = false;
+			$query
+				->where([$this->aliasField('security_user_id') => 0]);
 
-		$settings['pagination'] = false;
-		$query
-			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-			->contain(['Users'])
-			->find('withAbsence', ['date' => $selectedDate])
-			->where([$this->aliasField('institution_site_id') => $institutionId])
-			;
-
-		if ($selectedDay == -1) {
-			foreach ($this->allDayOptions as $key => $obj) {
-				$this->ControllerAction->addField($key);
-			}
-		} else {
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
-		}
-	}
 
-	// public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-	// 	$institutionId = $this->Session->read('Institutions.id');
-	// 	$periodId = $request->query('period_id');
-	// 	$week = $request->query('week');
-	// 	$day = $request->query('day');
-	// 	$date = $request->query('date');
-
-	// 	$options['contain'] = ['Users'];
-	// 	$options['finder'] = ['withAbsence' => ['date' => $date]];
-	// 	$options['conditions'][$this->aliasField('institution_site_id')] = $institutionId;
-
-	// 	if ($day == -1) {
-	// 		foreach ($this->allDayOptions as $key => $obj) {
-	// 			$this->ControllerAction->addField($key);
-	// 		}
-	// 	} else {
-	// 		$this->ControllerAction->field('type');
-	// 		$this->ControllerAction->field('reason');
-	// 	}
-	// }
-
-	public function findAcademicPeriod(Query $query, array $options) {
-		if (array_key_exists('academic_period_id', $options)) {
-			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$periodObj = $AcademicPeriods
-				->findById($options['academic_period_id'])
-				->first();
-			$startDate = date('Y-m-d', strtotime($periodObj->start_date));
-			$endDate = date('Y-m-d', strtotime($periodObj->end_date));
-
-			$conditions = [];
-			$conditions['OR'] = [
-				'OR' => [
-					[
-						$this->aliasField('end_date') . ' IS NOT NULL',
-						$this->aliasField('start_date') . ' <=' => $startDate,
-						$this->aliasField('end_date') . ' >=' => $startDate
-					],
-					[
-						$this->aliasField('end_date') . ' IS NOT NULL',
-						$this->aliasField('start_date') . ' <=' => $endDate,
-						$this->aliasField('end_date') . ' >=' => $endDate
-					],
-					[
-						$this->aliasField('end_date') . ' IS NOT NULL',
-						$this->aliasField('start_date') . ' >=' => $startDate,
-						$this->aliasField('end_date') . ' <=' => $startDate
-					]
-				],
-				[
-					$this->aliasField('end_date') . ' IS NULL',
-					$this->aliasField('start_date') . ' <=' => $endDate
-				]
-			];
-
-			return $query->where($conditions);
-		} else {
-			return $query;
+			$this->Alert->warning('StaffAttendances.noStaff');
 		}
 	}
 
