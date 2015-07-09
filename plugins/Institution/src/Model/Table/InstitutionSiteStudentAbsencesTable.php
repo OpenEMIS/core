@@ -29,6 +29,26 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		return $validator;
 	}
 
+	public function onGetDate(Event $event, Entity $entity) {
+		$startDate = date('d-m-Y', strtotime($entity->start_date));
+		$endDate = date('d-m-Y', strtotime($entity->end_date));
+		if ($entity->full_day == 1) {
+			if (!empty($entity->end_date) && strtotime($entity->end_date) > strtotime($entity->start_date)) {
+				$value = sprintf('%s - %s (%s)', $startDate, $endDate, __('full day'));
+			} else {
+				$value = sprintf('%s (%s)', $startDate, __('full day'));
+			}
+		} else {
+			$value = sprintf('%s (%s - %s)', $startDate, $entity->start_time, $entity->end_time);
+		}
+		
+		return $value;
+	}
+
+	public function onGetSecurityUserId(Event $event, Entity $entity) {
+		return $entity->user->name_with_id;
+	}
+
 	public function onGetType(Event $event, Entity $entity) {
 		$types = $this->getSelectOptions('Absence.types');
 		return $entity->student_absence_reason_id == 0 ? $types['UNEXCUSED'] : $types['EXCUSED'];
@@ -38,10 +58,6 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		if ($entity->student_absence_reason_id == 0) {
 			return '-';
 		}
-	}
-
-	public function onGetSecurityUserId(Event $event, Entity $entity) {
-		return $entity->user->name_with_id;
 	}
 
 	public function beforeAction(Event $event) {
@@ -60,7 +76,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 
 		$tabElements = [
 			'Attendance' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendance'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'],
 				'text' => __('Attendance')
 			],
 			'Absence' => [
@@ -71,6 +87,17 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Absence');
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('date');
+
+		$this->fields['full_day']['visible'] = false;
+		$this->fields['start_date']['visible'] = false;
+		$this->fields['end_date']['visible'] = false;
+		$this->fields['comment']['visible'] = false;
+
+		$this->ControllerAction->setFieldOrder(['date', 'security_user_id', 'type']);
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {

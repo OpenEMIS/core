@@ -52,6 +52,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
+			'ControllerAction.Model.onBeforeDelete' => 'onBeforeDelete',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
 		];
 
@@ -80,6 +81,57 @@ class UserBehavior extends Behavior {
 		$newEvents = array_merge($newEvents, $roleEvents);
 		$events = array_merge($events,$newEvents);
 		return $events;
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+
+
+		$process = function() use ($id, $options) {
+			// must also delete security roles here
+
+			$entity = $this->associatedModel->get($id);
+			$securityUserId = $entity->security_user_id;
+
+			$remainingAssociatedCount = $this->associatedModel
+				->find()
+				->where([$this->associatedModel->aliasField('security_user_id') => $securityUserId])
+				->count();
+			if ($remainingAssociatedCount<=1) {
+				// need to reinsert associated array so that still recognise user as a 'student' or 'staff'
+				$newAssociated = $this->associatedModel->newEntity(['security_user_id' => $securityUserId]);
+				$this->associatedModel->save($newAssociated);
+			}
+
+			// must also delete security roles here if it is a staff
+			if ($this->_table->hasBehavior('Staff')) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+				if ($this->_table->Session->check('Institutions.id')) {
+					$institutionId = $this->_table->Session->read('Institutions.id');
+				}
+
+
+				// if got security_user and institution then delete all
+				if (isset($institutionId) && isset($securityUserId)) {
+					$Institution = TableRegistry::get('Institution.Institutions');
+					$institutionData = $Institution->get($institutionId);
+					
+					$securityGroupId = $institutionData->security_group_id;
+
+
+					$conditions = [
+									'security_group_id' => $securityGroupId,
+									'security_user_id' => $securityUserId
+									];	
+					$SecurityGroupUsers->deleteAll($conditions);
+				}
+				
+
+			}
+			
+			return $this->associatedModel->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
 	}
 
 
@@ -121,9 +173,9 @@ class UserBehavior extends Behavior {
 				$this->_table->fields[$key]['visible'] = false;
 			}
 			$session = $this->_table->request->session();
-			$institutionsId = $session->read('Institutions.id');
+			$institutionSiteId = $session->read('Institutions.id');
 			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
-			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);			
+			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionSiteId, 'fieldName' => $associationString.'institution_site_id']);			
 
 			if ($this->_table->hasBehavior('Student')) {
 
@@ -237,7 +289,7 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('new', $action)) {
 			$session = $controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
-			$session->delete($sessionVar);
+			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
 			unset($action['new']);
 		}
 		$event->stopPropagation();
@@ -246,9 +298,9 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
+			'InstitutionSiteProgrammes.institution_site_id' => $institutionSiteId
 		);
 
 		$InstitutionSiteProgramme = TableRegistry::get('Institution.InstitutionSiteProgrammes');
@@ -266,7 +318,7 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 		$this->academicPeriodId = null;
 		if (array_key_exists('academic_period', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['academic_period'])) {
@@ -286,7 +338,7 @@ class UserBehavior extends Behavior {
 		$attr['options'] = [];
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
-			$attr['options'] = $InstitutionSiteProgrammes->getSiteProgrammeOptions($institutionsId, $this->academicPeriodId);
+			$attr['options'] = $InstitutionSiteProgrammes->getSiteProgrammeOptions($institutionSiteId, $this->academicPeriodId);
 			if (empty($attr['options'])) {
 				$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.educationProgrammeId');
 			}
@@ -297,26 +349,36 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		if (array_key_exists('education_programme_id', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_programme_id'])) {
-				$this->educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
+				$educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
 					if (array_key_exists('education_programme_id', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
 						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
-							$this->educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+							$educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
 						}
 					}
 				}
 			}
 		}
+
+		// this is used for staffTable autocomplete - for filtering of students that are (in institution and of same education programme)
+		$session = $this->_table->request->session();
+		$session->delete($this->_table->controller->name.'.'.$this->_table->alias);
+		if (isset($educationProgrammeId)) {
+			$institutionSiteId = $session->read('Institutions.id');
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_id', $institutionSiteId);
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'education_programme_id', $educationProgrammeId);
+		}
+
 		$attr['type'] = 'select';
 		$attr['onChangeReload'] = true;
 		$attr['options'] = [];
-		if (isset($this->educationProgrammeId)) {
+		if (isset($educationProgrammeId)) {
 			$InstitutionSiteGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
-			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionsId, $this->academicPeriodId, $this->educationProgrammeId);
+			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionSiteId, $this->academicPeriodId, $educationProgrammeId);
 		}
 
 		if (empty($attr['options'])) {
@@ -328,7 +390,7 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		if (array_key_exists('education_grade', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_grade'])) {
@@ -346,7 +408,7 @@ class UserBehavior extends Behavior {
 		$attr['options'] = [];
 		if (isset($this->education_grade)) {
 			$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-			$attr['options'] = $InstitutionSiteSections->getSectionOptions($this->academicPeriodId, $institutionsId, $this->education_grade);
+			$attr['options'] = $InstitutionSiteSections->getSectionOptions($this->academicPeriodId, $institutionSiteId, $this->education_grade);
 		}
 
 		if (empty($attr['options'])) {
@@ -369,10 +431,10 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
-		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionsId, true);
+		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionSiteId, true);
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
@@ -386,12 +448,12 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		$attr['type'] = 'select';
 
 		$data = $this->_table->SecurityRoles
-			->find('ByInstitution', ['id' => $institutionsId])
+			->find('ByInstitution', ['id' => $institutionSiteId])
 			;
 
 		$optionsList = [];
@@ -424,6 +486,15 @@ class UserBehavior extends Behavior {
 					}
 				}
 			}
+		}
+
+		// this is used for staffTable autocomplete - for filtering of staff that are (in institution and of same position)
+		$session = $this->_table->request->session();
+		$session->delete($this->_table->controller->name.'.'.$this->_table->alias);
+		if ($positionId) {
+			$institutionSiteId = $session->read('Institutions.id');
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_id', $institutionSiteId);
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_position_id', $positionId);
 		}
 
 		$startDate = null;

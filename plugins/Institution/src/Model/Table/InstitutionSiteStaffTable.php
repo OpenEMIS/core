@@ -22,6 +22,7 @@ class InstitutionSiteStaffTable extends AppTable {
 		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 
+		$this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('HighChart', [
         	'number_of_staff' => [
         		'_function' => 'getNumberOfStaff',

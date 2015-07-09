@@ -87,8 +87,6 @@ class InstitutionSiteStudentsTable extends AppTable {
 			])
 			->add('education_grade',[
 			])
-			->add('section',[
-			])
 		;
 	}
 

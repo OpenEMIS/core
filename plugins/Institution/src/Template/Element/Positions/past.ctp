@@ -1,4 +1,4 @@
-<?php $_edit = (array_key_exists('edit', $_buttons) ? true : false);?>
+<?php $_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
 	<div class="clearfix"></div>
 
 	<hr>
@@ -29,7 +29,7 @@
 								<td>
 									<?php 
 									if ($_edit) {
-										$url = $_buttons['index']['url'];
+										$url = $ControllerAction['buttons']['index']['url'];
 										$url['action'] = 'Staff';
 										$url[0] = 'edit';
 										$url[1] = $obj->id;
@@ -39,8 +39,8 @@
 									}
 									?>
 								</td>
-								<td><?php echo $table->formatDate($obj->start_date) ?></td>
-								<td><?php echo $table->formatDate($obj->end_date) ?></td>
+								<td><?php echo $ControllerAction['table']->formatDate($obj->start_date) ?></td>
+								<td><?php echo $ControllerAction['table']->formatDate($obj->end_date) ?></td>
 								<td><?php echo (is_object($obj->staff_status) ? $obj->staff_status->name : '') ?></td>
 								<td><?php echo $obj->FTE ?></td>
 							</tr>

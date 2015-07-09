@@ -16,14 +16,6 @@ class StaffTable extends BaseTable {
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStaff]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function() use ($id, $options) {
-			$entity = $this->InstitutionSiteStaff->get($id);
-			return $this->InstitutionSiteStaff->delete($entity, $options->getArrayCopy());
-		};
-		return $process;
-	}
-
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
 			$this->layout = 'ajax';
@@ -49,14 +41,37 @@ class StaffTable extends BaseTable {
 					->find('all')
 					->contain(['Users'])
 					->where($conditions)
-					->group('Users.id')
-					->order(['Users.first_name asc']);
+					;
+
+			$session = $this->request->session();
+			if ($session->check($this->controller->name.'.'.$this->alias)) {
+				$filterData = $session->read($this->controller->name.'.'.$this->alias);
+				// need to form an exclude list
+				$excludeQuery = $this->InstitutionSiteStaff
+					->find()
+					->select(['security_user_id'])
+					->where(
+						[
+							'AND' => $filterData
+						]
+					)
+					->group('security_user_id')
+				;
+				$excludeList = [];
+				foreach ($excludeQuery as $key => $value) {
+					$excludeList[] = $value->security_user_id;
+				}
+
+				$list
+					->where([$this->InstitutionSiteStaff->aliasField('security_user_id').' NOT IN' => $excludeList]);
+			}
+			
+			$list
+				->group('Users.id')
+				->order(['Users.first_name asc']);
 
 			$data = array();
 			foreach ($list as $obj) {
-
-				//pr($obj->user);
-
 				$data[] = array(
 					'label' => $obj->user->nameWithId,
 					'value' =>  $obj->user->id
@@ -66,5 +81,5 @@ class StaffTable extends BaseTable {
 			echo json_encode($data);
 			die;
 		}
-	}
+	}	
 }
