@@ -266,4 +266,22 @@ class AcademicPeriodsTable extends AppTable {
 		}
 	}
 
+	public function getCurrent() {
+		$result = $this->find()
+			->select([$this->aliasField('id')])
+			->where([
+				$this->aliasField('available') => 1,
+				$this->aliasField('visible').' > 0',
+				$this->aliasField('current') => 1
+			])
+			->first()
+			->toArray()
+			;
+		if(!empty($result['id'])){
+			return $result['id'];
+		}else{
+			return '';
+		}
+	}
+
 }
