@@ -136,6 +136,9 @@ class ControllerActionComponent extends Component {
 			uasort($this->model->fields, [$this, 'sortFields']);
 			$this->config['fields'] = $this->model->fields;
 
+			/**
+			 * ControllerAction viewVar is being used by Positions/current.ctp, Positions/past.ctp & HtmlFieldHelper -> binary()
+			 */
 			$controller->set('ControllerAction', $this->config);
 
 			// deprecated: backward compatible

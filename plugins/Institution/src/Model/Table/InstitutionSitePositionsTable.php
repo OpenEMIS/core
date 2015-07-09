@@ -119,11 +119,20 @@ class InstitutionSitePositionsTable extends AppTable {
 			'current_staff_list', 'past_staff_list'
 		]);
 
-		$viewVars = $this->ControllerAction->vars();
-		$id = $viewVars['buttons']['view']['url'][1];
-
 		$session = $this->controller->request->session();
-
+		$pass = $this->request->param('pass');
+		if (is_array($pass) && !empty($pass)) {
+			$id = $pass[1];
+		}
+		if (!isset($id)) {
+			if ($session->check($this->aliasField('id'))) {
+				$id = $session->read($this->aliasField('id'));
+			}
+		}
+		if (!isset($id)) {
+			die('no position id specified');
+		}
+		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->InstitutionSiteStaff;
 		$currentStaff = $Staff ->find('all')

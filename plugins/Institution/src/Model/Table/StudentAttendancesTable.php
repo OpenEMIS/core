@@ -12,7 +12,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 
-class StudentAttendanceTable extends AppTable {
+class StudentAttendancesTable extends AppTable {
 	use OptionsTrait;
 	use MessagesTrait;
 	private $allDayOptions = [];
@@ -51,7 +51,7 @@ class StudentAttendanceTable extends AppTable {
 
 		$tabElements = [
 			'Attendance' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendance'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'],
 				'text' => __('Attendance')
 			],
 			'Absence' => [
@@ -157,14 +157,14 @@ class StudentAttendanceTable extends AppTable {
 	public function getAbsenceData(Event $event, Entity $entity, $key) {
 		$value = '<i class="fa fa-check"></i>';
 
-		if (isset($entity->InstitutionSiteStudentAbsence['id'])) {
-			$startDate = $entity->InstitutionSiteStudentAbsence['start_date'];
-			$endDate = $entity->InstitutionSiteStudentAbsence['end_date'];
+		if (isset($entity->StudentAbsences['id'])) {
+			$startDate = $entity->StudentAbsences['start_date'];
+			$endDate = $entity->StudentAbsences['end_date'];
 			$currentDay = $this->allDayOptions[$key]['date'];
 			if ($currentDay >= $startDate && $currentDay <= $endDate) {
 				$InstitutionSiteStudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 				$absenceQuery = $InstitutionSiteStudentAbsences
-					->findById($entity->InstitutionSiteStudentAbsence['id'])
+					->findById($entity->StudentAbsences['id'])
 					->contain('StudentAbsenceReasons');
 				$absenceResult = $absenceQuery->first();
 
@@ -186,7 +186,7 @@ class StudentAttendanceTable extends AppTable {
 					'controller' => $this->controller->name,
 					'action' => $StudentAbsences->alias(),
 					'view',
-					$entity->InstitutionSiteStudentAbsence['id']
+					$entity->StudentAbsences['id']
 				]);
 			}
 		}
@@ -207,7 +207,7 @@ class StudentAttendanceTable extends AppTable {
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
-		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
@@ -215,7 +215,7 @@ class StudentAttendanceTable extends AppTable {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-		$this->controller->set(compact('periodOptions'));
+		$this->controller->set(compact('periodOptions', 'selectedPeriod'));
 		// End setup periods
 
 		// Setup week options
@@ -227,7 +227,7 @@ class StudentAttendanceTable extends AppTable {
 		}
 		$selectedWeek = $this->queryString('week', $weekOptions);
 		$this->advancedSelectOptions($weekOptions, $selectedWeek);
-		$this->controller->set(compact('weekOptions'));
+		$this->controller->set(compact('weekOptions', 'selectedWeek'));
 		// end setup weeks
 
 		// Setup day options
@@ -291,7 +291,7 @@ class StudentAttendanceTable extends AppTable {
 		} else {
 			$selectedDate = $week;
 		}
-		$this->controller->set(compact('dayOptions'));
+		$this->controller->set(compact('dayOptions', 'selectedDay'));
 		// End setup days
 
 		// Setup section options
@@ -305,7 +305,7 @@ class StudentAttendanceTable extends AppTable {
 
 		$selectedSection = $this->queryString('section_id', $sectionOptions);
 		$this->advancedSelectOptions($sectionOptions, $selectedSection);
-		$this->controller->set(compact('sectionOptions'));
+		$this->controller->set(compact('sectionOptions', 'selectedSection'));
 		// End setup sections
 
 		$settings['pagination'] = false;
@@ -325,56 +325,50 @@ class StudentAttendanceTable extends AppTable {
 		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$sectionId = $request->query('section_id');
-		$week = $request->query('week');
-		$day = $request->query('day');
-		$date = $request->query('date');
+	// public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	// 	$sectionId = $request->query('section_id');
+	// 	$week = $request->query('week');
+	// 	$day = $request->query('day');
+	// 	$date = $request->query('date');
 
-		$options['contain'] = ['Users'];
-		$options['finder'] = ['withAbsence' => ['date' => $date]];
-		$options['conditions'][$this->aliasField('institution_site_section_id')] = $sectionId;
+	// 	$options['contain'] = ['Users'];
+	// 	$options['finder'] = ['withAbsence' => ['date' => $date]];
+	// 	$options['conditions'][$this->aliasField('institution_site_section_id')] = $sectionId;
 
-		if ($day == -1) {
-			foreach ($this->allDayOptions as $key => $obj) {
-				$this->ControllerAction->addField($key);
-			}
-		} else {
-			$this->ControllerAction->field('type');
-			$this->ControllerAction->field('reason');
-		}
-	}
-
-	public function indexAfterPaginate(Event $event, $data) {
-		foreach ($data as $row) {
-			// pr($row);
-		}
-	}
+	// 	if ($day == -1) {
+	// 		foreach ($this->allDayOptions as $key => $obj) {
+	// 			$this->ControllerAction->addField($key);
+	// 		}
+	// 	} else {
+	// 		$this->ControllerAction->field('type');
+	// 		$this->ControllerAction->field('reason');
+	// 	}
+	// }
 
 	public function findWithAbsence(Query $query, array $options) {
 		$date = $options['date'];
 
-		$conditions = ['InstitutionSiteStudentAbsence.security_user_id = StudentAttendance.security_user_id'];
+		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.security_user_id'];
 		if (is_array($date)) {
-			$conditions['InstitutionSiteStudentAbsence.start_date >= '] = $date[0]->format('Y-m-d');
-			$conditions['InstitutionSiteStudentAbsence.start_date <= '] = $date[1]->format('Y-m-d');
+			$conditions['StudentAbsences.start_date >= '] = $date[0]->format('Y-m-d');
+			$conditions['StudentAbsences.start_date <= '] = $date[1]->format('Y-m-d');
 		} else {
-			$conditions['InstitutionSiteStudentAbsence.start_date <= '] = $date->format('Y-m-d');
-			$conditions['InstitutionSiteStudentAbsence.end_date >= '] = $date->format('Y-m-d');
+			$conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
+			$conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');
 		}
     	return $query
     		->select([
     			$this->aliasField('security_user_id'), 
     			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
-    			'InstitutionSiteStudentAbsence.id',
-    			'InstitutionSiteStudentAbsence.start_date',
-    			'InstitutionSiteStudentAbsence.end_date',
-    			'InstitutionSiteStudentAbsence.student_absence_reason_id'
+    			'StudentAbsences.id',
+    			'StudentAbsences.start_date',
+    			'StudentAbsences.end_date',
+    			'StudentAbsences.student_absence_reason_id'
     		])
 			->join([
 				[
 					'table' => 'institution_site_student_absences',
-					'alias' => 'InstitutionSiteStudentAbsence',
+					'alias' => 'StudentAbsences',
 					'type' => 'LEFT',
 					'conditions' => $conditions
 				]
