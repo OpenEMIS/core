@@ -41,7 +41,7 @@ foreach ($data as $entity) {
 	$tableData[] = $row;
 }
 
-$tableClass = 'table table-striped table-hover table-bordered table-sortable';
+$tableClass = 'table table-striped table-hover table-bordered table-sortable table-checkable';
 
 $url = [
 	'plugin' => $this->request->params['plugin'],
@@ -54,6 +54,8 @@ if ($this->request->params['action'] == 'index') {
 } else {
 	$url[] = 'reorder';
 }
+
+$this->HtmlField->includes();
 
 $baseUrl = $this->Url->build($url);
 ?>
