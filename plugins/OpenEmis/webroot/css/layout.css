@@ -1231,6 +1231,9 @@ input[type="checkbox"] {
 	border: 0;
 	-ms-overflow-y: hidden;
 	    overflow-y: hidden;	
+	-ms-overflow-x: scroll;
+	    overflow-x: scroll;  
+	overflow-x: visible;
 }
 
 .ng-scope table > thead:first-child > tr:first-child > th {
@@ -1921,7 +1924,7 @@ label + select {
 .fileinput .form-control {
 	-webkit-border-radius: 3px !important;
 	        border-radius: 3px !important;
-	width: 87%; 
+	width: 100%; 
 	margin-right: -1px; 
 	margin-top: -1px !important;  
 	z-index: 0 !important;
@@ -1947,7 +1950,7 @@ label + select {
 
 .fileinput .btn-file-cancel {
 	display: inline-block;
-	margin-left: -50px;
+	margin-left: -104px;
 	margin-top: -1px;
 	padding: 8px 14px 9px;
 	border-radius: 0;
@@ -2042,11 +2045,8 @@ label + select {
 	width: 70%;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;	
-}
-
-.table-in-view table tbody {
-	border-left: 1px solid #CCC;
 	border-right: 1px solid #CCC;
+	border-left: 1px solid #CCC;
 }
 
 .table-in-view .btn-default {
@@ -2058,10 +2058,6 @@ label + select {
 	width: 150px !important;
 }
 
-.table-in-view thead {
-	border: 0;
-}
-
 .table-in-view .btn-reset {
 	margin-left: -20px !important;
 	padding: 6px 0;
@@ -2069,6 +2065,45 @@ label + select {
 
 .table-toolbar {
 	margin: 10px;
+}
+
+.table-in-view .table thead, 
+.table-in-view .table thead tr {
+	border-left: 0 !important;
+	border-right: 0 !important;
+}
+
+/* For the "inset" look only */
+
+.table-responsive .table-in-view {
+    overflow-y: hidden;
+    overflow-x: scroll;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+::-webkit-scrollbar:window-hover {
+    width: 13px;
+    height: 13px;
+}
+ 
+/* Track */
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    -webkit-border-radius: 0;
+    border-radius: 0;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: #6B6B6B; 
+    -webkit-box-shadow: inset 0 0 1px rgba(0,0,0,0.1); 
+     opacity: 1;
 }
 
 /* Form Buttons */
