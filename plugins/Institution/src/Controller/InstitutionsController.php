@@ -92,7 +92,7 @@ class InstitutionsController extends AppController  {
 				} else {
 					$header = $name .' - '.__(Inflector::humanize($action));
 				}
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}
