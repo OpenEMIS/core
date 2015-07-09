@@ -989,6 +989,10 @@ input[type="checkbox"] {
 	        border-radius: 3px;
 }
 
+.input-group-btn {
+	display: block;
+}
+
 .btn-default,
 .selected,
 .selected:active,
