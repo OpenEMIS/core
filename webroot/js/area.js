@@ -20,11 +20,14 @@ var Area = {
 	},
 	reload: function(obj){
 		var value = $(obj).val();
+		var hiddenField = $(this).find('input:hidden');
+		if(value == -1){
+			value = hiddenField.val();
+		}
 		var url = $(obj).attr('url');
 		var modelName= $(obj).attr('data-source');
 		var parent = $(obj).closest('.areapicker');
 		url += "/" + modelName + "/" + value;
-		alert(url);
 		Area.populate(parent, url)
 	},
 	populate: function(objToUpdate, url){
@@ -36,8 +39,8 @@ var Area = {
 			//traditional: true,
 			success: function(data){
 				//console.log(data);
-				//objToUpdate.html(data);
-				objToUpdate.append(data);
+				objToUpdate.html(data);
+				//objToUpdate.append(data);
 			}
 		});	
 	}
