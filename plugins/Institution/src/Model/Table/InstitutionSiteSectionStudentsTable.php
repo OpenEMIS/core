@@ -63,7 +63,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 		$selectedSectionId = $data['institution_site_section_id'];
 		$selectedStudentCategoryId = $data['student_category_id'];
 
-		if($selectedSectionId != 0) {
+		if(!empty($selectedSectionId)) {
 			$autoInsertData = $this->newEntity();
 
 			$existingData = $this
