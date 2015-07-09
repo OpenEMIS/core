@@ -1310,7 +1310,8 @@ input[type="checkbox"] {
 }
 
 .table thead,
-.table thead tr {
+.table thead tr,
+.table tfoot {
     border: 1px solid #CCC;
 }
 
@@ -2117,7 +2118,8 @@ label + select {
 }
 
 .table-in-view .table thead, 
-.table-in-view .table thead tr {
+.table-in-view .table thead tr,
+.table-in-view .table tfoot {
 	border-left: 0 !important;
 	border-right: 0 !important;
 }
