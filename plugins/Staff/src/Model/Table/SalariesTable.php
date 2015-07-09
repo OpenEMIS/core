@@ -20,8 +20,7 @@ class SalariesTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		//$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
-		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'gross', 'maxlength' => 9);
+		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
 		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 	}
 

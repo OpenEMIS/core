@@ -36,7 +36,7 @@ switch ($fieldName) {
 				</tr>
 			</thead>
 			<?php if (!empty($data->$fieldName)) : ?>
-				<tbody>
+				<tbody id='table_total_salary_<?php echo $fieldName; ?>s'>
 					<?php foreach ($data->$fieldName as $key => $obj) : ?>
 						<tr>
 							<td>
@@ -67,7 +67,7 @@ switch ($fieldName) {
 									$optionsArray['label'] = false;
 									$optionsArray['computeType'] = 'total_salary_'.$fieldName.'s';
 									$optionsArray['onkeypress'] = 'return utility.floatCheck(event)';
-									$optionsArray['onkeyup'] = 'jsTable.computeTotalForMoney(this); jsForm.compute(this); ';
+									$optionsArray['onkeyup'] = 'jsTable.computeTotalForMoney("total_salary_'.$fieldName.'s"); jsForm.compute(this); ';
 									$optionsArray['allowNull'] = true;
 									$optionsArray['onfocus'] = '$(this).select();';
 									$optionsArray['before'] = false;
@@ -78,7 +78,7 @@ switch ($fieldName) {
 								 ?>
 							</td>
 							<td> 
-								<button onclick="jsTable.doRemove(this);jsTable.computeTotalForMoney(this);jsForm.compute(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
+								<button onclick="jsTable.doRemove(this);jsTable.computeTotalForMoney('total_salary_<?php echo $fieldName; ?>s');jsForm.compute(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
 									<i class="fa fa-trash"></i>
 									<span>Delete</span>
 								</button>
