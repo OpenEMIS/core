@@ -170,7 +170,7 @@ trait MessagesTrait {
 			'userRoles' => 'User Roles',
 			'systemRoles' => 'System Roles'
 		],
-		'StudentAttendance' => [
+		'StudentAttendances' => [
 			'noSections' => 'No Sections'
 		],
 		'StaffBehaviours' => [
