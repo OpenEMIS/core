@@ -137,7 +137,8 @@ class NavigationComponent extends Component {
 								],
 								'Roles' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles'],
+									'selected' => ['Roles', 'Permissions']
 								]
 							]
 						],
@@ -189,7 +190,7 @@ class NavigationComponent extends Component {
 					'items' => [
 						'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']],
 						'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
-						'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAbsences']]
+						'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendance'], 'selected' => ['StaffAttendance', 'StaffAbsences']]
 					]
 				],
 
