@@ -146,6 +146,9 @@ trait MessagesTrait {
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
 		],
+		'EducationGrades' => [
+			'add_subject' => 'Add Subject'
+		],
 		'RubricSections' => [
 			'rubric_template_id' => 'Rubric Template'
 		],
@@ -162,6 +165,10 @@ trait MessagesTrait {
 				'fail' => 'You have entered an invalid username or password.'
 			],
 			'noAccess' => 'You do not have access to this location.'
+		],
+		'SecurityRoles' => [
+			'userRoles' => 'User Roles',
+			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
@@ -206,9 +213,6 @@ trait MessagesTrait {
 			'add_staff' => 'Add Staff',
 			'select_teacher' => 'Select Teacher',
 			'add_teacher' => 'Add Teacher'
-		],
-		'UserRoles' => [
-			'tabTitle' => 'User Roles'
 		],
 		'UserGroups' => [
 			'tabTitle' => 'User Groups'
@@ -271,6 +275,7 @@ trait MessagesTrait {
 			],
 			'InstitutionSiteStaff' => [
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
+				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 			]
