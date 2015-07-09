@@ -22,8 +22,13 @@ class UsersTable extends AppTable {
 
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
 	private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
+	private $defaultUserProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
+
 	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
 	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
+	private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
+
+
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
@@ -151,7 +156,9 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('student_institution_name', ['visible' => false]);
 
 		$this->fields['name']['sort'] = true;
-		$this->fields['default_identity_type']['sort'] = true;
+		if($this->controller->name != 'Securities') {
+			$this->fields['default_identity_type']['sort'] = true;
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
@@ -368,15 +375,18 @@ class UsersTable extends AppTable {
 		$fileContent = $entity->photo_content;
 		$value = "";
 		if(empty($fileContent) && is_null($fileContent)) {
-			$controllerName = $this->controller->name;	
 			if(($this->hasBehavior('Student')) && ($this->action == "index")){
 				$value = $this->defaultStudentProfileIndex;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
 				$value = $this->defaultStaffProfileIndex;
+			} else if(($this->hasBehavior('User')) && ($this->action == "index")){
+				$value = $this->defaultUserProfileIndex;
 			} else if(($this->hasBehavior('Student')) && ($this->action == "view")){
 				$value = $this->defaultStudentProfileView;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
 				$value = $this->defaultStaffProfileView;
+			} else if(($this->hasBehavior('User')) && ($this->action == "view")){
+				$value = $this->defaultUserProfileView;
 			}
 		} else {
 			$value = base64_encode( stream_get_contents($fileContent) );//$fileContent;
@@ -426,11 +436,14 @@ class UsersTable extends AppTable {
 	public function getDefaultImgView(){
 		$value = "";
 		$controllerName = $this->controller->name;	
+
 		if($this->hasBehavior('Student')){
 			$value = $this->defaultStudentProfileView;
 		} else if($this->hasBehavior('Staff')){
 			$value = $this->defaultStaffProfileView;
-		}
+		} else if($this->hasBehavior('User')){
+			$value = $this->defaultUserProfileView;
+		} 
 		return $value;
 	}
 }
