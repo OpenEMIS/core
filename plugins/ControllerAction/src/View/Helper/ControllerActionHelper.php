@@ -222,8 +222,8 @@ class ControllerActionHelper extends Helper {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
 			}
 
-			if (isset($attr['tableRowClass'])) {
-				$row[] = array($value, array('class' => $attr['tableRowClass']));
+			if (isset($attr['tableColumnClass'])) {
+				$row[] = [$value, ['class' => $attr['tableColumnClass']]];
 			} else {
 				$row[] = $value;
 			}

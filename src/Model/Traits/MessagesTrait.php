@@ -65,6 +65,7 @@ trait MessagesTrait {
 			'reject' => 'Reject',
 			'noSections' => 'No Sections',
 			'noClasses' => 'No Classes',
+			'noStaff' => 'No Staff',
 			'type' => 'Type',
 			'amount' => 'Amount'
 		],
@@ -132,10 +133,10 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
-		'InstitutionSiteStaffAbsences' => [
-			'first_date_absent' => 'First Day Of Absence',
-			'last_date_absent' => 'Last Day Of Absence'
-		],
+		// 'InstitutionSiteStaffAbsences' => [
+		// 	'first_date_absent' => 'First Day Of Absence',
+		// 	'last_date_absent' => 'Last Day Of Absence'
+		// ],
 		'InstitutionSurveys' => [
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
@@ -170,8 +171,11 @@ trait MessagesTrait {
 			'userRoles' => 'User Roles',
 			'systemRoles' => 'System Roles'
 		],
-		'StudentAttendance' => [
-			'noSections' => 'No Sections'
+		'StudentAttendances' => [
+			'noSections' => 'There are no available Sections.',
+		],
+		'StaffAttendances' => [
+			'noStaff' => 'There are no available Staff.',
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
@@ -277,7 +281,7 @@ trait MessagesTrait {
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
-				'staffTypeId' => 'You need to configure Staff Types first.',
+				'staffTypeId' => 'You need to configure Staff Types first.'
 			]
 		],
 		'User' => [

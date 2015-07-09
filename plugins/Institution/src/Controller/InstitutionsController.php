@@ -35,12 +35,12 @@ class InstitutionsController extends AppController  {
 			// 'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
-			'StaffAttendance' 	=> ['className' => 'Institution.StaffAttendance', 'actions' => ['index']],
+			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
-			'StudentAttendance' => ['className' => 'Institution.StudentAttendance', 'actions' => ['index']],
+			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'StudentResults'	=> ['className' => 'Institution.StudentResults', 'actions' => ['index']],
 
@@ -92,7 +92,7 @@ class InstitutionsController extends AppController  {
 				} else {
 					$header = $name .' - '.__(Inflector::humanize($action));
 				}
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}
