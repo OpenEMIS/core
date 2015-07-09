@@ -173,6 +173,25 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * check the existence of AM / PM in a time field
+	 * @param  string $field      The field value
+	 * @param  array  $globalData [description]
+	 * @return mixed              Boolean or String
+	 */
+	public static function amPmValue($field, $globalData) {
+		$explode = explode(' ', $field);
+		if (isset($explode[1])) {
+			if (!in_array($explode[1], ['am', 'AM', 'pm', 'PM'])) {
+				return __('Wrong time format');
+			} else {
+				return true;
+			}
+		} else {
+			return __('Wrong time format');
+		}
+	}
+
+	/**
 	 * [checkIfStringGotNoNumber description]
 	 * @param  [type] $check      [description]
 	 * @param  array  $globalData [description]
