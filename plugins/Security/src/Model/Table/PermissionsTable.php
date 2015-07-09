@@ -239,6 +239,9 @@ class PermissionsTable extends AppTable {
 		if (!empty($this->request->query)) {
 			$url = array_merge($url, $this->request->query);
 		}
+		if (array_key_exists('mode', $url)) {
+			unset($url['mode']);
+		}
 		
 		foreach ($modules as $module) {
 			$tabElements[$module] = [
