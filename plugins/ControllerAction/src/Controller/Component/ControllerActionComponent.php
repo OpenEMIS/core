@@ -895,7 +895,7 @@ class ControllerActionComponent extends Component {
 			$id = $request->data[$primaryKey];
 			$deleteOptions = new ArrayObject([]);
 
-			$process = function () use ($model, $deleteOptions) {
+			$process = function () use ($id, $model, $deleteOptions) {
 				$entity = $model->get($id);
 				return $model->delete($entity, $deleteOptions->getArrayCopy());
 			};
