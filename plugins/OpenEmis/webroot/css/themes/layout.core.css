@@ -62,7 +62,7 @@
 }
 
 .header-navigation .btn-group .btn:hover,
-::-webkit-scrollbar-thumb {
+.table-in-view::-webkit-scrollbar-thumb {
 	background-color: #476B8F;
 }
 
