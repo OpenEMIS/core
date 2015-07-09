@@ -303,7 +303,6 @@ class HtmlFieldHelper extends Helper {
 
 		if ($action == 'index' || $action == 'view') {
 			$src = $data->photo_content;
-			$imgClass = ($action == "index") ?  $this->table->getDefaultImgIndexClass() : $this->table->getDefaultImgViewClass();
 			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
 
 			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
