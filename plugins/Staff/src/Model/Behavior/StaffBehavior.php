@@ -85,9 +85,10 @@ class StaffBehavior extends Behavior {
 			}
 		}
 
-		
-		$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
-		$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_site_staff'][0])) {
+			$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
+			$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+		}
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
