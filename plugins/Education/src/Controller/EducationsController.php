@@ -67,7 +67,7 @@ class EducationsController extends AppController
 		$header = __('Education');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Education', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $model->alias]);
+		$this->Navigation->addCrumb('Education Structure', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $model->alias]);
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);

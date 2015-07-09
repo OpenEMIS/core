@@ -49,7 +49,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
-			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
+			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
@@ -70,6 +70,7 @@ class UserBehavior extends Behavior {
 		if ($this->_table->hasBehavior('Staff')) {
 			$roleEvents = [
 				'ControllerAction.Model.onUpdateFieldInstitutionSitePositionId' => 'onUpdateFieldInstitutionSitePositionId',
+				'ControllerAction.Model.onUpdateFieldSecurityRoleId' => 'onUpdateFieldSecurityRoleId',
 				'ControllerAction.Model.onUpdateFieldStartDate' => 'onUpdateFieldStartDate',
 				'ControllerAction.Model.onUpdateFieldFTE' => 'onUpdateFieldFTE',
 				'ControllerAction.Model.onUpdateFieldStaffTypeID' => 'onUpdateFieldStaffTypeID',
@@ -152,6 +153,7 @@ class UserBehavior extends Behavior {
 
 			if ($this->_table->hasBehavior('Staff')) {
 				$this->_table->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
+				$this->_table->ControllerAction->field('security_role_id', ['fieldName' => $associationString.'security_role_id']);
 				$this->_table->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
 				$this->_table->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
 				$this->_table->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
@@ -161,7 +163,7 @@ class UserBehavior extends Behavior {
 															     'url' => '/Institutions/Staff/autoCompleteUserList',
 															     'length' => 3 ]);
 				$this->_table->ControllerAction->setFieldOrder([
-					'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
+					'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id'
 					, 'search'
 					]);
 
@@ -199,7 +201,15 @@ class UserBehavior extends Behavior {
 					return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
 				} else {
 					$data[$this->_table->alias()][$this->associatedModel->table()][0]['security_user_id'] = $currSearch;
+
+
 					if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()][$this->associatedModel->table()][0]))) {
+
+						// need to insert security roles here
+						if ($this->_table->hasBehavior('Staff')) {
+							TableRegistry::get('Security.SecurityGroupUsers')->insertSecurityRoleForInstitution($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+						}
+
 						$this->_table->ControllerAction->Alert->success('general.add.success');
 					} else {
 						$this->_table->ControllerAction->Alert->error('general.add.failed');
@@ -212,7 +222,18 @@ class UserBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller) {
+	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+		if ($this->_table->hasBehavior('Staff')) {
+			// need to insert security roles here
+			$data = $this->_table->ControllerAction->request->data[$this->_table->alias()][$this->associatedModel->table()][0];
+			$data['security_user_id'] = $entity->id;
+			TableRegistry::get('Security.SecurityGroupUsers')->insertSecurityRoleForInstitution($data);
+		}
+
+		// that function removes the session and makes it redirect to 
+		// index without any named params
+		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
+		$action = $this->_table->ControllerAction->buttons['index']['url'];
 		if (array_key_exists('new', $action)) {
 			$session = $controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
@@ -359,6 +380,29 @@ class UserBehavior extends Behavior {
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.institutionSitePositionId');
 		}
 		$attr['onChangeReload'] = true;
+
+		return $attr;
+	}
+
+	public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, $request) {
+		$session = $this->_table->request->session();
+		$institutionsId = $session->read('Institutions.id');
+
+		$attr['type'] = 'select';
+
+		$data = $this->_table->SecurityRoles
+			->find('ByInstitution', ['id' => $institutionsId])
+			;
+
+		$optionsList = [];
+		foreach ($data as $key => $value) {
+			$optionsList[$value->id] = $value->name;
+		}
+		$attr['options'] = $optionsList;
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.securityRoleId');
+		}
 
 		return $attr;
 	}

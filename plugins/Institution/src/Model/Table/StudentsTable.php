@@ -14,6 +14,11 @@ class StudentsTable extends BaseTable {
 		$this->addBehavior('Student.Student');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
+
+		// $this->addBehavior('Institution.Role', ['associatedModel' => $this->InstitutionSiteStudents]);
+		// new aftersave
+		// existing aftersave update instaed of new one
+		// deletion onBeforeDelete new insert or update 
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
