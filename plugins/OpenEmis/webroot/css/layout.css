@@ -603,7 +603,7 @@ body.large {
 /* PANEL OR CHART TOOLBAR */
 .toolbar-responsive {
 	min-height: 0.01%;
-	padding: 5px !important;
+	padding: 5px 0 !important;
 	margin-bottom: 5px;
 }
 
@@ -645,6 +645,7 @@ body.large {
 }
 
 .panel-toolbar a {
+	display: inline-block;
 	padding: 8px;
 	-webkit-border-radius: 3px !important;
 	        border-radius: 3px !important;	
@@ -662,7 +663,6 @@ body.large {
 	color: #999;
 	vertical-align: middle;
 	display: block;
-	/*padding: 11px 0 !important;*/
 }
 
 .panel-toolbar .dropdown-arrow i {
@@ -671,6 +671,46 @@ body.large {
 
 .panel-toolbar .dropdown-toggle i {
 	padding: 0 0 0 3px;
+}
+
+/* Panel with Accordion */
+.panel-toolbar .panel-heading {
+	display: none;
+}
+
+.panel-toolbar .panel-default {
+	margin: 0;
+}
+
+.panel-toolbar .panel-body {
+	padding: 5px 0 0;
+	width: 100%;
+	max-height: 180px;
+	-ms-overflow-x: scroll;
+	    overflow-x: scroll;
+}
+
+.panel-toolbar .table-responsive {
+	background: none;
+}
+
+.panel-toolbar .chart-lists tbody {
+	width: 100%;
+}
+
+.panel-toolbar table tr {
+	margin-top: 10px;
+}
+
+.panel-toolbar .chart-lists img {
+	width: 120px;
+	height: 80px;
+	margin: 10px;
+	padding: 2px;
+	background: #FFF;
+	border: 1px solid #DDD;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
 }
 
 .panel-toolbar .dropdown-menu {
@@ -785,6 +825,8 @@ input[type="checkbox"] {
 .format-lists {
 	max-height: 300px;
 	overflow: auto;
+	width: 100%;
+	margin: 0 10px;
 }
 
 .format-lists textarea {
@@ -825,9 +867,8 @@ input[type="checkbox"] {
 }
 
 .dropdown-header {
-	border-bottom: 1px solid #DDD;
 	padding: 0;
-	margin-bottom: 10px;
+	text-align: center;
 }
 
 .format-item,
@@ -868,6 +909,10 @@ input[type="checkbox"] {
 .format-item label {
 	font-weight: 500;
 	padding: 0;
+}
+
+.format-item .btn-default {
+	margin: 10px 0;
 }
 
 .format-item input,
@@ -942,6 +987,10 @@ input[type="checkbox"] {
 .input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle) {
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
+}
+
+.input-group-btn {
+	display: block;
 }
 
 .btn-default,
@@ -2075,30 +2124,30 @@ label + select {
 
 /* For the "inset" look only */
 
-.table-responsive .table-in-view {
+.table-in-view {
     overflow-y: hidden;
     overflow-x: scroll;
 }
 
-::-webkit-scrollbar {
-    width: 9px;
-    height: 9px;
+.table-in-view::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-::-webkit-scrollbar:window-hover {
+.table-in-view::-webkit-scrollbar:window-hover {
     width: 13px;
     height: 13px;
 }
  
 /* Track */
-::-webkit-scrollbar-track {
+/*::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
     -webkit-border-radius: 0;
     border-radius: 0;
-}
+}*/
  
 /* Handle */
-::-webkit-scrollbar-thumb {
+.table-in-view::-webkit-scrollbar-thumb {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     background-color: #6B6B6B; 
@@ -2237,7 +2286,9 @@ input[readonly] {
 .button-responsive	{
 	display: inline-block;
 	margin: -6px 10px;	 
-	border-left: 1px solid #DDD;	   
+	border-left: 1px solid #DDD;
+	-ms-overflow-y: hidden !important;
+	    overflow-y: hidden !important;		   
 }
 
 /* WIZARD */
