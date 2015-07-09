@@ -22,6 +22,7 @@ class InstitutionSiteStaffTable extends AppTable {
 		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 
+		$this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('HighChart', [
         	'number_of_staff' => [
         		'_function' => 'getNumberOfStaff',
@@ -44,46 +45,6 @@ class InstitutionSiteStaffTable extends AppTable {
 	public function findByInstitution(Query $query, array $options) {
 		if (array_key_exists('Institutions.id', $options)) {
 			return $query->where([$this->aliasField('institution_site_id') => $options['Institutions.id']]);
-		} else {
-			return $query;
-		}
-	}
-
-	public function findAcademicPeriod(Query $query, array $options) {
-		if (array_key_exists('academic_period_id', $options)) {
-			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$periodObj = $AcademicPeriods
-				->findById($options['academic_period_id'])
-				->first();
-			$startDate = date('Y-m-d', strtotime($periodObj->start_date));
-			$endDate = date('Y-m-d', strtotime($periodObj->end_date));
-
-			$conditions = [];
-			$conditions['OR'] = [
-				'OR' => [
-					[
-						$this->aliasField('end_date') . ' IS NOT NULL',
-						$this->aliasField('start_date') . ' <=' => $startDate,
-						$this->aliasField('end_date') . ' >=' => $startDate
-					],
-					[
-						$this->aliasField('end_date') . ' IS NOT NULL',
-						$this->aliasField('start_date') . ' <=' => $endDate,
-						$this->aliasField('end_date') . ' >=' => $endDate
-					],
-					[
-						$this->aliasField('end_date') . ' IS NOT NULL',
-						$this->aliasField('start_date') . ' >=' => $startDate,
-						$this->aliasField('end_date') . ' <=' => $startDate
-					]
-				],
-				[
-					$this->aliasField('end_date') . ' IS NULL',
-					$this->aliasField('start_date') . ' <=' => $endDate
-				]
-			];
-
-			return $query->where($conditions);
 		} else {
 			return $query;
 		}
