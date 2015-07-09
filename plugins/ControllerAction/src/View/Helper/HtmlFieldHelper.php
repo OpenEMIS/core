@@ -552,7 +552,9 @@ class HtmlFieldHelper extends Helper {
 			if (!empty($fileUpload)) {
 				$name = $fileUpload->config('name');
 			}
-			$buttons = $this->_View->get('_buttons');
+			// $buttons = $this->_View->get('_buttons');
+			$buttons = $this->_View->get('ControllerAction');
+			$buttons = $buttons['buttons'];
 			$action = $buttons['download']['url'];
 			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {
