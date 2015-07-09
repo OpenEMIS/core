@@ -33,6 +33,12 @@ class StudentAttendanceTable extends AppTable {
 		return $validator;
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	// Event: ControllerAction.Model.beforeAction
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('openemis_no');
@@ -375,12 +381,6 @@ class StudentAttendanceTable extends AppTable {
 			])
 			->order(['Users.openemis_no'])
 			;
-    }
-
-    public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {    	
