@@ -52,6 +52,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
+			'ControllerAction.Model.onBeforeDelete' => 'onBeforeDelete',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
 		];
 
@@ -80,6 +81,57 @@ class UserBehavior extends Behavior {
 		$newEvents = array_merge($newEvents, $roleEvents);
 		$events = array_merge($events,$newEvents);
 		return $events;
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+
+
+		$process = function() use ($id, $options) {
+			// must also delete security roles here
+
+			$entity = $this->associatedModel->get($id);
+			$securityUserId = $entity->security_user_id;
+
+			$remainingAssociatedCount = $this->associatedModel
+				->find()
+				->where([$this->associatedModel->aliasField('security_user_id') => $securityUserId])
+				->count();
+			if ($remainingAssociatedCount<=1) {
+				// need to reinsert associated array so that still recognise user as a 'student' or 'staff'
+				$newAssociated = $this->associatedModel->newEntity(['security_user_id' => $securityUserId]);
+				$this->associatedModel->save($newAssociated);
+			}
+
+			// must also delete security roles here if it is a staff
+			if ($this->_table->hasBehavior('Staff')) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+				if ($this->_table->Session->check('Institutions.id')) {
+					$institutionId = $this->_table->Session->read('Institutions.id');
+				}
+
+
+				// if got security_user and institution then delete all
+				if (isset($institutionId) && isset($securityUserId)) {
+					$Institution = TableRegistry::get('Institution.Institutions');
+					$institutionData = $Institution->get($institutionId);
+					
+					$securityGroupId = $institutionData->security_group_id;
+
+
+					$conditions = [
+									'security_group_id' => $securityGroupId,
+									'security_user_id' => $securityUserId
+									];	
+					$SecurityGroupUsers->deleteAll($conditions);
+				}
+				
+
+			}
+			
+			return $this->associatedModel->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
 	}
 
 
