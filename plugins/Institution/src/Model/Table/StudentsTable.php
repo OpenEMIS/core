@@ -21,14 +21,6 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function() use ($id, $options) {
-			$entity = $this->InstitutionSiteStudents->get($id);
-			return $this->InstitutionSiteStudents->delete($entity, $options->getArrayCopy());
-		};
-		return $process;
-	}
-
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
 			$this->layout = 'ajax';
