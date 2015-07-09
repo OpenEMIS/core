@@ -75,7 +75,7 @@ class StaffAbsencesTable extends AppTable {
 
 		$tabElements = [
 			'Attendance' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendance'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'],
 				'text' => __('Attendance')
 			],
 			'Absence' => [
