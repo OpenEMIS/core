@@ -87,7 +87,14 @@ class HtmlFieldHelper extends Helper {
 					echo $this->Html->css($include['css'], ['block' => true]);
 				}
 				if (array_key_exists('js', $include)) {
-					echo $this->Html->script($include['js'], ['block' => true]);
+					if (is_array($include['js'])) {
+						foreach ($include['js'] as $js) {
+
+							echo $this->Html->script($js, ['block' => true]);
+						}
+					} else {
+						echo $this->Html->script($include['js'], ['block' => true]);
+					}
 				}
 				if (array_key_exists('element', $include)) {
 					echo $this->_View->element($include['element']);
@@ -303,7 +310,6 @@ class HtmlFieldHelper extends Helper {
 
 		if ($action == 'index' || $action == 'view') {
 			$src = $data->photo_content;
-			$imgClass = ($action == "index") ?  $this->table->getDefaultImgIndexClass() : $this->table->getDefaultImgViewClass();
 			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
 
 			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
@@ -553,7 +559,9 @@ class HtmlFieldHelper extends Helper {
 			if (!empty($fileUpload)) {
 				$name = $fileUpload->config('name');
 			}
-			$buttons = $this->_View->get('_buttons');
+			// $buttons = $this->_View->get('_buttons');
+			$buttons = $this->_View->get('ControllerAction');
+			$buttons = $buttons['buttons'];
 			$action = $buttons['download']['url'];
 			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {

@@ -94,10 +94,14 @@ class StudentBehavior extends Behavior {
 			}
 		}
 
-		$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
-		$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
-		$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
-		$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
+		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_site_students'][0])) {
+			$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['start_date']));
+			$data[$this->_table->alias()]['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+		}
+		if (array_key_exists('end_date', $data[$this->_table->alias()]['institution_site_students'][0])) {
+			$endData = getdate(strtotime($data[$this->_table->alias()]['institution_site_students'][0]['end_date']));
+			$data[$this->_table->alias()]['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
+		}
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -113,8 +117,9 @@ class StudentBehavior extends Behavior {
 		if ($entity->isNew()) {
 			// for attaching student to section
 			if (array_key_exists('new', $this->_table->request->query)) {
-				if ($this->_table->Session->check('InstitutionSiteStudents.add.'.$this->_table->request->query['new'])) {
-					$institutionStudentData = $this->_table->Session->read('InstitutionSiteStudents.add.'.$this->_table->request->query['new']);
+				$sessionVar = $this->_table->alias().'.add.'.$this->_table->request->query['new'];
+				if ($this->_table->Session->check($sessionVar)) {
+					$institutionStudentData = $this->_table->Session->read($sessionVar);
 					$sectionData = [];
 					$sectionData['security_user_id'] = $entity->id;
 					$sectionData['education_grade_id'] = $institutionStudentData[$this->_table->alias()]['institution_site_students'][0]['education_grade'];

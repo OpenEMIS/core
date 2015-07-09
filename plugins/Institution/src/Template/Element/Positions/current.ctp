@@ -1,5 +1,4 @@
-<?php $_edit = (array_key_exists('edit', $_buttons) ? true : false);?>
-<?php //pr($_buttons);?>
+<?php $_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
 	<div class="clearfix"></div>
 
 	<hr>
@@ -19,6 +18,7 @@
 	
 			<tbody>
 				<?php 
+				// pr($ControllerAction['buttons']);die;
 				// if $current is 0, we need to add an empty row so that the table header and table footer columns will have separator lines; else the lines will not show up.
 				// Probably due to the existence of <tfoot> element.
 				if (count($attr['data'])>0): 
@@ -33,7 +33,7 @@
 								<td>
 									<?php 
 									if ($_edit) {
-										$url = $_buttons['index']['url'];
+										$url = $ControllerAction['buttons']['index']['url'];
 										$url['action'] = 'Staff';
 										$url[0] = 'edit';
 										$url[1] = $obj->id;
@@ -43,7 +43,7 @@
 									}
 									?>
 								</td>
-								<td><?php echo $table->formatDate($obj->start_date) ?></td>
+								<td><?php echo $ControllerAction['table']->formatDate($obj->start_date) ?></td>
 								<td><?php echo $obj->FTE ?></td>
 							</tr>
 						<?php endif; ?>

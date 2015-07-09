@@ -21,14 +21,6 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function() use ($id, $options) {
-			$entity = $this->InstitutionSiteStudents->get($id);
-			return $this->InstitutionSiteStudents->delete($entity, $options->getArrayCopy());
-		};
-		return $process;
-	}
-
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
 			$this->layout = 'ajax';
@@ -53,9 +45,34 @@ class StudentsTable extends BaseTable {
 			$list = $this->InstitutionSiteStudents
 					->find('all')
 					->contain(['Users'])
-					->where($conditions)
-					->group('Users.id')
-					->order(['Users.first_name asc']);
+					->where($conditions);
+
+			$session = $this->request->session();
+			if ($session->check($this->controller->name.'.'.$this->alias)) {
+				$filterData = $session->read($this->controller->name.'.'.$this->alias);
+				// need to form an exclude list
+				$excludeQuery = $this->InstitutionSiteStudents
+					->find()
+					->select(['security_user_id'])
+					->where(
+						[
+							'AND' => $filterData
+						]
+					)
+					->group('security_user_id')
+				;
+				$excludeList = [];
+				foreach ($excludeQuery as $key => $value) {
+					$excludeList[] = $value->security_user_id;
+				}
+				$list
+					->where([$this->InstitutionSiteStudents->aliasField('security_user_id').' NOT IN' => $excludeList]);
+			}
+
+
+			$list	
+				->group('Users.id')
+				->order(['Users.first_name asc']);
 
 			$data = array();
 			foreach ($list as $obj) {
