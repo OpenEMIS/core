@@ -23,6 +23,11 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 	}
 
+	public function onGetStatus(Event $event, Entity $entity) {
+		list($statusOptions) = array_values($this->_getSelectOptions());
+		return $statusOptions[$entity->status];
+	}
+
 	public function onGetAssessmentId(Event $event, Entity $entity) {
 		return $entity->assessment->code_name;
 	}
@@ -58,6 +63,10 @@ class InstitutionAssessmentsTable extends AppTable {
 		return $entity->modified;
 	}
 
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => false]]);
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -91,7 +100,6 @@ class InstitutionAssessmentsTable extends AppTable {
 			$fieldOrder[] = 'completed_on';
         }
 
-        $this->ControllerAction->field('status', ['visible' => false]);
         $this->ControllerAction->setFieldOrder($fieldOrder);
     }
 
