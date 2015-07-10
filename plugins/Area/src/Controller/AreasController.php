@@ -56,24 +56,28 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function ajaxGetArea() {
+    public function ajaxGetArea($tableName, $id) {
     	// Getting the first part of the pass value as the model name
     	$passedValue = $this->request->pass;
-    	$tableName = $passedValue[0];
-    	$id = $passedValue[1];
     	//pr($this->ControllerAction->model->alias);
     	$tableItems = TableRegistry::get($passedValue[0]);
     	$list = $tableItems
     		->find('list')
     		->where(['parent_id'=>$id])
     		->toArray();
-    		
-		
+    	$disabled = false;
+    	if($list){
+    		$firstOption = ["-1"=>"--Select--"];
+    		$list = $firstOption + $list;
+    	}else{
+    		$disabled = true;
+    	}
+		// pr($list);
     	// $this->set('id', $id);
     	// $this->set('code', $code);
     	// $this->set('name', $name);
 
-    	$this->set(compact('list', 'tableName'));
+    	$this->set(compact('list', 'tableName', 'id', 'disabled'));
     	$this->layout = false;
 	}
 }
