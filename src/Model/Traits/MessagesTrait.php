@@ -137,6 +137,12 @@ trait MessagesTrait {
 		// 	'first_date_absent' => 'First Day Of Absence',
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
+		'InstitutionAssessments' => [
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			],
+		],
 		'InstitutionAssessmentResults' => [
 			'noSubjects' => 'There are no available Subjects.',
 			'noClasses' => 'There are no available Classes.',

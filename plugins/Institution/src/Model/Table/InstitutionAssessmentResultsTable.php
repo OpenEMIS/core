@@ -266,7 +266,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 					]
 				);
 			} else {
-				$Items->log($Items->errors(), 'debug');
+				$Items->log($entity->errors(), 'debug');
 				if ($selectedStatus == 0) {
 					$this->Alert->success('general.add.failed');
 				} else if ($selectedStatus == 1) {
