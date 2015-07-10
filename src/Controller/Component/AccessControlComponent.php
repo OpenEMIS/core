@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller\Component;
 
+use Cake\I18n\Time;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
@@ -24,14 +25,35 @@ class AccessControlComponent extends Component {
 		$this->Session = $this->request->session();
 
 		// $this->Session->delete('Permissions');
-		if (!is_null($this->Auth->user()) && !$this->Session->check('Permissions')) {
-			$this->buildPermissions();
-		} else {
-			// TODO-jeff
-			// check last updated and rebuild permissions;
+		if (!is_null($this->Auth->user())) {
+			if (!$this->Session->check('Permissions')) {
+				$this->buildPermissions();
+			} else {
+				// check if permission is updated and rebuild
+				$userId = $this->Auth->user('id');
+				$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+				$roles = $SecurityGroupUsers
+					->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
+					->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+					->toArray();
+
+				$entity = $SecurityRoleFunctions
+					->find()
+					->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
+					->order([$SecurityRoleFunctions->aliasField('modified') => 'DESC'])
+					->first();
+
+				if (!is_null($entity)) {
+					$lastModified = $this->Session->read('Permissions.lastModified');
+
+					if ($entity->modified->gt($lastModified)) {
+						$this->buildPermissions();
+					}
+				}
+			}
 		}
-		// pr($this->Session->read('Permissions'));
-		// die;
 	}
 
 	public function startup(Event $event) {
@@ -45,7 +67,8 @@ class AccessControlComponent extends Component {
 		$Users = TableRegistry::get('User.Users');
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
 		$userObj = $Users->findById($userId)->contain(['SecurityRoles'])->first();
-		
+		$lastModified = null;
+
 		foreach ($userObj->security_roles as $role) { // for each role in user
 			$roleId = $role->id;
 			$functions = $SecurityRoleFunctions->findAllBySecurityRoleId($roleId)->contain(['SecurityFunctions'])->all();
@@ -53,6 +76,9 @@ class AccessControlComponent extends Component {
 			foreach ($functions as $entity) { // for each function in roles
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
+					if (is_null($lastModified) || (!is_null($lastModified) && $lastModified->lt($entity->modified))) {
+						$lastModified = $entity->modified;
+					}
 
 					foreach ($operations as $op) { // for each operation in function
 						if (!empty($function->$op) && $entity->$op == 1) {
@@ -74,6 +100,8 @@ class AccessControlComponent extends Component {
 				}
 			}
 		}
+
+		$this->Session->write('Permissions.lastModified', $lastModified);
 	}
 
 	public function addPermission($permission, $roleId) {
