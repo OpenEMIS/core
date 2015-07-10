@@ -25,7 +25,7 @@ class AccessControlComponent extends Component {
 		$this->Session = $this->request->session();
 
 		// $this->Session->delete('Permissions');
-		if (!is_null($this->Auth->user())) {
+		if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
 			if (!$this->Session->check('Permissions')) {
 				$this->buildPermissions();
 			} else {
