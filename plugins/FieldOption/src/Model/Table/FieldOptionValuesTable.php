@@ -17,6 +17,8 @@ class FieldOptionValuesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
+
+		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
 	}
 
 	public function onGetEditable(Event $event, Entity $entity) {
@@ -28,23 +30,10 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('field_option_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
 		$this->ControllerAction->field('editable', ['options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
-	}
-
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$toolbarElements = [
-			['name' => 'FieldOption.controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
-		$this->ControllerAction->setFieldOrder([
-			'visible', 'default', 'editable', 'name', 'national_code'
-		]);
-
-		$settings['pagination'] = false;
+		
 
 		$fieldOptions = [];
 		$data = $this->FieldOptions
@@ -59,13 +48,41 @@ class FieldOptionValuesTable extends AppTable {
 			$parent = __($obj->parent);
 			if (!array_key_exists($parent, $fieldOptions)) {
 				$fieldOptions[$parent] = array();
-		}
+			}
 			$fieldOptions[$parent][$key] = __($obj->name);
 		}
 		$this->controller->set('fieldOptions', $fieldOptions);
 
 		$selectedOption = $this->queryString('field_option_id', $fieldOptions);
 		$this->controller->set('selectedOption', $selectedOption);
+
+		if ($this->action == 'index') {
+			$toolbarElements = [
+				['name' => 'FieldOption.controls', 'data' => [], 'options' => []]
+			];
+			$this->controller->set('toolbarElements', $toolbarElements);
+		}
+
+		$fieldOptionList = $this->FieldOptions->getList()->toArray();
+		$this->ControllerAction->field('field_option_id', [
+			'type' => 'readonly', 
+			'options' => $fieldOptionList,
+			'visible' => ['index' => false, 'view' => true, 'edit' => true]
+		]);
+
+		$this->ControllerAction->setFieldOrder([
+			'field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'
+		]);
+	}
+
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
+		$this->ControllerAction->setFieldOrder([
+			'visible', 'default', 'editable', 'name', 'national_code'
+		]);
+
+		$settings['pagination'] = false;
+
+		$selectedOption = $this->ControllerAction->getVar('selectedOption');
 
 		$fieldOption = $this->FieldOptions->get($selectedOption);
 		if (!empty($fieldOption->params)) {
@@ -80,16 +97,10 @@ class FieldOptionValuesTable extends AppTable {
 		return $query->find('order');
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
-			'name', 'national_code', 'international_code', 'visible'
-		]);
-	}
-
-	public function editBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
-			'name', 'national_code', 'international_code', 'visible'
-		]);
+	public function addOnInitialize(Event $event, Entity $entity) {
+		// set field option value for add page
+		$selectedOption = $this->ControllerAction->getVar('selectedOption');
+		$entity->field_option_id = $selectedOption;
 	}
 
 	public function getList($customOptions=[]) {
