@@ -1,5 +1,5 @@
 <?php if ($ControllerAction['action'] == 'index') : ?>
-	<?= $attr['value'] ?>
+	<?= isset($attr['value']) ? $attr['value'] : 0; ?>
 <?php elseif ($ControllerAction['action'] == 'view') : ?>
 	<?php
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
