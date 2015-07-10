@@ -16,7 +16,7 @@ class AccessControlComponent extends Component {
 		'separator' => '|'
 	];
 
-	public $components = ['Auth'];
+	public $components = ['Auth', 'ControllerAction'];
 
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
@@ -30,7 +30,12 @@ class AccessControlComponent extends Component {
 			// TODO-jeff
 			// check last updated and rebuild permissions;
 		}
-		// pr($this->Session->read('Permissions'));die;
+		// pr($this->Session->read('Permissions'));
+		// die;
+	}
+
+	public function startup(Event $event) {
+		// pr($this->ControllerAction->buttons);
 	}
 
 	public function buildPermissions() {
@@ -84,22 +89,22 @@ class AccessControlComponent extends Component {
 		}
 	}
 	
-	public function check($controller=null, $action=null, $roleId=0) {
-		if (is_null($controller)) {
-			$controller = $this->controller->name;
-		}
-		if (is_null($action)) {
-			$action = $this->action;
+	public function check($url=[], $roleId=0) {
+		$superAdmin = $this->Auth->user('super_admin');
+
+		if ($superAdmin) {
+			return true;
 		}
 
-		$permissionKey = ['Permissions', $controller];
-		if (is_array($action)) {
-			$permissionKey = array_merge($permissionKey, $action);
-		} else {
-			$permissionKey[] = $action;
+		if (empty($url)) {
+			$url = [$this->controller->name, $this->action];
 		}
 
-		if ($this->Session->check(implode('.', $permissionKey))) {
+		$url = array_merge(['Permissions'], $url);
+		$permissionKey = implode('.', $url);
+		// pr($permissionKey);
+
+		if ($this->Session->check($permissionKey)) {
 			if ($roleId != 0) {
 				$roles = $this->Session->read($permissionKey);
 				return in_array($roleId, $roles);

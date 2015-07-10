@@ -20,12 +20,12 @@ class SecurityAuthorize extends BaseAuthorize {
 			
 			// TODO-jeff: need to check for roles belonging to institutions
 			if (array_key_exists($model->alias, $controller->ControllerAction->models)) {
-				$authorized = $AccessControl->check($controller->name, [$model->alias, $action]);
+				$authorized = $AccessControl->check([$controller->name, $model->alias, $action]);
 			} else {
-				$authorized = $AccessControl->check($controller->name, $action);
+				$authorized = $AccessControl->check([$controller->name, $action]);
 			}
 		} else { // normal actions from Controller
-			$authorized = $AccessControl->check($controller->name, $action);
+			$authorized = $AccessControl->check([$controller->name, $action]);
 		}
 
 		if (!$authorized) {
