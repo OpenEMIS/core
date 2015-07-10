@@ -23,6 +23,24 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 	}
 
+	public function reject() {
+		$this->ControllerAction->autoRender = false;
+		$request = $this->ControllerAction->request;
+
+		$id = $request->params['pass'][1];
+		$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
+
+		if ($this->save($entity)) {
+			$this->Alert->success('InstitutionAssessments.reject.success');
+		} else {
+			$this->Alert->success('InstitutionAssessments.reject.failed');
+			$this->log($entity->errors(), 'debug');
+		}
+		$action = $this->ControllerAction->buttons['index']['url'];
+		$action['status'] = 2;
+		return $this->controller->redirect($action);
+	}
+
 	public function onGetStatus(Event $event, Entity $entity) {
 		list($statusOptions) = array_values($this->_getSelectOptions());
 		return $statusOptions[$entity->status];
@@ -117,6 +135,23 @@ class InstitutionAssessmentsTable extends AppTable {
 		$options['order'] = [
 			$this->AcademicPeriods->aliasField('order')
 		];
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		if ($selectedStatus == 2) {	//Completed
+			$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+			$rejectBtn = ['reject' => $buttons['view']];
+			$rejectBtn['reject']['url']['action'] = 'Assessments';
+			$rejectBtn['reject']['url'][0] = 'reject';
+			$rejectBtn['reject']['label'] = '<i class="fa fa-trash"></i>' . __('Reject');
+
+			$buttons = array_merge($buttons, $rejectBtn);
+
+			return $buttons;
+		}
 	}
 
 	public function _buildRecords($status=0) {
