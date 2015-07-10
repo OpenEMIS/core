@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -80,7 +81,23 @@ class InstitutionsTable extends AppTable  {
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
+        $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
 	}
+
+	public function onExcelGenerate(Event $event, $writer, $settings) {
+		// pr($settings);
+		// $generate = function() { pr('dsa'); };
+		// return $generate;
+	}
+
+	public function onExcelBeforeQuery(Event $event, Query $query) {
+		// pr($this->Session->read($this->aliasField('id')));die;
+		// $query->where(['Institutions.id' => 2]);
+	}
+
+	// public function onExcelGetLabel(Event $event, $column) {
+	// 	return 'asd';
+	// }
 
 	public function validationDefault(Validator $validator) {
 		$validator
