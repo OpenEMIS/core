@@ -2,6 +2,9 @@
 	
 	$inputName = "value";
 
+	$template = $this->ControllerAction->getFormTemplate();
+	$this->Form->templates($template);
+
 	// Using the url helper to build the url
 	$url = $this->Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
 	$selectAreaOption = ["-1"=>"--Select Area--"];
