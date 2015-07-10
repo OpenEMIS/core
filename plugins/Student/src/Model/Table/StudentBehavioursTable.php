@@ -102,7 +102,11 @@ class StudentBehavioursTable extends AppTable {
 		// 	$periodOptions[$academic->id] = (!is_null($academic->institution_site_sections)) ? $academic->name : $academic->name." [No Sections]";
 		// }
 
-
+		// foreach($periodOptions as $key=>$periodOption){
+		// 	$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		// 	$sectionsAvailable = $AcademicPeriod->find('list')->autoFields(true)->contain(['InstitutionSiteSections'])->where(['institution_site_sections.institution_site_id' => $key]);
+		// 	pr($sectionsAvailable);
+		// }
 
 
 		$attr['options'] = $periodOptions;
