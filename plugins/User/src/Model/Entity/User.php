@@ -185,7 +185,7 @@ class User extends Entity {
     		$sectionName = ($query->institution_site_section)? $query->institution_site_section->name: '';
     	}
 
-    	return $educationProgrammeName . ' - ' . $sectionName;
+    	return $educationProgrammeName . '<span class="divider"></span>' . $sectionName;
     }
 
     protected function _getPosition() {
