@@ -121,22 +121,19 @@ class AssessmentsTable extends AppTable {
 			$gradeId = key($this->fields['education_grade_id']['options']);
 			$obj = $this->EducationGrades
 				->findById($gradeId)
-				->contain([
-					'EducationGradesSubjects.EducationSubjects',
-					'EducationGradesSubjects' => function ($q) {
-						return $q->find('visible');
-					}
-				])
+				->contain(['EducationSubjects'])
 				->first();
 
 			$entity->assessment_items = [];
-			foreach ($obj->education_grades_subjects as $subject) {
-				$AssessmentItem = $this->AssessmentItems->newEntity();
-				$AssessmentItem->pass_mark = 50;
-				$AssessmentItem->max = 100;
-				$AssessmentItem->visible = 1;
-				$AssessmentItem->education_subject = $subject->education_subject;
-				$entity->assessment_items[] = $AssessmentItem;
+			foreach ($obj->education_subjects as $subject) {
+				if ($subject->_joinData->visible == 1) {
+					$AssessmentItem = $this->AssessmentItems->newEntity();
+					$AssessmentItem->pass_mark = 50;
+					$AssessmentItem->max = 100;
+					$AssessmentItem->visible = 1;
+					$AssessmentItem->education_subject = $subject;
+					$entity->assessment_items[] = $AssessmentItem;
+				}
 			}
 		}
 	}
@@ -188,27 +185,30 @@ class AssessmentsTable extends AppTable {
 
 		$obj = $this->EducationGrades
 			->findById($gradeId)
-			->contain([
-				'EducationGradesSubjects.EducationSubjects',
-				'EducationGradesSubjects' => function ($q) {
-					return $q->find('visible');
-				}
-			])
+			->contain(['EducationSubjects'])
+			// ->contain([
+			// 	'EducationGradesSubjects.EducationSubjects',
+			// 	'EducationGradesSubjects' => function ($q) {
+			// 		return $q->find('visible');
+			// 	}
+			// ])
 			->first();
 
 		$assessmentItems = [];
-		foreach ($obj->education_grades_subjects as $subject) {
-			$item = [
-				'id' => '',
-				'visible' => 1,
-				'education_subject_id' => $subject->id,
-				'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
-				'pass_mark' => 50,
-				'max' => 100,
-				'assessment_grading_type_id' => key($gradingTypeOptions),
-				'education_subject' => $subject->education_subject
-			];
-			$assessmentItems[] = $item;
+		foreach ($obj->education_subjects as $subject) {
+			if ($subject->_joinData->visible == 1) {
+				$item = [
+					'id' => '',
+					'visible' => 1,
+					'education_subject_id' => $subject->id,
+					'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
+					'pass_mark' => 50,
+					'max' => 100,
+					'assessment_grading_type_id' => key($gradingTypeOptions),
+					'education_subject' => $subject
+				];
+				$assessmentItems[] = $item;
+			}
 		}
 
 		$data[$this->alias()]['assessment_items'] = $assessmentItems;
