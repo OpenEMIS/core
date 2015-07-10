@@ -13,7 +13,7 @@ class EducationLevelsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevelIsced', ['className' => 'Education.EducationLevelIsced']);
 		$this->belongsTo('EducationSystems', ['className' => 'Education.EducationSystems']);
-		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles']);
+		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {

@@ -72,13 +72,20 @@ class AppController extends Controller {
 			]
 		]);
 
-		$this->Auth->config('authorize', ['ControllerAction.Security']);
+		$this->Auth->config('authorize', ['Security']);
 
 		// Custom Components
 		$this->loadComponent('Navigation');
 		$this->loadComponent('Localization.Localization');
 		$this->loadComponent('ControllerAction.Alert');
-		$this->loadComponent('AccessControl');
+		$this->loadComponent('AccessControl', [
+			'ignoreList' => [
+				'Users' => ['login', 'logout', 'postLogin'],
+				'Dashboard' => [],
+				'Preferences' => [],
+				'About' => []
+			]
+		]);
 	}
 
 	public function beforeFilter(Event $event) {
@@ -91,6 +98,10 @@ class AppController extends Controller {
 		if (!$session->check('System.home')) {
 			$session->write('System.home', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		}
+
+		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard'];
+		$session->write('System.home', $homeUrl);
+
 		$this->set('theme', $theme);
 		$this->set('SystemVersion', $this->getCodeVersion());
 		$this->set('_productName', $this->_productName);

@@ -138,12 +138,18 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->name, [
-			'plugin' => $this->controller->plugin,
-			'controller' => $this->controller->name,
-			'action' => 'dashboard',
-			'0' => $entity->id
-		]);
+		$name = $entity->name;
+
+		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
+			$name = $event->subject()->Html->link($entity->name, [
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
+				'action' => 'dashboard',
+				'0' => $entity->id
+			]);
+		}
+		
+		return $name;
 	}
 
 	public function beforeAction($event) {
