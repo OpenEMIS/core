@@ -18,10 +18,10 @@ class AreasController extends AppController
 			'Administratives' => ['className' => 'Area.AreaAdministratives']
 		];
 		$this->loadComponent('Paginator');
-    }
+	}
 
-    public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
 
 		$tabElements = [
 			'Levels' => [
@@ -42,8 +42,8 @@ class AreasController extends AppController
 			]
 		];
 
-        $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+		$this->set('tabElements', $tabElements);
+		$this->set('selectedAction', $this->request->action);
 	}
 
 	public function onInitialize(Event $event, Table $model) {
@@ -54,30 +54,107 @@ class AreasController extends AppController
 		$this->Navigation->addCrumb($this->viewVars['tabElements'][$model->alias]['text']);
 
 		$this->set('contentHeader', $header);
-    }
+	}
 
-    public function ajaxGetArea($tableName, $id) {
-    	// Getting the first part of the pass value as the model name
-    	$passedValue = $this->request->pass;
-    	//pr($this->ControllerAction->model->alias);
-    	$tableItems = TableRegistry::get($passedValue[0]);
-    	$list = $tableItems
-    		->find('list')
-    		->where(['parent_id'=>$id])
-    		->toArray();
-    	$disabled = false;
-    	if($list){
-    		$firstOption = ["-1"=>"--Select--"];
-    		$list = $firstOption + $list;
-    	}else{
-    		$disabled = true;
-    	}
-		// pr($list);
-    	// $this->set('id', $id);
-    	// $this->set('code', $code);
-    	// $this->set('name', $name);
+	public function ajaxGetArea($tableName, $id) {
 
-    	$this->set(compact('list', 'tableName', 'id', 'disabled'));
-    	$this->layout = false;
+		//pr($this->ControllerAction->model->alias);
+		$rootId = -1; // Root node
+		// Get the default table item
+		$Table = TableRegistry::get($tableName);
+
+		// Getting the parent id of the item that is posted over
+		$areaEntity = $Table->get($id);
+		$parentId = $areaEntity['parent_id'];
+
+		$path = $Table
+			->find('path', ['for' => $areaEntity->id])
+			->contain(['Levels'])
+			->order([$Table->aliasField('lft')])
+			->all();
+
+		// $findChildren = $Table
+		// 	->find('children', ['for' => $areaEntity->id, true])
+		// 	->contain(['Levels'])
+		// 	->order([$Table->aliasField('lft')])
+		// 	->all();
+
+		//pr($path);
+		//$stack = [];
+		foreach ($path as $obj) {
+			// pr($obj->level->name . ' - ' . $obj->name);
+			$parentId = $obj->parent_id;
+			// pr($parentId);
+
+			$list = $Table
+				->find('list')
+				->where([$Table->aliasField('parent_id') => $parentId])
+				->order([$Table->aliasField('order')])
+				->toArray();
+
+			$obj->list = $list;
+			 //pr($obj);
+		}
+
+		// $children = $Table
+		// 	->find('list')
+		// 	->where(['parent_id'=>$id])
+		// 	->contain(['Levels']);
+		// $children = $query->all();
+
+		// pr($path);
+   //  	$arrayToPrint = [];
+   //  	$parentIdArray = [];
+   //  	$listOfAreaLevel = [];
+	  // 	array_push($parentIdArray, $id);
+   //	 	array_push($parentIdArray, $parentId);	  	
+   //  	// Get the parent nodes
+   //	 	while( $parentId > $rootId ){
+   //  		$parentItem = $tableItems->get($parentId)->toArray();
+			// $parentId = $parentItem['parent_id'];
+			// array_push($parentIdArray, $parentId);
+	  // 	}
+
+	  // 	// Handle Area.AreaAdministratives
+	  // 	if($tableName == 'Area.AreaAdministratives'){
+	  // 		array_pop($parentIdArray);
+	  // 	}
+
+	  // 	$idToPass = $parentIdArray;
+
+
+
+	  // 	while(!empty($parentIdArray)){
+	  // 		$id = array_pop($parentIdArray);
+
+	  // 		// If there is no children already, disable checkbox
+	  //   	$query = $tableItems
+	  //   		->find('list')
+	  //   		->where(['parent_id'=>$id])
+	  //   		->contain(['Levels']);
+	  //   	$results = $query->toArray();
+
+	  //   	// Add a select item into the list
+   //  		$firstOption = ["-1"=>"--Select Area--"];
+   //  		$results = $firstOption + $results;
+   //  		$arrayToPrint[] = $results;
+   //  	}
+
+		// if($results){
+		// 	// Add a select item into the list
+		// 	$firstOption = ["-1"=>"--Select Area--"];
+		// 	$results = $firstOption + $results;
+		// 	$arrayToPrint[] = $results;
+		// }else{
+		// 	$arrayToPrint[] = [];
+		// 	$disabled = true;
+		// }
+
+		// $this->set('id', $id);
+		// $this->set('code', $code);
+		// $this->set('name', $name);
+
+		$this->set(compact('path', 'children', 'tableName'));
+		$this->layout = false;
 	}
 }

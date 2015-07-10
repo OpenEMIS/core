@@ -172,8 +172,8 @@ class InstitutionsTable extends AppTable  {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 
-		$datatest = ['1' => 'data1', '2' => 'data2'];
-		$this->controller->set('datatest', $datatest);
+		//$datatest = ['1' => 'data1', '2' => 'data2'];
+		//$this->controller->set('datatest', $datatest);
 	}
 
 	// public function onUpdateFieldAreaAdministrativeId(Event $event, $attr) {
@@ -203,13 +203,10 @@ class InstitutionsTable extends AppTable  {
 			->where(['parent_id'=>$parentId])
 			->toArray();
 
-		//pr($areaOptions);
-		// If world record exist, update the parent ID to the world ID
-
-		//if(in_array($worldRecord, $areaOptions)){
+		// Find the children of World
 		if($attr['source_model']=='Area.AreaAdministratives'){
+			// Using the primary key of the World record
 			$parentId = key($areaOptions);
-			//pr($parentId);
 			$areaOptions = $targetTable
 			->find('list')
 			->where(['parent_id'=>$parentId])
