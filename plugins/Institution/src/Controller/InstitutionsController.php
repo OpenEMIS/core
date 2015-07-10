@@ -184,6 +184,11 @@ class InstitutionsController extends AppController  {
 		return $options;
 	}
 
+	public function excel($id=0) {
+		$this->Institutions->excel($id);
+		$this->autoRender = false;
+	}
+
 	public function dashboard() {
 		if ($this->activeObj) {
 			$id = $this->activeObj->id;
