@@ -9,6 +9,8 @@ class NavigationComponent extends Component {
 	public $action;
 	public $breadcrumbs = [];
 
+	public $components = ['AccessControl'];
+
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
 		$this->action = $this->request->params['action'];
@@ -37,9 +39,44 @@ class NavigationComponent extends Component {
 		$controller = $this->controller;
 		
 		$navigations = $this->buildNavigation();
-		
+		$this->checkPermissions($navigations);
+
 		$controller->set('_navigations', $navigations);
 		$controller->set('_breadcrumbs', $this->breadcrumbs);
+	}
+
+	public function checkPermissions(&$navigations) {
+		if (array_key_exists('items', $navigations)) {
+			foreach ($navigations['items'] as $name => $attr) {
+				$access = true;
+				if (array_key_exists('url', $attr)) {
+					$url = $attr['url'];
+					unset($url['plugin']);
+
+					if (is_numeric(end($url))) { // remove any other pass values such as id
+						array_pop($url);
+					}
+					
+					if ($this->AccessControl->check($url) == false) {
+						$access = false;
+					}
+				}
+				if ($access) {
+					if (array_key_exists('items', $attr)) {
+						$items = $this->checkPermissions($attr);
+						
+						if (empty($items['items'])) {
+							unset($navigations['items'][$name]);
+						} else {
+							$navigations['items'][$name] = $items;
+						}
+					}
+				} else {
+					unset($navigations['items'][$name]);
+				}
+			}
+		}
+		return $navigations;
 	}
 
 	public function buildNavigation() {
@@ -95,27 +132,27 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Administrative Boundaries' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas'],
+									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas', 'index'],
 									'selected' => ['Levels', 'AdministrativeLevels', 'Administratives']
 								],
 								'Academic Periods' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods'],
+									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods', 'index'],
 									'selected' => ['Levels']
 								],
 								'Education Structure' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems'],
+									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
 									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
 								],
 								'Infrastructure' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields', 'index'],
 									'selected' => ['Levels', 'Types']
 								],
 								'Assessments' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments'],
+									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments', 'index'],
 									'selected' => ['GradingTypes', 'GradingOptions', 'Status']
 								],
 								'Field Options' => [
