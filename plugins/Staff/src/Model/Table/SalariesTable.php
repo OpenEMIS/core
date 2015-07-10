@@ -119,15 +119,9 @@ class SalariesTable extends AppTable {
 		$SalaryAdditionType = TableRegistry::get('FieldOption.SalaryAdditionTypes')->getList();
 		$SalaryDeductionType = TableRegistry::get('FieldOption.SalaryDeductionTypes')->getList();
 
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('salary_date', $order++);
-		$this->ControllerAction->setFieldOrder('gross_salary', $order++);
-		$this->ControllerAction->setFieldOrder('net_salary', $order++);
-
 		$this->ControllerAction->addField('addition_set', [
 			'type' => 'element',
 			'element' => 'Staff.salary_info',
-			'order' => $order++,
 			'visible' => true,
 			'fieldName' => 'salary_additions',
 			'operation' => 'add',
@@ -136,14 +130,13 @@ class SalariesTable extends AppTable {
 		$this->ControllerAction->addField('deduction_set', [
 			'type' => 'element',
 			'element' => 'Staff.salary_info',
-			'order' => $order++,
 			'visible' => true,
 			'fieldName' => 'salary_deductions',
 			'operation' => 'deduct',
 			'fieldOptions' => $SalaryDeductionType->toArray()
 		]);
 
-		$this->ControllerAction->setFieldOrder('comment', $order++);
+		$this->ControllerAction->setFieldOrder(['salary_date', 'gross_salary', 'net_salary', 'addition_set', 'deduction_set', 'comment']);
 	}
 
 	public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
