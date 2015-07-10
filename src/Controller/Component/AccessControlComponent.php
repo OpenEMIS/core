@@ -6,11 +6,15 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class AccessControlComponent extends Component {
-	public $controller;
-	public $action;
-	public $Session;
-	public $operations = ['_view', '_add', '_edit', '_delete', '_execute'];
-	public $separator = '|';
+	private $controller;
+	private $action;
+	private $Session;
+
+	protected $_defaultConfig = [
+		'operations' => ['_view', '_add', '_edit', '_delete', '_execute'],
+		'ignoreList' => [],
+		'separator' => '|'
+	];
 
 	public $components = ['Auth'];
 
@@ -30,6 +34,8 @@ class AccessControlComponent extends Component {
 	}
 
 	public function buildPermissions() {
+		$operations = $this->config('operations');
+		$separator = $this->config('separator');
 		$userId = $this->Auth->user('id');
 		$Users = TableRegistry::get('User.Users');
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
@@ -43,9 +49,9 @@ class AccessControlComponent extends Component {
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
 
-					foreach ($this->operations as $op) { // for each operation in function
+					foreach ($operations as $op) { // for each operation in function
 						if (!empty($function->$op) && $entity->$op == 1) {
-							$actions = explode($this->separator, $function->$op);
+							$actions = explode($separator, $function->$op);
 
 							if (is_array($actions)) {
 								foreach ($actions as $action) { // for each action in operation
@@ -102,5 +108,24 @@ class AccessControlComponent extends Component {
 			}
 		}
 		return false;
+	}
+
+	// determines whether the action is required for access control checking
+	public function isIgnored($controller, $action) {
+		$ignoreList = $this->config('ignoreList');
+		$ignored = false;
+
+		if (array_key_exists($controller, $ignoreList)) {
+			if (!empty($ignoreList[$controller])) {
+				$actions = $ignoreList[$controller];
+				if (in_array($action, $actions)) {
+					$ignored = true;
+				}
+			} else {
+				$ignored = true;
+			}
+		}
+
+		return $ignored;
 	}
 }
