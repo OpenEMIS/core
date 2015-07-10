@@ -45,13 +45,13 @@ class UsersTable extends AppTable {
 		$this->fieldOrder1 = new ArrayObject(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
 		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
-		$this->addBehavior('ControllerAction.FileUpload', [
-			'name' => 'photo_name',
-			'content' => 'photo_content',
-			'size' => '2MB',
-			'contentEditable' => true,
-			'allowable_file_types' => 'image'
-		]);
+		// $this->addBehavior('ControllerAction.FileUpload', [
+		// 	'name' => 'photo_name',
+		// 	'content' => 'photo_content',
+		// 	'size' => '2MB',
+		// 	'contentEditable' => true,
+		// 	'allowable_file_types' => 'image'
+		// ]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -360,7 +360,7 @@ class UsersTable extends AppTable {
 				->add('photo_content', [
 					'ruleCheckSelectedFileAsImage' => [
 							'rule' => 'checkSelectedFileAsImage',
-							'message' => 'Please upload image format files. Eg. jpg, png, gif.'
+							'message' => 'Please upload image format files. Eg. jpg, jpeg, png, gif.'
 					],
 					'ruleCheckIfImageExceedsUploadSize' => [
 							'rule' => 'checkIfImageExceedsUploadSize',
@@ -445,5 +445,29 @@ class UsersTable extends AppTable {
 			$value = $this->defaultUserProfileView;
 		} 
 		return $value;
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
+		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
+			$file = $entity->photo_content;
+			if(!empty($file['tmp_name'])){
+				$entity->photo_content = file_get_contents($file['tmp_name']);
+				if(!empty($file['name'])){
+					$pathInfo = pathinfo($file['name']);
+					$entity->photo_name = uniqid() . '.' . $pathInfo['extension'];
+				}
+
+			} else if($file['error'] > 0) {
+				$entity->photo_content = null;
+				$entity->photo_name = null;
+			}
+		}
+
+		if(empty($entity->photo_content)){
+			$entity->photo_content = null;
+			$entity->photo_name = null;
+		}
+
+		parent::beforeSave($event, $entity, $options);
 	}
 }
