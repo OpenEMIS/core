@@ -19,12 +19,12 @@ class AssessmentStatusesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
-
 		$this->belongsToMany('AcademicPeriods', [
 			'className' => 'AcademicPeriod.AcademicPeriods',
 			'joinTable' => 'assessment_status_periods',
 			'foreignKey' => 'assessment_status_id',
 			'targetForeignKey' => 'academic_period_id',
+			'through' => 'Assessment.AssessmentStatusPeriods',
 			'dependent' => true
 		]);
 	}
