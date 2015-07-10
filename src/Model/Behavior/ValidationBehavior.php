@@ -247,7 +247,7 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkSelectedFileAsImage($field, array $globalData) {
-		$isValid = true;
+		$isValid = false;
 		$fileImagesMap = array(
 			'jpeg'	=> 'image/jpeg',
 			'jpg'	=> 'image/jpeg',
@@ -256,11 +256,9 @@ class ValidationBehavior extends Behavior {
 			// 'jpeg'=>'image/pjpeg',
 			// 'jpeg'=>'image/x-png'
 		);
-		
-		if(!isset($field['type'])) {
-			$isValid = false;
-		} else if(isset($field['type']) && !in_array($field['type'], $fileImagesMap)){
-			$isValid = false;
+
+		if(isset($field['type']) && in_array($field['type'], $fileImagesMap)){
+			$isValid = true;
 		} 
 
 		return $isValid;
