@@ -256,10 +256,13 @@ class ValidationBehavior extends Behavior {
 			// 'jpeg'=>'image/pjpeg',
 			// 'jpeg'=>'image/x-png'
 		);
-
-		if(isset($field['type']) && !in_array($field['type'], $fileImagesMap)){
+		
+		if(!isset($field['type'])) {
+			$isValid = false;
+		} else if(isset($field['type']) && !in_array($field['type'], $fileImagesMap)){
 			$isValid = false;
 		} 
+
 		return $isValid;
 	}
 
