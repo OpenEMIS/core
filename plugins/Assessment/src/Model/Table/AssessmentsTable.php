@@ -20,6 +20,7 @@ class AssessmentsTable extends AppTable {
 
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
+		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses']);
 
 		$this->addBehavior('Reorder');
 	}
@@ -35,12 +36,11 @@ class AssessmentsTable extends AppTable {
 			'education_grade_id', 'assessment_items'
 		]);
 
-		$GradingTypes = TableRegistry::get('Assessment.AssessmentGradingTypes');
-		$gradingTypeOptions = $GradingTypes->getList()->toArray();
-		
+		$gradingTypeOptions = $this->AssessmentItems->GradingTypes->getList()->toArray();
 		if (empty($gradingTypeOptions)) {
 			$this->Alert->warning('Assessments.noGradingTypes');
 		}
+
 		$this->controller->set('gradingTypeOptions', $gradingTypeOptions);
 		$this->controller->set('markTypeOptions', $this->getSelectOptions($this->aliasField('mark_types')));
 		$this->controller->set('selectedAction', $this->alias());
@@ -56,10 +56,9 @@ class AssessmentsTable extends AppTable {
 
 	public function onUpdateFieldEducationProgrammes(Event $event, array $attr, $action, Request $request) {
 		$attr['visible'] = ['index' => false, 'view' => true, 'edit' => true];
-		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+		
 		$EducationGrades = $this->EducationGrades;
-
-		$programmeOptions = $EducationProgrammes
+		$programmeOptions = $EducationGrades->EducationProgrammes
 			->find('list')
 			->find('visible')
 			->find('order')
@@ -106,7 +105,7 @@ class AssessmentsTable extends AppTable {
 		if ($action != 'index') {
 			$attr['type'] = 'element';
 			$attr['element'] = 'Assessment.Assessments/subjects';
-			$attr['override'] = true;
+			$attr['valueClass'] = 'table-full-width';
 		} else {
 			$attr['visible'] = false;
 		}
@@ -122,16 +121,21 @@ class AssessmentsTable extends AppTable {
 			$gradeId = key($this->fields['education_grade_id']['options']);
 			$obj = $this->EducationGrades
 				->findById($gradeId)
-				->contain(['EducationSubjects'])
+				->contain([
+					'EducationGradesSubjects.EducationSubjects',
+					'EducationGradesSubjects' => function ($q) {
+						return $q->find('visible');
+					}
+				])
 				->first();
 
 			$entity->assessment_items = [];
-			foreach ($obj->education_subjects as $subject) {
+			foreach ($obj->education_grades_subjects as $subject) {
 				$AssessmentItem = $this->AssessmentItems->newEntity();
 				$AssessmentItem->pass_mark = 50;
 				$AssessmentItem->max = 100;
 				$AssessmentItem->visible = 1;
-				$AssessmentItem->education_subject = $subject;
+				$AssessmentItem->education_subject = $subject->education_subject;
 				$entity->assessment_items[] = $AssessmentItem;
 			}
 		}
@@ -155,18 +159,28 @@ class AssessmentsTable extends AppTable {
 		}
 	}
 
-	public function addOnChangeProgrammes(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeProgrammes(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$gradeId = key($this->fields['education_grade_id']['options']);
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
 		
 		$this->populateAssessmentItems($data, $gradeId, ['gradingTypeOptions' => $gradingTypeOptions]);
 	}
 
-	public function addOnChangeGrades(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeGrades(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$gradeId = $data[$this->alias()]['education_grade_id'];
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
 		
 		$this->populateAssessmentItems($data, $gradeId, ['gradingTypeOptions' => $gradingTypeOptions]);
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$programmeId = $this->EducationGrades
+			->findById($entity->education_grade_id)
+			->select([$this->EducationGrades->aliasField('education_programme_id')])
+			->first()
+			->education_programme_id;
+
+		$entity->education_programmes = $programmeId;
 	}
 
 	public function populateAssessmentItems($data, $gradeId, $options=[]) {
@@ -174,11 +188,16 @@ class AssessmentsTable extends AppTable {
 
 		$obj = $this->EducationGrades
 			->findById($gradeId)
-			->contain(['EducationSubjects'])
+			->contain([
+				'EducationGradesSubjects.EducationSubjects',
+				'EducationGradesSubjects' => function ($q) {
+					return $q->find('visible');
+				}
+			])
 			->first();
 
 		$assessmentItems = [];
-		foreach ($obj->education_subjects as $subject) {
+		foreach ($obj->education_grades_subjects as $subject) {
 			$item = [
 				'id' => '',
 				'visible' => 1,
@@ -187,7 +206,7 @@ class AssessmentsTable extends AppTable {
 				'pass_mark' => 50,
 				'max' => 100,
 				'assessment_grading_type_id' => key($gradingTypeOptions),
-				'education_subject' => $subject
+				'education_subject' => $subject->education_subject
 			];
 			$assessmentItems[] = $item;
 		}

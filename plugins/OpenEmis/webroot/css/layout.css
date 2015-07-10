@@ -427,7 +427,7 @@ body.large {
 .treemap-breadcrumb {
 	background: none;
 	margin: 0;
-	padding: 5px;
+	padding: 5px 10px;
 }
 
 .treemap-breadcrumb li a,
@@ -609,7 +609,7 @@ body.large {
 
 .toolbar-wrapper .input{
 	width: 20%;
-	margin: 5px;
+	margin: 5px 10px;
 	display: inline-block;
 }
 
@@ -675,6 +675,23 @@ body.large {
 
 .panel-toolbar tags-input {
 	margin: 0 10px;
+}
+
+.panel-toolbar .checkbox {
+	display: block;
+	float: left;
+	margin: 12px 10px !important;
+	padding: 0 !important;
+	width: 95px !important;
+}
+
+.panel-toolbar .checkbox-label,
+.panel-toolbar .checkbox-label:hover {
+	width: 85px !important;
+	font-weight: bold !important;
+	margin: 0 -4px !important;
+	color: #333 !important;
+	cursor: default;
 }
 
 /* Panel with Accordion */
@@ -1748,17 +1765,20 @@ table tr.sorting-row td {background-color: #8b8;}
 .section .table-responsive table thead tr,
 .section .table-responsive {
 	padding: 10px;
-	border-left: 0 !important;
-	border-right: 0 !important;
 }
 
-.section .kd-save {
+.section .kd-check {
 	color: green;
 	font-size: 10px;
 }
 
-.section .kd-cancel {
+.section .kd-cross {
 	color: red;
+	font-size: 9px;
+}
+
+.section-header .icheck-input {
+	margin: -3px 5px 0px -10px !important;
 }
 
 .form-control {
@@ -1856,6 +1876,14 @@ label + select {
 .iradio_minimal-grey {
     float: left;
 } 
+
+.icheck-input {
+	background-color: #FFF;
+}
+
+.icheckbox_minimal-grey.disabled {
+	cursor: not-allowed !important;
+}
 
 .input-checkbox-inline,
 .input-checkbox {
