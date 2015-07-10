@@ -29,7 +29,15 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetAssessmentId(Event $event, Entity $entity) {
-		return $entity->assessment->code_name;
+		return $event->subject()->Html->link($entity->assessment->code_name, [
+			'plugin' => $this->controller->plugin,
+			'controller' => $this->controller->name,
+			'action' => 'Results',
+			'index',
+			'status' => $entity->status,
+			'assessment' => $entity->assessment_id,
+			'period' => $entity->academic_period_id
+		]);
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
