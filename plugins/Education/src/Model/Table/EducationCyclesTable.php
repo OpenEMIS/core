@@ -10,7 +10,7 @@ class EducationCyclesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
-		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {

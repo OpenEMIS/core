@@ -13,8 +13,8 @@ class EducationProgrammesTable extends AppTable {
 		$this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
 		$this->belongsTo('EducationCertifications', ['className' => 'Education.EducationCertifications']);
 		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
-		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes']);
+		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
