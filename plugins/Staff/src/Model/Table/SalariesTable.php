@@ -110,10 +110,12 @@ class SalariesTable extends AppTable {
 		$this->fields['gross_salary']['type'] = 'float';
 		$this->fields['net_salary']['type'] = 'float';
 
-		// $this->fields['gross_salary']['options'] = ['step' => '0.01', 'min' => '0'];
-		// $this->fields['net_salary']['options'] = ['step' => '0.01', 'min' => '0'];
-
+		$this->fields['gross_salary']['attr']['step'] = 0.00;
+		$this->fields['gross_salary']['attr']['min'] = 0.00;
 		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+
+		$this->fields['net_salary']['attr']['step'] = 0.00;
+		$this->fields['net_salary']['attr']['min'] = 0.00;
 		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 
 		$SalaryAdditionType = TableRegistry::get('FieldOption.SalaryAdditionTypes')->getList();
@@ -140,7 +142,7 @@ class SalariesTable extends AppTable {
 	}
 
 	public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['salary_additions'][] = ['amount' => 0];
+		$data[$this->alias()]['salary_additions'][] = ['amount' => '0.00'];
 		$options['associated'] = [
 			'SalaryAdditions' => ['validate' => false],
 			//'SalaryDeductions' => ['validate' => false]
@@ -148,7 +150,7 @@ class SalariesTable extends AppTable {
 	}
 
 	public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['salary_deductions'][] = ['amount' => 0];
+		$data[$this->alias()]['salary_deductions'][] = ['amount' => '0.00'];
 		$options['associated'] = [
 			//'SalaryAdditions' => ['validate' => false],
 			'SalaryDeductions' => ['validate' => false]
