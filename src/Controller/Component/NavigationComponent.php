@@ -96,8 +96,8 @@ class NavigationComponent extends Component {
 								],
 								'Assessments' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'index'],
-									'selected' => ['index', 'add', 'view', 'edit', 'GradingTypes', 'GradingOptions', 'Status']
+									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments'],
+									'selected' => ['GradingTypes', 'GradingOptions', 'Status']
 								],
 								'Field Options' => [
 									'collapse' => true,
@@ -191,7 +191,7 @@ class NavigationComponent extends Component {
 						'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']],
 						'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 						'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
-						'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], ['selected' => ['Assessments', 'StudentResults']]]
+						'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments']]
 					]
 				],
 
