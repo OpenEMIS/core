@@ -663,7 +663,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			$gradeData[$value->education_grade->id] = $value->education_grade->name;
 		}
 
-		$EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
 		$subjects = $EducationGradesSubjects
 				->find()
 				->contain(['EducationSubjects'])
