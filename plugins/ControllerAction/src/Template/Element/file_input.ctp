@@ -7,7 +7,7 @@ if (isset($attr['null']) && empty($attr['null'])) {
 }
 ?>
 
-<div class="input file">
+<div class="input file <?= $required ?>">
 	<label><?= __('File') ?></label>
 
 	<div class="fileinput fileinput-new input-group" data-provides="fileinput">
