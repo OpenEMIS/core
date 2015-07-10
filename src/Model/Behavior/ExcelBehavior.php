@@ -19,7 +19,7 @@ class ExcelBehavior extends Behavior {
 		'folder' => 'export',
 		'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id'],
 		'excludes' => [],
-		'limit' => 500,
+		'limit' => 100,
 		'orientation' => 'landscape' // or portrait
 	];
 
@@ -115,20 +115,26 @@ class ExcelBehavior extends Behavior {
 		}
 
 		if ($this->config('orientation') == 'landscape') {
-			$resultSet = $query->all();
 			$row = [];
 			foreach ($fields as $attr) {
 				$row[] = $attr['label'];
 			}
 			$writer->writeSheetRow($sheetName, $row);
 
-			foreach ($resultSet as $entity) {
-				$row = [];
-				foreach ($fields as $attr) {
-					$field = $attr['field'];
-					$row[] = $this->getValue($entity, $this->_table, $field);
+			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
+				$resultSet = $query
+					->limit($this->config('limit'))
+					->page($pageNo+1)
+					->all();
+
+				foreach ($resultSet as $entity) {
+					$row = [];
+					foreach ($fields as $attr) {
+						$field = $attr['field'];
+						$row[] = $this->getValue($entity, $this->_table, $field);
+					}
+					$writer->writeSheetRow($sheetName, $row);
 				}
-				$writer->writeSheetRow($sheetName, $row);
 			}
 		} else {
 			$entity = $query->first();
