@@ -18,6 +18,15 @@ switch ($fieldName) {
 	break;
 }	
 ?>
+<script type="text/javascript">
+	$(function(){ 
+		$(".total_salary_<?= $fieldName; ?>s").val(<?= $totalAmount; ?>);
+
+		//calculate the row values added upon loading
+		jsTable.computeTotalForMoney('total_salary_<?= $fieldName; ?>s');
+		jsForm.compute(this);
+	});
+</script>
 <div class="input">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="table-toolbar">
@@ -98,8 +107,3 @@ switch ($fieldName) {
 		</table>
 	</div>
 </div>
-<script type="text/javascript">
-	$(function(){ 
-		$(".total_salary_<?= $fieldName; ?>s").val(<?= $totalAmount; ?>);
-	});
-</script>
