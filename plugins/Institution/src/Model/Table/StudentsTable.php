@@ -65,8 +65,10 @@ class StudentsTable extends BaseTable {
 				foreach ($excludeQuery as $key => $value) {
 					$excludeList[] = $value->security_user_id;
 				}
-				$list
-					->where([$this->InstitutionSiteStudents->aliasField('security_user_id').' NOT IN' => $excludeList]);
+
+				if(!empty($excludeList)) {
+					$list->where([$this->InstitutionSiteStudents->aliasField('security_user_id').' NOT IN' => $excludeList]);
+				}
 			}
 
 
