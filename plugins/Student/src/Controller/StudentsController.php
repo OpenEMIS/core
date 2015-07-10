@@ -24,8 +24,12 @@ class StudentsController extends AppController {
 			'fieldValueKey' => ['className' => 'Student.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellKey' => ['className' => 'Student.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
-        $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-        $this->ControllerAction->model()->addBehavior('AdvanceSearch');
+		$this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		$this->ControllerAction->model()->addBehavior('AdvanceSearch');
+		$this->ControllerAction->model()->addBehavior('Excel', [
+			'excludes' => ['password', 'photo_name'],
+			'filename' => 'Students'
+		]);
 
 		$this->ControllerAction->models = [
 		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
@@ -170,6 +174,11 @@ class StudentsController extends AppController {
 		}
 		
 		return $options;
+	}
+
+	public function excel($id=0) {
+		$this->Users->excel($id);
+		$this->autoRender = false;
 	}
 
 	public function afterFilter(Event $event) {

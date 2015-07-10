@@ -5,6 +5,7 @@ tmp/cache/*
 tmp/sessions/*
 tmp/tests/*
 logs/*.log*
+webroot/export/*
 /build
 /dist
 /tags
