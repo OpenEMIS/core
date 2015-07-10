@@ -102,7 +102,7 @@ class NavigationComponent extends Component {
 								'Field Options' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
-									'selected' => ['index', 'view', 'edit']
+									'selected' => ['index', 'add', 'view', 'edit', 'remove']
 								],
 								// 'Translations' => [
 								// 	'collapse' => true,
