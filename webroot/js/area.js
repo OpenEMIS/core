@@ -10,7 +10,8 @@ var Area = {
 			var closestObject = selectedOption.closest('.areapicker');
 			var hiddenField = $(this).find('input:hidden');
 			var url = $(this).find('select').attr('url');
-			var modelName= $(this).find('select').attr('data-source');
+			var modelName = $(this).find('select').attr('data-source');
+			modelName += "/" + $(this).find('select').attr('target-model');
 			url += "/" + modelName + "/" +value;
 			Area.populate(closestObject,url);
 
@@ -26,6 +27,7 @@ var Area = {
 		}
 		var url = $(obj).attr('url');
 		var modelName= $(obj).attr('data-source');
+		modelName += "/" + $(this).find('select').attr('target-model');
 		var parent = $(obj).closest('.areapicker');
 		url += "/" + modelName + "/" + value;
 		Area.populate(parent, url)
