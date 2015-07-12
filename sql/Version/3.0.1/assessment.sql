@@ -8,7 +8,7 @@ ALTER TABLE `assessment_item_results` DROP `assessment_result_type_id`;
 -- New table - institution_site_assessments
 DROP TABLE IF EXISTS `institution_site_assessments`;
 CREATE TABLE IF NOT EXISTS `institution_site_assessments` (
-  `id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Draft, 2 -> Completed',
   `academic_period_id` int(11) NOT NULL,
   `assessment_id` int(11) NOT NULL,
