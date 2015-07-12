@@ -79,8 +79,15 @@ class EducationGradesTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['setVisible'] = true;
-		//Required by patchEntity for associated data
+		// to be revisit
+		// $data[$this->alias()]['setVisible'] = true;
+
+		// To handle when delete all subjects
+		if (!array_key_exists('education_subjects', $data[$this->alias()])) {
+			$data[$this->alias()]['education_subjects'] = [];
+		}
+
+		// Required by patchEntity for associated data
 		$newOptions = [];
 		$newOptions['associated'] = $this->_contain;
 
@@ -224,11 +231,7 @@ class EducationGradesTable extends AppTable {
 
 	public function _getSelectOptions() {
 		//Return all required options and their key
-		$levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels
-			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-			->find('visible')
-			->find('order')
-			->toArray();
+		$levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions();
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
 		$cycleIds = $this->EducationProgrammes->EducationCycles
@@ -237,12 +240,17 @@ class EducationGradesTable extends AppTable {
 			->where([$this->EducationProgrammes->EducationCycles->aliasField('education_level_id') => $selectedLevel])
 			->toArray();
 
-		$programmeOptions = $this->EducationProgrammes
+		$EducationProgrammes = $this->EducationProgrammes;
+		$programmeOptions = $EducationProgrammes
 			->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
 			->find('visible')
-			->find('order')
+			->contain(['EducationCycles'])
+			->order([
+				$EducationProgrammes->EducationCycles->aliasField('order'),
+				$EducationProgrammes->aliasField('order')
+			])
 			->where([
-				$this->EducationProgrammes->aliasField('education_cycle_id IN') => $cycleIds
+				$EducationProgrammes->aliasField('education_cycle_id IN') => $cycleIds
 			])
 			->toArray();
 		$selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);

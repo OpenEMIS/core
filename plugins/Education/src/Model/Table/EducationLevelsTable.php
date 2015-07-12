@@ -67,4 +67,18 @@ class EducationLevelsTable extends AppTable {
 
 		return compact('systemOptions', 'selectedSystem');
 	}
+
+	public function getLevelOptions() {
+		$list = $this
+			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+			->find('visible')
+			->contain(['EducationSystems'])
+			->order([
+				$this->EducationSystems->aliasField('order'),
+				$this->aliasField('order')
+			])
+			->toArray();
+
+		return $list;
+	}
 }

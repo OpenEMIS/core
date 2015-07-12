@@ -60,11 +60,7 @@ class EducationProgrammesTable extends AppTable {
 
 	public function getSelectOptions() {
 		//Return all required options and their key
-		$levelOptions = $this->EducationCycles->EducationLevels
-			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-			->find('visible')
-			->find('order')
-			->toArray();
+		$levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions();
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
 		$cycleOptions = $this->EducationCycles
