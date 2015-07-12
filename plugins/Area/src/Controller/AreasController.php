@@ -58,103 +58,71 @@ class AreasController extends AppController
 
 	public function ajaxGetArea($tableName, $id) {
 
-		//pr($this->ControllerAction->model->alias);
 		$rootId = -1; // Root node
 		// Get the default table item
-		$Table = TableRegistry::get($tableName);
+		$Table = TableRegistry::get($tableName);	
 
 		// Getting the parent id of the item that is posted over
 		$areaEntity = $Table->get($id);
-		$parentId = $areaEntity['parent_id'];
+		$pathId = $areaEntity->id;
+		$hasChildren = false;
 
+		// Get the id of any one of the children
+		$children = $Table
+			->find('children',['for' => $pathId, 'direct' => true])
+			->find('threaded')
+			->toArray();
+		if(!empty($children)){
+			$pathId = $children[0]->id;
+			$hasChildren = true;
+		}
+
+		// Find the path of the tree from the children to the root
 		$path = $Table
-			->find('path', ['for' => $areaEntity->id])
+			->find('path', ['for' => $pathId])
 			->contain(['Levels'])
 			->order([$Table->aliasField('lft')])
 			->all();
+		$count = 1;
+		$prevousOptionId=-1;
 
-		// $findChildren = $Table
-		// 	->find('children', ['for' => $areaEntity->id, true])
-		// 	->contain(['Levels'])
-		// 	->order([$Table->aliasField('lft')])
-		// 	->all();
-
-		//pr($path);
-		//$stack = [];
 		foreach ($path as $obj) {
 			// pr($obj->level->name . ' - ' . $obj->name);
 			$parentId = $obj->parent_id;
-			// pr($parentId);
-
 			$list = $Table
 				->find('list')
 				->where([$Table->aliasField('parent_id') => $parentId])
 				->order([$Table->aliasField('order')])
 				->toArray();
 
+			// Push each of the object ID into the stack and assign the Id of the previous selected item 
+			// to the --Select Area-- option 
+			// The root record does not require the --Select Area-- Option
+			switch($tableName){
+				case "Area.AreaAdministratives":
+					if( $count > 2 ){
+						$list = [$previousOptionId => '--Select Area--'] + $list;
+					}
+					break;
+				default:
+					if( $count > 1 ){
+						$list = [$previousOptionId => '--Select Area--'] + $list;
+					}
+					break;
+			}
+
+			if(! ($count == count($path)) || ! $hasChildren){
+				$obj->selectedId = $obj->id;
+			}else{
+				$obj->selectedId = $previousOptionId;
+			}
+			
+			$previousOptionId = $obj->id;
 			$obj->list = $list;
-			 //pr($obj);
+			$count++;
 		}
 
-		// $children = $Table
-		// 	->find('list')
-		// 	->where(['parent_id'=>$id])
-		// 	->contain(['Levels']);
-		// $children = $query->all();
-
-		// pr($path);
-   //  	$arrayToPrint = [];
-   //  	$parentIdArray = [];
-   //  	$listOfAreaLevel = [];
-	  // 	array_push($parentIdArray, $id);
-   //	 	array_push($parentIdArray, $parentId);	  	
-   //  	// Get the parent nodes
-   //	 	while( $parentId > $rootId ){
-   //  		$parentItem = $tableItems->get($parentId)->toArray();
-			// $parentId = $parentItem['parent_id'];
-			// array_push($parentIdArray, $parentId);
-	  // 	}
-
-	  // 	// Handle Area.AreaAdministratives
-	  // 	if($tableName == 'Area.AreaAdministratives'){
-	  // 		array_pop($parentIdArray);
-	  // 	}
-
-	  // 	$idToPass = $parentIdArray;
-
-
-
-	  // 	while(!empty($parentIdArray)){
-	  // 		$id = array_pop($parentIdArray);
-
-	  // 		// If there is no children already, disable checkbox
-	  //   	$query = $tableItems
-	  //   		->find('list')
-	  //   		->where(['parent_id'=>$id])
-	  //   		->contain(['Levels']);
-	  //   	$results = $query->toArray();
-
-	  //   	// Add a select item into the list
-   //  		$firstOption = ["-1"=>"--Select Area--"];
-   //  		$results = $firstOption + $results;
-   //  		$arrayToPrint[] = $results;
-   //  	}
-
-		// if($results){
-		// 	// Add a select item into the list
-		// 	$firstOption = ["-1"=>"--Select Area--"];
-		// 	$results = $firstOption + $results;
-		// 	$arrayToPrint[] = $results;
-		// }else{
-		// 	$arrayToPrint[] = [];
-		// 	$disabled = true;
-		// }
-
-		// $this->set('id', $id);
-		// $this->set('code', $code);
-		// $this->set('name', $name);
-
-		$this->set(compact('path', 'children', 'tableName'));
+		$this->set(compact('path', 'tableName'));
 		$this->layout = false;
 	}
 }
