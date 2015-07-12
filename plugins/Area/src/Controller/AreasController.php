@@ -56,13 +56,11 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
 	}
 
-	public function ajaxGetArea($tableName, $id) {
-
+	public function ajaxGetArea($tableName, $targetModel, $id) {
 		$rootId = -1; // Root node
-		// Get the default table item
+
 		$Table = TableRegistry::get($tableName);	
 
-		// Getting the parent id of the item that is posted over
 		$areaEntity = $Table->get($id);
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
@@ -95,9 +93,6 @@ class AreasController extends AppController
 				->order([$Table->aliasField('order')])
 				->toArray();
 
-			// Push each of the object ID into the stack and assign the Id of the previous selected item 
-			// to the --Select Area-- option 
-			// The root record does not require the --Select Area-- Option
 			switch($tableName){
 				case "Area.AreaAdministratives":
 					if( $count > 2 ){
@@ -122,7 +117,7 @@ class AreasController extends AppController
 			$count++;
 		}
 
-		$this->set(compact('path', 'tableName'));
+		$this->set(compact('path', 'targetModel', 'tableName'));
 		$this->layout = false;
 	}
 }

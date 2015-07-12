@@ -1,20 +1,24 @@
 <?php
 	
-	$inputName = "value";
-
+	$inputName = $targetModel;
 	$template = $this->ControllerAction->getFormTemplate();
 	$this->Form->templates($template);
 
-	// Using the url helper to build the url
 	$url = $this->Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
-	// From selected to root
+
 	$count = 0;
 	foreach($path as $obj){
+		$name = $inputName;
+		if($count == 0)
+			$name .= '.' . $tableName;
+		else
+			$name = $obj->level->name;
 		if(! ($tableName=='Area.AreaAdministratives' && $count==0)){
-			echo $this->Form->input($inputName, array(
+			echo $this->Form->input($name, array(
 				'class' => 'form-control',
 				'div' => false,
 				'data-source' => $tableName,
+				'target-model' => $targetModel,
 				'label' => $tableName ." ". $obj->level->name,
 				'url' => $url,
 				'onchange' => 'Area.reload(this)',
