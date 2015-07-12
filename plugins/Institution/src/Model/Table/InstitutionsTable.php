@@ -163,8 +163,9 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
 		//$this->ControllerAction->field('area_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model'=>'Area.AreaAdministratives']);
-		//$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model' => 'Area.AreaAdministratives']);
+		//$this->ControllerAction->field('area_administrative_id', ['type' => 'select']);
+		//$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model'=>'Area.AreaAdministratives']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'area', 'source_model' => 'Area.Areas']);
 		//$this->ControllerAction->field('area_id', ['type' => 'element', 'element' => 'Institution.Institutions/area', 'valueClass' => 'table-full-width', 'id-id' => 'xxx', 'source_model' => 'Area.Areas']);
 		// pr($this->fields['area_administrative_id']);
@@ -217,7 +218,7 @@ class InstitutionsTable extends AppTable  {
 		$options['onchange'] = "Area.reload(this)";
 		$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
 		$options['data-source'] = $attr['source_model'];
-		//$options['class'] = 'areapicker';
+		$options['target-model'] = $attr['model'];
 		$options['options'] = $areaOptions;
 		$options['id'] = 'areapicker';
 		$value = "<div class='areapicker'>";
