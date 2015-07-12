@@ -223,8 +223,8 @@ class InstitutionsTable extends AppTable  {
 		$options['id'] = 'areapicker';
 		$value = "<div class='areapicker'>";
 		$value .= $Form->input($fieldName, $options);
-		$value .= $Form->hidden($attr['model'].'.'.$attr['field'], ['value' => ""]);
 		$value .= "</div>";
+		$value .= $Form->hidden($attr['model'].'.'.$attr['field'], ['value' => "1"]);
 		return $value;
 	
 	}
