@@ -13,22 +13,24 @@ class ReorderBehavior extends Behavior {
 	];
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$orderField = $this->config('orderField');
-		$filter = $this->config('filter');
+		if ($entity->isNew()) {
+			$orderField = $this->config('orderField');
+			$filter = $this->config('filter');
 
-		$order = 0;
+			$order = 0;
 
-		if (is_null($filter)) {
-			$order = $this->_table->find()->count();
-		} else {
-			$filterValue = $entity->$filter;
-			$table = $this->_table;
-			$order = $table
-				->find()
-				->where([$table->aliasField($filter) => $filterValue])
-				->count();
-			
+			if (is_null($filter)) {
+				$order = $this->_table->find()->count();
+			} else {
+				$filterValue = $entity->$filter;
+				$table = $this->_table;
+				$order = $table
+					->find()
+					->where([$table->aliasField($filter) => $filterValue])
+					->count();
+				
+			}
+			$entity->$orderField = $order + 1;
 		}
-		$entity->$orderField = $order + 1;
 	}
 }
