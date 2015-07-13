@@ -40,59 +40,63 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	public function onGetMark(Event $event, Entity $entity) {
 		$html = '';
 
+		$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
+		$Items = TableRegistry::get('Assessment.AssessmentItems');
+		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
+
 		$institutionId = $this->Session->read('Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
-		$selectedSubject = $this->request->query('subject');
+		$selectedClass = $this->request->query('class');
+		$subjectId = $Classes->get($selectedClass)->education_subject_id;
 		$id = $entity->id;
-
-		$Items = TableRegistry::get('Assessment.AssessmentItems');
-		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 
 		$itemObj = $Items
 			->find()
 			->where([
 				$Items->aliasField('assessment_id') => $selectedAssessment,
-				$Items->aliasField('education_subject_id') => $selectedSubject
+				$Items->aliasField('education_subject_id') => $subjectId
 			])
 			->first();
 
-		$resultObj = $Results
-			->find()
-			->where([
-				$Results->aliasField('assessment_item_id') => $itemObj->id,
-				$Results->aliasField('security_user_id') => $id,
-				$Results->aliasField('institution_site_id') => $institutionId,
-				$Results->aliasField('academic_period_id') => $selectedPeriod
-			])
-			->first();
+		if (!is_null($itemObj)) {
+			$resultObj = $Results
+				->find()
+				->where([
+					$Results->aliasField('assessment_item_id') => $itemObj->id,
+					$Results->aliasField('security_user_id') => $id,
+					$Results->aliasField('institution_site_id') => $institutionId,
+					$Results->aliasField('academic_period_id') => $selectedPeriod
+				])
+				->first();
 
-		$marks = 0;
-		$gradingId = 0;
-		if (!is_null($resultObj)) {
-			$marks = $resultObj->marks;
-			$gradingId = $resultObj->assessment_grading_option_id;
-		}
-		$entity->assessment_grading_option_id = $gradingId;
-
-		if ($selectedStatus == 0 || $selectedStatus == 1) {
-			$Form = $event->subject()->Form;
-			$alias = Inflector::underscore($Results->alias());
-			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
-
+			$marks = 0;
+			$gradingId = 0;
 			if (!is_null($resultObj)) {
-				$html .= $Form->hidden($fieldPrefix.".id", ['value' => $resultObj->id]);
+				$marks = $resultObj->marks;
+				$gradingId = $resultObj->assessment_grading_option_id;
 			}
+			$entity->assessment_grading_option_id = $gradingId;
 
-			$options = ['type' => 'number', 'label' => false, 'value' => $marks];
-			$html .= $Form->input($fieldPrefix.".marks", $options);
-			$html .= $Form->hidden($Items->alias().".id", ['value' => $itemObj->id]);
-			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
-			$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
-			$html .= $Form->hidden($fieldPrefix.".academic_period_id", ['value' => $selectedPeriod]);
-		} else {
-			$html = $marks;
+			if ($selectedStatus == 0 || $selectedStatus == 1) {
+				$Form = $event->subject()->Form;
+				$alias = Inflector::underscore($Results->alias());
+				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
+
+				if (!is_null($resultObj)) {
+					$html .= $Form->hidden($fieldPrefix.".id", ['value' => $resultObj->id]);
+				}
+
+				$options = ['type' => 'number', 'label' => false, 'value' => $marks];
+				$html .= $Form->input($fieldPrefix.".marks", $options);
+				$html .= $Form->hidden($Items->alias().".id", ['value' => $itemObj->id]);
+				$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
+				$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
+				$html .= $Form->hidden($fieldPrefix.".academic_period_id", ['value' => $selectedPeriod]);
+			} else {
+				$html = $marks;
+			}
 		}
 
 		return $html;
@@ -101,80 +105,30 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
 
-		$selectedStatus = $this->request->query('status');
-		if ($selectedStatus == 0 || $selectedStatus == 1) {
-			$Form = $event->subject()->Form;
-			$Items = TableRegistry::get('Assessment.AssessmentItems');
-			$Results = TableRegistry::get('Assessment.AssessmentItemResults');
-			$alias = Inflector::underscore($Results->alias());
-			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->id;
+		if (isset($entity->assessment_grading_option_id)) {
+			$selectedStatus = $this->request->query('status');
+			if ($selectedStatus == 0 || $selectedStatus == 1) {
+				$Form = $event->subject()->Form;
+				$Items = TableRegistry::get('Assessment.AssessmentItems');
+				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
+				$alias = Inflector::underscore($Results->alias());
+				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->id;
 
-			$gradingOptions = $this->gradingOptions;
-			$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
+				$gradingOptions = $this->gradingOptions;
+				$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
 
-			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
-			$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
-		} else {
-			$html = $this->gradingOptions[$entity->assessment_grading_option_id];
+				$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
+				$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
+			} else {
+				if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
+					$html = $this->gradingOptions[$entity->assessment_grading_option_id];
+				} else {
+					$html = '<i class="fa fa-minus"></i>';
+				}
+			}
 		}
 
 		return $html;
-	}
-
-	public function beforeAction(Event $event) {
-		$institutionId = $this->Session->read('Institutions.id');
-		$selectedStatus = $this->request->query('status');
-		$selectedAssessment = $this->request->query('assessment');
-		$selectedPeriod = $this->request->query('period');
-
-		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-		$subjectIds = $AssessmentItems
-			->findByAssessmentId($selectedAssessment)
-			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
-			->toArray();
-
-		if (!empty($subjectIds)) {
-			$classes = $this->InstitutionSiteClasses
-				->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $selectedPeriod)
-				->where([
-					$this->InstitutionSiteClasses->aliasField('education_subject_id IN') => $subjectIds
-				])
-				->all();
-
-			if (!$classes->isEmpty()) {
-				$plugin = $this->controller->plugin;
-				$controller = $this->controller->name;
-				$action = $this->alias;
-				$action .= '?status=' . $selectedStatus;
-				$action .= '&assessment=' . $selectedAssessment;
-				$action .= '&period=' . $selectedPeriod;
-
-				$tabElements = [];
-				$classOptions = [];
-				$subjectOptions = [];
-				foreach ($classes as $key => $class) {
-					$classId = $class->id;
-					$className = $class->name;
-					$subjectId = $class->education_subject_id;
-					$classOptions[$classId] = $className;
-					$subjectOptions[$subjectId] = $subjectId;
-
-					$tabElements[$className] = [
-						'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'&class='.$classId.'&subject='.$subjectId],
-						'text' => __($className)
-					];
-				}
-				$selectedAction = $this->queryString('class', $classOptions);
-				$selectedSubject = $this->queryString('subject', $subjectOptions);
-
-				$this->controller->set('tabElements', $tabElements);
-				$this->controller->set('selectedAction', $classOptions[$selectedAction]);
-			} else {
-				$this->Alert->warning('InstitutionAssessmentResults.noClasses');
-			}
-		} else {
-			$this->Alert->warning('InstitutionAssessmentResults.noSubjects');
-		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -186,29 +140,161 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('grade');
 		$this->ControllerAction->setFieldOrder(['identity', 'security_user_id', 'mark', 'grade']);
 
-		$settings['pagination'] = false;
-		$selectedClass = !is_null($this->request->query('class')) ? $this->request->query('class') : -1;
+		$institutionId = $this->Session->read('Institutions.id');
+		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
-		$selectedSubject = $this->request->query('subject');
+		$selectedPeriod = $this->request->query('period');
 
-		$Items = TableRegistry::get('Assessment.AssessmentItems');
-		$itemObj = $Items
-			->find()
-			->where([
-				$Items->aliasField('assessment_id') => $selectedAssessment,
-				$Items->aliasField('education_subject_id') => $selectedSubject
-			])
-			->contain(['GradingTypes.GradingOptions'])
-			->first();
+		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+		$subjectIds = $AssessmentItems
+			->findByAssessmentId($selectedAssessment)
+			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
+			->toArray();
 
-		$gradings = $itemObj->grading_type->grading_options;
-		foreach ($gradings as $key => $obj) {
-			$this->gradingOptions[$obj->id] = $obj->code ." - ". $obj->name;
+		$settings['pagination'] = false;
+		if (!empty($subjectIds)) {
+			$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+			$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
+			$SectionClasses = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
+
+			$sectionResults = $Sections
+				->find()
+				->select([
+					$Sections->aliasField('id'),
+					$Sections->aliasField('name')
+				])
+				->where([
+					$Sections->aliasField('institution_site_id') => $institutionId,
+					$Sections->aliasField('academic_period_id') => $selectedPeriod,
+				])
+				->join([
+					'table' => $SectionClasses->_table,
+					'alias' => $SectionClasses->alias(),
+					'conditions' => [
+						$SectionClasses->aliasField('institution_site_section_id =') . $Sections->aliasField('id')
+					]
+				])
+				->join([
+					'table' => $Classes->_table,
+					'alias' => $Classes->alias(),
+					'conditions' => [
+						$Classes->aliasField('id =') . $SectionClasses->aliasField('institution_site_class_id'),
+						$Classes->aliasField('institution_site_id') => $institutionId,
+						$Classes->aliasField('academic_period_id') => $selectedPeriod,
+						$Classes->aliasField('education_subject_id IN') => $subjectIds
+					]
+				])
+				->group([
+					$Sections->aliasField('id')
+				])
+				->contain(['InstitutionSiteClasses.EducationSubjects'])
+				->all();
+
+			if (!$sectionResults->isEmpty()) {
+				// tabElements variables
+				$plugin = $this->controller->plugin;
+				$controller = $this->controller->name;
+				$action = $this->alias;
+				$action .= '?status=' . $selectedStatus;
+				$action .= '&assessment=' . $selectedAssessment;
+				$action .= '&period=' . $selectedPeriod;
+				// End
+				
+				$tabElements = [];
+				$sectionOptions = [];
+				$classOptions = [];
+				foreach ($sectionResults as $section) {
+					$sectionId = $section->id;
+					$sectionName = $section->name;
+
+					$classes = [];
+					foreach ($section->institution_site_classes as $class) {
+						$classId = $class->id;
+						$className = $class->name;
+						$subjectId = $class->education_subject->id;
+						$subjectName = $class->education_subject->name;
+						
+						// Class Options
+						$classes[$classId] = [
+							'value' => $classId,
+							'text' => $className
+						];
+					}
+
+					$tabElements[$sectionName] = [
+						'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'&section='.$sectionId],
+						'text' => __($sectionName)
+					];
+
+					// Section Options
+					$sectionOptions[$sectionId] = [
+						'value' => $sectionId,
+						'text' => $sectionName,
+						'classes' => $classes
+					];
+				}
+				$selectedSection = $this->queryString('section', $sectionOptions);
+
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $sectionOptions[$selectedSection]['text']);
+
+
+				if (!empty($sectionOptions[$selectedSection]['classes'])) {
+					// Class Options
+					$classOptions = $sectionOptions[$selectedSection]['classes'];
+					$selectedClass = $this->queryString('class', $classOptions);
+					$classOptions[$selectedClass][0] = 'selected';
+					// End
+
+					// toolbarElements
+					$toolbarElements = [
+						['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => []]
+					];
+					$this->controller->set('toolbarElements', $toolbarElements);
+					$this->controller->set('classOptions', $classOptions);
+					// End
+
+					// Grading Options
+					$subjectId = $Classes->get($selectedClass)->education_subject_id;
+
+					$Items = TableRegistry::get('Assessment.AssessmentItems');
+					$itemObj = $Items
+						->find()
+						->where([
+							$Items->aliasField('assessment_id') => $selectedAssessment,
+							$Items->aliasField('education_subject_id') => $subjectId
+						])
+						->contain(['GradingTypes.GradingOptions'])
+						->first();
+
+					if (!is_null($itemObj)) {
+						foreach ($itemObj->grading_type->grading_options as $key => $obj) {
+							$this->gradingOptions[$obj->id] = $obj->code ." - ". $obj->name;
+						}
+					}
+					// End
+
+					return $query
+						->where([$this->aliasField('institution_site_class_id') => $selectedClass])
+						->contain(['Users']);
+				} else {
+					return $query
+						->where([$this->aliasField('security_user_id') => 0]);
+
+					$this->Alert->warning('InstitutionAssessmentResults.noClasses');
+				}
+			} else {
+				return $query
+					->where([$this->aliasField('security_user_id') => 0]);
+
+				$this->Alert->warning('InstitutionAssessmentResults.noSections');
+			}
+		} else {
+			return $query
+				->where([$this->aliasField('security_user_id') => 0]);
+
+			$this->Alert->warning('InstitutionAssessmentResults.noSubjects');
 		}
-
-		return $query
-			->where([$this->aliasField('institution_site_class_id') => $selectedClass])
-			->contain(['Users']);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
