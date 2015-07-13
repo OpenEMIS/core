@@ -160,14 +160,14 @@ class NavigationComponent extends Component {
 									'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
 									'selected' => ['index', 'add', 'view', 'edit', 'remove']
 								],
-								// 'Translations' => [
-								// 	'collapse' => true,
-								// 	'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
-								// ],
 								'Custom Field' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
 									'selected' => ['Pages']
+								],
+								'Translations' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index']
 								],
 								'System Configurations' => [
 									'collapse' => true,
