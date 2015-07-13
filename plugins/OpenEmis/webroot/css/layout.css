@@ -1408,6 +1408,10 @@ input[type="checkbox"] {
     border: 0;
 }
 
+.table-bordered > tbody {
+	border: 1px solid #FFF;
+}
+
 .table > tbody > tr > td, 
 .table > tbody > tr > th, 
 .table > tfoot > tr > td, 
@@ -2340,7 +2344,9 @@ label + select {
 }
 
 .form-error,
-.error input {
+.error input,
+.error textarea,
+.error .input-select-wrapper {
 	border-color: #CC5C5C !important;
 }
 
@@ -2397,10 +2403,14 @@ input[readonly] {
 	color: #333;
 	font-weight: bold;
 	padding: 2px 5px;
-	margin: 0 0 4px;
+	margin: -4px 0 0;
 	border: 1px solid #F2DC45;
 	-webkit-border-radius: 2px;
 		    border-radius: 2px;	
+}
+
+table .status {
+	margin: 0 0 4px;
 }
 
 .status:before {
