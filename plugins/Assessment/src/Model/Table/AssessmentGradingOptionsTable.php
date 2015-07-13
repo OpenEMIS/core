@@ -14,15 +14,13 @@ class AssessmentGradingOptionsTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
-		// $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
-		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
 
+		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
 		$this->addBehavior('Reorder', ['filter' => 'assessment_grading_type_id']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$gradingTypeOptions = $this->AssessmentGradingTypes->getList()->toArray();
+		list($gradingTypeOptions, $selectedGradingType) = array_values($this->_getSelectOptions());
 
 		if (!empty($gradingTypeOptions)) {
 			$toolbarElements = [
@@ -35,13 +33,27 @@ class AssessmentGradingOptionsTable extends AppTable {
 		}
 
 		$this->ControllerAction->field('assessment_grading_type_id', ['visible' => false]);
-		$selectedType = $this->queryString('grading_type_id', $gradingTypeOptions);
-		$options['conditions'][$this->aliasField('assessment_grading_type_id')] = $selectedType;
+		$options['conditions'][$this->aliasField('assessment_grading_type_id')] = $selectedGradingType;
 	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('assessment_grading_type_id', ['type' => 'select']);
-
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('assessment_grading_type_id');
 		$this->ControllerAction->setFieldOrder(['assessment_grading_type_id', 'code', 'name']);
+	}
+
+	public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, Request $request) {
+		list($gradingTypeOptions) = array_values($this->_getSelectOptions());
+		$attr['options'] = $gradingTypeOptions;
+
+		return $attr;
+	}
+
+	public function _getSelectOptions() {
+		//Return all required options and their key
+		$gradingTypeOptions = $this->AssessmentGradingTypes->getList()->toArray();
+		$selectedGradingType = $this->queryString('grading_type_id', $gradingTypeOptions);
+		$this->advancedSelectOptions($gradingTypeOptions, $selectedGradingType);
+
+		return compact('gradingTypeOptions', 'selectedGradingType');
 	}
 }

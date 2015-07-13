@@ -13,8 +13,8 @@ class EducationProgrammesTable extends AppTable {
 		$this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
 		$this->belongsTo('EducationCertifications', ['className' => 'Education.EducationCertifications']);
 		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
-		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes']);
+		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -60,11 +60,7 @@ class EducationProgrammesTable extends AppTable {
 
 	public function getSelectOptions() {
 		//Return all required options and their key
-		$levelOptions = $this->EducationCycles->EducationLevels
-			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-			->find('visible')
-			->find('order')
-			->toArray();
+		$levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions();
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
 		$cycleOptions = $this->EducationCycles
