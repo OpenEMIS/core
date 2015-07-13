@@ -17,6 +17,7 @@ class RubricTemplatesTable extends AppTable {
 		parent::initialize($config);
 		$this->hasMany('RubricSections', ['className' => 'Rubric.RubricSections', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('RubricTemplateOptions', ['className' => 'Rubric.RubricTemplateOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('RubricStatuses', ['className' => 'Rubric.RubricStatuses']);
 	}
 
 	public function validationDefault(Validator $validator) {
