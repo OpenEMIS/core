@@ -310,24 +310,22 @@ class NavigationComponent extends Component {
 					]
 				]
 			];
-		} else if ($controller->name == 'Guardian' && $action != 'index') {
-			$navigations['items']['Guardian']['items'] = [
-				'General' => [
-					'collapse' => true,
-					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'view', $id]],
-						'Contacts' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Contacts']],
-						'Identities' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Identities']],
-						'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Languages']],
-						'Comments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Comments']],
-						// 'Special Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'SpecialNeeds']],
-						// 'Awards' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Awards']],
-						// 'Attachments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Attachments']],
-						// 'History' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'History']]
-					]
-				],
-			];
-		} else {
+		} 
+		// else if ($controller->name == 'Guardians' && $action != 'index') {
+		// 	$navigations['items']['Guardians']['items'] = [
+		// 		'General' => [
+		// 			'collapse' => true,
+		// 			'items' => [
+		// 				'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'view', $id]],
+		// 				// 'Contacts' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Contacts']],
+		// 				// 'Identities' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Identities']],
+		// 				// 'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Languages']],
+		// 				// 'Comments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Comments']]
+		// 			]
+		// 		],
+		// 	];
+		// } 
+		else {
 			
 		}
 		$controller->set('_navigations', $navigations);
