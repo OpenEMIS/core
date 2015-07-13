@@ -356,6 +356,7 @@ class UsersTable extends AppTable {
 			->allowEmpty('username')
 			->add('address', [])
 			->add('password', [])
+			->allowEmpty('photo_content')
 			;
 		return $validator;
 	}
@@ -436,7 +437,7 @@ class UsersTable extends AppTable {
 		return $value;
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
+	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
 		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
 			$file = $entity->photo_content;
 			if(!empty($file['tmp_name'])){
@@ -458,5 +459,5 @@ class UsersTable extends AppTable {
 		}
 
 		parent::beforeSave($event, $entity, $options);
-	}
+	}*/
 }
