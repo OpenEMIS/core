@@ -173,6 +173,25 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * check the existence of AM / PM in a time field
+	 * @param  string $field      The field value
+	 * @param  array  $globalData [description]
+	 * @return mixed              Boolean or String
+	 */
+	public static function amPmValue($field, $globalData) {
+		$explode = explode(' ', $field);
+		if (isset($explode[1])) {
+			if (!in_array($explode[1], ['am', 'AM', 'pm', 'PM'])) {
+				return __('Wrong time format');
+			} else {
+				return true;
+			}
+		} else {
+			return __('Wrong time format');
+		}
+	}
+
+	/**
 	 * [checkIfStringGotNoNumber description]
 	 * @param  [type] $check      [description]
 	 * @param  array  $globalData [description]
@@ -225,34 +244,6 @@ class ValidationBehavior extends Behavior {
 		$contactOption = $globalData['data']['contact_option_id'];
 
 		return $flag;
-	}
-
-	public static function checkSelectedFileAsImage($field, array $globalData) {
-		$isValid = true;
-		$fileImagesMap = array(
-			'jpeg'	=> 'image/jpeg',
-			'jpg'	=> 'image/jpeg',
-			'gif'	=> 'image/gif',
-			'png'	=> 'image/png'
-			// 'jpeg'=>'image/pjpeg',
-			// 'jpeg'=>'image/x-png'
-		);
-
-		if(isset($field['type']) && !in_array($field['type'], $fileImagesMap)){
-			$isValid = false;
-		} 
-		return $isValid;
-	}
-
-	public static function checkIfImageExceedsUploadSize($field, array $globalData) {
-		$isValid = true;
-		$restrictedSize = 2000000; //2MB in bytes
-
-		 if(isset($field['type']) && ($field['size'] > $restrictedSize)){
-		 	$isValid = false;
-		 }
-
-		return $isValid;
 	}
 
 	public static function comparePasswords($field, $compareField, array $globalData) {

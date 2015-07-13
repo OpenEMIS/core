@@ -42,9 +42,8 @@ class InstitutionsController extends AppController  {
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'StudentResults'	=> ['className' => 'Institution.StudentResults', 'actions' => ['index']],
-
-			'Assessments'		=> ['className' => 'Institution.AssessmentStatuses', 'actions' => ['index', 'view']],
+			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view']],
+			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
@@ -92,7 +91,7 @@ class InstitutionsController extends AppController  {
 				} else {
 					$header = $name .' - '.__(Inflector::humanize($action));
 				}
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action, $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $id]);
 			} else {
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 			}
@@ -181,6 +180,11 @@ class InstitutionsController extends AppController  {
 		}
 		
 		return $options;
+	}
+
+	public function excel($id=0) {
+		$this->Institutions->excel($id);
+		$this->autoRender = false;
 	}
 
 	public function dashboard() {

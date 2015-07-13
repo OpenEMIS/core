@@ -43,6 +43,10 @@
 	color: #476B8F;
 }
 
+.ui-menu-item:hover {
+	color: #FFF !important;
+}
+
 .btn-default,
 .pagination > .active > a,
 .pagination > .active > a:hover,
@@ -61,7 +65,10 @@
 	border-right: 1px solid #476B8F !important;
 }
 
-.header-navigation .btn-group .btn:hover,
+.header-navigation .btn-group .btn:hover {
+	background-color: #476B8F;
+}
+
 .table-in-view::-webkit-scrollbar-thumb {
 	background-color: #476B8F;
 }

@@ -1,3 +1,5 @@
+<?php if (isset($modal['id'])) : ?>
+
 <div class="modal fade" id="<?= $modal['id'] ?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
 		<div class="modal-content">
@@ -30,3 +32,5 @@
 		</div>
 	</div>
 </div>
+
+<?php endif ?>
