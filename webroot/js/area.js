@@ -22,7 +22,7 @@ var Area = {
 		var hiddenField = $(this).find('input:hidden');
 		var url = $(obj).attr('url');
 		var modelName= $(obj).attr('data-source');
-		modelName += "/" + $(this).find('select').attr('target-model');
+		modelName += "/" + $(obj).attr('target-model');
 		var parent = $(obj).closest('.areapicker');
 		url += "/" + modelName + "/" + value;
 		Area.populate(parent, url)
