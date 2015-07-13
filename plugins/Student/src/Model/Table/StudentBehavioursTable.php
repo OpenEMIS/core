@@ -20,7 +20,7 @@ class StudentBehavioursTable extends AppTable {
 	public function beforeAction() {
 		$this->ControllerAction->field('academic_period');
 		$this->ControllerAction->field('section');
-		$this->fields['security_user']['type'] = 'select';
+		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
 		$this->fields['student_behaviour_category_id']['type'] = 'select';
 
 	}	
@@ -73,7 +73,7 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user', 'student_behaviour_category_id']);
+		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
