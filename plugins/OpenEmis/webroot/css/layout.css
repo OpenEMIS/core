@@ -2344,7 +2344,9 @@ label + select {
 }
 
 .form-error,
-.error input {
+.error input,
+.error textarea,
+.error .input-select-wrapper {
 	border-color: #CC5C5C !important;
 }
 
