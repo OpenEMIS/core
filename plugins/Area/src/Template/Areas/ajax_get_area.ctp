@@ -26,7 +26,6 @@
 				'disabled' => false,
 				'default' => $obj->selectedId
 			));
-			
 		}
 		$count++;
 	}
