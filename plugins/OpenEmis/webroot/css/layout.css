@@ -2403,10 +2403,14 @@ input[readonly] {
 	color: #333;
 	font-weight: bold;
 	padding: 2px 5px;
-	margin: 0 0 4px;
+	margin: -4px 0 0;
 	border: 1px solid #F2DC45;
 	-webkit-border-radius: 2px;
 		    border-radius: 2px;	
+}
+
+table .status {
+	margin: 0 0 4px;
 }
 
 .status:before {
