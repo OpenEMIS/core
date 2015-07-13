@@ -150,16 +150,18 @@ class InstitutionSiteStaffTable extends AppTable {
 			}
 		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
-			$positionType = $staffByPosition->position->type;
-			$staffGender = $staffByPosition->user->gender->name;
-			$StaffTotal = $staffByPosition->total;
+			if ($staffByPosition->has('position')) {
+				$positionType = $staffByPosition->position->type;
+				$staffGender = $staffByPosition->user->gender->name;
+				$StaffTotal = $staffByPosition->total;
 
-			foreach ($dataSet as $dkey => $dvalue) {
-				if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
-					$dataSet[$dkey]['data'][$positionType] = 0;
+				foreach ($dataSet as $dkey => $dvalue) {
+					if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+						$dataSet[$dkey]['data'][$positionType] = 0;
+					}
 				}
+				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
 			}
-			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
 		}
 
 		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
