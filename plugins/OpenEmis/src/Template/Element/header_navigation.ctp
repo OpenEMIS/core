@@ -11,7 +11,7 @@ $dropdown = [
 		'icon' => 'fa-info-circle'
 	],
 	'Preferences' => [
-		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index/account'], 
+		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index', 'action'], 
 		'icon' => 'fa-cog'
 	],
 	'_divider',

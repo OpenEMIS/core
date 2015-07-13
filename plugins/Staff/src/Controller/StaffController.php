@@ -21,6 +21,10 @@ class StaffController extends AppController {
 			'tableCellKey' => ['className' => 'Staff.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Staff.StaffActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('Excel', [
+			'excludes' => ['password', 'photo_name'],
+			'filename' => 'Staff'
+		]);
 
 		$this->ControllerAction->models = [
 			'Accounts' => ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
@@ -152,5 +156,10 @@ class StaffController extends AppController {
 			}
 		}
 		return $options;
+	}
+
+	public function excel($id=0) {
+		$this->Users->excel($id);
+		$this->autoRender = false;
 	}
 }

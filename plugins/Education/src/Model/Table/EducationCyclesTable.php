@@ -10,7 +10,7 @@ class EducationCyclesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
-		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -48,11 +48,7 @@ class EducationCyclesTable extends AppTable {
 
 	public function getSelectOptions() {
 		//Return all required options and their key
-		$levelOptions = $this->EducationLevels
-			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-			->find('visible')
-			->find('order')
-			->toArray();
+		$levelOptions = $this->EducationLevels->getLevelOptions();
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
 
 		return compact('levelOptions', 'selectedLevel');

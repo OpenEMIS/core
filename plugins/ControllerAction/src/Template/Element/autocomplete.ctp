@@ -104,22 +104,12 @@ var Autocomplete = {
 			response: Autocomplete.searchComplete,
 			search: Autocomplete.beforeSearch
 		}).on( 'keyup', Autocomplete.keyup );
-	},
-
-	submitForm: function(obj){
-		var parentForm = $(obj).closest('form');
-		if(parentForm.length > 0){
-			var indicatorField = '<input type="hidden" name="data[new]" value="" />';
-			parentForm.append(indicatorField);
-			parentForm.find('input.btn_save').click();
-			return false;
-		}
 	}
 
 }
 </script>
 <?php
-$loadingImg =  $this->Html->image('OpenEmis.icons/loader.gif', ['plugin' => true]);
+$loadingImg =  $this->Html->image('OpenEmis/loader.gif', ['plugin' => true]);
 ?>
 <div class="input text">
 	<label for="<?= $attr['field'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
