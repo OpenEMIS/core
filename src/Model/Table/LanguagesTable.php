@@ -8,6 +8,6 @@ class LanguagesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('field_option_values');
 		$this->addBehavior('ControllerAction.FieldOption');
-		$this->hasMany('UserLanguages', ['className' => 'UserLanguages']);
+		$this->hasMany('UserLanguages', ['className' => 'UserLanguages', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
