@@ -159,10 +159,20 @@ class FileUploadBehavior extends Behavior {
 			}
 		} else {
 			if ($contentEditable) {
-
 				if (!empty($file) && $file['error'] == 0) { // success
 					// pr('parseUploadInput');
-					$data = $this->parseUploadInput($data, $file);
+					if ($this->uploadedFileIsAllowed($file)) {
+						if ($this->uploadedFileSizeIsAcceptable($file)) {
+							$data = $this->parseUploadInput($data, $file);
+						} else {
+							$entity->errors($fileContentField, ['File size should not be more than ' . $this->config('size')]);
+							unset($data[$model->alias()][$fileContentField]);
+						}				
+					} else {
+						$entity->errors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView()]);
+						unset($data[$model->alias()][$fileContentField]);
+					}
+
 				} elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file) ) {
 					// pr('content allowed to be empty');
 					$this->unsetProperties($entity, $data);
