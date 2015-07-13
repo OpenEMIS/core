@@ -137,6 +137,16 @@ trait MessagesTrait {
 		// 	'first_date_absent' => 'First Day Of Absence',
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
+		'InstitutionAssessments' => [
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			],
+		],
+		'InstitutionAssessmentResults' => [
+			'noSubjects' => 'There are no available Subjects.',
+			'noClasses' => 'There are no available Classes.',
+		],
 		'InstitutionSurveys' => [
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
@@ -228,7 +238,12 @@ trait MessagesTrait {
 			'next_step' => 'Next Step',
 			'comment_required' => 'Comment Required'
 		],
-
+		'InstitutionQualityVisits' => [
+			'noPeriods' => 'No Available Periods',
+			'noSections' => 'No Available Sections',
+			'noClasses' => 'No Available Classes',
+			'noStaff' => 'No Available Staff'
+		],
 
 
 		// Validation Messages

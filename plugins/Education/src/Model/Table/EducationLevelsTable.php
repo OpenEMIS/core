@@ -13,7 +13,7 @@ class EducationLevelsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevelIsced', ['className' => 'Education.EducationLevelIsced']);
 		$this->belongsTo('EducationSystems', ['className' => 'Education.EducationSystems']);
-		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles']);
+		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -66,5 +66,19 @@ class EducationLevelsTable extends AppTable {
 		$selectedSystem = !is_null($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
 
 		return compact('systemOptions', 'selectedSystem');
+	}
+
+	public function getLevelOptions() {
+		$list = $this
+			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
+			->find('visible')
+			->contain(['EducationSystems'])
+			->order([
+				$this->EducationSystems->aliasField('order'),
+				$this->aliasField('order')
+			])
+			->toArray();
+
+		return $list;
 	}
 }
