@@ -26,7 +26,7 @@ class LocalizationComponent extends Component {
 	public $Session;
 	public $showLanguage = true;
 	public $language = 'en';
-	public $languages = [
+	private $languages = [
 		'ar' => ['name' => 'العربية', 'direction' => 'rtl'],
 		'zh' => ['name' => '中文', 'direction' => 'ltr'],
 		'en' => ['name' => 'English', 'direction' => 'ltr'],
@@ -91,5 +91,9 @@ class LocalizationComponent extends Component {
 			$options[$key] = $lang['name'];
 		}
 		return $options;
+	}
+
+	public function getLanguages() {
+		return $this->languages;
 	}
 }
