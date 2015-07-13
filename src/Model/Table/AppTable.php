@@ -284,6 +284,7 @@ class AppTable extends Table {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$primaryKey = $this->primaryKey();
 		$id = $entity->$primaryKey;
+		pr($id);
 
 		if (array_key_exists('view', $buttons)) {
 			$buttons['view']['url'][1] = $id;
