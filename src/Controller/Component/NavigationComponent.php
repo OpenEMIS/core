@@ -120,10 +120,10 @@ class NavigationComponent extends Component {
 				// 	'collapse' => true,
 				// 	'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				// ],
-				'Reports' => [
-					'collapse' => true,
-					'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
-				],
+				// 'Reports' => [
+				// 	'collapse' => true,
+				// 	'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
+				// ],
 				'Administration' => [
 					'collapse' => true,
 					'items' => [
