@@ -66,14 +66,14 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Student.security_user_id');
+			$session->delete('Students.security_user_id');
 			$session->delete('Users.id');
-		} elseif ($session->check('Student.security_user_id') || $session->check('Users.id') || $action == 'view' || $action == 'edit') {
+		} elseif ($session->check('Students.security_user_id') || $session->check('Users.id') || $action == 'view' || $action == 'edit') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Student.security_user_id')) {
-				$id = $session->read('Student.security_user_id');
+			} else if ($session->check('Students.security_user_id')) {
+				$id = $session->read('Students.security_user_id');
 			} else if ($session->check('Users.id')) {
 				$id = $session->read('Users.id');
 			}
@@ -92,7 +92,7 @@ class StudentsController extends AppController {
 
 	public function onInitialize($event, $model) {
 		/**
-		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
+		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
@@ -108,7 +108,7 @@ class StudentsController extends AppController {
 				if (strtolower($action) != 'index')	{
 					if (in_array('Guardian', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
-							$persona = $model->get($params['pass'][1]);
+							$persona = $this->Users->get($params['pass'][1]);
 							if (is_object($persona)) {
 								$this->Navigation->addCrumb($persona->name);
 							}
@@ -159,8 +159,8 @@ class StudentsController extends AppController {
 
 		if ($model->alias() != 'Guardians') {
 			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
-					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
+				if ($this->ControllerAction->Session->check('Students.security_user_id')) {
+					$securityUserId = $this->ControllerAction->Session->read('Students.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
 						$options['conditions'] = [];
 					}
