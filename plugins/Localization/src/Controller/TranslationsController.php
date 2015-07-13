@@ -12,17 +12,17 @@ class TranslationsController extends AppController {
 		$this->ControllerAction->model('Localization.Translations');
 	}
 
-	// public function beforeFilter(Event $event) {
-	// 	parent::beforeFilter($event);
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
 
-	// 	$header = "Translations";
+		$header = "Translations";
 
-	// 	// Setting a bread crumb
-	// 	$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
+		// Setting a bread crumb
+		$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
 
-	// 	// Setting a header
-	// 	$this->set('contentHeader', __($header));
-	// }
+		// Setting a header
+		$this->set('contentHeader', __($header));
+	}
 
 	// public function beforeAction(Event $event){
 	// 	//$currentLocale = I18n.locale();
