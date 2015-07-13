@@ -185,26 +185,12 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		//$this->ControllerAction->field('area_id', ['type' => 'select']);
-		//$this->ControllerAction->field('area_administrative_id', ['type' => 'select']);
-		//$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model'=>'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'area', 'source_model' => 'Area.Areas']);
-		//$this->ControllerAction->field('area_id', ['type' => 'element', 'element' => 'Institution.Institutions/area', 'valueClass' => 'table-full-width', 'id-id' => 'xxx', 'source_model' => 'Area.Areas']);
-		// pr($this->fields['area_administrative_id']);
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
-
-		//$datatest = ['1' => 'data1', '2' => 'data2'];
-		//$this->controller->set('datatest', $datatest);
 	}
-
-	// public function onUpdateFieldAreaAdministrativeId(Event $event, $attr) {
-	// 	$attr['type'] = 'area';
-	// 	$attr['model'] = 'something';
-	// 	return $attr;
-	// }
 
 	public function onGetAreaElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$includes = [
@@ -218,9 +204,6 @@ class InstitutionsTable extends AppTable  {
 		$Form = $HtmlField->Form;
 		$targetModel = $attr['source_model'];
 		$targetTable = TableRegistry::get($targetModel);
-
-		$parentId = -1;
-		$worldRecord = "World";
 
 		$areaOptions = $targetTable
 			->find('list')
