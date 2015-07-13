@@ -101,13 +101,11 @@ class ConfigItemsTable extends AppTable {
 					$this->validator()->add('value', $this->$validationRules);
 				}
 			}
-
 			if ($entity->type == 'Custom Validation') {
 				$this->fields['format']['visible'] = true;
 				$this->fields['format']['value'] = '<ul><li>9 (Numbers)</li><li>a (Letter)</li><li>w (Alphanumeric)</li><li>* (Any Character)</li><li>? (Optional - any characters following will become optional)</li></ul>';
-
+		
 				$this->fields['value']['attr']['onkeypress'] = 'return Config.inputMaskCheck(event)';
-
 			}
 		}
 	}
@@ -129,7 +127,7 @@ class ConfigItemsTable extends AppTable {
 
 /******************************************************************************************************************
 **
-** view action methods
+** specific field methods
 **
 ******************************************************************************************************************/
 	public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
@@ -197,15 +195,6 @@ class ConfigItemsTable extends AppTable {
 	}
 
 	public function onGetValue(Event $event, Entity $entity) {
-		if ($entity->type == 'Custom Validation') {
-			$attr['type'] = 'string';
-			$event->subject()->HtmlField->includes['configItems'] = [
-				'include' => true,
-				'js' => [
-					'config'
-				]
-			];
-		}
 		return $this->recordValueForView('value', $entity);
 	}
 
@@ -213,7 +202,21 @@ class ConfigItemsTable extends AppTable {
 		return $this->recordValueForView('default_value', $entity);
 	}
 
+	/**
+	 * Custom input element
+	 * @param  Event  $event   [description]
+	 * @param  [type] $action  [description]
+	 * @param  [type] $entity  [description]
+	 * @param  [type] $attr    [description]
+	 * @param  array  $options [description]
+	 * @return [type]          [description]
+	 */
     public function onGetCustomNotesElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$event->subject()->includes['configItems'] = [
+			'include' => true,
+			'js' => ['config']
+		];
+
 		$fieldLabel = Inflector::humanize($attr['field']);
 		if (array_key_exists('label', $attr)) {
 			$fieldName = $attr['label'];
