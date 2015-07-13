@@ -147,11 +147,13 @@ class InstitutionAssessmentResultsTable extends AppTable {
 
 		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$subjectIds = $AssessmentItems
-			->findByAssessmentId($selectedAssessment)
 			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
+			->find('visible')
+			->where([$AssessmentItems->aliasField('assessment_id') => $selectedAssessment])
 			->toArray();
 
 		$settings['pagination'] = false;
+		$querySkip = null;
 		if (!empty($subjectIds)) {
 			$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 			$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
@@ -187,7 +189,17 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				->group([
 					$Sections->aliasField('id')
 				])
-				->contain(['InstitutionSiteClasses.EducationSubjects'])
+				->contain([
+					'InstitutionSiteClasses.EducationSubjects',
+				    'InstitutionSiteClasses' => function ($q) use ($Classes, $institutionId, $selectedPeriod, $subjectIds) {
+				       return $q
+				       		->where([
+				       			$Classes->aliasField('institution_site_id') => $institutionId,
+								$Classes->aliasField('academic_period_id') => $selectedPeriod,
+								$Classes->aliasField('education_subject_id IN') => $subjectIds
+				       		]);
+				    }
+				])
 				->all();
 
 			if (!$sectionResults->isEmpty()) {
@@ -277,24 +289,19 @@ class InstitutionAssessmentResultsTable extends AppTable {
 					return $query
 						->where([$this->aliasField('institution_site_class_id') => $selectedClass])
 						->contain(['Users']);
-				} else {
-					return $query
-						->where([$this->aliasField('security_user_id') => 0]);
-
-					$this->Alert->warning('InstitutionAssessmentResults.noClasses');
 				}
 			} else {
-				return $query
-					->where([$this->aliasField('security_user_id') => 0]);
-
-				$this->Alert->warning('InstitutionAssessmentResults.noSections');
+				$querySkip = 'InstitutionAssessmentResults.noClasses';
 			}
 		} else {
-			return $query
-				->where([$this->aliasField('security_user_id') => 0]);
-
-			$this->Alert->warning('InstitutionAssessmentResults.noSubjects');
+			$querySkip = 'InstitutionAssessmentResults.noSubjects';
 		}
+
+		if (!is_null($querySkip)) {
+			$this->Alert->warning($querySkip);
+		}
+		return $query
+				->where([$this->aliasField('security_user_id') => 0]);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
