@@ -17,4 +17,9 @@ class NationalitiesTable extends AppTable {
 		return $validator;
 	}
 
+	public function validationNonMandatory(Validator $validator) {
+		$this->validationDefault($validator);
+		return $validator->allowEmpty('country_id');
+	}
+
 }
