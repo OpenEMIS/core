@@ -632,6 +632,7 @@ class UserBehavior extends Behavior {
 					}
 				}
 			}
+			// because this is a behavior, it will call appTable's onUpdateActionButtons again
 			$event->stopPropagation();
 		}
 		if ($this->_table->hasBehavior('Staff')) {
@@ -645,6 +646,7 @@ class UserBehavior extends Behavior {
 					}
 				}
 			}
+			// because this is a behavior, it will call appTable's onUpdateActionButtons again
 			$event->stopPropagation();
 		}
 		

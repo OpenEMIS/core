@@ -486,7 +486,6 @@ html {
     margin: 0 5px;
 }
 
-.rtl .format-item .btn,
 .rtl .chart-item .btn {
     float: right;
     margin: 0 2px;
@@ -735,6 +734,35 @@ html {
     margin-right: 0;
 }
 
+/* Dashboard Elements RTL */
+.rtl .dropdown-menu .dropdown-header {
+    text-align: right;
+}
+
+.rtl .dropdown-header {
+    text-align: center;
+}
+
+.rtl .panel-toolbar .btn-group:first-child {
+    margin-left: 0;
+    margin-right: 10px;
+    margin-bottom: -1px;
+}
+
+.rtl .format-item button[colorpicker] {
+    float: right;
+    margin-right: 10px;
+}
+
+.rtl .input-group-btn {
+    display: table-cell;
+}
+
+.rtl .btn-bold, 
+.rtl .btn-italic {
+    float: right;    
+}
+
 /* FOOTER */
 
 .rtl footer {
@@ -885,3 +913,4 @@ html {
         margin-right: 0;
     }
 }
+
