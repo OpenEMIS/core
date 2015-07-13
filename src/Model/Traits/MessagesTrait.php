@@ -28,6 +28,9 @@ trait MessagesTrait {
 			'notEditable' => 'This record is not editable',
 			'exists' => 'The record is exists in the system.',
 			'noData' => 'There are no records.',
+			'select' => [
+				'noOptions' => 'No configured options'
+			],
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
 				'success' => 'The record has been added successfully.',
@@ -61,7 +64,10 @@ trait MessagesTrait {
 			'default' => 'Default',
 			'reject' => 'Reject',
 			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes'
+			'noClasses' => 'No Classes',
+			'noStaff' => 'No Staff',
+			'type' => 'Type',
+			'amount' => 'Amount'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -127,9 +133,19 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
-		'InstitutionSiteStaffAbsences' => [
-			'first_date_absent' => 'First Day Of Absence',
-			'last_date_absent' => 'Last Day Of Absence'
+		// 'InstitutionSiteStaffAbsences' => [
+		// 	'first_date_absent' => 'First Day Of Absence',
+		// 	'last_date_absent' => 'Last Day Of Absence'
+		// ],
+		'InstitutionAssessments' => [
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			],
+		],
+		'InstitutionAssessmentResults' => [
+			'noSubjects' => 'There are no available Subjects.',
+			'noClasses' => 'There are no available Classes.',
 		],
 		'InstitutionSurveys' => [
 			'reject' => [
@@ -140,6 +156,9 @@ trait MessagesTrait {
 		'password'=> [
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
+		],
+		'EducationGrades' => [
+			'add_subject' => 'Add Subject'
 		],
 		'RubricSections' => [
 			'rubric_template_id' => 'Rubric Template'
@@ -158,8 +177,15 @@ trait MessagesTrait {
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
-		'StudentAttendance' => [
-			'noSections' => 'No Sections'
+		'SecurityRoles' => [
+			'userRoles' => 'User Roles',
+			'systemRoles' => 'System Roles'
+		],
+		'StudentAttendances' => [
+			'noSections' => 'There are no available Sections.',
+		],
+		'StaffAttendances' => [
+			'noStaff' => 'There are no available Staff.',
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
@@ -202,9 +228,6 @@ trait MessagesTrait {
 			'select_teacher' => 'Select Teacher',
 			'add_teacher' => 'Add Teacher'
 		],
-		'UserRoles' => [
-			'tabTitle' => 'User Roles'
-		],
 		'UserGroups' => [
 			'tabTitle' => 'User Groups'
 		],
@@ -215,7 +238,12 @@ trait MessagesTrait {
 			'next_step' => 'Next Step',
 			'comment_required' => 'Comment Required'
 		],
-
+		'InstitutionQualityVisits' => [
+			'noPeriods' => 'No Available Periods',
+			'noSections' => 'No Available Sections',
+			'noClasses' => 'No Available Classes',
+			'noStaff' => 'No Available Staff'
+		],
 
 
 		// Validation Messages
@@ -256,6 +284,19 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			],
+			'InstitutionSiteStudents' => [
+				'academicPeriod' => 'You need to configure Academic Periods first.',
+				'educationProgrammeId' => 'You need to configure Education Programmes first.',
+				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
+				'sections' => 'You need to configure Sections first.',
+				'studentStatusId' => 'You need to configure Student Statuses first.',
+			],
+			'InstitutionSiteStaff' => [
+				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
+				'securityRoleId' => 'You need to configure Security Roles first.',
+				'FTE' => 'There are no available FTE for this position.',
+				'staffTypeId' => 'You need to configure Staff Types first.'
 			]
 		],
 		'User' => [

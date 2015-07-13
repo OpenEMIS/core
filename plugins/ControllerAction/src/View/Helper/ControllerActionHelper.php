@@ -61,7 +61,8 @@ class ControllerActionHelper extends Helper {
 			'novalidate' => true
 		];
 
-		$fields = $this->_View->get('_fields');
+		$config = $this->_View->get('ControllerAction');
+		$fields = $config['fields'];
 		if (!empty($fields)) {
 			$types = ['binary','image'];
 			foreach ($fields as $key => $attr) {
@@ -80,8 +81,8 @@ class ControllerActionHelper extends Helper {
 		$buttons = $this->_View->get('toolbarButtons');
 	
 		echo '<div class="form-buttons"><div class="button-label"></div>';
-		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save'));
-		echo $this->Html->link(__('Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel'));
+		echo $this->Form->button(__('<i class="fa fa-check"></i> Save'), array('class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save'));
+		echo $this->Html->link(__('<i class="fa fa-close"></i> Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel', 'escape' => false));
 		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo '</div>';
 	}
@@ -221,8 +222,8 @@ class ControllerActionHelper extends Helper {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
 			}
 
-			if (isset($attr['tableRowClass'])) {
-				$row[] = array($value, array('class' => $attr['tableRowClass']));
+			if (isset($attr['tableColumnClass'])) {
+				$row[] = [$value, ['class' => $attr['tableColumnClass']]];
 			} else {
 				$row[] = $value;
 			}
@@ -262,30 +263,29 @@ class ControllerActionHelper extends Helper {
 
 	public function getPageOptions() {
 		$html = '';
-		if (!is_null($this->_View->get('pageOptions'))) {
-			$pageOptions = $this->_View->get('pageOptions');
+		$config = $this->_View->get('ControllerAction');
+
+		if (!is_null($config['pageOptions'])) {
+			$pageOptions = $config['pageOptions'];
 			
 			if (!empty($pageOptions)) {
-				$html = '<span>' . __('Display') . '</span>';
-				$html .= $this->Form->create(NULL, ['type' => 'post', 'style' => 'display: inline-block']);
 				$html .= $this->Form->input('Search.limit', [
 					'label' => false,
 					'options' => $pageOptions,
 					'onchange' => "$(this).closest('form').submit()",
 					'templates' => $this->getFormTemplate()
 				]);
-				$html .= '<p>' . __('records') . '</p>';
-				$html .= $this->Form->end();
 			}
 		}
 		return $html;
 	}
 
 	public function getEditElements(Entity $data, $fields = [], $exclude = []) {
-		$_fields = $this->_View->get('_fields');
+		$config = $this->_View->get('ControllerAction');
+		$_fields = $config['fields'];
 
 		$html = '';
-		$model = $this->_View->get('model');
+		$model = $config['table']->alias();
 		$displayFields = $_fields;
 
 		if (!empty($fields)) { // if we only want specific fields to be displayed
@@ -356,7 +356,8 @@ class ControllerActionHelper extends Helper {
 	public function getViewElements(Entity $data, $fields = [], $exclude = []) {
 		//  1. implemented override param for nav_tabs to omit label
 		//  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
-		$_fields = $this->_View->get('_fields');
+		$config = $this->_View->get('ControllerAction');
+		$_fields = $config['fields'];
 
 		$html = '';
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';

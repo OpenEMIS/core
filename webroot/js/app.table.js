@@ -194,6 +194,21 @@ var jsTable = {
 		});
 		table.siblings('tfoot').find('.' + type).html(total);
 	},
+
+	computeTotalForMoney: function(type) {
+		var total = 0;
+		$('#table_'+type).find('input[computeType="' + type + '"]').each(function() {
+			if($(this).val().isEmpty()) {
+				if($(this).attr('allowNull')==undefined) {
+					$(this).val(0);
+					total += parseFloat($(this).val()) || 0;
+				}
+			} else {
+				total += parseFloat($(this).val()) || 0;
+			}
+		});
+		$('#table_'+type).siblings('tfoot').find('.' + type).html(parseFloat(total).toFixed(2));
+	},
 	
 	computeTotal: function(obj) {
 		var table = $(obj).closest('tbody');

@@ -33,9 +33,18 @@ class StudentClass extends Entity
 
 	protected function _getHomeroomTeacherName() {
     	$name = '';
-    	if ($this->has('user') && $this->user->has('name')) {
-    		$name = $this->user->name;
-    	}
+        $institution_site_section_id = $this->institution_site_section_id;
+        if($this->has('institution_site_section')) { // && $this->institution_site_section->has('staff')){
+            $InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+            $InstitutionSiteSection = $InstitutionSiteSections
+                    ->find()
+                    ->contain(['Staff'])
+                    ->where(['InstitutionSiteSections.id' => $institution_site_section_id])
+                    ->first();  
+   
+             if(!empty($InstitutionSiteSection->staff))
+                $name = $InstitutionSiteSection->staff->name;
+        }
     	return $name;
 	}
 	protected function _getEducationSubject() {

@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -79,7 +80,24 @@ class InstitutionsTable extends AppTable  {
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
+        $this->addBehavior('AdvanceSearch');
+        $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
 	}
+
+	public function onExcelGenerate(Event $event, $writer, $settings) {
+		// pr($settings);
+		// $generate = function() { pr('dsa'); };
+		// return $generate;
+	}
+
+	public function onExcelBeforeQuery(Event $event, Query $query) {
+		// pr($this->Session->read($this->aliasField('id')));die;
+		// $query->where(['Institutions.id' => 2]);
+	}
+
+	// public function onExcelGetLabel(Event $event, $column) {
+	// 	return 'asd';
+	// }
 
 	public function validationDefault(Validator $validator) {
 		$validator
@@ -134,6 +152,21 @@ class InstitutionsTable extends AppTable  {
 				])
 	        ;
 		return $validator;
+	}
+
+	public function onGetName(Event $event, Entity $entity) {
+		$name = $entity->name;
+
+		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
+			$name = $event->subject()->Html->link($entity->name, [
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
+				'action' => 'dashboard',
+				'0' => $entity->id
+			]);
+		}
+		
+		return $name;
 	}
 
 	public function beforeAction($event) {
@@ -205,6 +238,19 @@ class InstitutionsTable extends AppTable  {
         return true;
 	}
 
+	public function afterAction(Event $event, ArrayObject $config) {
+		if ($this->action == 'index') {
+			$indexDashboard = 'Institution.Institutions/dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
+	    $config['formButtons'] = false;
+	}
+
 
 /******************************************************************************************************************
 **
@@ -213,9 +259,6 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
 		$this->Session->delete('Institutions.id');
-
-		$indexDashboard = 'Institution.Institutions/dashboard';
-		$this->controller->set('indexDashboard', $indexDashboard);
 
 		$this->ControllerAction->setFieldOrder([
 			'code', 'name', 'area_id', 'institution_site_type_id'
@@ -232,6 +275,7 @@ class InstitutionsTable extends AppTable  {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
 	}
+
 
 /******************************************************************************************************************
 **
@@ -250,4 +294,11 @@ class InstitutionsTable extends AppTable  {
 			'contact_person', 'telephone', 'fax', 'email', 'website'
 		]);
 	}
+
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
 }
