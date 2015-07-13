@@ -1408,6 +1408,10 @@ input[type="checkbox"] {
     border: 0;
 }
 
+.table-bordered > tbody {
+	border: 1px solid #FFF;
+}
+
 .table > tbody > tr > td, 
 .table > tbody > tr > th, 
 .table > tfoot > tr > td, 
