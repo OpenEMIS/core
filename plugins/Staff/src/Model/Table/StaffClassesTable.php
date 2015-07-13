@@ -12,7 +12,7 @@ class StaffClassesTable extends AppTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses']);
-		$this->hasMany('InstitutionSiteClassStudents', ['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteClassStudents', ['className' => 'Institution.InstitutionSiteClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 

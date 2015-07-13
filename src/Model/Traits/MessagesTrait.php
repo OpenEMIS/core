@@ -145,6 +145,7 @@ trait MessagesTrait {
 		],
 		'InstitutionAssessmentResults' => [
 			'noSubjects' => 'There are no available Subjects.',
+			'noSections' => 'There are no available Sections.',
 			'noClasses' => 'There are no available Classes.',
 		],
 		'InstitutionSurveys' => [
