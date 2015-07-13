@@ -43,6 +43,10 @@
 	color: #476B8F;
 }
 
+.ui-menu-item:hover {
+	color: #FFF !important;
+}
+
 .btn-default,
 .pagination > .active > a,
 .pagination > .active > a:hover,

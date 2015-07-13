@@ -1,0 +1,3 @@
+-- do not run this
+-- ALTER TABLE `student_guardians` CHANGE `security_user_id` `student_user_id` INT(11) NOT NULL COMMENT 'is security_user.id';
+-- ALTER TABLE `student_guardians` CHANGE `guardian_id` `guardian_user_id` INT(11) NOT NULL COMMENT 'is security_user.id';
