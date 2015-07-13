@@ -88,14 +88,12 @@ class SalariesTable extends AppTable {
 
 
 	public function indexBeforeAction(Event $event) {
+		$this->fields['gross_salary']['type'] = 'float';
+		$this->fields['net_salary']['type'] = 'float';
+		$this->fields['additions']['type'] = 'float';
+		$this->fields['deductions']['type'] = 'float';
 		$this->fields['comment']['visible'] = false;
-
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('salary_date', $order++);
-		$this->ControllerAction->setFieldOrder('gross_salary', $order++);
-		$this->ControllerAction->setFieldOrder('additions', $order++);
-		$this->ControllerAction->setFieldOrder('deductions', $order++);
-		$this->ControllerAction->setFieldOrder('net_salary', $order++);
+		$this->ControllerAction->setFieldOrder(['salary_date', 'gross_salary', 'additions', 'deductions', 'net_salary']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {
@@ -112,21 +110,20 @@ class SalariesTable extends AppTable {
 		$this->fields['gross_salary']['type'] = 'string';
 		$this->fields['net_salary']['type'] = 'string';
 
+		//$this->fields['gross_salary']['attr']['step'] = 0.00;
+		//$this->fields['gross_salary']['attr']['min'] = 0.00;
 		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+
+		//$this->fields['net_salary']['attr']['step'] = 0.00;
+		//$this->fields['net_salary']['attr']['min'] = 0.00;
 		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 
 		$SalaryAdditionType = TableRegistry::get('FieldOption.SalaryAdditionTypes')->getList();
 		$SalaryDeductionType = TableRegistry::get('FieldOption.SalaryDeductionTypes')->getList();
 
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('salary_date', $order++);
-		$this->ControllerAction->setFieldOrder('gross_salary', $order++);
-		$this->ControllerAction->setFieldOrder('net_salary', $order++);
-
 		$this->ControllerAction->addField('addition_set', [
 			'type' => 'element',
 			'element' => 'Staff.salary_info',
-			'order' => $order++,
 			'visible' => true,
 			'fieldName' => 'salary_additions',
 			'operation' => 'add',
@@ -135,18 +132,17 @@ class SalariesTable extends AppTable {
 		$this->ControllerAction->addField('deduction_set', [
 			'type' => 'element',
 			'element' => 'Staff.salary_info',
-			'order' => $order++,
 			'visible' => true,
 			'fieldName' => 'salary_deductions',
 			'operation' => 'deduct',
 			'fieldOptions' => $SalaryDeductionType->toArray()
 		]);
 
-		$this->ControllerAction->setFieldOrder('comment', $order++);
+		$this->ControllerAction->setFieldOrder(['salary_date', 'gross_salary', 'net_salary', 'addition_set', 'deduction_set', 'comment']);
 	}
 
 	public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['salary_additions'][] = ['amount' => 0];
+		$data[$this->alias()]['salary_additions'][] = ['amount' => '0.00'];
 		$options['associated'] = [
 			'SalaryAdditions' => ['validate' => false],
 			//'SalaryDeductions' => ['validate' => false]
@@ -154,7 +150,7 @@ class SalariesTable extends AppTable {
 	}
 
 	public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['salary_deductions'][] = ['amount' => 0];
+		$data[$this->alias()]['salary_deductions'][] = ['amount' => '0.00'];
 		$options['associated'] = [
 			//'SalaryAdditions' => ['validate' => false],
 			'SalaryDeductions' => ['validate' => false]
@@ -174,4 +170,10 @@ class SalariesTable extends AppTable {
 		;
 	}
 
+	public function viewBeforeAction(Event $event) {
+		$this->fields['gross_salary']['type'] = 'float';
+		$this->fields['net_salary']['type'] = 'float';
+		$this->fields['additions']['type'] = 'float';
+		$this->fields['deductions']['type'] = 'float';
+	}
 }

@@ -1,5 +1,12 @@
+<?php
+	$dashboardUrl = $this->Url->build([
+		'plugin' => false,
+	    'controller' => 'Dashboard',
+	    'action' => 'index',
+	]);
+?>
 <ul class="breadcrumb panel-breadcrumb">
-	<li><a href="#"><i class="fa fa-home"></i></a></li>
+	<li><a href="<?= $dashboardUrl ?>"><i class="fa fa-home"></i></a></li>
 	
 	<?php foreach($_breadcrumbs as $b) : ?>
 	<li>

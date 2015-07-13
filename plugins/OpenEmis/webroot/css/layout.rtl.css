@@ -486,7 +486,6 @@ html {
     margin: 0 5px;
 }
 
-.rtl .format-item .btn,
 .rtl .chart-item .btn {
     float: right;
     margin: 0 2px;
@@ -621,14 +620,19 @@ html {
 }
 
 .rtl .fileinput .btn-file-cancel {
-    border-right: 1px solid #6B6B6B !important;
-    left: 50px;
+    position: absolute;
+    left: 54px;
     right: auto;
+    top: 0;
+    margin-left: 0;
+    border-right: 1px solid #6B6B6B !important;
 }
 
 .rtl .fileinput .btn-file {
-    left: -1px;
+    left: 0;
     right: auto;
+    margin-left: 1px;
+    width: 53px !important;
 }
 
 .rtl .input-checkbox-inline,
@@ -655,6 +659,8 @@ html {
             border-top-right-radius: 3px !important;
     -webkit-border-bottom-right-radius: 3px !important;
             border-bottom-right-radius: 3px !important;
+    width: 99%;   
+    margin-left: 3px;     
 }
 
 .rtl .input-group-addon {
@@ -726,6 +732,35 @@ html {
 .rtl .fuelux .wizard > .steps-container > ul.steps li .badge {
     margin-left: 8px;
     margin-right: 0;
+}
+
+/* Dashboard Elements RTL */
+.rtl .dropdown-menu .dropdown-header {
+    text-align: right;
+}
+
+.rtl .dropdown-header {
+    text-align: center;
+}
+
+.rtl .panel-toolbar .btn-group:first-child {
+    margin-left: 0;
+    margin-right: 10px;
+    margin-bottom: -1px;
+}
+
+.rtl .format-item button[colorpicker] {
+    float: right;
+    margin-right: 10px;
+}
+
+.rtl .input-group-btn {
+    display: table-cell;
+}
+
+.rtl .btn-bold, 
+.rtl .btn-italic {
+    float: right;    
 }
 
 /* FOOTER */
@@ -878,3 +913,4 @@ html {
         margin-right: 0;
     }
 }
+

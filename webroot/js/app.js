@@ -200,6 +200,21 @@ var jsForm = {
 		);
 	},
 
+	submit: function() {
+		var key = 'data-input-name';
+		var form = $('form:first');
+		
+		$('[' + key + ']').each(function() {
+			form.append($('<input>').attr({
+				'type': 'hidden',
+				'name': $(this).attr(key),
+				'value': $(this).val()
+			}));
+		});
+
+		form.submit();
+	},
+
 	compute: function(obj) {
 		var total = 0;
 		$("input[data-compute-variable=true]").each(
@@ -252,7 +267,7 @@ var jsForm = {
 		if (group != undefined) {
 			var groupArray = group.split(',');
 			for (var i in groupArray) {
-				ret.push(encodeURIComponent(groupArray[i]) + "=" + encodeURIComponent($('select[data-named-key=' + groupArray[i] + ']').val()));
+				ret.push(encodeURIComponent(groupArray[i]) + "=" + encodeURIComponent($('[data-named-key=' + groupArray[i] + ']').val()));
 			}
 		}
 		var url = window.location.origin + $(obj).attr('url');

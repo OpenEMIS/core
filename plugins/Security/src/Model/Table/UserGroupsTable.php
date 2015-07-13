@@ -19,7 +19,8 @@ class UserGroupsTable extends AppTable {
 
 		$this->belongsToMany('Users', [
 			'className' => 'User.Users',
-			'through' => 'Security.SecurityGroupUsers'
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
 		]);
 	}
 

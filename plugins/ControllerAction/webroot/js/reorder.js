@@ -17,7 +17,8 @@ var Reorder = {
 		// Sortable only when mouse over the arrows
 		$( "td.sorter" ).mousedown(function() {
 			// Sortable on tbody
-			$( "#sortable tbody" ).sortable({
+			var tbody = $(this).closest('tbody');
+			tbody.sortable({
 				forcePlaceholderSize: true,	
 				helper: preventCollapse,
 				cursor: "none",
@@ -43,7 +44,7 @@ var Reorder = {
 			}).disableSelection();
 			
 			// Re-enable the sortable if the mouse has already been release
-			$( "#sortable tbody" ).sortable('enable');
+			tbody.sortable('enable');
 		})
 
 		// Disable sortable on any other portion of the body if the mouse is move away

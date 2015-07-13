@@ -2,34 +2,50 @@
 
 $fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: null;
 $operation = (array_key_exists('operation', $attr))? $attr['operation']: null;
+$totalAmount = 0;
 
 switch ($fieldName) {
 	case 'salary_additions':
 	$operand = 'plus';
 	$optionName = 'salary_addition';
+	$totalAmount = $data->additions;
 	break;
 
 	case 'salary_deductions':
 	$operand = 'minus';
 	$optionName = 'salary_deduction';
+	$totalAmount = $data->deductions;
 	break;
-}
-$totalAmount = 0;
-
+}	
 ?>
+<script type="text/javascript">
+	$(function(){ 
+		$(".total_salary_<?= $fieldName; ?>s").val(<?= $totalAmount; ?>);
 
+		//calculate the row values added upon loading
+		jsTable.computeTotalForMoney('total_salary_<?= $fieldName; ?>s');
+		jsForm.compute(this);
+	});
+</script>
 <div class="input">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
-	<div class="col-md-6">
+	<div class="table-toolbar">
+		<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()">
+			<i class="fa fa-plus"></i> 
+			<span>Add</span>
+		</button>
+	</div>
+	<div class="table-in-view col-md-4 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('general.type'); ?></th>
 					<th><?= $this->Label->get('general.amount'); ?></th>
+					<th></th>
 				</tr>
 			</thead>
 			<?php if (!empty($data->$fieldName)) : ?>
-				<tbody>
+				<tbody id='table_total_salary_<?php echo $fieldName; ?>s'>
 					<?php foreach ($data->$fieldName as $key => $obj) : ?>
 						<tr>
 							<td>
@@ -60,7 +76,7 @@ $totalAmount = 0;
 									$optionsArray['label'] = false;
 									$optionsArray['computeType'] = 'total_salary_'.$fieldName.'s';
 									$optionsArray['onkeypress'] = 'return utility.floatCheck(event)';
-									$optionsArray['onkeyup'] = 'jsTable.computeTotal(this); jsForm.compute(this); ';
+									$optionsArray['onkeyup'] = 'jsTable.computeTotalForMoney("total_salary_'.$fieldName.'s"); jsForm.compute(this); ';
 									$optionsArray['allowNull'] = true;
 									$optionsArray['onfocus'] = '$(this).select();';
 									$optionsArray['before'] = false;
@@ -69,11 +85,12 @@ $totalAmount = 0;
 									$optionsArray['data-compute-operand'] = $operand;
 									echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.amount', $optionsArray);
 								 ?>
-								
-								
 							</td>
 							<td> 
-								<span class="fa fa-minus-circle" style="cursor: pointer;" title="<?php echo $this->Label->get('general.delete'); ?>" onclick="$(this).closest('tr').remove();"></span>
+								<button onclick="jsTable.doRemove(this);jsTable.computeTotalForMoney('total_salary_<?php echo $fieldName; ?>s');jsForm.compute(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
+									<i class="fa fa-trash"></i>
+									<span>Delete</span>
+								</button>
 							</td>
 						</tr>
 					<?php endforeach ?>
@@ -88,7 +105,5 @@ $totalAmount = 0;
 				</tr>
 			</tfoot>
 		</table>
-		
-		<a class="void icon_plus" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()"><i class="fa fa-plus"></i></a>
 	</div>
 </div>

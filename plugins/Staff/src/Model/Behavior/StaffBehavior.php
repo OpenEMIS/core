@@ -16,9 +16,9 @@ class StaffBehavior extends Behavior {
 		$query
 			->join([
 				'table' => 'institution_site_staff',
-				'alias' => 'InstitionSiteStaff',
+				'alias' => 'InstitutionSiteStaff',
 				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitionSiteStaff.security_user_id']
+				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStaff.security_user_id']
 			])
 			->group($this->_table->aliasField('id'));
 	}
@@ -26,7 +26,6 @@ class StaffBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'ControllerAction.Model.beforeAction' => 'beforeAction',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
@@ -45,29 +44,7 @@ class StaffBehavior extends Behavior {
 		$this->_table->fields['openemis_no']['attr']['value'] = $this->_table->getUniqueOpenemisId(['model'=>Inflector::singularize('Staff')]);
 	}
 
-	public function beforeAction(Event $event) {
-		$this->_table->fields['super_admin']['visible'] = false;
-		$this->_table->fields['status']['visible'] = false;
-		$this->_table->fields['date_of_death']['visible'] = false;
-		$this->_table->fields['last_login']['visible'] = false;
-		$this->_table->fields['photo_name']['visible'] = false;
-	}
-
 	public function indexBeforeAction(Event $event) {
-		$this->_table->fields['first_name']['visible'] = false;
-		$this->_table->fields['middle_name']['visible'] = false;
-		$this->_table->fields['third_name']['visible'] = false;
-		$this->_table->fields['last_name']['visible'] = false;
-		$this->_table->fields['preferred_name']['visible'] = false;
-		$this->_table->fields['address']['visible'] = false;
-		$this->_table->fields['postal_code']['visible'] = false;
-		$this->_table->fields['address_area_id']['visible'] = false;
-		$this->_table->fields['gender_id']['visible'] = false;
-		$this->_table->fields['date_of_birth']['visible'] = false;
-		$this->_table->fields['username']['visible'] = false;
-		$this->_table->fields['birthplace_area_id']['visible'] = false;
-		$this->_table->fields['status']['visible'] = false;
-		$this->_table->fields['photo_content']['visible'] = true;
 		$this->_table->fields['staff_institution_name']['visible'] = true;
 
 		$this->_table->ControllerAction->field('name', []);
@@ -94,18 +71,23 @@ class StaffBehavior extends Behavior {
 					}
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
 
-					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE']/100;
-
-
 					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
 
+					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE'];
+
 					// start (date and year) handling
 					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
-					$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
-					$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+					
+					$data[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'];
+					
 				}
 			}
+		}
+
+		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_site_staff'][0])) {
+			$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
+			$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
 		}
 	}
 

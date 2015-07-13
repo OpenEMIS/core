@@ -43,6 +43,10 @@
 	color: #476B8F;
 }
 
+.ui-menu-item:hover {
+	color: #FFF !important;
+}
+
 .btn-default,
 .pagination > .active > a,
 .pagination > .active > a:hover,
@@ -52,15 +56,20 @@
 .btn-italic:hover,
 .input-group-addon,
 .selected,
-.btn-single-action:hover {
+.btn-single-action:hover,
+.ui-menu-item:hover {
 	border: 1px solid #476B8F !important;
 }
 
-.rtl a.btn-file-cancel {
+.rtl a.btn-file-cancel, {
 	border-right: 1px solid #476B8F !important;
 }
 
 .header-navigation .btn-group .btn:hover {
+	background-color: #476B8F;
+}
+
+.table-in-view::-webkit-scrollbar-thumb {
 	background-color: #476B8F;
 }
 
@@ -88,7 +97,17 @@
 .mce-menu-item.mce-selected, 
 .mce-menu-item:focus,
 .selected-size,
-.btn-single-action:hover {
+.btn-single-action:hover,
+.ui-menu-item:hover,
+.ui-state-focus:hover,
+.ui-state-focus:focus,
+.ui-state-focus:visited,
+.ui-state-focus:active,
+.chosen-container .chosen-results li.highlighted,
+.chosen-container .chosen-results li.active-result:hover,
+.ui-state-focus,
+.ui-widget-content .ui-state-focus,
+.ui-widget-header .ui-state-focus {
 	background-color: #476B8F !important;
 	color: #FFF !important;
 	background-image: none !important;	

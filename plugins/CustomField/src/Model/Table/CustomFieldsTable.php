@@ -36,7 +36,19 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain($this->_contain);
+		$query->contain(['CustomFieldOptions']);
+		$query->contain([
+		    'CustomTableColumns' => function ($q) {
+		       return $q
+		       		->find('visible');
+		    }
+		]);
+		$query->contain([
+		    'CustomTableRows' => function ($q) {
+		       return $q
+		       		->find('visible');
+		    }
+		]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -70,6 +82,20 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$fieldKey = Inflector::underscore(Inflector::singularize($this->alias())) . '_id';
+		foreach ($this->_contain as $_contain) {
+			// Should put here instead of in beforeSave()
+			$this->{$_contain}->updateAll(
+				['visible' => 0],
+				[$fieldKey => $entity->id]
+			);
+
+			// To handle when delete all field_options
+			if (!array_key_exists(Inflector::underscore($_contain), $data[$this->alias()])) {
+				$data[$this->alias()][Inflector::underscore($_contain)] = [];
+			}
+		}
+
 		//Required by patchEntity for associated data
 		$newOptions = [];
 		$newOptions['associated'] = $this->_contain;

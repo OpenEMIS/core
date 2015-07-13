@@ -23,9 +23,6 @@ class UserBehavior extends Behavior {
 		if ($session->check('Institutions.id')) {
 			$institutionId = $session->read('Institutions.id');
 		} else {
-			/**
-			 * this should be something else
-			 */
 			$institutionId = 0;
 		}
 		$query
@@ -52,8 +49,11 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
-			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
+			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+			'ControllerAction.Model.add.addOnReload' => 'onReload',
+			'ControllerAction.Model.onBeforeDelete' => 'onBeforeDelete',
+			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
 		];
 
 		$roleEvents = [];
@@ -71,6 +71,7 @@ class UserBehavior extends Behavior {
 		if ($this->_table->hasBehavior('Staff')) {
 			$roleEvents = [
 				'ControllerAction.Model.onUpdateFieldInstitutionSitePositionId' => 'onUpdateFieldInstitutionSitePositionId',
+				'ControllerAction.Model.onUpdateFieldSecurityRoleId' => 'onUpdateFieldSecurityRoleId',
 				'ControllerAction.Model.onUpdateFieldStartDate' => 'onUpdateFieldStartDate',
 				'ControllerAction.Model.onUpdateFieldFTE' => 'onUpdateFieldFTE',
 				'ControllerAction.Model.onUpdateFieldStaffTypeID' => 'onUpdateFieldStaffTypeID',
@@ -82,6 +83,57 @@ class UserBehavior extends Behavior {
 		return $events;
 	}
 
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+
+
+		$process = function() use ($id, $options) {
+			// must also delete security roles here
+
+			$entity = $this->associatedModel->get($id);
+			$securityUserId = $entity->security_user_id;
+
+			$remainingAssociatedCount = $this->associatedModel
+				->find()
+				->where([$this->associatedModel->aliasField('security_user_id') => $securityUserId])
+				->count();
+			if ($remainingAssociatedCount<=1) {
+				// need to reinsert associated array so that still recognise user as a 'student' or 'staff'
+				$newAssociated = $this->associatedModel->newEntity(['security_user_id' => $securityUserId]);
+				$this->associatedModel->save($newAssociated);
+			}
+
+			// must also delete security roles here if it is a staff
+			if ($this->_table->hasBehavior('Staff')) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+				if ($this->_table->Session->check('Institutions.id')) {
+					$institutionId = $this->_table->Session->read('Institutions.id');
+				}
+
+
+				// if got security_user and institution then delete all
+				if (isset($institutionId) && isset($securityUserId)) {
+					$Institution = TableRegistry::get('Institution.Institutions');
+					$institutionData = $Institution->get($institutionId);
+					
+					$securityGroupId = $institutionData->security_group_id;
+
+
+					$conditions = [
+									'security_group_id' => $securityGroupId,
+									'security_user_id' => $securityUserId
+									];	
+					$SecurityGroupUsers->deleteAll($conditions);
+				}
+				
+
+			}
+			
+			return $this->associatedModel->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
+	}
+
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		if ($this->_table->Session->check('Institutions.id')) {
@@ -91,6 +143,16 @@ class UserBehavior extends Behavior {
 					'InstitutionSiteStudents' => [
 						'conditions' => [
 							'InstitutionSiteStudents.institution_site_id' => $institutionId
+						]
+					]
+				];
+			}
+
+			if ($this->_table->alias() == 'Staff') {
+				$options['contain'] = [
+					'InstitutionSiteStaff' => [
+						'conditions' => [
+							'InstitutionSiteStaff.institution_site_id' => $institutionId
 						]
 					]
 				];
@@ -111,9 +173,9 @@ class UserBehavior extends Behavior {
 				$this->_table->fields[$key]['visible'] = false;
 			}
 			$session = $this->_table->request->session();
-			$institutionsId = $session->read('Institutions.id');
+			$institutionSiteId = $session->read('Institutions.id');
 			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
-			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionsId, 'fieldName' => $associationString.'institution_site_id']);			
+			$this->_table->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionSiteId, 'fieldName' => $associationString.'institution_site_id']);			
 
 			if ($this->_table->hasBehavior('Student')) {
 
@@ -122,8 +184,14 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
 				$this->_table->ControllerAction->field('section', ['fieldName' => $associationString.'section']);
 				$this->_table->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
-				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
-				$this->_table->ControllerAction->field('end_date', ['type' => 'Date', 'fieldName' => $associationString.'end_date']);
+				$this->_table->ControllerAction->field('start_date', ['type' => 'date', 'fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->field('end_date', [
+					'type' => 'date', 
+					'fieldName' => $associationString.'end_date',
+					'date_options' => ['startDate' => '+1d']
+				]);
+				// $this->_table->fields['end_date']['value'] = '09-07-2015';
+				// $this->_table->fields['end_date’][‘date_options']['start_date'] = '+1d';
 				$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
 															     'placeholder' => 'openEMIS ID or Name',
 															     'url' => '/Institutions/Students/autoCompleteUserList',
@@ -137,6 +205,7 @@ class UserBehavior extends Behavior {
 
 			if ($this->_table->hasBehavior('Staff')) {
 				$this->_table->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
+				$this->_table->ControllerAction->field('security_role_id', ['fieldName' => $associationString.'security_role_id']);
 				$this->_table->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
 				$this->_table->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
 				$this->_table->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
@@ -146,7 +215,7 @@ class UserBehavior extends Behavior {
 															     'url' => '/Institutions/Staff/autoCompleteUserList',
 															     'length' => 3 ]);
 				$this->_table->ControllerAction->setFieldOrder([
-					'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
+					'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id'
 					, 'search'
 					]);
 
@@ -184,7 +253,15 @@ class UserBehavior extends Behavior {
 					return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
 				} else {
 					$data[$this->_table->alias()][$this->associatedModel->table()][0]['security_user_id'] = $currSearch;
+
+
 					if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()][$this->associatedModel->table()][0]))) {
+
+						// need to insert security roles here
+						if ($this->_table->hasBehavior('Staff')) {
+							TableRegistry::get('Security.SecurityGroupUsers')->insertSecurityRoleForInstitution($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+						}
+
 						$this->_table->ControllerAction->Alert->success('general.add.success');
 					} else {
 						$this->_table->ControllerAction->Alert->error('general.add.failed');
@@ -197,11 +274,22 @@ class UserBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller) {
+	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+		if ($this->_table->hasBehavior('Staff')) {
+			// need to insert security roles here
+			$data = $this->_table->ControllerAction->request->data[$this->_table->alias()][$this->associatedModel->table()][0];
+			$data['security_user_id'] = $entity->id;
+			TableRegistry::get('Security.SecurityGroupUsers')->insertSecurityRoleForInstitution($data);
+		}
+
+		// that function removes the session and makes it redirect to 
+		// index without any named params
+		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
+		$action = $this->_table->ControllerAction->buttons['index']['url'];
 		if (array_key_exists('new', $action)) {
 			$session = $controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
-			$session->delete($sessionVar);
+			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
 			unset($action['new']);
 		}
 		$event->stopPropagation();
@@ -210,9 +298,9 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
+			'InstitutionSiteProgrammes.institution_site_id' => $institutionSiteId
 		);
 
 		$InstitutionSiteProgramme = TableRegistry::get('Institution.InstitutionSiteProgrammes');
@@ -220,32 +308,40 @@ class UserBehavior extends Behavior {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = 'true';
+		$attr['onChangeReload'] = true;
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.academicPeriod');
+		}
 
 		return $attr;
 	}
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 		$this->academicPeriodId = null;
 		if (array_key_exists('academic_period', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['academic_period'])) {
 				$this->academicPeriodId = key($this->_table->fields['academic_period']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period']) {
-						$this->academicPeriodId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period'];
+					if (array_key_exists('academic_period', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period']) {
+							$this->academicPeriodId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['academic_period'];
+						}
 					}
 				}
 
 			}
 		}
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = 'true';
-
+		$attr['onChangeReload'] = true;
+		$attr['options'] = [];
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
-			$attr['options'] = $InstitutionSiteProgrammes->getSiteProgrammeOptions($institutionsId, $this->academicPeriodId);
+			$attr['options'] = $InstitutionSiteProgrammes->getSiteProgrammeOptions($institutionSiteId, $this->academicPeriodId);
+			if (empty($attr['options'])) {
+				$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.educationProgrammeId');
+			}
 		}
 
 		return $attr;
@@ -253,24 +349,40 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		if (array_key_exists('education_programme_id', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_programme_id'])) {
-				$this->educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
+				$educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
-						$this->educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+					if (array_key_exists('education_programme_id', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
+							$educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+						}
 					}
 				}
 			}
 		}
-		$attr['type'] = 'select';
-		$attr['onChangeReload'] = 'true';
 
-		if (isset($this->educationProgrammeId)) {
+		// this is used for staffTable autocomplete - for filtering of students that are (in institution and of same education programme)
+		$session = $this->_table->request->session();
+		$session->delete($this->_table->controller->name.'.'.$this->_table->alias);
+		if (isset($educationProgrammeId)) {
+			$institutionSiteId = $session->read('Institutions.id');
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_id', $institutionSiteId);
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'education_programme_id', $educationProgrammeId);
+		}
+
+		$attr['type'] = 'select';
+		$attr['onChangeReload'] = true;
+		$attr['options'] = [];
+		if (isset($educationProgrammeId)) {
 			$InstitutionSiteGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
-			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionsId, $this->academicPeriodId, $this->educationProgrammeId);
+			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionSiteId, $this->academicPeriodId, $educationProgrammeId);
+		}
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.institutionSiteGrades');
 		}
 
 		return $attr;
@@ -278,23 +390,29 @@ class UserBehavior extends Behavior {
 
 	public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		if (array_key_exists('education_grade', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_grade'])) {
 				$this->education_grade = key($this->_table->fields['education_grade']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']) {
-						$this->education_grade = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade'];
+					if (array_key_exists('education_grade', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']) {
+							$this->education_grade = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade'];
+						}
 					}
 				}
 			}
 		}
 		$attr['type'] = 'select';
-
+		$attr['options'] = [];
 		if (isset($this->education_grade)) {
 			$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-			$attr['options'] = $InstitutionSiteSections->getSectionOptions($this->academicPeriodId, $institutionsId, $this->education_grade);
+			$attr['options'] = $InstitutionSiteSections->getSectionOptions($this->academicPeriodId, $institutionSiteId, $this->education_grade);
+		}
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.sections');
 		}
 
 		return $attr;
@@ -304,25 +422,55 @@ class UserBehavior extends Behavior {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->associatedModel->StudentStatuses->getList();
 
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.studentStatusId');
+		}
+
 		return $attr;
 	}
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
-		$institutionsId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institutions.id');
 
 		$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
-		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionsId, true);
+		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionSiteId, true);
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = 'true';
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.institutionSitePositionId');
+		}
+		$attr['onChangeReload'] = true;
+
+		return $attr;
+	}
+
+	public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, $request) {
+		$session = $this->_table->request->session();
+		$institutionSiteId = $session->read('Institutions.id');
+
+		$attr['type'] = 'select';
+
+		$data = $this->_table->SecurityRoles
+			->find('ByInstitution', ['id' => $institutionSiteId])
+			;
+
+		$optionsList = [];
+		foreach ($data as $key => $value) {
+			$optionsList[$value->id] = $value->name;
+		}
+		$attr['options'] = $optionsList;
+
+		if (empty($attr['options'])) {
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.securityRoleId');
+		}
 
 		return $attr;
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = 'true';
+		$attr['onChangeReload'] = true;
 		return $attr;
 	}
 
@@ -331,22 +479,39 @@ class UserBehavior extends Behavior {
 			if (array_key_exists('options', $this->_table->fields['institution_site_position_id'])) {
 				$positionId = key($this->_table->fields['institution_site_position_id']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-					if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id']) {
-						$positionId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id'];
+					if (array_key_exists('institution_site_position_id', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id']) {
+							$positionId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['institution_site_position_id'];
+						}
 					}
 				}
 			}
 		}
 
+		// this is used for staffTable autocomplete - for filtering of staff that are (in institution and of same position)
+		$session = $this->_table->request->session();
+		$session->delete($this->_table->controller->name.'.'.$this->_table->alias);
+		if ($positionId) {
+			$institutionSiteId = $session->read('Institutions.id');
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_id', $institutionSiteId);
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_position_id', $positionId);
+		}
+
 		$startDate = null;
 		if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-			if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date']) {
-				$startDate = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date'];
+			if (array_key_exists('start_date', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
+				if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date']) {
+					$startDate = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['start_date'];
+				}
 			}
 		}
 
 		$attr['type'] = 'select';
 		$attr['options'] = $this->getFTEOptions($positionId, ['startDate' => $startDate]);
+		if (empty($attr['options'])) {
+			$attr['attr']['empty'] = __('No available FTE');
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.FTE');
+		}
 		return $attr;
 	}
 
@@ -423,7 +588,7 @@ class UserBehavior extends Behavior {
 			}
 
 			if (count($filterFTEOptions)==0) {
-				$filterFTEOptions = array(''=>__('No available FTE'));
+				$filterFTEOptions = [];
 			}
 		}
 		return $filterFTEOptions;
@@ -432,9 +597,59 @@ class UserBehavior extends Behavior {
 	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->InstitutionSiteStaff->StaffTypes->getList();
-
+		if (empty($attr['options'])){
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		}
+		
 		return $attr;
 	}
 
+	public function addOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$newOptions = [];
+		if ($this->_table->hasBehavior('Student')) {
+			$options['associated'] = ['InstitutionSiteStudents' => ['validate' => false]];
+		} 
+		if ($this->_table->hasBehavior('Staff')) {
+			$options['associated'] = ['InstitutionSiteStaff' => ['validate' => false]];
+		}
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+
+		if ($this->_table->hasBehavior('Student')) {
+			if (array_key_exists('remove', $buttons)) {
+				if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+					// pr($entity);
+					if (isset($entity->institution_site_students)) {
+						if (array_key_exists(0, $entity->institution_site_students)) {
+							$buttons['remove']['attr']['field-value'] = $entity->institution_site_students[0]->id;
+						}
+					}
+				}
+			}
+			$event->stopPropagation();
+		}
+		if ($this->_table->hasBehavior('Staff')) {
+			if (array_key_exists('remove', $buttons)) {
+				if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+					// pr($entity);
+					if (isset($entity->institution_site_staff)) {
+						if (array_key_exists(0, $entity->institution_site_staff)) {
+							$buttons['remove']['attr']['field-value'] = $entity->institution_site_staff[0]->id;
+						}
+					}
+				}
+			}
+			$event->stopPropagation();
+		}
+		
+		
+		return $buttons;
+	}
 
 }

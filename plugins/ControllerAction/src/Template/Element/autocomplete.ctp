@@ -104,25 +104,15 @@ var Autocomplete = {
 			response: Autocomplete.searchComplete,
 			search: Autocomplete.beforeSearch
 		}).on( 'keyup', Autocomplete.keyup );
-	},
-
-	submitForm: function(obj){
-		var parentForm = $(obj).closest('form');
-		if(parentForm.length > 0){
-			var indicatorField = '<input type="hidden" name="data[new]" value="" />';
-			parentForm.append(indicatorField);
-			parentForm.find('input.btn_save').click();
-			return false;
-		}
 	}
 
 }
 </script>
 <?php
-$loadingImg =  $this->Html->image('OpenEmis.icons/loader.gif', ['plugin' => true]);
+$loadingImg =  $this->Html->image('OpenEmis/loader.gif', ['plugin' => true]);
 ?>
 <div class="input text">
-	<label class="pull-left" for="<?= $attr['field'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+	<label for="<?= $attr['field'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<input type="text" name="searchField" url="<?= $options['url'] ?>" class="<?= $options['class'] ?>" placeholder="<?= $options['placeholder'] ?>" id="searchInput">
 	<input type="hidden" name="<?= $attr['model'] ?>[<?= $attr['field'] ?>]" value="" id="hiddenSearchField"/>
 	<span class="loading_img"><?= $loadingImg ?></span>

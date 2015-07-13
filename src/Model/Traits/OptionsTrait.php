@@ -15,7 +15,8 @@ trait OptionsTrait {
 				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
 			],
 			'Assessments' => [
-				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
+				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')],
+				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			]
 		];
 
