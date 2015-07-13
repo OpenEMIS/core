@@ -280,16 +280,16 @@ class ExcelBehavior extends Behavior {
 				$toolbarButtons['export']['attr']['title'] = __('Export');
 			}
 		} else if ($action == 'index') {
-			$toolbarButtons['export'] = $buttons['index'];
-			if ($isFromModel) {
-				$toolbarButtons['export']['url'][0] = 'excel';
-			} else {
-				$toolbarButtons['export']['url']['action'] = 'excel';
-			}
-			$toolbarButtons['export']['label'] = '<i class="fa kd-export"></i>';
-			$toolbarButtons['export']['type'] = 'button';
-			$toolbarButtons['export']['attr'] = $attr;
-			$toolbarButtons['export']['attr']['title'] = __('Export');
+			// $toolbarButtons['export'] = $buttons['index'];
+			// if ($isFromModel) {
+			// 	$toolbarButtons['export']['url'][0] = 'excel';
+			// } else {
+			// 	$toolbarButtons['export']['url']['action'] = 'excel';
+			// }
+			// $toolbarButtons['export']['label'] = '<i class="fa kd-export"></i>';
+			// $toolbarButtons['export']['type'] = 'button';
+			// $toolbarButtons['export']['attr'] = $attr;
+			// $toolbarButtons['export']['attr']['title'] = __('Export');
 		}
 	}
 }
