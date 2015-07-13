@@ -75,7 +75,7 @@ class StaffAttendancesTable extends AppTable {
 			$types = $this->getSelectOptions('Absence.types');
 			$type = $types['EXCUSED'];
 
-			if (empty($entity->StaffAbsence['staff_absence_reason_id'])) {
+			if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
 				$type = $types['UNEXCUSED'];
 			}
 		}
@@ -85,7 +85,7 @@ class StaffAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetReason
 	public function onGetReason(Event $event, Entity $entity) {
-		$reasonId = $entity->StaffAbsence['staff_absence_reason_id'];
+		$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
 		$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
 
 		if (!empty($reasonId)) {
