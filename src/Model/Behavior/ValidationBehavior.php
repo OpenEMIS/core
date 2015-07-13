@@ -246,35 +246,6 @@ class ValidationBehavior extends Behavior {
 		return $flag;
 	}
 
-	public static function checkSelectedFileAsImage($field, array $globalData) {
-		$isValid = false;
-		$fileImagesMap = array(
-			'jpeg'	=> 'image/jpeg',
-			'jpg'	=> 'image/jpeg',
-			'gif'	=> 'image/gif',
-			'png'	=> 'image/png'
-			// 'jpeg'=>'image/pjpeg',
-			// 'jpeg'=>'image/x-png'
-		);
-
-		if(isset($field['type']) && in_array($field['type'], $fileImagesMap)){
-			$isValid = true;
-		} 
-
-		return $isValid;
-	}
-
-	public static function checkIfImageExceedsUploadSize($field, array $globalData) {
-		$isValid = true;
-		$restrictedSize = 2000000; //2MB in bytes
-
-		 if(isset($field['type']) && ($field['size'] > $restrictedSize)){
-		 	$isValid = false;
-		 }
-
-		return $isValid;
-	}
-
 	public static function comparePasswords($field, $compareField, array $globalData) {
 		$fieldOne = $globalData['data'][$globalData['field']];
 		$fieldTwo = $globalData['data'][$compareField];
