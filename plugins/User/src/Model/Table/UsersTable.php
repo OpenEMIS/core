@@ -45,13 +45,13 @@ class UsersTable extends AppTable {
 		$this->fieldOrder1 = new ArrayObject(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
 		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
-		// $this->addBehavior('ControllerAction.FileUpload', [
-		// 	'name' => 'photo_name',
-		// 	'content' => 'photo_content',
-		// 	'size' => '2MB',
-		// 	'contentEditable' => true,
-		// 	'allowable_file_types' => 'image'
-		// ]);
+		$this->addBehavior('ControllerAction.FileUpload', [
+			'name' => 'photo_name',
+			'content' => 'photo_content',
+			'size' => '2MB',
+			'contentEditable' => true,
+			'allowable_file_types' => 'image'
+		]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -356,17 +356,6 @@ class UsersTable extends AppTable {
 			->allowEmpty('username')
 			->add('address', [])
 			->add('password', [])
-			->allowEmpty('photo_content')
-				->add('photo_content', [
-					'ruleCheckSelectedFileAsImage' => [
-							'rule' => 'checkSelectedFileAsImage',
-							'message' => 'Please upload image format files. Eg. jpg, jpeg, png, gif.'
-					],
-					'ruleCheckIfImageExceedsUploadSize' => [
-							'rule' => 'checkIfImageExceedsUploadSize',
-							'message' => 'Uploaded file exceeds 2MB in size.'
-					]
-				])
 			;
 		return $validator;
 	}
