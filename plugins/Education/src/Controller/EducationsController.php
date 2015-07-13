@@ -15,30 +15,22 @@ class EducationsController extends AppController
 			'Cycles' => ['className' => 'Education.EducationCycles'],
 			'Programmes' => ['className' => 'Education.EducationProgrammes'],
 			'Grades' => ['className' => 'Education.EducationGrades'],
-			'Subjects' => ['className' => 'Education.EducationSubjects']
+			'Subjects' => ['className' => 'Education.EducationSubjects'],
+			'Certifications' => ['className' => 'Education.EducationCertifications'],
+			'FieldOfStudies' => ['className' => 'Education.EducationFieldOfStudies'],
+			'ProgrammeOrientations' => ['className' => 'Education.EducationProgrammeOrientations']
 		];
 		$this->loadComponent('Paginator');
     }
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Education', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $this->request->action]);
-		$this->Navigation->addCrumb($this->request->action);
 
-    	$header = __('Education');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
-
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
-
-		$this->set('contentHeader', $header);
+		$selectedAction = $this->request->action;
+		$setupTab = 'Subjects';
+		if (in_array($selectedAction, ['Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
+			$setupTab = $selectedAction;
+		}
 
 		$tabElements = [
 			'Systems' => [
@@ -61,13 +53,23 @@ class EducationsController extends AppController
 				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades'],
 				'text' => __('Grades')
 			],
-			'Subjects' => [
-				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Subjects'],
-				'text' => __('Subjects')
+			$setupTab => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $setupTab],
+				'text' => __('Setup')
 			]
 		];
 
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $selectedAction);
 	}
+
+	public function onInitialize($event, $model) {
+		$header = __('Education');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb('Education Structure', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $model->alias]);
+		$this->Navigation->addCrumb($model->getHeader($model->alias));
+
+		$this->set('contentHeader', $header);
+    }
 }

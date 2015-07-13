@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class StaffController extends AppController {
-	private $_staffObj = null;
+	public $activeObj = null;
 
 	public function initialize() {
 		parent::initialize();
@@ -21,6 +21,10 @@ class StaffController extends AppController {
 			'tableCellKey' => ['className' => 'Staff.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Staff.StaffActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('Excel', [
+			'excludes' => ['password', 'photo_name'],
+			'filename' => 'Staff'
+		]);
 
 		$this->ControllerAction->models = [
 			'Accounts' => ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
@@ -70,8 +74,8 @@ class StaffController extends AppController {
 				$id = $session->read('Users.id');
 			}
 			if (!empty($id)) {
-				$this->_staffObj = $this->Users->get($id);
-				$name = $this->_staffObj->name;
+				$this->activeObj = $this->Users->get($id);
+				$name = $this->activeObj->name;
 				$header = $name .' - Overview';
 				$this->Navigation->addCrumb($name, ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]);
 			} else {
@@ -86,7 +90,7 @@ class StaffController extends AppController {
 		/**
 		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
-		if (!is_null($this->_staffObj)) {
+		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
 			$action = false;
 			$params = $this->request->params;
@@ -103,18 +107,18 @@ class StaffController extends AppController {
 				$this->Navigation->addCrumb($model->getHeader($model->alias));
 			}
 
-			$header = $this->_staffObj->name . ' - ' . $model->getHeader($model->alias);
+			$header = $this->activeObj->name . ' - ' . $model->getHeader($model->alias);
 
-			if ($model->hasField('security_user_id') && !is_null($this->_staffObj)) {
+			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
-				$model->fields['security_user_id']['value'] = $this->_staffObj->id;
+				$model->fields['security_user_id']['value'] = $this->activeObj->id;
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
-						$model->aliasField('security_user_id') => $this->_staffObj->id
+						$model->aliasField('security_user_id') => $this->activeObj->id
 					]);
 				
 					/**
@@ -152,5 +156,10 @@ class StaffController extends AppController {
 			}
 		}
 		return $options;
+	}
+
+	public function excel($id=0) {
+		$this->Users->excel($id);
+		$this->autoRender = false;
 	}
 }

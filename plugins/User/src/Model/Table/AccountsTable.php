@@ -53,7 +53,7 @@ class AccountsTable extends AppTable {
 			]
 		];
 
-		if (!in_array($this->controller->name, ['Students', 'Staff', 'Institutions'])) {
+		if (!in_array($this->controller->name, ['Students', 'Staff', 'Guardians', 'Institutions'])) {
 			$tabElements['Details'] = [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $id],
 				'text' => __('Details')

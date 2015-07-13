@@ -22,8 +22,13 @@ class UsersTable extends AppTable {
 
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
 	private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
+	private $defaultUserProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
+
 	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
 	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
+	private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
+
+
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
@@ -54,6 +59,7 @@ class UsersTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
@@ -71,12 +77,12 @@ class UsersTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('username', ['visible' => false]);
-
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
-		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active'), 'visible' => false]);
 		$this->ControllerAction->field('photo_content', ['type' => 'image']);
+		$this->ControllerAction->field('last_login', ['visible' => false]);
 	}
 
 	public function afterAction(Event $event) {
@@ -114,7 +120,7 @@ class UsersTable extends AppTable {
 			]
 		];
 
-		if (!in_array($this->controller->name, ['Students', 'Staff'])) {
+		if (!in_array($this->controller->name, ['Students', 'Staff', 'Guardians'])) {
 			$tabElements[$this->alias] = [
 				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $id],
 				'text' => __('Details')
@@ -126,6 +132,21 @@ class UsersTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('first_name', ['visible' => false]);
+		$this->ControllerAction->field('middle_name', ['visible' => false]);
+		$this->ControllerAction->field('third_name', ['visible' => false]);
+		$this->ControllerAction->field('last_name', ['visible' => false]);
+		$this->ControllerAction->field('preferred_name', ['visible' => false]);
+		$this->ControllerAction->field('address', ['visible' => false]);
+		$this->ControllerAction->field('postal_code', ['visible' => false]);
+		$this->ControllerAction->field('address_area_id', ['visible' => false]);
+		$this->ControllerAction->field('gender_id', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', ['visible' => false]);
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
+		$this->ControllerAction->field('status', ['visible' => false]);
+		$this->ControllerAction->field('photo_content', ['visible' => true]);
+
 		$this->ControllerAction->field('address', ['visible' => false]);
 		$this->ControllerAction->field('postal_code', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['visible' => false]);
@@ -135,7 +156,9 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('student_institution_name', ['visible' => false]);
 
 		$this->fields['name']['sort'] = true;
-		$this->fields['default_identity_type']['sort'] = true;
+		if($this->controller->name != 'Securities') {
+			$this->fields['default_identity_type']['sort'] = true;
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
@@ -334,16 +357,6 @@ class UsersTable extends AppTable {
 			->add('address', [])
 			->add('password', [])
 			->allowEmpty('photo_content')
-				->add('photo_content', [
-					'ruleCheckSelectedFileAsImage' => [
-							'rule' => 'checkSelectedFileAsImage',
-							'message' => 'Please upload image format files. Eg. jpg, png, gif.'
-					],
-					'ruleCheckIfImageExceedsUploadSize' => [
-							'rule' => 'checkIfImageExceedsUploadSize',
-							'message' => 'Uploaded file exceeds 2MB in size.'
-					]
-				])
 			;
 		return $validator;
 	}
@@ -352,15 +365,18 @@ class UsersTable extends AppTable {
 		$fileContent = $entity->photo_content;
 		$value = "";
 		if(empty($fileContent) && is_null($fileContent)) {
-			$controllerName = $this->controller->name;	
 			if(($this->hasBehavior('Student')) && ($this->action == "index")){
 				$value = $this->defaultStudentProfileIndex;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
 				$value = $this->defaultStaffProfileIndex;
+			} else if(($this->hasBehavior('User')) && ($this->action == "index")){
+				$value = $this->defaultUserProfileIndex;
 			} else if(($this->hasBehavior('Student')) && ($this->action == "view")){
 				$value = $this->defaultStudentProfileView;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
 				$value = $this->defaultStaffProfileView;
+			} else if(($this->hasBehavior('User')) && ($this->action == "view")){
+				$value = $this->defaultUserProfileView;
 			}
 		} else {
 			$value = base64_encode( stream_get_contents($fileContent) );//$fileContent;
@@ -410,11 +426,38 @@ class UsersTable extends AppTable {
 	public function getDefaultImgView(){
 		$value = "";
 		$controllerName = $this->controller->name;	
+
 		if($this->hasBehavior('Student')){
 			$value = $this->defaultStudentProfileView;
 		} else if($this->hasBehavior('Staff')){
 			$value = $this->defaultStaffProfileView;
-		}
+		} else if($this->hasBehavior('User')){
+			$value = $this->defaultUserProfileView;
+		} 
 		return $value;
 	}
+
+	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
+		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
+			$file = $entity->photo_content;
+			if(!empty($file['tmp_name'])){
+				$entity->photo_content = file_get_contents($file['tmp_name']);
+				if(!empty($file['name'])){
+					$pathInfo = pathinfo($file['name']);
+					$entity->photo_name = uniqid() . '.' . $pathInfo['extension'];
+				}
+
+			} else if($file['error'] > 0) {
+				$entity->photo_content = null;
+				$entity->photo_name = null;
+			}
+		}
+
+		if(empty($entity->photo_content)){
+			$entity->photo_content = null;
+			$entity->photo_name = null;
+		}
+
+		parent::beforeSave($event, $entity, $options);
+	}*/
 }

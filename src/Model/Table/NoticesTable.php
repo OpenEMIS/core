@@ -15,4 +15,9 @@ class NoticesTable extends AppTable {
 			'created', 'message'
 		]);
 	}
+
+	public function onGetCreated(Event $event, Entity $entity) {
+		return $this->formatDateTime($entity->created);
+	}
+
 }

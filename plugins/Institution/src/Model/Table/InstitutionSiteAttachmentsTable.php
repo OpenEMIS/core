@@ -37,6 +37,12 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 
 /******************************************************************************************************************
 **
@@ -65,6 +71,12 @@ class InstitutionSiteAttachmentsTable extends AppTable {
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
 	    }
+
+	    $viewVars = $this->ControllerAction->vars();
+	    if(!is_null($viewVars['toolbarButtons']['download'])) {
+	    	$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
+	    }
+
 		return $entity;
     }
 
@@ -88,4 +100,31 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 		return $this->getFileTypeForView($entity->file_name);
 	}
 
+
+/******************************************************************************************************************
+**
+** adding download button to index page
+**
+******************************************************************************************************************/
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
+		$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
+		$buttons['download']['attr'] = $indexAttr;
+		$buttons['download']['url']['action'] = $this->alias.'/download';
+		$buttons['download']['url'][1] = $entity->id;
+
+		return $buttons;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
+		if($action == "view"){
+			$toolbarButtons['download']['type'] = 'button';
+			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+			$toolbarButtons['download']['attr'] = $attr;
+			$toolbarButtons['download']['attr']['title'] = __('Download');
+			$toolbarButtons['download']['url']['action'] = $this->alias.'/download';
+		}
+	}
 }

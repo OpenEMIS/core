@@ -1094,15 +1094,6 @@ CREATE TABLE IF NOT EXISTS `institution_site_custom_table_cells` (
 ALTER TABLE `institution_site_custom_table_cells`
   ADD PRIMARY KEY (`id`);
 
--- Absence
-ALTER TABLE `institution_site_student_absences` CHANGE `first_date_absent` `start_date` DATE NULL NOT NULL ;
-ALTER TABLE `institution_site_student_absences` CHANGE `last_date_absent` `end_date` DATE NULL NOT NULL ;
-ALTER TABLE `institution_site_student_absences` CHANGE `start_time_absent` `start_time` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
-ALTER TABLE `institution_site_student_absences` CHANGE `end_time_absent` `end_time` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
-ALTER TABLE `institution_site_student_absences` CHANGE `full_day_absent` `full_day` INT( 1 ) NOT NULL ;
-ALTER TABLE `institution_site_student_absences` DROP `institution_site_section_id` ;
-ALTER TABLE `institution_site_student_absences` DROP `absence_type` ;
-
 update config_items set name = 'StaffContacts' where name = 'StaffContact' and type = 'Add New Staff';
 update config_items set name = 'StaffIdentities' where name = 'StaffIdentity' and type = 'Add New Staff';
 update config_items set name = 'StaffNationalities' where name = 'StaffNationality' and type = 'Add New Staff';
@@ -1126,17 +1117,6 @@ UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboa
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_height';
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_default';
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_size_limit';
-
--- 27th June 2015
-UPDATE `security_functions` SET 
-	`_edit` = REPLACE(`_edit`, '_view:', ''), 
-	`_add` = REPLACE(`_add`, '_view:', ''), 
-	`_delete` = REPLACE(`_delete`, '_view:', ''),
-	`_execute` = REPLACE(`_execute`, '_view:', '');
-
-UPDATE `security_functions` SET `controller` = 'Institutions' WHERE `controller` = 'InstitutionSites';
-UPDATE `security_functions` SET `_view` = 'Attachments.index|Attachments.view', `_add` = 'Attachments.add', `_edit` = 'Attachments.edit', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download' WHERE `controller` = 'Institutions' AND `name` = 'Attachments';
-UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'Students.index|Students.view', `_add` = 'Students.add', `_edit` = 'Students.edit', `_delete` = 'Students.remove', `_execute` = 'Students.excel' WHERE `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Details' AND `name` = 'Student';
 
 -- 29th June 1600hrs
 -- Update for Institution - Surveys
@@ -1520,5 +1500,18 @@ ALTER TABLE `user_attachments` CHANGE `file_content` `file_content` LONGBLOB NOT
 ALTER TABLE `institution_site_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
 ALTER TABLE `student_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
 ALTER TABLE `staff_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `field`;
+
+
+-- 7 July 2015 by jeff
+DELETE FROM `field_options` WHERE `code` IN (
+	'InstitutionSiteCustomFields', 'CensusCustomFieldOptions', 'CensusCustomFields', 'CensusGrids', 'StudentCustomFields',
+	'StaffCustomFields', 'InfrastructureBuildings', 'InfrastructureCategories', 'InfrastructureEnergies',
+	'InfrastructureFurnitures', 'InfrastructureMaterials', 'InfrastructureResources', 'InfrastructureRooms',
+	'InfrastructureSanitations', 'InfrastructureStatuses', 'InfrastructureWaters'
+);
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.Banks"}' WHERE `field_options`.`code` = 'Banks';
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.BankBranches"}' WHERE `field_options`.`code` = 'BankBranches';
+UPDATE `field_options` SET `params` = '{"model":"User.ContactTypes"}' WHERE `field_options`.`code` = 'ContactTypes';
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.Countries"}' WHERE `field_options`.`code` = 'Countries';
 
 

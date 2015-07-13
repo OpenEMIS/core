@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
@@ -20,6 +21,16 @@ class InstitutionSiteStaffTable extends AppTable {
 		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions','foreignKey' => 'institution_site_position_id']);
 		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
+
+		$this->addBehavior('AcademicPeriod.Period');
+        $this->addBehavior('HighChart', [
+        	'number_of_staff' => [
+        		'_function' => 'getNumberOfStaff',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Position Type']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			]
+		]);
 
 	}
 
@@ -44,43 +55,6 @@ class InstitutionSiteStaffTable extends AppTable {
 			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
 	}
 
-	
-
-	// public function beforeAction() {
-
-	// 	$this->fields['security_user_id']['order'] = 0;
-	// 	$this->fields['institution_site_position_id']['order'] = 1;		
-	// 	$this->fields['FTE']['order'] = 2;
-	// 	$this->fields['start_date']['order'] = 3;
-	// 	$this->fields['end_date']['order'] = 4;
-	// 	$this->fields['staff_type_id']['order'] = 5;
-	// 	$this->fields['staff_status_id']['order'] = 6;
-
-	// }
-
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('institution');
-		$this->ControllerAction->field('institution_site_position_id');
-		$this->ControllerAction->field('start_date');
-		$this->ControllerAction->field('FTE');
-		$this->ControllerAction->field('staff_type_id');
-		// $this->ControllerAction->field('search');
-
-		$this->fields['start_year']['visible'] = false;
-		$this->fields['end_year']['visible'] = false;
-		$this->fields['end_date']['visible'] = false;
-		$this->fields['staff_status_id']['visible'] = false;
-
-		// initializing to bypass validation - will be modified later when appropriate
-		$this->fields['security_user_id']['type'] = 'hidden';
-		$this->fields['security_user_id']['value'] = 0;
-
-		$this->ControllerAction->setFieldOrder([
-			'institution', 'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
-			// , 'search'
-			]);
-	}
-
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$timeNow = strtotime("now");
 		$sessionVar = $this->alias().'.add.'.strtotime("now");
@@ -91,152 +65,108 @@ class InstitutionSiteStaffTable extends AppTable {
 			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
 		}
 	}
-
-	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {
-		$attr['type'] = 'readonly';
-
-		$institutionsId = $this->Session->read('Institutions.id');
-		$result = $this->Institutions
-			->find()
-			->where([$this->Institutions->primaryKey()=>$institutionsId])
-			->first()
-		;
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
 		
-		if (!empty($result)) {
-			$result = $result->toArray();
-			$attr['attr']['value'] = $result['name'];
-		}
-		return $attr;
-	}
-
-	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
-		$institutionsId = $this->Session->read('Institutions.id');
-
-		$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
-		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionsId, true);
-
-		$attr['type'] = 'select';
-		$attr['options'] = $list;
-		$attr['onChangeReload'] = 'true';
-
-		return $attr;
-	}
-
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = 'true';
-		return $attr;
-	}
-
-	public function onUpdateFieldFTE(Event $event, array $attr, $action, $request) {
-		if (array_key_exists('institution_site_position_id', $this->fields)) {
-			if (array_key_exists('options', $this->fields['institution_site_position_id'])) {
-				$positionId = key($this->fields['institution_site_position_id']['options']);
-				if ($this->request->data($this->aliasField('institution_site_position_id'))) {
-					$positionId = $this->request->data($this->aliasField('institution_site_position_id'));
-				}
+		if ($entity->isNew()) {
+			if (isset($entity->FTE)) {
+				$entity->FTE = $entity->FTE/100;
 			}
 		}
-
-		$startDate = null;
-		if ($this->request->data($this->aliasField('start_date'))) {
-			$startDate = $this->request->data($this->aliasField('start_date'));
-		}
-
-		$attr['type'] = 'select';
-		$attr['options'] = $this->getFTEOptions($positionId, ['startDate' => $startDate]);
-		return $attr;
-	}
-
-	public function onUpdateFieldStaffTypeID(Event $event, array $attr, $action, $request) {
-		$attr['type'] = 'select';
-		$attr['options'] = $this->StaffTypes->getList();
-
-		return $attr;
-	}
-
-	public function getFTEOptions($positionId, $options = []) {
-		$options['showAllFTE'] = !empty($options['showAllFTE']) ? $options['showAllFTE'] : false;
-		$options['includeSelfNum'] = !empty($options['includeSelfNum']) ? $options['includeSelfNum'] : false;
-		$options['FTE_value'] = !empty($options['FTE_value']) ? $options['FTE_value'] : 0;
-		$options['startDate'] = !empty($options['startDate']) ? date('Y-m-d', strtotime($options['startDate'])) : null;
-		$options['endDate'] = !empty($options['endDate']) ? date('Y-m-d', strtotime($options['endDate'])) : null;
-		$currentFTE = !empty($options['currentFTE']) ? $options['currentFTE'] : 0;
-
-		if ($options['showAllFTE']) {
-			foreach ($this->fteOptions as $obj) {
-				$filterFTEOptions[$obj] = $obj;
-			}
-		} else {
-			$query = $this->find();
-			$query->where(['AND' => ['institution_site_position_id' => $positionId]]);
-
-			if (!empty($options['startDate'])) {
-				$query->where(['AND' => ['OR' => [
-					'end_date >= ' => $options['startDate'],
-					'end_date is null'
-					]]]);
-			}
-
-			if (!empty($options['endDate'])) {
-				$query->where(['AND' => ['start_date <= ' => $options['endDate']]]);
-			}
-
-			$query->select([
-					// todo:mlee unable to implement 'COALESCE(SUM(FTE),0) as totalFTE'
-					'totalFTE' => $query->func()->sum('FTE'),
-					'institution_site_position_id'
-				])
-				->group('institution_site_position_id')
-			;
-
-			if (is_object($query)) {
-				$data = $query->toArray();
-				$totalFTE = empty($data[0]->totalFTE) ? 0 : $data[0]->totalFTE * 100;
-				$remainingFTE = 100 - intval($totalFTE);
-				$remainingFTE = ($remainingFTE < 0) ? 0 : $remainingFTE;
-
-				if ($options['includeSelfNum']) {
-					$remainingFTE +=  $options['FTE_value'];
-				}
-				$highestFTE = (($remainingFTE > $options['FTE_value']) ? $remainingFTE : $options['FTE_value']);
-
-				$filterFTEOptions = [];
-
-				foreach ($this->fteOptions as $obj) {
-					if ($highestFTE >= $obj) {
-						$objLabel = number_format($obj / 100, 2);
-						$filterFTEOptions[$obj] = $objLabel;
-					}
-				}
-
-				if(!empty($currentFTE) && !in_array($currentFTE, $filterFTEOptions)){
-					if($remainingFTE > 0) {
-						$newMaxFTE = $currentFTE + $remainingFTE;
-					}else{
-						$newMaxFTE = $currentFTE;
-					}
-					
-					foreach ($this->fteOptions as $obj) {
-						if ($obj <= $newMaxFTE) {
-							$objLabel = number_format($obj / 100, 2);
-							$filterFTEOptions[$obj] = $objLabel;
-						}
-					}
-				}
-
-			}
-
-			if (count($filterFTEOptions)==0) {
-				$filterFTEOptions = array(''=>__('No available FTE'));
-			}
-		}
-		return $filterFTEOptions;
 	}
 
 	public function validationDefault(Validator $validator) {
 		return $validator
 			// this function doesnt update... only adds
 			->requirePresence('staff_status_id', 'update')
+			->add('institution_site_position_id', [
+			])
+			->add('security_role_id', [
+			])
+			->add('FTE', [
+			])
+			->add('staff_type_id', [
+			])
 		;
 	}
+
+	public function getNumberOfStaff($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStaff.'.$key] = $value;
+		}
+
+		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+
+		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+		$staffsByPositionConditions['OR'] = array(
+			'OR' => array(
+				array(
+					'InstitutionSiteStaff.end_year IS NOT NULL',
+					'InstitutionSiteStaff.start_year <= "' . $currentYear . '"',
+					'InstitutionSiteStaff.end_year >= "' . $currentYear . '"'
+				)
+			),
+			array(
+				'InstitutionSiteStaff.end_year IS NULL',
+				'InstitutionSiteStaff.start_year <= "' . $currentYear . '"'
+			)
+		);
+		$query = $this->find();
+		$staffByPositions = $query
+			->contain(['Users.Genders','Positions'])
+			->select([
+				'Positions.type',
+				'Users.id',
+				'Genders.name',
+				'total' => $query->func()->count($this->aliasField('id'))
+			])
+			->where($staffsByPositionConditions)
+			->group([
+				'Positions.type', 'Genders.name'
+			])
+			->order(
+				'Positions.type'
+			)
+			->toArray();
+
+		$positionTypes = array(
+			0 => __('Non-Teaching'),
+			1 => __('Teaching')
+		);
+
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => []);
+		}
+		foreach ($dataSet as $key => $obj) {
+			foreach ($positionTypes as $id => $name) {
+				$dataSet[$key]['data'][$id] = 0;
+			}
+		}
+		foreach ($staffByPositions as $key => $staffByPosition) {
+			$positionType = $staffByPosition->position->type;
+			$staffGender = $staffByPosition->user->gender->name;
+			$StaffTotal = $staffByPosition->total;
+
+			foreach ($dataSet as $dkey => $dvalue) {
+				if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+					$dataSet[$dkey]['data'][$positionType] = 0;
+				}
+			}
+			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($positionTypes);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
+	}
+
 }
