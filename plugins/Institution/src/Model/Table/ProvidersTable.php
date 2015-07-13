@@ -9,6 +9,6 @@ class ProvidersTable extends AppTable {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
 		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

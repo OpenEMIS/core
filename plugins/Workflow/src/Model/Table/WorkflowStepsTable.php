@@ -15,7 +15,7 @@ class WorkflowStepsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
-		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions']);
+		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'joinTable' => 'workflow_step_roles',

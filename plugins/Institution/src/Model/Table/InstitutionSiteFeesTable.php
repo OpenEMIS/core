@@ -30,8 +30,8 @@ class InstitutionSiteFeesTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-		$this->hasMany('InstitutionSiteFeeTypes', ['className' => 'Institution.InstitutionSiteFeeTypes']);
-		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFees']);
+		$this->hasMany('InstitutionSiteFeeTypes', ['className' => 'Institution.InstitutionSiteFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {

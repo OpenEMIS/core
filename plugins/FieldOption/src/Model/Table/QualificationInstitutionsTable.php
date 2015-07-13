@@ -7,6 +7,6 @@ use Cake\Validation\Validator;
 class QualificationInstitutionsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
-		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications']);
+		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
