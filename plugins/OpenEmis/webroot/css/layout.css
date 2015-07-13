@@ -33,6 +33,10 @@ select,
   box-shadow: none;
 }
 
+.panel-toolbar .btn-group.open .dropdown-toggle {
+  border: 1px solid #EDEDED;	
+}
+
 .container-fluid {
 	display: table;
 	padding: 0;
@@ -58,6 +62,15 @@ input::-moz-focus-inner {
 
 a:hover {
 	text-decoration: none;
+}
+
+a:[data-toggle="tooltip"] {
+	z-index: 9999px;
+}
+
+.overflow-y-hidden {
+	-ms-overflow-y: hidden !important;
+	    overflow-y: hidden !important;
 }
 
 /* HEADINGS */
@@ -642,6 +655,7 @@ body.large {
 .panel-toolbar {
 	border: 1px solid #CCC !important;
 	margin-top: -1px;	
+	margin-bottom: 20px;
 }
 
 .panel-toolbar a {
@@ -651,18 +665,34 @@ body.large {
 	        border-radius: 3px !important;	
 }
 
-.panel-toolbar a:hover {
+.panel-toolbar a:hover,
+.panel-toolbar a:active,
+.panel-toolbar a:focus,
+.panel-toolbar a:visited,
+.panel-toolbar a.active {
 	background-color: #EDEDED;
 	transition: all 0.8s ease;	
 	-webkit-border-radius: 5px;
 	        border-radius: 5px;
+	padding: 8px;
+	margin: 0;
+}
+
+.panel-toolbar a.active {
+	-webkit-border-bottom-left-radius: 0 !important;
+	        border-bottom-left-radius: 0 !important;
+	border-bottom: 1px solid #EDEDED !important;
+	border-top: 1px solid #DDD;
+	border-left: 1px solid #DDD;
+	border-right: 1px solid #DDD;
+	margin-bottom: -2px;
 }
 
 .panel-toolbar i {
 	font-size: 20px;
 	color: #999;
 	vertical-align: middle;
-	display: block;
+	display: inline-block;
 }
 
 .panel-toolbar .dropdown-arrow i {
@@ -670,7 +700,7 @@ body.large {
 }
 
 .panel-toolbar .dropdown-toggle i {
-	padding: 0 0 0 3px;
+	/*padding: 0 0 0 3px;*/
 }
 
 .panel-toolbar tags-input {
@@ -699,20 +729,39 @@ body.large {
 	display: none;
 }
 
-.panel-toolbar .panel-default {
+.panel-toolbar .panel-default,
+.panel-toolbar .panel-group {
 	margin: 0;
 }
 
 .panel-toolbar .panel-body {
 	padding: 5px 0 0;
 	width: 100%;
-	max-height: 180px;
 	-ms-overflow-x: scroll;
 	    overflow-x: scroll;
+	-ms-overflow-y: hidden;
+	    overflow-y: hidden;
+	background-color: #EDEDED;
+	border: 1px solid #DDD;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;		
+}
+
+.panel-toolbar .elements-wrapper .panel-body {
+	-ms-overflow-x: hidden;
+	    overflow-x: hidden;
 }
 
 .panel-toolbar .table-responsive {
 	background: none;
+}
+
+.panel-toolbar .panel-collapse {
+	margin: 0 10px;
+}
+
+.panel-toolbar .btn-group:first-child {
+	margin-left: 10px;
 }
 
 .panel-toolbar .chart-lists tbody {
@@ -737,6 +786,21 @@ body.large {
 .panel-toolbar .dropdown-menu {
 	top: 34px;
 	left: -1px;
+}
+
+.panel-toolbar .dropdown-menu .format-lists {
+	margin: 0;
+}
+
+.panel-toolbar .dropdown-menu .dropdown-header {
+	text-align: left;
+	border-bottom: 1px solid #DDD;
+	padding-bottom: 5px;
+	margin-bottom: 10px;
+}
+
+.panel-toolbar .dropdown-menu .dropdown-header p {
+	margin: 0;
 }
 
 .panel-toolbar .input-select-wrapper {
@@ -898,7 +962,9 @@ input[type="checkbox"] {
 }
 
 .format-item a,
-.chart-item a {
+.chart-item a,
+.format-item a:hover,
+.chart-item a:hover {
 	display: table-cell;
 	text-align: center;
 	padding: 10px 15px 0;
@@ -912,15 +978,6 @@ input[type="checkbox"] {
 .toolbar-image .dropdown-arrow i {
 	margin-left: -6px;
 	margin-top: -1px;
-}
-
-.dropdown-item:after {
-	font-family: "FontAwesome";
-	content: "\f0d7";
-	font-size: 10px;
-	position: absolute;
-	bottom: -3px;
-	left: 16px;
 }
 
 .format-item {
@@ -944,6 +1001,10 @@ input[type="checkbox"] {
 
 .format-item .checkbox input {
 	margin: -2px 6px 0 6px !important;
+}
+
+.format-item .icheck-input {
+	margin-right: 5px;
 }
 
 .move-action i {
@@ -1289,6 +1350,7 @@ input[type="checkbox"] {
 	-ms-overflow-x: scroll;
 	    overflow-x: scroll;  
 	overflow-x: visible;
+	margin-top: -1px;
 }
 
 .ng-scope table > thead:first-child > tr:first-child > th {
