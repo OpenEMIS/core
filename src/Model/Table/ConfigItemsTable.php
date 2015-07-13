@@ -54,8 +54,14 @@ class ConfigItemsTable extends AppTable {
 
 		$selectedType = $this->queryString('type', $typeOptions);
 		$this->advancedSelectOptions($typeOptions, $selectedType);
+		$buffer = $typeOptions;
+		foreach ($buffer as $key => $value) {
+			$result = $this->find()->where([$this->aliasField('type') => $value['text'], $this->aliasField('visible') => 1])->count();
+			if (!$result) {
+				unset($typeOptions[$key]);
+			}
+		}
 		$this->request->query['type_value'] = $typeOptions[$selectedType]['text'];
-
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
@@ -92,6 +98,20 @@ class ConfigItemsTable extends AppTable {
 				if (isset($this->$validationRules)) {
 					$this->validator()->add('value', $this->$validationRules);
 				}
+			}
+		}
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if (is_array($data[$this->alias()]['value'])) {
+			if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
+				$value = $data[$this->alias()]['value']['prefix'];
+				if (isset($data[$this->alias()]['value']['enable'])) {
+					$value .= ',1';
+				} else {
+					$value .= ',0';
+				}
+				$data[$this->alias()]['value'] = $value;
 			}
 		}
 	}
@@ -155,14 +175,11 @@ class ConfigItemsTable extends AppTable {
 					} else if ($entity->code == 'training_credit_hour') {
 						$attr['type'] = 'integer';
 						$attr['attr'] = ['min' => 0];
+					} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
+						$attr['type'] = 'element';
+						$attr['element'] = 'Configurations/with_prefix';
+						$attr['data'] = [];
 					}
-				// } else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix') {
-				// 	$exp = explode(',', $entity->value);
-				// 	if (!$exp[1]) {
-				// 		return __('Disabled');
-				// 	} else {
-				// 		return __('Enabled') . ' ('.$exp[0].')';
-				// 	}
 				// } else {
 				// 	if ($entity->code == 'time_format' || $entity->code == 'date_format') {
 				// 		return date($entity->value);
@@ -296,6 +313,79 @@ class ConfigItemsTable extends AppTable {
 ** refer to editBeforeAction() on how these validation rules are loaded dynamically
 **
 ******************************************************************************************************************/
+	// private $validateSupportPhone = [
+	// 		'url' => [
+	// 			'rule'	=> ['checkLongitude'],
+	// 			'provider' => 'table',
+	// 		]
+ //  		];
+	   
+	private $validateSupportEmail = [
+			'email' => [
+				'rule'	=> ['email'],
+			]
+  		];
+	   
+	private $validateWhereIsMySchoolStartLong = [
+			'checkLongitude' => [
+				'rule'	=> ['checkLongitude'],
+				'provider' => 'table',
+			]
+  		];
+	   
+	private $validateWhereIsMySchoolStartLat = [
+			'checkLatitude' => [
+				'rule'	=> ['checkLatitude'],
+				'provider' => 'table',
+			]
+  		];
+	   
+	private $validateWhereIsMySchoolStartRange = [
+			'num' => [
+				'rule'  => ['numeric'],
+			],
+  		];
+	   
+	private $validateSmsProviderUrl = [
+			'url' => [
+				'rule'	=> ['url', true],
+				'message' => 'Please provide a valid URL with http:// or https://',
+			]
+  		];
+	   
+	private $validateWhereIsMySchoolUrl = [
+			'url' => [
+				'rule'	=> ['url', true],
+				'message' => 'Please provide a valid URL with http:// or https://',
+			]
+  		];
+	   
+	private $validateStartTime = [
+			'dateInput' => [
+				'rule'	=> ['checkDateInput'],
+				'provider' => 'table',
+				'last' => true
+			],
+			'aPValue' => [
+				'rule'	=> ['amPmValue'],
+				'provider' => 'table',
+				'last' => true
+			]
+  		];
+	   
+	private $validateLowestYear = [
+			'num' => [
+				'rule'  => ['numeric'],
+				'message' => 'Please provide a valid year',
+				'last' => true
+			],
+			'bet' => [
+				'rule'	=> ['range', 1900, 9999],
+				'message' => 'Please provide a valid year',
+				'last' => true
+			]
+  		];
+	   
 	private $validateHoursPerDay = [
 			'num' => [
 				'rule'  => ['numeric'],
@@ -377,7 +467,7 @@ class ConfigItemsTable extends AppTable {
   	private $validateTrainingCreditHour = [
   			'num' => [
 				'rule'  => 'numeric',
-	  			'message' => 'Value should be numeric'
+	  			'message' => 'Value should be numeric',
   			]
   		];
   

@@ -366,16 +366,6 @@ class UsersTable extends AppTable {
 			->add('address', [])
 			->add('password', [])
 			->allowEmpty('photo_content')
-				->add('photo_content', [
-					'ruleCheckSelectedFileAsImage' => [
-							'rule' => 'checkSelectedFileAsImage',
-							'message' => 'Please upload image format files. Eg. jpg, png, gif.'
-					],
-					'ruleCheckIfImageExceedsUploadSize' => [
-							'rule' => 'checkIfImageExceedsUploadSize',
-							'message' => 'Uploaded file exceeds 2MB in size.'
-					]
-				])
 			;
 		return $validator;
 	}
@@ -455,4 +445,28 @@ class UsersTable extends AppTable {
 		} 
 		return $value;
 	}
+
+	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
+		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
+			$file = $entity->photo_content;
+			if(!empty($file['tmp_name'])){
+				$entity->photo_content = file_get_contents($file['tmp_name']);
+				if(!empty($file['name'])){
+					$pathInfo = pathinfo($file['name']);
+					$entity->photo_name = uniqid() . '.' . $pathInfo['extension'];
+				}
+
+			} else if($file['error'] > 0) {
+				$entity->photo_content = null;
+				$entity->photo_name = null;
+			}
+		}
+
+		if(empty($entity->photo_content)){
+			$entity->photo_content = null;
+			$entity->photo_name = null;
+		}
+
+		parent::beforeSave($event, $entity, $options);
+	}*/
 }
