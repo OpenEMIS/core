@@ -185,7 +185,7 @@ Plugin::load('Migrations');
 
 // Custom Plugins
 Plugin::load('OpenEmis', ['autoload' => true]);
-Plugin::load('Localization', ['autoload' => true]);
+Plugin::load('Localization', ['routes'=>true, 'autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
 Plugin::load('FieldOption', ['routes' => true, 'autoload' => true]);
 Plugin::load('Institution', ['routes' => true, 'autoload' => true]);
