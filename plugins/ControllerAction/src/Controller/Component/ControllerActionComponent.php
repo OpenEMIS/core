@@ -1080,37 +1080,34 @@ class ControllerActionComponent extends Component {
 			$model = $this->model;
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
-			$order = 1;
 			
-			$ids = json_decode($request->data("ids"));
-			$entity = $model->newEntity();
+			$ids = json_decode($request->data("ids"));		
 
-			foreach ($ids as $id) {
-				$entity->$primaryKey = $id;
-				$entity->$orderField = $order++;
-				$model->save($entity);
+			foreach ($ids as $order => $id) {
+				$model->updateAll([$orderField => $order + 1], [$primaryKey => $id]);
 			}
 		}
 	}
 	
-	public function fixOrder($conditions) {
-		$model = $this->model;
-		$count = $model->find('count', array('conditions' => $conditions));
-		if($count > 0) {
-			$list = $model->find('list', array(
-				'conditions' => $conditions,
-				'order' => array(
-					$model->alias().'.'.$this->orderField,
-					$model->alias().'.'.$model->primaryKey()
-				)
-			));
-			$order = 1;
-			foreach($list as $id => $name) {
-				$model->id = $id;
-				$model->saveField($this->orderField, $order++);
-			}
-		}
-	}
+	// NOT IN USED
+	// public function fixOrder($conditions) {
+	// 	$model = $this->model;
+	// 	$count = $model->find('count', array('conditions' => $conditions));
+	// 	if($count > 0) {
+	// 		$list = $model->find('list', array(
+	// 			'conditions' => $conditions,
+	// 			'order' => array(
+	// 				$model->alias().'.'.$this->orderField,
+	// 				$model->alias().'.'.$model->primaryKey()
+	// 			)
+	// 		));
+	// 		$order = 1;
+	// 		foreach($list as $id => $name) {
+	// 			$model->id = $id;
+	// 			$model->saveField($this->orderField, $order++);
+	// 		}
+	// 	}
+	// }
 
 	public function getPlugin($model) {
 		$array = $this->getModel($model);
