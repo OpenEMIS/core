@@ -9,7 +9,7 @@ class GendersTable extends AppTable {
 		parent::initialize($config);
 
 		// todo-mlee sort out all these hasmany associations when census is created
-		$this->hasMany('Users', ['className' => 'User.Users']);
+		$this->hasMany('Users', ['className' => 'User.Users', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// $this->hasMany('CensusBehaviours', ['className' => 'User.CensusBehaviours']);
 		// $this->hasMany('CensusTeachers', ['className' => 'User.CensusTeachers']);
 		// $this->hasMany('CensusTeacherTrainings', ['className' => 'User.CensusTeacherTrainings']);

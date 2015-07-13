@@ -15,7 +15,7 @@ class StudentSectionsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 
-		$this->hasMany('InstitutionSiteSectionGrade', ['className' => 'Institution.InstitutionSiteSectionGrade']);
+		$this->hasMany('InstitutionSiteSectionGrade', ['className' => 'Institution.InstitutionSiteSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
