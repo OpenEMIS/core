@@ -107,15 +107,15 @@ class SalariesTable extends AppTable {
 		$this->fields['additions']['visible'] = false;
 		$this->fields['deductions']['visible'] = false;
 
-		$this->fields['gross_salary']['type'] = 'float';
-		$this->fields['net_salary']['type'] = 'float';
+		$this->fields['gross_salary']['type'] = 'string';
+		$this->fields['net_salary']['type'] = 'string';
 
-		$this->fields['gross_salary']['attr']['step'] = 0.00;
-		$this->fields['gross_salary']['attr']['min'] = 0.00;
+		//$this->fields['gross_salary']['attr']['step'] = 0.00;
+		//$this->fields['gross_salary']['attr']['min'] = 0.00;
 		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 
-		$this->fields['net_salary']['attr']['step'] = 0.00;
-		$this->fields['net_salary']['attr']['min'] = 0.00;
+		//$this->fields['net_salary']['attr']['step'] = 0.00;
+		//$this->fields['net_salary']['attr']['min'] = 0.00;
 		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 
 		$SalaryAdditionType = TableRegistry::get('FieldOption.SalaryAdditionTypes')->getList();
