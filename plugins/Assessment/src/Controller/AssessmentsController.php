@@ -2,6 +2,7 @@
 namespace Assessment\Controller;
 
 use App\Controller\AppController;
+use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
@@ -10,8 +11,8 @@ class AssessmentsController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Assessment.Assessments');
 		$this->ControllerAction->models = [
+			'Assessments'		=> ['className' => 'Assessment.Assessments'],
 			'GradingTypes'		=> ['className' => 'Assessment.AssessmentGradingTypes'],
 			'GradingOptions'	=> ['className' => 'Assessment.AssessmentGradingOptions'],
 			'Status'			=> ['className' => 'Assessment.AssessmentStatuses']
@@ -21,31 +22,22 @@ class AssessmentsController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Assessments', ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => $this->request->action]);
-		$this->Navigation->addCrumb(Inflector::humanize(Inflector::underscore($this->request->action)));
-
-    	$header = __('Assessment');
-    	$controller = $this;
-
-		$this->set('contentHeader', $header);
-
-		$plugin = $this->plugin;
 
 		$tabElements = [
 			'Assessments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'index'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Assessments'],
 				'text' => __('Assessments')
 			],
 			'GradingTypes' => [
-				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
 				'text' => __('Grading Types')
 			],
 			'GradingOptions' => [
-				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'GradingOptions'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingOptions'],
 				'text' => __('Grading Options')
 			],
 			'Status' => [
-				'url' => ['plugin' => $plugin, 'controller' => $this->name, 'action' => 'Status'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Status'],
 				'text' => __('Status')
 			]
 		];
@@ -53,4 +45,14 @@ class AssessmentsController extends AppController
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
+
+	public function onInitialize(Event $event, Table $model) {
+		$header = __('Assessment');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+		$this->Navigation->addCrumb($model->getHeader($model->alias));
+
+		$this->set('contentHeader', $header);
+    }
 }

@@ -427,7 +427,7 @@ body.large {
 .treemap-breadcrumb {
 	background: none;
 	margin: 0;
-	padding: 5px;
+	padding: 5px 10px;
 }
 
 .treemap-breadcrumb li a,
@@ -609,7 +609,7 @@ body.large {
 
 .toolbar-wrapper .input{
 	width: 20%;
-	margin: 5px;
+	margin: 5px 10px;
 	display: inline-block;
 }
 
@@ -671,6 +671,27 @@ body.large {
 
 .panel-toolbar .dropdown-toggle i {
 	padding: 0 0 0 3px;
+}
+
+.panel-toolbar tags-input {
+	margin: 0 10px;
+}
+
+.panel-toolbar .checkbox {
+	display: block;
+	float: left;
+	margin: 12px 10px !important;
+	padding: 0 !important;
+	width: 95px !important;
+}
+
+.panel-toolbar .checkbox-label,
+.panel-toolbar .checkbox-label:hover {
+	width: 85px !important;
+	font-weight: bold !important;
+	margin: 0 -4px !important;
+	color: #333 !important;
+	cursor: default;
 }
 
 /* Panel with Accordion */
@@ -1028,21 +1049,6 @@ input[type="checkbox"] {
 	background-color: #FFF !important;
 	color: #6B6B6B !important;
 	border: 1px solid #6B6B6B !important;
-}
-
-.btn-save:before {
-	font-family: 'kordit-fonts';
-	content: "\e62a";
-	color: #FFF;
-	font-size: 11px;
-	margin-right: 5px;
-}
-
-.btn-cancel:before {
-	font-family: 'kordit-fonts';
-	content: "\e620";
-	font-size: 10px;
-	margin-right: 5px;	
 }
 
 .btn-cancel {
@@ -1714,6 +1720,8 @@ table tr.sorting-row td {background-color: #8b8;}
 	border-left: 2px solid #FFF;
 }
 
+/* View with Sections and Map */
+
 .section {
 	display: inline-block;
 	width: 100%;
@@ -1750,6 +1758,27 @@ table tr.sorting-row td {background-color: #8b8;}
 .section #googlemap iframe {
 	height: 300px !important;
 	width: 100%;
+}
+
+/* View with Sections and tables */
+.section .table-responsive table thead,
+.section .table-responsive table thead tr,
+.section .table-responsive {
+	padding: 10px;
+}
+
+.section .kd-check {
+	color: green;
+	font-size: 10px;
+}
+
+.section .kd-cross {
+	color: red;
+	font-size: 9px;
+}
+
+.section-header .icheck-input {
+	margin: -3px 5px 0px -10px !important;
 }
 
 .form-control {
@@ -1847,6 +1876,14 @@ label + select {
 .iradio_minimal-grey {
     float: left;
 } 
+
+.icheck-input {
+	background-color: #FFF;
+}
+
+.icheckbox_minimal-grey.disabled {
+	cursor: not-allowed !important;
+}
 
 .input-checkbox-inline,
 .input-checkbox {
