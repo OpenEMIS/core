@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Table\AppTable;
 
@@ -223,18 +224,7 @@ class InstitutionsTable extends AppTable  {
 
 		$areaOptions = $targetTable
 			->find('list')
-			->where(['parent_id'=>$parentId])
 			->toArray();
-
-		// Find the children of World
-		if($attr['source_model']=='Area.AreaAdministratives'){
-			// Using the primary key of the World record
-			$parentId = key($areaOptions);
-			$areaOptions = $targetTable
-			->find('list')
-			->where(['parent_id'=>$parentId])
-			->toArray();
-		}
 
 		$fieldName = $attr['model'] . '.' . $attr['field'];
 		$options['onchange'] = "Area.reload(this)";
