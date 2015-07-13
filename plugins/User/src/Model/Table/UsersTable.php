@@ -45,13 +45,13 @@ class UsersTable extends AppTable {
 		$this->fieldOrder1 = new ArrayObject(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
 		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
-		// $this->addBehavior('ControllerAction.FileUpload', [
-		// 	'name' => 'photo_name',
-		// 	'content' => 'photo_content',
-		// 	'size' => '2MB',
-		// 	'contentEditable' => true,
-		// 	'allowable_file_types' => 'image'
-		// ]);
+		$this->addBehavior('ControllerAction.FileUpload', [
+			'name' => 'photo_name',
+			'content' => 'photo_content',
+			'size' => '2MB',
+			'contentEditable' => true,
+			'allowable_file_types' => 'image'
+		]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -59,7 +59,8 @@ class UsersTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'student_user_id']);
+		$this->hasMany('GuardianStudents', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_user_id']);
 		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
@@ -96,7 +97,9 @@ class UsersTable extends AppTable {
 	}
 
 	public function setTabElements() {
-		if ($this->controller->name == 'Institutions') return;
+		if ($this->alias() != 'Users') {
+			return;
+		}
 		
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
@@ -258,14 +261,20 @@ class UsersTable extends AppTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
-		if (array_key_exists('pass', $this->request->params)) {
-			$id = reset($this->request->params['pass']);
-			$this->ControllerAction->setFieldOrder(['photo_content']);
+		if ($this->alias() == 'Users') {
+			// means that this originates from a controller
+			$roleName = $this->controller->name;
+			if (array_key_exists('pass', $this->request->params)) {
+				$id = reset($this->request->params['pass']);
+			}
+		} else {
+			// originates from a model
+			$roleName = $this->controller->name.'.'.$this->alias();
+			if (array_key_exists('pass', $this->request->params)) {
+				$id = $this->request->params['pass'][1];
+			}	
 		}
 
-		// would be 'Student' or 'Staff'
-		$name = $this->controller->name;
-		$roleName = Inflector::singularize($name);
 		if (isset($id)) {
 			$this->Session->write($roleName.'.security_user_id', $id);
 		} else {
@@ -357,16 +366,6 @@ class UsersTable extends AppTable {
 			->add('address', [])
 			->add('password', [])
 			->allowEmpty('photo_content')
-				->add('photo_content', [
-					'ruleCheckSelectedFileAsImage' => [
-							'rule' => 'checkSelectedFileAsImage',
-							'message' => 'Please upload image format files. Eg. jpg, jpeg, png, gif.'
-					],
-					'ruleCheckIfImageExceedsUploadSize' => [
-							'rule' => 'checkIfImageExceedsUploadSize',
-							'message' => 'Uploaded file exceeds 2MB in size.'
-					]
-				])
 			;
 		return $validator;
 	}
@@ -447,7 +446,7 @@ class UsersTable extends AppTable {
 		return $value;
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
+	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
 		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
 			$file = $entity->photo_content;
 			if(!empty($file['tmp_name'])){
@@ -469,5 +468,5 @@ class UsersTable extends AppTable {
 		}
 
 		parent::beforeSave($event, $entity, $options);
-	}
+	}*/
 }

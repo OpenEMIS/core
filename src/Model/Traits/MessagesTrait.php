@@ -238,7 +238,12 @@ trait MessagesTrait {
 			'next_step' => 'Next Step',
 			'comment_required' => 'Comment Required'
 		],
-
+		'InstitutionQualityVisits' => [
+			'noPeriods' => 'No Available Periods',
+			'noSections' => 'No Available Sections',
+			'noClasses' => 'No Available Classes',
+			'noStaff' => 'No Available Staff'
+		],
 
 
 		// Validation Messages

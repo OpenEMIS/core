@@ -19,13 +19,13 @@ class StudentGuardianBehavior extends Behavior {
 	public function beforeFind(Event $event, Query $query, $options) {
 		$session = $this->_table->request->session();
 		
-		if ($session->check('Student.security_user_id')) {
-			$institutionId = $session->read('Student.security_user_id');
+		if ($session->check('Students.security_user_id')) {
+			$student_user_id = $session->read('Students.security_user_id');
 		} else {
-			$institutionId = 0;
+			$student_user_id = 0;
 		}
 		$query
-			->where(['security_user_id = '.$institutionId])
+			->where(['student_user_id = '.$student_user_id])
 			;
 	}
 
@@ -37,6 +37,7 @@ class StudentGuardianBehavior extends Behavior {
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.onUpdateFieldGuardianRelationId' => 'onUpdateFieldGuardianRelationId',
 			'ControllerAction.Model.onUpdateFieldGuardianEducationLevelId' => 'onUpdateFieldGuardianEducationLevelId',
+			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
 	// 		'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 	// 		'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
 	// 		'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
@@ -52,12 +53,12 @@ class StudentGuardianBehavior extends Behavior {
 
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		if ($this->_table->Session->check('Student.security_user_id')) {
-			$studentSecurityUserId = $this->_table->Session->read('Student.security_user_id');
+		if ($this->_table->Session->check('Students.security_user_id')) {
+			$studentSecurityUserId = $this->_table->Session->read('Students.security_user_id');
 			$options['contain'] = [
-				'StudentGuardians' => [
+				'GuardianStudents' => [
 					'conditions' => [
-						'StudentGuardians.security_user_id' => $studentSecurityUserId
+						'GuardianStudents.student_user_id' => $studentSecurityUserId
 					]
 				]
 			];
@@ -73,7 +74,7 @@ class StudentGuardianBehavior extends Behavior {
 				$this->_table->fields[$key]['visible'] = false;
 			}
 			$session = $this->_table->request->session();
-			$studentSecurityUserId = $session->read('Student.security_user_id');
+			$studentSecurityUserId = $session->read('Students.security_user_id');
 			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
 			$this->_table->ControllerAction->field('security_user_id', ['type' => 'hidden', 'value' => $studentSecurityUserId, 'fieldName' => $associationString.'security_user_id']);
 
@@ -159,7 +160,7 @@ class StudentGuardianBehavior extends Behavior {
 
 	// public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 	// 	$session = $this->_table->request->session();
-	// 	$studentSecurityUserId = $session->read('Student.security_user_id');
+	// 	$studentSecurityUserId = $session->read('Students.security_user_id');
 	// 	$conditions = array(
 	// 		'InstitutionSiteProgrammes.security_user_id' => $studentSecurityUserId
 	// 	);
@@ -176,7 +177,7 @@ class StudentGuardianBehavior extends Behavior {
 
 	// public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
 	// 	$session = $this->_table->request->session();
-	// 	$studentSecurityUserId = $session->read('Student.security_user_id');
+	// 	$studentSecurityUserId = $session->read('Students.security_user_id');
 	// 	$this->academicPeriodId = null;
 	// 	if (array_key_exists('academic_period', $this->_table->fields)) {
 	// 		if (array_key_exists('options', $this->_table->fields['academic_period'])) {
@@ -202,7 +203,7 @@ class StudentGuardianBehavior extends Behavior {
 
 	// public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, $request) {
 	// 	$session = $this->_table->request->session();
-	// 	$studentSecurityUserId = $session->read('Student.security_user_id');
+	// 	$studentSecurityUserId = $session->read('Students.security_user_id');
 
 	// 	if (array_key_exists('education_programme_id', $this->_table->fields)) {
 	// 		if (array_key_exists('options', $this->_table->fields['education_programme_id'])) {
@@ -227,7 +228,7 @@ class StudentGuardianBehavior extends Behavior {
 
 	// public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
 	// 	$session = $this->_table->request->session();
-	// 	$studentSecurityUserId = $session->read('Student.security_user_id');
+	// 	$studentSecurityUserId = $session->read('Students.security_user_id');
 
 	// 	if (array_key_exists('education_grade', $this->_table->fields)) {
 	// 		if (array_key_exists('options', $this->_table->fields['education_grade'])) {
@@ -258,7 +259,7 @@ class StudentGuardianBehavior extends Behavior {
 
 	// public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
 	// 	$session = $this->_table->request->session();
-	// 	$studentSecurityUserId = $session->read('Student.security_user_id');
+	// 	$studentSecurityUserId = $session->read('Students.security_user_id');
 
 	// 	$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
 	// 	$list = $InstitutionSitePositions->getInstitutionSitePositionList($studentSecurityUserId, true);
@@ -385,19 +386,44 @@ class StudentGuardianBehavior extends Behavior {
 	// 	return $attr;
 	// }
 
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+		if (isset($entity->student_guardians)) {
+			if (array_key_exists(0, $entity->student_guardians)) {
+				if (array_key_exists('view', $buttons)) {
+					$buttons['view']['url'][1] = $entity->student_guardians[0]->guardian_user_id;
+				}
+				if (array_key_exists('edit', $buttons)) {
+					$buttons['edit']['url'][1] = $entity->student_guardians[0]->guardian_user_id;
+				}
+				if (array_key_exists('remove', $buttons)) {
+					$buttons['remove']['attr']['field-value'] = $entity->student_guardians[0]->id;
+				}
+			}
+		}
+
+		// because this is a behavior, it will call appTable's onUpdateActionButtons again
+		$event->stopPropagation();
+		return $buttons;
+	}
 
 	public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->StudentGuardians->GuardianRelations->getList();
+		if (empty($attr['options']->toArray())){
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		}
 		return $attr;
 	}
 
 	public function onUpdateFieldGuardianEducationLevelId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->StudentGuardians->GuardianEducationLevels->getList();
+		if (empty($attr['options']->toArray())){
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		}
 		return $attr;
 	}
-
 
 
 }
