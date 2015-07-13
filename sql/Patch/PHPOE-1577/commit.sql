@@ -1,0 +1,1 @@
+ALTER TABLE `translations` ADD PRIMARY KEY (`id`);
