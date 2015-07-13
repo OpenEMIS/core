@@ -16,9 +16,9 @@ class GuardianBehavior extends Behavior {
 		$query
 			->join([
 				'table' => 'student_guardians',
-				'alias' => 'StudentGuardians',
+				'alias' => 'GuardianStudents',
 				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'StudentGuardians.security_user_id']
+				'conditions' => [$this->_table->aliasField('id').' = '. 'GuardianStudents.guardian_user_id']
 			])
 			->group($this->_table->aliasField('id'));
 	}
@@ -37,7 +37,7 @@ class GuardianBehavior extends Behavior {
 
 	public function addBeforeAction(Event $event) {
 		$name = $this->_table->alias();
-		$this->_table->ControllerAction->addField('student_guardians.0.security_user_id', [
+		$this->_table->ControllerAction->addField('student_guardians.0.student_user_id', [
 			'type' => 'hidden', 
 			'value' => 0
 		]);
@@ -45,9 +45,8 @@ class GuardianBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		unset($this->_table->fields['default_identity_type']);
-
 		$this->_table->ControllerAction->field('name', []);
+		$this->_table->ControllerAction->field('default_identity_type', ['visible' => false]);
 		// $this->_table->ControllerAction->field('guardian_relation', []);
 		// $this->_table->ControllerAction->field('mobile_phone', []);
 

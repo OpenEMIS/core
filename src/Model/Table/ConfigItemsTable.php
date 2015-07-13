@@ -36,6 +36,8 @@ class ConfigItemsTable extends AppTable {
 		$this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('value', ['visible' => true]);
+
+		$this->ControllerAction->field('format', ['type' => 'custom_notes', 'visible' => false]);
 	}
 
 
@@ -98,6 +100,14 @@ class ConfigItemsTable extends AppTable {
 				if (isset($this->$validationRules)) {
 					$this->validator()->add('value', $this->$validationRules);
 				}
+			}
+
+			if ($entity->type == 'Custom Validation') {
+				$this->fields['format']['visible'] = true;
+				$this->fields['format']['value'] = '<ul><li>9 (Numbers)</li><li>a (Letter)</li><li>w (Alphanumeric)</li><li>* (Any Character)</li><li>? (Optional - any characters following will become optional)</li></ul>';
+
+				$this->fields['value']['attr']['onkeypress'] = 'return Config.inputMaskCheck(event)';
+
 			}
 		}
 	}
@@ -180,28 +190,44 @@ class ConfigItemsTable extends AppTable {
 						$attr['element'] = 'Configurations/with_prefix';
 						$attr['data'] = [];
 					}
-				// } else {
-				// 	if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-				// 		return date($entity->value);
-				// 	} else {
-				// 		return $entity->value;
-				// 	}
 				}
-
 			}
-			// pr($attr);
 		}
 		return $attr;
 	}
 
 	public function onGetValue(Event $event, Entity $entity) {
+		if ($entity->type == 'Custom Validation') {
+			$attr['type'] = 'string';
+			$event->subject()->HtmlField->includes['configItems'] = [
+				'include' => true,
+				'js' => [
+					'config'
+				]
+			];
+		}
 		return $this->recordValueForView('value', $entity);
 	}
-
 
 	public function onGetDefaultValue(Event $event, Entity $entity) {
 		return $this->recordValueForView('default_value', $entity);
 	}
+
+    public function onGetCustomNotesElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$fieldLabel = Inflector::humanize($attr['field']);
+		if (array_key_exists('label', $attr)) {
+			$fieldName = $attr['label'];
+		}
+		$fieldName = strtolower($attr['model'] . '-' . $attr['field']);
+		if (array_key_exists('fieldName', $attr)) {
+			$fieldName = $attr['fieldName'];
+		}
+		if (!array_key_exists('value', $attr)) {
+			$attr['value'] = '* Please set the note in your model *';
+		}
+		$value = '<div class="input text"><label for="'.$fieldName.'">'.$fieldLabel.'</label><div class="button-label" style="width: 65%;">'.$attr['value'].'</div></div>';
+		return $value;
+    }
 
 
 /******************************************************************************************************************
