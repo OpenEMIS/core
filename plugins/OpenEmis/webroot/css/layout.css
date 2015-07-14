@@ -3382,11 +3382,6 @@ footer {
 		float: left;
 		margin: 1px 0 0 10px;		
 	}
-
-	/* ERROR PAGES */
-	.error-wrapper {
-		width: 100%;
-	}
 }
 
 @media (max-width: 480px) {
