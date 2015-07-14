@@ -9,7 +9,7 @@ use Cake\Event\Event;
 class AcademicPeriodLevelsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function beforeAction(Event $event) {

@@ -9,6 +9,6 @@ class StaffPositionGradesTable extends AppTable {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
 				
-		$this->hasMany('Positions', ['className' => 'Institution.Positions']);
+		$this->hasMany('Positions', ['className' => 'Institution.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
