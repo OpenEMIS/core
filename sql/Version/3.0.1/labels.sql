@@ -152,5 +152,6 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 -- StaffActivities
 ('StaffActivities', 'created', NULL, 'Modified On'),
 ('StaffActivities', 'created_user_id', NULL, 'Modified By'),
-('StaffActivities', 'model', NULL, 'Module')
+('StaffActivities', 'model', NULL, 'Module'),
+('StudentBehaviours', 'security_user_id', NULL, 'Student')
 ;

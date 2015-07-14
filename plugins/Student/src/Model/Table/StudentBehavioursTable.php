@@ -7,6 +7,8 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
+
 
 class StudentBehavioursTable extends AppTable {
 	public function initialize(array $config) {
@@ -18,14 +20,17 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		$this->ControllerAction->field('academic_period');
-		$this->ControllerAction->field('section');
-		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
+		$this->ControllerAction->field('academic_period', ['type' => 'select']);
+		$this->ControllerAction->field('section', ['type' => 'select']);
+		$this->ControllerAction->field('security_user_id', ['type' => 'string']);
 		$this->fields['student_behaviour_category_id']['type'] = 'select';
-
+		$this->fields['academic_period']['visible'] = true;
+		$this->fields['section']['visible'] = true;
 	}	
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		$this->fields['academic_period']['visible'] = false;
+		$this->fields['section']['visible'] = false;
 		$this->fields['description']['visible'] = false;
 		$this->fields['action']['visible'] = false;
 		$this->fields['time_of_behaviour']['visible'] = false;
@@ -70,9 +75,40 @@ class StudentBehavioursTable extends AppTable {
 			$this->controller->set(compact('sectionOptions', 'selectedSection'));
 			// End setup sections
 		}	
+		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$students = $Students
+						->findAllByInstitutionSiteSectionId($selectedSection)
+						->contain(['Users'])
+						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+						->toArray();
+	
+		$existingStudents = is_array($students) ? array_keys($students) : array();	
+
+		$settings['pagination'] = false;
+		$query
+			->find('all')
+			->contain(['Users'])
+		    ->where(function ($exp, $q) use ($existingStudents) {
+		        return $exp->in('security_user_id', $existingStudents);	
+		    })
+		    ->andWhere(['institution_site_id' => $institutionId])
+		    ;
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function viewBeforeAction(Event $event) {
+		$this->fields['academic_period']['visible'] = false;
+		$this->fields['section']['visible'] = false;
+	}
+
+	public function editBeforeAction(Event $event) {
+		$this->fields['academic_period']['visible'] = false;
+		$this->fields['section']['visible'] = false;
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly']);
+		$this->ControllerAction->setFieldOrder(['security_user_id', 'student_behaviour_category_id']);
+	}
+
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
 		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id']);
 	}
 
@@ -157,7 +193,7 @@ class StudentBehavioursTable extends AppTable {
 			}
 			
 			$attr['options'] = $students;
-		}
+		} 
 		return $attr;
 	}
 
