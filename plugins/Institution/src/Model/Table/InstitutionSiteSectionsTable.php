@@ -740,11 +740,10 @@ class InstitutionSiteSectionsTable extends AppTable {
         $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
 
         // TODO-Hanafi: add date conditions as commented below
-        // pr($startDate);
-        // pr($endDate);
         $Staff = $this->Institutions->InstitutionSiteStaff;
 		$query = $Staff->find('all')
 						->find('withBelongsTo')
+						->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
 						->find('byInstitution', ['Institutions.id'=>$this->institutionId])
 						->where([
 							$Staff->aliasField('end_date') . ' IS NULL',
