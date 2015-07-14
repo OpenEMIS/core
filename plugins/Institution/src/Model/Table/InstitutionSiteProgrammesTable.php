@@ -21,7 +21,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 
-		$this->hasMany('InstitutionSiteGrades',	['className' => 'Institution.InstitutionSiteGrades']);
+		$this->hasMany('InstitutionSiteGrades',	['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		/**
 		 * Short cuts to initialised models set in relations.
@@ -174,7 +174,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 			$programmeOptions = $this->EducationProgrammes
 				->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
 				->find('withCycle')
-				->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $levelId])
+				->where(['EducationCycles.education_level_id' => $levelId])
 				->toArray();
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			$this->fields['education_programme_id']['attr']['value'] = $entity->education_programme_id;
@@ -229,7 +229,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 			$this->_programmeOptions = $this->EducationProgrammes
 				->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
 				->find('withCycle')
-				->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $levelId])
+				->where(['EducationCycles.education_level_id' => $levelId])
 				->toArray();
 			$attr['options'] = $this->_programmeOptions;
 
