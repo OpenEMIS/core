@@ -24,9 +24,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true]);
-		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions', 'dependent' => true]);
-		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances', 'dependent' => true]);
+		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
