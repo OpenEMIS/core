@@ -1,6 +1,7 @@
 <?php
 namespace ControllerAction\View\Helper;
 
+use ArrayObject;
 use Cake\View\UrlHelper;
 use Cake\Event\Event;
 use Cake\View\Helper;
@@ -80,8 +81,16 @@ class HtmlFieldHelper extends Helper {
 		return $html;
 	}
 
-	public function includes() {
-		foreach ($this->includes as $include) {
+	public function includes($table=null, $action) {
+		$includes = new ArrayObject($this->includes);
+
+		if (!is_null($table)) {
+			// trigger event to update inclusion of css/js files
+			$eventKey = 'ControllerAction.Model.onUpdateIncludes';
+			$event = $this->dispatchEvent($table, $eventKey, null, [$includes, $action]);
+		}
+
+		foreach ($includes as $include) {
 			if ($include['include']) {
 				if (array_key_exists('css', $include)) {
 					echo $this->Html->css($include['css'], ['block' => true]);

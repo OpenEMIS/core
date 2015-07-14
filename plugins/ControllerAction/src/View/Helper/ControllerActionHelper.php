@@ -349,7 +349,7 @@ class ControllerActionHelper extends Helper {
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
 			}
 		}
-		$this->HtmlField->includes();
+		$this->HtmlField->includes($table, 'edit');
 		return $html;
 	}
 
@@ -478,6 +478,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
+		$this->HtmlField->includes($table, 'view');
 		return $html;
 	}
 }
