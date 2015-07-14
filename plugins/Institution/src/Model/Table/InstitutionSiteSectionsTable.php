@@ -47,6 +47,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+
+		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		if (array_key_exists($this->alias(), $this->request->data)) {
+			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		} else if ($this->action == 'edit' && isset($this->request->pass[1])) {
+			$id = $this->request->pass[1];
+			if ($this->exists($id)) {
+				$this->_selectedAcademicPeriodId = $this->get($id)->academic_period_id;
+			}
+		}
+
 		$this->ControllerAction->field('section_number', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('modified', ['visible' => false]);
@@ -88,6 +99,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'name', 'security_user_id', 'male_students', 'female_students', 'classes',
 		]);
+
 	}
 
 
@@ -223,7 +235,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'InstitutionSiteShifts',
 			'Staff',
 			'InstitutionSiteSectionGrades.EducationGrades',
-			'InstitutionSiteSectionStudents.Users.Genders'
+			'InstitutionSiteSectionStudents.Users.Genders',
+			'InstitutionSiteSectionStudents.EducationGrades'
 		]);
 	}
 
@@ -464,7 +477,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		// $this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
 
-		// pr($data);
+		// pr($data);die;
 		/**
 		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
@@ -487,6 +500,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
+		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -548,9 +562,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		if (array_key_exists($this->alias(), $this->request->data)) {
-			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
-		}
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
