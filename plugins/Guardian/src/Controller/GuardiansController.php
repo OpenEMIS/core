@@ -22,6 +22,8 @@ class GuardiansController extends AppController {
 		// 	'tableCellKey' => ['className' => 'Guardian.GuardianCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		// ]);
 
+        $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Guardian.GuardianActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+
 		$this->ControllerAction->models = [
 		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 		'Contacts' 			=> ['className' => 'User.Contacts'],
@@ -29,7 +31,7 @@ class GuardiansController extends AppController {
 		'Languages' 		=> ['className' => 'User.UserLanguages'],
 		'Comments' 			=> ['className' => 'User.Comments'],
 		'Attachments' 		=> ['className' => 'User.Attachments'],
-		// 'History' 			=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
+		'History' 			=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
 		];
 
 		$this->loadComponent('Paginator');

@@ -69,6 +69,7 @@ class UsersTable extends AppTable {
 		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentActivities', 		['className' => 'Student.StudentActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('GuardianActivities', 			['className' => 'Guardian.GuardianActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',

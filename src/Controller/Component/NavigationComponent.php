@@ -404,6 +404,7 @@ class NavigationComponent extends Component {
 					'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Languages']],
 					'Comments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Comments']],
 					'Attachments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Attachments']],
+					'History' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'History']]
 				]
 			],
 		];
