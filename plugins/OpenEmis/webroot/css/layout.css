@@ -1350,6 +1350,9 @@ input[type="checkbox"] {
 	-ms-overflow-x: scroll;
 	    overflow-x: scroll;  
 	overflow-x: visible;
+}
+
+.tab-content .table-responsive {
 	margin-top: -1px;
 }
 
