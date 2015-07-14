@@ -22,10 +22,10 @@ class AbsencesTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		$query = $this->request->query;
 
-		$this->fields['last_date_absent']['visible'] = false;
-		$this->fields['full_day_absent']['visible'] = false;
-		$this->fields['start_time_absent']['visible'] = false;
-		$this->fields['end_time_absent']['visible'] = false;
+		$this->fields['end_date']['visible'] = false; //Need to change last_date_absence to end_date
+		$this->fields['full_day']['visible'] = false; //Need to change from full_day_absence to full_day
+		$this->fields['start_time']['visible'] = false; //Need to change from start_time_absence to start_time
+		$this->fields['end_time']['visible'] = false; //Need to change from end_time_absence to end_time
 		$this->fields['comment']['visible'] = false;
 		$this->fields['security_user_id']['visible'] = false;
 
@@ -33,10 +33,10 @@ class AbsencesTable extends AppTable {
 		$this->ControllerAction->addField('time', []);
 
 		$order = 0;
-		$this->ControllerAction->setFieldOrder('first_date_absent', $order++);
+		$this->ControllerAction->setFieldOrder('start_date', $order++); //Need to change first_date_absence to start date
 		$this->ControllerAction->setFieldOrder('days', $order++);
 		$this->ControllerAction->setFieldOrder('time', $order++);
 		$this->ControllerAction->setFieldOrder('staff_absence_reason_id', $order++);
-		$this->ControllerAction->setFieldOrder('absence_type', $order++);
+		//$this->ControllerAction->setFieldOrder('absence_type', $order++); //Remove this line as the absence_type has been drop in the new table structure
 	}
 }
