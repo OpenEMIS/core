@@ -7,6 +7,6 @@ use Cake\Validation\Validator;
 class StudentStatusesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
-		$this->hasMany('Identities', ['className' => 'User.Identities']);
+		$this->hasMany('Identities', ['className' => 'User.Identities', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
