@@ -33,19 +33,21 @@ class TranslationsTable extends AppTable {
 
 		// Setting the options to choose from the list of locale
 		$localeOptions = $this->Localization->getOptions();
+		
+		unset($localeOptions[$defaultLocale]);
 
-		//$this->controller->set(compact('localeOptions');
+		$this->controller->set(compact('localeOptions'));
 		// Get the selected options
-		$selectedOption = $this->queryString('id', $localeOptions);
+		$selectedOption = $this->queryString('translations_id', $localeOptions);
 		$this->controller->set('selectedOption', $selectedOption);
 
 		// Getting the elements for the toolbar
 		// need to make a controls.ctp
 		$toolbarElements = [
-			['name' => 'Translation.controls', 'data' => [], 'options' => []]
+			['name' => 'Localization.controls', 'data' => [], 'options' => []]
 		];
 
-		//$this->controller->set('toolbarElements', $toolbarElements);
+		$this->controller->set('toolbarElements', $toolbarElements);
 
 		//pr($this->Localization->getOptions());
 		// $this->request
