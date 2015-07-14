@@ -94,6 +94,7 @@ class StudentsController extends AppController {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
+		
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
 			$action = false;
@@ -108,7 +109,7 @@ class StudentsController extends AppController {
 				if (strtolower($action) != 'index')	{
 					if (in_array('Guardian', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
-							$persona = $this->Users->get($params['pass'][1]);
+							$persona = $model->get($params['pass'][1]);
 							if (is_object($persona)) {
 								$this->Navigation->addCrumb($persona->name);
 							}
