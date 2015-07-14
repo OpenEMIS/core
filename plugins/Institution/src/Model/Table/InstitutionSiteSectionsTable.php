@@ -27,8 +27,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->belongsTo('InstitutionSiteShifts', 	['className' => 'Institution.InstitutionSiteShifts','foreignKey' => 'institution_site_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades']);
-		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('InstitutionSiteClasses', [
 			'className' => 'Institution.InstitutionSiteClasses',
@@ -86,8 +86,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'security_user_id', 
-			'male_students', 'female_students', 'classes',
+			'name', 'security_user_id', 'male_students', 'female_students', 'classes',
 		]);
 	}
 
@@ -268,7 +267,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		/**
 		 * add/edit form setup
 		 */
-		$staffOptions = $this->getStaffOptions();
+		$staffOptions = $this->getStaffOptions('add');
 		if ($this->_selectedGradeType == 'single') {
 	    	if (array_key_exists($this->alias(), $this->request->data)) {
 		    	$_data = $this->request->data[$this->alias()];
@@ -372,7 +371,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 			$data['InstitutionSiteSections'] = $data['MultiSections'];
 			unset($data['MultiSections']);
-			
+
 			$sections = $this->newEntities($data['InstitutionSiteSections']);
 			$error = false;
 			foreach ($sections as $section) {
@@ -596,18 +595,18 @@ class InstitutionSiteSectionsTable extends AppTable {
 		if ($action == 'edit') {
 
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['options'] = $this->getStaffOptions();
+				$attr['options'] = $this->getStaffOptions('edit');
 			}
 
 		} elseif ($action == 'add') {
 
 			// $attr['type'] = 'select';
 
-		} elseif ($action == 'view') {
+		} elseif (in_array($action, ['view', 'index'])) {
 
 			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['options'] = $this->getStaffOptions();
+				$attr['options'] = $this->getStaffOptions('view');
 			}
 			
 		}
@@ -733,7 +732,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $studentOptions;
 	}
 
-	protected function getStaffOptions() {
+	protected function getStaffOptions($action='edit') {
 		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
@@ -769,7 +768,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 						// 		]
 						// ])
 							;
-		$options = [];
+		if (in_array($action, ['edit', 'add'])) {
+			$options = [0=>'-- Select Teacher or Leave Blank --'];
+		} else {
+			$options = [0=>'No Teacher Assigned'];
+		}
 		foreach ($query->toArray() as $key => $value) {
 			if ($value->has('user')) {
 				$options[$value->user->id] = $value->user->name;
