@@ -111,7 +111,7 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
-		if ($action == 'add') {
+		if ($action == 'add' || $action == 'edit') {
 			$staff = [];
 
 			$institutionId = $this->Session->read('Institutions.id');
