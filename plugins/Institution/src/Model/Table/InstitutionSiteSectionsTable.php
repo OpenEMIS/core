@@ -47,6 +47,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+
+		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		if (array_key_exists($this->alias(), $this->request->data)) {
+			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		} else if ($this->action == 'edit' && isset($this->request->pass[1])) {
+			$id = $this->request->pass[1];
+			if ($this->exists($id)) {
+				$this->_selectedAcademicPeriodId = $this->get($id)->academic_period_id;
+			}
+		}
+
 		$this->ControllerAction->field('section_number', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('modified', ['visible' => false]);
@@ -86,9 +97,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'security_user_id', 
-			'male_students', 'female_students', 'classes',
+			'name', 'security_user_id', 'male_students', 'female_students', 'classes',
 		]);
+
 	}
 
 
@@ -224,7 +235,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'InstitutionSiteShifts',
 			'Staff',
 			'InstitutionSiteSectionGrades.EducationGrades',
-			'InstitutionSiteSectionStudents.Users.Genders'
+			'InstitutionSiteSectionStudents.Users.Genders',
+			'InstitutionSiteSectionStudents.EducationGrades'
 		]);
 	}
 
@@ -268,7 +280,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		/**
 		 * add/edit form setup
 		 */
-		$staffOptions = $this->getStaffOptions();
+		$staffOptions = $this->getStaffOptions('add');
 		if ($this->_selectedGradeType == 'single') {
 	    	if (array_key_exists($this->alias(), $this->request->data)) {
 		    	$_data = $this->request->data[$this->alias()];
@@ -372,7 +384,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 			$data['InstitutionSiteSections'] = $data['MultiSections'];
 			unset($data['MultiSections']);
-			
+
 			$sections = $this->newEntities($data['InstitutionSiteSections']);
 			$error = false;
 			foreach ($sections as $section) {
@@ -465,7 +477,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		// $this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
 
-		// pr($data);
+		// pr($data);die;
 		/**
 		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
@@ -488,6 +500,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
+		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -553,9 +566,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		if (array_key_exists($this->alias(), $this->request->data)) {
-			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
-		}
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
@@ -600,18 +610,18 @@ class InstitutionSiteSectionsTable extends AppTable {
 		if ($action == 'edit') {
 
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['options'] = $this->getStaffOptions();
+				$attr['options'] = $this->getStaffOptions('edit');
 			}
 
 		} elseif ($action == 'add') {
 
 			// $attr['type'] = 'select';
 
-		} elseif ($action == 'view') {
+		} elseif (in_array($action, ['view', 'index'])) {
 
 			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['options'] = $this->getStaffOptions();
+				$attr['options'] = $this->getStaffOptions('view');
 			}
 			
 		}
@@ -739,7 +749,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $studentOptions;
 	}
 
-	protected function getStaffOptions() {
+	protected function getStaffOptions($action='edit') {
 		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
@@ -775,7 +785,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 						// 		]
 						// ])
 							;
-		$options = [];
+		if (in_array($action, ['edit', 'add'])) {
+			$options = [0=>'-- Select Teacher or Leave Blank --'];
+		} else {
+			$options = [0=>'No Teacher Assigned'];
+		}
 		foreach ($query->toArray() as $key => $value) {
 			if ($value->has('user')) {
 				$options[$value->user->id] = $value->user->name;
