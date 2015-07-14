@@ -28,48 +28,37 @@ class TranslationsTable extends AppTable {
 
 	// Search component
 	public function indexBeforeAction(Event $event){
+		// By default English has to be there
 		$defaultLocale = 'en';
-		$defaultLocaleName = 'English';
 
-		// Setting the options to choose from the list of locale
+		// Get the localization option from localization component
 		$localeOptions = $this->Localization->getOptions();
 		
-		unset($localeOptions[$defaultLocale]);
-
+		if(array_key_exists($defaultLocale, $localeOptions)){
+			unset($localeOptions[$defaultLocale]);
+		}
 		$this->controller->set(compact('localeOptions'));
-		// Get the selected options
+
 		$selectedOption = $this->queryString('translations_id', $localeOptions);
 		$this->controller->set('selectedOption', $selectedOption);
 
-		// Getting the elements for the toolbar
-		// need to make a controls.ctp
 		$toolbarElements = [
 			['name' => 'Localization.controls', 'data' => [], 'options' => []]
 		];
-
 		$this->controller->set('toolbarElements', $toolbarElements);
 
-		//pr($this->Localization->getOptions());
-		// $this->request
-		//pr($this->schema());
-		//$this->fields;
-
-		// 'ar' => ['name' => 'العربية', 'direction' => 'rtl'],
-		// 'zh' => ['name' => '中文', 'direction' => 'ltr'],
-		// 'en' => ['name' => 'English', 'direction' => 'ltr'],
-		// 'fr' => ['name' => 'Français', 'direction' => 'ltr'],
-		// 'ru' => ['name' => 'русский', 'direction' => 'ltr'],
-		// 'es' => ['name' => 'español', 'direction' => 'ltr']
-
-
+		$selected = 'ar';
+		if(array_key_exists($selectedOption, $localeOptions)){
+			$selected = $selectedOption;
+		}
+		
 		$this->ControllerAction->setFieldOrder([
-			 $defaultLocale, 'zh'
+			 $defaultLocale, $selected
 		]);
 		$this->ControllerAction->setFieldVisible(['index'], [
-			$defaultLocale, 'zh'
+			$defaultLocale, $selected
 		]);
 	}
-
 }
 
 ?>
