@@ -16,7 +16,7 @@
 	</div>
 	<?php endif;?>
 
-	<div class="table-in-view">
+	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
