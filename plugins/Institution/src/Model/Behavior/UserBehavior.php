@@ -46,11 +46,12 @@ class UserBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvents = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
 			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
-			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
 			'ControllerAction.Model.onBeforeDelete' => 'onBeforeDelete',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
