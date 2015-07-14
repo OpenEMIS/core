@@ -33,7 +33,7 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['date_of_behaviour', 'title', 'student_behaviour_category_id', 'institution_site_id']);
 
 		$toolbarElements = [
-			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
+			['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
 		];
 		$this->controller->set('toolbarElements', $toolbarElements);
 
