@@ -28,15 +28,24 @@ class TranslationsTable extends AppTable {
 
 	// Search component
 	public function indexBeforeAction(Event $event){
+		$defaultLocale = 'en';
+		$defaultLocaleName = 'English';
 
-		$options = $this->Localization->getOptions();
+		// Setting the options to choose from the list of locale
+		$localeOptions = $this->Localization->getOptions();
+
+		//$this->controller->set(compact('localeOptions');
+		// Get the selected options
+		$selectedOption = $this->queryString('id', $localeOptions);
+		$this->controller->set('selectedOption', $selectedOption);
+
 		// Getting the elements for the toolbar
 		// need to make a controls.ctp
 		$toolbarElements = [
 			['name' => 'Translation.controls', 'data' => [], 'options' => []]
 		];
 
-		//$this->controller->set(compact('toolbarElements'));
+		//$this->controller->set('toolbarElements', $toolbarElements);
 
 		//pr($this->Localization->getOptions());
 		// $this->request
@@ -50,10 +59,12 @@ class TranslationsTable extends AppTable {
 		// 'ru' => ['name' => 'русский', 'direction' => 'ltr'],
 		// 'es' => ['name' => 'español', 'direction' => 'ltr']
 
-		$defaultLocale = I18n::locale();
 
 		$this->ControllerAction->setFieldOrder([
-			 
+			 $defaultLocale, 'zh'
+		]);
+		$this->ControllerAction->setFieldVisible(['index'], [
+			$defaultLocale, 'zh'
 		]);
 	}
 
