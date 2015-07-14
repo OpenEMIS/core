@@ -1,0 +1,2 @@
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('InstitutionSiteStudentAbsences', 'security_user_id', 'Student', '0', '0000-00-00 00:00:00');
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StaffAbsences', 'security_user_id', 'Staff', '0', '0000-00-00 00:00:00');
