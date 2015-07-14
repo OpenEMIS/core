@@ -20,7 +20,7 @@ class StudentBehavioursTable extends AppTable {
 	public function beforeAction() {
 		$this->ControllerAction->field('academic_period');
 		$this->ControllerAction->field('section');
-		$this->fields['security_user']['type'] = 'select';
+		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
 		$this->fields['student_behaviour_category_id']['type'] = 'select';
 
 	}	
@@ -73,7 +73,7 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user', 'student_behaviour_category_id']);
+		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -85,29 +85,26 @@ class StudentBehavioursTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
 
-		// $periodOptions = array();
-		// $matching = $AcademicPeriod
-		// 	->find('all')
-		// 	->join([
-		// 		'table' => 'institution_site_sections',
-		// 		'alias' => 'InstitutionSiteSections',
-		// 		'type' => 'right',
-		// 		'conditions' => ['InstitutionSiteSections.institution_site_id' => $institutionId],
-		// 	])
-		// 	->contain(['InstitutionSiteSections'])
-		// 	->order(['AcademicPeriods.name', 'InstitutionSiteSections.name'])
-		// 	; //->select(['InstitutionSiteSections.name', 'AcademicPeriods.id', 'AcademicPeriods.name'])
+		$periodOptions = array();
 
-		// foreach($matching as $key=>$academic) {
-		// 	$periodOptions[$academic->id] = (!is_null($academic->institution_site_sections)) ? $academic->name : $academic->name." [No Sections]";
-		// }
+		$matching = $AcademicPeriod
+					->find('all')
+					->leftJoin(
+						 ['InstitutionSiteSections' => 'institution_site_sections'],	
+						[
+									'InstitutionSiteSections.academic_period_id = AcademicPeriods.id', 
+									'InstitutionSiteSections.institution_site_id' => $institutionId,
+										
+						])
+					->group(['AcademicPeriods.name'])
+					->where(['AcademicPeriods.parent_id <> 0'])
+					->select(['AcademicPeriods.name', 'InstitutionSiteSections.id', 'AcademicPeriods.id'])	
+					->order(['AcademicPeriods.name DESC', 'InstitutionSiteSections.name ASC'])
+					;
 
-		// foreach($periodOptions as $key=>$periodOption){
-		// 	$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		// 	$sectionsAvailable = $AcademicPeriod->find('list')->autoFields(true)->contain(['InstitutionSiteSections'])->where(['institution_site_sections.institution_site_id' => $key]);
-		// 	pr($sectionsAvailable);
-		// }
-
+		foreach($matching as $key=>$academic) {
+			$periodOptions[$academic->id] = (!is_null($academic->InstitutionSiteSections['id'])) ? $academic->name : $academic->name." [No Sections]";
+		}	
 
 		$attr['options'] = $periodOptions;
 		$attr['onChangeReload'] = 'changePeriod';
