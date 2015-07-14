@@ -185,6 +185,10 @@ trait MessagesTrait {
 		'StudentAttendances' => [
 			'noSections' => 'There are no available Sections.',
 		],
+		'InstitutionSiteStudentAbsences' => [
+			'noSections' => 'There are no available Sections.',
+			'noStudents' => 'There are no available Students.'
+		],
 		'StaffAttendances' => [
 			'noStaff' => 'There are no available Staff.',
 		],
