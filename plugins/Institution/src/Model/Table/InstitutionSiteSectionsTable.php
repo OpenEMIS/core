@@ -528,9 +528,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 				}
 			}
 			/**
-			 * Insert the newly record into the UI table & unset the record from studentOptions
+			 * Insert the newly added record into the UI table & unset the record from studentOptions
 			 */
-			if (array_key_exists('student_id', $this->request->data)) {
+			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']>0) {
 				$id = $this->request->data['student_id'];
 				if ($id != 0) {
 					$students[] = $this->createVirtualStudentEntity($id, $entity);
