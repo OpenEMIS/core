@@ -1326,6 +1326,7 @@ input[type="checkbox"] {
 	background-color: #FFF !important;
 	margin-top: -1px;
 	padding: 7px 10px 6px !important;
+	color: #555 !important;
 }
 
 .nav-tabs > li.active > a:focus {
@@ -3031,6 +3032,50 @@ footer {
 .login-box .btn-login:hover {
 	background-color: #6B6B6B;
 	transition: all 1s ease;	
+}
+
+/* ERROR PAGE */
+.error-wrapper {
+	padding: 20px;
+	min-height: 145px;
+	width: 50%;
+	margin: 0 auto;
+}
+
+.error-icon {
+	width: 100%;
+	display: inline-block;
+	float: left;
+	margin: 0 auto;	
+	text-align: center;	
+	padding: 20px;
+}
+
+.error-icon i {
+	font-size: 200px;
+	color: #999;
+}
+
+.error-text,
+.error-buttons {
+	width: 100%;
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+.error-text h5 {
+	color: #CC5C5C;	
+	margin: 15px 0;	
+	line-height: 1.4em;
+}	
+
+.error-text a {
+	color: #CC5C5C;		
+	text-decoration: underline;		
+}
+
+.error-text a:hover {
+	text-decoration: none;
 }
 
 /* Small devices (tablets, 768px and up) */
