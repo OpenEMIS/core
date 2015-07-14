@@ -91,8 +91,8 @@ class NavigationComponent extends Component {
 			$navigations['items']['Students']['items'] = $this->getStudentNavigation();
 		} else if ($controller->name == 'Staff' && $action != 'index') {
 			$navigations['items']['Staff']['items'] = $this->getStaffNavigation();
-		} else if ($controller->name == 'Guardian' && $action != 'index') {
-			$navigations['items']['Guardian']['items'] = $this->getGuardianNavigation();
+		} else if ($controller->name == 'Guardians' && $action != 'index') {
+			$navigations['items']['Guardians']['items'] = $this->getGuardianNavigation();
 		} else {
 			// do nothing
 		}
@@ -116,10 +116,10 @@ class NavigationComponent extends Component {
 					'collapse' => true,
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
-				// 'Guardians' => [
-				// 	'collapse' => true,
-				// 	'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
-				// ],
+				'Guardians' => [
+					'collapse' => true,
+					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
+				],
 				'Reports' => [
 					'collapse' => true,
 					'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
@@ -314,7 +314,7 @@ class NavigationComponent extends Component {
 			'Details' => [
 				'collapse' => true,
 				'items' => [
-					// 'Guardians' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Guardians']],
+					'Guardians' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Guardians']],
 					'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes']],
 					'Sections' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
 					'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],
@@ -398,11 +398,12 @@ class NavigationComponent extends Component {
 			'General' => [
 				'collapse' => true,
 				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'view', $id]],
-					'Contacts' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Contacts']],
-					'Identities' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Identities']],
-					'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Languages']],
-					'Comments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardian', 'action' => 'Comments']]
+					'Overview' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'view', $id]],
+					'Contacts' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Contacts']],
+					'Identities' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Identities']],
+					'Languages' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Languages']],
+					'Comments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Comments']],
+					'Attachments' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Attachments']],
 				]
 			],
 		];

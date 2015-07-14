@@ -12,19 +12,9 @@ class GuardiansTable extends BaseTable {
 		parent::initialize($config);
 		$this->entityClass('User.User');
 		$this->addBehavior('Guardian.Guardian');
-		$this->addBehavior('Student.StudentGuardian', ['associatedModel' => $this->StudentGuardians]);
-
-
+		$this->addBehavior('Student.GuardianStudent', ['associatedModel' => $this->GuardianStudents]);
 		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->StudentGuardians]);
-	}
-
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $options, $id) {
-		// $process = function() use ($id, $options) {
-		// 	$entity = $this->InstitutionSiteStudents->get($id);
-		// 	return $this->InstitutionSiteStudents->delete($entity, $options->getArrayCopy());
-		// };
-		// return $process;
 	}
 
 	public function autoCompleteUserList() {
@@ -52,19 +42,42 @@ class GuardiansTable extends BaseTable {
 					->find('all')
 					->contain(['GuardianUsers'])
 					->where($conditions)
-					->group('GuardianUsers.id')
-					->order(['GuardianUsers.first_name asc']);
+					;
 
-					pr($list->toArray());
+			$session = $this->request->session();
+
+			if ($session->check('Students.security_user_id')) {
+				$student_user_id = $session->read('Students.security_user_id');
+				// need to form an exclude list
+				$excludeQuery = $this->StudentGuardians
+					->find()
+					->select(['guardian_user_id'])
+					->where(
+						['student_user_id' => $student_user_id]
+					)
+					->group('guardian_user_id')
+					;
+
+				$excludeList = [];
+				foreach ($excludeQuery as $key => $value) {
+					$excludeList[] = $value->guardian_user_id;
+				}
+
+				if(!empty($excludeList)) {
+					$list->where([$this->StudentGuardians->aliasField('guardian_user_id').' NOT IN' => $excludeList]);
+				}
+			}
+			
+			$list
+				->group('GuardianUsers.id')
+				->order(['GuardianUsers.first_name asc']);
 
 			$data = array();
+
 			foreach ($list as $obj) {
-
-				//pr($obj->user);
-
 				$data[] = array(
-					'label' => $obj->user->nameWithId,
-					'value' =>  $obj->user->id
+					'label' => $obj->guardian_user->nameWithId,
+					'value' =>  $obj->guardian_user->id
 				);
 			}
 			
