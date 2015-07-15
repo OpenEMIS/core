@@ -18,6 +18,15 @@ class SystemGroupsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->hasOne('Institutions', ['className' => 'Institution.Institutions']);
+
+		$this->belongsToMany('Users', [
+			'className' => 'User.Users',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_group_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
 	}
 
 	public function beforeAction(Event $event) {
