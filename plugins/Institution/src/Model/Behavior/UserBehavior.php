@@ -308,7 +308,7 @@ class UserBehavior extends Behavior {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'reload';
 		if (empty($attr['options'])) {
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.academicPeriod');
 		}
@@ -334,7 +334,7 @@ class UserBehavior extends Behavior {
 			}
 		}
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'reload';
 		$attr['options'] = [];
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
@@ -374,7 +374,7 @@ class UserBehavior extends Behavior {
 		}
 
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'reload';
 		$attr['options'] = [];
 		if (isset($educationProgrammeId)) {
 			$InstitutionSiteGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
@@ -441,7 +441,7 @@ class UserBehavior extends Behavior {
 		if (empty($attr['options'])) {
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.institutionSitePositionId');
 		}
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'reload';
 
 		return $attr;
 	}
@@ -470,7 +470,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'reload';
 		return $attr;
 	}
 
