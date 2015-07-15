@@ -22,6 +22,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Network\Response;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Exception\NotFoundException;
 
 class ControllerActionComponent extends Component {
