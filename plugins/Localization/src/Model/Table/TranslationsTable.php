@@ -84,9 +84,10 @@ class TranslationsTable extends AppTable {
 			$toolbarButtons['download']['type'] = 'button';
 			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
 			$toolbarButtons['download']['attr'] = $attr;
-			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$toolbarButtons['download']['url'] = "/Localization/js/translations.js";
-			$toolbarButtons['download']['onchange'] = "something()";
+			$toolbarButtons['download']['attr']['title'] = __('Compile');
+			$toolbarButtons['download']['attr']['onclick'] = 'Translations.compile(this);';
+			$toolbarButtons['download']['attr']['url-post'] = '/Localization/js/translations.js';
+			$toolbarButtons['download']['url'] = "";
 		}
     }
 }
