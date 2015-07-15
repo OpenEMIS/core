@@ -10,9 +10,6 @@ var Translations = {
 			},
 			success: function(data) {
 				console.log('success');
-			},
-			error: function(jqXHR, textStatus, errorThrown){
-				console.log('error');
 			}
 		});
 	}	

@@ -13,11 +13,7 @@ class TranslationsTable extends AppTable {
 
 	// Initialisation
 	public function initialize(array $config) {
-		$config['Modified'] = false;
-		$config['Created'] = false;
 		parent::initialize($config);
-		$this->belongsTo('ModifiedUser', ['className' => 'Security.Users', 'foreignKey' => 'modified_user_id']);
-		$this->belongsTo('CreatedUser', ['className' => 'Security.Users', 'foreignKey' => 'created_user_id']);
 	}
 
 	// Has to be implemented before a button can be added
@@ -26,13 +22,6 @@ class TranslationsTable extends AppTable {
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
-
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('modified', ['visible' => false]);
-		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
-		$this->ControllerAction->field('created', ['visible' => false]);
-		$this->ControllerAction->field('created_user_id', ['visible' => false]);
-	}
 
 	// Search component
 	public function indexBeforeAction(Event $event){
@@ -56,9 +45,9 @@ class TranslationsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 
 		$selected = 'ar';
-		if(array_key_exists($selectedOption, $localeOptions)){
-			$selected = $selectedOption;
-		}
+		// if(array_key_exists($selectedOption, $localeOptions)){
+		// 	$selected = $selectedOption;
+		// }
 		
 		$this->ControllerAction->setFieldOrder([
 			 $defaultLocale, $selected
@@ -86,8 +75,12 @@ class TranslationsTable extends AppTable {
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Compile');
 			$toolbarButtons['download']['attr']['onclick'] = 'Translations.compile(this);';
+			$url = "";
 			$query = $this->request->query('translations_id');
-			$toolbarButtons['download']['url'] = "?translations_id=".$query;
+			if (isset($query)) {
+				$url['translations_id'] = $query;
+			}
+			$toolbarButtons['download']['url'] = $url;
 		}
     }
 }
