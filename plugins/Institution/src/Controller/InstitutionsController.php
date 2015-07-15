@@ -18,6 +18,9 @@ class InstitutionsController extends AppController  {
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
+			'Fields' 			=> ['className' => 'Institution.InstitutionCustomFields'],
+			'Pages' 			=> ['className' => 'Institution.InstitutionCustomForms'],
+
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
 
