@@ -140,10 +140,9 @@ class InstitutionAssessmentsTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($selectedStatus == 2) {	//Completed
-			$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
 			$rejectBtn = ['reject' => $buttons['view']];
 			$rejectBtn['reject']['url']['action'] = 'Assessments';
 			$rejectBtn['reject']['url'][0] = 'reject';
