@@ -141,20 +141,24 @@ class User extends Entity {
     }
 
     protected function _getStaffStatus(){
-        $data = "";
-        $securityUserId = $this->id;
+		if (!empty($this->_properties['institution_site_staff'])) {
+			$StaffStatuses = TableRegistry::get('FieldOption.StaffStatuses');
+			$StaffStatusesList = $StaffStatuses->getList()->toArray();
 
-        $InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStaff');
-        $StaffStatus = $InstitutionSiteStudents
-                ->find()
-                ->contain(['StaffStatuses'])
-                ->where(['security_user_id' => $securityUserId])
-                ->first();
-     
-        if(!empty($StaffStatus->staff_status))
-            $data = $StaffStatus->staff_status->name;
+			$allStatuses = [];
+			foreach ($this->_properties['institution_site_staff'] as $key => $value) {
+				$allStatuses[] = $value->staff_status_id;
+			}
 
-        return $data;
+			foreach ($allStatuses as $key => $value) {
+				if (array_key_exists($value, $StaffStatusesList)) {
+					$allStatuses[$key] = $StaffStatusesList[$value];
+				} else {
+					unset($allStatuses[$key]);
+				}
+			}
+		}
+		return implode(', ', $allStatuses);
     }
 
     protected function _getProgrammeSection(){
@@ -188,17 +192,28 @@ class User extends Entity {
     	return $educationProgrammeName . '<span class="divider"></span>' . $sectionName;
     }
 
-    protected function _getPosition() {
-        $data = "";
-        $securityUserId = $this->id;
-        $InstitutionSiteStaffTable = TableRegistry::get('Institution.InstitutionSiteStaff');
-        $sitestaff =  $InstitutionSiteStaffTable
-                      ->find()
-                      ->contain(['Positions.StaffPositionTitles'])
-                      ->where([$InstitutionSiteStaffTable->aliasField('security_user_id') => $securityUserId])
-                      ->first();
-        $data = (!empty($sitestaff['position'])) ? $sitestaff['position']['staff_position_title']['name']: "";     
-        return $data;
-    }
+	protected function _getPosition($field) {
+		$allPositionsNames = [];
+		if (!empty($this->_properties['institution_site_staff'])) {
+			$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
+
+			$allPositions = [];
+			foreach ($this->_properties['institution_site_staff'] as $key => $value) {
+				$allPositions[] = $value->institution_site_position_id;
+			}
+
+			$data = $InstitutionSitePositions->find()
+				->select('StaffPositionTitles.name')
+				->contain(['StaffPositionTitles'])
+				->where([$InstitutionSitePositions->aliasField($InstitutionSitePositions->primaryKey()) . ' IN' => $allPositions])
+				;
+
+			$allPositionsNames = [];
+			foreach ($data as $key => $value) {
+				$allPositionsNames[] = $value->StaffPositionTitles->name;
+			}
+		}
+		return implode(', ', $allPositionsNames);
+	}
 
 }
