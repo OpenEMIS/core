@@ -31,9 +31,6 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		/**
-		 * This model uses TrackActivityBehavior
-		 */
 		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments', 'dependent' => true]);
 
@@ -177,43 +174,39 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+
         if ($entity->isNew()) {
-			// $addSecurityGroupParams = array(
-			// 	'SecurityGroup' => array(
-			// 		'name' => $this->data['InstitutionSite']['name']
-			// 	),
-			// 	'GroupInstitutionSite' => array(
-			// 		'0' => array(
-			// 			'institution_site_id' => $this->data['InstitutionSite']['id']
-			// 		)
-			// 	)
-			// );
-			// $securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
-			// if ($securityGroup) {
-			// 	$this->trackActivity = false;
-			// 	$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
-			// 	if (!$this->save()) {
-			// 		return false;
-			// 	}
-			// } else {
-			// 	return false;
-			// }
+
+			$data = ['name' => $entity->name];
+			$obj = $SecurityGroup->newEntity();
+			$obj = $SecurityGroup->patchEntity($obj, $data);
+			$securityGroup = $SecurityGroup->save($obj);
+			if ($securityGroup) {
+				$this->trackActivity = false;
+				$entity->security_group_id = $securityGroup->id;
+				if (!$this->save($entity)) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+
         } else {
-			// $securityGroupId = $this->field('security_group_id');
-			// if (!empty($securityGroupId)) {
-			// 	$this->SecurityGroup->read(null, $securityGroupId);
-			// 	if (is_object($this->SecurityGroup)) {
-			// 		$editSecurityGroupParams = [
-			// 			'SecurityGroup' => [
-			// 				'id' => $securityGroupId,
-			// 				'name' => $this->data['InstitutionSite']['name']
-			// 			]
-			// 		];
-			// 		if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
-			// 			return false;
-			// 		}
-			// 	}
-			// }
+
+			$securityGroupId = $entity->security_group_id;
+			if (!empty($securityGroupId)) {
+				$obj = $SecurityGroup->get($securityGroupId);
+				if (is_object($obj)) {
+					$data = ['name' => $entity->name];
+					$obj = $SecurityGroup->patchEntity($obj, $data);
+					$securityGroup = $SecurityGroup->save($obj);
+					if (!$securityGroup) {
+						return false;
+					}
+				}
+			}
+
         }
         return true;
 	}

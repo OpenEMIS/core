@@ -17,8 +17,7 @@ class SystemGroupsTable extends AppTable {
 		$this->table('security_groups');
 		parent::initialize($config);
 
-		$this->hasOne('Institutions', ['className' => 'Institution.Institutions']);
-
+		$this->hasOne('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'security_group_id']);
 		$this->belongsToMany('Users', [
 			'className' => 'User.Users',
 			'joinTable' => 'security_group_users',
