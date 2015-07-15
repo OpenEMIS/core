@@ -9,8 +9,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Network\Request;
+use Cake\Controller\Controller;
 
-class StudentGuardianBehavior extends Behavior {
+class GuardianStudentBehavior extends Behavior {
 	private $associatedModel;
 	public function initialize(array $config) {
 		$this->associatedModel = (array_key_exists('associatedModel', $config))? $config['associatedModel']: null;
@@ -34,13 +35,18 @@ class StudentGuardianBehavior extends Behavior {
 		$newEvents = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
+			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
+			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
+			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
+
+			'ControllerAction.Model.onBeforeDelete' => 'onBeforeDelete',
+
 			'ControllerAction.Model.onUpdateFieldGuardianRelationId' => 'onUpdateFieldGuardianRelationId',
 			'ControllerAction.Model.onUpdateFieldGuardianEducationLevelId' => 'onUpdateFieldGuardianEducationLevelId',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
-	// 		'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
-	// 		'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
-	// 		'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
+			
 		];
 
 		$events = array_merge($events,$newEvents);
@@ -49,6 +55,28 @@ class StudentGuardianBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event) {
 		// to set field order and other stuff
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function() use ($id, $options) {
+			// must also delete security roles here
+
+			$entity = $this->associatedModel->get($id);
+			$guardianUserId = $entity->guardian_user_id;
+
+			$remainingAssociatedCount = $this->associatedModel
+				->find()
+				->where([$this->associatedModel->aliasField('guardian_user_id') => $guardianUserId])
+				->count();
+			if ($remainingAssociatedCount<=1) {
+				// need to reinsert associated array so that still recognise user as a 'student' or 'staff'
+				$newAssociated = $this->associatedModel->newEntity(['guardian_user_id' => $guardianUserId]);
+				$this->associatedModel->save($newAssociated);
+			}
+			
+			return $this->associatedModel->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
 	}
 
 
@@ -75,11 +103,12 @@ class StudentGuardianBehavior extends Behavior {
 			}
 			$session = $this->_table->request->session();
 			$studentSecurityUserId = $session->read('Students.security_user_id');
-			$associationString = $this->_table->alias().'.'.$this->associatedModel->table().'.0.';
-			$this->_table->ControllerAction->field('security_user_id', ['type' => 'hidden', 'value' => $studentSecurityUserId, 'fieldName' => $associationString.'security_user_id']);
+			// pr($studentSecurityUserId);
+			$associationString = $this->_table->alias().'.'.Inflector::tableize($this->associatedModel->alias()).'.0.';
+			$this->_table->ControllerAction->field('student_user_id', ['type' => 'hidden', 'value' => $studentSecurityUserId, 'fieldName' => $associationString.'student_user_id']);
 
-			$this->_table->ControllerAction->field('guardian_relation_id', ['fieldName' => $associationString.'academic_period']);
-			$this->_table->ControllerAction->field('guardian_education_level_id', ['fieldName' => $associationString.'education_programme_id']);
+			$this->_table->ControllerAction->field('guardian_relation_id', ['fieldName' => $associationString.'guardian_relation_id']);
+			$this->_table->ControllerAction->field('guardian_education_level_id', ['fieldName' => $associationString.'guardian_education_level_id']);
 			$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
 														     'placeholder' => 'openEMIS ID or Name',
 														     'url' => '/Students/Guardians/autoCompleteUserList',
@@ -89,74 +118,65 @@ class StudentGuardianBehavior extends Behavior {
 					'guardian_relation_id', 'guardian_education_level_id'
 				, 'search'
 				]);	
-// 			Search
-// Guardian Relation
-// First Name
-// Last Name
-// Gender
-// Mobile Phone
-// Office Phone
-// Email
-// Address
-// Postal Code
-// Guardian Education Level
-// Comments
 		}
 	}
 
-	// public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-	// 	if (!array_key_exists('new', $this->_table->request->query)) {
-	// 		$newOptions = [];
-	// 		$newOptions['validate'] = false;
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if (!array_key_exists('new', $this->_table->request->query)) {
+			$newOptions = [];
+			$newOptions['validate'] = false;
 
-	// 		$arrayOptions = $options->getArrayCopy();
-	// 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-	// 		$options->exchangeArray($arrayOptions);
-	// 	}
-	// }
+			$arrayOptions = $options->getArrayCopy();
+			$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+			$options->exchangeArray($arrayOptions);
+		}
+	}
 
-	// public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-	// 	if (!array_key_exists('new', $this->_table->request->query)) {
-	// 		$timeNow = strtotime("now");
-	// 		$sessionVar = $this->_table->alias().'.add.'.strtotime("now");
-	// 		$session = $this->_table->request->session();
-	// 		$session->write($sessionVar, $this->_table->request->data);
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if (!array_key_exists('new', $this->_table->request->query)) {
+			$timeNow = strtotime("now");
+			$sessionVar = $this->_table->alias().'.add.'.strtotime("now");
+			$session = $this->_table->request->session();
+			$session->write($sessionVar, $this->_table->request->data);
 
-	// 		$currSearch = null;
-	// 		if (array_key_exists('search', $data[$this->_table->alias()])) {
-	// 			$currSearch = $data[$this->_table->alias()]['search'];
-	// 			unset($data[$this->_table->alias()]['search']);
-	// 		}
+			$currSearch = null;
+			if (array_key_exists('search', $data[$this->_table->alias()])) {
+				$currSearch = $data[$this->_table->alias()]['search'];
+				unset($data[$this->_table->alias()]['search']);
+			}
 
-	// 		if (!$entity->errors()) {
-	// 			if (!$currSearch) {
-	// 				$event->stopPropagation();
-	// 				return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
-	// 			} else {
-	// 				$data[$this->_table->alias()][$this->associatedModel->table()][0]['security_user_id'] = $currSearch;
-	// 				if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()][$this->associatedModel->table()][0]))) {
-	// 					$this->_table->ControllerAction->Alert->success('general.add.success');
-	// 				} else {
-	// 					$this->_table->ControllerAction->Alert->error('general.add.failed');
-	// 				}
-	// 				$event->stopPropagation();
-	// 				return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'index']);
-	// 			}
+			if (!$entity->errors()) {
+				if (!$currSearch) {
+					$event->stopPropagation();
+					return $this->_table->controller->redirect(['plugin' => 'Student', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
+				} else {
+					$data[$this->_table->alias()]['guardian_students'][0]['guardian_user_id'] = $currSearch;
+					if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()]['guardian_students'][0]))) {
+						$this->_table->ControllerAction->Alert->success('general.add.success');
+					} else {
+						$this->_table->ControllerAction->Alert->error('general.add.failed');
+					}
+					$event->stopPropagation();
+					return $this->_table->controller->redirect(['plugin' => 'Student', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'index']);
+				}
+			}
+		}
+	}
 
-	// 		}
-	// 	}
-	// }
-
-	// public function addAfterSave(Event $event, Controller $controller) {
-	// 	if (array_key_exists('new', $action)) {
-	// 		$session = $controller->request->session();
-	// 		$sessionVar = $this->_table->alias().'.add';
-	// 		$session->delete($sessionVar);
-	// 		unset($action['new']);
-	// 	}
-	// 	$event->stopPropagation();
-	// 	return $controller->redirect($action);
-	// }
+	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+		// that function removes the session and makes it redirect to 
+		// index without any named params
+		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
+		$action = $this->_table->ControllerAction->buttons['index']['url'];
+		if (array_key_exists('new', $action)) {
+			$session = $controller->request->session();
+			$sessionVar = $this->_table->alias().'.add';
+			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
+			unset($action['new']);
+		}
+		$event->stopPropagation();
+		return $controller->redirect($action);
+	}
 
 	// public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 	// 	$session = $this->_table->request->session();
@@ -388,16 +408,16 @@ class StudentGuardianBehavior extends Behavior {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		if (isset($entity->student_guardians)) {
-			if (array_key_exists(0, $entity->student_guardians)) {
+		if (isset($entity->guardian_students)) {
+			if (array_key_exists(0, $entity->guardian_students)) {
 				if (array_key_exists('view', $buttons)) {
-					$buttons['view']['url'][1] = $entity->student_guardians[0]->guardian_user_id;
+					$buttons['view']['url'][1] = $entity->guardian_students[0]->guardian_user_id;
 				}
 				if (array_key_exists('edit', $buttons)) {
-					$buttons['edit']['url'][1] = $entity->student_guardians[0]->guardian_user_id;
+					$buttons['edit']['url'][1] = $entity->guardian_students[0]->guardian_user_id;
 				}
 				if (array_key_exists('remove', $buttons)) {
-					$buttons['remove']['attr']['field-value'] = $entity->student_guardians[0]->id;
+					$buttons['remove']['attr']['field-value'] = $entity->guardian_students[0]->id;
 				}
 			}
 		}
@@ -409,18 +429,18 @@ class StudentGuardianBehavior extends Behavior {
 
 	public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
-		$attr['options'] = $this->_table->StudentGuardians->GuardianRelations->getList();
-		if (empty($attr['options']->toArray())){
-			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		$attr['options'] = $this->_table->StudentGuardians->GuardianRelations->getList()->toArray();
+		if (empty($attr['options'])){
+			$this->_table->ControllerAction->Alert->warning('Institution.StudentGuardians.guardianRelationId');
 		}
 		return $attr;
 	}
 
 	public function onUpdateFieldGuardianEducationLevelId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
-		$attr['options'] = $this->_table->StudentGuardians->GuardianEducationLevels->getList();
-		if (empty($attr['options']->toArray())){
-			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		$attr['options'] = $this->_table->StudentGuardians->GuardianEducationLevels->getList()->toArray();
+		if (empty($attr['options'])){
+			$this->_table->ControllerAction->Alert->warning('Institution.StudentGuardians.guardianEducationLevel');
 		}
 		return $attr;
 	}
