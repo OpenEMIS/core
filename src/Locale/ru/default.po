@@ -1,15 +1,14 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Openemis Version 2.0\n"
+"Project-Id-Version: Openemis Version 3\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-27 09:32+0800\n"
+"PO-Revision-Date: 2015-07-15 09:22:24+00:00\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: rus\n"
-"X-Generator: Poedit 1.6.4\n"
+"Language: ru\n"
 
 msgid "Home"
 msgstr "Главная страница"
@@ -38,7 +37,7 @@ msgstr "Учителя"
 msgid "Staff"
 msgstr "персонал"
 
-msgid "REPORTS"
+msgid "Reports"
 msgstr "Отчеты"
 
 msgid "Settings"
@@ -122,7 +121,7 @@ msgstr "были удалены"
 msgid "has been added to the List of"
 msgstr "была добавлена ​​в список"
 
-msgid "by"
+msgid "By"
 msgstr "на"
 
 msgid "Notice"
@@ -188,7 +187,7 @@ msgstr "Список студентов"
 msgid "Add new Student"
 msgstr "Добавить новый студент"
 
-msgid "DETAILS"
+msgid "Details"
 msgstr "Подробности"
 
 msgid "Attachments"
@@ -203,7 +202,7 @@ msgstr "больше"
 msgid "Additional Info"
 msgstr "Дополнительная информация"
 
-msgid "STUDENT INFORMATION"
+msgid "Student Information"
 msgstr "СВЕДЕНИЯ ОБ УЧАЩИХСЯ"
 
 msgid "Static fields"
@@ -215,7 +214,7 @@ msgstr "Параметры поля"
 msgid "National Assessments"
 msgstr "национальных оценок"
 
-msgid "ASSESSMENT"
+msgid "Assessments"
 msgstr "ОЦЕНКА"
 
 msgid "Assessment Results"
@@ -305,7 +304,7 @@ msgstr "Эл. Почта"
 msgid "E-mail"
 msgstr "Эл. Почта"
 
-msgid "GENERAL"
+msgid "General"
 msgstr "Общие"
 
 msgid "Contact"
@@ -323,7 +322,7 @@ msgstr "Список сотрудников"
 msgid "Add new Staff"
 msgstr "Добавить новый персонал"
 
-msgid "STAFF INFORMATION"
+msgid "Staff Information"
 msgstr "ИНФОРМАЦИЯ О СОТРУДНИКАХ"
 
 msgid "Staff Details"
@@ -344,7 +343,7 @@ msgstr "Добавить нового учителя"
 msgid "Qualifications"
 msgstr "Квалификация"
 
-msgid "TRAINING"
+msgid "Training"
 msgstr "профессиональная подготовка"
 
 msgid "Teacher Information"
@@ -728,7 +727,7 @@ msgstr "Пароли не совпадают"
 msgid "System Information"
 msgstr "Системные сведения"
 
-msgid "support"
+msgid "Support"
 msgstr "Поддержка"
 
 msgid "License"
@@ -743,15 +742,14 @@ msgstr "Финансы"
 msgid "Total Public Expenditure"
 msgstr "Общая сумма государственных расходов"
 
-msgid "NATIONAL DENOMINATORS"
-msgstr "НАЦИОНАЛЬНЫЕ ЗНАМЕНАТЕЛИ"
+msgid "National Denominators"
+msgstr "Национальные Знаменатели"
 
 msgid "Select"
 msgstr "Выбрать"
 
 msgid "Total Public Expenditure Per Education Level"
-msgstr ""
-"Общая сумма государственных расходов, в зависимости от уровня образования"
+msgstr "Общая сумма государственных расходов, в зависимости от уровня образования"
 
 msgid "System"
 msgstr "Система"
@@ -819,12 +817,8 @@ msgstr "Ваша сессия закончилась. Пожалуйста, во
 msgid "You are not an authorized user."
 msgstr "Вы не авторизированный пользователь."
 
-msgid ""
-"You have encountered an unexpected error. Please contact the system "
-"administrator for assistance."
-msgstr ""
-"Вы произошла непредвиденная ошибка. Пожалуйста, обратитесь к системному "
-"администратору."
+msgid "You have encountered an unexpected error. Please contact the system administrator for assistance."
+msgstr "Вы произошла непредвиденная ошибка. Пожалуйста, обратитесь к системному администратору."
 
 msgid "Host Unreachable"
 msgstr "Узел недоступен"
@@ -940,7 +934,7 @@ msgstr "Финансы"
 msgid "Other Forms"
 msgstr "Другие формы"
 
-msgid "SYSTEM SETUP"
+msgid "System Setup"
 msgstr "Настройка системы"
 
 msgid "Administrative Boundaries"
@@ -970,10 +964,10 @@ msgstr "Редактировать пользовательские таблиц
 msgid "System Configurations"
 msgstr "Конфигурация системы"
 
-msgid "Accounts &amp; Security"
+msgid "Accounts and Security"
 msgstr "Логины и безопасность"
 
-msgid "ACCOUNTS & SECURITY"
+msgid "ACCOUNTS &amp; SECURITY"
 msgstr "СЧЕТА и БЕЗОПАСНОСТЬ"
 
 msgid "Population"
@@ -1399,16 +1393,16 @@ msgstr "Отчет Дополнительной Информации о Сайт
 msgid "List of Institution Sites with additional info"
 msgstr "Список сайтов учреждений с дополнительной информацией  "
 
-msgid "Institution Site Programme Report"
+msgid "Institution Programme Report"
 msgstr "Программный Отчет о Сайте Учреждения"
 
-msgid "List of Institution Sites with programmes"
+msgid "List of Institutions with programmes"
 msgstr "Список сайтов учреждений, предлогающих программы"
 
-msgid "Institution Site Bank Account Report"
+msgid "Institution Bank Account Report"
 msgstr "Отчет Сайта Учреждения по Банковским счетам "
 
-msgid "List of Institution Sites with bank accounts"
+msgid "List of Institutions with bank accounts"
 msgstr "Список сайтов учреждений с их банковскими реквезитами"
 
 msgid "Enrolment Report"
@@ -1498,7 +1492,7 @@ msgstr "Основная мебель и ее состояние по переп
 msgid "Resource Report"
 msgstr "Отчет по ресурсам"
 
-msgid "Summary of resources and condition from census"
+msgid "Summary of resources and conditions from census"
 msgstr "Сводные данные о ресурсах и их состоянии по переписи"
 
 msgid "Energy Report"
@@ -1552,9 +1546,7 @@ msgstr "Список сотрудников с дополнительной ин
 msgid "Wheres My School Report"
 msgstr "Отчет “Где моя школа"
 
-msgid ""
-"A Google Earth (KML) file containing all the location of all Institution "
-"Sites"
+msgid "A Google Earth (KML) file containing all the location of all Institutions"
 msgstr "Google Earth (KML) файл, содержащий расположение всех Учреждение"
 
 msgid "Year Book Report"
@@ -1587,24 +1579,17 @@ msgstr "Резюме данных школы переписи населения
 msgid "Non-Responsive Schools Report"
 msgstr "Отчет по школам, неучавствующих в проекте"
 
-msgid ""
-"List of Institution Sites that do not contain census data for a given year"
+msgid "List of Institutions that do not contain census data for a given year"
 msgstr "Список учреждений, которые не содержат данные переписи за текущий год"
 
 msgid "Data Discrepancy Report"
 msgstr "Отчета по данным несоответствия"
 
-msgid ""
-"List of Institution Sites with questionable census data compared to the "
-"previous year"
-msgstr ""
-"Список учреждении с сомнительными данными переписи по сравнению с предыдущим "
-"годом"
+msgid "List of Institutions with questionable census data compared to the previous year"
+msgstr "Список учреждении с сомнительными данными переписи по сравнению с предыдущим годом"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
-msgstr ""
-"Количество студентов (зачисленных) по полу, возрасту, местности и уровню "
-"образованию"
+msgstr "Количество студентов (зачисленных) по полу, возрасту, местности и уровню образованию"
 
 msgid "Number of teachers by sex, locality and grade"
 msgstr "Количество учителей по полу, местности и степени"
@@ -1633,16 +1618,8 @@ msgstr "Число людей по полу и возрасту"
 msgid "Net Enrolment Rate Report"
 msgstr "Отчет по коэффициенту зачисления"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled who are of the official "
-"age group for a given level of education by the population for the same age "
-"group and multiply the result by 100. This indicator has dimension values of "
-"sex, locality and grade."
-msgstr ""
-"Разделите количество зачисленных учащихся (или студентов), в официальный "
-"возрастной группе для данного уровня образования на население в той же "
-"возрастной группе и умножьте результат на 100. Этот показатель различается "
-"по полу, местности и классам."
+msgid "Divide the number of pupils (or students) enrolled who are of the official age group for a given level of education by the population for the same age group and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "Разделите количество зачисленных учащихся (или студентов), в официальный возрастной группе для данного уровня образования на население в той же возрастной группе и умножьте результат на 100. Этот показатель различается по полу, местности и классам."
 
 msgid "Gross Enrolment Rate Report"
 msgstr "Отчет по общему коэффициенту зачисления"
@@ -1650,250 +1627,125 @@ msgstr "Отчет по общему коэффициенту зачислени
 msgid "Net Intake Rate Report"
 msgstr "Отчет по коэффициенту чистого приема"
 
-msgid ""
-"Divide the number of children of official primary school-entrance age who "
-"enter the first grade of primary education for the first time by the "
-"population of the same age, and multiply the result by 100. This indicator "
-"has dimension values of sex and locality."
-msgstr ""
-"Разделите число детей официального младшего школьного возраста, которые "
-"входом введите первый класс начальной школы в первый раз со стороны "
-"населения того же возраста, и умножить результат на 100. Этот показатель "
-"имеет размерность значения сексу и местности."
+msgid "Divide the number of children of official primary school-entrance age who enter the first grade of primary education for the first time by the population of the same age, and multiply the result by 100. This indicator has dimension values of sex and locality."
+msgstr "Разделите число детей официального младшего школьного возраста, которые входом введите первый класс начальной школы в первый раз со стороны населения того же возраста, и умножить результат на 100. Этот показатель имеет размерность значения сексу и местности."
 
 msgid "Gross Intake Rate Report"
 msgstr "Отчет по общему коэффициенту приема"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in a given level of "
-"education regardless of age by the population of the age group which "
-"officially corresponds to the given level of education, and multiply the "
-"result by 100. This indicator has dimension values of sex, locality and "
-"grade."
-msgstr ""
-"Разделите количество учащихся (или студентов), обучающихся на данном уровне "
-"образования, независимо от возраста, на население возрастной группы, которая "
-"официально соответствует данному уровню образования, и умножьте результат на "
-"100. Этот показатель различается по полу, местности и классам."
+msgid "Divide the number of pupils (or students) enrolled in a given level of education regardless of age by the population of the age group which officially corresponds to the given level of education, and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "Разделите количество учащихся (или студентов), обучающихся на данном уровне образования, независимо от возраста, на население возрастной группы, которая официально соответствует данному уровню образования, и умножьте результат на 100. Этот показатель различается по полу, местности и классам."
 
-msgid ""
-"Divide the number of new entrants in grade 1, irrespective of age, by the "
-"population of official school-entrance age, and multiply the result by 100. "
-"This indicator has dimension values of sex, locality and grade."
-msgstr ""
-"Разделите число учащихся, поступивших в 1-й класс, независимо от возраста, "
+msgid "Divide the number of new entrants in grade 1, irrespective of age, by the population of official school-entrance age, and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "Разделите число учащихся, поступивших в 1-й класс, независимо от возраста, "
 
 msgid "Repetition Rate Report"
 msgstr "Отчет по коэффициенту повторения"
 
-msgid ""
-"Divide the number of repeaters in a given grade in school year t+1 by the "
-"number of pupils from the same cohort enrolled in the same grade in the "
-"previous school year t . This indicator has dimension values of sex, "
-"locality, sector and grade."
+msgid "Divide the number of repeaters in a given grade in school year t+1 by the number of pupils from the same cohort enrolled in the same grade in the previous school year t . This indicator has dimension values of sex, locality, sector and grade."
 msgstr ""
 
 msgid "Completion Rate Report"
 msgstr "Отчет по коэффициенту окончания"
 
-msgid ""
-"Divide the number of primary graduates, irrespective of age, by the "
-"population of theoretical primary graduation, and multiply the result by "
-"100. This indicator has dimension values of sex, locality and sector."
-msgstr ""
-"Разделите число выпускников начальной школы, независимо от возраста на "
-"теоретическое число выпускников и умножьте результат на 100. Этот показатель "
-"различается по полу, местности, секторам."
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100. This indicator has dimension values of sex, locality and sector."
+msgstr "Разделите число выпускников начальной школы, независимо от возраста на теоретическое число выпускников и умножьте результат на 100. Этот показатель различается по полу, местности, секторам."
 
 msgid "Survival Rate Report"
 msgstr "Отчет по выживаемости"
 
-msgid ""
-"Divide the total number of pupils belonging to a school-cohort who reached "
-"each successive grade of the specified level of education by the number of "
-"pupils in the school-cohort i.e. those originally enrolled in the first "
-"grade of primary education, and multiply the result by 100. The survival "
-"rate is calculated on the basis of the reconstructed cohort method, which "
-"uses data on enrolment and repeaters for two consecutive years. This "
-"indicator has dimension values of sex, locality and sector."
-msgstr ""
-"Разделить общее количество учеников, принадлежащих к когорте школы, которые "
-"доучились до класса, указанного уровнем образования на количество "
+msgid "Divide the total number of pupils belonging to a school-cohort who reached each successive grade of the specified level of education by the number of pupils in the school-cohort i.e. those originally enrolled in the first grade of primary education, and multiply the result by 100. The survival rate is calculated on the basis of the reconstructed cohort method, which uses data on enrolment and repeaters for two consecutive years. This indicator has dimension values of sex, locality and sector."
+msgstr "Разделить общее количество учеников, принадлежащих к когорте школы, которые доучились до класса, указанного уровнем образования на количество "
 
 msgid "Transition Rate Report"
 msgstr "Отчет по коэффициенту перехода"
 
-msgid ""
-"Divide the number of new entrants in the first grade of the specified higher "
-"cycle or level of education by the number of pupils who were enrolled in the "
-"final grade of the preceding cycle or level of education in the previous "
-"school year, and multiply by 100. This indicator has dimension values of "
-"sex, locality, sector and grade."
-msgstr ""
-"Разделите число учащихся, поступивших в первый класс, указанного ранее цикла "
-"или уровня образования на количество учеников, которые были зачислены в "
-"последний класс, предшествующего цикла или уровня образования в предыдущем "
-"учебном году и умножьте на 100. Этот показатель различается по полу, "
-"местности, сектору и классам."
+msgid "Divide the number of new entrants in the first grade of the specified higher cycle or level of education by the number of pupils who were enrolled in the final grade of the preceding cycle or level of education in the previous school year, and multiply by 100. This indicator has dimension values of sex, locality, sector and grade."
+msgstr "Разделите число учащихся, поступивших в первый класс, указанного ранее цикла или уровня образования на количество учеников, которые были зачислены в последний класс, предшествующего цикла или уровня образования в предыдущем учебном году и умножьте на 100. Этот показатель различается по полу, местности, сектору и классам."
 
 msgid "Pupil Teacher Ratio Report"
 msgstr "Отчет по соотношению учеников к учителям"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of teachers at the same level. This indicator has "
-"dimension values of locality, sector and level of education."
-msgstr ""
-"Разделить общее количество учащихся на определенном уровне образования на "
-"число учителей на том же уровне. Этот показатель различается по местности, "
-"сектору и уровню образования."
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of teachers at the same level. This indicator has dimension values of locality, sector and level of education."
+msgstr "Разделить общее количество учащихся на определенном уровне образования на число учителей на том же уровне. Этот показатель различается по местности, сектору и уровню образования."
 
 msgid "Pupil Class Ratio Report"
 msgstr "Отчет по соотношению учеников к классу"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of classes at the same level. This indicator has "
-"dimension values of locality and sector."
-msgstr ""
-"Разделить общее количество учащихся на заданном уровне образования на число "
-"классов на том же уровне. Этот показатель различается по местности и "
-"секторам."
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of classes at the same level. This indicator has dimension values of locality and sector."
+msgstr "Разделить общее количество учащихся на заданном уровне образования на число классов на том же уровне. Этот показатель различается по местности и секторам."
 
 msgid "Trained Teachers Report"
 msgstr "Отчет по квалифицированным учителям "
 
-msgid ""
-"Divide the number of teachers of the specified level of education who have "
-"received the minimum required teacher training by the total number of "
-"teachers at the same level of education, and multiply the result by 100. "
-"This indicator has dimension values of locality, sector and level of "
-"education."
+msgid "Divide the number of teachers of the specified level of education who have received the minimum required teacher training by the total number of teachers at the same level of education, and multiply the result by 100. This indicator has dimension values of locality, sector and level of education."
 msgstr "Разделите количество учителей, указанного уровня образования, которые "
 
 msgid "Gender Parity Index (Students) Report"
 msgstr "Отчет по индексу гендерного паритета (студенты)"
 
-msgid ""
-"Divide the number of female students by the number of male students. This "
-"indicator has dimension values of sex, locality, sector and level of "
-"education."
-msgstr ""
-"Разделите число студенток на количеству студентов мужского пола. Этот "
-"показатель различается по полу, местности, сектору и образованию."
+msgid "Divide the number of female students by the number of male students. This indicator has dimension values of sex, locality, sector and level of education."
+msgstr "Разделите число студенток на количеству студентов мужского пола. Этот показатель различается по полу, местности, сектору и образованию."
 
 msgid "Female Students Report"
 msgstr "Отчет по студенткам "
 
-msgid ""
-"Divide the number of female tertiary students enrolled in a specified ISCED "
-"level by the total number of students (male plus female) in that level in a "
-"given academic-year, and multiply the result by 100. This indicator has "
-"dimension values of locality, sector and level of education."
+msgid "Divide the number of female tertiary students enrolled in a specified ISCED level by the total number of students (male plus female) in that level in a given academic-year, and multiply the result by 100. This indicator has dimension values of locality, sector and level of education."
 msgstr ""
 
 msgid "Female Teachers Report"
 msgstr "Отчет по женщинам преподавателям"
 
-msgid ""
-"Divide the total number of female teachers at a given level of education by "
-"the total number of teachers (male and female) at the same level in a given "
-"school year, and multiply by 100. This indicator has dimension values of "
-"locality, sector and level of education."
+msgid "Divide the total number of female teachers at a given level of education by the total number of teachers (male and female) at the same level in a given school year, and multiply by 100. This indicator has dimension values of locality, sector and level of education."
 msgstr ""
 
 msgid "Private Enrolment Report"
 msgstr "Отчет по частному зачислению"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in private educational "
-"institutions in a given level of education by total enrolment (public and "
-"private) at the same level of education, and multiply the result by 100. "
-"This indicator has dimension values of sex, locality and level of education."
-msgstr ""
-"Разделите количество учащихся (или студентов), обучающихся в частных учебных "
-"заведениях на данном уровне образования на общее число учащихся "
-"(государственных и частных) на том же уровне образования и умножьте "
-"результат на 100. Этот показатель различается по полу, местности, сектору и "
-"образованию."
+msgid "Divide the number of pupils (or students) enrolled in private educational institutions in a given level of education by total enrolment (public and private) at the same level of education, and multiply the result by 100. This indicator has dimension values of sex, locality and level of education."
+msgstr "Разделите количество учащихся (или студентов), обучающихся в частных учебных заведениях на данном уровне образования на общее число учащихся (государственных и частных) на том же уровне образования и умножьте результат на 100. Этот показатель различается по полу, местности, сектору и образованию."
 
 msgid "Pupil Textbook Ratio Report"
 msgstr "Отчет по cоотношению учеников к учебникам "
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of textbooks at the same level. This indicator has "
-"dimension values of locality, and sector."
-msgstr ""
-"Разделить общее количество учащихся на определенный уровень образования на "
-"количество учебников на том же уровне. Этот показатель различается по "
-"местности,  и секторам."
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of textbooks at the same level. This indicator has dimension values of locality, and sector."
+msgstr "Разделить общее количество учащихся на определенный уровень образования на количество учебников на том же уровне. Этот показатель различается по местности,  и секторам."
 
 msgid "Water Sources Report"
 msgstr "Отчет по источникам воды"
 
-msgid ""
-"Number of water sources by type. This indicator has dimension values of "
-"locality, sector and condition."
-msgstr ""
-"Количество источников воды по типу. Этот показатель различается по "
-"местности, сектору и условиям."
+msgid "Number of water sources by type. This indicator has dimension values of locality, sector and condition."
+msgstr "Количество источников воды по типу. Этот показатель различается по местности, сектору и условиям."
 
 msgid "Sanitation Facilities Report"
 msgstr "Отчет по санитарии"
 
-msgid ""
-"Number of sanitation facilities by type. This indicator has dimension values "
-"of locality, sector and condition."
-msgstr ""
-"Количество санитарных объектов по типу. Этот показатель различается по "
-"местности, сектору и условиям."
+msgid "Number of sanitation facilities by type. This indicator has dimension values of locality, sector and condition."
+msgstr "Количество санитарных объектов по типу. Этот показатель различается по местности, сектору и условиям."
 
 msgid "Public Expenditure per Education Level Report"
 msgstr "Отчет по Государственным расходам в зависимости от уровня образования"
 
-msgid ""
-"Divide total public expenditure for each level of education in a given "
-"financial year by the total public expenditure on education for the same "
-"financial year and multiply the result by 100. "
+msgid "Divide total public expenditure for each level of education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100. "
 msgstr ""
 
 msgid "Public Expenditure on Education Report"
 msgstr "Отчет по Государственным расходам на образование"
 
-msgid ""
-"Divide total public expenditure on education incurred by all government "
-"agencies/departments in a given financial year by the total government "
-"expenditure for the same financial year and multiply by 100."
-msgstr ""
-"Разделите общий объем государственных расходов на образование, понесенных "
-"всеми государственными учреждениями / департаментами в данном финансовом "
-"году на совокупные государственные расходы за тот же финансовый год и "
-"умножьте на 100."
+msgid "Divide total public expenditure on education incurred by all government agencies/departments in a given financial year by the total government expenditure for the same financial year and multiply by 100."
+msgstr "Разделите общий объем государственных расходов на образование, понесенных всеми государственными учреждениями / департаментами в данном финансовом году на совокупные государственные расходы за тот же финансовый год и умножьте на 100."
 
 msgid "Public Expenditure on Education by GNP Report"
 msgstr "Отчет ВВП по Государственным расходам на образование"
 
-msgid ""
-"Divide total public expenditure on education in a given financial year by "
-"the Gross National Product (GNP) or Gross National Income (GNI) of the "
-"country for the corresponding year and multiply by 100."
-msgstr ""
-"Разделите общие государственные расходы на образование в данном финансовом "
-"году на валовый национальный продукт (ВНП) или валовой национальный доход "
-"(ВНД) страны на соответствующий год и умножьте на 100."
+msgid "Divide total public expenditure on education in a given financial year by the Gross National Product (GNP) or Gross National Income (GNI) of the country for the corresponding year and multiply by 100."
+msgstr "Разделите общие государственные расходы на образование в данном финансовом году на валовый национальный продукт (ВНП) или валовой национальный доход (ВНД) страны на соответствующий год и умножьте на 100."
 
 msgid "Public Expenditure per Pupil Report"
 msgstr "Отчет по Государственным расходам на одного ученика "
 
-msgid ""
-"Divide per pupil public current expenditure on each level of education in a "
-"given year by the GNI per capita for the same year and multiply by 100. This "
-"indicator has dimension values of level of education."
-msgstr ""
-"Разделите текущие общественные расходы на каждого ученика на всех уровнях "
-"образования данного года по ВВП на душу населения за тот же год и умножьте "
-"на 100. Этот показатель различается по образованию."
+msgid "Divide per pupil public current expenditure on each level of education in a given year by the GNI per capita for the same year and multiply by 100. This indicator has dimension values of level of education."
+msgstr "Разделите текущие общественные расходы на каждого ученика на всех уровнях образования данного года по ВВП на душу населения за тот же год и умножьте на 100. Этот показатель различается по образованию."
 
 msgid "Process"
 msgstr "Процесс"
@@ -1982,21 +1834,14 @@ msgstr "Генерировать"
 msgid "Generated Files"
 msgstr "Сгенерировано Файлы"
 
-msgid ""
-"The system will %s the current data and restore to your previous data based "
-"on the restore point you selected."
-msgstr ""
-"Система %s текущие данные и восстановит предыдущие данные, основанные на "
-"точке восстановления, которую вы выбрали."
+msgid "The system will %s the current data and restore to your previous data based on the restore point you selected."
+msgstr "Система %s текущие данные и восстановит предыдущие данные, основанные на точке восстановления, которую вы выбрали."
 
 msgid "Please note that the system will not restore the following tables:"
 msgstr "Внимание: система не восстановит следующие таблицы:"
 
-msgid ""
-"Below are the list of available backup dates, please choose a restore point."
-msgstr ""
-"Ниже список доступных резервных дат, пожалуйста, выберите точку "
-"восстановления"
+msgid "Below are the list of available backup dates, please choose a restore point."
+msgstr "Ниже список доступных резервных дат, пожалуйста, выберите точку восстановления"
 
 msgid "Files"
 msgstr "Файлы"
@@ -2017,9 +1862,7 @@ msgid "Image exceeds system max filesize."
 msgstr "Размер файла изображения превышает максимально допустимые нормы"
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr ""
-"Размер файла изображения превышает максимально допустимые нормы в формате "
-"HTML"
+msgstr "Размер файла изображения превышает максимально допустимые нормы в формате HTML"
 
 msgid "Image was only partially uploaded."
 msgstr "Изображение загружено лишь частично"
@@ -2084,13 +1927,8 @@ msgstr "Пожалуйста, введите длительность"
 msgid "Add Programme"
 msgstr "Добавить программы"
 
-msgid ""
-"You are able to delete this record in the database. <br><br>All related "
-"information of this record will also be deleted.<br><br>Are you sure you "
-"want to do this?"
-msgstr ""
-"Вы можете удалить эту запись в базе данных. <br> <br> Все информацией этой "
-"записи также будут удалены. <br> <br> Вы уверены, что хотите это сделать?"
+msgid "You are able to delete this record in the database. <br><br>All related information of this record will also be deleted.<br><br>Are you sure you want to do this?"
+msgstr "Вы можете удалить эту запись в базе данных. <br> <br> Все информацией этой записи также будут удалены. <br> <br> Вы уверены, что хотите это сделать?"
 
 msgid "Deleting attachment..."
 msgstr "Удаление приложения ..."
@@ -2114,9 +1952,7 @@ msgid "Unsaved Data"
 msgstr "несохраненные данные"
 
 msgid "Please save your data before proceed. <br><br>Do you want to save now?"
-msgstr ""
-"Пожалуйста, сохраните ваши данные, прежде чем продолжить. <br> <br> Вы "
-"хотите сохранить это сейчас?"
+msgstr "Пожалуйста, сохраните ваши данные, прежде чем продолжить. <br> <br> Вы хотите сохранить это сейчас?"
 
 msgid "Are you sure you want to leave?"
 msgstr "Вы уверены, что хотите выйти?"
@@ -2194,9 +2030,7 @@ msgid "Click to dismiss"
 msgstr "Кликните здесь для удаления"
 
 msgid "Unable to add Areas.<br/>Please create Area Level before adding Areas."
-msgstr ""
-"Не удалось добавить название районов. <br/> Пожалуйста, создайте уровень "
-"района, прежде чем добавлять название районов"
+msgstr "Не удалось добавить название районов. <br/> Пожалуйста, создайте уровень района, прежде чем добавлять название районов"
 
 msgid "Saving please wait..."
 msgstr "Идет сохранение, пожалуйста, подождите ..."
@@ -2225,8 +2059,7 @@ msgstr "Пожалуйста, добавьте программу для сай�
 msgid "Missing Coordinates Report"
 msgstr "Отчет по Отсутствующим Координатам"
 
-msgid ""
-"List of Institution Sites with latitude and/or longitude values of 0 or null"
+msgid "List of Institutions with latitude and/or longitude values of 0 or null"
 msgstr "Список учреждении с широтой и / или долготы:  0 или NULL"
 
 msgid "OLAP Report"
@@ -2370,12 +2203,8 @@ msgstr "логотип"
 msgid "Data Outliers"
 msgstr "Тип сайта"
 
-msgid ""
-"Census Numbers that have age or total of male and female numbers beyond the "
-"specified range in settings."
-msgstr ""
-"Перепись числа, которые имеют возраст или общее мужчины и женщины, выходящая "
-"за пределы диапазона, установленного в настройках."
+msgid "Census Numbers that have age or total of male and female numbers beyond the specified range in settings."
+msgstr "Перепись числа, которые имеют возраст или общее мужчины и женщины, выходящая за пределы диапазона, установленного в настройках."
 
 msgid "Page Orientation"
 msgstr "Ориентация страницы"
@@ -2446,7 +2275,7 @@ msgstr ""
 msgid "Descriptions"
 msgstr ""
 
-msgid "QUALITY"
+msgid "Quality"
 msgstr ""
 
 msgid "Rubric Details"
@@ -2632,7 +2461,7 @@ msgstr ""
 msgid "Credit Hours"
 msgstr ""
 
-msgid "Mode Of Delivery"
+msgid "Mode of Delivery"
 msgstr ""
 
 msgid "Training Provider"
@@ -2749,7 +2578,7 @@ msgstr ""
 msgid "Please select a Country"
 msgstr ""
 
-msgid "Sms"
+msgid "SMS"
 msgstr ""
 
 msgid "Messages"
@@ -2797,9 +2626,7 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-msgid ""
-"Note: Please clear the Responses page as existing responses may no longer "
-"match the updated Messages."
+msgid "Note: Please clear the Responses page as existing responses may no longer match the updated Messages."
 msgstr ""
 
 msgid "Do you wish to clear all records?"
@@ -2937,13 +2764,8 @@ msgstr "Файл не был успешно обновлен."
 msgid "Completion Rate / Gross Primary Graduation Ratio"
 msgstr "коэффициент окончания / общий коэффициент окончания начальной школы"
 
-msgid ""
-"Divide the number of primary graduates, irrespective of age, by the "
-"population of theoretical primary graduation, and multiply the result by 100."
-msgstr ""
-"Разделить число выпускников начальной школы, независимо от возраста на "
-"теоретическое количество выпускников начальной школы и умножьте результат на "
-"100."
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100."
+msgstr "Разделить число выпускников начальной школы, независимо от возраста на теоретическое количество выпускников начальной школы и умножьте результат на 100."
 
 msgid "Percentage of Trained Teachers"
 msgstr "Процент квалифицированных учителей"
@@ -2966,31 +2788,17 @@ msgstr "Процент школ с улучшенным источникам п�
 msgid "Percentage of schools with adequate sanitation facilities"
 msgstr "Процент школ с надлежащими санитарно-гигиеническими условиями"
 
-msgid ""
-"Public Expenditure as percentage of Total Public Expenditure on Education"
-msgstr ""
-"Государственные расходы как процент от общих государственных расходов на "
-"образование"
+msgid "Public Expenditure as percentage of Total Public Expenditure on Education"
+msgstr "Государственные расходы как процент от общих государственных расходов на образование"
 
-msgid ""
-"Divide public current expenditure devoted to each level of education by the "
-"total public current expenditure on education, and multiply the result by "
-"100. Divide public current expenditure on education in a given financial "
-"year by the total public expenditure on education for the same financial "
-"year and multiply the result by 100."
-msgstr ""
-"Разделите текущие общественные расходы, направленные на каждый уровень "
-"образования, на текущие общую сумму общественных расходов на образование и "
-"умножьте результат на 100. Разделите текущие общественные расходы на "
-"образование в данном финансовом году на общую сумму  государственных "
-"расходов на образование за тот же финансовый год и умножьть результат на 100."
+msgid "Divide public current expenditure devoted to each level of education by the total public current expenditure on education, and multiply the result by 100. Divide public current expenditure on education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100."
+msgstr "Разделите текущие общественные расходы, направленные на каждый уровень образования, на текущие общую сумму общественных расходов на образование и умножьте результат на 100. Разделите текущие общественные расходы на образование в данном финансовом году на общую сумму  государственных расходов на образование за тот же финансовый год и умножьть результат на 100."
 
 msgid "Public Expenditure as percentage of Total Government Expenditure"
 msgstr "Общественные расходы как процент от общих государственных расходов"
 
 msgid "Public Expenditure as percentage of Gross National Product (GNP)"
-msgstr ""
-"Общественные расходы как процент от валового национального продукта (ВНП)"
+msgstr "Общественные расходы как процент от валового национального продукта (ВНП)"
 
 msgid "Number of teachers"
 msgstr "Количество учителей"
@@ -3092,9 +2900,7 @@ msgid "Report on institution sites"
 msgstr "Отчет по учреждениям"
 
 msgid "Please contact support for more information on Custom Report."
-msgstr ""
-"Пожалуйста, свяжитесь со службой поддержки для получения дополнительной "
-"информации о пользовательских отчетах."
+msgstr "Пожалуйста, свяжитесь со службой поддержки для получения дополнительной информации о пользовательских отчетах."
 
 msgid "This is a report on classes"
 msgstr "Это отчет по классам"
@@ -3142,9 +2948,6 @@ msgid "Room Report"
 msgstr ""
 
 msgid "Summary of sanitation, gender and conditions from census"
-msgstr ""
-
-msgid "Summary of resources and conditions from census"
 msgstr ""
 
 msgid "Summary of water and conditions from census"
@@ -3339,25 +3142,19 @@ msgstr ""
 msgid "Training Trainer Report"
 msgstr ""
 
-msgid ""
-"Report of Exceptions to see if a staff is enrolled in two courses at the "
-"same time or has already completed the course"
+msgid "Report of Exceptions to see if a staff is enrolled in two courses at the same time or has already completed the course"
 msgstr ""
 
 msgid "Training Exception Report"
 msgstr ""
 
-msgid ""
-"Report on the number of staff actually trained verses target groups for each "
-"program"
+msgid "Report on the number of staff actually trained verses target groups for each program"
 msgstr ""
 
 msgid "Training Staff Statistics Report"
 msgstr ""
 
-msgid ""
-"Report on the number of teachers actually trained verses target groups for "
-"each program"
+msgid "Report on the number of teachers actually trained verses target groups for each program"
 msgstr ""
 
 msgid "Training Teacher Statistic Report"
@@ -3369,7 +3166,7 @@ msgstr ""
 msgid "Institution Site Custom Field Report"
 msgstr ""
 
-msgid "Institution Site Totals"
+msgid "Institution Totals"
 msgstr ""
 
 msgid "Summary of verifications from census"
@@ -3423,13 +3220,7 @@ msgstr ""
 msgid "Summary of furniture and conditions from census"
 msgstr ""
 
-msgid "Summary of resources and conditions from census "
-msgstr ""
-
 msgid "Summary of power and conditions from census"
-msgstr ""
-
-msgid "Summary of water and conditions from census "
 msgstr ""
 
 msgid "List of Students with custom fields"
@@ -3465,7 +3256,7 @@ msgstr ""
 msgid "Standard"
 msgstr ""
 
-msgid "SURVEY"
+msgid "Survey"
 msgstr ""
 
 msgid "New Surveys"
@@ -3483,9 +3274,7 @@ msgstr ""
 msgid "Training Staff Statistic Report"
 msgstr ""
 
-msgid ""
-"Report on the number of teacher actually trained verses target groups for "
-"each program"
+msgid "Report on the number of teacher actually trained verses target groups for each program"
 msgstr ""
 
 msgid "New Staff"
@@ -3524,7 +3313,7 @@ msgstr ""
 msgid "Salary"
 msgstr ""
 
-msgid "HEALTH"
+msgid "Health"
 msgstr ""
 
 msgid "Family"
@@ -3620,7 +3409,7 @@ msgstr ""
 msgid "Total Days"
 msgstr ""
 
-msgid "List of Behaviours"
+msgid "List of Behaviour"
 msgstr ""
 
 msgid "No record available"
@@ -3791,18 +3580,13 @@ msgstr ""
 msgid "Quality Assurance"
 msgstr ""
 
-msgid ""
-"Report generated at the school, FD and national level for each aspect "
-"(category) and domain (technical or administrative) "
+msgid "Report generated at the school, FD and national level for each aspect (category) and domain (technical or administrative) "
 msgstr ""
 
 msgid "QA Schools Report"
 msgstr ""
 
-msgid ""
-"Report generated by type, category, result (pass or fail) and a table with "
-"the average, minimum and maximum values and also compare results from one "
-"year to the next "
+msgid "Report generated by type, category, result (pass or fail) and a table with the average, minimum and maximum values and also compare results from one year to the next "
 msgstr ""
 
 msgid "QA Results Report"
@@ -4003,9 +3787,7 @@ msgstr ""
 msgid "*File size should not be larger than 2MB."
 msgstr ""
 
-msgid ""
-"*Maximum 5 files are permitted on single upload. Each file size should not "
-"be larger than 2MB."
+msgid "*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB."
 msgstr ""
 
 msgid "Result Type"
@@ -4186,4 +3968,235 @@ msgid "Download Trainee Results"
 msgstr ""
 
 msgid "Duplicate Session"
+msgstr ""
+
+msgid "Shared Reports"
+msgstr ""
+
+msgid "My Reports"
+msgstr ""
+
+msgid "Absence"
+msgstr ""
+
+msgid "From"
+msgstr ""
+
+msgid "To"
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Select Image"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Change"
+msgstr ""
+
+msgid "There is no data to be displayed."
+msgstr ""
+
+msgid "s"
+msgstr ""
+
+msgid "Site Type:"
+msgstr ""
+
+msgid "Period"
+msgstr ""
+
+msgid "Shift"
+msgstr ""
+
+msgid "Shift Name"
+msgstr ""
+
+msgid "Start Time"
+msgstr "время начала"
+
+msgid "End Time"
+msgstr "Время окончания"
+
+msgid "Shift Details"
+msgstr ""
+
+msgid "Edit Shift"
+msgstr ""
+
+msgid "Add Shift"
+msgstr ""
+
+msgid "Add Attachment"
+msgstr ""
+
+msgid "Please enter a File name"
+msgstr ""
+
+msgid "No file was uploaded"
+msgstr ""
+
+msgid "The files has been uploaded"
+msgstr ""
+
+msgid "Attachment Details"
+msgstr ""
+
+msgid "Teaching"
+msgstr ""
+
+msgid "Position Details"
+msgstr ""
+
+msgid "Edit Position"
+msgstr ""
+
+msgid "All Years"
+msgstr ""
+
+msgid "Number:"
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+msgid "Visualizer - Indicator"
+msgstr ""
+
+msgid "Unit"
+msgstr ""
+
+msgid "Step 1"
+msgstr ""
+
+msgid "Step 2"
+msgstr ""
+
+msgid "Step 3"
+msgstr ""
+
+msgid "Step 4"
+msgstr ""
+
+msgid "Step 5"
+msgstr ""
+
+msgid "Step 6"
+msgstr ""
+
+msgid "Step 7"
+msgstr ""
+
+msgid "Step 8"
+msgstr ""
+
+msgid "Step 9"
+msgstr ""
+
+msgid "Dimension"
+msgstr ""
+
+msgid "Review"
+msgstr ""
+
+msgid "Visualize"
+msgstr ""
+
+msgid "Indicators"
+msgstr ""
+
+msgid "Area ID"
+msgstr ""
+
+msgid "Table"
+msgstr ""
+
+msgid "Column"
+msgstr ""
+
+msgid "Stacked Column"
+msgstr ""
+
+msgid "Bar"
+msgstr ""
+
+msgid "Stacked Bar"
+msgstr ""
+
+msgid "Line"
+msgstr ""
+
+msgid "Scatter"
+msgstr ""
+
+msgid "Pie"
+msgstr ""
+
+msgid "Visualization"
+msgstr ""
+
+msgid "Visualizer"
+msgstr ""
+
+msgid "List of Classes"
+msgstr ""
+
+msgid "Verify"
+msgstr ""
+
+msgid "Data Entry"
+msgstr ""
+
+msgid "Estimate"
+msgstr ""
+
+msgid "Full Time Equivalent Teachers"
+msgstr ""
+
+msgid "Single Grade Teachers Only"
+msgstr ""
+
+msgid "Single Grade Classes Only"
+msgstr ""
+
+msgid "Multi Grade Classes"
+msgstr ""
+
+msgid "There are no classes associated with this institution site for the selected year."
+msgstr ""
+
+msgid "There are no subjects configured in the system."
+msgstr ""
+
+msgid "Overview and More"
+msgstr ""
+
+msgid "Guardians"
+msgstr "Стражи"
+
+msgid "Maps"
+msgstr "Карты"
+
+msgid "Communications"
+msgstr ""
+
+msgid "Display"
+msgstr ""
+
+msgid "records"
+msgstr ""
+
+msgid "Showing"
+msgstr ""
+
+msgid "Surveys"
+msgstr ""
+
+msgid "Workflows"
 msgstr ""
