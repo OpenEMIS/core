@@ -255,8 +255,9 @@ class InstitutionsTable extends AppTable  {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$query = $request->query;
+
 		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+			$options['order'][$this->aliasField('name')] = 'desc';
 		}
 	}
 
