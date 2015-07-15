@@ -60,6 +60,7 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// this method should rightfully be in institution userbehavior - need to move this in an issue after guardian module is in prod
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStaffData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
@@ -72,6 +73,8 @@ class StaffBehavior extends Behavior {
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
 
 					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'];
+
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
 
 					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE'];
