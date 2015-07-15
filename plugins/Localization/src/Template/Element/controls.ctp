@@ -9,7 +9,7 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
-			echo $this->Form->input('field_option', array(
+			echo $this->Form->input('translation', array(
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $localeOptions,
