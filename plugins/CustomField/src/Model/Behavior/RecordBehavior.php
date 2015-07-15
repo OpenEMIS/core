@@ -68,13 +68,17 @@ class RecordBehavior extends Behavior {
 
 				$fieldValue = $fieldTypes[$fieldType];
 
-				// For checkbox
-				if (is_array($obj[$fieldValue])) {
-					$checkboxes[] = $data[$this->_table->alias()]['custom_field_values'][$key];
-					$fieldIds[$obj[$this->config('fieldKey')]] = $obj[$this->config('fieldKey')];
+				if (isset($obj[$fieldValue])) {
+					// For checkbox
+					if (is_array($obj[$fieldValue])) {
+						$checkboxes[] = $data[$this->_table->alias()]['custom_field_values'][$key];
+						$fieldIds[$obj[$this->config('fieldKey')]] = $obj[$this->config('fieldKey')];
+						$obj[$fieldValue] = '';
+					}
+					// End
+				} else {
 					$obj[$fieldValue] = '';
 				}
-				// End
 
 				if (strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
