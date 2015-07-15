@@ -210,12 +210,13 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
 				$this->_table->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
 				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->field('staff_status_id', ['fieldName' => $associationString.'staff_status_id']);
 				$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
 															     'placeholder' => 'openEMIS ID or Name',
 															     'url' => '/Institutions/Staff/autoCompleteUserList',
 															     'length' => 3 ]);
 				$this->_table->ControllerAction->setFieldOrder([
-					'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id'
+					'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id', 'staff_status_id'
 					, 'search'
 					]);
 
@@ -597,6 +598,16 @@ class UserBehavior extends Behavior {
 	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->InstitutionSiteStaff->StaffTypes->getList();
+		if (empty($attr['options'])){
+			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+		}
+		
+		return $attr;
+	}
+
+	public function onUpdateFieldStaffStatusId(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'select';
+		$attr['options'] = $this->_table->InstitutionSiteStaff->StaffStatuses->getList();
 		if (empty($attr['options'])){
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
 		}
