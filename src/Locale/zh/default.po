@@ -1,19 +1,14 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Openemis Version 2.0\n"
-"POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-27 09:32+0800\n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Language: chi\n"
-"X-Generator: Poedit 1.6.4\n"
-
-#: Controller/NoticesController.php:19
-msgid "Notices"
-msgstr "启事"
+Project-Id-Version: Openemis Version 3\n
+POT-Creation-Date: 2013-01-17 02:33+0000\n
+PO-Revision-Date: 2015-07-15 02:21:36+00:00\n
+Last-Translator: \n
+Language-Team: \n
+MIME-Version: 1.0\n
+Content-Type: text/plain; charset=UTF-8\n
+Content-Transfer-Encoding: 8bit\n
+Language: zh\n
 
 msgid "Home"
 msgstr "首页"
@@ -42,7 +37,7 @@ msgstr "教师"
 msgid "Staff"
 msgstr "工作人员"
 
-msgid "REPORTS"
+msgid "Reports"
 msgstr "报告"
 
 msgid "Settings"
@@ -126,8 +121,8 @@ msgstr "被删除"
 msgid "has been added to the List of"
 msgstr "已经被添加到——"
 
-msgid "by"
-msgstr " ——"
+msgid "By"
+msgstr "由"
 
 msgid "Notice"
 msgstr "启事"
@@ -192,7 +187,7 @@ msgstr "学生名单"
 msgid "Add new Student"
 msgstr "添加新学生"
 
-msgid "DETAILS"
+msgid "Details"
 msgstr "详细资料"
 
 msgid "Attachments"
@@ -207,7 +202,7 @@ msgstr ""
 msgid "Additional Info"
 msgstr "附加信息"
 
-msgid "STUDENT INFORMATION"
+msgid "Student Information"
 msgstr "学生资料"
 
 msgid "Static fields"
@@ -219,7 +214,7 @@ msgstr ""
 msgid "National Assessments"
 msgstr ""
 
-msgid "ASSESSMENT"
+msgid "Assessments"
 msgstr "评估"
 
 msgid "Assessment Results"
@@ -309,7 +304,7 @@ msgstr "电子邮件"
 msgid "E-mail"
 msgstr "电子邮件"
 
-msgid "GENERAL"
+msgid "General"
 msgstr "基本资料"
 
 msgid "Contact"
@@ -327,7 +322,7 @@ msgstr "工作人员名单"
 msgid "Add new Staff"
 msgstr "添加新工作人员"
 
-msgid "STAFF INFORMATION"
+msgid "Staff Information"
 msgstr "工作人员资料"
 
 msgid "Staff Details"
@@ -348,7 +343,7 @@ msgstr "添加教师"
 msgid "Qualifications"
 msgstr "资格"
 
-msgid "TRAINING"
+msgid "Training"
 msgstr "培训"
 
 msgid "Teacher Information"
@@ -732,7 +727,7 @@ msgstr "密码错误。"
 msgid "System Information"
 msgstr "系统资料"
 
-msgid "support"
+msgid "Support"
 msgstr "支援"
 
 msgid "License"
@@ -747,7 +742,7 @@ msgstr "财政"
 msgid "Total Public Expenditure"
 msgstr "公共开支总额"
 
-msgid "NATIONAL DENOMINATORS"
+msgid "National Denominators"
 msgstr "国家分母"
 
 msgid "Select"
@@ -822,9 +817,7 @@ msgstr "你操作超时，请重新登陆。"
 msgid "You are not an authorized user."
 msgstr "你不是授权管理人员"
 
-msgid ""
-"You have encountered an unexpected error. Please contact the system "
-"administrator for assistance."
+msgid "You have encountered an unexpected error. Please contact the system administrator for assistance."
 msgstr "你遇到意外错误。请联络系统管理员求助"
 
 msgid "Host Unreachable"
@@ -941,7 +934,7 @@ msgstr "财政"
 msgid "Other Forms"
 msgstr "其他表格"
 
-msgid "SYSTEM SETUP"
+msgid "System Setup"
 msgstr "系统设置"
 
 msgid "Administrative Boundaries"
@@ -971,10 +964,10 @@ msgstr "编辑自定义表"
 msgid "System Configurations"
 msgstr "系统配置"
 
-msgid "Accounts &amp; Security"
+msgid "Accounts and Security"
 msgstr "帐户号码和安全系统"
 
-msgid "ACCOUNTS & SECURITY"
+msgid "ACCOUNTS &amp; SECURITY"
 msgstr "帐目及安全性"
 
 msgid "Population"
@@ -1400,16 +1393,16 @@ msgstr "学院分校其它信息列表"
 msgid "List of Institution Sites with additional info"
 msgstr "学院分校额外信息报告"
 
-msgid "Institution Site Programme Report"
+msgid "Institution Programme Report"
 msgstr "学院分校教育计划"
 
-msgid "List of Institution Sites with programmes"
+msgid "List of Institutions with programmes"
 msgstr "学院分校计划列表"
 
-msgid "Institution Site Bank Account Report"
+msgid "Institution Bank Account Report"
 msgstr "学院分校银行帐户"
 
-msgid "List of Institution Sites with bank accounts"
+msgid "List of Institutions with bank accounts"
 msgstr "学院分校的银行帐户名单"
 
 msgid "Enrolment Report"
@@ -1499,7 +1492,7 @@ msgstr "家具数量和条件的报告"
 msgid "Resource Report"
 msgstr "资源报告"
 
-msgid "Summary of resources and condition from census"
+msgid "Summary of resources and conditions from census"
 msgstr "资源数量和种类以及条件状态的报告"
 
 msgid "Energy Report"
@@ -1553,9 +1546,7 @@ msgstr "员工的附加信息列表"
 msgid "Wheres My School Report"
 msgstr "我的学校在哪里报告"
 
-msgid ""
-"A Google Earth (KML) file containing all the location of all Institution "
-"Sites"
+msgid "A Google Earth (KML) file containing all the location of all Institutions"
 msgstr "一个Google Earth (KML)语法规则文件包含所有学校的地点"
 
 msgid "Year Book Report"
@@ -1588,16 +1579,13 @@ msgstr "学校人口普查数据摘要"
 msgid "Non-Responsive Schools Report"
 msgstr "无回复的学校报告"
 
-msgid ""
-"List of Institution Sites that do not contain census data for a given year"
+msgid "List of Institutions that do not contain census data for a given year"
 msgstr "本列表包含在今年没有提交统计数据的学院机构"
 
 msgid "Data Discrepancy Report"
 msgstr "数据差异报告"
 
-msgid ""
-"List of Institution Sites with questionable census data compared to the "
-"previous year"
+msgid "List of Institutions with questionable census data compared to the previous year"
 msgstr "本列表包含与上一年对比有疑问的统计数据"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
@@ -1630,14 +1618,8 @@ msgstr "人数按性别和年龄"
 msgid "Net Enrolment Rate Report"
 msgstr "净入学率报告"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled who are of the official "
-"age group for a given level of education by the population for the same age "
-"group and multiply the result by 100. This indicator has dimension values of "
-"sex, locality and grade."
-msgstr ""
-"以同年龄组别受教育程为总人数， 除以达到入学年龄的注册学生人数，再乘以结果的"
-"100。该指标包含性别，地区和年级数据。"
+msgid "Divide the number of pupils (or students) enrolled who are of the official age group for a given level of education by the population for the same age group and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "以同年龄组别受教育程为总人数， 除以达到入学年龄的注册学生人数，再乘以结果的100。该指标包含性别，地区和年级数据。"
 
 msgid "Gross Enrolment Rate Report"
 msgstr "毛入学率报告"
@@ -1645,241 +1627,125 @@ msgstr "毛入学率报告"
 msgid "Net Intake Rate Report"
 msgstr "净录取率报告"
 
-msgid ""
-"Divide the number of children of official primary school-entrance age who "
-"enter the first grade of primary education for the first time by the "
-"population of the same age, and multiply the result by 100. This indicator "
-"has dimension values of sex and locality."
-msgstr ""
-"正式的小学入学年龄的儿童进入小学一年级的小学教育，第一次由同年龄的人口数除"
-"以，然后将结果乘以100。该指标包含性别和地区数据。"
+msgid "Divide the number of children of official primary school-entrance age who enter the first grade of primary education for the first time by the population of the same age, and multiply the result by 100. This indicator has dimension values of sex and locality."
+msgstr "正式的小学入学年龄的儿童进入小学一年级的小学教育，第一次由同年龄的人口数除以，然后将结果乘以100。该指标包含性别和地区数据。"
 
 msgid "Gross Intake Rate Report"
 msgstr "毛入学率报告"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in a given level of "
-"education regardless of age by the population of the age group which "
-"officially corresponds to the given level of education, and multiply the "
-"result by 100. This indicator has dimension values of sex, locality and "
-"grade."
-msgstr ""
-"划分的学生人数（或学生）参加在给定的教育水平，不论年龄由年龄组正式对应于给定"
-"的受教育程度的人口，将结果乘以100。该指标包含性别，地区和年级数据。"
+msgid "Divide the number of pupils (or students) enrolled in a given level of education regardless of age by the population of the age group which officially corresponds to the given level of education, and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "划分的学生人数（或学生）参加在给定的教育水平，不论年龄由年龄组正式对应于给定的受教育程度的人口，将结果乘以100。该指标包含性别，地区和年级数据。"
 
-msgid ""
-"Divide the number of new entrants in grade 1, irrespective of age, by the "
-"population of official school-entrance age, and multiply the result by 100. "
-"This indicator has dimension values of sex, locality and grade."
-msgstr ""
-"新进入者的数量除以1级，不论年龄大小，人口的官方学校 - 入学年龄，并且将结果乘"
-"以100。该指标包含性别和地区数据。"
+msgid "Divide the number of new entrants in grade 1, irrespective of age, by the population of official school-entrance age, and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "新进入者的数量除以1级，不论年龄大小，人口的官方学校 - 入学年龄，并且将结果乘以100。该指标包含性别和地区数据。"
 
 msgid "Repetition Rate Report"
 msgstr "重读率报告"
 
-msgid ""
-"Divide the number of repeaters in a given grade in school year t+1 by the "
-"number of pupils from the same cohort enrolled in the same grade in the "
-"previous school year t . This indicator has dimension values of sex, "
-"locality, sector and grade."
-msgstr ""
-"中继器的数量在一个给定的等级，在学年 t +1分的学生人数从同一队列登记在同一个档"
-"次上一学年度。该指标包含性别，地区，单位和年级数据。"
+msgid "Divide the number of repeaters in a given grade in school year t+1 by the number of pupils from the same cohort enrolled in the same grade in the previous school year t . This indicator has dimension values of sex, locality, sector and grade."
+msgstr "中继器的数量在一个给定的等级，在学年 t +1分的学生人数从同一队列登记在同一个档次上一学年度。该指标包含性别，地区，单位和年级数据。"
 
 msgid "Completion Rate Report"
 msgstr "完成率报告"
 
-msgid ""
-"Divide the number of primary graduates, irrespective of age, by the "
-"population of theoretical primary graduation, and multiply the result by "
-"100. This indicator has dimension values of sex, locality and sector."
-msgstr ""
-"将这个数字的小学毕业生，不论年龄大小，人口理论小学毕业，并且将结果乘以100。该"
-"指标包含性别，地区和单位数据。"
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100. This indicator has dimension values of sex, locality and sector."
+msgstr "将这个数字的小学毕业生，不论年龄大小，人口理论小学毕业，并且将结果乘以100。该指标包含性别，地区和单位数据。"
 
 msgid "Survival Rate Report"
 msgstr "存活率报告"
 
-msgid ""
-"Divide the total number of pupils belonging to a school-cohort who reached "
-"each successive grade of the specified level of education by the number of "
-"pupils in the school-cohort i.e. those originally enrolled in the first "
-"grade of primary education, and multiply the result by 100. The survival "
-"rate is calculated on the basis of the reconstructed cohort method, which "
-"uses data on enrolment and repeaters for two consecutive years. This "
-"indicator has dimension values of sex, locality and sector."
-msgstr ""
-"分属于一所学校？队列，每个学校的学生人数在连续级指定的受教育程度达到学生总人"
-"数的吗？队列即那些原本就读于一年级的小学教育，将结果乘以100。生存率的计算方法"
-"的基础上重建队列方法，它使用了连续两年的入学和中继器的数据。该指标包含性别，"
-"地区和单位数据。"
+msgid "Divide the total number of pupils belonging to a school-cohort who reached each successive grade of the specified level of education by the number of pupils in the school-cohort i.e. those originally enrolled in the first grade of primary education, and multiply the result by 100. The survival rate is calculated on the basis of the reconstructed cohort method, which uses data on enrolment and repeaters for two consecutive years. This indicator has dimension values of sex, locality and sector."
+msgstr "分属于一所学校？队列，每个学校的学生人数在连续级指定的受教育程度达到学生总人数的吗？队列即那些原本就读于一年级的小学教育，将结果乘以100。生存率的计算方法的基础上重建队列方法，它使用了连续两年的入学和中继器的数据。该指标包含性别，地区和单位数据。"
 
 msgid "Transition Rate Report"
 msgstr "转校率报告"
 
-msgid ""
-"Divide the number of new entrants in the first grade of the specified higher "
-"cycle or level of education by the number of pupils who were enrolled in the "
-"final grade of the preceding cycle or level of education in the previous "
-"school year, and multiply by 100. This indicator has dimension values of "
-"sex, locality, sector and grade."
-msgstr ""
-"数除以一年级的新进入者在指定的周期或受教育程度的学生被纳入最终成绩的前一个周"
-"期或在上一学年的教育水平，再乘以100。该指标包含性别，地区，单位和年级数据。"
+msgid "Divide the number of new entrants in the first grade of the specified higher cycle or level of education by the number of pupils who were enrolled in the final grade of the preceding cycle or level of education in the previous school year, and multiply by 100. This indicator has dimension values of sex, locality, sector and grade."
+msgstr "数除以一年级的新进入者在指定的周期或受教育程度的学生被纳入最终成绩的前一个周期或在上一学年的教育水平，再乘以100。该指标包含性别，地区，单位和年级数据。"
 
 msgid "Pupil Teacher Ratio Report"
 msgstr "学生与教师的比率报告"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of teachers at the same level. This indicator has "
-"dimension values of locality, sector and level of education."
-msgstr ""
-"总数除以学生人数在指定的受教育程度在同级别的教师人数。该指标包含地区，单位和"
-"教育程度数据。"
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of teachers at the same level. This indicator has dimension values of locality, sector and level of education."
+msgstr "总数除以学生人数在指定的受教育程度在同级别的教师人数。该指标包含地区，单位和教育程度数据。"
 
 msgid "Pupil Class Ratio Report"
 msgstr "学生与班级的比率报告"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of classes at the same level. This indicator has "
-"dimension values of locality and sector."
-msgstr ""
-"总数除以学生人数在指定的受教育程度在同级别的班级数目。该指标包含地区和单位数"
-"据。"
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of classes at the same level. This indicator has dimension values of locality and sector."
+msgstr "总数除以学生人数在指定的受教育程度在同级别的班级数目。该指标包含地区和单位数据。"
 
 msgid "Trained Teachers Report"
 msgstr "经过培训的教师报告"
 
-msgid ""
-"Divide the number of teachers of the specified level of education who have "
-"received the minimum required teacher training by the total number of "
-"teachers at the same level of education, and multiply the result by 100. "
-"This indicator has dimension values of locality, sector and level of "
-"education."
-msgstr ""
-"数除以教师指定级别的教育已经收到了教师总人数的最低要求教师培训在同等水平的教"
-"育，然后将结果乘以100。该指标包含地区，单位和教育程度数据。"
+msgid "Divide the number of teachers of the specified level of education who have received the minimum required teacher training by the total number of teachers at the same level of education, and multiply the result by 100. This indicator has dimension values of locality, sector and level of education."
+msgstr "数除以教师指定级别的教育已经收到了教师总人数的最低要求教师培训在同等水平的教育，然后将结果乘以100。该指标包含地区，单位和教育程度数据。"
 
 msgid "Gender Parity Index (Students) Report"
 msgstr "性别平均指数（学生）报告"
 
-msgid ""
-"Divide the number of female students by the number of male students. This "
-"indicator has dimension values of sex, locality, sector and level of "
-"education."
-msgstr ""
-"划分的女性价值的一个给定指标的男性。该指标包含性别，地区，单位和教育程度数"
-"据。"
+msgid "Divide the number of female students by the number of male students. This indicator has dimension values of sex, locality, sector and level of education."
+msgstr "划分的女性价值的一个给定指标的男性。该指标包含性别，地区，单位和教育程度数据。"
 
 msgid "Female Students Report"
 msgstr "女学生报告"
 
-msgid ""
-"Divide the number of female tertiary students enrolled in a specified ISCED "
-"level by the total number of students (male plus female) in that level in a "
-"given academic-year, and multiply the result by 100. This indicator has "
-"dimension values of locality, sector and level of education."
-msgstr ""
-"ISCED水平在指定的学生总人数（男加女），在一个给定的学术年就读于女性大专学生，"
-"将这个数字将结果乘以100。该指标包含地区，单位和教育程度数据。"
+msgid "Divide the number of female tertiary students enrolled in a specified ISCED level by the total number of students (male plus female) in that level in a given academic-year, and multiply the result by 100. This indicator has dimension values of locality, sector and level of education."
+msgstr "ISCED水平在指定的学生总人数（男加女），在一个给定的学术年就读于女性大专学生，将这个数字将结果乘以100。该指标包含地区，单位和教育程度数据。"
 
 msgid "Female Teachers Report"
 msgstr "女教师报告"
 
-msgid ""
-"Divide the total number of female teachers at a given level of education by "
-"the total number of teachers (male and female) at the same level in a given "
-"school year, and multiply by 100. This indicator has dimension values of "
-"locality, sector and level of education."
-msgstr ""
-"女教师总数除以在给定的教育水平在同级别中一个学年的教师总人数（男，女），再乘"
-"以100。该指标包含地区，单位和教育程度数据。"
+msgid "Divide the total number of female teachers at a given level of education by the total number of teachers (male and female) at the same level in a given school year, and multiply by 100. This indicator has dimension values of locality, sector and level of education."
+msgstr "女教师总数除以在给定的教育水平在同级别中一个学年的教师总人数（男，女），再乘以100。该指标包含地区，单位和教育程度数据。"
 
 msgid "Private Enrolment Report"
 msgstr "私人入学报名"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in private educational "
-"institutions in a given level of education by total enrolment (public and "
-"private) at the same level of education, and multiply the result by 100. "
-"This indicator has dimension values of sex, locality and level of education."
-msgstr ""
-"划分的学生人数（或学生）就读于私立教育机构在给定的教育水平同等水平的教育总入"
-"学率（公共和私人），然后将结果乘以100。该指标包含性别，地区和教育程度数据。"
+msgid "Divide the number of pupils (or students) enrolled in private educational institutions in a given level of education by total enrolment (public and private) at the same level of education, and multiply the result by 100. This indicator has dimension values of sex, locality and level of education."
+msgstr "划分的学生人数（或学生）就读于私立教育机构在给定的教育水平同等水平的教育总入学率（公共和私人），然后将结果乘以100。该指标包含性别，地区和教育程度数据。"
 
 msgid "Pupil Textbook Ratio Report"
 msgstr "学生与教材比例报告"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of textbooks at the same level. This indicator has "
-"dimension values of locality, and sector."
-msgstr ""
-"总数除以学生人数在指定的受教育程度在同级别的教科书由数量。该指标包含地区和单"
-"位数据。"
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of textbooks at the same level. This indicator has dimension values of locality, and sector."
+msgstr "总数除以学生人数在指定的受教育程度在同级别的教科书由数量。该指标包含地区和单位数据。"
 
 msgid "Water Sources Report"
 msgstr "水源报告"
 
-msgid ""
-"Number of water sources by type. This indicator has dimension values of "
-"locality, sector and condition."
+msgid "Number of water sources by type. This indicator has dimension values of locality, sector and condition."
 msgstr "水源数量按类型。该指标包含地区，单位和条件数据。"
 
 msgid "Sanitation Facilities Report"
 msgstr "卫生设施报告"
 
-msgid ""
-"Number of sanitation facilities by type. This indicator has dimension values "
-"of locality, sector and condition."
+msgid "Number of sanitation facilities by type. This indicator has dimension values of locality, sector and condition."
 msgstr "卫生设施数量按类型。该指标包含地区，单位和条件数据。"
 
 msgid "Public Expenditure per Education Level Report"
 msgstr "公共教育支出按教育程度报告"
 
-msgid ""
-"Divide total public expenditure for each level of education in a given "
-"financial year by the total public expenditure on education for the same "
-"financial year and multiply the result by 100. "
-msgstr ""
-"教育所产生的所有政府机构/部门在给定的财政年度的政府总开支为同一财政年度的公共"
-"开支总额除以再乘以100。"
+msgid "Divide total public expenditure for each level of education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100. "
+msgstr "教育所产生的所有政府机构/部门在给定的财政年度的政府总开支为同一财政年度的公共开支总额除以再乘以100。"
 
 msgid "Public Expenditure on Education Report"
 msgstr "公共教育开支报告"
 
-msgid ""
-"Divide total public expenditure on education incurred by all government "
-"agencies/departments in a given financial year by the total government "
-"expenditure for the same financial year and multiply by 100."
-msgstr ""
-"教育所产生的所有政府机构/部门在给定的财政年度的政府总开支为同一财政年度的公共"
-"开支总额除以再乘以100。"
+msgid "Divide total public expenditure on education incurred by all government agencies/departments in a given financial year by the total government expenditure for the same financial year and multiply by 100."
+msgstr "教育所产生的所有政府机构/部门在给定的财政年度的政府总开支为同一财政年度的公共开支总额除以再乘以100。"
 
 msgid "Public Expenditure on Education by GNP Report"
 msgstr "公共教育开支按 GNP 报告"
 
-msgid ""
-"Divide total public expenditure on education in a given financial year by "
-"the Gross National Product (GNP) or Gross National Income (GNI) of the "
-"country for the corresponding year and multiply by 100."
-msgstr ""
-"在一个给定的财政年度教育的公共开支总额除以相应年度的国家的国民总收入，再乘以"
-"100。"
+msgid "Divide total public expenditure on education in a given financial year by the Gross National Product (GNP) or Gross National Income (GNI) of the country for the corresponding year and multiply by 100."
+msgstr "在一个给定的财政年度教育的公共开支总额除以相应年度的国家的国民总收入，再乘以100。"
 
 msgid "Public Expenditure per Pupil Report"
 msgstr "公共支出的每名学生人均国民生产报告"
 
-msgid ""
-"Divide per pupil public current expenditure on each level of education in a "
-"given year by the GNI per capita for the same year and multiply by 100. This "
-"indicator has dimension values of level of education."
-msgstr ""
-"每个在某一年的教育水平，人均国民总收入为同年除以每个学生的公共经常性支出，再"
-"乘以100。该指标包含教育程度数据。"
+msgid "Divide per pupil public current expenditure on each level of education in a given year by the GNI per capita for the same year and multiply by 100. This indicator has dimension values of level of education."
+msgstr "每个在某一年的教育水平，人均国民总收入为同年除以每个学生的公共经常性支出，再乘以100。该指标包含教育程度数据。"
 
 msgid "Process"
 msgstr "流程"
@@ -1968,16 +1834,13 @@ msgstr "生成"
 msgid "Generated Files"
 msgstr "生成 文档"
 
-msgid ""
-"The system will %s the current data and restore to your previous data based "
-"on the restore point you selected."
+msgid "The system will %s the current data and restore to your previous data based on the restore point you selected."
 msgstr "系统将以你选择的修复点进行修复，并显示当前所完成修复数据的百分比。"
 
 msgid "Please note that the system will not restore the following tables:"
 msgstr "请注意，系统不会恢复以下列表："
 
-msgid ""
-"Below are the list of available backup dates, please choose a restore point."
+msgid "Below are the list of available backup dates, please choose a restore point."
 msgstr "以下列表是可备份的日期，请选择一个修复点。"
 
 msgid "Files"
@@ -2064,13 +1927,8 @@ msgstr "请输入期限。"
 msgid "Add Programme"
 msgstr "添加计划"
 
-msgid ""
-"You are able to delete this record in the database. <br><br>All related "
-"information of this record will also be deleted.<br><br>Are you sure you "
-"want to do this?"
-msgstr ""
-"您可以在数据库中删除这条记录。参考此记录的所有相关信息也将被删除。<br><br>您"
-"确定要删除吗？"
+msgid "You are able to delete this record in the database. <br><br>All related information of this record will also be deleted.<br><br>Are you sure you want to do this?"
+msgstr "您可以在数据库中删除这条记录。参考此记录的所有相关信息也将被删除。<br><br>您确定要删除吗？"
 
 msgid "Deleting attachment..."
 msgstr "删除附件…"
@@ -2201,8 +2059,7 @@ msgstr "请为此学院分校添加教育计划。"
 msgid "Missing Coordinates Report"
 msgstr "缺少坐标报告"
 
-msgid ""
-"List of Institution Sites with latitude and/or longitude values of 0 or null"
+msgid "List of Institutions with latitude and/or longitude values of 0 or null"
 msgstr "机构网站和纬度/经度值是0或空列表"
 
 msgid "OLAP Report"
@@ -2346,9 +2203,7 @@ msgstr "标志"
 msgid "Data Outliers"
 msgstr "数据野值"
 
-msgid ""
-"Census Numbers that have age or total of male and female numbers beyond the "
-"specified range in settings."
+msgid "Census Numbers that have age or total of male and female numbers beyond the specified range in settings."
 msgstr "人口普查数字超出规定的范围内设置有年龄的男性和女性的数字或总。"
 
 msgid "Page Orientation"
@@ -2420,7 +2275,7 @@ msgstr ""
 msgid "Descriptions"
 msgstr ""
 
-msgid "QUALITY"
+msgid "Quality"
 msgstr ""
 
 msgid "Rubric Details"
@@ -2606,7 +2461,7 @@ msgstr ""
 msgid "Credit Hours"
 msgstr ""
 
-msgid "Mode Of Delivery"
+msgid "Mode of Delivery"
 msgstr ""
 
 msgid "Training Provider"
@@ -2723,7 +2578,7 @@ msgstr ""
 msgid "Please select a Country"
 msgstr ""
 
-msgid "Sms"
+msgid "SMS"
 msgstr ""
 
 msgid "Messages"
@@ -2771,9 +2626,7 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-msgid ""
-"Note: Please clear the Responses page as existing responses may no longer "
-"match the updated Messages."
+msgid "Note: Please clear the Responses page as existing responses may no longer match the updated Messages."
 msgstr ""
 
 msgid "Do you wish to clear all records?"
@@ -2911,9 +2764,7 @@ msgstr ""
 msgid "Completion Rate / Gross Primary Graduation Ratio"
 msgstr ""
 
-msgid ""
-"Divide the number of primary graduates, irrespective of age, by the "
-"population of theoretical primary graduation, and multiply the result by 100."
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100."
 msgstr ""
 
 msgid "Percentage of Trained Teachers"
@@ -2937,16 +2788,10 @@ msgstr ""
 msgid "Percentage of schools with adequate sanitation facilities"
 msgstr ""
 
-msgid ""
-"Public Expenditure as percentage of Total Public Expenditure on Education"
+msgid "Public Expenditure as percentage of Total Public Expenditure on Education"
 msgstr ""
 
-msgid ""
-"Divide public current expenditure devoted to each level of education by the "
-"total public current expenditure on education, and multiply the result by "
-"100. Divide public current expenditure on education in a given financial "
-"year by the total public expenditure on education for the same financial "
-"year and multiply the result by 100."
+msgid "Divide public current expenditure devoted to each level of education by the total public current expenditure on education, and multiply the result by 100. Divide public current expenditure on education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100."
 msgstr ""
 
 msgid "Public Expenditure as percentage of Total Government Expenditure"
@@ -3103,9 +2948,6 @@ msgid "Room Report"
 msgstr ""
 
 msgid "Summary of sanitation, gender and conditions from census"
-msgstr ""
-
-msgid "Summary of resources and conditions from census"
 msgstr ""
 
 msgid "Summary of water and conditions from census"
@@ -3300,25 +3142,19 @@ msgstr ""
 msgid "Training Trainer Report"
 msgstr ""
 
-msgid ""
-"Report of Exceptions to see if a staff is enrolled in two courses at the "
-"same time or has already completed the course"
+msgid "Report of Exceptions to see if a staff is enrolled in two courses at the same time or has already completed the course"
 msgstr ""
 
 msgid "Training Exception Report"
 msgstr ""
 
-msgid ""
-"Report on the number of staff actually trained verses target groups for each "
-"program"
+msgid "Report on the number of staff actually trained verses target groups for each program"
 msgstr ""
 
 msgid "Training Staff Statistics Report"
 msgstr ""
 
-msgid ""
-"Report on the number of teachers actually trained verses target groups for "
-"each program"
+msgid "Report on the number of teachers actually trained verses target groups for each program"
 msgstr ""
 
 msgid "Training Teacher Statistic Report"
@@ -3330,7 +3166,7 @@ msgstr ""
 msgid "Institution Site Custom Field Report"
 msgstr ""
 
-msgid "Institution Site Totals"
+msgid "Institution Totals"
 msgstr ""
 
 msgid "Summary of verifications from census"
@@ -3384,13 +3220,7 @@ msgstr ""
 msgid "Summary of furniture and conditions from census"
 msgstr ""
 
-msgid "Summary of resources and conditions from census "
-msgstr ""
-
 msgid "Summary of power and conditions from census"
-msgstr ""
-
-msgid "Summary of water and conditions from census "
 msgstr ""
 
 msgid "List of Students with custom fields"
@@ -3426,7 +3256,7 @@ msgstr ""
 msgid "Standard"
 msgstr ""
 
-msgid "SURVEY"
+msgid "Survey"
 msgstr ""
 
 msgid "New Surveys"
@@ -3444,9 +3274,7 @@ msgstr ""
 msgid "Training Staff Statistic Report"
 msgstr ""
 
-msgid ""
-"Report on the number of teacher actually trained verses target groups for "
-"each program"
+msgid "Report on the number of teacher actually trained verses target groups for each program"
 msgstr ""
 
 msgid "New Staff"
@@ -3485,7 +3313,7 @@ msgstr ""
 msgid "Salary"
 msgstr ""
 
-msgid "HEALTH"
+msgid "Health"
 msgstr ""
 
 msgid "Family"
@@ -3581,7 +3409,7 @@ msgstr ""
 msgid "Total Days"
 msgstr ""
 
-msgid "List of Behaviours"
+msgid "List of Behaviour"
 msgstr ""
 
 msgid "No record available"
@@ -3752,18 +3580,13 @@ msgstr ""
 msgid "Quality Assurance"
 msgstr ""
 
-msgid ""
-"Report generated at the school, FD and national level for each aspect "
-"(category) and domain (technical or administrative) "
+msgid "Report generated at the school, FD and national level for each aspect (category) and domain (technical or administrative) "
 msgstr ""
 
 msgid "QA Schools Report"
 msgstr ""
 
-msgid ""
-"Report generated by type, category, result (pass or fail) and a table with "
-"the average, minimum and maximum values and also compare results from one "
-"year to the next "
+msgid "Report generated by type, category, result (pass or fail) and a table with the average, minimum and maximum values and also compare results from one year to the next "
 msgstr ""
 
 msgid "QA Results Report"
@@ -3964,9 +3787,7 @@ msgstr ""
 msgid "*File size should not be larger than 2MB."
 msgstr ""
 
-msgid ""
-"*Maximum 5 files are permitted on single upload. Each file size should not "
-"be larger than 2MB."
+msgid "*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB."
 msgstr ""
 
 msgid "Result Type"
@@ -4147,4 +3968,235 @@ msgid "Download Trainee Results"
 msgstr ""
 
 msgid "Duplicate Session"
+msgstr ""
+
+msgid "Shared Reports"
+msgstr ""
+
+msgid "My Reports"
+msgstr ""
+
+msgid "Absence"
+msgstr ""
+
+msgid "From"
+msgstr ""
+
+msgid "To"
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Select Image"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Change"
+msgstr ""
+
+msgid "There is no data to be displayed."
+msgstr ""
+
+msgid "s"
+msgstr ""
+
+msgid "Site Type:"
+msgstr ""
+
+msgid "Period"
+msgstr ""
+
+msgid "Shift"
+msgstr ""
+
+msgid "Shift Name"
+msgstr ""
+
+msgid "Start Time"
+msgstr "开始时间"
+
+msgid "End Time"
+msgstr "结束时间"
+
+msgid "Shift Details"
+msgstr ""
+
+msgid "Edit Shift"
+msgstr ""
+
+msgid "Add Shift"
+msgstr ""
+
+msgid "Add Attachment"
+msgstr ""
+
+msgid "Please enter a File name"
+msgstr ""
+
+msgid "No file was uploaded"
+msgstr ""
+
+msgid "The files has been uploaded"
+msgstr ""
+
+msgid "Attachment Details"
+msgstr ""
+
+msgid "Teaching"
+msgstr ""
+
+msgid "Position Details"
+msgstr ""
+
+msgid "Edit Position"
+msgstr ""
+
+msgid "All Years"
+msgstr ""
+
+msgid "Number:"
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+msgid "Visualizer - Indicator"
+msgstr ""
+
+msgid "Unit"
+msgstr ""
+
+msgid "Step 1"
+msgstr ""
+
+msgid "Step 2"
+msgstr ""
+
+msgid "Step 3"
+msgstr ""
+
+msgid "Step 4"
+msgstr ""
+
+msgid "Step 5"
+msgstr ""
+
+msgid "Step 6"
+msgstr ""
+
+msgid "Step 7"
+msgstr ""
+
+msgid "Step 8"
+msgstr ""
+
+msgid "Step 9"
+msgstr ""
+
+msgid "Dimension"
+msgstr ""
+
+msgid "Review"
+msgstr ""
+
+msgid "Visualize"
+msgstr ""
+
+msgid "Indicators"
+msgstr ""
+
+msgid "Area ID"
+msgstr ""
+
+msgid "Table"
+msgstr ""
+
+msgid "Column"
+msgstr ""
+
+msgid "Stacked Column"
+msgstr ""
+
+msgid "Bar"
+msgstr ""
+
+msgid "Stacked Bar"
+msgstr ""
+
+msgid "Line"
+msgstr ""
+
+msgid "Scatter"
+msgstr ""
+
+msgid "Pie"
+msgstr ""
+
+msgid "Visualization"
+msgstr ""
+
+msgid "Visualizer"
+msgstr ""
+
+msgid "List of Classes"
+msgstr ""
+
+msgid "Verify"
+msgstr ""
+
+msgid "Data Entry"
+msgstr ""
+
+msgid "Estimate"
+msgstr ""
+
+msgid "Full Time Equivalent Teachers"
+msgstr ""
+
+msgid "Single Grade Teachers Only"
+msgstr ""
+
+msgid "Single Grade Classes Only"
+msgstr ""
+
+msgid "Multi Grade Classes"
+msgstr ""
+
+msgid "There are no classes associated with this institution site for the selected year."
+msgstr ""
+
+msgid "There are no subjects configured in the system."
+msgstr ""
+
+msgid "Overview and More"
+msgstr ""
+
+msgid "Guardians"
+msgstr "监护人"
+
+msgid "Maps"
+msgstr "地图"
+
+msgid "Communications"
+msgstr ""
+
+msgid "Display"
+msgstr ""
+
+msgid "records"
+msgstr ""
+
+msgid "Showing"
+msgstr ""
+
+msgid "Surveys"
+msgstr ""
+
+msgid "Workflows"
 msgstr ""
