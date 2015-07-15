@@ -1,5 +1,9 @@
+<?php $label = isset($attr['label']) ? $attr['label'] : $attr['field']; ?>
+<?php if ($label): ?>
 <div class="input date<?= $attr['null'] == false ? ' required' : '' ?>">
-	<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+	<label for="<?= $attr['id'] ?>"><?= $label ?></label>
+<?php endif; ?>
+
 	<div class="input-group date" id="<?= $attr['id'] ?>">
 		<?php 
 
@@ -31,4 +35,7 @@
 		echo $this->Form->error($attr['field']);
 	}
 	?>
+	
+<?php if ($label): ?>
 </div>
+<?php endif; ?>
