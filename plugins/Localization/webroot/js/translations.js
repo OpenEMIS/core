@@ -1,7 +1,6 @@
 var Translations = {
 	compile: function (obj){
-		var urlPost = $( this ).attr('url-post');
-		var url = urlPost;
+		var url = $( '#translation' ).attr('compile-url');
 		var value = $( '#translation' ).val();
 		$.ajax({
 			type: 'POST',
@@ -10,10 +9,10 @@ var Translations = {
 				locale : value
 			},
 			success: function(data) {
-				alert('Translations applied');
+				console.log('success');
 			},
 			error: function(jqXHR, textStatus, errorThrown){
-				alert('Error when applying translations');
+				console.log('error');
 			}
 		});
 	}	
