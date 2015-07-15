@@ -1,6 +1,7 @@
 var Translations = {
 	compile: function (obj){
-		var url = $( this ).attr('url');
+		var urlPost = $( this ).attr('url-post');
+		var url = urlPost;
 		var value = $( '#translation' ).val();
 		$.ajax({
 			type: 'POST',
