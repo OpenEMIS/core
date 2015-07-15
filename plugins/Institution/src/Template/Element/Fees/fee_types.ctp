@@ -1,8 +1,8 @@
-<?php if ($action == 'add' || $action == 'edit') : ?>
+<?php if (($action == 'add' || $action == 'edit') && !isset($attr['non-editable'])) : ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
-	<div class="table-in-view col-md-4 table-responsive">
+	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
+	<div>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
@@ -49,39 +49,48 @@
 
 <?php else : ?>
 
-<div class="table-in-view col-md-4 table-responsive">
-	<table class="table table-striped table-hover table-bordered">
-		<thead>
-			<tr>
-				<th><?= __('Type') ?></th>
-				<th><?= __('Amount ('.$attr['currency'].')') ?></th>
-			</tr>
-		</thead>
-		<tbody>
-		<?php 
-		if (isset($attr['data']) && !empty($attr['data'])) :
-			foreach ($attr['data'] as $i=>$obj) : ?>
-			<tr>
-				<td><?= $obj['type'] ?></td>
-				<td class="cell-number"><?php echo $obj['amount'] ?></td>
-			</tr>
-		<?php
-			endforeach;
-		endif;
-		?>
-		</tbody>
-		
-		<?php if (isset($attr['data']) && !empty($attr['data'])) : ?>
-		
-		<tfoot>
-			<td class="cell-number bold"><?php echo $this->Label->get('general.total') ?></td>
-			<td class="cell-number bold"><?php echo $attr['total'] ?></td>
-		</tfoot>
-		
-		<?php
-		endif;
-		?>
-	</table>
+<?php if (isset($attr['non-editable']) && $action != 'view'): ?>
+<div class="input clearfix">
+	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
+	<div class="table-in-view">
+<?php else : ?>
+	<div>
+<?php endif; ?>
+		<table class="table table-striped table-hover table-bordered">
+			<thead>
+				<tr>
+					<th><?= __('Type') ?></th>
+					<th><?= __('Amount ('.$attr['currency'].')') ?></th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php 
+			if (isset($attr['data']) && !empty($attr['data'])) :
+				foreach ($attr['data'] as $i=>$obj) : ?>
+				<tr>
+					<td><?= $obj['type'] ?></td>
+					<td class="cell-number"><?php echo $obj['amount'] ?></td>
+				</tr>
+			<?php
+				endforeach;
+			endif;
+			?>
+			</tbody>
+			
+			<?php if (isset($attr['data']) && !empty($attr['data'])) : ?>
+			
+			<tfoot>
+				<td class="cell-number bold"><?php echo $this->Label->get('general.total') ?></td>
+				<td class="cell-number bold"><?php echo $attr['total'] ?></td>
+			</tfoot>
+			
+			<?php
+			endif;
+			?>
+		</table>
+	</div>
+<?php if (isset($attr['non-editable'])): ?>
 </div>
+<?php endif ?>
 
 <?php endif ?>

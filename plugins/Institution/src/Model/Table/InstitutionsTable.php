@@ -55,6 +55,8 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
+		
+		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'dependent' => true]);
 
 		// pr($this->validator());
 		$this->addBehavior('CustomField.Record', [

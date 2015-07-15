@@ -67,7 +67,8 @@ trait MessagesTrait {
 			'noClasses' => 'No Classes',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
-			'amount' => 'Amount'
+			'amount' => 'Amount',
+			'total' => 'Total'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',

@@ -7,11 +7,10 @@
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">
 	<?php
-		echo $this->Form->input('student_id', array(
-			'options' => $attr['data']['studentOptions'],
+		echo $this->Form->input('student_id', [
 			'label' => $this->Label->get('Users.add_student'),
 			'onchange' => "$('#reload').val('add').click();"
-		));
+		]);
 		?>
 	</div>
 	<?php endif;?>
