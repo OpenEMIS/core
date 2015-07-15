@@ -93,12 +93,17 @@ class HtmlFieldHelper extends Helper {
 		foreach ($includes as $include) {
 			if ($include['include']) {
 				if (array_key_exists('css', $include)) {
-					echo $this->Html->css($include['css'], ['block' => true]);
+					if (is_array($include['css'])) {
+						foreach ($include['css'] as $css) {
+							echo $this->Html->css($css, ['block' => true]);
+						}
+					} else {
+						echo $this->Html->css($include['css'], ['block' => true]);
+					}
 				}
 				if (array_key_exists('js', $include)) {
 					if (is_array($include['js'])) {
 						foreach ($include['js'] as $js) {
-
 							echo $this->Html->script($js, ['block' => true]);
 						}
 					} else {

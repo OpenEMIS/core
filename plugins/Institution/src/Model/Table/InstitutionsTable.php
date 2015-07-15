@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -14,7 +15,7 @@ use App\Model\Table\AppTable;
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
-        parent::initialize($config); 
+        parent::initialize($config);
 
 		/**
 		 * fieldOption tables
@@ -56,7 +57,6 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 
-		// pr($this->validator());
 		$this->addBehavior('CustomField.Record', [
 			'recordKey' => 'institution_site_id',
 			'fieldValueKey' => ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
@@ -176,11 +176,7 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, $options) {
-		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
-		// echo 'Options<br/>';pr($options);pr('<hr/>');
-		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
-		// die('afterSave');
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         if ($entity->isNew()) {
 			// $addSecurityGroupParams = array(
 			// 	'SecurityGroup' => array(
@@ -207,12 +203,12 @@ class InstitutionsTable extends AppTable  {
 			// if (!empty($securityGroupId)) {
 			// 	$this->SecurityGroup->read(null, $securityGroupId);
 			// 	if (is_object($this->SecurityGroup)) {
-			// 		$editSecurityGroupParams = array(
-			// 			'SecurityGroup' => array(
+			// 		$editSecurityGroupParams = [
+			// 			'SecurityGroup' => [
 			// 				'id' => $securityGroupId,
 			// 				'name' => $this->data['InstitutionSite']['name']
-			// 			)
-			// 		);
+			// 			]
+			// 		];
 			// 		if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
 			// 			return false;
 			// 		}
@@ -220,6 +216,14 @@ class InstitutionsTable extends AppTable  {
 			// }
         }
         return true;
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$securityGroupId = $entity->security_group_id;
+		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+
+		$groupEntity = $SecurityGroup->get($securityGroupId);
+		$SecurityGroup->delete($groupEntity);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
