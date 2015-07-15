@@ -7,34 +7,34 @@ $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 
 <div class="clearfix"></div>
 <hr>
-<h3><?= __('Areas') ?></h3>
+<h3><?= __('Institutions') ?></h3>
 <?php
 	$url = $this->Url->build([
 		'plugin' => $this->request->params['plugin'],
 	    'controller' => $this->request->params['controller'],
 	    'action' => $this->request->params['action'],
-	    'ajaxAreaAutocomplete'
+	    'ajaxInstitutionAutocomplete'
 	]);
 	$table = $ControllerAction['table']->alias();
 
-	echo $this->Form->input('area_search', [
-		'label' => __('Add Area'),
+	echo $this->Form->input('institution_search', [
+		'label' => __('Add Institution'),
 		'type' => 'text',
 		'class' => 'autocomplete',
 		'autocomplete-url' => $url,
-		'autocomplete-no-results' => __('No Area found.'),
+		'autocomplete-no-results' => __('No Institution found.'),
 		'autocomplete-class' => 'error-message',
-		'autocomplete-target' => 'area_id',
-		'autocomplete-submit' => "$('#reload').val('addArea').click();"
+		'autocomplete-target' => 'institution_id',
+		'autocomplete-submit' => "$('#reload').val('addInstitution').click();"
 	]);
-	echo $this->Form->hidden('area_id', ['autocomplete-value' => 'area_id']);
+	echo $this->Form->hidden('institution_id', ['autocomplete-value' => 'institution_id']);
 ?>
 <div class="clearfix"></div>
 <hr>
 
 <?php endif ?>
 
-<div class="table-responsive" autocomplete-ref="area_id">
+<div class="table-responsive" autocomplete-ref="institution_id">
 	<table class="table table-striped table-hover table-bordered table-input">
 		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 		<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
