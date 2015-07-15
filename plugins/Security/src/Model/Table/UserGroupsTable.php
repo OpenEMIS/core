@@ -7,18 +7,23 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
+use App\Model\Traits\HtmlTrait;
 
 class UserGroupsTable extends AppTable {
 	use MessagesTrait;
+	use HtmlTrait;
 
 	public function initialize(array $config) {
 		$this->table('security_groups');
 		parent::initialize($config);
 
+		$this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
+
 		$this->belongsToMany('Users', [
-			'className' => 'User.Users',
+			'className' => 'Security.Users',
 			'joinTable' => 'security_group_users',
 			'foreignKey' => 'security_group_id',
 			'targetForeignKey' => 'security_user_id',
@@ -31,16 +36,27 @@ class UserGroupsTable extends AppTable {
 			'joinTable' => 'security_group_areas',
 			'foreignKey' => 'security_group_id',
 			'targetForeignKey' => 'area_id',
+			'through' => 'Security.SecurityGroupAreas',
 			'dependent' => true
 		]);
 
 		$this->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
-			'joinTable' => 'security_group_institutions',
+			'joinTable' => 'security_group_institution_sites',
 			'foreignKey' => 'security_group_id',
 			'targetForeignKey' => 'institution_site_id',
+			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
 		]);
+
+		// $this->belongsToMany('Roles', [
+		// 	'className' => 'Security.SecurityRoles',
+		// 	'joinTable' => 'security_group_users',
+		// 	'foreignKey' => 'security_group_id',
+		// 	'targetForeignKey' => 'security_role_id',
+		// 	'through' => 'Security.SecurityGroupUsers',
+		// 	'dependent' => true
+		// ]);
 	}
 
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
@@ -69,35 +85,50 @@ class UserGroupsTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 
-		$this->ControllerAction->field('areas', ['type' => 'area_table', 'valueClass' => 'table-full-width']);
-		$this->ControllerAction->field('institutions', ['type' => 'institution_table', 'valueClass' => 'table-full-width']);
+		$this->ControllerAction->field('areas', [
+			'type' => 'area_table', 
+			'valueClass' => 'table-full-width',
+			'visible' => ['index' => false, 'view' => true, 'edit' => true]
+		]);
+		$this->ControllerAction->field('institutions', [
+			'type' => 'institution_table', 
+			'valueClass' => 'table-full-width',
+			'visible' => ['index' => false, 'view' => true, 'edit' => true]
+		]);
+		$this->ControllerAction->field('users', [
+			'type' => 'user_table', 
+			'valueClass' => 'table-full-width',
+			'visible' => ['index' => false, 'view' => true, 'edit' => true]
+		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'areas'
+			'name', 'areas', 'institutions', 'users'
 		]);
+
+		$userId = $this->Auth->user('id');
+		$roles = $this->Roles->getRoles(2);
+		foreach ($roles as $role) {
+			pr($role);
+		}
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['Areas.Levels']);
+		$query->contain(['Areas.Levels', 'Institutions', 'Users.SecurityRoles']);
+		$this->Institutions->trackActivity = false;
 	}
 
 	public function onGetAreaTableElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$tableHeaders = [__('Level'), __('Code'), __('Area')];
 		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'areas';
 
 		if ($action == 'index') {
-			// $EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
-			// $value = $EducationGradesSubjects
-			// 	->findByEducationGradeId($entity->id)
-			// 	->where([$EducationGradesSubjects->aliasField('visible') => 1])
-			// 	->count();
-			// $attr['value'] = $value;
+			// not showing
 		} else if ($action == 'view') {
-			
-			
-			$areas = $entity->extractOriginal(['areas']);
-			if (!empty($areas)) {
-				foreach ($areas['areas'] as $key => $obj) {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
 					$rowData[] = [$obj->level->name, ['autocomplete-exclude' => $obj->id]];
 					$rowData[] = $obj->code;
@@ -105,100 +136,252 @@ class UserGroupsTable extends AppTable {
 					$tableCells[] = $rowData;
 				}
 			}
-
-			$attr['tableHeaders'] = $tableHeaders;
-			$attr['tableCells'] = $tableCells;
 		} else if ($action == 'edit') {
-			// if (isset($entity->id)) {
-			// 	$form = $event->subject()->Form;
-			// 	// Build Education Subjects options
-			// 	$subjectOptions = $this->EducationSubjects
-			// 		->find('list')
-			// 		->find('visible')
-			// 		->find('order')
-			// 		->toArray();
-			// 	// End
+			$tableHeaders[] = ''; // for delete column
+			$Form = $event->subject()->Form;
 
-			// 	$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];
-			// 	$cellCount = 0;
+			if ($this->request->is(['get'])) {
+				if (!array_key_exists($alias, $this->request->data)) {
+					$this->request->data[$alias] = [$key => []];
+				} else {
+					$this->request->data[$alias][$key] = [];
+				}
 
-			// 	$arraySubjects = [];
-				if ($this->request->is(['get'])) {
-					$areas = $entity->extractOriginal(['areas']);
-					if (!empty($areas)) {
-						foreach ($areas['areas'] as $key => $obj) {
-							$rowData = [];
-							$rowData[] = [$obj->level->name, ['autocomplete-exclude' => $obj->id]];
-							$rowData[] = $obj->code;
-							$rowData[] = $obj->name;
-							$tableCells[] = $rowData;
+				$associated = $entity->extractOriginal([$key]);
+				if (!empty($associated[$key])) {
+					foreach ($associated[$key] as $i => $obj) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $obj->id,
+							'_joinData' => ['level' => $obj->level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
+						];
+					}
+				}
+			}
+			// refer to addEditOnAddArea for http post
+			if ($this->request->data("$alias.$key")) {
+				$associated = $this->request->data("$alias.$key");
+
+				foreach ($associated as $i => $obj) {
+					$joinData = $obj['_joinData'];
+					$rowData = [];
+					$name = $joinData['name'];
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $obj['id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.level", ['value' => $joinData['level']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.code", ['value' => $joinData['code']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.area_id", ['value' => $joinData['area_id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$rowData[] = [$joinData['level'], ['autocomplete-exclude' => $joinData['area_id']]];
+					$rowData[] = $joinData['code'];
+					$rowData[] = $name;
+					$rowData[] = $this->getDeleteButton();
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
+	}
+
+	public function addEditOnAddArea(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+
+		if ($data->offsetExists('area_id')) {
+			$id = $data['area_id'];
+			try {
+				$obj = $this->Areas->get($id, ['contain' => 'Levels']);
+				
+				if (!array_key_exists('areas', $data[$alias])) {
+					$data[$alias]['areas'] = [];
+				}
+				$data[$alias]['areas'][] = [
+					'id' => $obj->id,
+					'_joinData' => ['level' => $obj->level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
+				];
+			} catch (RecordNotFoundException $ex) {
+				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
+			}
+		}
+	}
+
+	public function onGetInstitutionTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('Code'), __('Institution')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'institutions';
+
+		if ($action == 'index') {
+			// not showing
+		} else if ($action == 'view') {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$rowData = [];
+					$rowData[] = [$obj->code, ['autocomplete-exclude' => $obj->id]];
+					$rowData[] = $obj->name;
+					$tableCells[] = $rowData;
+				}
+			}
+		} else if ($action == 'edit') {
+			$tableHeaders[] = ''; // for delete column
+			$Form = $event->subject()->Form;
+
+			if ($this->request->is(['get'])) {
+
+				if (!array_key_exists($alias, $this->request->data)) {
+					$this->request->data[$alias] = [$key => []];
+				} else {
+					$this->request->data[$alias][$key] = [];
+				}
+
+				$associated = $entity->extractOriginal([$key]);
+				if (!empty($associated[$key])) {
+					foreach ($associated[$key] as $i => $obj) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $obj->id,
+							'_joinData' => ['code' => $obj->code, 'institution_site_id' => $obj->id, 'name' => $obj->name]
+						];
+					}
+				}
+			}
+			// refer to addEditOnAddInstitution for http post
+			if ($this->request->data("$alias.$key")) {
+				$associated = $this->request->data("$alias.$key");
+
+				foreach ($associated as $i => $obj) {
+					$joinData = $obj['_joinData'];
+					$rowData = [];
+					$name = $joinData['name'];
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['institution_site_id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.code", ['value' => $joinData['code']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.institution_site_id", ['value' => $joinData['institution_site_id']]);
+					$rowData[] = [$joinData['code'], ['autocomplete-exclude' => $joinData['institution_site_id']]];
+					$rowData[] = $name;
+					$rowData[] = $this->getDeleteButton();
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
+	}
+
+	public function addEditOnAddInstitution(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+
+		if ($data->offsetExists('institution_id')) {
+			$id = $data['institution_id'];
+			try {
+				$obj = $this->Institutions->get($id);
+
+				if (!array_key_exists('institutions', $data[$alias])) {
+					$data[$alias]['institutions'] = [];
+				}
+				$data[$alias]['institutions'][] = [
+					'id' => $obj->id,
+					'_joinData' => ['code' => $obj->code, 'institution_site_id' => $obj->id, 'name' => $obj->name]
+				];
+			} catch (RecordNotFoundException $ex) {
+				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
+			}
+		}
+	}
+
+	public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Role')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'users';
+
+		if ($action == 'index') {
+			// not showing
+		} else if ($action == 'view') {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$rowData = [];
+					$rowData[] = $obj->openemis_no;
+					$rowData[] = $obj->name;
+					
+					foreach ($obj->security_roles as $role) {
+						if ($role->_joinData->security_group_id == $entity->id) {
+							$rowData[] = $role->name;
+							break;
 						}
 					}
-				} //else if ($this->request->is(['post', 'put'])) {
-			// 		$requestData = $this->request->data;
-			// 		if (array_key_exists('education_subjects', $requestData[$this->alias()])) {
-			// 			foreach ($requestData[$this->alias()]['education_subjects'] as $key => $obj) {
-			// 				$arraySubjects[] = $obj['_joinData'];
-			// 			}
-			// 		}
+					$tableCells[] = $rowData;
+				}
+			}
+		} else if ($action == 'edit') {
+			$tableHeaders[] = ''; // for delete column
+			$Form = $event->subject()->Form;
 
-			// 		if (array_key_exists('education_subject_id', $requestData[$this->alias()])) {
-			// 			$subjectId = $requestData[$this->alias()]['education_subject_id'];
-			// 			$subjectObj = $this->EducationSubjects
-			// 				->findById($subjectId)
-			// 				->first();
+			if ($this->request->is(['get'])) {
+				if (!array_key_exists($alias, $this->request->data)) {
+					$this->request->data[$alias] = [$key => []];
+				} else {
+					$this->request->data[$alias][$key] = [];
+				}
 
-			// 			$arraySubjects[] = [
-			// 				'name' => $subjectObj->name,
-			// 				'code' => $subjectObj->code,
-			// 				'hours_required' => 0,
-			// 				'education_grade_id' => $entity->id,
-			// 				'education_subject_id' => $subjectObj->id,
-			// 				'visible' => 1
-			// 			];
-			// 		}
-			// 	}
+				$associated = $entity->extractOriginal([$key]);
+				if (!empty($associated[$key])) {
+					foreach ($associated[$key] as $i => $obj) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $obj->id,
+							'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+						];
+					}
+				}
+			}
+			// refer to addEditOnAddInstitution for http post
+			if ($this->request->data("$alias.$key")) {
+				$associated = $this->request->data("$alias.$key");
 
-			// 	foreach ($arraySubjects as $key => $obj) {
-			// 		$fieldPrefix = $attr['model'] . '.education_subjects.' . $cellCount++;
-			// 		$joinDataPrefix = $fieldPrefix . '._joinData';
-
-			// 		$subjectId = $obj['education_subject_id'];
-			// 		$subjectCode = $obj['code'];
-			// 		$subjectName = $obj['name'];
-
-			// 		$cellData = "";
-			// 		$cellData .= $form->input($joinDataPrefix.".hours_required", ['label' => false, 'type' => 'number', 'value' => $obj['hours_required']]);
-			// 		$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $subjectId]);
-			// 		$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $subjectName]);
-			// 		$cellData .= $form->hidden($joinDataPrefix.".code", ['value' => $subjectCode]);
-			// 		$cellData .= $form->hidden($joinDataPrefix.".education_grade_id", ['value' => $obj['education_grade_id']]);
-			// 		$cellData .= $form->hidden($joinDataPrefix.".education_subject_id", ['value' => $subjectId]);
-			// 		$cellData .= $form->hidden($joinDataPrefix.".visible", ['value' => $obj['visible']]);
-			// 		if (isset($obj['id'])) {
-			// 			$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
-			// 		}
-
-			// 		$rowData = [];
-			// 		$rowData[] = $subjectName;
-			// 		$rowData[] = $subjectCode;
-			// 		$rowData[] = $cellData;
-			// 		$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-
-			// 		$tableCells[] = $rowData;
-			// 		unset($subjectOptions[$obj['education_subject_id']]);
-			// 	}
-
-				$attr['tableHeaders'] = $tableHeaders;
-	    		$attr['tableCells'] = $tableCells;
-
-	  //   		$subjectOptions[0] = "-- ".__('Add Subject') ." --";
-	  //   		ksort($subjectOptions);
-	  //   		$attr['options'] = $subjectOptions;
-			// }
+				foreach ($associated as $i => $obj) {
+					$joinData = $obj['_joinData'];
+					$rowData = [];
+					$name = $joinData['name'];
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+					$rowData[] = $joinData['openemis_no'];
+					$rowData[] = $name;
+					$rowData[] = '';
+					$rowData[] = $this->getDeleteButton();
+					$tableCells[] = $rowData;
+				}
+			}
 		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
 
-		return $event->subject()->renderElement('Security.Groups/areas', ['attr' => $attr]);
+		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
+	}
+
+	public function addEditOnAddUser(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+
+		if ($data->offsetExists('user_id')) {
+			$id = $data['user_id'];
+			try {
+				$obj = $this->Users->get($id);
+
+				if (!array_key_exists('users', $data[$alias])) {
+					$data[$alias]['users'] = [];
+				}
+				$data[$alias]['users'][] = [
+					'id' => $obj->id,
+					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+				];
+			} catch (RecordNotFoundException $ex) {
+				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
+			}
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -219,6 +402,25 @@ class UserGroupsTable extends AppTable {
 			'NOT EXISTS (SELECT `id` FROM `institution_sites` WHERE `security_group_id` = `UserGroups`.`id`)'
 		]);
 		return $query;
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// delete all areas if no areas remains in the table
+		if (!array_key_exists('areas', $data[$this->alias()])) {
+			$data[$this->alias()]['areas'] = [];
+		}
+
+		if (!array_key_exists('institutions', $data[$this->alias()])) {
+			$data[$this->alias()]['institutions'] = [];
+		}
+
+		// Required by patchEntity for associated data
+		$newOptions = [];
+		$newOptions['associated'] = ['Areas', 'Institutions'];
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
 	}
 
 	public function findByUser(Query $query, array $options) {
@@ -259,9 +461,31 @@ class UserGroupsTable extends AppTable {
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-
-			// pr($this->Areas->autocomplete($term));
 			$data = $this->Areas->autocomplete($term);
+			echo json_encode($data);
+			die;
+		}
+	}
+
+	public function ajaxInstitutionAutocomplete() {
+		$this->controller->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$term = $this->request->query['term'];
+			$data = $this->Institutions->autocomplete($term);
+			echo json_encode($data);
+			die;
+		}
+	}
+
+	public function ajaxUserAutocomplete() {
+		$this->controller->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$term = $this->request->query['term'];
+			$data = $this->Users->autocomplete($term);
 			echo json_encode($data);
 			die;
 		}

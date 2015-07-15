@@ -147,6 +147,7 @@ class AreasTable extends AppTable {
 		return $attr;
 	}
 
+	// autocomplete used for UserGroups
 	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
 

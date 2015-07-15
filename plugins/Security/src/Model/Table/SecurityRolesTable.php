@@ -1,7 +1,6 @@
 <?php
 namespace Security\Model\Table;
 
-
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -10,7 +9,6 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
-
 
 class SecurityRolesTable extends AppTable {
 	use MessagesTrait;
@@ -22,6 +20,15 @@ class SecurityRolesTable extends AppTable {
 		$this->belongsToMany('SecurityFunctions', [
 			'className' => 'Security.SecurityFunctions',
 			'through' => 'Security.SecurityRoleFunctions'
+		]);
+
+		$this->belongsToMany('GroupRoles', [
+			'className' => 'Security.UserGroups',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
 		]);
 	}
 
@@ -135,5 +142,23 @@ class SecurityRolesTable extends AppTable {
 		} 
 
 		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
+	}
+
+	public function getRoles($userId, $groupId=null) {
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+		$query = $GroupRoles
+			->find()
+			->contain('SecurityRoles')
+			->where([
+				$GroupRoles->aliasField('security_user_id') => $userId,
+				'SecurityRoles.security_group_id' => -1
+			])
+			;
+
+		if (!is_null($groupId)) {
+			$query->where([$GroupRoles->aliasField('security_group_id') => $groupId]);
+		}
+
+		return $query->all();
 	}
 }

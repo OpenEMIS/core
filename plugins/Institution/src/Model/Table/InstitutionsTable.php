@@ -282,4 +282,29 @@ class InstitutionsTable extends AppTable  {
 ** essential methods
 **
 ******************************************************************************************************************/
+	
+	// autocomplete used for UserGroups
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('name') . ' LIKE' => $search,
+					$this->aliasField('code') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s (%s)', $obj->name, $obj->code),
+				'value' => $obj->id
+			];
+		}
+		return $data;
+	}
 }
