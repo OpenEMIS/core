@@ -167,7 +167,8 @@ class NavigationComponent extends Component {
 								],
 								'Translations' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index']
+									'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index'],
+									'selected' => ['add', 'view', 'edit']
 								],
 								'System Configurations' => [
 									'collapse' => true,
