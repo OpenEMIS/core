@@ -86,8 +86,8 @@ class TranslationsTable extends AppTable {
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Compile');
 			$toolbarButtons['download']['attr']['onclick'] = 'Translations.compile(this);';
-			$toolbarButtons['download']['attr']['url-post'] = '/Localization/js/translations.js';
-			$toolbarButtons['download']['url'] = "";
+			$query = $this->request->query('translations_id');
+			$toolbarButtons['download']['url'] = "?translations_id=".$query;
 		}
     }
 }
