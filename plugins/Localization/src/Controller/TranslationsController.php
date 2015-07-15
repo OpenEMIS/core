@@ -2,12 +2,11 @@
 namespace Localization\Controller;
 
 use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
-use Cake\I18n\I18n;
 use Cake\Core\App;
 
 class TranslationsController extends AppController {
+	private $defaultLocale = 'en';
+
 	public function initialize() {
 		parent::initialize();
 		$this->ControllerAction->model('Localization.Translations');
@@ -25,8 +24,6 @@ class TranslationsController extends AppController {
 		$this->set('contentHeader', __($header));
 	}
 
-	private $defaultLocale = 'en';
-
 	public function compile(){
 		$this->autoRender = false;
 		if ($this->request->is('ajax')) {
@@ -34,7 +31,6 @@ class TranslationsController extends AppController {
 			$this->convertPO($locale);
 		}
 	}
-
 
 	private function convertPO($locale){
 		$this->autoRender = false;
@@ -80,9 +76,4 @@ class TranslationsController extends AppController {
 			}
 		}
 	}
-
-	// public function onInitialize(Event $event, $model) {
-		
-	// }
 }
-?>
