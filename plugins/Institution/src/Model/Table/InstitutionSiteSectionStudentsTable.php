@@ -15,7 +15,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 
-		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrade']);
 
         $this->addBehavior('HighChart', [
         	'number_of_students_by_grade' => [
