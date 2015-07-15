@@ -4,6 +4,7 @@ namespace User\Model\Entity;
 use Cake\ORM\Entity;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
 use App\Model\Traits\UserTrait;
 
 class User extends Entity {
@@ -158,34 +159,48 @@ class User extends Entity {
     }
 
     protected function _getProgrammeSection(){
-        $education_programme_id = "";
-    	if ($this->institution_site_students) {
-    		$education_programme_id = $this->institution_site_students[0]->education_programme_id;
-    	}
+		if ($this->institution_site_students) {
+			$education_programme_id = $this->institution_site_students[0]->education_programme_id;
+			$institutionId = $this->institution_site_students[0]->institution_site_id;
+		}
 
-    	$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-    	$query = $EducationProgrammes
-    		->find()
-    		->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $education_programme_id])
-    		->first();
+		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+		$query = $EducationProgrammes
+			->find()
+			->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $education_programme_id])
+			->first();
+		$educationProgrammeName = ($query)? $query->name: '';
 
-    	$educationProgrammeName = ($query)? $query->name: '';
+		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$query = $InstitutionSiteSectionStudents->find()
+			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $this->id])
+			->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc')
+			;
 
-    	$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-    	$query = $InstitutionSiteSectionStudents
-    		->find()
-    		->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $this->id])
-    		->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc')
-    		->contain('InstitutionSiteSections')
-    		->first()
-    	;
+		if (isset($institutionId)) {
+			$query->contain(
+				[
+					'InstitutionSiteSections'  => function ($q) use ($institutionId) {
+						return $q
+							->select(['id', 'name'])
+							->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
+						}
+				]
+			);
+		} else {
+			$query->contain('InstitutionSiteSections');
+		}
 
-    	$sectionName = '';
-    	if ($query) {
-    		$sectionName = ($query->institution_site_section)? $query->institution_site_section->name: '';
-    	}
-
-    	return $educationProgrammeName . '<span class="divider"></span>' . $sectionName;
+		$sectionName = [];
+		foreach ($query as $key => $value) {
+			if ($value->institution_site_section) {
+				if (isset($value->institution_site_section->name)) {
+					$sectionName[] = $value->institution_site_section->name;
+				}
+			}
+		}
+		// sectionName
+		return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
     }
 
     protected function _getPosition() {
