@@ -45,9 +45,9 @@ class TranslationsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 
 		$selected = 'ar';
-		// if(array_key_exists($selectedOption, $localeOptions)){
-		// 	$selected = $selectedOption;
-		// }
+		if(array_key_exists($selectedOption, $localeOptions)){
+			$selected = $selectedOption;
+		}
 		
 		$this->ControllerAction->setFieldOrder([
 			 $defaultLocale, $selected
