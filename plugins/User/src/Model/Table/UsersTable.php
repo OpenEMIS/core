@@ -70,9 +70,11 @@ class UsersTable extends AppTable {
 
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
-			'through' => 'Security.SecurityGroupUsers'
-		]);
-		
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);	
 	}
 
 	public function beforeAction(Event $event) {
