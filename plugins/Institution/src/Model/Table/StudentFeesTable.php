@@ -12,9 +12,10 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class StudentFeesTable extends AppTable {
-	private $_selectedAcademicPeriodId = 0;
+	public $institutionId = 0;
+	private $_selectedAcademicPeriodId = -1;
 	private $_academicPeriodOptions = [];
-	private $_selectedGradeId = 0;
+	private $_selectedEducationGradeId = -1;
 	private $_gradeOptions = [];
 
 
@@ -37,39 +38,28 @@ class StudentFeesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		// 'amount' => array(
-		// 	'ruleRequired' => array(
-		// 		'rule' => 'notEmpty',
-		// 		'required' => true,
-		// 		'message' => 'Please enter a valid Amount'
-		// 	)
-		// )
-
 		return $validator;
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
     	$this->ControllerAction->field('amount', ['type' => 'float', 					'visible' => ['index'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('payment_date', ['type' => 'date', 				'visible' => ['edit'=>true]]);
     	$this->ControllerAction->field('comments', ['type' => 'string', 				'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
     	$this->ControllerAction->field('security_user_id', ['type' => 'select', 		'visible' => ['view'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('institution_site_fee_id', ['type' => 'select', 	'visible' => ['edit'=>true]]);
 
-    	$this->ControllerAction->field('openemis_id', ['type' => 'string', 				'visible' => ['index'=>true]]);
+    	$this->ControllerAction->field('openemis_no', ['type' => 'string', 				'visible' => ['index'=>true]]);
     	$this->ControllerAction->field('name', ['type' => 'string', 					'visible' => ['index'=>true]]);
     	$this->ControllerAction->field('total', ['type' => 'string', 					'visible' => ['index'=>true]]);
     	$this->ControllerAction->field('outstanding', ['type' => 'string', 				'visible' => ['index'=>true]]);
+
+		$session = $this->request->session();
+		$this->institutionId = $session->read('Institutions.id');
 
 		// $ConfigItems = TableRegistry::get('ConfigItems');
   //   	$currency = $ConfigItems->value('currency');
   //   	$this->ControllerAction->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
-		$this->_academicPeriodOptions = $this->AcademicPeriods->getAvailableAcademicPeriods(true);
-		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $this->_academicPeriodOptions);
-
- 		$institutionsId = $this->Session->read('Institutions.id');
-		$this->_gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId);
-		$this->_selectedGradeId = $this->queryString('grade_id', $this->_gradeOptions);
 	}
 
 
@@ -78,9 +68,9 @@ class StudentFeesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
-			'openemis_id', 'name', 'total', 'amount', 'outstanding'
+			'openemis_no', 'name', 'total', 'amount', 'outstanding'
 		]);
 
 		// $Fees = $this;
@@ -93,11 +83,26 @@ class StudentFeesTable extends AppTable {
 		// 	}
 		// ]);
 
+		$conditions = array(
+			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+		);
+		$academicPeriodOptions = $this->InstitutionSiteFees->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		if (empty($academicPeriodOptions)) {
+			$this->Alert->warning('Institutions.noProgrammes');
+		}
+		$institutionId = $this->institutionId;
+		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
+
+		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
+		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
+
 		$toolbarElements = [
             ['name' => 'Institution.StudentFees/controls', 
              'data' => [
-	            	'academicPeriodOptions'=>$this->_academicPeriodOptions,
-	            	'gradeOptions'=>$this->_gradeOptions,
+	            	'academicPeriodOptions'=>$academicPeriodOptions,
+	            	'gradeOptions'=>$gradeOptions,
 	            ],
 	         'options' => []
             ]
@@ -108,13 +113,57 @@ class StudentFeesTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		// $paginateOptions['finder'] = ['withProgrammes' => []];
-		
+		$paginateOptions['conditions'][] = [
+						'InstitutionSiteFees.institution_site_id' => $this->institutionId,
+						'InstitutionSiteFees.academic_period_id' => $this->_selectedAcademicPeriodId,
+						'InstitutionSiteFees.education_grade_id' => $this->_selectedEducationGradeId
+					];
 	}
 
-    public function findWithProgrammes(Query $query, array $options) {
-    	return $query->contain(['EducationGrades'=>['EducationProgrammes']]);
-    }
+
+/******************************************************************************************************************
+**
+** add action methods
+**
+******************************************************************************************************************/
+    public function addBeforeAction(Event $event) {
+   		$this->ControllerAction->setFieldOrder([
+			'institution_site_fee_id', 'security_user_id', 'payment_date', 'amount', 'comments'
+		]);
+	}
+
+
+/******************************************************************************************************************
+**
+** add action methods
+**
+******************************************************************************************************************/
+    public function viewBeforeAction(Event $event) {
+		// if ($model->alias() == 'StudentFees') {
+	    	// $this->ControllerAction->models[$model->alias()]['actions'][] = 'add';
+	    	// $this->ControllerAction->defaultActions = $this->ControllerAction->models[$model->alias()]['actions'];
+
+			// $this->ControllerAction->model($model->alias(), $this->ControllerAction->models[$model->alias()]['actions']);
+	  //   	pr($this->ControllerAction->models[$model->alias()]['actions']);
+		// }
+
+		// $this->ControllerAction->vars()['toolbarButtons']['edit'] = [
+  //                   'url' => [],
+  //                   'type' => 'button',
+  //                   'label' => '',
+  //                   'attr' => [
+  //                           'class' => 'btn btn-xs btn-default',
+  //                           'data-toggle' => 'tooltip',
+  //                           'data-placement' => 'bottom',
+  //                           'escape' => '',
+  //                           'title' => 'Edit'
+  //                       ]
+  //               	];
+  //   	pr($this->ControllerAction->vars()['toolbarButtons']);
+   		$this->ControllerAction->setFieldOrder([
+			'institution_site_fee_id', 'security_user_id', 'payment_date', 'amount', 'comments'
+		]);
+	}
 
 
 /******************************************************************************************************************
@@ -122,12 +171,42 @@ class StudentFeesTable extends AppTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
-	// public function onGetEducationProgramme(Event $event, Entity $entity) {
-	// 	return $entity->education_grade->education_programme->name;
+	public function onGetOpenemisNo(Event $event, Entity $entity) {
+		return $entity->user->openemis_no;
+		// return $event->subject()->Html->link($entity->name, [
+		// 	'plugin' => $this->controller->plugin,
+		// 	'controller' => $this->controller->name,
+		// 	'action' => $this->alias,
+		// 	'index',
+		// 	'parent' => $entity->id
+		// ]);
+	}
+
+	public function onGetName(Event $event, Entity $entity) {
+		return $entity->user->name;
+	}
+
+	public function onGetTotal(Event $event, Entity $entity) {
+		return $entity->institution_site_fee->total;
+	}
+
+	public function onGetOutstanding(Event $event, Entity $entity) {
+		return ($entity->institution_site_fee->total - $entity->amount);
+	}
+
+	// public function onUpdateOpenemisNo(Event $event, array $attr, $action, $request) {
+	// 	return $attr;
 	// }
 
-	// public function onUpdateFieldFeeTypes(Event $event, array $attr, $action, $request) {
-	// 	$attr['options'] = $this->InstitutionSiteFeeTypes->FeeTypes->getList();
+	// public function onGetInstitutionSiteFeeId(Event $event, Entity $entity) {
+	// 	die('onGetInstitutionSiteFeeId');
+	// 	return 'chak';
+	// }
+
+	// public function onUpdateInstitutionSiteFeeId(Event $event, array $attr, $action, $request) {
+	// 	die('chak');
+	// 	$attr['value'] = 'chak';
+	// 	$attr['type'] = 'string';
 	// 	return $attr;
 	// }
 
@@ -148,7 +227,6 @@ class StudentFeesTable extends AppTable {
 	// 	$attr['options'] = $this->_gradeOptions;
 	// 	return $attr;
 	// }
-
 
 
 }
