@@ -158,7 +158,7 @@ class InstitutionSurveysTable extends AppTable {
 
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$results = $SurveyStatuses
-			->find('all')
+			->find()
 			->select([
 				$SurveyStatuses->aliasField('date_disabled')
 			])
@@ -173,10 +173,15 @@ class InstitutionSurveysTable extends AppTable {
 					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
 				]
 			])
-			->first()
-			->toArray();
+			->first();
 
-		return $results['date_disabled'];
+		$dateDisabled = null;
+		if (!is_null($results)) {
+			$data = $results->toArray();
+			$dateDisabled = $data['date_disabled'];
+		}
+
+		return $dateDisabled;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {

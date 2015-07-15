@@ -1,7 +1,9 @@
 -- 14th July 2015
 
 ALTER TABLE `custom_field_types` ADD `visible` INT(1) NOT NULL DEFAULT '1' AFTER `is_unique`;
-UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('CHECKBOX', 'DATE', 'TIME');
+UPDATE `custom_field_types` SET `visible` = 1;
+UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('DATE', 'TIME');
+UPDATE `custom_field_types` SET `value` = 'number_value' WHERE `code` = 'CHECKBOX';
 
 ALTER TABLE `survey_form_questions` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `survey_question_id`;
 ALTER TABLE `survey_form_questions` CHANGE `name` `name` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
@@ -19,7 +21,7 @@ SELECT `id`, `name`,
 	CASE
 		WHEN `type` = 2 THEN 'TEXT'
 	    WHEN `type` = 3 THEN 'DROPDOWN'
-	    WHEN `type` = 4 THEN 'DROPDOWN'
+	    WHEN `type` = 4 THEN 'CHECKBOX'
 	    WHEN `type` = 5 THEN 'TEXTAREA'
 	    WHEN `type` = 6 THEN 'NUMBER'
 	    WHEN `type` = 7 THEN 'TABLE'
@@ -51,7 +53,8 @@ FROM `z_1461_survey_table_rows`;
 TRUNCATE TABLE `survey_form_questions`;
 INSERT INTO `survey_form_questions` (`id`, `survey_form_id`, `survey_question_id`, `order`)
 SELECT uuid(), `survey_template_id`, `id`, `order`
-FROM `z_1461_survey_questions`;
+FROM `z_1461_survey_questions`
+WHERE `type` != 1;
 
 -- patch institution_site_surveys
 TRUNCATE TABLE `institution_site_surveys`;
