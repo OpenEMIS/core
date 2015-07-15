@@ -9,7 +9,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'staff_status', 'programme_section'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'staff_status', 'programme_section', 'date_of_birth_formatted'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -200,5 +200,10 @@ class User extends Entity {
         $data = (!empty($sitestaff['position'])) ? $sitestaff['position']['staff_position_title']['name']: "";     
         return $data;
     }
+
+    protected function _getDateOfBirthFormatted(){
+        $Users = TableRegistry::get('User.Users');
+        return $Users->formatDate($this->date_of_birth);
+    } 
 
 }
