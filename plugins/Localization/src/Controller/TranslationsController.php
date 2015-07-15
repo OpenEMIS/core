@@ -66,18 +66,20 @@ class TranslationsController extends AppController {
 		$str .= 'Language: '.$locale.'\n'."\n";
 		
 		//Replace the whole file
-		file_put_contents($fileLocation, $str, LOCK_EX);
-
-		// For populating the translation list
-		foreach ($data as $key => $value) {
-			$msgid = $key;
-			$msgstr = $value;
-			$str = "\n";
-			$str .= 'msgid "'.$msgid.'"'."\n";
-			$str .= 'msgstr "'.$msgstr.'"'."\n";
-			//Append to current file
-			file_put_contents($fileLocation, $str, FILE_APPEND | LOCK_EX);
+		if(file_put_contents($fileLocation, $str, LOCK_EX)){
+			// For populating the translation list
+			foreach ($data as $key => $value) {
+				$msgid = $key;
+				$msgstr = $value;
+				$str = "\n";
+				$str .= 'msgid "'.$msgid.'"'."\n";
+				$str .= 'msgstr "'.$msgstr.'"'."\n";
+				//Append to current file
+				file_put_contents($fileLocation, $str, FILE_APPEND | LOCK_EX);
+			}
 		}
+
+		pr(file_get_contents($fileLocation));
 	}
 
 	// public function onInitialize(Event $event, $model) {
