@@ -28,7 +28,10 @@ class TranslationsController extends AppController {
 		$this->autoRender = false;
 		if ($this->request->is('ajax')) {
 			$locale = $this->request->data['locale'];
-			$this->convertPO($locale);
+			if($this->convertPO($locale))
+				$this->Alert->warning('general.edit.success');
+			else
+				$this->Alert->warning('general.edit.failed');
 		}
 	}
 
@@ -44,10 +47,6 @@ class TranslationsController extends AppController {
 				'valueField' => $locale
 			])
 			->toArray();
-		
-		// Change permission of file to read and write for everyone
-		// 1 - execute, 2 - write, 4 - read
-		// chmod($fileLocation, 0666);
 
 		// Header of the PO file
 		$str .= 'msgid ""'."\n";
@@ -74,6 +73,9 @@ class TranslationsController extends AppController {
 				//Append to current file
 				file_put_contents($fileLocation, $str, FILE_APPEND | LOCK_EX);
 			}
+			return true;
+		}else{
+			return false;
 		}
 	}
 }
