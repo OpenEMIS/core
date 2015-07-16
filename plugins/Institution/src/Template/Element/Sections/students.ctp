@@ -51,7 +51,7 @@
 					<td><?php echo $obj->user->openemis_no ?></td>
 					<td><?php echo $obj->user->name ?></td>
 					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth ?></td>
+					<td><?php echo $obj->user->date_of_birth_formatted ?></td>
 					<td>
 						<?php
 						echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.education_grade_id", array(
@@ -84,7 +84,7 @@
 					<td><?php echo $obj->user->openemis_no ?></td>
 					<td><?php echo $obj->user->name ?></td>
 					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth ?></td>
+					<td><?php echo $obj->user->date_of_birth_formatted ?></td>
 					<td><?php echo (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 					<td><?php echo $attr['data']['categoryOptions'][$obj->student_category_id] ?></td>
 				</tr>
