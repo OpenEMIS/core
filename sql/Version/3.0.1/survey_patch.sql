@@ -1,7 +1,9 @@
 -- 14th July 2015
 
 ALTER TABLE `custom_field_types` ADD `visible` INT(1) NOT NULL DEFAULT '1' AFTER `is_unique`;
-UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('CHECKBOX', 'DATE', 'TIME');
+UPDATE `custom_field_types` SET `visible` = 1;
+UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('DATE', 'TIME');
+UPDATE `custom_field_types` SET `value` = 'number_value' WHERE `code` = 'CHECKBOX';
 
 ALTER TABLE `survey_form_questions` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `survey_question_id`;
 ALTER TABLE `survey_form_questions` CHANGE `name` `name` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
@@ -19,7 +21,7 @@ SELECT `id`, `name`,
 	CASE
 		WHEN `type` = 2 THEN 'TEXT'
 	    WHEN `type` = 3 THEN 'DROPDOWN'
-	    WHEN `type` = 4 THEN 'DROPDOWN'
+	    WHEN `type` = 4 THEN 'CHECKBOX'
 	    WHEN `type` = 5 THEN 'TEXTAREA'
 	    WHEN `type` = 6 THEN 'NUMBER'
 	    WHEN `type` = 7 THEN 'TABLE'
@@ -48,10 +50,54 @@ SELECT `id`, `name`, `order`, `visible`, `survey_question_id`, `modified_user_id
 FROM `z_1461_survey_table_rows`;
 
 -- patch survey_form_questions
-TRUNCATE TABLE `survey_form_questions`;
-INSERT INTO `survey_form_questions` (`id`, `survey_form_id`, `survey_question_id`, `order`)
-SELECT uuid(), `survey_template_id`, `id`, `order`
-FROM `z_1461_survey_questions`;
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS survey_patch
+$$
+CREATE PROCEDURE survey_patch()
+BEGIN
+	DECLARE done INT DEFAULT FALSE;
+	DECLARE questionId, formId INT(11);
+	DECLARE questionOrder INT(3);
+	DECLARE questionType INT(1);
+	DECLARE questionName VARCHAR(250);
+	DECLARE sectionName VARCHAR(250);
+	DECLARE sfq CURSOR FOR 
+		SELECT `SurveyQuestions`.`id`, `SurveyQuestions`.`name`, `SurveyQuestions`.`type`, `SurveyQuestions`.`order`, `SurveyQuestions`.`survey_template_id`
+		FROM `z_1461_survey_questions` AS `SurveyQuestions`
+		ORDER BY `SurveyQuestions`.`survey_template_id`, `SurveyQuestions`.`order`;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	OPEN sfq;
+	TRUNCATE TABLE `survey_form_questions`;
+
+	read_loop: LOOP
+	FETCH sfq INTO questionId, questionName, questionType, questionOrder, formId;
+	IF done THEN
+		LEAVE read_loop;
+	END IF;
+
+		IF questionType = 1 THEN
+			SET @sectionName = questionName;
+		END IF;
+
+		IF questionType <> 1 THEN
+			INSERT INTO `survey_form_questions` (`id`, `survey_form_id`, `survey_question_id`, `section`, `order`) VALUES (uuid(), formId, questionId, @sectionName, questionType);
+		END IF;
+
+	END LOOP read_loop;
+
+	CLOSE sfq;
+END
+$$
+
+CALL survey_patch
+$$
+
+DROP PROCEDURE IF EXISTS survey_patch
+$$
+
+DELIMITER ;
 
 -- patch institution_site_surveys
 TRUNCATE TABLE `institution_site_surveys`;
