@@ -34,7 +34,7 @@
 									<?php 
 									if ($_edit) {
 										$url = $ControllerAction['buttons']['index']['url'];
-										$url['action'] = 'Staff';
+										$url['action'] = 'StaffPositions';
 										$url[0] = 'edit';
 										$url[1] = $obj->id;
 										echo $this->Html->link($obj->user->name, $url);

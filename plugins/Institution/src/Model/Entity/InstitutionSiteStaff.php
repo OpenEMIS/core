@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 class InstitutionSiteStaff extends Entity {
 	protected $_virtual = ['name'];
 	
-	protected function _getStaffName() {
+	protected function _getName() {
 		return $this->user->name_with_id;
 	}
 }
