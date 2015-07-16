@@ -7,9 +7,6 @@ var Translations = {
 			url: url,
 			data: {
 				locale : value
-			},
-			success: function(data) {
-				console.log('success');
 			}
 		});
 	}	
