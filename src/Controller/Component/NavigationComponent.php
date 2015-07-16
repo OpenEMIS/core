@@ -294,7 +294,7 @@ class NavigationComponent extends Component {
 
 	public function getStudentNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Students.id');
+		$id = $session->read('Students.security_user_id');
 
 		$navigation = [
 			'General' => [
@@ -344,7 +344,7 @@ class NavigationComponent extends Component {
 
 	public function getStaffNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Staff.id');
+		$id = $session->read('Staff.security_user_id');
 
 		$navigation = [
 			'General' => [
