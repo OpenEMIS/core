@@ -203,7 +203,7 @@ class User extends Entity {
 
     protected function _getDateOfBirthFormatted(){
         $Users = TableRegistry::get('User.Users');
-        return $Users->formatDate($this->date_of_birth);
+        return (!empty($this->date_of_birth)) ? $Users->formatDate($this->date_of_birth) : "";
     } 
 
 }
