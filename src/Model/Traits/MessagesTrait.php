@@ -302,7 +302,12 @@ trait MessagesTrait {
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
 				'staffTypeId' => 'You need to configure Staff Types first.'
-			]
+			],
+			'StudentGuardians' => [
+				'guardianRelationId' => 'You need to configure Guardian Relations first.',
+				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
+
+			],
 		],
 		'User' => [
 			'Users' => [
