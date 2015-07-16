@@ -41,7 +41,13 @@ class InstitutionSiteProgrammesTable extends AppTable {
  	        ->add('end_date', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'start_date', false]
 	    	    ])
-	        ;
+ 	    	->add('education_programme_id', [
+	    		'unique' => [
+			        'rule' => ['validateUnique', ['scope' => 'institution_site_id']],
+			        'provider' => 'table',
+			        'message' => 'This programme is already exists in the system'
+			    ]
+		    ]);
 		return $validator;
 	}
 
