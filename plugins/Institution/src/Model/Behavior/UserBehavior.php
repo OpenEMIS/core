@@ -450,17 +450,19 @@ class UserBehavior extends Behavior {
 		$session = $this->_table->request->session();
 		$institutionSiteId = $session->read('Institutions.id');
 
-		$attr['type'] = 'select';
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		$obj = $Institutions->get($institutionSiteId);
+		$groupId = $obj->security_group_id;
+		$userId = null;
 
-		$data = $this->_table->SecurityRoles
-			->find('ByInstitution', ['id' => $institutionSiteId])
-			;
-
-		$optionsList = [];
-		foreach ($data as $key => $value) {
-			$optionsList[$value->id] = $value->name;
+		if ($session->read('Auth.User.super_admin') == 0) {
+			$userId = $session->read('Auth.User.id');
 		}
-		$attr['options'] = $optionsList;
+
+		$roleOptions = $this->_table->SecurityRoles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
+
+		$attr['type'] = 'select';
+		$attr['options'] = $roleOptions;
 
 		if (empty($attr['options'])) {
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.securityRoleId');
