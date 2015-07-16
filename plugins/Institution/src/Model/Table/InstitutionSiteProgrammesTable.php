@@ -45,7 +45,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	    		'unique' => [
 			        'rule' => ['validateUnique', ['scope' => 'institution_site_id']],
 			        'provider' => 'table',
-			        'message' => 'This programme is already exists in the system'
+			        'message' => 'This Education Programme already exists in the system'
 			    ]
 		    ]);
 		return $validator;
