@@ -25,6 +25,7 @@ class AccessControlComponent extends Component {
 		$this->Session = $this->request->session();
 
 		// $this->Session->delete('Permissions');
+		// pr($this->Session->read('Permissions'));
 		if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
 			if (!$this->Session->check('Permissions')) {
 				$this->buildPermissions();
@@ -48,8 +49,12 @@ class AccessControlComponent extends Component {
 				if (!is_null($entity)) {
 					$lastModified = $this->Session->read('Permissions.lastModified');
 
-					if ($entity->modified->gt($lastModified)) {
+					if (is_null($lastModified)) {
 						$this->buildPermissions();
+					} else {
+						if ($entity->modified->gt($lastModified)) {
+							$this->buildPermissions();
+						}
 					}
 				}
 			}
@@ -61,18 +66,29 @@ class AccessControlComponent extends Component {
 	}
 
 	public function buildPermissions() {
+		$this->Session->delete('Permissions'); // remove all permission first
+
 		$operations = $this->config('operations');
 		$separator = $this->config('separator');
 		$userId = $this->Auth->user('id');
-		$Users = TableRegistry::get('User.Users');
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
-		$userObj = $Users->findById($userId)->contain(['SecurityRoles'])->first();
-		$lastModified = null;
+		$roles = $GroupRoles->find()
+			->contain(['SecurityRoles'])
+			->where([$GroupRoles->aliasField('security_user_id') => $userId])
+			->group([$GroupRoles->aliasField('security_role_id')])
+			->all();
+		;
 
-		foreach ($userObj->security_roles as $role) { // for each role in user
-			$roleId = $role->id;
-			$functions = $SecurityRoleFunctions->findAllBySecurityRoleId($roleId)->contain(['SecurityFunctions'])->all();
-			
+		$lastModified = null;
+		foreach ($roles as $role) { // for each role in user
+			$roleId = $role->security_role_id;
+			$functions = $SecurityRoleFunctions->find()
+				->contain(['SecurityFunctions'])
+				->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
+				->all()
+			;
+
 			foreach ($functions as $entity) { // for each function in roles
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
@@ -122,6 +138,14 @@ class AccessControlComponent extends Component {
 
 		if ($superAdmin) {
 			return true;
+		}
+
+		if (array_key_exists('plugin', $url)) {
+			unset($url['plugin']);
+		}
+		
+		while (is_numeric(end($url))) { // remove any other pass values such as id
+			array_pop($url);
 		}
 
 		if (empty($url)) {
