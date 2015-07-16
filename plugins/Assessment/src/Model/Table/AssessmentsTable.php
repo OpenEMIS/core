@@ -19,8 +19,8 @@ class AssessmentsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
-		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses']);
+		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->addBehavior('Reorder');
 	}

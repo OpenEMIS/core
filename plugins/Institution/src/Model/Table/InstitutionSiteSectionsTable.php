@@ -27,8 +27,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->belongsTo('InstitutionSiteShifts', 	['className' => 'Institution.InstitutionSiteShifts','foreignKey' => 'institution_site_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades']);
-		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades', 'dependent' => true]);
+		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents', 'dependent' => true]);
 
 		$this->belongsToMany('InstitutionSiteClasses', [
 			'className' => 'Institution.InstitutionSiteClasses',
@@ -507,7 +507,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 				foreach ($this->request->data[$this->alias()]['institution_site_section_students'] as $row) {
 					if ($row['status'] == 1 && array_key_exists($row['security_user_id'], $studentOptions)) {
 						$id = $row['security_user_id'];
-						$students[] = $this->createVirtualStudentEntity($id, $entity);
+						if ($id != 0) {
+							$students[] = $this->createVirtualStudentEntity($id, $entity);
+						}
 						unset($studentOptions[$id]);
 					}
 				}
@@ -517,7 +519,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 			 */
 			if (array_key_exists('student_id', $this->request->data)) {
 				$id = $this->request->data['student_id'];
-				$students[] = $this->createVirtualStudentEntity($id, $entity);
+				if ($id != 0) {
+					$students[] = $this->createVirtualStudentEntity($id, $entity);
+				}
 				unset($studentOptions[$id]);
 			}
 		} else {
@@ -652,7 +656,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$students = $this->Institutions->InstitutionSiteStudents;
 		$query = $students->find();
-		$query = $query->contain(['Users', 'EducationProgrammes'=>['EducationGrades']]);
+		$query = $query->contain(['Users', 'EducationProgrammes.EducationGrades']);
 		$query = $query->where([
 				$students->aliasField('institution_site_id') => $this->institutionId,
 				'OR' => array(
@@ -683,23 +687,25 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$list = $query->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
 		foreach ($list as $skey => $obj) {
-			$studentGradeEligible = $obj->education_programme->education_grades;
-			$studentGradeKeys = array();
-			foreach ($studentGradeEligible as $key => $value) {
-				$studentGradeKeys[] = $value->id;
-			}
-
-			$studentProgramEligible = false;
-			foreach ($studentGradeKeys as $key => $value) {
-				if (in_array($value, $sectionGrades)) {
-					$studentProgramEligible = true;
+			if ($obj->has('education_programme') && $obj->education_programme->has('education_grades')) {
+				$studentGradeEligible = $obj->education_programme->education_grades;
+				$studentGradeKeys = array();
+				foreach ($studentGradeEligible as $key => $value) {
+					$studentGradeKeys[] = $value->id;
 				}
-			}
-			if ($studentProgramEligible) {
-				if (isset($obj->user)) {
-					$studentOptions[$obj->user->id] = $obj->user->name_with_id;
-				} else {
-					$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
+
+				$studentProgramEligible = false;
+				foreach ($studentGradeKeys as $key => $value) {
+					if (in_array($value, $sectionGrades)) {
+						$studentProgramEligible = true;
+					}
+				}
+				if ($studentProgramEligible) {
+					if (isset($obj->user)) {
+						$studentOptions[$obj->user->id] = $obj->user->name_with_id;
+					} else {
+						$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
+					}
 				}
 			}
 		}
@@ -807,7 +813,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 	
 	protected function createVirtualStudentEntity($id, $entity) {
-		$userData = $this->Institutions->InstitutionSiteStudents->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+		$userData = $this->Institutions->InstitutionSiteStudents->find()
+			->contain(['Users'=>['Genders']])
+			->where(['security_user_id'=>$id])
+			->first();
+
 		$data = [
 			'id'=>$this->getExistingRecordId($id, $entity),
 			'security_user_id'=>$id,

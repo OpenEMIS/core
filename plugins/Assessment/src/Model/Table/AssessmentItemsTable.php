@@ -9,6 +9,6 @@ class AssessmentItemsTable extends AppTable {
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('GradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'foreignKey' => 'assessment_grading_type_id']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults']);
+		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
