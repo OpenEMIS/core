@@ -17,7 +17,7 @@ var Area = {
 			$(this).next().val(value);
 		});
 	},
-	reload: function(obj){
+	reload: function(obj) {
 		var value = $(obj).val();
 		var hiddenField = $(this).find('input:hidden');
 		var url = $(obj).attr('url');
@@ -29,12 +29,11 @@ var Area = {
 		// Update hidden field value
 		$( parent ).next().val(value);
 	},
-	populate: function(objToUpdate, url){
+	populate: function(objToUpdate, url) {
 		$.ajax({
 			url: url,
 			type: "GET",
-			data: {
-			},
+			data: {},
 			//traditional: true,
 			success: function(data){
 				//console.log(data);

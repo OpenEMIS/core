@@ -83,6 +83,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+        $this->addBehavior('Area.Areapicker');
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -185,43 +186,11 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'area', 'source_model' => 'Area.AreaAdministratives']);
-		$this->ControllerAction->field('area_id', ['type' => 'area', 'source_model' => 'Area.Areas']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
-	}
-
-	public function onGetAreaElement(Event $event, $action, Entity $entity, $attr, $options) {
-		$includes = [
-			'area' => ['include' => true, 'js' => 'area']
-		];
-
-		$controller = $this->controller;
-		$HtmlField = $event->subject();
-		$HtmlField->includes = array_merge($HtmlField->includes, $includes);
-		$Url = $HtmlField->Url;
-		$Form = $HtmlField->Form;
-		$targetModel = $attr['source_model'];
-		$targetTable = TableRegistry::get($targetModel);
-
-		$areaOptions = $targetTable
-			->find('list')
-			->toArray();
-
-		$fieldName = $attr['model'] . '.' . $attr['field'];
-		$options['onchange'] = "Area.reload(this)";
-		$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
-		$options['data-source'] = $attr['source_model'];
-		$options['target-model'] = $attr['model'];
-		$options['options'] = $areaOptions;
-		$options['id'] = 'areapicker';
-		$value = "<div class='areapicker'>";
-		$value .= $Form->input($fieldName, $options);
-		$value .= "</div>";
-		$value .= $Form->hidden($attr['model'].'.'.$attr['field'], ['value' => "1"]);
-		return $value;
-	
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
