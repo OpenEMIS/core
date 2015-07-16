@@ -22,7 +22,7 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityRoleFunctions'
 		]);
 
-		$this->belongsToMany('GroupRoles', [
+		$this->belongsToMany('GroupUsers', [
 			'className' => 'Security.UserGroups',
 			'joinTable' => 'security_group_users',
 			'foreignKey' => 'security_role_id',
@@ -144,21 +144,54 @@ class SecurityRolesTable extends AppTable {
 		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
 	}
 
-	public function getRoles($userId, $groupId=null) {
-		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-		$query = $GroupRoles
-			->find()
-			->contain('SecurityRoles')
-			->where([
-				$GroupRoles->aliasField('security_user_id') => $userId,
-				'SecurityRoles.security_group_id' => -1
-			])
+	// this function will return all roles (system roles & user roles) that has lower
+	// privileges than the current role of the user in a specific group
+	public function getPrivilegedRoleOptionsByGroup($groupId, $userId=null) {
+		$roleOptions = [];
+
+		// -1 is system defined roles (not editable)
+		// 0 is system defined roles (editable)
+		// >1 is user defined roles in specific group
+		$groupIds = [-1, 0, $groupId];
+
+		if (!is_null($userId)) { // userId will be null if he/she is a super admin
+			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+			foreach ($groupIds as $id) {
+				// this will show only roles of the user by group
+				$query = $GroupRoles
+					->find()
+					->contain('SecurityRoles')
+					->order(['SecurityRoles.order'])
+					->where([
+						$GroupRoles->aliasField('security_group_id') => $groupId,
+						$GroupRoles->aliasField('security_user_id') => $userId,
+						'SecurityRoles.security_group_id' => $id
+					])
+				;
+
+				// first find the roles based on current role of user
+				$highestRole = $query->first();
+
+				if (!is_null($highestRole)) {
+					// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+					$roleList = $this->find('list')
+						->where([
+							$this->aliasField('security_group_id') => $id,
+							$this->aliasField('order') . ' > ' => $highestRole->security_role->order,
+						])
+						->toArray()
+					;
+					$roleOptions = $roleOptions + $roleList;
+				}
+			}
+		} else { // super admin will show all roles of system and group specific
+			$roleOptions = $this
+				->find('list')
+				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
+				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+				->toArray()
 			;
-
-		if (!is_null($groupId)) {
-			$query->where([$GroupRoles->aliasField('security_group_id') => $groupId]);
 		}
-
-		return $query->all();
+		return $roleOptions;
 	}
 }

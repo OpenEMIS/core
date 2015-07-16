@@ -35,7 +35,7 @@ class TrackActivityBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function beforeSave(Event $event, Entity $entity) {
-		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity) { // edit operation
+		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity && isset($this->_table->fields)) { // edit operation
 			$model = $this->_table;
 		    $schema = $model->schema();
 		    $session = $this->_session->read($this->config('session'));

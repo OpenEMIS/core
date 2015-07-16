@@ -49,14 +49,14 @@ class UserGroupsTable extends AppTable {
 			'dependent' => true
 		]);
 
-		// $this->belongsToMany('Roles', [
-		// 	'className' => 'Security.SecurityRoles',
-		// 	'joinTable' => 'security_group_users',
-		// 	'foreignKey' => 'security_group_id',
-		// 	'targetForeignKey' => 'security_role_id',
-		// 	'through' => 'Security.SecurityGroupUsers',
-		// 	'dependent' => true
-		// ]);
+		$this->belongsToMany('Roles', [
+			'className' => 'Security.SecurityRoles',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_group_id',
+			'targetForeignKey' => 'security_role_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
 	}
 
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
@@ -104,17 +104,10 @@ class UserGroupsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'name', 'areas', 'institutions', 'users'
 		]);
-
-		$userId = $this->Auth->user('id');
-		$roles = $this->Roles->getRoles(2);
-		foreach ($roles as $role) {
-			pr($role);
-		}
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['Areas.Levels', 'Institutions', 'Users.SecurityRoles']);
-		$this->Institutions->trackActivity = false;
+		$query->contain(['Areas.Levels', 'Institutions', 'Users', 'Roles']);
 	}
 
 	public function onGetAreaTableElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -306,9 +299,10 @@ class UserGroupsTable extends AppTable {
 					$rowData = [];
 					$rowData[] = $obj->openemis_no;
 					$rowData[] = $obj->name;
-					
-					foreach ($obj->security_roles as $role) {
-						if ($role->_joinData->security_group_id == $entity->id) {
+
+					foreach ($entity->roles as $role) {
+						if ($obj->_joinData->security_role_id == $role->_joinData->security_role_id
+						&& 	$obj->_joinData->security_user_id == $role->_joinData->security_user_id) {
 							$rowData[] = $role->name;
 							break;
 						}
@@ -319,6 +313,13 @@ class UserGroupsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
+
+			$user = $this->Auth->user();
+			$userId = $user['id'];
+			if ($user['super_admin'] == 1) { // super admin will show all roles
+				$userId = null;
+			}
+			$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId);
 
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
@@ -337,7 +338,7 @@ class UserGroupsTable extends AppTable {
 					}
 				}
 			}
-			// refer to addEditOnAddInstitution for http post
+			// refer to addEditOnAddUser for http post
 			if ($this->request->data("$alias.$key")) {
 				$associated = $this->request->data("$alias.$key");
 
@@ -351,7 +352,7 @@ class UserGroupsTable extends AppTable {
 					$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
 					$rowData[] = $joinData['openemis_no'];
 					$rowData[] = $name;
-					$rowData[] = '';
+					$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
 					$rowData[] = $this->getDeleteButton();
 					$tableCells[] = $rowData;
 				}
@@ -414,6 +415,9 @@ class UserGroupsTable extends AppTable {
 			$data[$this->alias()]['institutions'] = [];
 		}
 
+		// in case user has been added with the same role twice, we need to filter it
+		$this->filterDuplicateUserRoles($data);
+
 		// Required by patchEntity for associated data
 		$newOptions = [];
 		$newOptions['associated'] = ['Areas', 'Institutions'];
@@ -421,6 +425,52 @@ class UserGroupsTable extends AppTable {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		// users can't save properly using associated method
+		// until we find a better solution, saving of users for groups will be done in afterSave as of now
+		if ($entity->has('users')) {
+			$users = $entity->users;
+			if (!empty($users)) {
+				$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$id = $entity->id;
+				foreach ($users as $user) {
+					$query = $GroupUsers->find()->where([
+						$GroupUsers->aliasField('security_user_id') => $user['_joinData']['security_user_id'],
+						$GroupUsers->aliasField('security_role_id') => $user['_joinData']['security_role_id'],
+						$GroupUsers->aliasField('security_group_id') => $id
+					]);
+
+					if ($query->count() == 0) {
+						$newEntity = $GroupUsers->newEntity([
+							'security_user_id' => $user['_joinData']['security_user_id'],
+							'security_role_id' => $user['_joinData']['security_role_id'],
+							'security_group_id' => $id
+						]);
+
+						$GroupUsers->save($newEntity);
+					}
+				}
+			}
+		}
+	}
+
+	private function filterDuplicateUserRoles(ArrayObject $data) {
+		if (array_key_exists('users', $data[$this->alias()])) {
+			$roles = [];
+
+			$users = $data[$this->alias()]['users'];
+			foreach ($users as $i => $user) {
+				$joinData = $user['_joinData'];
+				$userRole = $joinData['security_user_id'] . ' - ' . $joinData['security_role_id'];
+				if (in_array($userRole, $roles)) {
+					unset($data[$this->alias()]['users'][$i]);
+				} else {
+					$roles[] = $userRole;
+				}
+			}
+		}
 	}
 
 	public function findByUser(Query $query, array $options) {
