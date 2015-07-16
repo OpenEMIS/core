@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
 use App\Model\Table\AppTable;
 
 class InstitutionSiteProgrammesTable extends AppTable {
@@ -44,8 +43,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
  	    	->add('education_programme_id', [
 	    		'unique' => [
 			        'rule' => ['validateUnique', ['scope' => 'institution_site_id']],
-			        'provider' => 'table',
-			        'message' => 'This Education Programme already exists in the system'
+			        'provider' => 'table'
 			    ]
 		    ]);
 		return $validator;
