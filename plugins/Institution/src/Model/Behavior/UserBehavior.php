@@ -256,9 +256,22 @@ class UserBehavior extends Behavior {
 					$data[$this->_table->alias()][$this->associatedModel->table()][0]['security_user_id'] = $currSearch;
 
 
-					if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()][$this->associatedModel->table()][0]))) {
+					$newEntity = $this->associatedModel->newEntity($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+					if ($this->associatedModel->save($newEntity)) {
 
-						// need to insert security roles here
+						// need to insert section over here because it will redirect before going to aftersave
+						if ($this->_table->hasBehavior('Student')) {
+							$sectionData['security_user_id'] = $newEntity->security_user_id;
+							$sectionData['education_grade_id'] = $entity->institution_site_students[0]['education_grade'];
+							$sectionData['institution_site_section_id'] = $entity->institution_site_students[0]['section'];
+							$sectionData['student_category_id'] = $entity->institution_site_students[0]['student_status_id'];
+
+							$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+
+							$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);	
+						}
+
+						// need to insert security roles here because it will redirect before going to aftersave
 						if ($this->_table->hasBehavior('Staff')) {
 							TableRegistry::get('Security.SecurityGroupUsers')->insertSecurityRoleForInstitution($data[$this->_table->alias()][$this->associatedModel->table()][0]);
 						}
