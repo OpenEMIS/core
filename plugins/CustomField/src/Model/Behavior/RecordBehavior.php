@@ -106,8 +106,8 @@ class RecordBehavior extends Behavior {
 
 		$CustomForms = $CustomFields->CustomForms;
 		$CustomModules = $CustomForms->CustomModules;
-		$CustomFormFilters = $CustomForms->CustomFormFilters;
-		$CustomFormFields = $CustomForms->CustomFormFields;
+		$CustomFormsFilters = $CustomForms->CustomFormsFilters;
+		$CustomFormsFields = $CustomForms->CustomFormsFields;
 
 		$customFieldQuery = null;
 		//For Institution Survey
@@ -115,11 +115,11 @@ class RecordBehavior extends Behavior {
 			$customFormId = $entity->{$this->config('formKey')};
 
 			if (isset($customFormId)) {
-				$customFieldQuery = $CustomFormFields
+				$customFieldQuery = $CustomFormsFields
 					->find('all')
 					->find('order')
 					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-					->where([$CustomFormFields->aliasField($this->config('formKey')) => $customFormId]);
+					->where([$CustomFormsFields->aliasField($this->config('formKey')) => $customFormId]);
 			}
 		} else {
 			$where = [$CustomModules->aliasField('model') => $this->_table->registryAlias()];
@@ -143,32 +143,32 @@ class RecordBehavior extends Behavior {
 				->where([$CustomForms->aliasField($this->config('moduleKey')) => $customModuleId])
 				->toArray();
 
-			$genaralResults = $CustomFormFilters
+			$genaralResults = $CustomFormsFilters
 				->find('all')
-				->select([$CustomFormFilters->aliasField($this->config('formKey'))])
+				->select([$CustomFormsFilters->aliasField($this->config('formKey'))])
 				->where([
-					$CustomFormFilters->aliasField($this->config('formKey').' IN') => $customFormIds,
-					$CustomFormFilters->aliasField('custom_filter_id') => 0
+					$CustomFormsFilters->aliasField($this->config('formKey').' IN') => $customFormIds,
+					$CustomFormsFilters->aliasField('custom_filter_id') => 0
 				])
 				->all();
 
 			if ($genaralResults->isEmpty()) {
 				if (is_null($filter)) {
-					$customFieldQuery = $CustomFormFields
+					$customFieldQuery = $CustomFormsFields
 						->find('all')
 						->find('order')
 						->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-						->where([$CustomFormFields->aliasField($this->config('formKey') . ' IN') => $customFormIds]);
+						->where([$CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds]);
 				}
 			} else {
 				$genaralData = $genaralResults->first();
 				$generalId = $genaralData->{$this->config('formKey')};
 
-				$customFieldQuery = $CustomFormFields
+				$customFieldQuery = $CustomFormsFields
 					->find('all')
 					->find('order')
 					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-					->where([$CustomFormFields->aliasField($this->config('formKey')) => $generalId]);
+					->where([$CustomFormsFields->aliasField($this->config('formKey')) => $generalId]);
 			}
 
 			if (!is_null($filter)) {
@@ -176,12 +176,12 @@ class RecordBehavior extends Behavior {
 				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 
 				$filterId = $entity->$filterKey;
-				$typedResults = $CustomFormFilters
+				$typedResults = $CustomFormsFilters
 					->find('all')
-					->select([$CustomFormFilters->aliasField($this->config('formKey'))])
+					->select([$CustomFormsFilters->aliasField($this->config('formKey'))])
 					->where([
-						$CustomFormFilters->aliasField($this->config('formKey').' IN') => $customFormIds,
-						$CustomFormFilters->aliasField('custom_filter_id') => $filterId
+						$CustomFormsFilters->aliasField($this->config('formKey').' IN') => $customFormIds,
+						$CustomFormsFilters->aliasField('custom_filter_id') => $filterId
 					])
 					->all();
 
@@ -189,11 +189,11 @@ class RecordBehavior extends Behavior {
 					$typedData = $typedResults->first();
 					$typedId = $typedData->{$this->config('formKey')};
 
-					$typedCustomFieldQuery = $CustomFormFields
+					$typedCustomFieldQuery = $CustomFormsFields
 						->find('all')
 						->find('order')
 						->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-						->where([$CustomFormFields->aliasField($this->config('formKey')) => $typedId]);
+						->where([$CustomFormsFields->aliasField($this->config('formKey')) => $typedId]);
 
 					if (isset($customFieldQuery)) {
 						$customFieldQuery
@@ -219,8 +219,8 @@ class RecordBehavior extends Behavior {
 
 		$CustomForms = $CustomFields->CustomForms;
 		$CustomModules = $CustomForms->CustomModules;
-		$CustomFormFilters = $CustomForms->CustomFormFilters;
-		$CustomFormFields = $CustomForms->CustomFormFields;
+		$CustomFormsFilters = $CustomForms->CustomFormsFilters;
+		$CustomFormsFields = $CustomForms->CustomFormsFields;
 
 		if (isset($customFieldQuery)) {
 			$customFields = $customFieldQuery
