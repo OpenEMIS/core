@@ -10,6 +10,6 @@ class LocationInstitutionSitesTable extends AppTable {
 		$this->table('institution_sites');
         parent::initialize($config);
 				
-		$this->hasMany('InstitutionSiteShifts', ['className' => 'Institution.InstitutionSiteShifts']);
+		$this->hasMany('InstitutionSiteShifts', ['className' => 'Institution.InstitutionSiteShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

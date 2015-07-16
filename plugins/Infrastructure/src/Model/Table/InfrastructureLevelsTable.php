@@ -14,8 +14,8 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Infrastructure.InfrastructureLevels']);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->hasMany('InfrastructureTypes', ['className' => 'Infrastructure.InfrastructureTypes']);
-		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures']);
+		$this->hasMany('InfrastructureTypes', ['className' => 'Infrastructure.InfrastructureTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomFormFields', ['className' => 'Infrastructure.InfrastructureLevelFields', 'foreignKey' => 'infrastructure_level_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomFields', [
 			'className' => 'Infrastructure.InfrastructureCustomFields',

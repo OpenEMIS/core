@@ -12,7 +12,10 @@ class FieldTypeBehavior extends Behavior {
     }
 
     public function getFieldTypeList() {
-        $list = $this->CustomFieldTypes->find('list', ['keyField' => 'code', 'valueField' => 'name'])->toArray();
+        $list = $this->CustomFieldTypes
+        	->find('list', ['keyField' => 'code', 'valueField' => 'name'])
+        	// ->find('visible')
+        	->toArray();
         return $list;
     }
 }
