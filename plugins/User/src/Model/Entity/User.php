@@ -159,48 +159,48 @@ class User extends Entity {
     }
 
     protected function _getProgrammeSection(){
-		if ($this->institution_site_students) {
+		if ($this->has('institution_site_students')) {
 			$education_programme_id = $this->institution_site_students[0]->education_programme_id;
 			$institutionId = $this->institution_site_students[0]->institution_site_id;
-		}
+			$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
-		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-		$query = $EducationProgrammes
-			->find()
-			->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $education_programme_id])
-			->first();
-		$educationProgrammeName = ($query)? $query->name: '';
+			$query = $EducationProgrammes
+				->find()
+				->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $education_programme_id])
+				->first();
+			$educationProgrammeName = ($query)? $query->name: '';
 
-		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$query = $InstitutionSiteSectionStudents->find()
-			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $this->id])
-			->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc')
-			;
+			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+			$query = $InstitutionSiteSectionStudents->find()
+				->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $this->id])
+				->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc')
+				;
 
-		if (isset($institutionId)) {
-			$query->contain(
-				[
-					'InstitutionSiteSections'  => function ($q) use ($institutionId) {
-						return $q
-							->select(['id', 'name'])
-							->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
-						}
-				]
-			);
-		} else {
-			$query->contain('InstitutionSiteSections');
-		}
+			if (isset($institutionId)) {
+				$query->contain(
+					[
+						'InstitutionSiteSections'  => function ($q) use ($institutionId) {
+							return $q
+								->select(['id', 'name'])
+								->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
+							}
+					]
+				);
+			} else {
+				$query->contain('InstitutionSiteSections');
+			}
 
-		$sectionName = [];
-		foreach ($query as $key => $value) {
-			if ($value->institution_site_section) {
-				if (isset($value->institution_site_section->name)) {
-					$sectionName[] = $value->institution_site_section->name;
+			$sectionName = [];
+			foreach ($query as $key => $value) {
+				if ($value->institution_site_section) {
+					if (isset($value->institution_site_section->name)) {
+						$sectionName[] = $value->institution_site_section->name;
+					}
 				}
 			}
-		}
-		// sectionName
-		return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
+			// sectionName
+			return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
+		}		
     }
 
     protected function _getPosition() {
