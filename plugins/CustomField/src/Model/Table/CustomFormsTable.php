@@ -2,36 +2,45 @@
 namespace CustomField\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class CustomFormsTable extends AppTable {
-	private $_contain = ['FieldOptionValues', 'CustomFields'];
+	use OptionsTrait;
+
+	private $_contain = ['CustomFilters', 'CustomFields'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->hasMany('CustomFormFilters', ['className' => 'CustomField.CustomFormFilters', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomFormFields', ['className' => 'CustomField.CustomFormFields', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->belongsToMany('FieldOptionValues', [
-			'className' => 'FieldOptionValues',
+		$this->belongsToMany('CustomFilters', [
+			'className' => 'FieldOption.FieldOptionValues',
 			'joinTable' => 'custom_form_filters',
 			'foreignKey' => 'custom_form_id',
-			'targetForeignKey' => 'custom_filter_id'
+			'targetForeignKey' => 'custom_filter_id',
+			'through' => 'CustomField.CustomFormsFilters',
+			'dependent' => true
 		]);
 		$this->belongsToMany('CustomFields', [
 			'className' => 'CustomField.CustomFields',
-			'joinTable' => 'custom_form_fields',
+			'joinTable' => 'custom_forms_fields',
 			'foreignKey' => 'custom_form_id',
-			'targetForeignKey' => 'custom_field_id'
+			'targetForeignKey' => 'custom_field_id',
+			'through' => 'CustomField.CustomFormsFields',
+			'dependent' => true
 		]);
 	}
 
+	public function beforeAction(Event $event) {
+	}
+
+	/*
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		if (isset($entity->apply_to_all) && $entity->apply_to_all == 1) {
 			$where = [
@@ -40,18 +49,18 @@ class CustomFormsTable extends AppTable {
 			];
 
 			$customFormIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where($where)->toArray();
-			$this->CustomFormFilters->deleteAll([
-				$this->CustomFormFilters->aliasField('custom_form_id IN') => $customFormIds,
-				$this->CustomFormFilters->aliasField('custom_filter_id') => 0
+			$this->CustomFormsFilters->deleteAll([
+				$this->CustomFormsFilters->aliasField('custom_form_id IN') => $customFormIds,
+				$this->CustomFormsFilters->aliasField('custom_filter_id') => 0
 			]);
 
-			$CustomFormFiltersTable = $this->CustomFormFilters;
-			$CustomFormFilter = $CustomFormFiltersTable->newEntity();
+			$CustomFormsFiltersTable = $this->CustomFormsFilters;
+			$CustomFormFilter = $CustomFormsFiltersTable->newEntity();
 			$CustomFormFilter->custom_form_id = $entity->id;
 			$CustomFormFilter->custom_filter_id = 0;
-			if ($CustomFormFiltersTable->save($CustomFormFilter)) {
+			if ($CustomFormsFiltersTable->save($CustomFormFilter)) {
 			} else {
-				$this->CustomFormFilters->log($CustomFormFilter->errors(), 'debug');
+				$this->CustomFormsFilters->log($CustomFormFilter->errors(), 'debug');
 			}
 		}
 	}
@@ -195,11 +204,11 @@ class CustomFormsTable extends AppTable {
 		//Initialize field values
 		list(, , , $selectedApplyToAll) = array_values($this->getSelectOptions());
 
-		$results = $this->CustomFormFilters
+		$results = $this->CustomFormsFilters
 			->find('all')
 			->where([
-				$this->CustomFormFilters->aliasField('custom_form_id') => $entity->id,
-				$this->CustomFormFilters->aliasField('custom_filter_id') => 0		
+				$this->CustomFormsFilters->aliasField('custom_form_id') => $entity->id,
+				$this->CustomFormsFilters->aliasField('custom_filter_id') => 0		
 			]);
 
 		if (!$results->isEmpty()) {
@@ -217,11 +226,11 @@ class CustomFormsTable extends AppTable {
 				$list[] = $obj->name;
 			}
 		} else {
-			$results = $this->CustomFormFilters
+			$results = $this->CustomFormsFilters
 				->find('all')
 				->where([
-					$this->CustomFormFilters->aliasField('custom_form_id') => $entity->id,
-					$this->CustomFormFilters->aliasField('custom_filter_id') => 0
+					$this->CustomFormsFilters->aliasField('custom_form_id') => $entity->id,
+					$this->CustomFormsFilters->aliasField('custom_filter_id') => 0
 				]);
 
 			if (!$results->isEmpty()) {
@@ -253,4 +262,5 @@ class CustomFormsTable extends AppTable {
 			'custom_module_id', 'apply_to_all', 'name', 'custom_fields'
 		]);
 	}
+	*/
 }
