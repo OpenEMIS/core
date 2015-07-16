@@ -24,9 +24,12 @@ class StaffPositionsTable extends AppTable {
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 	}
 
-	// public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-	// 	parent::beforeSave($event, $entity, $options);
-	// }	
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $options) {
+		unset($options['StaffPositions']['staff_name']);
+		unset($options['StaffPositions']['position']);
+		unset($options['StaffPositions']['FTE']);
+		unset($options['StaffPositions']['start_date_formatted']);
+	}	
 
 	public function editBeforeAction(Event $event) {
 		$session = $this->request->session();
@@ -43,6 +46,15 @@ class StaffPositionsTable extends AppTable {
 		$this->fields['staff_type_id']['visible'] = true;
 		$this->fields['staff_status_id']['visible'] = true;
 
+		//make some visible
+		$this->fields['security_user_id']['visible'] = true;
+		$this->fields['institution_site_id']['visible'] = true;
+		$this->fields['institution_site_position_id']['visible'] = true;
+
+		$this->ControllerAction->field('security_user_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('institution_site_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('institution_site_position_id', ['type' => 'hidden']);
+
 		$this->ControllerAction->field('staff_name', ['type' => 'readonly']);
 		$this->ControllerAction->field('position', ['type' => 'readonly']);
 		$this->ControllerAction->field('FTE', ['type' => 'readonly']);
@@ -52,7 +64,7 @@ class StaffPositionsTable extends AppTable {
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		
 		$this->ControllerAction->setFieldOrder([
-			'staff_name', 'position', 'FTE', 'start_date_formatted', 'end_date', 'staff_type_id', 'staff_status_id'
+			'security_user_id', 'institution_site_id', 'institution_site_position_id', 'staff_name', 'position', 'FTE', 'start_date_formatted', 'end_date', 'staff_type_id', 'staff_status_id'
 			
 			]);
 	}
