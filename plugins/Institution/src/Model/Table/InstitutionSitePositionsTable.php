@@ -234,4 +234,15 @@ class InstitutionSitePositionsTable extends AppTable {
 		return $list;
 	}
 
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
+	public function findWithBelongsTo(Query $query, array $options) {
+		return $query
+			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
+	}
+
 }
