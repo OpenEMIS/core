@@ -11,9 +11,9 @@ class InstitutionCustomFieldsTable extends CustomFieldsTable {
 		$this->hasMany('CustomTableRows', ['className' => 'InstitutionCustomField.InstitutionCustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'InstitutionCustomField.InstitutionCustomForms',
-			'joinTable' => 'institution_site_custom_forms_fields',
-			'foreignKey' => 'institution_site_custom_field_id',
-			'targetForeignKey' => 'institution_site_custom_form_id',
+			'joinTable' => 'institution_custom_forms_fields',
+			'foreignKey' => 'institution_custom_field_id',
+			'targetForeignKey' => 'institution_custom_form_id',
 			'through' => 'InstitutionCustomField.InstitutionCustomFormsFields',
 			'dependent' => true
 		]);
