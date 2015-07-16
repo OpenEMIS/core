@@ -73,6 +73,10 @@ a:[data-toggle="tooltip"] {
 	    overflow-y: hidden !important;
 }
 
+.center {
+	text-align: center;
+}
+
 /* HEADINGS */
 
 h1, h2, h3, h4, h5, h6 {
@@ -1990,6 +1994,15 @@ label + select {
 	        border-radius: 3px;
 }
 
+td.center .icheck-input {
+    float: none !important;
+    margin: 0 auto !important;
+}
+
+td.center .icheck-input input {
+	min-width: 18px;
+}
+
 /* Multi Select Input */
 
 .form-horizontal .chosen-container {
@@ -3337,6 +3350,11 @@ footer {
 		float: left;
 		margin: 1px 0 0 10px;		
 	}
+
+	.panel-toolbar .input-select-wrapper,
+	.panel-toolbar .select {
+		width: 97% !important;
+	}
 }
 
 @media (max-width: 480px) {
@@ -3698,6 +3716,12 @@ footer {
 
 	.error-message {
 		margin: 0 28% 10px;
+	}
+
+	/* PANEL TOOLBAR */
+	.panel-toolbar .checkbox {
+		clear: both;
+		float: none;
 	}
 
 	/* PAGINATION */
