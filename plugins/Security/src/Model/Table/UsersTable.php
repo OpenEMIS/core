@@ -9,6 +9,14 @@ class UsersTable extends BaseTable {
 		parent::initialize($config);
 		$this->entityClass('User.User');
 		$this->addBehavior('Security.User');
+
+		$this->belongsToMany('SecurityRoles', [
+			'className' => 'Security.SecurityRoles',
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);	
 	}
 
 	// autocomplete used for UserGroups

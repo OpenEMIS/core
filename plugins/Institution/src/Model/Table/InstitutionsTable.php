@@ -54,6 +54,15 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 
+		$this->belongsToMany('SecurityGroups', [
+			'className' => 'Security.SystemGroups',
+			'joinTable' => 'security_group_institution_sites',
+			'foreignKey' => 'institution_site_id', 
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupInstitutions',
+			'dependent' => true
+		]);
+
 		$this->addBehavior('CustomField.Record', [
 			'recordKey' => 'institution_site_id',
 			'fieldValueKey' => ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
@@ -63,6 +72,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+        $this->addBehavior('Security.Institution');
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -250,8 +260,23 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+	public function onGetAreaId(Event $event, Entity $entity) {
+		return $entity->Areas['name'];
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$query = $request->query;
+		$options['contain'] = ['InstitutionSiteTypes'];
+		$options['fields'] = [
+			$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
+			'Areas.name', 'InstitutionSiteTypes.name'
+		];
+		$options['join'] = [
+			[
+				'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+				'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+			]
+		];
 		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
