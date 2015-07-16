@@ -153,7 +153,7 @@ class InstitutionSitePositionsTable extends AppTable {
 							->where([$Staff->aliasField('end_date').' IS NULL'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo')
-							->find('byPosition', ['InstitutionSitePositions.id'=>$id])
+							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
 							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
 							;
 
@@ -172,7 +172,7 @@ class InstitutionSitePositionsTable extends AppTable {
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo')
-							->find('byPosition', ['InstitutionSitePositions.id'=>$id])
+							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
 							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
 							;
 
