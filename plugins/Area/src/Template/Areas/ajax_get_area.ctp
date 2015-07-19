@@ -1,5 +1,4 @@
 <?php
-	$inputName = $targetModel;
 	$template = $this->ControllerAction->getFormTemplate();
 	$this->Form->templates($template);
 
@@ -7,26 +6,22 @@
 
 	$count = 0;
 	foreach ($path as $obj) {
-		$name = $inputName;
-		if ($count == 0) {
-			$name .= '.' . $tableName;
-		} else {
-			$name = $obj->level->name;
-		}
-
+		
+		$name = $obj->level->name;
 		if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
-			echo $this->Form->input($name, array(
+			echo $this->Form->input($fieldName.".".$name, [
 				'class' => 'form-control',
 				'div' => false,
 				'data-source' => $tableName,
 				'target-model' => $targetModel,
-				'label' => $tableName ." ". $obj->level->name,
+				'field-name' => $fieldName,
+				'label' => $fieldNameForFormat . " - " . $name,
 				'url' => $url,
 				'onchange' => 'Area.reload(this)',
 				'options' => $obj->list,
 				'disabled' => false,
 				'default' => $obj->selectedId
-			));
+			]);
 		}
 		$count++;
 	}
