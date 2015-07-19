@@ -203,6 +203,23 @@ class NavigationComponent extends Component {
 							'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
 							'selected' => ['Questions', 'Forms', 'Status']
 						],
+						'Communications' => [
+							'collapse' => true,
+							'items' => [
+								'Questions' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Questions']
+								],
+								'Responses' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Responses']
+								],
+								'Logs' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Logs']
+								]
+							]
+						],
 						'Rubric' => [
 							'collapse' => true,
 							'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates'],
