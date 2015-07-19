@@ -1,5 +1,7 @@
 -- 16th July 2015
 
+UPDATE `custom_modules` SET `filter` = 'Infrastructure.InfrastructureLevels' WHERE `code` = 'Infrastructure';
+
 --
 -- For Institutions - Infrastructure
 --
@@ -97,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `institution_infrastructures` (
   `infrastructure_type_id` int(11) NOT NULL,
   `infrastructure_ownership_id` int(11) NOT NULL,
   `infrastructure_condition_id` int(11) NOT NULL,
-  `infrastructure_custom_form_id` int(11) NOT NULL,
+  -- `infrastructure_custom_form_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -105,8 +107,8 @@ CREATE TABLE IF NOT EXISTS `institution_infrastructures` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `institution_infrastructures`
-  ADD PRIMARY KEY (`id`), ADD KEY `code` (`code`), ADD KEY `name` (`name`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`), ADD KEY `infrastructure_custom_form_id` (`infrastructure_custom_form_id`);
+-- ALTER TABLE `institution_infrastructures`
+--   ADD PRIMARY KEY (`id`), ADD KEY `code` (`code`), ADD KEY `name` (`name`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`), ADD KEY `infrastructure_custom_form_id` (`infrastructure_custom_form_id`);
 
 
 ALTER TABLE `institution_infrastructures`
