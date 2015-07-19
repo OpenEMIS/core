@@ -5,6 +5,7 @@ use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 class AreasController extends AppController
 {
@@ -56,7 +57,7 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
 	}
 
-	public function ajaxGetArea($tableName, $targetModel, $id) {
+	public function ajaxGetArea($tableName, $targetModel, $fieldName, $id) {
 		$rootId = -1; // Root node
 
 		$Table = TableRegistry::get($tableName);	
@@ -117,7 +118,21 @@ class AreasController extends AppController
 			$count++;
 		}
 
-		$this->set(compact('path', 'targetModel', 'tableName'));
+		// Format the field label
+		$fieldNameForFormat = $fieldName;
+		if (strpos($fieldName, '.') !== false) {
+			$fieldElements = explode('.', $fieldName);
+			$fieldNameForFormat = array_pop($fieldElements);
+		} else {
+			$fieldNameForFormat = $fieldName;
+		}
+		if (substr($fieldNameForFormat, -3) ==='_id') {
+			$fieldNameForFormat = substr($fieldNameForFormat, 0, -3);
+		}
+		$fieldNameForFormat = __(Inflector::humanize(Inflector::underscore($fieldNameForFormat)));
+
+
+		$this->set(compact('path', 'targetModel', 'fieldName', 'tableName', 'fieldNameForFormat'));
 		$this->layout = false;
 	}
 }
