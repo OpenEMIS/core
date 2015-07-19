@@ -167,6 +167,7 @@ class PermissionsTable extends AppTable {
 
 		$query = $this->SecurityFunctions
 			->find()
+			->find('visible')
 			->select([
 				'SecurityFunctions.id', 'SecurityFunctions.name', 'SecurityFunctions.controller', 
 				'SecurityFunctions.module', 'SecurityFunctions.category', 
