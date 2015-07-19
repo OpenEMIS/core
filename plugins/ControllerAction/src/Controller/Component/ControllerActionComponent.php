@@ -135,10 +135,7 @@ class ControllerActionComponent extends Component {
 
 			uasort($this->model->fields, [$this, 'sortFields']);
 			$this->config['fields'] = $this->model->fields;
-
-			/**
-			 * ControllerAction viewVar is being used by Positions/current.ctp, Positions/past.ctp & HtmlFieldHelper -> binary()
-			 */
+			
 			$controller->set('ControllerAction', $this->config);
 
 			// deprecated: backward compatible
@@ -162,6 +159,9 @@ class ControllerActionComponent extends Component {
 			}
 
 			// make field sortable by default if it is a string data-type
+			if (!array_key_exists('type', $attr)) {
+				$this->log($key, 'debug');
+			}
 			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
 			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
@@ -241,6 +241,25 @@ class ControllerActionComponent extends Component {
 			$value = $this->controller->viewVars[$key];
 		}
 		return $value;
+	}
+
+	public function paramsPass() {
+		$params = $this->request->pass;
+		if ($this->triggerFrom == 'Model') {
+			if ($this->triggerFrom == 'Model') {
+				unset($params[0]);
+			}
+		}
+		return $params;
+	}
+
+	public function paramsQuery() {
+		return $this->request->query;
+	}
+
+	public function params() {
+		$params = $this->paramsPass();
+		return array_merge($params, $this->paramsQuery());
 	}
 
 	public function buildDefaultValidation() {
