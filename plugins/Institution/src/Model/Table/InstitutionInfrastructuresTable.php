@@ -28,23 +28,12 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'tableRowKey' => 'infrastructure_custom_table_row_id',
 			'formKey' => 'infrastructure_custom_form_id',
 			'filterKey' => 'infrastructure_custom_filter_id',
-			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
-			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+			'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+			'formFilterClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFilters'],
 			'recordKey' => 'infrastructure_id',
-			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'Institution.InstitutionInfrastructureCustomFieldValues', 'foreignKey' => 'infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Institution.InstitutionInfrastructureCustomTableCells', 'foreignKey' => 'infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
-
-		// $this->addBehavior('CustomField.Record', [
-		// 	'moduleKey' => null,
-		// 	'fieldKey' => 'infrastructure_custom_field_id',
-		// 	'formKey' => 'infrastructure_custom_form_id',
-		// 	'tableColumnKey' => 'infrastructure_custom_table_column_id',
-		// 	'tableRowKey' => 'infrastructure_custom_table_row_id',
-		// 	'recordKey' => 'institution_infrastructure_id',
-		// 	'fieldValueKey' => ['className' => 'Institution.InstitutionInfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
-		// 	'tableCellKey' => ['className' => 'Institution.InstitutionInfrastructureCustomTableCells', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
-		// ]);
 	}
 
 	public function beforeAction(Event $event) {
