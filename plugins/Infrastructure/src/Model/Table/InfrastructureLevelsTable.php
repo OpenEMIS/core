@@ -91,16 +91,4 @@ class InfrastructureLevelsTable extends AppTable {
 		$value = $entity->parent_id == 0 ? ' ' : $entity->parent->name;
 		return $value;
 	}
-
-	// public function getSelectOptions() {
-	// 	list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::getSelectOptions());
-
-	// 	$moduleOptions = $this->CustomModules
-	// 		->find('list')
-	// 		->where([$this->CustomModules->aliasField('model') => $this->InstitutionInfrastructures->registryAlias()])
-	// 		->toArray();
-	// 	$selectedModule = !is_null($this->request->query('module')) ? $this->request->query('module') : key($moduleOptions);
-
-	// 	return compact('moduleOptions', 'selectedModule', 'applyToAllOptions', 'selectedApplyToAll');
-	// }
 }
