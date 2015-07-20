@@ -19,19 +19,13 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['student'] = $entity->security_user_id;
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 	}
 
-	public function afterAction(Event $event) {
-		if(!empty($this->request->query['student'])){
-			$Users = TableRegistry::get('User.Users');
-			$studentId = $this->request->query['student'];
-			$studentName = $Users->get($studentId)->name_with_id;
-
-			$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $studentName]]);
-		}
-	}	
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Users']);
+	}
 
 	public function beforeAction() {
 		$this->ControllerAction->field('academic_period', ['type' => 'select']);
