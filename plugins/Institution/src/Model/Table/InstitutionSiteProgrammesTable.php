@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
 use App\Model\Table\AppTable;
 
 class InstitutionSiteProgrammesTable extends AppTable {
@@ -41,7 +40,12 @@ class InstitutionSiteProgrammesTable extends AppTable {
  	        ->add('end_date', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'start_date', false]
 	    	    ])
-	        ;
+ 	    	->add('education_programme_id', [
+	    		'unique' => [
+			        'rule' => ['validateUnique', ['scope' => 'institution_site_id']],
+			        'provider' => 'table'
+			    ]
+		    ]);
 		return $validator;
 	}
 
