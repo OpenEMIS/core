@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -14,7 +15,7 @@ use App\Model\Table\AppTable;
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
-        parent::initialize($config); 
+        parent::initialize($config);
 
 		/**
 		 * fieldOption tables
@@ -30,9 +31,6 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		/**
-		 * This model uses TrackActivityBehavior
-		 */
 		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments', 'dependent' => true]);
 
@@ -56,7 +54,15 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 
-		// pr($this->validator());
+		$this->belongsToMany('SecurityGroups', [
+			'className' => 'Security.SystemGroups',
+			'joinTable' => 'security_group_institution_sites',
+			'foreignKey' => 'institution_site_id', 
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupInstitutions',
+			'dependent' => true
+		]);
+
 		$this->addBehavior('CustomField.Record', [
 			'recordKey' => 'institution_site_id',
 			'fieldValueKey' => ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
@@ -66,6 +72,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+        $this->addBehavior('Security.Institution');
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -176,50 +183,50 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, $options) {
-		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
-		// echo 'Options<br/>';pr($options);pr('<hr/>');
-		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
-		// die('afterSave');
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+
         if ($entity->isNew()) {
-			// $addSecurityGroupParams = array(
-			// 	'SecurityGroup' => array(
-			// 		'name' => $this->data['InstitutionSite']['name']
-			// 	),
-			// 	'GroupInstitutionSite' => array(
-			// 		'0' => array(
-			// 			'institution_site_id' => $this->data['InstitutionSite']['id']
-			// 		)
-			// 	)
-			// );
-			// $securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
-			// if ($securityGroup) {
-			// 	$this->trackActivity = false;
-			// 	$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
-			// 	if (!$this->save()) {
-			// 		return false;
-			// 	}
-			// } else {
-			// 	return false;
-			// }
+
+			$data = ['name' => $entity->name];
+			$obj = $SecurityGroup->newEntity();
+			$obj = $SecurityGroup->patchEntity($obj, $data);
+			$securityGroup = $SecurityGroup->save($obj);
+			if ($securityGroup) {
+				$this->trackActivity = false;
+				$entity->security_group_id = $securityGroup->id;
+				if (!$this->save($entity)) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+
         } else {
-			// $securityGroupId = $this->field('security_group_id');
-			// if (!empty($securityGroupId)) {
-			// 	$this->SecurityGroup->read(null, $securityGroupId);
-			// 	if (is_object($this->SecurityGroup)) {
-			// 		$editSecurityGroupParams = array(
-			// 			'SecurityGroup' => array(
-			// 				'id' => $securityGroupId,
-			// 				'name' => $this->data['InstitutionSite']['name']
-			// 			)
-			// 		);
-			// 		if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
-			// 			return false;
-			// 		}
-			// 	}
-			// }
+
+			$securityGroupId = $entity->security_group_id;
+			if (!empty($securityGroupId)) {
+				$obj = $SecurityGroup->get($securityGroupId);
+				if (is_object($obj)) {
+					$data = ['name' => $entity->name];
+					$obj = $SecurityGroup->patchEntity($obj, $data);
+					$securityGroup = $SecurityGroup->save($obj);
+					if (!$securityGroup) {
+						return false;
+					}
+				}
+			}
+
         }
         return true;
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$securityGroupId = $entity->security_group_id;
+		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+
+		$groupEntity = $SecurityGroup->get($securityGroupId);
+		$SecurityGroup->delete($groupEntity);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
@@ -253,8 +260,23 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+	public function onGetAreaId(Event $event, Entity $entity) {
+		return $entity->Areas['name'];
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		$query = $request->query;
+		$options['contain'] = ['InstitutionSiteTypes'];
+		$options['fields'] = [
+			$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
+			'Areas.name', 'InstitutionSiteTypes.name'
+		];
+		$options['join'] = [
+			[
+				'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+				'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+			]
+		];
 		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
 			$options['order'][$this->aliasField('name')] = 'asc';
 		}
@@ -285,4 +307,29 @@ class InstitutionsTable extends AppTable  {
 ** essential methods
 **
 ******************************************************************************************************************/
+	
+	// autocomplete used for UserGroups
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('name') . ' LIKE' => $search,
+					$this->aliasField('code') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s (%s)', $obj->name, $obj->code),
+				'value' => $obj->id
+			];
+		}
+		return $data;
+	}
 }
