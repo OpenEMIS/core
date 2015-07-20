@@ -1,5 +1,5 @@
 <?php
-namespace StudentCustomField\Model\Table;
+namespace StaffCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
@@ -7,16 +7,16 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class StudentCustomFormsTable extends CustomFormsTable {
+class StaffCustomFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->belongsToMany('CustomFields', [
-			'className' => 'StudentCustomField.StudentCustomFields',
-			'joinTable' => 'student_custom_forms_fields',
-			'foreignKey' => 'student_custom_form_id',
-			'targetForeignKey' => 'student_custom_field_id',
-			'through' => 'StudentCustomField.StudentCustomFormsFields',
+			'className' => 'StaffCustomField.StaffCustomFields',
+			'joinTable' => 'staff_custom_forms_fields',
+			'foreignKey' => 'staff_custom_form_id',
+			'targetForeignKey' => 'staff_custom_field_id',
+			'through' => 'StaffCustomField.StaffCustomFormsFields',
 			'dependent' => true
 		]);
 	}
@@ -27,7 +27,7 @@ class StudentCustomFormsTable extends CustomFormsTable {
 			->find('list')
 			->find('visible')
 			->where([
-				$this->CustomModules->aliasField('code') => 'Student'
+				$this->CustomModules->aliasField('code') => 'Staff'
 			])
 			->toArray();
 		$selectedModule = $this->queryString('module', $moduleOptions);

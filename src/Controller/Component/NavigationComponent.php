@@ -177,11 +177,11 @@ class NavigationComponent extends Component {
 											'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
 											'selected' => ['Pages']
 										],
-										// 'Staff' => [
-										// 	'collapse' => true,
-										// 	'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
-										// 	'selected' => ['Pages']
-										// ],
+										'Staff' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
 										'Infrastructure' => [
 											'collapse' => true,
 											'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
