@@ -1,5 +1,5 @@
 <?php
-namespace InstitutionCustomField\Model\Table;
+namespace StudentCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
@@ -7,24 +7,17 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class InstitutionCustomFormsTable extends CustomFormsTable {
+class StudentCustomFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
-		$config['custom_filter'] = [
-			'className' => 'FieldOption.InstitutionSiteTypes',
-			'joinTable' => 'institution_custom_forms_filters',
-			'foreignKey' => 'institution_custom_form_id',
-			'targetForeignKey' => 'institution_custom_filter_id',
-			'through' => 'InstitutionCustomField.InstitutionCustomFormsFilters',
-			'dependent' => true
-		];
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
+		// $this->hasMany('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomFields', [
-			'className' => 'InstitutionCustomField.InstitutionCustomFields',
-			'joinTable' => 'institution_custom_forms_fields',
-			'foreignKey' => 'institution_custom_form_id',
-			'targetForeignKey' => 'institution_custom_field_id',
-			'through' => 'InstitutionCustomField.InstitutionCustomFormsFields',
+			'className' => 'StudentCustomField.StudentCustomFields',
+			'joinTable' => 'student_custom_forms_fields',
+			'foreignKey' => 'student_custom_form_id',
+			'targetForeignKey' => 'student_custom_field_id',
+			'through' => 'StudentCustomField.StudentCustomFormsFields',
 			'dependent' => true
 		]);
 	}
@@ -35,7 +28,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 			->find('list')
 			->find('visible')
 			->where([
-				$this->CustomModules->aliasField('code') => 'Institution'
+				$this->CustomModules->aliasField('code') => 'Student'
 			])
 			->toArray();
 		$selectedModule = $this->queryString('module', $moduleOptions);

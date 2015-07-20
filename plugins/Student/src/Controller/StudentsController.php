@@ -20,9 +20,16 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->ControllerAction->model()->addBehavior('CustomField.Record', [
 			'behavior' => 'Student',
+			'fieldKey' => 'student_custom_field_id',
+			'tableColumnKey' => 'student_custom_table_column_id',
+			'tableRowKey' => 'student_custom_table_row_id',
+			'formKey' => 'student_custom_form_id',
+			'filterKey' => 'student_custom_filter_id',
+			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
 			'recordKey' => 'security_user_id',
-			'fieldValueKey' => ['className' => 'Student.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellKey' => ['className' => 'Student.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 		$this->ControllerAction->model()->addBehavior('AdvanceSearch');
