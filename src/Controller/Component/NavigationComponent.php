@@ -203,6 +203,23 @@ class NavigationComponent extends Component {
 							'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
 							'selected' => ['Questions', 'Forms', 'Status']
 						],
+						'Communications' => [
+							'collapse' => true,
+							'items' => [
+								'Questions' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Questions']
+								],
+								'Responses' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Responses']
+								],
+								'Logs' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Logs']
+								]
+							]
+						],
 						'Rubric' => [
 							'collapse' => true,
 							'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates'],
@@ -300,7 +317,7 @@ class NavigationComponent extends Component {
 			'General' => [
 				'collapse' => true,
 				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]],
+					'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id], 'selected' => ['edit', 'add', 'Accounts']],
 					'Contacts' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Contacts']],
 					'Identities' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Identities']],
 					'Languages' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Languages']],
@@ -350,7 +367,7 @@ class NavigationComponent extends Component {
 			'General' => [
 				'collapse' => true,
 				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]],
+					'Overview' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id], 'selected' => ['edit', 'add', 'Accounts']],
 					'Contacts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Contacts']],
 					'Identities' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Identities']],
 					'Languages' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Languages']],
