@@ -55,6 +55,8 @@ class UsersTable extends AppTable {
 			'allowable_file_types' => 'image'
 		]);
 
+		$this->addBehavior('Area.Areapicker');
+
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
@@ -73,9 +75,11 @@ class UsersTable extends AppTable {
 
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
-			'through' => 'Security.SecurityGroupUsers'
-		]);
-		
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);	
 	}
 
 	public function beforeAction(Event $event) {
@@ -86,6 +90,8 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active'), 'visible' => false]);
 		$this->ControllerAction->field('photo_content', ['type' => 'image']);
 		$this->ControllerAction->field('last_login', ['visible' => false]);
+		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 	}
 
 	public function afterAction(Event $event) {

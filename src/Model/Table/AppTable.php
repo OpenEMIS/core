@@ -175,6 +175,7 @@ class AppTable extends Table {
 	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
 		// needs clean up
 		$controller = $event->subject()->_registry->getController();
+		$access = $controller->AccessControl;
 
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
@@ -188,7 +189,7 @@ class AppTable extends Table {
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
 		if ($action == 'index') {
-			if ($buttons->offsetExists('add')) {
+			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
 				$toolbarButtons['add'] = $buttons['add'];
 				$toolbarButtons['add']['type'] = 'button';
 				$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
@@ -226,7 +227,7 @@ class AppTable extends Table {
 			$toolbarButtons['back']['attr']['title'] = __('Back');
 
 			// edit button
-			if ($buttons->offsetExists('edit')) {
+			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
 				$toolbarButtons['edit'] = $buttons['edit'];
 				$toolbarButtons['edit']['type'] = 'button';
 				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -253,25 +254,25 @@ class AppTable extends Table {
 			// }
 		}
 
-		if ($buttons->offsetExists('view')) {
+		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'])) {
 			$indexButtons['view'] = $buttons['view'];
 			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View');
 			$indexButtons['view']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('edit')) {
+		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
 			$indexButtons['edit'] = $buttons['edit'];
 			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit');
 			$indexButtons['edit']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('remove')) {
+		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'])) {
 			$indexButtons['remove'] = $buttons['remove'];
 			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder')) {
+		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 

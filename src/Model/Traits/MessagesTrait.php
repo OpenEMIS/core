@@ -74,6 +74,7 @@ trait MessagesTrait {
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
 		'InfrastructureTypes' => [
+			'noLevels' => 'No Available Levels',
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'InfrastructureCustomFields' => [
@@ -272,6 +273,9 @@ trait MessagesTrait {
 			],
 
 			'InstitutionSiteProgrammes' => [
+				'education_programme_id' => [
+					'unique' => 'This Education Programme already exists in the system'
+				],
 				'noGrade' => 'There is no grade selected',
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
@@ -584,6 +588,10 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			]
+		],
+		'Translation' => [
+			'success' => 'The language has been successfully compiled',
+			'failed' => 'The language has not been compiled due to errors encountered',
 		],
 	];
 
