@@ -256,6 +256,12 @@ trait MessagesTrait {
 				'noSections' => 'There is no section under the selected academic period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+				],
+				'longitude' => [
+					'ruleLongitude' => 'Please enter a valid Longitude'
+				],
+				'latitude' => [
+					'ruleLatitude' => 'Please enter a valid Latitude'
 				]
 			],
 			
