@@ -3,6 +3,7 @@ namespace Security\Model\Table;
 
 use User\Model\Table\UsersTable as BaseTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class UsersTable extends BaseTable {
 	public function initialize(array $config) {
@@ -16,7 +17,9 @@ class UsersTable extends BaseTable {
 			'targetForeignKey' => 'security_user_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
-		]);	
+		]);
+
+		$this->addBehavior('Area.Areapicker');
 	}
 
 	// autocomplete used for UserGroups
@@ -45,5 +48,10 @@ class UsersTable extends BaseTable {
 			];
 		}
 		return $data;
+	}
+
+	public function editBeforeAction(Event $event) {
+		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 	}
 }
