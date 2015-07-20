@@ -118,14 +118,12 @@ class InstitutionsTable extends AppTable  {
 
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
-					'rule' => 'checkLongitude',
-					'message' => 'Please enter a valid Longitude'
+					'rule' => 'checkLongitude'
 				])
 		
 	        ->allowEmpty('latitude')
 			->add('latitude', 'ruleLatitude', [
-					'rule' => 'checkLatitude',
-					'message' => 'Please enter a valid Latitude'
+					'rule' => 'checkLatitude'
 				])
 		
 			// ->add('address', 'ruleMaximum255', [
