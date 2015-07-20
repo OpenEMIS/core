@@ -51,11 +51,6 @@ class NavigationComponent extends Component {
 				$access = true;
 				if (array_key_exists('url', $attr)) {
 					$url = $attr['url'];
-					unset($url['plugin']);
-
-					if (is_numeric(end($url))) { // remove any other pass values such as id
-						array_pop($url);
-					}
 					
 					if ($this->AccessControl->check($url) == false) {
 						$access = false;
@@ -145,11 +140,6 @@ class NavigationComponent extends Component {
 									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
 									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
 								],
-								'Infrastructure' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields', 'index'],
-									'selected' => ['Levels', 'Types']
-								],
 								'Assessments' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments', 'index'],
@@ -160,14 +150,40 @@ class NavigationComponent extends Component {
 									'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
 									'selected' => ['index', 'add', 'view', 'edit', 'remove']
 								],
-								// 'Translations' => [
-								// 	'collapse' => true,
-								// 	'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
-								// ],
 								'Custom Field' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
-									'selected' => ['Pages']
+									'items' => [
+										'General' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Institution' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Student' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Staff' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Infrastructure' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+											'selected' => ['Pages', 'Levels', 'Types']
+										],
+									]
+								],
+								'Translations' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index'],
+									'selected' => ['add', 'view', 'edit']
 								],
 								'System Configurations' => [
 									'collapse' => true,

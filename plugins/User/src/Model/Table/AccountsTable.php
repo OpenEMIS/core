@@ -110,20 +110,6 @@ class AccountsTable extends AppTable {
 		$query->select([$this->primaryKey(), 'username']);
 	}
 
-	// public function editAfterSave(Event $event, Controller $controller) {
-	// 	$id = '';
-	// 	if (array_key_exists('pass', $this->request->params)) {
-	// 		$id = $this->request->params['pass'][1];
-	// 	}	
-
-	// 	if ($this->controller->name == 'Securities') {
-	// 		$action = ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users','view',$id];
-	// 	} else {
-	// 		$action = ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'view',$id];
-	// 	}
-	// 	return $action;
-	// }
-
 	public function validationDefault(Validator $validator) {
 		return $validator
 			->requirePresence('gender_id', 'create')

@@ -26,9 +26,9 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses']);
+		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
 
 		$this->belongsToMany('Teachers', [
 			'className' => 'User.Users',
