@@ -272,6 +272,9 @@ trait MessagesTrait {
 			],
 
 			'InstitutionSiteProgrammes' => [
+				'education_programme_id' => [
+					'unique' => 'This Education Programme already exists in the system'
+				],
 				'noGrade' => 'There is no grade selected',
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
