@@ -1,6 +1,6 @@
 <?php
 
-namespace StudentCustomField\Controller;
+namespace StaffCustomField\Controller;
 
 use App\Controller\AppController as BaseController;
 
