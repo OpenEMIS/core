@@ -1,9 +1,9 @@
 <?php
-namespace Institution\Model\Table;
+namespace Infrastructure\Model\Table;
 
 use CustomField\Model\Table\CustomTableCellsTable;
 
-class InstitutionInfrastructureCustomTableCellsTable extends CustomTableCellsTable {
+class InfrastructureCustomTableCellsTable extends CustomTableCellsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'Infrastructure.InfrastructureCustomFields', 'foreignKey' => 'infrastructure_custom_field_id']);
