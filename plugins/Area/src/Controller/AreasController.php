@@ -57,7 +57,7 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
 	}
 
-	public function ajaxGetArea($tableName, $targetModel, $fieldName, $id) {
+	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id) {
 		$rootId = -1; // Root node
 
 		$Table = TableRegistry::get($tableName);	
@@ -118,21 +118,7 @@ class AreasController extends AppController
 			$count++;
 		}
 
-		// Format the field label
-		$fieldNameForFormat = $fieldName;
-		if (strpos($fieldName, '.') !== false) {
-			$fieldElements = explode('.', $fieldName);
-			$fieldNameForFormat = array_pop($fieldElements);
-		} else {
-			$fieldNameForFormat = $fieldName;
-		}
-		if (substr($fieldNameForFormat, -3) ==='_id') {
-			$fieldNameForFormat = substr($fieldNameForFormat, 0, -3);
-		}
-		$fieldNameForFormat = __(Inflector::humanize(Inflector::underscore($fieldNameForFormat)));
-
-
-		$this->set(compact('path', 'targetModel', 'fieldName', 'tableName', 'fieldNameForFormat'));
+		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName'));
 		$this->layout = false;
 	}
 }
