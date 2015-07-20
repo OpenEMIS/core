@@ -51,11 +51,6 @@ class NavigationComponent extends Component {
 				$access = true;
 				if (array_key_exists('url', $attr)) {
 					$url = $attr['url'];
-					unset($url['plugin']);
-
-					if (is_numeric(end($url))) { // remove any other pass values such as id
-						array_pop($url);
-					}
 					
 					if ($this->AccessControl->check($url) == false) {
 						$access = false;
