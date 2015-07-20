@@ -348,8 +348,37 @@ class StudentAttendancesTable extends AppTable {
 
 		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.security_user_id'];
 		if (is_array($date)) {
-			$conditions['StudentAbsences.start_date >= '] = $date[0]->format('Y-m-d');
-			$conditions['StudentAbsences.start_date <= '] = $date[1]->format('Y-m-d');
+			$startDate = $date[0]->format('Y-m-d');
+			$endDate = $date[1]->format('Y-m-d');
+
+			$conditions['OR'] = [
+				'OR' => [
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date >=' => $startDate,
+						'StudentAbsences.start_date <=' => $endDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date <=' => $startDate,
+						'StudentAbsences.end_date >=' => $startDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date <=' => $endDate,
+						'StudentAbsences.end_date >=' => $endDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date >=' => $startDate,
+						'StudentAbsences.end_date <=' => $startDate
+					]
+				],
+				[
+					'StudentAbsences.end_date IS NULL',
+					'StudentAbsences.start_date <=' => $endDate
+				]
+			];
 		} else {
 			$conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
 			$conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');

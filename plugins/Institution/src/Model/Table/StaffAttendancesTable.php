@@ -302,8 +302,37 @@ class StaffAttendancesTable extends AppTable {
 
 		$conditions = ['StaffAbsences.security_user_id = StaffAttendances.security_user_id'];
 		if (is_array($date)) {
-			$conditions['StaffAbsences.start_date >= '] = $date[0]->format('Y-m-d');
-			$conditions['StaffAbsences.start_date <= '] = $date[1]->format('Y-m-d');
+			$startDate = $date[0]->format('Y-m-d');
+			$endDate = $date[1]->format('Y-m-d');
+
+			$conditions['OR'] = [
+				'OR' => [
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date >=' => $startDate,
+						'StaffAbsences.start_date <=' => $endDate
+					],
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date <=' => $startDate,
+						'StaffAbsences.end_date >=' => $startDate
+					],
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date <=' => $endDate,
+						'StaffAbsences.end_date >=' => $endDate
+					],
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date >=' => $startDate,
+						'StaffAbsences.end_date <=' => $startDate
+					]
+				],
+				[
+					'StaffAbsences.end_date IS NULL',
+					'StaffAbsences.start_date <=' => $endDate
+				]
+			];
 		} else {
 			$conditions['StaffAbsences.start_date <= '] = $date->format('Y-m-d');
 			$conditions['StaffAbsences.end_date >= '] = $date->format('Y-m-d');
