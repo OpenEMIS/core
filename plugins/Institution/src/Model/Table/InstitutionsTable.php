@@ -146,8 +146,7 @@ class InstitutionsTable extends AppTable  {
 		        		'last' => true
 				    ],
 					'ruleValidEmail' => [
-						'rule' => 'email',
-						'message' => 'Please enter a valid Email'
+						'rule' => 'email'
 					]
 				])
 	        ;
