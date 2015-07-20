@@ -111,10 +111,10 @@ class RecordBehavior extends Behavior {
 			}
 
 			foreach ($checkboxes as $checkbox) {
-				$fieldType = $CustomFields
+				$fieldType = $this->CustomFields
 					->find('all')
-					->select([$CustomFields->aliasField('field_type')])
-					->where([$CustomFields->aliasField('id') => $obj[$this->config('fieldKey')]])
+					->select([$this->CustomFields->aliasField('field_type')])
+					->where([$this->CustomFields->aliasField('id') => $checkbox[$this->config('fieldKey')]])
 					->first()
 					->field_type;
 
