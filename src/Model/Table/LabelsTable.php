@@ -10,7 +10,7 @@ class LabelsTable extends AppTable {
 		$data = $this->findByModuleAndField($module, $field)->first();
 		
 		if ($data) {
-			if (!empty($data->$language)) {
+			if (empty($data->$language)) {
 				$language = 'en';
 			}
 			$label = ucfirst($data->$language);
