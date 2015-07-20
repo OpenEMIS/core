@@ -5,8 +5,9 @@ UPDATE `custom_field_types` SET `visible` = 1;
 UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('DATE', 'TIME');
 UPDATE `custom_field_types` SET `value` = 'number_value' WHERE `code` = 'CHECKBOX';
 
-ALTER TABLE `survey_form_questions` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `survey_question_id`;
-ALTER TABLE `survey_form_questions` CHANGE `name` `name` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+RENAME TABLE `survey_form_questions` TO `survey_forms_questions`;
+ALTER TABLE `survey_forms_questions` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `survey_question_id`;
+ALTER TABLE `survey_forms_questions` CHANGE `name` `name` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
 
 -- patch survey_forms
 TRUNCATE TABLE `survey_forms`;
@@ -49,7 +50,7 @@ INSERT INTO `survey_table_rows` (`id`, `name`, `order`, `visible`, `survey_quest
 SELECT `id`, `name`, `order`, `visible`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_1461_survey_table_rows`;
 
--- patch survey_form_questions
+-- patch survey_forms_questions
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS survey_patch
@@ -69,7 +70,7 @@ BEGIN
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
 	OPEN sfq;
-	TRUNCATE TABLE `survey_form_questions`;
+	TRUNCATE TABLE `survey_forms_questions`;
 
 	read_loop: LOOP
 	FETCH sfq INTO questionId, questionName, questionType, questionOrder, formId;
@@ -82,7 +83,7 @@ BEGIN
 		END IF;
 
 		IF questionType <> 1 THEN
-			INSERT INTO `survey_form_questions` (`id`, `survey_form_id`, `survey_question_id`, `section`, `order`) VALUES (uuid(), formId, questionId, @sectionName, questionType);
+			INSERT INTO `survey_forms_questions` (`id`, `survey_form_id`, `survey_question_id`, `section`, `order`) VALUES (uuid(), formId, questionId, @sectionName, questionType);
 		END IF;
 
 	END LOOP read_loop;

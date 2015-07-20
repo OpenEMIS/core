@@ -176,11 +176,9 @@ class RecordBehavior extends Behavior {
 			$customFormId = $entity->{$this->config('formKey')};
 
 			if (isset($customFormId)) {
-				$customFieldQuery = $this->CustomFormsFields
-					->find('all')
-					->find('order')
-					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-					->where([$CustomFormsFields->aliasField($this->config('formKey')) => $customFormId]);
+				$customFormQuery = $this->CustomForms
+					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+					->where([$this->CustomForms->aliasField('id') => $customFormId]);
 			}
 		} else {
 			$where = [$this->CustomModules->aliasField('model') => $this->_table->registryAlias()];
@@ -227,21 +225,21 @@ class RecordBehavior extends Behavior {
 						]
 					]);
 			}
-
-			$customFormIds = $customFormQuery
-				->toArray();
-
-			$customFieldQuery = $this->CustomFormsFields
-				->find('all')
-				->find('order')
-				->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-				->where([
-					$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
-				])
-				->group([
-					$this->CustomFormsFields->aliasField($this->config('fieldKey'))
-				]);
 		}
+
+		$customFormIds = $customFormQuery
+			->toArray();
+
+		$customFieldQuery = $this->CustomFormsFields
+			->find('all')
+			->find('order')
+			->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+			->where([
+				$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
+			])
+			->group([
+				$this->CustomFormsFields->aliasField($this->config('fieldKey'))
+			]);
 
 		return $customFieldQuery;
 	}

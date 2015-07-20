@@ -274,6 +274,7 @@ class CustomFormsTable extends AppTable {
 
 	public function _getSelectOptions() {
 		// Return all required options and their key
+		$query = $this->request->query;
 		// Exclude three main module
 		$moduleOptions = $this->CustomModules
 			->find('list')
@@ -282,7 +283,8 @@ class CustomFormsTable extends AppTable {
 				$this->CustomModules->aliasField('parent_id !=') => 0
 			])
 			->toArray();
-		$selectedModule = $this->queryString('module', $moduleOptions);
+		$selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
+		// $selectedModule = $this->queryString('module', $moduleOptions);
 
 		$applyToAllOptions = $this->getSelectOptions('general.yesno');
 		$selectedApplyToAll = !is_null($this->request->query('apply_to_all')) ? $this->request->query('apply_to_all') : key($applyToAllOptions);
