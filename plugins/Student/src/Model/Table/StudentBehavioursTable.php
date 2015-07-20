@@ -37,62 +37,65 @@ class StudentBehavioursTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder(['date_of_behaviour', 'title', 'student_behaviour_category_id', 'institution_site_id']);
 
-		$toolbarElements = [
-			['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
+		//display toolbar only when it's adding/editing behaviours from Institutions
+		if($this->controller->name == "Institutions") {
+			$toolbarElements = [
+				['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
+			];
+			$this->controller->set('toolbarElements', $toolbarElements);
 
-		// Setup period options
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
+			// Setup period options
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$periodOptions = $AcademicPeriod->getList();
+			
+			$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+			$institutionId = $this->Session->read('Institutions.id');
+			$selectedPeriod = $this->queryString('period_id', $periodOptions);
+
+			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+				'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
+				'callable' => function($id) use ($Sections, $institutionId) {
+					return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
+				}
+			]);
+			// End setup periods
+
+			if ($selectedPeriod != 0) {
+				$this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
+				// Setup section options
+				$sectionOptions = $Sections
+					->find('list')
+					->where([
+						$Sections->aliasField('institution_site_id') => $institutionId, 
+						$Sections->aliasField('academic_period_id') => $selectedPeriod
+					])
+					->toArray();
+
+				$selectedSection = $this->queryString('section_id', $sectionOptions);
+				$this->advancedSelectOptions($sectionOptions, $selectedSection);
+				$this->controller->set(compact('sectionOptions', 'selectedSection'));
+				// End setup sections
+			}	
+			$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+			$students = $Students
+							->findAllByInstitutionSiteSectionId($selectedSection)
+							->contain(['Users'])
+							->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+							->toArray();
 		
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$institutionId = $this->Session->read('Institutions.id');
-		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+			$existingStudents = is_array($students) ? array_keys($students) : array();	
 
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
-			}
-		]);
-		// End setup periods
-
-		if ($selectedPeriod != 0) {
-			$this->controller->set(compact('periodOptions', 'selectedPeriod'));
-
-			// Setup section options
-			$sectionOptions = $Sections
-				->find('list')
-				->where([
-					$Sections->aliasField('institution_site_id') => $institutionId, 
-					$Sections->aliasField('academic_period_id') => $selectedPeriod
-				])
-				->toArray();
-
-			$selectedSection = $this->queryString('section_id', $sectionOptions);
-			$this->advancedSelectOptions($sectionOptions, $selectedSection);
-			$this->controller->set(compact('sectionOptions', 'selectedSection'));
-			// End setup sections
-		}	
-		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$students = $Students
-						->findAllByInstitutionSiteSectionId($selectedSection)
-						->contain(['Users'])
-						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
-						->toArray();
-	
-		$existingStudents = is_array($students) ? array_keys($students) : array();	
-
-		$settings['pagination'] = false;
-		$query
-			->find('all')
-			->contain(['Users'])
-		    ->where(function ($exp, $q) use ($existingStudents) {
-		        return $exp->in('security_user_id', $existingStudents);	
-		    })
-		    ->andWhere(['institution_site_id' => $institutionId])
-		    ;
+			$settings['pagination'] = false;
+			$query
+				->find('all')
+				->contain(['Users'])
+			    ->where(function ($exp, $q) use ($existingStudents) {
+			        return $exp->in('security_user_id', $existingStudents);	
+			    })
+			    ->andWhere(['institution_site_id' => $institutionId])
+			    ;
+		} 
 	}
 
 	public function viewBeforeAction(Event $event) {
