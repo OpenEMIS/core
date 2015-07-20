@@ -64,9 +64,16 @@ class InstitutionsTable extends AppTable  {
 		]);
 
 		$this->addBehavior('CustomField.Record', [
+			'fieldKey' => 'institution_custom_field_id',
+			'tableColumnKey' => 'institution_custom_table_column_id',
+			'tableRowKey' => 'institution_custom_table_row_id',
+			'formKey' => 'institution_custom_form_id',
+			'filterKey' => 'institution_custom_filter_id',
+			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
 			'recordKey' => 'institution_site_id',
-			'fieldValueKey' => ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellKey' => ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
@@ -331,5 +338,13 @@ class InstitutionsTable extends AppTable  {
 			];
 		}
 		return $data;
+	}
+
+	public function onUpdateFieldInstitutionSiteTypeId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['onChangeReload'] = true;
+		}
+
+		return $attr;
 	}
 }

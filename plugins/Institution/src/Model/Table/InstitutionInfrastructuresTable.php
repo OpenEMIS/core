@@ -14,7 +14,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 	];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_infrastructures');
 		parent::initialize($config);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
@@ -24,14 +23,16 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 
 		$this->addBehavior('CustomField.Record', [
-			'moduleKey' => null,
 			'fieldKey' => 'infrastructure_custom_field_id',
-			'formKey' => 'infrastructure_level_id',
 			'tableColumnKey' => 'infrastructure_custom_table_column_id',
 			'tableRowKey' => 'infrastructure_custom_table_row_id',
-			'recordKey' => 'institution_site_infrastructure_id',
-			'fieldValueKey' => ['className' => 'Institution.InstitutionInfrastructureCustomFieldValues', 'foreignKey' => 'institution_site_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellKey' => ['className' => 'Institution.InstitutionInfrastructureCustomTableCells', 'foreignKey' => 'institution_site_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'formKey' => 'infrastructure_custom_form_id',
+			'filterKey' => 'infrastructure_custom_filter_id',
+			'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+			'formFilterClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFilters'],
+			'recordKey' => 'institution_infrastructure_id',
+			'fieldValueClass' => ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Infrastructure.InfrastructureCustomTableCells', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 
@@ -90,12 +91,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$attr['default'] = $selectedLevel;
 		$attr['onChangeReload'] = true;
 
-		if (array_key_exists($this->alias(), $request->data)) {
-			if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
-				unset($request->data[$this->alias()]['custom_field_values']);
-			}
-			if (array_key_exists('custom_table_cells', $request->data[$this->alias()])) {
-				unset($request->data[$this->alias()]['custom_table_cells']);
+		$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+		if ($submit != 'save') {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
+					unset($request->data[$this->alias()]['custom_field_values']);
+				}
+				if (array_key_exists('custom_table_cells', $request->data[$this->alias()])) {
+					unset($request->data[$this->alias()]['custom_table_cells']);
+				}
 			}
 		}
 

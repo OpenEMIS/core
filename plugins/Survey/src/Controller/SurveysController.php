@@ -24,15 +24,15 @@ class SurveysController extends AppController
 
 		$tabElements = [
 			'Questions' => [
-				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Questions'],
 				'text' => __('Questions')
 			],
 			'Forms' => [
-				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Forms'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Forms'],
 				'text' => __('Forms')
 			],
 			'Status' => [
-				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Status'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Status'],
 				'text' => __('Status')
 			]
 		];
@@ -45,7 +45,7 @@ class SurveysController extends AppController
 		$header = __('Survey');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Survey', ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => $model->alias]);
+		$this->Navigation->addCrumb('Survey', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);
@@ -53,7 +53,7 @@ class SurveysController extends AppController
 
     public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
     	if ($model->alias == 'Status') {
-	        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
+	        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->_getSelectOptions());
 	        $this->set(compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
 
 	        $todayDate = date('Y-m-d');
@@ -66,7 +66,7 @@ class SurveysController extends AppController
     	}
     }
 
-    public function getSelectOptions() {
+    public function _getSelectOptions() {
         //Return all required options and their key
         $query = $this->request->query;
 
