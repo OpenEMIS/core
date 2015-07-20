@@ -99,7 +99,6 @@ CREATE TABLE IF NOT EXISTS `institution_infrastructures` (
   `infrastructure_type_id` int(11) NOT NULL,
   `infrastructure_ownership_id` int(11) NOT NULL,
   `infrastructure_condition_id` int(11) NOT NULL,
-  -- `infrastructure_custom_form_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -107,16 +106,16 @@ CREATE TABLE IF NOT EXISTS `institution_infrastructures` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
--- ALTER TABLE `institution_infrastructures`
---   ADD PRIMARY KEY (`id`), ADD KEY `code` (`code`), ADD KEY `name` (`name`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`), ADD KEY `infrastructure_custom_form_id` (`infrastructure_custom_form_id`);
+ALTER TABLE `institution_infrastructures`
+  ADD PRIMARY KEY (`id`), ADD KEY `code` (`code`), ADD KEY `name` (`name`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
 
 
 ALTER TABLE `institution_infrastructures`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
--- New table - institution_infrastructure_custom_field_values
-DROP TABLE IF EXISTS `institution_infrastructure_custom_field_values`;
-CREATE TABLE IF NOT EXISTS `institution_infrastructure_custom_field_values` (
+-- New table - infrastructure_custom_field_values
+DROP TABLE IF EXISTS `infrastructure_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_field_values` (
   `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `number_value` int(11) DEFAULT NULL,
@@ -132,12 +131,12 @@ CREATE TABLE IF NOT EXISTS `institution_infrastructure_custom_field_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `institution_infrastructure_custom_field_values`
+ALTER TABLE `infrastructure_custom_field_values`
   ADD PRIMARY KEY (`id`);
 
--- New table - institution_infrastructure_custom_table_cells
-DROP TABLE IF EXISTS `institution_infrastructure_custom_table_cells`;
-CREATE TABLE IF NOT EXISTS `institution_infrastructure_custom_table_cells` (
+-- New table - infrastructure_custom_table_cells
+DROP TABLE IF EXISTS `infrastructure_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_table_cells` (
   `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `infrastructure_custom_field_id` int(11) NOT NULL,
@@ -151,5 +150,5 @@ CREATE TABLE IF NOT EXISTS `institution_infrastructure_custom_table_cells` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `institution_infrastructure_custom_table_cells`
+ALTER TABLE `infrastructure_custom_table_cells`
   ADD PRIMARY KEY (`id`);

@@ -30,9 +30,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'filterKey' => 'infrastructure_custom_filter_id',
 			'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
 			'formFilterClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFilters'],
-			'recordKey' => 'infrastructure_id',
-			'fieldValueClass' => ['className' => 'Institution.InstitutionInfrastructureCustomFieldValues', 'foreignKey' => 'infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'Institution.InstitutionInfrastructureCustomTableCells', 'foreignKey' => 'infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'institution_infrastructure_id',
+			'fieldValueClass' => ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Infrastructure.InfrastructureCustomTableCells', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 
@@ -91,12 +91,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$attr['default'] = $selectedLevel;
 		$attr['onChangeReload'] = true;
 
-		if (array_key_exists($this->alias(), $request->data)) {
-			if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
-				unset($request->data[$this->alias()]['custom_field_values']);
-			}
-			if (array_key_exists('custom_table_cells', $request->data[$this->alias()])) {
-				unset($request->data[$this->alias()]['custom_table_cells']);
+		$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+		if ($submit != 'save') {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
+					unset($request->data[$this->alias()]['custom_field_values']);
+				}
+				if (array_key_exists('custom_table_cells', $request->data[$this->alias()])) {
+					unset($request->data[$this->alias()]['custom_table_cells']);
+				}
 			}
 		}
 
