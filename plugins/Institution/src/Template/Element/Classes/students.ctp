@@ -44,7 +44,7 @@
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.security_user_id", [ 'value'=> $obj->security_user_id ]);
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.status", [ 'value' => $obj->status ]);
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.institution_site_class_id", [ 'value'=> $obj->institution_site_class_id ]);
-
+					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
 					?>
 					<td><?php echo $obj->user->openemis_no ?></td>
 					<td><?php echo $obj->user->name ?></td>
