@@ -129,3 +129,43 @@ CREATE TABLE IF NOT EXISTS `student_custom_forms_fields` (
 
 ALTER TABLE `student_custom_forms_fields`
   ADD PRIMARY KEY (`id`);
+
+-- New table - student_custom_field_values
+DROP TABLE IF EXISTS `student_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `student_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `student_custom_field_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - student_custom_table_cells
+DROP TABLE IF EXISTS `student_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `student_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `student_custom_field_id` int(11) NOT NULL,
+  `student_custom_table_column_id` int(11) NOT NULL,
+  `student_custom_table_row_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_table_cells`
+  ADD PRIMARY KEY (`id`);

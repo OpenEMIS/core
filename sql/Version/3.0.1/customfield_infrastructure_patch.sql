@@ -78,7 +78,7 @@ ALTER TABLE `infrastructure_levels`
 ALTER TABLE `infrastructure_levels`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
--- Drop table - infrastructure_level_fields
+-- Drop tables
 DROP TABLE IF EXISTS `infrastructure_level_fields`;
 DROP TABLE IF EXISTS `institution_site_infrastructures`;
 DROP TABLE IF EXISTS `institution_site_infrastructure_custom_field_values`;
