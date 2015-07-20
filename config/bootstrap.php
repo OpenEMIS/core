@@ -190,7 +190,7 @@ Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
 
 // Localizations
-Plugin::load('Localization', ['autoload' => true]);
+Plugin::load('Localization', ['routes' => true, 'autoload' => true]);
 
 // Main Modules
 Plugin::load('Area', ['routes' => true, 'autoload' => true]);
