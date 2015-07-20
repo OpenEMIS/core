@@ -15,8 +15,8 @@ class SalariesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('SalaryAdditions', ['className' => 'Staff.SalaryAdditions']);
-		$this->hasMany('SalaryDeductions', ['className' => 'Staff.SalaryDeductions']);
+		$this->hasMany('SalaryAdditions', ['className' => 'Staff.SalaryAdditions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SalaryDeductions', ['className' => 'Staff.SalaryDeductions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function beforeAction() {

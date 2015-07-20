@@ -14,6 +14,7 @@ class InfrastructuresController extends AppController
 
 		$this->ControllerAction->models = [
 			'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
+			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms'],
 			'Levels' => ['className' => 'Infrastructure.InfrastructureLevels'],
 			'Types' => ['className' => 'Infrastructure.InfrastructureTypes']
 		];
@@ -25,15 +26,19 @@ class InfrastructuresController extends AppController
 
 		$tabElements = [
 			'Fields' => [
-				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Fields'],
 				'text' => __('Fields')
 			],
+			'Pages' => [
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Pages'],
+				'text' => __('Pages')
+			],
 			'Levels' => [
-				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Levels'],
 				'text' => __('Levels')
 			],
 			'Types' => [
-				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Types'],
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Types'],
 				'text' => __('Types')
 			]
 		];
@@ -46,7 +51,7 @@ class InfrastructuresController extends AppController
 		$header = __('Infrastructure');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Infrastructure', ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => $model->alias]);
+		$this->Navigation->addCrumb('Infrastructure', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);

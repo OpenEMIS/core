@@ -21,18 +21,13 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
 
-			// 'InstitutionSiteCustomField',
-			// 'InstitutionSiteCustomFieldOption',
-
 			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
 			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
 			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
-			// 'Classes' 			=> ['className' => 'Institution.InstitutionSiteSectionClasses'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
 
-			// 'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],

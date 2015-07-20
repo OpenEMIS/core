@@ -46,11 +46,11 @@ class UserBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvents = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
-			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+			'ControllerAction.Model.add.afterAction' => 'addAfterAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
 			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
-			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.addOnReload' => 'onReload',
 			'ControllerAction.Model.onBeforeDelete' => 'onBeforeDelete',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
@@ -65,6 +65,10 @@ class UserBehavior extends Behavior {
 				'ControllerAction.Model.onUpdateFieldEducationGrade' => 'onUpdateFieldEducationGrade',
 				'ControllerAction.Model.onUpdateFieldSection' => 'onUpdateFieldSection',
 				'ControllerAction.Model.onUpdateFieldStudentStatusId' => 'onUpdateFieldStudentStatusId',
+
+				'ControllerAction.Model.add.onChangePeriod' => 'addOnChangePeriod',
+				'ControllerAction.Model.add.onChangeEducationProgrammeId' => 'addOnChangeEducationProgrammeId',
+				'ControllerAction.Model.add.onChangeEducationGrade' => 'addOnChangeEducationGrade',
 			];
 		}
 
@@ -165,7 +169,7 @@ class UserBehavior extends Behavior {
 	}
 
 
-	public function addBeforeAction(Event $event) {
+	public function addAfterAction(Event $event) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 
 		} else {
@@ -308,7 +312,7 @@ class UserBehavior extends Behavior {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changePeriod';
 		if (empty($attr['options'])) {
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.academicPeriod');
 		}
@@ -334,7 +338,7 @@ class UserBehavior extends Behavior {
 			}
 		}
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeEducationProgrammeId';
 		$attr['options'] = [];
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
@@ -353,11 +357,11 @@ class UserBehavior extends Behavior {
 
 		if (array_key_exists('education_programme_id', $this->_table->fields)) {
 			if (array_key_exists('options', $this->_table->fields['education_programme_id'])) {
-				$educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
+				$this->educationProgrammeId = key($this->_table->fields['education_programme_id']['options']);
 				if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
 					if (array_key_exists('education_programme_id', $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0])) {
 						if ($this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']) {
-							$educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
+							$this->educationProgrammeId = $this->_table->request->data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id'];
 						}
 					}
 				}
@@ -367,18 +371,18 @@ class UserBehavior extends Behavior {
 		// this is used for staffTable autocomplete - for filtering of students that are (in institution and of same education programme)
 		$session = $this->_table->request->session();
 		$session->delete($this->_table->controller->name.'.'.$this->_table->alias);
-		if (isset($educationProgrammeId)) {
+		if (isset($this->educationProgrammeId)) {
 			$institutionSiteId = $session->read('Institutions.id');
 			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'institution_site_id', $institutionSiteId);
-			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'education_programme_id', $educationProgrammeId);
+			$session->write($this->_table->controller->name.'.'.$this->_table->alias.'.'.'education_programme_id', $this->educationProgrammeId);
 		}
 
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeEducationGrade';
 		$attr['options'] = [];
-		if (isset($educationProgrammeId)) {
+		if (isset($this->educationProgrammeId)) {
 			$InstitutionSiteGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
-			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionSiteId, $this->academicPeriodId, $educationProgrammeId);
+			$attr['options'] = $InstitutionSiteGrades->getGradeOptions($institutionSiteId, $this->academicPeriodId, $this->educationProgrammeId);
 		}
 
 		if (empty($attr['options'])) {
@@ -404,6 +408,7 @@ class UserBehavior extends Behavior {
 				}
 			}
 		}
+
 		$attr['type'] = 'select';
 		$attr['options'] = [];
 		if (isset($this->education_grade)) {
@@ -412,7 +417,8 @@ class UserBehavior extends Behavior {
 		}
 
 		if (empty($attr['options'])) {
-			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.sections');
+			// sections not mandatory
+			// $this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.sections');
 		}
 
 		return $attr;
@@ -450,17 +456,19 @@ class UserBehavior extends Behavior {
 		$session = $this->_table->request->session();
 		$institutionSiteId = $session->read('Institutions.id');
 
-		$attr['type'] = 'select';
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		$obj = $Institutions->get($institutionSiteId);
+		$groupId = $obj->security_group_id;
+		$userId = null;
 
-		$data = $this->_table->SecurityRoles
-			->find('ByInstitution', ['id' => $institutionSiteId])
-			;
-
-		$optionsList = [];
-		foreach ($data as $key => $value) {
-			$optionsList[$value->id] = $value->name;
+		if ($session->read('Auth.User.super_admin') == 0) {
+			$userId = $session->read('Auth.User.id');
 		}
-		$attr['options'] = $optionsList;
+
+		$roleOptions = $this->_table->SecurityRoles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
+
+		$attr['type'] = 'select';
+		$attr['options'] = $roleOptions;
 
 		if (empty($attr['options'])) {
 			$this->_table->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.securityRoleId');
@@ -616,6 +624,32 @@ class UserBehavior extends Behavior {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+	}
+
+	
+
+	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->addOnReload($event, $entity, $data, $options);
+		// pr($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+		unset($data[$this->_table->alias()][$this->associatedModel->table()][0]['education_programme_id']);
+		unset($data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']);
+		unset($data[$this->_table->alias()][$this->associatedModel->table()][0]['section']);
+		// pr($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+	}
+
+	public function addOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->addOnReload($event, $entity, $data, $options);
+		// pr($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+		unset($data[$this->_table->alias()][$this->associatedModel->table()][0]['education_grade']);
+		unset($data[$this->_table->alias()][$this->associatedModel->table()][0]['section']);
+		// pr($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+	}
+
+	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->addOnReload($event, $entity, $data, $options);
+		// pr($data[$this->_table->alias()][$this->associatedModel->table()][0]);
+		unset($data[$this->_table->alias()][$this->associatedModel->table()][0]['section']);
+		// pr($data[$this->_table->alias()][$this->associatedModel->table()][0]);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
