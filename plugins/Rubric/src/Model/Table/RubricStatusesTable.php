@@ -100,6 +100,7 @@ class RubricStatusesTable extends AppTable {
 			->toArray();
 		
 		$attr['type'] = 'chosenSelect';
+		$attr['placeholder'] = __('Select Academic Periods');
 		$attr['options'] = $periodOptions;
 		return $attr;
 	}

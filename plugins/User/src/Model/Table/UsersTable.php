@@ -22,10 +22,12 @@ class UsersTable extends AppTable {
 
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
 	private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
+	private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
 	private $defaultUserProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
 
 	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
 	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
+	private $defaultGuardianProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 	private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 
 
@@ -53,27 +55,31 @@ class UsersTable extends AppTable {
 			'allowable_file_types' => 'image'
 		]);
 
+		$this->addBehavior('Area.Areapicker');
+
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
-		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'student_user_id']);
-		$this->hasMany('GuardianStudents', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_user_id']);
-		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
-
-		$this->hasMany('StudentActivities', 		['className' => 'Student.StudentActivities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'student_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('GuardianStudents', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentActivities', 		['className' => 'Student.StudentActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('GuardianActivities', 			['className' => 'Guardian.GuardianActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
-			'through' => 'Security.SecurityGroupUsers'
-		]);
-		
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);	
 	}
 
 	public function beforeAction(Event $event) {
@@ -84,6 +90,8 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active'), 'visible' => false]);
 		$this->ControllerAction->field('photo_content', ['type' => 'image']);
 		$this->ControllerAction->field('last_login', ['visible' => false]);
+		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 	}
 
 	public function afterAction(Event $event) {
@@ -300,7 +308,7 @@ class UsersTable extends AppTable {
 		
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
-				case 'Student': case 'Staff':
+				case 'Student': case 'Staff': case 'Guardian':
 					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
@@ -378,12 +386,16 @@ class UsersTable extends AppTable {
 				$value = $this->defaultStudentProfileIndex;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
 				$value = $this->defaultStaffProfileIndex;
+			} else if(($this->hasBehavior('Guardian')) && ($this->action == "index")){
+				$value = $this->defaultGuardianProfileIndex;
 			} else if(($this->hasBehavior('User')) && ($this->action == "index")){
 				$value = $this->defaultUserProfileIndex;
 			} else if(($this->hasBehavior('Student')) && ($this->action == "view")){
 				$value = $this->defaultStudentProfileView;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
 				$value = $this->defaultStaffProfileView;
+			} else if(($this->hasBehavior('Guardian')) && ($this->action == "view")){
+				$value = $this->defaultGuardianProfileView;
 			} else if(($this->hasBehavior('User')) && ($this->action == "view")){
 				$value = $this->defaultUserProfileView;
 			}
@@ -440,6 +452,8 @@ class UsersTable extends AppTable {
 			$value = $this->defaultStudentProfileView;
 		} else if($this->hasBehavior('Staff')){
 			$value = $this->defaultStaffProfileView;
+		} else if($this->hasBehavior('Guardian')){
+			$value = $this->defaultGuardianProfileView;
 		} else if($this->hasBehavior('User')){
 			$value = $this->defaultUserProfileView;
 		} 

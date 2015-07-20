@@ -74,6 +74,7 @@ trait MessagesTrait {
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
 		'InfrastructureTypes' => [
+			'noLevels' => 'No Available Levels',
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'InfrastructureCustomFields' => [
@@ -145,6 +146,7 @@ trait MessagesTrait {
 		],
 		'InstitutionAssessmentResults' => [
 			'noSubjects' => 'There are no available Subjects.',
+			'noSections' => 'There are no available Sections.',
 			'noClasses' => 'There are no available Classes.',
 		],
 		'InstitutionSurveys' => [
@@ -183,6 +185,10 @@ trait MessagesTrait {
 		],
 		'StudentAttendances' => [
 			'noSections' => 'There are no available Sections.',
+		],
+		'InstitutionSiteStudentAbsences' => [
+			'noSections' => 'There are no available Sections.',
+			'noStudents' => 'There are no available Students.'
 		],
 		'StaffAttendances' => [
 			'noStaff' => 'There are no available Staff.',
@@ -267,6 +273,9 @@ trait MessagesTrait {
 			],
 
 			'InstitutionSiteProgrammes' => [
+				'education_programme_id' => [
+					'unique' => 'This Education Programme already exists in the system'
+				],
 				'noGrade' => 'There is no grade selected',
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
@@ -297,7 +306,12 @@ trait MessagesTrait {
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
 				'staffTypeId' => 'You need to configure Staff Types first.'
-			]
+			],
+			'StudentGuardians' => [
+				'guardianRelationId' => 'You need to configure Guardian Relations first.',
+				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
+
+			],
 		],
 		'User' => [
 			'Users' => [
@@ -574,6 +588,10 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			]
+		],
+		'Translation' => [
+			'success' => 'The language has been successfully compiled',
+			'failed' => 'The language has not been compiled due to errors encountered',
 		],
 	];
 

@@ -34,47 +34,6 @@ class InstitutionSiteStaffTable extends AppTable {
 
 	}
 
-	public function findByPosition(Query $query, array $options) {
-		if (array_key_exists('InstitutionSitePositions.id', $options)) {
-			return $query->where([$this->aliasField('institution_site_position_id') => $options['InstitutionSitePositions.id']]);
-		} else {
-			return $query;
-		}
-	}
-
-	public function findByInstitution(Query $query, array $options) {
-		if (array_key_exists('Institutions.id', $options)) {
-			return $query->where([$this->aliasField('institution_site_id') => $options['Institutions.id']]);
-		} else {
-			return $query;
-		}
-	}
-
-	public function findWithBelongsTo(Query $query, array $options) {
-		return $query
-			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
-	}
-
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$timeNow = strtotime("now");
-		$sessionVar = $this->alias().'.add.'.strtotime("now");
-		$this->Session->write($sessionVar, $this->request->data);
-
-		if (!$entity->errors()) {
-			$event->stopPropagation();
-			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
-		}
-	}
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
-		
-		if ($entity->isNew()) {
-			if (isset($entity->FTE)) {
-				$entity->FTE = $entity->FTE/100;
-			}
-		}
-	}
-
 	public function validationDefault(Validator $validator) {
 		return $validator
 			// this function doesnt update... only adds
@@ -90,6 +49,121 @@ class InstitutionSiteStaffTable extends AppTable {
 		;
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		
+		if ($entity->isNew()) {
+			if (isset($entity->FTE)) {
+				$entity->FTE = $entity->FTE/100;
+			}
+		}
+	}
+
+
+/******************************************************************************************************************
+**
+** add action functions
+**
+******************************************************************************************************************/
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$timeNow = strtotime("now");
+		$sessionVar = $this->alias().'.add.'.strtotime("now");
+		$this->Session->write($sessionVar, $this->request->data);
+
+		if (!$entity->errors()) {
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
+		}
+	}
+
+
+/******************************************************************************************************************
+**
+** finders functions to be used with query
+**
+******************************************************************************************************************/
+	/**
+	 * $options['type'] == 0 > non-teaching
+	 * $options['type'] == 1 > teaching
+	 * refer to OptionsTrait
+	 */
+	public function findByPositions(Query $query, array $options) {
+		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$positions = $this->Positions->find('list')
+						->find('withBelongsTo')
+				        ->where([
+				        	'Institutions.id' => $options['Institutions.id'],
+				        	$this->Positions->aliasField('type') => $options['type']
+				        ])
+				        ->toArray();
+			$positions = array_keys($positions);
+			return $query->where([$this->aliasField('institution_site_position_id IN') => $positions]);
+		} else {
+			return $query;
+		}
+	}
+
+	public function findByInstitution(Query $query, array $options) {
+		if (array_key_exists('Institutions.id', $options)) {
+			return $query->where([$this->aliasField('institution_site_id') => $options['Institutions.id']]);
+		} else {
+			return $query;
+		}
+	}
+
+	/**
+	 * currently available values:
+	 * 	Full-Time
+	 * 	Part-Time
+	 * 	Contract
+	 */
+	public function findByType(Query $query, array $options) {
+		if (array_key_exists('type', $options)) {
+			$types = $this->StaffTypes->getList()->toArray();
+			if (is_array($types) && in_array($options['type'], $types)) {
+				$typeId = array_search($options['type'], $types);
+				return $query->where([$this->aliasField('staff_type_id') => $typeId]);
+			} else {
+				return $query;
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	/**
+	 * currently available values:
+	 * 	Current
+	 * 	Transferred
+	 * 	Resigned
+	 * 	Leave
+	 * 	Terminated
+	 */
+	public function findByStatus(Query $query, array $options) {
+		if (array_key_exists('status', $options)) {
+			$statuses = $this->StaffStatuses->getList()->toArray();
+			if (is_array($statuses) && in_array($options['status'], $statuses)) {
+				$statusId = array_search($options['status'], $statuses);
+				return $query->where([$this->aliasField('staff_status_id') => $statusId]);
+			} else {
+				return $query;
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	public function findWithBelongsTo(Query $query, array $options) {
+		return $query
+			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
+	}
+
+
+/******************************************************************************************************************
+**
+** essential functions
+**
+******************************************************************************************************************/
 	public function getNumberOfStaff($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
@@ -150,16 +224,18 @@ class InstitutionSiteStaffTable extends AppTable {
 			}
 		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
-			$positionType = $staffByPosition->position->type;
-			$staffGender = $staffByPosition->user->gender->name;
-			$StaffTotal = $staffByPosition->total;
+			if ($staffByPosition->has('position')) {
+				$positionType = $staffByPosition->position->type;
+				$staffGender = $staffByPosition->user->gender->name;
+				$StaffTotal = $staffByPosition->total;
 
-			foreach ($dataSet as $dkey => $dvalue) {
-				if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
-					$dataSet[$dkey]['data'][$positionType] = 0;
+				foreach ($dataSet as $dkey => $dvalue) {
+					if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+						$dataSet[$dkey]['data'][$positionType] = 0;
+					}
 				}
+				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
 			}
-			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
 		}
 
 		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
