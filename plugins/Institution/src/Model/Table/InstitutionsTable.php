@@ -9,7 +9,6 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use Cake\ORM\TableRegistry;
 
 use App\Model\Table\AppTable;
 
