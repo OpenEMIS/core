@@ -172,6 +172,16 @@ class NavigationComponent extends Component {
 											'url' => ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields', 'action' => 'Fields'],
 											'selected' => ['Pages']
 										],
+										'Student' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										// 'Staff' => [
+										// 	'collapse' => true,
+										// 	'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
+										// 	'selected' => ['Pages']
+										// ],
 										'Infrastructure' => [
 											'collapse' => true,
 											'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
@@ -189,26 +199,6 @@ class NavigationComponent extends Component {
 								]
 							]
 						],
-						// 'Custom Field' => [
-						// 	'collapse' => true,
-						// 	'items' => [
-						// 		'General' => [
-						// 			'collapse' => true,
-						// 			'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
-						// 			'selected' => ['Pages']
-						// 		],
-						// 		'Institution' => [
-						// 			'collapse' => true,
-						// 			'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Fields'],
-						// 			'selected' => ['Pages']
-						// 		],
-						// 		'Infrastructure' => [
-						// 			'collapse' => true,
-						// 			'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields', 'index'],
-						// 			'selected' => ['Levels', 'Types']
-						// 		],
-						// 	]
-						// ],
 						'Security' => [
 							'collapse' => true,
 							'items' => [
