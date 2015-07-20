@@ -27,18 +27,6 @@ class StaffBehavioursTable extends AppTable {
 		$this->fields['section']['visible'] = true;
 	}	
 
-	// public function indexBeforeAction() {
-	// 	$this->fields['description']['visible'] = false;
-	// 	$this->fields['action']['visible'] = false;
-	// 	$this->fields['time_of_behaviour']['visible'] = false;
-
-	// 	$order = 0;
-	// 	$this->ControllerAction->setFieldOrder('date_of_behaviour', $order++);
-	// 	$this->ControllerAction->setFieldOrder('title', $order++);
-	// 	$this->ControllerAction->setFieldOrder('staff_behaviour_category_id', $order++);
-	// 	$this->ControllerAction->setFieldOrder('institution_site_id', $order++);
-	// }
-
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields['academic_period']['visible'] = false;
 		$this->fields['section']['visible'] = false;
@@ -119,9 +107,8 @@ class StaffBehavioursTable extends AppTable {
 	public function editBeforeAction(Event $event) {
 		$this->fields['academic_period']['visible'] = false;
 		$this->fields['section']['visible'] = false;
-		// $this->fields['security_user_id']['visible'] = false;
-		$this->ControllerAction->field('name', ['type' => 'readonly']);
-		$this->ControllerAction->setFieldOrder(['name', 'staff_behaviour_category_id']);
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly']);
+		$this->ControllerAction->setFieldOrder(['security_user_id', 'staff_behaviour_category_id']);
 	}
 
 	public function addBeforeAction(Event $event) {
