@@ -278,6 +278,9 @@ class AppTable extends Table {
 		$event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
 		$this->eventManager()->dispatch($event);
 
+		if ($toolbarButtons->offsetExists('back')) {
+			$controller->set('backButton', $toolbarButtons['back']);
+		}
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 
