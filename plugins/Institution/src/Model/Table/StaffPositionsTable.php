@@ -14,9 +14,10 @@ use Cake\Network\Request;
 class StaffPositionsTable extends AppTable {
 	//public $useTable = false;
 	public function initialize(array $config) {
-		$this->table('institution_site_staff');
-        parent::initialize($config);
+				$this->table('institution_site_staff');
 
+        parent::initialize($config);
+        $this->entityClass('Institution.InstitutionSiteStaff');
         $this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions','foreignKey' => 'institution_site_position_id']);
@@ -24,11 +25,21 @@ class StaffPositionsTable extends AppTable {
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 	}
 
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('position', ['type' => 'readonly', 'attr' => ['value' => $entity->position->staff_position_title->name]]);
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
+		$this->ControllerAction->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $this->formatDate($entity->start_date)]]);
+	}
+
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Users','Positions.StaffPositionTitles']);
+	}
+
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $options) {
-		unset($options['StaffPositions']['staff_name']);
-		unset($options['StaffPositions']['position']);
-		unset($options['StaffPositions']['FTE']);
-		unset($options['StaffPositions']['start_date_formatted']);
+		unset($options[$this->alias()]['staff_name']);
+		unset($options[$this->alias()]['position']);
+		unset($options[$this->alias()]['FTE']);
+		unset($options[$this->alias()]['start_date_formatted']);
 	}	
 
 	public function editBeforeAction(Event $event) {
@@ -38,10 +49,10 @@ class StaffPositionsTable extends AppTable {
 			$this->fields[$key]['visible'] = false;
 		}	
 
-		$this->fields['staff_name']['visible'] = true;
+		//$this->fields['staff_name']['visible'] = true;
 		$this->fields['position']['visible'] = true;
 		$this->fields['FTE']['visible'] = true;
-		$this->fields['start_date_formatted']['visible'] = true;
+		$this->fields['start_date']['visible'] = true;
 		$this->fields['end_date']['visible'] = true;
 		$this->fields['staff_type_id']['visible'] = true;
 		$this->fields['staff_status_id']['visible'] = true;
@@ -51,20 +62,16 @@ class StaffPositionsTable extends AppTable {
 		$this->fields['institution_site_id']['visible'] = true;
 		$this->fields['institution_site_position_id']['visible'] = true;
 
-		$this->ControllerAction->field('security_user_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('institution_site_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('institution_site_position_id', ['type' => 'hidden']);
 
-		$this->ControllerAction->field('staff_name', ['type' => 'readonly']);
-		$this->ControllerAction->field('position', ['type' => 'readonly']);
 		$this->ControllerAction->field('FTE', ['type' => 'readonly']);
-		$this->ControllerAction->field('start_date_formatted', ['type' => 'readonly']);
 		$this->ControllerAction->field('end_date', ['type' => 'date']);
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		
 		$this->ControllerAction->setFieldOrder([
-			'security_user_id', 'institution_site_id', 'institution_site_position_id', 'staff_name', 'position', 'FTE', 'start_date_formatted', 'end_date', 'staff_type_id', 'staff_status_id'
+			'security_user_id', 'institution_site_id', 'institution_site_position_id', 'security_user_id', 'position', 'FTE', 'start_date', 'end_date', 'staff_type_id', 'staff_status_id'
 			
 			]);
 	}
