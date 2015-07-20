@@ -78,6 +78,10 @@ class RecordBehavior extends Behavior {
 		}
 
 		if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
+			$count = 0;
+			$checkboxes = [];
+			$fieldIds = [];
+
 			foreach ($data[$this->_table->alias()]['custom_field_values'] as $key => $obj) {
 				$fieldType = $this->CustomFields
 					->find('all')
@@ -88,8 +92,52 @@ class RecordBehavior extends Behavior {
 
 				$fieldValue = $fieldTypes[$fieldType];
 
+				if (isset($obj[$fieldValue])) {
+					// For checkbox
+					if (is_array($obj[$fieldValue])) {
+						$checkboxes[] = $data[$this->_table->alias()]['custom_field_values'][$key];
+						$fieldIds[$obj[$this->config('fieldKey')]] = $obj[$this->config('fieldKey')];
+						$obj[$fieldValue] = '';
+					}
+					// End
+				} else {
+					$obj[$fieldValue] = '';
+				}
+
 				if (strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
+				}
+				$count++;
+			}
+
+			foreach ($checkboxes as $checkbox) {
+				$fieldType = $CustomFields
+					->find('all')
+					->select([$CustomFields->aliasField('field_type')])
+					->where([$CustomFields->aliasField('id') => $obj[$this->config('fieldKey')]])
+					->first()
+					->field_type;
+
+				$fieldValue = $fieldTypes[$fieldType];
+				$answers = $checkbox[$fieldValue];
+
+				foreach ($answers as $key => $checked) {
+					if ($checked) {
+						$checkbox[$fieldValue] = $key;
+						$data[$this->_table->alias()]['custom_field_values'][++$count] = $checkbox;
+					}
+				}
+			}
+
+			if (array_key_exists('id', $data[$this->_table->alias()])) {
+				if (!empty($fieldIds)) {
+					$id = $data[$this->_table->alias()]['id'];
+					$CustomFieldValues = $this->_table->CustomFieldValues;
+
+					$CustomFieldValues->deleteAll([
+						$CustomFieldValues->aliasField($this->config('recordKey')) => $id,
+						$CustomFieldValues->aliasField($this->config('fieldKey') . ' IN') => $fieldIds
+					]);
 				}
 			}
 		}
@@ -215,7 +263,7 @@ class RecordBehavior extends Behavior {
 				}
 			}
 
-			foreach ($customFields as $key => $customField) {
+			foreach ($customFields as $customFieldOrder => $customField) {
 				$_customField = $customField->custom_field;
 
 				$_field_type = $_customField->field_type;
@@ -248,11 +296,23 @@ class RecordBehavior extends Behavior {
 						->all();
 
 					if (!$results->isEmpty()) {
-						$data = $results
-							->first();
+						if ($_field_type == 'CHECKBOX') {
+							$_value = [];
+							$data = $results->toArray();
+							foreach ($data as $obj) {
+								$_value[] = [
+									'id' => $obj->id,
+									'value' => $obj->$fieldValue
+								];
+							}
+						} else {
+							$data = $results
+								->first();
 
-						$_id = $data->id;
-						$_value = $data->$fieldValue;
+							$_id = $data->id;
+							$_value = $data->$fieldValue;
+						}
+
 						$_attr['value'] = $_value;
 					}
 				}
@@ -261,14 +321,14 @@ class RecordBehavior extends Behavior {
 					'CustomField.'.Inflector::camelize(strtolower($_field_type))
 				);
 
-				$fieldName = "custom_".$key."_field";
+				$fieldName = "custom_.$customFieldOrder._field";
 				$fieldOrder[$order++] = $fieldName;
 				$valueClass = strtolower($_field_type) == 'table' ? 'table-full-width' : '';
 
 				$this->_table->ControllerAction->field($fieldName, [
 		            'type' => 'custom_'. strtolower($_field_type),
 		            'visible' => true,
-		            'field' => $key,
+		            'field' => $customFieldOrder,
 		            'attr' => $_attr,
 		            'recordKey' => $this->config('recordKey'),
 		            'fieldKey' => $this->config('fieldKey'),

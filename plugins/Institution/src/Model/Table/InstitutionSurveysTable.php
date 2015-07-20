@@ -6,13 +6,12 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\MessagesTrait;
 
 class InstitutionSurveysTable extends AppTable {
-	private $status = [
-		0 => 'New',
-		1 => 'Draft',
-		2 => 'Completed',
-	];
+	use OptionsTrait;
+	use MessagesTrait;
 
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
@@ -33,6 +32,12 @@ class InstitutionSurveysTable extends AppTable {
 			'tableCellKey' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
 
 	public function buildSurveyRecords() {
 		$CustomModules = $this->SurveyForms->CustomModules;
@@ -115,33 +120,37 @@ class InstitutionSurveysTable extends AppTable {
 		$request = $this->ControllerAction->request;
 
 		$id = $request->params['pass'][1];
+		$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
 
-		$InstitutionSurvey = $this->newEntity();
-		$InstitutionSurvey->id = $id;
-		$InstitutionSurvey->status = 1;
-
-		if ($this->save($InstitutionSurvey)) {
+		if ($this->save($entity)) {
 			$this->Alert->success('InstitutionSurveys.reject.success');
 		} else {
 			$this->Alert->success('InstitutionSurveys.reject.failed');
-			$this->log($InstitutionSurvey->errors(), 'debug');
+			$this->log($entity->errors(), 'debug');
 		}
 		$action = $this->ControllerAction->buttons['index']['url'];
 		$action['status'] = 2;
 		return $this->controller->redirect($action);
 	}
 
-	public function onGetSurveyFormId(Event $event, Entity $entity) {
-		list(, $selectedStatus) = array_values($this->getSelectOptions());
+	public function onGetStatus(Event $event, Entity $entity) {
+		list($statusOptions) = array_values($this->_getSelectOptions());
+		return $statusOptions[$entity->status];
+	}
 
-		return $event->subject()->Html->link($entity->survey_form->name, [
-			'plugin' => $this->controller->plugin,
-			'controller' => $this->controller->name,
-			'action' => $this->alias,
-			'edit',
-			$entity->id,
-			'status' => $selectedStatus
-		]);
+	public function onGetSurveyFormId(Event $event, Entity $entity) {
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		if ($selectedStatus != 2) {
+			return $event->subject()->Html->link($entity->survey_form->name, [
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
+				'action' => $this->alias,
+				'edit',
+				$entity->id,
+				'status' => $selectedStatus
+			]);
+		}
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
@@ -158,7 +167,7 @@ class InstitutionSurveysTable extends AppTable {
 
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$results = $SurveyStatuses
-			->find('all')
+			->find()
 			->select([
 				$SurveyStatuses->aliasField('date_disabled')
 			])
@@ -173,39 +182,23 @@ class InstitutionSurveysTable extends AppTable {
 					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
 				]
 			])
-			->first()
-			->toArray();
+			->first();
 
-		return $results['date_disabled'];
+		$dateDisabled = null;
+		if (!is_null($results)) {
+			$data = $results->toArray();
+			$dateDisabled = $data['date_disabled'];
+		}
+
+		return $dateDisabled;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
 		return $entity->modified;
 	}
 
-	public function indexOnInitializeButtons(Event $event, $buttons) {
-		list(, $selectedStatus) = array_values($this->getSelectOptions());
-		if ($selectedStatus == 0) {
-			unset($buttons['delete']);
-		} else if ($selectedStatus == 1) {
-		} else if ($selectedStatus == 2) {
-			unset($buttons['edit']);
-			unset($buttons['delete']);
-			$buttons['reject'] = [
-				'class' => 'fa fa-trash',
-				'url' => [
-					'plugin' => $this->controller->plugin,
-					'controller' => $this->controller->name,
-					'action' => $this->alias,
-					'reject'
-				]
-			];
-		}
-		return $buttons;
-	}
-
 	public function indexBeforeAction(Event $event) {
-		list($statusOptions, $selectedStatus) = array_values($this->getSelectOptions());
+		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
 
 		$tabElements = [
 			'New' => [
@@ -255,11 +248,43 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		list(, $selectedStatus) = array_values($this->getSelectOptions());
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 		$options['conditions'][$this->aliasField('status')] = $selectedStatus;
 		$options['order'] = [
 			$this->AcademicPeriods->aliasField('order')
 		];
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		if ($selectedStatus == 2) {	//Completed
+			if ($action == 'view') {
+				unset($toolbarButtons['edit']);	
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		if ($selectedStatus == 0) {	//New
+			unset($buttons['view']);
+			unset($buttons['remove']);
+		} else if ($selectedStatus == 2) {	//Completed
+			$rejectBtn = ['reject' => $buttons['view']];
+			$rejectBtn['reject']['url']['action'] = $this->alias;
+			$rejectBtn['reject']['url'][0] = 'reject';
+			$rejectBtn['reject']['url'][1] = $entity->id;
+			$rejectBtn['reject']['label'] = '<i class="fa fa-trash"></i>' . __('Reject');
+
+			unset($buttons['edit']);
+			unset($buttons['remove']);
+			$buttons = array_merge($buttons, $rejectBtn);
+		}
+
+		return $buttons;
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -273,10 +298,10 @@ class InstitutionSurveysTable extends AppTable {
 		$data[$this->alias()]['status'] = $status;
     }
 
-	public function getSelectOptions() {
+	public function _getSelectOptions() {
 		//Return all required options and their key
-		$statusOptions = $this->status;
-		$selectedStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : key($statusOptions);
+		$statusOptions = $this->getSelectOptions('Surveys.status');
+		$selectedStatus = $this->queryString('status', $statusOptions);
 
 		return compact('statusOptions', 'selectedStatus');
 	}
