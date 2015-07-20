@@ -31,6 +31,8 @@ class AreapickerBehavior extends Behavior {
 		$options['field-name']=$fieldName;
 		$options['options'] = $areaOptions;
 		$options['id'] = 'areapicker';
+		$options['area-label'] = $options['label'];
+
 		$value = "<div class='areapicker'>";
 		$value .= $Form->input($fieldName, $options);
 		$value .= "</div>";

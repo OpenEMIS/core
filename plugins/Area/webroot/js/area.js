@@ -11,9 +11,9 @@ var Area = {
 			var url = $(this).find('select').attr('url');
 			var modelName = $(this).find('select').attr('data-source');
 			modelName += "/" + $(this).find('select').attr('target-model');
-			var fieldName = $(this).find('select').attr('field-name');
-			url += "/" + modelName + "/" + fieldName + "/" + value;
-			Area.populate(closestObject,url);
+			var areaLabel = $(this).find('select').attr('area-label');
+			url += "/" + modelName + "/" + areaLabel + "/" + value;
+			 Area.populate(closestObject,url);
 			// Update hidden field value
 			$(this).next().val(value);
 		});
@@ -24,8 +24,8 @@ var Area = {
 		var modelName= $(obj).attr('data-source');
 		modelName += "/" + $(obj).attr('target-model');
 		var parent = $(obj).closest('.areapicker');
-		var fieldName = $(obj).attr('field-name');
-		url += "/" + modelName + "/" + fieldName + "/" + value;
+		var areaLabel = $(obj).attr('area-label');
+		url += "/" + modelName + "/" + areaLabel + "/" + value;
 		Area.populate(parent, url)
 		// Update hidden field value
 		$( parent ).next().val(value);
@@ -35,11 +35,8 @@ var Area = {
 			url: url,
 			type: "GET",
 			data: {},
-			//traditional: true,
 			success: function(data){
-				//console.log(data);
 				objToUpdate.html(data);
-				//objToUpdate.append(data);
 			}
 		});	
 	}
