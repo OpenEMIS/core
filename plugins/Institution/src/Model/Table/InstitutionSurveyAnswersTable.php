@@ -1,9 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
+use CustomField\Model\Table\CustomFieldValuesTable;
 
-class InstitutionSurveyAnswersTable extends AppTable {
+class InstitutionSurveyAnswersTable extends CustomFieldValuesTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_survey_answers');
 

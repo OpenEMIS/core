@@ -17,6 +17,13 @@ trait OptionsTrait {
 			'Assessments' => [
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')],
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
+			],
+			'Surveys' => [
+				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
+			],
+			'Rubrics' => [
+				'types' => [1 => __('Section Break'), 2 => __('Criteria')],
+				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			]
 		];
 

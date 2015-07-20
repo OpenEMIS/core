@@ -67,10 +67,11 @@ class InstitutionAssessmentsTable extends AppTable {
 		$AssessmentStatusPeriods = TableRegistry::get('Assessment.AssessmentStatusPeriods');
 
 		$results = $AssessmentStatuses
-			->findAllByAssessmentId($entity->assessment->id)
+			->find()
 			->select([
 				$AssessmentStatuses->aliasField('date_disabled')
 			])
+			->where([$AssessmentStatuses->aliasField('assessment_id') => $entity->assessment->id])
 			->join([
 				'table' => $AssessmentStatusPeriods->_table,
 				'alias' => $AssessmentStatusPeriods->alias(),
@@ -139,10 +140,9 @@ class InstitutionAssessmentsTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($selectedStatus == 2) {	//Completed
-			$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
 			$rejectBtn = ['reject' => $buttons['view']];
 			$rejectBtn['reject']['url']['action'] = 'Assessments';
 			$rejectBtn['reject']['url'][0] = 'reject';
@@ -172,7 +172,6 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		$AssessmentStatuses = $this->Assessments->AssessmentStatuses;
 		foreach ($assessments as $key => $assessment) {
-			// pr('Id: ' . $assessment->id . ' Code: ' . $assessment->code . ' Name: ' . $assessment->name);
 			$assessmentStatuses = $AssessmentStatuses
 				->find()
 				->contain(['AcademicPeriods'])

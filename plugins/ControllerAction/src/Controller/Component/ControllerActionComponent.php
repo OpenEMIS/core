@@ -23,6 +23,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
+use Cake\I18n\I18n;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -135,10 +136,7 @@ class ControllerActionComponent extends Component {
 
 			uasort($this->model->fields, [$this, 'sortFields']);
 			$this->config['fields'] = $this->model->fields;
-
-			/**
-			 * ControllerAction viewVar is being used by Positions/current.ctp, Positions/past.ctp & HtmlFieldHelper -> binary()
-			 */
+			
 			$controller->set('ControllerAction', $this->config);
 
 			// deprecated: backward compatible
@@ -162,6 +160,9 @@ class ControllerActionComponent extends Component {
 			}
 
 			// make field sortable by default if it is a string data-type
+			if (!array_key_exists('type', $attr)) {
+				$this->log($key, 'debug');
+			}
 			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
 			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
@@ -241,6 +242,25 @@ class ControllerActionComponent extends Component {
 			$value = $this->controller->viewVars[$key];
 		}
 		return $value;
+	}
+
+	public function paramsPass() {
+		$params = $this->request->pass;
+		if ($this->triggerFrom == 'Model') {
+			if ($this->triggerFrom == 'Model') {
+				unset($params[0]);
+			}
+		}
+		return $params;
+	}
+
+	public function paramsQuery() {
+		return $this->request->query;
+	}
+
+	public function params() {
+		$params = $this->paramsPass();
+		return array_merge($params, $this->paramsQuery());
 	}
 
 	public function buildDefaultValidation() {
@@ -1079,37 +1099,34 @@ class ControllerActionComponent extends Component {
 			$model = $this->model;
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
-			$order = 1;
 			
-			$ids = json_decode($request->data("ids"));
-			$entity = $model->newEntity();
+			$ids = json_decode($request->data("ids"));		
 
-			foreach ($ids as $id) {
-				$entity->$primaryKey = $id;
-				$entity->$orderField = $order++;
-				$model->save($entity);
+			foreach ($ids as $order => $id) {
+				$model->updateAll([$orderField => $order + 1], [$primaryKey => $id]);
 			}
 		}
 	}
 	
-	public function fixOrder($conditions) {
-		$model = $this->model;
-		$count = $model->find('count', array('conditions' => $conditions));
-		if($count > 0) {
-			$list = $model->find('list', array(
-				'conditions' => $conditions,
-				'order' => array(
-					$model->alias().'.'.$this->orderField,
-					$model->alias().'.'.$model->primaryKey()
-				)
-			));
-			$order = 1;
-			foreach($list as $id => $name) {
-				$model->id = $id;
-				$model->saveField($this->orderField, $order++);
-			}
-		}
-	}
+	// NOT IN USED
+	// public function fixOrder($conditions) {
+	// 	$model = $this->model;
+	// 	$count = $model->find('count', array('conditions' => $conditions));
+	// 	if($count > 0) {
+	// 		$list = $model->find('list', array(
+	// 			'conditions' => $conditions,
+	// 			'order' => array(
+	// 				$model->alias().'.'.$this->orderField,
+	// 				$model->alias().'.'.$model->primaryKey()
+	// 			)
+	// 		));
+	// 		$order = 1;
+	// 		foreach($list as $id => $name) {
+	// 			$model->id = $id;
+	// 			$model->saveField($this->orderField, $order++);
+	// 		}
+	// 	}
+	// }
 
 	public function getPlugin($model) {
 		$array = $this->getModel($model);

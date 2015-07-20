@@ -111,7 +111,7 @@ class StudentAttendancesTable extends AppTable {
 			$types = $this->getSelectOptions('Absence.types');
 			$type = $types['EXCUSED'];
 
-			if (empty($entity->InstitutionSiteStudentAbsence['student_absence_reason_id'])) {
+			if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
 				$type = $types['UNEXCUSED'];
 			}
 		}
@@ -121,7 +121,7 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetReason
 	public function onGetReason(Event $event, Entity $entity) {
-		$reasonId = $entity->InstitutionSiteStudentAbsence['student_absence_reason_id'];
+		$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
 		$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');
 
 		if (!empty($reasonId)) {
@@ -348,8 +348,37 @@ class StudentAttendancesTable extends AppTable {
 
 		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.security_user_id'];
 		if (is_array($date)) {
-			$conditions['StudentAbsences.start_date >= '] = $date[0]->format('Y-m-d');
-			$conditions['StudentAbsences.start_date <= '] = $date[1]->format('Y-m-d');
+			$startDate = $date[0]->format('Y-m-d');
+			$endDate = $date[1]->format('Y-m-d');
+
+			$conditions['OR'] = [
+				'OR' => [
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date >=' => $startDate,
+						'StudentAbsences.start_date <=' => $endDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date <=' => $startDate,
+						'StudentAbsences.end_date >=' => $startDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date <=' => $endDate,
+						'StudentAbsences.end_date >=' => $endDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date >=' => $startDate,
+						'StudentAbsences.end_date <=' => $startDate
+					]
+				],
+				[
+					'StudentAbsences.end_date IS NULL',
+					'StudentAbsences.start_date <=' => $endDate
+				]
+			];
 		} else {
 			$conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
 			$conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');

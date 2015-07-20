@@ -7,6 +7,6 @@ use Cake\Validation\Validator;
 class SpecialNeedTypesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
-		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds']);
+		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
