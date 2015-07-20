@@ -18,18 +18,12 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['staff'] = $entity->security_user_id;
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 	}
 
-	public function afterAction(Event $event) {
-		if(!empty($this->request->query['staff'])){
-			$Users = TableRegistry::get('User.Users');
-			$staffId = $this->request->query['staff'];
-			$staffName = $Users->get($staffId)->name_with_id;
-
-			$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
-		}
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Users']);
 	}
 
 	public function beforeAction() {
