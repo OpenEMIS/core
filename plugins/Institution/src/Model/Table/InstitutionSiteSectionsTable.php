@@ -902,10 +902,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 		);
 
 		if($gradeId!==false) {
-			$multiGradeOptions['joins'] = array(
+			$multiGradeOptions['join'] = array(
 				array(
 					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
+					'alias' => 'InstitutionSiteSectionGrades',
 					'conditions' => array(
 						'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id',
 						'InstitutionSiteSectionGrades.education_grade_id = ' . $gradeId,
