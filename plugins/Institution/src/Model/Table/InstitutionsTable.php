@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Table\AppTable;
 
@@ -73,6 +74,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
         $this->addBehavior('Security.Institution');
+        $this->addBehavior('Area.Areapicker');
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -175,9 +177,8 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_id', ['type' => 'select']);
-
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
