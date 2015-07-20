@@ -3,7 +3,7 @@ namespace Survey\Model\Table;
 
 use CustomField\Model\Table\CustomFormsFieldsTable;
 
-class SurveyFormQuestionsTable extends CustomFormsFieldsTable {
+class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
