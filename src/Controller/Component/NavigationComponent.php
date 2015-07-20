@@ -140,11 +140,6 @@ class NavigationComponent extends Component {
 									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
 									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
 								],
-								'Infrastructure' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields', 'index'],
-									'selected' => ['Levels', 'Types']
-								],
 								'Assessments' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments', 'index'],
@@ -157,8 +152,33 @@ class NavigationComponent extends Component {
 								],
 								'Custom Field' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
-									'selected' => ['Pages']
+									'items' => [
+										'General' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Institution' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Student' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Staff' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
+											'selected' => ['Pages']
+										],
+										'Infrastructure' => [
+											'collapse' => true,
+											'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+											'selected' => ['Pages', 'Levels', 'Types']
+										],
+									]
 								],
 								'Translations' => [
 									'collapse' => true,

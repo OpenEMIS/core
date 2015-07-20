@@ -1,9 +1,9 @@
 <?php
 namespace Survey\Model\Table;
 
-use CustomField\Model\Table\CustomFormFieldsTable;
+use CustomField\Model\Table\CustomFormsFieldsTable;
 
-class SurveyFormQuestionsTable extends CustomFormFieldsTable {
+class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 

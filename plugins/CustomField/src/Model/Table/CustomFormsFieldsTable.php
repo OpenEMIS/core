@@ -3,11 +3,10 @@ namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class CustomFormFiltersTable extends AppTable {
+class CustomFormsFieldsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-
 		$this->belongsTo('CustomForms', ['className' => 'CustomField.CustomForms']);
-		$this->belongsTo('FieldOptionValues', ['className' => 'FieldOptionValues']);
+		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 	}
 }

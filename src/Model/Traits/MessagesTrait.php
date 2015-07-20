@@ -74,6 +74,7 @@ trait MessagesTrait {
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
 		'InfrastructureTypes' => [
+			'noLevels' => 'No Available Levels',
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'InfrastructureCustomFields' => [
