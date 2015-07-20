@@ -82,7 +82,7 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$fieldKey = Inflector::underscore(Inflector::singularize($this->alias())) . '_id';
+		$fieldKey = Inflector::singularize($this->_table) . '_id';
 		foreach ($this->_contain as $_contain) {
 			// Should put here instead of in beforeSave()
 			$this->{$_contain}->updateAll(

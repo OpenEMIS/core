@@ -23,6 +23,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
+use Cake\I18n\I18n;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
