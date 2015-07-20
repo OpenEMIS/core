@@ -18,6 +18,20 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['staff'] = $entity->security_user_id;
+	}
+
+	public function afterAction(Event $event) {
+		if(!empty($this->request->query['staff'])){
+			$Users = TableRegistry::get('User.Users');
+			$staffId = $this->request->query['staff'];
+			$staffName = $Users->get($staffId)->name_with_id;
+
+			$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
+		}
+	}
+
 	public function beforeAction() {
 		$this->ControllerAction->field('academic_period', ['type' => 'select']);
 		$this->ControllerAction->field('section', ['type' => 'select']);
@@ -107,7 +121,6 @@ class StaffBehavioursTable extends AppTable {
 	public function editBeforeAction(Event $event) {
 		$this->fields['academic_period']['visible'] = false;
 		$this->fields['section']['visible'] = false;
-		$this->ControllerAction->field('security_user_id', ['type' => 'readonly']);
 		$this->ControllerAction->setFieldOrder(['security_user_id', 'staff_behaviour_category_id']);
 	}
 
