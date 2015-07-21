@@ -12,6 +12,36 @@ class StaffBehavior extends Behavior {
 	public function initialize(array $config) {
 	}
 
+	// public function beforeFind(Event $event, Query $query, $options) {
+	// 	// need to display individual rows of institution_site_staff for institution/index only
+	// 	$joinType = (!$this->_table->controller->name == 'Institutions' && $this->_table->action == 'index')? 'RIGHT': 'INNER';
+	// 	$joinType = 'INNER';
+
+	// 	$schema = $this->_table->InstitutionSiteStaff->schema();
+	// 	$columns = $schema->columns();
+	// 	$institutionSiteStaffFields = [];
+	// 	foreach ($columns as $col) {
+	// 		$institutionSiteStaffFields[] = $this->_table->InstitutionSiteStaff->aliasField($col);
+	// 	}
+
+	// 	$query
+	// 		->join([
+	// 			'table' => 'institution_site_staff',
+	// 			'alias' => 'InstitutionSiteStaff',
+	// 			'type' => $joinType,
+	// 			'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStaff.security_user_id']
+	// 		])
+	// 		->select($institutionSiteStaffFields)
+	// 		->autofields(true)
+	// 		;
+
+	// 	if (!$this->_table->controller->name == 'Institutions' && $this->_table->action == 'index') {
+	// 		$query->group($this->_table->aliasField('id'));
+	// 	} else {
+	// 		// for institution/staff. do not group by so that the roles will be separated in index
+	// 	}
+	// }
+
 	public function beforeFind(Event $event, Query $query, $options) {
 		$query
 			->join([
@@ -50,10 +80,10 @@ class StaffBehavior extends Behavior {
 		$this->_table->ControllerAction->field('name', []);
 		$this->_table->ControllerAction->field('default_identity_type', []);
 		$this->_table->ControllerAction->field('staff_institution_name', []);
-		$this->_table->ControllerAction->field('staff_status', []);
+		$this->_table->ControllerAction->field('staffstatus', []);
 
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'staff_institution_name', 'staff_status']);
+			'name', 'default_identity_type', 'staff_institution_name', 'staffstatus']);
 
 		$indexDashboard = 'Staff.Staff/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
