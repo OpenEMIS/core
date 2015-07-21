@@ -168,11 +168,11 @@ class ControllerActionHelper extends Helper {
 					// end attach event
 
 					if ($event->result) {
-						$label = $event->result;
+						$label = __($event->result);
 					}
 
 					if ($attr['sort']) {
-						$title = ($label!='') ? $label : $field;
+						$title = ($label!='') ? $label : __($field);
 						$label = $this->Paginator->sort($field, $title);
 					}
 					
