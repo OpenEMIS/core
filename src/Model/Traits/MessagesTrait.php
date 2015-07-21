@@ -589,9 +589,9 @@ trait MessagesTrait {
 				]
 			]
 		],
-		'Translation' => [
-			'success' => 'The language has been successfully compiled',
-			'failed' => 'The language has not been compiled due to errors encountered',
+		'Translations' => [
+			'success' => 'The language has been successfully compiled.',
+			'failed' => 'The language has not been compiled due to errors encountered.',
 		],
 	];
 
