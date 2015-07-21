@@ -3,6 +3,7 @@ namespace Localization\Controller;
 
 use Cake\Event\Event;
 use Cake\Core\App;
+use Cake\Cache\Cache;
 
 class TranslationsController extends AppController {
 	private $defaultLocale = 'en';
@@ -48,10 +49,13 @@ class TranslationsController extends AppController {
 			])
 			->toArray();
 
+		// clear persistent cache that is used for Translations
+		Cache::clear(false, '_cake_core_');
+
 		// Header of the PO file
 		$str .= 'msgid ""'."\n";
 		$str .= 'msgstr ""'."\n";
-		$str .= '"Project-Id-Version: Openemis Version 3\n"'."\n";
+		$str .= '"Project-Id-Version: OpenEMIS Project\n"'."\n";
 		$str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"'."\n";
 		$str .= '"PO-Revision-Date: '.date('Y-m-d H:i:sP').'\n"'."\n";
 		$str .= '"Last-Translator: \n"'."\n";
