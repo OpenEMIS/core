@@ -357,10 +357,11 @@ class ControllerActionHelper extends Helper {
 				if ($label !== false) {
 					if (!array_key_exists('label', $options)) {
 						$_fieldAttr['label'] = $label;
-						$options['label'] = $label;
+						$options['label'] = __($label);
 					} else {
 						$_fieldAttr['label'] = $options['label'];
 					}
+					$_fieldAttr['label'] = __($_fieldAttr['label']);
 				}
 
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
@@ -484,7 +485,7 @@ class ControllerActionHelper extends Helper {
 
 				if ($_fieldAttr['label']) {
 					$labelClass = implode(' ', $_labelClass);
-					$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, $label, $valueClass, $value);
+					$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, __($label), $valueClass, $value);
 				} else { // no label
 					$rowContent = sprintf($_valueCol, $valueClass, $value);
 				}
