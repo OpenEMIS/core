@@ -33,7 +33,7 @@ class UserBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvents = [
-			'ControllerAction.Model.add.afterAction' => 'addAfterAction',
+			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
 			'ControllerAction.Model.add.afterSave' => 'addAfterSave',
@@ -93,7 +93,7 @@ class UserBehavior extends Behavior {
 		return $process;
 	}
 
-	public function addAfterAction(Event $event) {
+	public function addBeforeAction(Event $event) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 
 		} else {

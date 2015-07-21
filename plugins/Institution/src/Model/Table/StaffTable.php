@@ -60,24 +60,22 @@ class StaffTable extends BaseTable {
 			$associationString = $this->alias().'.'.$this->InstitutionSiteStaff->table().'.0.';
 			$this->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionSiteId, 'fieldName' => $associationString.'institution_site_id']);			
 
-			if ($this->hasBehavior('Staff')) {
-				$this->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
-				$this->ControllerAction->field('security_role_id', ['fieldName' => $associationString.'security_role_id']);
-				$this->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
-				$this->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
-				$this->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
-				$this->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
-				$this->ControllerAction->field('staff_status_id', ['fieldName' => $associationString.'staff_status_id']);
-				$this->ControllerAction->field('search',['type' => 'autocomplete', 
-															     'placeholder' => 'openEMIS ID or Name',
-															     'url' => '/Institutions/Staff/autoCompleteUserList',
-															     'length' => 3 ]);
-				$this->ControllerAction->setFieldOrder([
-					'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id', 'staff_status_id'
-					, 'search'
-					]);
+			$this->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
+			$this->ControllerAction->field('security_role_id', ['fieldName' => $associationString.'security_role_id']);
+			$this->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
+			$this->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
+			$this->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
+			$this->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
+			$this->ControllerAction->field('staff_status_id', ['fieldName' => $associationString.'staff_status_id']);
+			$this->ControllerAction->field('search',['type' => 'autocomplete', 
+														     'placeholder' => 'openEMIS ID or Name',
+														     'url' => '/Institutions/Staff/autoCompleteUserList',
+														     'length' => 3 ]);
+			$this->ControllerAction->setFieldOrder([
+				'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id', 'staff_status_id'
+				, 'search'
+				]);
 
-			}
 		}
 	}
 
