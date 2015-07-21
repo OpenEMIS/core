@@ -10,7 +10,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'programme_section', 'date_of_birth_formatted');
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'programme_section', 'date_of_birth_formatted'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
