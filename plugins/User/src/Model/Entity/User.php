@@ -9,7 +9,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'staff_status', 'programme_section'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'programme_section'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -85,7 +85,6 @@ class User extends Entity {
 		if(!empty($UserIdentity)) {
 			$data = $UserIdentity->number;
 		}
-
 		return $data;
 	}
 
@@ -140,27 +139,6 @@ class User extends Entity {
         return $data;
     }
 
-    protected function _getStaffStatus(){
-		if (!empty($this->_properties['institution_site_staff'])) {
-			$StaffStatuses = TableRegistry::get('FieldOption.StaffStatuses');
-			$StaffStatusesList = $StaffStatuses->getList()->toArray();
-
-			$allStatuses = [];
-			foreach ($this->_properties['institution_site_staff'] as $key => $value) {
-				$allStatuses[] = $value->staff_status_id;
-			}
-
-			foreach ($allStatuses as $key => $value) {
-				if (array_key_exists($value, $StaffStatusesList)) {
-					$allStatuses[$key] = $StaffStatusesList[$value];
-				} else {
-					unset($allStatuses[$key]);
-				}
-			}
-		}
-		return implode(', ', $allStatuses);
-    }
-
     protected function _getProgrammeSection(){
         $education_programme_id = "";
     	if ($this->institution_site_students) {
@@ -191,29 +169,5 @@ class User extends Entity {
 
     	return $educationProgrammeName . '<span class="divider"></span>' . $sectionName;
     }
-
-	protected function _getPosition($field) {
-		$allPositionsNames = [];
-		if (!empty($this->_properties['institution_site_staff'])) {
-			$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
-
-			$allPositions = [];
-			foreach ($this->_properties['institution_site_staff'] as $key => $value) {
-				$allPositions[] = $value->institution_site_position_id;
-			}
-
-			$data = $InstitutionSitePositions->find()
-				->select('StaffPositionTitles.name')
-				->contain(['StaffPositionTitles'])
-				->where([$InstitutionSitePositions->aliasField($InstitutionSitePositions->primaryKey()) . ' IN' => $allPositions])
-				;
-
-			$allPositionsNames = [];
-			foreach ($data as $key => $value) {
-				$allPositionsNames[] = $value->StaffPositionTitles->name;
-			}
-		}
-		return implode(', ', $allPositionsNames);
-	}
 
 }

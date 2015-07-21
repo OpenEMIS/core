@@ -21,6 +21,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
 
@@ -519,7 +520,7 @@ class ControllerActionComponent extends Component {
 		}
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
-			$order = [$this->model->aliasField($this->orderField) => 'asc'];
+			$order = [$model->aliasField($this->orderField) => 'asc'];
 		}
 
 		$paginateOptions = new ArrayObject(['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions]);
@@ -595,7 +596,7 @@ class ControllerActionComponent extends Component {
 		}
 
 		$event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
-		$event = $model->eventManager()->dispatch($event);
+		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
 		$modal = $this->getModalOptions('remove');
