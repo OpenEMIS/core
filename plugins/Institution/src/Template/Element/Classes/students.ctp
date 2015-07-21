@@ -46,10 +46,10 @@
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.institution_site_class_id", [ 'value'=> $obj->institution_site_class_id ]);
 
 					?>
-					<td><?php echo $obj->user->openemis_no ?></td>
-					<td><?php echo $obj->user->name ?></td>
-					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth_formatted ?></td>
+					<td><?= $obj->user->openemis_no ?></td>
+					<td><?= $obj->user->name ?></td>
+					<td><?= $obj->user->gender->name ?></td>
+					<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
 					<td> 
 						<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
 						<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);$('#reload').val('add').click();">
@@ -61,10 +61,10 @@
 			<?php else:?>
 
 				<tr>
-					<td><?php echo $obj->user->openemis_no ?></td>
-					<td><?php echo $obj->user->name ?></td>
-					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth_formatted ?></td>
+					<td><?= $obj->user->openemis_no ?></td>
+					<td><?= $obj->user->name ?></td>
+					<td><?= $obj->user->gender->name ?></td>
+					<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
 				</tr>
 
 			<?php endif;?>
