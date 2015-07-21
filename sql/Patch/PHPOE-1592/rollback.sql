@@ -1,0 +1,2 @@
+DELETE FROM labels WHERE module = 'StudentBehaviours' and field = 'openemisno' and en = 'OpenEMIS ID';
+DELETE FROM labels WHERE module = 'StaffBehaviours' and field = 'openemisno' and en = 'OpenEMIS ID';

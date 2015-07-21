@@ -1,0 +1,2 @@
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentBehaviours', 'openemisno', 'OpenEMIS ID', '1', NOW());
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StaffBehaviours', 'openemisno', 'OpenEMIS ID', '1', NOW());
