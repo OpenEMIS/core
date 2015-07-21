@@ -52,6 +52,6 @@ class InstitutionSiteSection extends Entity
     }
 
     protected function _getStaffName() {
-       return $this->staff->name_with_id; 
+       return (!empty($this->staff) || (!is_null($this->staff))) ? $this->staff->name_with_id : ''; 
     }
 }

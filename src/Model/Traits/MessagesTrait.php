@@ -245,7 +245,14 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Classes',
 			'noStaff' => 'No Available Staff'
 		],
-
+		'StudentBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStudents' => 'No Students'
+		],
+		'StaffBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStaff' => 'No Staff'
+		],
 
 		// Validation Messages
 		'Institution' => [

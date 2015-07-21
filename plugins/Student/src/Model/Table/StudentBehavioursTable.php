@@ -28,6 +28,7 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function beforeAction() {
+		$this->ControllerAction->field('openemisno', ['type' => 'string']);
 		$this->ControllerAction->field('academic_period', ['type' => 'select']);
 		$this->ControllerAction->field('section', ['type' => 'select']);
 		$this->ControllerAction->field('security_user_id', ['type' => 'string']);
@@ -43,7 +44,7 @@ class StudentBehavioursTable extends AppTable {
 		$this->fields['action']['visible'] = false;
 		$this->fields['time_of_behaviour']['visible'] = false;
 
-		$this->ControllerAction->setFieldOrder(['date_of_behaviour', 'title', 'student_behaviour_category_id', 'institution_site_id']);
+		$this->ControllerAction->setFieldOrder(['openemisno', 'security_user_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id', 'institution_site_id']);
 
 		//display toolbar only when it's adding/editing behaviours from Institutions
 		if($this->controller->name == "Institutions") {
@@ -61,7 +62,7 @@ class StudentBehavioursTable extends AppTable {
 			$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
+				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 				'callable' => function($id) use ($Sections, $institutionId) {
 					return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 				}
@@ -109,15 +110,18 @@ class StudentBehavioursTable extends AppTable {
 	public function viewBeforeAction(Event $event) {
 		$this->fields['academic_period']['visible'] = false;
 		$this->fields['section']['visible'] = false;
+		$this->ControllerAction->setFieldOrder(['openemisno', 'security_user_id', 'student_behaviour_category_id']);
 	}
 
 	public function editBeforeAction(Event $event) {
+		$this->fields['openemisno']['visible'] = false;
 		$this->fields['academic_period']['visible'] = false;
 		$this->fields['section']['visible'] = false;
 		$this->ControllerAction->setFieldOrder(['security_user_id', 'student_behaviour_category_id']);
 	}
 
 	public function addBeforeAction(Event $event) {
+		$this->fields['openemisno']['visible'] = false;
 		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
 		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id']);
 	}
@@ -129,57 +133,76 @@ class StudentBehavioursTable extends AppTable {
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+
 		$periodOptions = $AcademicPeriod->getList();
+		$selectedPeriod = $this->queryString('period', $periodOptions);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'callable' => function($id) use ($Sections, $institutionId) {
+				return $Sections
+					->find()
+					->where([
+						$Sections->aliasField('institution_site_id') => $institutionId,
+						$Sections->aliasField('academic_period_id') => $id
+					])
+					->count();
+			}
+		]);
 
-		$periodOptions = array();
-
-		$matching = $AcademicPeriod
-					->find('all')
-					->leftJoin(
-						 ['InstitutionSiteSections' => 'institution_site_sections'],	
-						[
-									'InstitutionSiteSections.academic_period_id = AcademicPeriods.id', 
-									'InstitutionSiteSections.institution_site_id' => $institutionId,
-										
-						])
-					->group(['AcademicPeriods.name'])
-					->where(['AcademicPeriods.parent_id <> 0'])
-					->select(['AcademicPeriods.name', 'InstitutionSiteSections.id', 'AcademicPeriods.id'])	
-					->order(['AcademicPeriods.name DESC', 'InstitutionSiteSections.name ASC'])
-					;
-
-		foreach($matching as $key=>$academic) {
-			$periodOptions[$academic->id] = (!is_null($academic->InstitutionSiteSections['id'])) ? $academic->name : $academic->name." [No Sections]";
-		}	
+		if ($request->is(['post', 'put'])) {
+			$selectedPeriod = $this->request->data($this->aliasField('academic_period'));
+		}
+		$request->query['period'] = $selectedPeriod;
 
 		$attr['options'] = $periodOptions;
-		$attr['onChangeReload'] = 'changePeriod';
+		$attr['onChangeReload'] = true;
 		if ($action != 'add') {
 			$attr['visible'] = false;
 		}
+
 		return $attr;
 	}
 
 	public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institutions.id');
-		$periodId = key($this->fields['academic_period']['options']);
-
-		if ($request->is('post')) {
-			$periodId = $this->request->data($this->aliasField('academic_period'));
-		}
+		$selectedPeriod = $this->request->query('period');
 
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 		$sectionOptions = $Sections
-			->findAllByInstitutionSiteIdAndAcademicPeriodId($institutionId, $periodId)
 			->find('list')
+			->where([
+				$Sections->aliasField('institution_site_id') => $institutionId,
+				$Sections->aliasField('academic_period_id') => $selectedPeriod
+			])
 			->order([$Sections->aliasField('section_number') => 'ASC'])
 			->toArray();
+		$selectedSection = $this->queryString('section', $sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $selectedSection, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+			'callable' => function($id) use ($Students) {
+				return $Students
+					->find()
+					->where([
+						$Students->aliasField('institution_site_section_id') => $id
+					])
+					->count();
+			}
+		]);
+
+		if ($request->is(['post', 'put'])) {
+			$selectedSection = $this->request->data($this->aliasField('section'));
+		}
+		$request->query['section'] = $selectedSection;
 
 		$attr['options'] = $sectionOptions;
-		$attr['onChangeReload'] = 'changeSection';
+		$attr['onChangeReload'] = true;
 		if ($action != 'add') {
 			$attr['visible'] = false;
 		}
+
 		return $attr;
 	}
 
@@ -187,7 +210,7 @@ class StudentBehavioursTable extends AppTable {
 		if ($action == 'add') {
 			$students = [];
 
-			$sectionId = key($this->fields['section']['options']);
+			$sectionId = $this->request->query('section');
 			if ($request->is('post')) {
 				if (isset($request->data[$this->alias()]['section'])) {
 					$sectionId = $request->data[$this->alias()]['section'];
@@ -207,43 +230,7 @@ class StudentBehavioursTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$institutionId = $this->Session->read('Institutions.id');
-		$periodId = $data[$this->alias()]['academic_period'];
-
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$sectionOptions = $Sections
-			->findAllByInstitutionSiteIdAndAcademicPeriodId($institutionId, $periodId)
-			->find('list')
-			->order([$Sections->aliasField('section_number') => 'ASC'])
-			->toArray();
-
-		$this->fields['section']['options'] = $sectionOptions;
-
-		$sectionId = key($sectionOptions);
-		$students = [];
-		if (!empty($sectionId)) {
-			$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$students = $Students
-				->findAllByInstitutionSiteSectionId($sectionId)
-				->contain(['Users'])
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
-				->toArray();
-		}
-		$this->fields['security_user_id']['options'] = $students;
+	public function onGetOpenemisno(Event $event, Entity $entity) {
+		return $entity->user->openemis_no;
 	}
-
-	public function addEditOnChangeSection(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$sectionId = $data[$this->alias()]['section'];
-		
-		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$students = $Students
-			->findAllByInstitutionSiteSectionId($sectionId)
-			->contain(['Users'])
-			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
-			->toArray();
-
-		$this->fields['security_user_id']['options'] = $students;
-	}
-
 }
