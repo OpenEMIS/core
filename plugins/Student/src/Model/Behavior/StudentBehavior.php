@@ -74,6 +74,7 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// this method should rightfully be in institution userbehavior - need to move this in an issue after guardian module is in prod
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStudentData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
@@ -114,6 +115,7 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
+		// this method should rightfully be in institution userbehavior - need to move this in an issue after guardian module is in prod
 		if ($entity->isNew()) {
 			// for attaching student to section
 			if (array_key_exists('new', $this->_table->request->query)) {
