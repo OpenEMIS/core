@@ -82,7 +82,7 @@ class NavigationHelper extends Helper {
 						$href = '#nav-menu-' . $index;
 					}
 					
-					$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
+					$html .= sprintf($a, $aClass, $href, $toggle, $index, __($name));
 	                
 					$this->getMenu($attr, $html, $level, $index, $path);
 					--$level;
@@ -93,7 +93,7 @@ class NavigationHelper extends Helper {
 					&&  (strtolower($attr['url']['action']) == strtolower($action) || in_array($action, $selected))) {
 						$aOptions['class'] = 'nav-active';
 					}
-					$html .= $this->Html->link($name, $attr['url'], $aOptions);
+					$html .= $this->Html->link(__($name), $attr['url'], $aOptions);
 				}
 				$html .= '</li>';
 			}
