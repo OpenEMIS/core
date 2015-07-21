@@ -514,7 +514,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->_selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
 
 		$teacherOptions = $this->getTeacherOptions();
-
 		/**
 		 * @todo should have additional filter; by start_date, end_date & education_programme_id
 		 */
@@ -568,7 +567,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 
-		$this->fields['teachers']['options'] = $teacherOptions;
+		if (!empty($teacherOptions)) {
+			$this->fields['teachers']['options'] = $teacherOptions;
+		}
 		$this->fields['students']['data'] = [
 			'students' => $students,
 			'studentOptions' => $studentOptions
