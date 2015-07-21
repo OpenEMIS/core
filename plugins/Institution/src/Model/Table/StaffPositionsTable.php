@@ -95,4 +95,20 @@ class StaffPositionsTable extends AppTable {
 		
 		return $attr;
 	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
+    	if($action == "view") {
+    		//back button should be redirecting to listing page in Positions
+    		$toolbarButtons['back']['url']['action'] = 'Positions';
+    		$toolbarButtons['back']['url']['0'] = 'view';
+    		$toolbarButtons['back']['url']['1'] = 1;
+    		//http://localhost/openEMISCore/Institutions/Positions/view/4
+    	}
+	}
 }
