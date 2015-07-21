@@ -10,7 +10,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'programme_section', 'date_of_birth_formatted'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'programme_section'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -51,27 +51,7 @@ class User extends Entity {
         return trim(sprintf('%s - %s', $this->openemis_no, $name));
     }
 
-    // public function getNameWithHistory($options=[]){
-    //     $name = '';
-    //     $separator = (isset($options['separator'])&&strlen($options['separator'])>0) ? $options['separator'] : ' ';
-    //     $keys = $this->getNameKeys($options);
-    //     foreach($keys as $k=>$v){
-    //         if(isset($obj[$k])&&$v){
-    //             if($k!='last_name'){
-    //                 if($k=='preferred_name'){
-    //                     $name .= $separator . '('. $obj[$k] . ((isset($obj['history_'.$k])) ? '<br>'.$obj['history_'.$k] .')' : ')');
-    //                 } else {
-    //                     $name .= $obj[$k] . ((isset($obj['history_'.$k])) ? '<br>'.$obj['history_'.$k] . $separator : $separator);
-    //                 }
-    //             } else {
-    //                 $name .= $obj[$k] . ((isset($obj['history_'.$k])) ? '<br>'.$obj['history_'.$k] : '');
-    //             }
-    //         }
-    //     }
-    //     return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['openemis_no'], $name)) : trim(sprintf('%s', $name));
-    // }
-
-	protected function _getDefaultIdentityType(){
+	protected function _getDefaultIdentityType() {
 		$data = "";
 		$securityUserId = $this->id;
 
@@ -89,7 +69,7 @@ class User extends Entity {
 		return $data;
 	}
 
-    protected function _getStudentInstitutionName(){
+    protected function _getStudentInstitutionName() {
         $data = "";
         $securityUserId = $this->id;
 
@@ -106,7 +86,7 @@ class User extends Entity {
         return $data;
     }
 
-    protected function _getStaffInstitutionName(){
+    protected function _getStaffInstitutionName() {
         $data = "";
         $securityUserId = $this->id;
 
@@ -123,7 +103,7 @@ class User extends Entity {
         return $data;
     }
 
-    protected function _getStudentStatus(){
+    protected function _getStudentStatus() {
         $data = "";
         $securityUserId = $this->id;
 
@@ -140,7 +120,7 @@ class User extends Entity {
         return $data;
     }
 
-    protected function _getProgrammeSection(){
+    protected function _getProgrammeSection() {
 		if ($this->has('institution_site_students')) {
 			$education_programme_id = $this->institution_site_students[0]->education_programme_id;
 			$institutionId = $this->institution_site_students[0]->institution_site_id;
@@ -184,10 +164,4 @@ class User extends Entity {
 			return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
 		}		
     }
-
-    protected function _getDateOfBirthFormatted(){
-        $Users = TableRegistry::get('User.Users');
-        return (!empty($this->date_of_birth)) ? $Users->formatDate($this->date_of_birth) : "";
-    } 
-
 }
