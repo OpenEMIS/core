@@ -46,7 +46,7 @@ class StudentsTable extends BaseTable {
 			'name', 'default_identity_type', 'programme_section', 'student_status']);
 	}
 
-	public function addBeforeAction(Event $event) {
+	public function addAfterAction(Event $event) {
 		if (array_key_exists('new', $this->request->query)) {
 
 		} else {
@@ -55,30 +55,28 @@ class StudentsTable extends BaseTable {
 			$associationString = $this->alias().'.'.$this->InstitutionSiteStudents->table().'.0.';
 			$this->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionSiteId, 'fieldName' => $associationString.'institution_site_id']);			
 
-			if ($this->hasBehavior('Student')) {
-				$this->ControllerAction->field('academic_period', ['fieldName' => $associationString.'academic_period']);
-				$this->ControllerAction->field('education_programme_id', ['fieldName' => $associationString.'education_programme_id']);
-				$this->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
-				$this->ControllerAction->field('section', ['fieldName' => $associationString.'section']);
-				$this->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
-				$this->ControllerAction->field('start_date', ['type' => 'date', 'fieldName' => $associationString.'start_date']);
-				$this->ControllerAction->field('end_date', [
-					'type' => 'date', 
-					'fieldName' => $associationString.'end_date',
-					'date_options' => ['startDate' => '+1d']
-				]);
-				// $this->fields['end_date']['value'] = '09-07-2015';
-				// $this->fields['end_date’][‘date_options']['start_date'] = '+1d';
-				$this->ControllerAction->field('search',['type' => 'autocomplete', 
-															     'placeholder' => 'openEMIS ID or Name',
-															     'url' => '/Institutions/Students/autoCompleteUserList',
-															     'length' => 3 ]);
+			$this->ControllerAction->field('academic_period', ['fieldName' => $associationString.'academic_period']);
+			$this->ControllerAction->field('education_programme_id', ['fieldName' => $associationString.'education_programme_id']);
+			$this->ControllerAction->field('education_grade', ['fieldName' => $associationString.'education_grade']);
+			$this->ControllerAction->field('section', ['fieldName' => $associationString.'section']);
+			$this->ControllerAction->field('student_status_id', ['fieldName' => $associationString.'student_status_id']);
+			$this->ControllerAction->field('start_date', ['type' => 'date', 'fieldName' => $associationString.'start_date']);
+			$this->ControllerAction->field('end_date', [
+				'type' => 'date', 
+				'fieldName' => $associationString.'end_date',
+				'date_options' => ['startDate' => '+1d']
+			]);
+			// $this->fields['end_date']['value'] = '09-07-2015';
+			// $this->fields['end_date’][‘date_options']['start_date'] = '+1d';
+			$this->ControllerAction->field('search',['type' => 'autocomplete', 
+														     'placeholder' => 'openEMIS ID or Name',
+														     'url' => '/Institutions/Students/autoCompleteUserList',
+														     'length' => 3 ]);
 
-				$this->ControllerAction->setFieldOrder([
-						'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
-					, 'search'
-					]);	
-			}
+			$this->ControllerAction->setFieldOrder([
+					'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
+				, 'search'
+				]);	
 		}
 	}
 
@@ -165,7 +163,7 @@ class StudentsTable extends BaseTable {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $list;
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changePeriod';
 		if (empty($attr['options'])) {
 			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStudents.academicPeriod');
 		}
@@ -191,7 +189,7 @@ class StudentsTable extends BaseTable {
 			}
 		}
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeEducationProgrammeId';
 		$attr['options'] = [];
 		if (isset($this->academicPeriodId)) {
 			$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
@@ -231,7 +229,7 @@ class StudentsTable extends BaseTable {
 		}
 
 		$attr['type'] = 'select';
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeEducationGrade';
 		$attr['options'] = [];
 		if (isset($educationProgrammeId)) {
 			$InstitutionSiteGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
@@ -291,7 +289,7 @@ class StudentsTable extends BaseTable {
 
 		if (array_key_exists('remove', $buttons)) {
 			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
-				// pr($entity);
+				// pr($entity);cthreeone
 				if (isset($entity->institution_site_students)) {
 					if (array_key_exists(0, $entity->institution_site_students)) {
 						$buttons['remove']['attr']['field-value'] = $entity->institution_site_students[0]->id;
@@ -310,5 +308,29 @@ class StudentsTable extends BaseTable {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+	}
+
+	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->addOnReload($event, $entity, $data, $options);
+		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_programme_id']);
+		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_grade']);
+		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
+		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+	}
+
+	public function addOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->addOnReload($event, $entity, $data, $options);
+		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_grade']);
+		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
+		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+	}
+
+	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->addOnReload($event, $entity, $data, $options);
+		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
+		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
 	}
 }
