@@ -35,7 +35,7 @@ class UsersTable extends AppTable {
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
-	private $specialFields = ['default_identity_type','student_status','staff_status','student_institution_name','staff_institution_name','programme_section'];
+	private $specialFields = ['default_identity_type','student_status','staffstatus','student_institution_name','staff_institution_name','programme_section'];
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -142,7 +142,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);
@@ -420,7 +420,7 @@ class UsersTable extends AppTable {
 					$value = $defaultIdentity->name;
 
 				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-			} else if($field == 'student_status' || $field == 'staff_status') {
+			} else if($field == 'student_status' || $field == 'staffstatus') {
 				return 'Status';
 			} else if($field == 'student_institution_name' || $field == 'staff_institution_name') {
 				return 'Institution Name';
