@@ -29,16 +29,16 @@ class TranslationsController extends AppController {
 		if ($this->request->is('ajax')) {
 			$locale = $this->request->data['locale'];
 			if($this->convertPO($locale))
-				$this->Alert->warning('general.edit.success');
+				$this->Alert->success('Translations.success');
 			else
-				$this->Alert->warning('general.edit.failed');
+				$this->Alert->warning('Translations.failed');
 		}
 	}
 
 	private function convertPO($locale){
 		$this->autoRender = false;
 		$str = "";
-		$localeDir = App::path('locale');
+		$localeDir = App::path('Locale');
 		$localeDir = $localeDir[0];
 		$fileLocation = $localeDir . $locale . DS . 'default.po';
 		$data = $this->Translations
