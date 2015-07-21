@@ -49,7 +49,7 @@
 					<td><?php echo $obj->user->openemis_no ?></td>
 					<td><?php echo $obj->user->name ?></td>
 					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth ?></td>
+					<td><?php echo $obj->user->date_of_birth_formatted ?></td>
 					<td> 
 						<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
 						<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);$('#reload').val('add').click();">
@@ -64,7 +64,7 @@
 					<td><?php echo $obj->user->openemis_no ?></td>
 					<td><?php echo $obj->user->name ?></td>
 					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth ?></td>
+					<td><?php echo $obj->user->date_of_birth_formatted ?></td>
 				</tr>
 
 			<?php endif;?>
