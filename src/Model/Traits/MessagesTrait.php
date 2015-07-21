@@ -67,7 +67,8 @@ trait MessagesTrait {
 			'noClasses' => 'No Classes',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
-			'amount' => 'Amount'
+			'amount' => 'Amount',
+			'total' => 'Total'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -133,6 +134,9 @@ trait MessagesTrait {
 		'InstitutionSiteFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+		],
+		'StudentFees' => [
+			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
