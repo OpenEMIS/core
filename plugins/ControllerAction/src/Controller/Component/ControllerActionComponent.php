@@ -23,7 +23,6 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
-use Cake\ORM\TableRegistry;
 use Cake\Network\Exception\NotFoundException;
 use Cake\I18n\I18n;
 
