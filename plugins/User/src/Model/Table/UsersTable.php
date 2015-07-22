@@ -275,6 +275,7 @@ class UsersTable extends AppTable {
 			if (array_key_exists('pass', $this->request->params)) {
 				$id = reset($this->request->params['pass']);
 			}
+			$this->hideFieldsBasedOnRole();
 		} else {
 			// originates from a model
 			$roleName = $this->controller->name.'.'.$this->alias();
@@ -291,6 +292,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function addEditBeforeAction(Event $event) {
+		$this->hideFieldsBasedOnRole();
 		$this->fields['openemis_no']['attr']['readonly'] = true;
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';
@@ -458,6 +460,17 @@ class UsersTable extends AppTable {
 			$value = $this->defaultUserProfileView;
 		} 
 		return $value;
+	}
+
+	public function hideFieldsBasedOnRole(){
+		//hide Address, postal code, gender and birthdate from user account page
+		$roleName = $this->controller->name;
+		if($roleName == 'Securities') {
+			$this->ControllerAction->field('address', ['visible' => false]);
+			$this->ControllerAction->field('postal_code', ['visible' => false]);
+			$this->ControllerAction->field('gender_id', ['visible' => false]);
+			$this->ControllerAction->field('date_of_birth', ['visible' => false]);
+		}
 	}
 
 	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
