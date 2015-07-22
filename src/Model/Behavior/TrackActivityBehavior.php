@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
@@ -90,6 +91,7 @@ class TrackActivityBehavior extends Behavior {
 							$obj['field_type'] = $fieldType;
 								
 							$allData = ['old'=>$oldValue, 'new'=>$newValue];
+							$track = true;
 							foreach ($allData as $allDataKey=>$allDataValue) {
 
 								// if related model exists, get related data
@@ -97,7 +99,13 @@ class TrackActivityBehavior extends Behavior {
 									$relatedModelSchema = $relatedModel->schema();
 
 									if ($relatedModelSchema->column('name')) {
-										$obj[$allDataKey.'_value'] = $relatedModel->get($allDataValue)->name;
+										try {
+											$obj[$allDataKey.'_value'] = $relatedModel->get($allDataValue)->name;
+										} catch (RecordNotFoundException $ex) {
+											$track = false;
+											$this->log($ex->getMessage(), 'debug');
+											break;
+										}
 									} else {
 										$obj[$allDataKey.'_value'] = ($allDataValue) ? $allDataValue : ' ';
 									}
@@ -112,11 +120,12 @@ class TrackActivityBehavior extends Behavior {
 								}
 							}
 
-							$obj['operation'] = 'edit';
-							$data = $ActivityModel->newEntity();
-							$data = $ActivityModel->patchEntity($data, $obj);
-							$ActivityModel->save($data);
-
+							if ($track) {
+								$obj['operation'] = 'edit';
+								$data = $ActivityModel->newEntity();
+								$data = $ActivityModel->patchEntity($data, $obj);
+								$ActivityModel->save($data);
+							}
 						}
 					}
 				}
