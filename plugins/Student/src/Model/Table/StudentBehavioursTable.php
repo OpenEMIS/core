@@ -255,18 +255,13 @@ class StudentBehavioursTable extends AppTable {
 			$students = [];
 
 			$sectionId = $this->request->query('section');
-			if ($request->is('post')) {
-				if (isset($request->data[$this->alias()]['section'])) {
-					$sectionId = $request->data[$this->alias()]['section'];
-				}
-				if (!empty($sectionId)) {
-					$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-					$students = $Students
-						->findAllByInstitutionSiteSectionId($sectionId)
-						->contain(['Users'])
-						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
-						->toArray();
-				}
+			if (!empty($sectionId)) {
+				$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$students = $Students
+					->findAllByInstitutionSiteSectionId($sectionId)
+					->contain(['Users'])
+					->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+					->toArray();
 			}
 			
 			$attr['options'] = $students;
