@@ -28,23 +28,24 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		$this->ControllerAction->field('openemisno', ['type' => 'string']);
-		$this->ControllerAction->field('academic_period', ['type' => 'select']);
-		$this->ControllerAction->field('section', ['type' => 'select']);
+		$this->ControllerAction->field('openemis_no', ['type' => 'string']);
+		$this->ControllerAction->field('academic_period');
+		$this->ControllerAction->field('section');
 		$this->ControllerAction->field('security_user_id', ['type' => 'string']);
-		$this->fields['student_behaviour_category_id']['type'] = 'select';
-		$this->fields['academic_period']['visible'] = true;
-		$this->fields['section']['visible'] = true;
-	}	
+		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
+		$this->ControllerAction->field('date_of_behaviour');
+		$this->ControllerAction->field('academic_period', ['visible' => true]);
+		$this->ControllerAction->field('section', ['visible' => true]);
+	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$this->fields['academic_period']['visible'] = false;
-		$this->fields['section']['visible'] = false;
-		$this->fields['description']['visible'] = false;
-		$this->fields['action']['visible'] = false;
-		$this->fields['time_of_behaviour']['visible'] = false;
+		$this->ControllerAction->field('academic_period', ['visible' => false]);
+		$this->ControllerAction->field('section', ['visible' => false]);
+		$this->ControllerAction->field('description', ['visible' => false]);
+		$this->ControllerAction->field('action', ['visible' => false]);
+		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
 
-		$this->ControllerAction->setFieldOrder(['openemisno', 'security_user_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id', 'institution_site_id']);
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'security_user_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id', 'institution_site_id']);
 
 		//display toolbar only when it's adding/editing behaviours from Institutions
 		if($this->controller->name == "Institutions") {
@@ -68,7 +69,8 @@ class StudentBehavioursTable extends AppTable {
 				}
 			]);
 			// End setup periods
-
+			$start_date = null;
+			$end_date = null;
 			if ($selectedPeriod != 0) {
 				$this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
@@ -85,6 +87,10 @@ class StudentBehavioursTable extends AppTable {
 				$this->advancedSelectOptions($sectionOptions, $selectedSection);
 				$this->controller->set(compact('sectionOptions', 'selectedSection'));
 				// End setup sections
+				 
+				$selectedPeriodEntity = $AcademicPeriod->get($selectedPeriod);
+				$start_date =$selectedPeriodEntity->start_date;
+				$end_date = $selectedPeriodEntity->end_date;
 			}	
 			$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 			$students = $Students
@@ -102,32 +108,54 @@ class StudentBehavioursTable extends AppTable {
 			    ->where(function ($exp, $q) use ($existingStudents) {
 			        return $exp->in('security_user_id', $existingStudents);	
 			    })
-			    ->andWhere(['institution_site_id' => $institutionId])
-			    ;
+			   ->andWhere(['institution_site_id' => $institutionId]);
+
+			if(!is_null($start_date) && !is_null($end_date)){
+				$query
+					->andWhere([function($exp) use($start_date, $end_date) {
+				        return $exp->between('date_of_behaviour', $start_date, $end_date, 'date');
+				    }])
+			    	;
+			}
 		} 
 	}
 
 	public function viewBeforeAction(Event $event) {
-		$this->fields['academic_period']['visible'] = false;
-		$this->fields['section']['visible'] = false;
-		$this->ControllerAction->setFieldOrder(['openemisno', 'security_user_id', 'student_behaviour_category_id']);
+		$this->ControllerAction->field('academic_period', ['visible' => false]);
+		$this->ControllerAction->field('section', ['visible' => false]);
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'security_user_id', 'student_behaviour_category_id']);
 	}
 
 	public function editBeforeAction(Event $event) {
-		$this->fields['openemisno']['visible'] = false;
-		$this->fields['academic_period']['visible'] = false;
-		$this->fields['section']['visible'] = false;
-		$this->ControllerAction->setFieldOrder(['security_user_id', 'student_behaviour_category_id']);
+		$this->ControllerAction->field('openemis_no', ['visible' => false]);
+		$this->ControllerAction->field('academic_period', ['visible' => false]);
+		$this->ControllerAction->field('section', ['visible' => false]);
+		$this->ControllerAction->setFieldOrder(['security_user_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function addBeforeAction(Event $event) {
-		$this->fields['openemisno']['visible'] = false;
+		$this->ControllerAction->field('openemis_no', ['visible' => false]);
 		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
-		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id']);
+		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		//get start and end date of selected academic period 
+		$selectedPeriod = $this->request->query('period');
+		if($selectedPeriod) {
+			$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
+			$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
+			$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
+
+			$validator
+			->add('date_of_behaviour', 
+					'ruleCheckInputWithinRange', 
+						['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
+				
+				)
+			;
+			return $validator;
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
@@ -161,7 +189,22 @@ class StudentBehavioursTable extends AppTable {
 		if ($action != 'add') {
 			$attr['visible'] = false;
 		}
+		$attr['type'] = 'select';
 
+		//set start and end dates for date of behaviour based on chosen academic period
+		if(!empty($selectedPeriod)) {
+			$selectedPeriodEntity = $AcademicPeriod->get($selectedPeriod);
+			$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
+			$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
+			$this->ControllerAction->field('date_of_behaviour', [
+												'date_options' => [
+													'startDate' => $startDateFormatted, 
+													'endDate' => $endDateFormatted
+												]
+											]
+										);
+		}
+		
 		return $attr;
 	}
 
@@ -202,6 +245,7 @@ class StudentBehavioursTable extends AppTable {
 		if ($action != 'add') {
 			$attr['visible'] = false;
 		}
+		$attr['type'] = 'select';
 
 		return $attr;
 	}
@@ -230,7 +274,7 @@ class StudentBehavioursTable extends AppTable {
 		return $attr;
 	}
 
-	public function onGetOpenemisno(Event $event, Entity $entity) {
+	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		return $entity->user->openemis_no;
 	}
 }
