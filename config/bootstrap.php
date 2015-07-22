@@ -53,7 +53,7 @@ use Cake\Network\Request;
 use Cake\Routing\DispatcherFactory;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
-
+use App\Error\AppError;
 /**
  * Read configuration file and inject configuration into various
  * CakePHP classes.
@@ -114,6 +114,8 @@ if ($isCli) {
 if ($isCli) {
     require __DIR__ . '/bootstrap_cli.php';
 }
+$errorHandler = new AppError();
+$errorHandler->register();
 
 /**
  * Set the full base URL.
