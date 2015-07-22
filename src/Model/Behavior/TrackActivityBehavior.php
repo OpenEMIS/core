@@ -105,6 +105,7 @@ class TrackActivityBehavior extends Behavior {
 										} catch (RecordNotFoundException $ex) {
 											$track = false;
 											Log::write('debug', $ex->getMessage());
+											Log::write('debug', $allDataKey);
 											break;
 										}
 									} else {
