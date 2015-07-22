@@ -68,17 +68,63 @@ class StudentsTable extends BaseTable {
 			]);
 			// $this->fields['end_date']['value'] = '09-07-2015';
 			// $this->fields['end_date’][‘date_options']['start_date'] = '+1d';
-			$this->ControllerAction->field('search',['type' => 'autocomplete', 
-														     'placeholder' => 'openEMIS ID or Name',
-														     'url' => '/Institutions/Students/autoCompleteUserList',
-														     'length' => 3 ]);
+			$this->ControllerAction->field('search', [
+				'type' => 'autocomplete', 
+				'placeholder' => 'openEMIS ID or Name',
+				'url' => '/Institutions/Students/autoCompleteUserList',
+				'length' => 3
+			]);
 
 			$this->ControllerAction->setFieldOrder([
-					'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
-				, 'search'
-				]);	
+				'academic_period', 'education_programme_id', 'education_grade', 'section',
+				'student_status_id', 'start_date', 'end_date', 'search'
+			]);	
 		}
 	}
+
+	// Jeff: temporary workaround to update student status
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$this->ControllerAction->field('student_status');
+	}
+
+	public function onUpdateFieldStudentStatus(Event $event, array $attr, $action, $request) {
+		if ($action != 'index') {
+			$StudentStatus = TableRegistry::get('FieldOption.StudentStatuses');
+			$statusOptions = $StudentStatus->getList()->toArray();
+			
+			$attr['options'] = $statusOptions;
+			$attr['order'] = 66;
+
+			if ($action == 'edit') {
+				$userId = $request->pass[1];
+				$institutionId = $this->Session->read('Institutions.id');
+
+				$InstitutionStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+				$entity = $InstitutionStudents->find()
+					->where([
+						$InstitutionStudents->aliasField('institution_site_id') => $institutionId,
+						$InstitutionStudents->aliasField('security_user_id') => $userId
+					])
+					->first();
+
+				$attr['attr']['value'] = $entity->student_status_id;
+			}
+		}
+
+		return $attr;
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$status = $data[$this->alias()]['student_status'];
+
+		$InstitutionStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+
+		$InstitutionStudents->updateAll(['student_status_id' => $status], [
+			'institution_site_id' => $this->Session->read('Institutions.id'),
+			'security_user_id' => $entity->id
+		]);
+	}
+	// End Jeff: temporary workaround
 
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
