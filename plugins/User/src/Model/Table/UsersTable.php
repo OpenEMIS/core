@@ -92,6 +92,11 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('last_login', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+
+		if ($this->action == 'add') {
+			$this->ControllerAction->field('username', ['visible' => true]);
+			$this->ControllerAction->field('password', ['visible' => true, 'type' => 'password']);
+		}
 	}
 
 	public function afterAction(Event $event) {
@@ -371,8 +376,8 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('username')
+			->allowEmpty('password')
 			->add('address', [])
-			->add('password', [])
 			->allowEmpty('photo_content')
 			;
 		return $validator;
