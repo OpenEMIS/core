@@ -7,12 +7,12 @@ use Cake\Error\ErrorHandler;
 
 class AppError extends ErrorHandler
 {
-    public function _displayException($exception)
-    {
-        if ($exception instanceof NotFoundException) {
-            // Here handle MissingControllerException by yourself
-        } else {
-            parent::_displayException($exception);
-        }
+	protected function _displayException($exception) {
+		$renderer = App::className($this->_options['exceptionRenderer'], 'Error');
     }
+
+    protected function _displayError($error, $debug) {
+
+    }
+
 }

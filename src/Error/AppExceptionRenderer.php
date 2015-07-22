@@ -14,9 +14,7 @@ class AppExceptionRenderer extends ExceptionRenderer
     }
 
     public function _template(\Exception $exception, $method, $code){
-
     	if ($code!=403) {
-    		    	// pr($code);die;
     		return $this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
     	}
     	return false;
