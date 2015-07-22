@@ -238,10 +238,57 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
+
+			$institutionRecords = $this->find();
+
+			// Total Institutions: number
+			$institutionCount = $institutionRecords
+				->count();
+
+			// Type: chart
+			$institutionSiteTypesCount = $institutionRecords
+				->contain(['InstitutionSiteTypes'])
+				->select([
+					'count' => $institutionRecords->func()->count('institution_site_type_id'),
+					'InstitutionSiteTypes.name'
+				])
+				->group('institution_site_type_id')
+				->toArray();
+
+			// Sector: chart
+			$institutionRecords = $this->find();
+			$institutionSiteSectorCount = $institutionRecords
+				->contain(['InstitutionSiteSectors'])
+				->select([
+					'count' => $institutionRecords->func()->count('institution_site_sector_id'),
+					'InstitutionSiteSectors.name'
+				])
+				->group('institution_site_sector_id')
+				->toArray();
+
+			// Locality: chart
+			$institutionRecords = $this->find();
+			$institutionSiteLocalityCount = $institutionRecords
+				->contain(['InstitutionSiteLocalities'])
+				->select([
+					'count' => $institutionRecords->func()->count('institution_site_locality_id'),
+					'InstitutionSiteLocalities.name'
+				])
+				->group('institution_site_locality_id')
+				->toArray();
+
+			$institutionSiteArray['count'] = $institutionCount;
+			$institutionSiteArray['type'] =  $institutionSiteTypesCount;
+			$institutionSiteArray['sector'] =  $institutionSiteSectorCount;
+			$institutionSiteArray['locality'] = $institutionSiteLocalityCount;
+			//pr($institutionSiteArray);
+
 			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [ 
+	            	'institutionSiteArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
