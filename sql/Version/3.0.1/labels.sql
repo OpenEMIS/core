@@ -152,5 +152,29 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `creat
 -- StaffActivities
 ('StaffActivities', 'created', NULL, 'Modified On', 1, NOW()),
 ('StaffActivities', 'created_user_id', NULL, 'Modified By', 1, NOW()),
-('StaffActivities', 'model', NULL, 'Module', 1, NOW())
+('StaffActivities', 'model', NULL, 'Module', 1, NOW()),
+-- StudentAttendances
+('StudentAttendances', 'openemis_no', NULL, 'OpenEMIS No', 1, NOW()),
+('StudentAttendances', 'security_user_id', NULL, 'Student', 1, NOW()),
+-- StudentAbsences
+('InstitutionSiteStudentAbsences', 'security_user_id', NULL, 'Student', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'full_day', NULL, 'Full Day Absent', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'start_date', NULL, 'First Date Absent', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'end_date', NULL, 'Last Date Absent', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'start_time', NULL, 'Start Time Absent', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'end_time', NULL, 'End Time Absent', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'absence_type', NULL, 'Type', 1, NOW()),
+('InstitutionSiteStudentAbsences', 'student_absence_reason_id', NULL, 'Reason', 1, NOW()),
+-- StaffAttendances
+('StaffAttendances', 'openemis_no', NULL, 'OpenEMIS No', 1, NOW()),
+('StaffAttendances', 'security_user_id', NULL, 'Staff', 1, NOW()),
+-- StaffAbsences
+('StaffAbsences', 'security_user_id', NULL, 'Staff', 1, NOW()),
+('StaffAbsences', 'full_day', NULL, 'Full Day Absent', 1, NOW()),
+('StaffAbsences', 'start_date', NULL, 'First Date Absent', 1, NOW()),
+('StaffAbsences', 'end_date', NULL, 'Last Date Absent', 1, NOW()),
+('StaffAbsences', 'start_time', NULL, 'Start Time Absent', 1, NOW()),
+('StaffAbsences', 'end_time', NULL, 'End Time Absent', 1, NOW()),
+('StaffAbsences', 'absence_type', NULL, 'Type', 1, NOW()),
+('StaffAbsences', 'staff_absence_reason_id', NULL, 'Reason', 1, NOW())
 ;
