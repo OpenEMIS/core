@@ -4,22 +4,32 @@
 		<i class="kd-institutions icon"></i>
 		<div class="data-field">
 			<h4>Total Institutions:</h4>
-			<h1 class="data-header"><?= $this->Paginator->counter('{{count}}') ?></h1>
+			<h1 class="data-header"><?= $institutionSiteArray['count'] ?></h1>
 		</div>
 	</div>
 
 	<div class="data-section">
-		<?php echo $this->element('doughnut') ?>
 		<div class="data-field">
-			<h4>Locality</h4>
-			<p><div class="data-blue"></div><strong>Urban:</strong> 20</p>
-			<p><div class="data-pink"></div><strong>Rural:</strong> 25</p>
+			<?php echo $this->element('doughnut') ?>
+			<h4>Types</h4>
+			<?php
+				foreach($institutionSiteArray['type'] as $siteCount){
+					echo '<p><div class="data-blue"></div><strong>'.$siteCount['institution_site_type']['name'].':</strong> '.$siteCount['count'].'</p>';
+				}
+			?>
 		</div>
 	</div>
 
-	<div class="data-section data-field">
-		<h4>Total Female Students</h4>
-		<h1 class="data-header">123, 600</h1>
+	<div class="data-section">
+		<div class="data-field">
+			<?php echo $this->element('doughnut') ?>
+			<h4>Types</h4>
+			<?php
+				foreach($institutionSiteArray['sector'] as $siteCount){
+					echo '<p><div class="data-blue"></div><strong>'.$siteCount['institution_sector_type']['name'].':</strong> '.$siteCount['count'].'</p>';
+				}
+			?>
+		</div>
 	</div>
 
 	<div class="data-section data-field">
