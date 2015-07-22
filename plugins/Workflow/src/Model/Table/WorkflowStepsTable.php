@@ -53,8 +53,8 @@ class WorkflowStepsTable extends AppTable {
         $this->controller->set(compact('toolbarElements'));
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$options['contain'] = array_merge($options['contain'], $this->_contain);
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain($this->_contain);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
