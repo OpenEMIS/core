@@ -11,6 +11,13 @@ use Cake\Utility\Inflector;
 
 class StudentBehavior extends Behavior {
 	public function initialize(array $config) {
+		$this->_table->belongsToMany('Guardians', [
+			'className' => 'Student.Guardians',
+			'foreignKey' => 'student_user_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Student.StudentGuardians',
+			'dependent' => true
+		]);
 	}
 
 	public function beforeFind(Event $event, Query $query, $options) {
@@ -108,6 +115,19 @@ class StudentBehavior extends Behavior {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
 		$options['associated'] = ['InstitutionSiteStudents'];
+
+		// Jeff: workaround, needs to redo this logic
+		if (isset($data[$this->_table->alias()]['institution_site_students'])) {
+			$students = $data[$this->_table->alias()]['institution_site_students'];
+			if (!empty($students) && isset($students[0]) && isset($students[0]['institution_site_id'])) {
+				if ($students[0]['institution_site_id'] == 0) {
+					$data[$this->_table->alias()]['institution_site_students'][0]['start_date'] = date('Y-m-d');
+					$data[$this->_table->alias()]['institution_site_students'][0]['end_date'] = date('Y-m-d', time()+86400);
+					$data[$this->_table->alias()]['institution_site_students'][0]['education_programme_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_students'][0]['student_status_id'] = 0;
+				}
+			}
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
