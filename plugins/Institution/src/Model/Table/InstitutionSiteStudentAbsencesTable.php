@@ -74,11 +74,11 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$tabElements = [
 			'Attendance' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'],
+				'url' => ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentAttendances'],
 				'text' => __('Attendance')
 			],
 			'Absence' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences'],
+				'url' => ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentAbsences'],
 				'text' => __('Absence')
 			]
 		];
@@ -144,6 +144,32 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		$this->ControllerAction->field('full_day', [
 			'options' => $fullDayOptions
 		]);
+		// Start Date and End Date
+		if ($this->action == 'add') {
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
+			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+
+			$this->ControllerAction->field('start_date', [
+				'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+			]);
+			$this->ControllerAction->field('end_date', [
+				'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+			]);
+
+			$todayDate = date("Y-m-d");
+			if ($todayDate >= $startDate->format('Y-m-d') && $todayDate <= $endDate->format('Y-m-d')) {
+				$entity->start_date = $todayDate;
+				$entity->end_date = $todayDate;
+			} else {
+				$entity->start_date = $startDate->format('Y-m-d');
+				$entity->end_date = $startDate->format('Y-m-d');
+			}
+		} else if ($this->action == 'edit') {
+			$this->ControllerAction->field('start_date');
+			$this->ControllerAction->field('end_date');
+		}
+		// End
 		$this->ControllerAction->field('start_time', ['type' => 'time']);
 		$this->ControllerAction->field('end_time', ['type' => 'time']);
 		$this->ControllerAction->field('absence_type', [

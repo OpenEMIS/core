@@ -188,14 +188,17 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'There are no available Sections.',
+			'noSections' => 'No Available Sections'
 		],
 		'InstitutionSiteStudentAbsences' => [
-			'noSections' => 'There are no available Sections.',
-			'noStudents' => 'There are no available Students.'
+			'noSections' => 'No Available Sections',
+			'noStudents' => 'No Available Students'
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'There are no available Staff.',
+			'noStaff' => 'No Available Staff'
+		],
+		'StaffAbsences' => [
+			'noStaff' => 'No Available Staff'
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
