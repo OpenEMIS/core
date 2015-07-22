@@ -12,36 +12,6 @@ class StaffBehavior extends Behavior {
 	public function initialize(array $config) {
 	}
 
-	// public function beforeFind(Event $event, Query $query, $options) {
-	// 	// need to display individual rows of institution_site_staff for institution/index only
-	// 	$joinType = (!$this->_table->controller->name == 'Institutions' && $this->_table->action == 'index')? 'RIGHT': 'INNER';
-	// 	$joinType = 'INNER';
-
-	// 	$schema = $this->_table->InstitutionSiteStaff->schema();
-	// 	$columns = $schema->columns();
-	// 	$institutionSiteStaffFields = [];
-	// 	foreach ($columns as $col) {
-	// 		$institutionSiteStaffFields[] = $this->_table->InstitutionSiteStaff->aliasField($col);
-	// 	}
-
-	// 	$query
-	// 		->join([
-	// 			'table' => 'institution_site_staff',
-	// 			'alias' => 'InstitutionSiteStaff',
-	// 			'type' => $joinType,
-	// 			'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStaff.security_user_id']
-	// 		])
-	// 		->select($institutionSiteStaffFields)
-	// 		->autofields(true)
-	// 		;
-
-	// 	if (!$this->_table->controller->name == 'Institutions' && $this->_table->action == 'index') {
-	// 		$query->group($this->_table->aliasField('id'));
-	// 	} else {
-	// 		// for institution/staff. do not group by so that the roles will be separated in index
-	// 	}
-	// }
-
 	public function beforeFind(Event $event, Query $query, $options) {
 		$query
 			->join([
@@ -127,6 +97,20 @@ class StaffBehavior extends Behavior {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
 		$options['associated'] = ['InstitutionSiteStaff'];
+
+		// Jeff: workaround, needs to redo this logic
+		if (isset($data[$this->_table->alias()]['institution_site_staff'])) {
+			$obj = $data[$this->_table->alias()]['institution_site_staff'];
+			if (!empty($obj) && isset($obj[0]) && isset($obj[0]['institution_site_id'])) {
+				if ($obj[0]['institution_site_id'] == 0) {
+					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = date('Y-m-d');
+					$data[$this->_table->alias()]['institution_site_staff'][0]['end_date'] = date('Y-m-d', time()+86400);
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = 0;
+				}
+			}
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
