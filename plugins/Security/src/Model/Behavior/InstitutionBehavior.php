@@ -15,11 +15,12 @@ class InstitutionBehavior extends Behavior {
 		return $events;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$options['finder'] = ['byAccess' => ['userId' => $userId, 'options' => $options]];
 		}
+		// $query->find('byAccess');
 	}
 
 	public function findByAccess(Query $query, array $options) {

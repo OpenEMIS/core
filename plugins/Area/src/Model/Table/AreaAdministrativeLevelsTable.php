@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 
 class AreaAdministrativeLevelsTable extends AppTable {
 	public function initialize(array $config) {
@@ -25,20 +26,17 @@ class AreaAdministrativeLevelsTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
-            ['name' => 'Area.controls', 'data' => [], 'options' => []]
-        ];
+			['name' => 'Area.controls', 'data' => [], 'options' => []]
+		];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($countryOptions, $selectedCountry) = array_values($this->getSelectOptions());
 
-        $this->controller->set(compact('countryOptions', 'selectedCountry'));
-
-		$options['conditions'][] = [
-        	$this->aliasField('area_administrative_id') => $selectedCountry
-        ];
+		$this->controller->set(compact('countryOptions', 'selectedCountry'));
+		$query->where([$this->aliasField('area_administrative_id') => $selectedCountry]);
 	}
 
 	public function addEditBeforeAction(Event $event) {
