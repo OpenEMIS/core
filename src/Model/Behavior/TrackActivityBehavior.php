@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Behavior;
 
+use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -103,7 +104,7 @@ class TrackActivityBehavior extends Behavior {
 											$obj[$allDataKey.'_value'] = $relatedModel->get($allDataValue)->name;
 										} catch (RecordNotFoundException $ex) {
 											$track = false;
-											$this->log($ex->getMessage(), 'debug');
+											Log::write('debug', $ex->getMessage());
 											break;
 										}
 									} else {
@@ -114,7 +115,7 @@ class TrackActivityBehavior extends Behavior {
 									// check if field is supposed to be a foreignKey
 									if (substr_count($field, '_id')>0) {
 										// log if relation is missing
-										$this->log($field." is not defined in belongsTo ".$model->alias()." @ TrackActivityBehaviour beforeSave()", 'debug');
+										Log::write('debug', $field." is not defined in belongsTo ".$model->alias()." @ TrackActivityBehaviour beforeSave()");
 									}
 									$obj[$allDataKey.'_value'] = ($allDataValue) ? $allDataValue : ' ';
 								}
