@@ -156,7 +156,7 @@ class AccountsTable extends AppTable {
 		$attr['tableHeaders'] = $tableHeaders;
     	$attr['tableCells'] = $tableCells;
 
-		return $event->subject()->renderElement('User.accounts/' . $key, ['attr' => $attr]);
+		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
 
 	public function editBeforeAction(Event $event)  {
