@@ -212,7 +212,12 @@ class StaffAttendancesTable extends AppTable {
 				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
+			if ($selectedYear == date("Y")) {
+				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+			} else {
+				$selectedWeek = $this->queryString('week', $weekOptions);
+			}
 			$this->advancedSelectOptions($weekOptions, $selectedWeek);
 			$this->controller->set(compact('weekOptions', 'selectedWeek'));
 			// end setup weeks
