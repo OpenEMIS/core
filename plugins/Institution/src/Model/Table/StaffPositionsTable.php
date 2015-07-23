@@ -109,19 +109,21 @@ class StaffPositionsTable extends AppTable {
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
     	if($action == 'view') {
-    		//back button should be redirecting to listing page in Positions
-    		//get staff positions id from edit toolbar
     		$staffPositionId = $toolbarButtons['edit']['url']['1'];
     		$staffPosition = TableRegistry::get('Institution.InstitutionSiteStaff')->get($staffPositionId);
     		if(!empty($staffPosition) && !empty($toolbarButtons['back'])) {
     			$toolbarButtons['back']['url']['action'] = 'Positions';
 	    		$toolbarButtons['back']['url']['0'] = 'view';
-	    		$toolbarButtons['back']['url']['1'] = $staffPosition->institution_site_id;
+	    		$toolbarButtons['back']['url']['1'] = $staffPosition->institution_site_position_id;
     		}
     	} else if($action == 'edit') {
-    		if($toolbarButtons['list']) {
+    		$staffPositionId = $toolbarButtons['back']['url']['1'];
+    		$staffPosition = TableRegistry::get('Institution.InstitutionSiteStaff')->get($staffPositionId);
+    		if(!empty($staffPosition) && !empty($toolbarButtons['list'])) {
     			$toolbarButtons['list']['url']['action'] = 'Positions';
+	    		$toolbarButtons['list']['url']['0'] = 'view';
+	    		$toolbarButtons['list']['url']['1'] = $staffPosition->institution_site_position_id;
     		}
-    	}
+    	} 
 	}
 }

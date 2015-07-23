@@ -143,18 +143,17 @@ class InstitutionSitePositionsTable extends AppTable {
 				$id = $session->read($this->aliasField('id'));
 			}
 		}
+
 		if (!isset($id)) {
 			die('no position id specified');
 		}
 		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->InstitutionSiteStaff;
-		$currentStaff = $Staff ->find('all')
+		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
 							->where([$Staff->aliasField('end_date').' IS NULL'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo')
-							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
-							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
 							;
 
 		$this->fields['current_staff_list']['data'] = $currentStaff;
@@ -168,12 +167,10 @@ class InstitutionSitePositionsTable extends AppTable {
 		// end Current Staff List field
 
 		// start Current Staff List field
-		$pastStaff = $Staff ->find('all')
+		$pastStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo')
-							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
-							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
 							;
 
 		$this->fields['past_staff_list']['data'] = $pastStaff;

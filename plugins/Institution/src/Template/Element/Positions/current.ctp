@@ -9,14 +9,14 @@
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<th><?php echo $this->Label->get('Users.openemis_no'); ?></th>
-					<th><?php echo $this->Label->get('Users.name'); ?></th>
-					<th><?php echo $this->Label->get('date.start'); ?></th>
-					<th><?php echo $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
+					<th><?= $this->Label->get('Users.openemis_no'); ?></th>
+					<th><?= $this->Label->get('Users.name'); ?></th>
+					<th><?= $this->Label->get('date.start'); ?></th>
+					<th><?= $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
 				</tr>
 			</thead>
 	
-			<tbody>
+			<tbody data-link="row">
 				<?php 
 				// pr($ControllerAction['buttons']);die;
 				// if $current is 0, we need to add an empty row so that the table header and table footer columns will have separator lines; else the lines will not show up.
@@ -27,24 +27,21 @@
 					<?php foreach ($attr['data'] as $i => $obj) : ?>
 						<?php if (!is_object($obj->user)): ?>
 							<tr><td>There is an error with this user data. User might have been deleted from users table.</td></tr>
-						<?php else: ?>
-							<tr>
-								<td><?php echo $obj->user->openemis_no; ?></td>
-								<td>
-									<?php 
+							<?php else: 
+									$link = '';
 									if ($_edit) {
 										$url = $ControllerAction['buttons']['index']['url'];
 										$url['action'] = 'StaffPositions';
 										$url[0] = 'view';
 										$url[1] = $obj->id;
-										echo $this->Html->link($obj->user->name, $url);
-									} else {
-										echo $obj->user->name;
-									}
-									?>
-								</td>
-								<td><?php echo $ControllerAction['table']->formatDate($obj->start_date) ?></td>
-								<td><?php echo $obj->FTE ?></td>
+										$link = $this->Url->build($url, true);
+									} 
+							?>
+							<tr onclick="location.href='<?= $link ?>'">
+								<td><?= $obj->user->openemis_no; ?></td>
+								<td><?= $obj->user->name ?></td>
+								<td><?= $ControllerAction['table']->formatDate($obj->start_date) ?></td>
+								<td><?= $obj->FTE ?></td>
 							</tr>
 						<?php endif; ?>
 					<?php endforeach ?>
@@ -62,7 +59,7 @@
 			<tfoot>
 				<tr>
 					<td colspan="3" class="side-label"><?php echo $this->Label->get('InstitutionSiteStaff.total_fte'); ?></td>
-					<td><?php echo $attr['totalCurrentFTE'];?></td>
+					<td><?= $attr['totalCurrentFTE'];?></td>
 				</tr>
 			</tfoot>
 		</table>
