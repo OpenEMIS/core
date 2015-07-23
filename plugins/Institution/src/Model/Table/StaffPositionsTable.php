@@ -18,6 +18,7 @@ class StaffPositionsTable extends AppTable {
 
         parent::initialize($config);
         $this->entityClass('Institution.InstitutionSiteStaff');
+      	$this->addBehavior('Year', ['end_date' => 'end_year']);
         $this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions','foreignKey' => 'institution_site_position_id']);
@@ -36,10 +37,7 @@ class StaffPositionsTable extends AppTable {
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $options) {
-		unset($options[$this->alias()]['staff_name']);
 		unset($options[$this->alias()]['position']);
-		unset($options[$this->alias()]['FTE']);
-		unset($options[$this->alias()]['start_date_formatted']);
 	}	
 
 	public function editBeforeAction(Event $event) {
@@ -50,17 +48,17 @@ class StaffPositionsTable extends AppTable {
 		}	
 
 		//$this->fields['staff_name']['visible'] = true;
-		$this->fields['position']['visible'] = true;
-		$this->fields['FTE']['visible'] = true;
-		$this->fields['start_date']['visible'] = true;
-		$this->fields['end_date']['visible'] = true;
-		$this->fields['staff_type_id']['visible'] = true;
-		$this->fields['staff_status_id']['visible'] = true;
-
+		$this->ControllerAction->field('position', ['visible' => true]);
+		$this->ControllerAction->field('FTE', ['visible' => true]);
+		$this->ControllerAction->field('start_date', ['visible' => true]);
+		$this->ControllerAction->field('end_date', ['visible' => true]);
+		$this->ControllerAction->field('staff_type_id', ['visible' => true]);
+		$this->ControllerAction->field('staff_status_id', ['visible' => true]);
+		
 		//make some visible
-		$this->fields['security_user_id']['visible'] = true;
-		$this->fields['institution_site_id']['visible'] = true;
-		$this->fields['institution_site_position_id']['visible'] = true;
+		$this->ControllerAction->field('security_user_id', ['visible' => true]);
+		$this->ControllerAction->field('institution_site_id', ['visible' => true]);
+		$this->ControllerAction->field('institution_site_position_id', ['visible' => true]);
 
 		$this->ControllerAction->field('institution_site_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('institution_site_position_id', ['type' => 'hidden']);
@@ -74,6 +72,13 @@ class StaffPositionsTable extends AppTable {
 			'security_user_id', 'institution_site_id', 'institution_site_position_id', 'security_user_id', 'position', 'FTE', 'start_date', 'end_date', 'staff_type_id', 'staff_status_id'
 			
 			]);
+	}
+
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('FTE', ['type' => 'string']);
+		$this->ControllerAction->field('end_date', ['visible' => true]);
+		$this->ControllerAction->field('end_year', ['visible' => true]);
+		$this->ControllerAction->field('FTE', ['visible' => true]);
 	}
 
 	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
