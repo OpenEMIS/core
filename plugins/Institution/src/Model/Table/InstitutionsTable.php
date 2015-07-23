@@ -238,7 +238,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
-
 			$institutionRecords = $this->find();
 
 			// Total Institutions: number
@@ -265,7 +264,6 @@ class InstitutionsTable extends AppTable  {
 				])
 				->group('institution_site_sector_id')
 				->toArray();
-
 			// Locality: chart
 			$institutionRecords = $this->find();
 			$institutionSiteLocalityCount = $institutionRecords
@@ -277,17 +275,16 @@ class InstitutionsTable extends AppTable  {
 				->group('institution_site_locality_id')
 				->toArray();
 
-			$institutionSiteArray['count'] = $institutionCount;
 			$institutionSiteArray['type'] =  $institutionSiteTypesCount;
 			$institutionSiteArray['sector'] =  $institutionSiteSectorCount;
 			$institutionSiteArray['locality'] = $institutionSiteLocalityCount;
-			//pr($institutionSiteArray);
 
 			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [ 
-	            	'institutionSiteArray' => $institutionSiteArray,
+	            	'institutionCount' => $institutionCount,
+	            	'institutionSiteArray' => $institutionSiteArray
 	            ],
 	            'options' => [],
 	            'order' => 1
