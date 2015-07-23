@@ -11,7 +11,6 @@ class WorkflowsController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		//$this->ControllerAction->model('Workflow.Workflows');
         $this->ControllerAction->models = [
             'Workflows' => ['className' => 'Workflow.Workflows'],
             'Steps' => ['className' => 'Workflow.WorkflowSteps']
@@ -24,11 +23,11 @@ class WorkflowsController extends AppController
 
         $tabElements = [
             'Workflows' => [
-                'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Workflows'],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Workflows'],
                 'text' => __('Workflows')
             ],
             'Steps' => [
-                'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Steps'],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'],
                 'text' => __('Steps')
             ]
         ];
@@ -41,20 +40,9 @@ class WorkflowsController extends AppController
         $header = __('Workflow');
 
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Workflow', ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Workflow', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);
-    }
-
-    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
-        if ($model->alias == 'Steps') {
-            list($workflowOptions, $selectedWorkflow) = array_values($this->WorkflowSteps->getSelectOptions());
-
-            $this->set(compact('workflowOptions', 'selectedWorkflow'));
-            $options['conditions'][] = [
-                $model->aliasField('workflow_id') => $selectedWorkflow
-            ];
-        }
     }
 }
