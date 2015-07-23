@@ -3,6 +3,7 @@ namespace Localization\Controller;
 
 use Cake\Event\Event;
 use Cake\Core\App;
+use Cake\Cache\Cache;
 
 class TranslationsController extends AppController {
 	private $defaultLocale = 'en';
@@ -29,16 +30,16 @@ class TranslationsController extends AppController {
 		if ($this->request->is('ajax')) {
 			$locale = $this->request->data['locale'];
 			if($this->convertPO($locale))
-				$this->Alert->warning('general.edit.success');
+				$this->Alert->success('Translations.success');
 			else
-				$this->Alert->warning('general.edit.failed');
+				$this->Alert->warning('Translations.failed');
 		}
 	}
 
 	private function convertPO($locale){
 		$this->autoRender = false;
 		$str = "";
-		$localeDir = App::path('locale');
+		$localeDir = App::path('Locale');
 		$localeDir = $localeDir[0];
 		$fileLocation = $localeDir . $locale . DS . 'default.po';
 		$data = $this->Translations
@@ -48,10 +49,13 @@ class TranslationsController extends AppController {
 			])
 			->toArray();
 
+		// clear persistent cache that is used for Translations
+		Cache::clear(false, '_cake_core_');
+
 		// Header of the PO file
 		$str .= 'msgid ""'."\n";
 		$str .= 'msgstr ""'."\n";
-		$str .= '"Project-Id-Version: Openemis Version 3\n"'."\n";
+		$str .= '"Project-Id-Version: OpenEMIS Project\n"'."\n";
 		$str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"'."\n";
 		$str .= '"PO-Revision-Date: '.date('Y-m-d H:i:sP').'\n"'."\n";
 		$str .= '"Last-Translator: \n"'."\n";
