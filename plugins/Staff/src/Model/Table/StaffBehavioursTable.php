@@ -12,6 +12,7 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
 	public function beforeAction() {
