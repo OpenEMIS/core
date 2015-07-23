@@ -8,6 +8,6 @@ class GuardianRelationsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 
-		$this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians']);
+		$this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

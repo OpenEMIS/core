@@ -12,5 +12,4 @@ class InstitutionSiteActivitiesTable extends AppTable {
 
         $this->addBehavior('Activity');
     }
-
 }

@@ -32,10 +32,12 @@ class InstitutionSiteClassesTable extends AppTable {
 
 		$this->belongsToMany('Teachers', [
 			'className' => 'User.Users',
-			'joinTable' => 'institution_site_class_staff',
+			'through' => 'InstitutionSiteClassStaff',
+			'conditions' => ['InstitutionSiteClassStaff.status' => 1],
 			'foreignKey' => 'institution_site_class_id',
 			'targetForeignKey' => 'security_user_id'
 		]);
+		
 		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
 
 		/**
@@ -218,11 +220,14 @@ class InstitutionSiteClassesTable extends AppTable {
 				'action' => 'Classes'
 			]);
 		}
-
+		// $this->belongsToMany('Teachers', [
+		// 	'className' => 'User.Users',
+		// 	'through' => 'InstitutionSiteClassStaff',
+		// 	'conditions' => ['InstitutionSiteClassStaff.status' => 1],
+		// 	'targetForeignKey' => 'security_user_id'
+		// ]);
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'section_name',
-			'name', 'education_subject_code', 'education_subject_id', 
-			'teachers', 'students',
+			'academic_period_id', 'section_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
 		]);
 	}
 
@@ -241,12 +246,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 		$entity->section_name = implode(', ', $sections);
 		
-		// $this->fields['teachers']['data']['teachers'] = $this
-		// 	->InstitutionSiteClassStaff
-		// 	->find()
-		// 	->contain(['Users'])
-		// 	->where(['InstitutionSiteClassStaff.institution_site_class_id'=>$entity->id])
-		// 	->toArray();
+		// pr($entity->teachers);
+		// pr($this->fields['teachers']);
 
 		$this->fields['students']['data']['students'] = $this
 			->InstitutionSiteClassStudents
@@ -471,6 +472,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			$k = $record->security_user_id;
 			if (	array_key_exists('teachers', $data[$this->alias()])	
 				&& 	array_key_exists('_ids', $data[$this->alias()]['teachers'])
+				&&  !empty($data[$this->alias()]['teachers']['_ids'])
 			) {
 				if (!in_array($k, $data[$this->alias()]['teachers']['_ids'])) {
 					$data[$this->alias()]['institution_site_class_staff'][$k] = [
@@ -492,7 +494,10 @@ class InstitutionSiteClassesTable extends AppTable {
 				];
 			}
 		}
-		if (!empty($checkedStaff)) {
+		if (	array_key_exists('teachers', $data[$this->alias()])	
+				&& 	array_key_exists('_ids', $data[$this->alias()]['teachers'])
+				&&  !empty($data[$this->alias()]['teachers']['_ids'])
+			) {
 			$balance = array_diff($data[$this->alias()]['teachers']['_ids'], $checkedStaff);
 			foreach ($balance as $bal) {
 				$data[$this->alias()]['institution_site_class_staff'][$bal] = [
@@ -502,28 +507,13 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 		unset($data[$this->alias()]['teachers']);
+		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
 
-		/**
-		 * @todo should have additional filter; by start_date, end_date, staff_type_id, staff_status_id & institution_site_position_id
-		 */
-		$query = $this
-			->Institutions
-			->InstitutionSiteStaff
-			->find()
-			->contain(['Users'])
-			->where([
-				'InstitutionSiteStaff.institution_site_id'=>$entity->institution_site_id,
-			])
-			->toArray();
-		$teacherOptions = [$this->getMessage('Users.select_teacher')];
-		foreach ($query as $teacher) {
-			$teacherOptions[$teacher->user->id] = $teacher->user->name_with_id;
-		}
-
+		$teacherOptions = $this->getTeacherOptions();
 		/**
 		 * @todo should have additional filter; by start_date, end_date & education_programme_id
 		 */
@@ -577,7 +567,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 
-		$this->fields['teachers']['options'] = $teacherOptions;
+		if (!empty($teacherOptions)) {
+			$this->fields['teachers']['options'] = $teacherOptions;
+		}
 		$this->fields['students']['data'] = [
 			'students' => $students,
 			'studentOptions' => $studentOptions
@@ -696,8 +688,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			->contain([
 				'InstitutionSiteClasses'=>[
 					'EducationSubjects',
-					// 'InstitutionSiteClassStaff'=>['Users'=>['Genders']]
-					'Teachers'=>['Genders']
+					'Teachers.Genders'
 				],
 			])
 			->where([
@@ -715,6 +706,56 @@ class InstitutionSiteClassesTable extends AppTable {
 			$data = $subjects;
 		}
 		return $data;
+	}
+
+	/**
+	 * @todo should have additional filter; by start_date, end_date,
+	 */
+	protected function getTeacherOptions() {
+		
+		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
+		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
+        $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
+
+        // TODO-Hanafi: add date conditions as commented below
+        $Staff = $this->Institutions->InstitutionSiteStaff;
+		$query = $Staff->find('all')
+						->find('withBelongsTo')
+						->find('byInstitution', ['Institutions.id' => $this->institutionId])
+						->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
+						->where([
+							$Staff->aliasField('institution_site_position_id') 
+						])
+						->where([
+							$Staff->aliasField('end_date') . ' IS NULL',
+							$Staff->aliasField('start_date') . ' >= ' . $endDate
+						])
+						// ->where(['OR' => [
+						// 			[
+						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
+						// 				$Staff->aliasField('start_date') . ' <= ' . $startDate,
+						// 				$Staff->aliasField('end_date') . ' >= ' . $startDate
+						// 			],
+						// 			[
+						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
+						// 				$Staff->aliasField('start_date') . ' <= ' . $endDate,
+						// 				$Staff->aliasField('end_date') . ' >= ' . $endDate
+						// 			],
+						// 			[
+						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
+						// 				$Staff->aliasField('start_date') . ' >= ' . $startDate,
+						// 				$Staff->aliasField('end_date') . ' <= ' . $endDate
+						// 			]
+						// 		]
+						// ])
+							;
+		$options = [];
+		foreach ($query->toArray() as $key => $value) {
+			if ($value->has('user')) {
+				$options[$value->user->id] = $value->user->name_with_id;
+			}
+		}
+		return $options;
 	}
 
 }

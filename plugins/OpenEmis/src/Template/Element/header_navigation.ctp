@@ -11,7 +11,7 @@ $dropdown = [
 		'icon' => 'fa-info-circle'
 	],
 	'Preferences' => [
-		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index', 'action'], 
+		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index'], 
 		'icon' => 'fa-cog'
 	],
 	'_divider',
@@ -29,13 +29,16 @@ $dropdown = [
 	</div>
 
 	<div class="btn-group">
-        <a class="btn" href="<?php echo $this->Url->build($homeUrl) ?>">
-            <i class="fa fa-home"></i>
-        </a>
-    </div>
-
-    <!--?php echo $this->element('Localization.languages') ?-->
-	<?php echo $this->element('OpenEmis.product_list') ?>
+		<a class="btn" href="<?php echo $this->Url->build($homeUrl) ?>">
+			<i class="fa fa-home"></i>
+		</a>
+	</div>
+	
+	<?php 
+	if (isset($showProductList) && $showProductList) {
+		echo $this->element('OpenEmis.product_list');
+	}
+	?>
 
 	<div class="btn-group">
 		<button class="btn dropdown-toggle" data-toggle="dropdown" href="#">
