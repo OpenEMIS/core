@@ -134,6 +134,7 @@ class InstitutionSiteFeesTable extends AppTable {
 
 		$this->fields['academic_period_id']['type'] = 'readonly';
 		$this->fields['education_grade_id']['type'] = 'readonly';
+		$this->ControllerAction->field('total', ['visible' => false]);
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
