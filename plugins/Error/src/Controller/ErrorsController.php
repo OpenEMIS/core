@@ -13,10 +13,10 @@ class ErrorsController extends AppController{
     }
 
     public function error404() {
-    	$this->layout = 'default';
+    	//$this->layout = 'default';
     }
 
     public function error403(){
-    	$this->layout = 'default';
+    	//$this->layout = 'default';
     }
 }
