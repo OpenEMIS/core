@@ -17,7 +17,7 @@ $this->start('contentBody');
 				<h5>You don't have permission to access "/Main/permissionError" on this server. If you believe you should be able to view this directory or page, please contact the administrator <a href="../About">here</a>.</h5>
 			</div>
 			<div class="error-buttons">
-				<a class="btn btn-default" href="../Users"><i class="fa fa-chevron-left"></i> Back</a>
+				<a class="btn btn-default" href="javascript:history.back()"><i class="fa fa-chevron-left"></i> Back</a>
 				<a class="btn btn-default" href="../Users"><i class="fa fa-home"></i> Home</a>
 			</div>	
 		</div>
