@@ -24,9 +24,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true]);
-		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions', 'dependent' => true]);
-		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances', 'dependent' => true]);
+		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -153,7 +153,7 @@ class InstitutionSitePositionsTable extends AppTable {
 							->where([$Staff->aliasField('end_date').' IS NULL'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo')
-							->find('byPosition', ['InstitutionSitePositions.id'=>$id])
+							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
 							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
 							;
 
@@ -172,7 +172,7 @@ class InstitutionSitePositionsTable extends AppTable {
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo')
-							->find('byPosition', ['InstitutionSitePositions.id'=>$id])
+							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
 							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
 							;
 
@@ -232,6 +232,17 @@ class InstitutionSitePositionsTable extends AppTable {
 			}
 		}
 		return $list;
+	}
+
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
+	public function findWithBelongsTo(Query $query, array $options) {
+		return $query
+			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
 	}
 
 }

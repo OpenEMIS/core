@@ -9,7 +9,7 @@ class InstitutionSiteCustomFieldsTable extends AppTable {
 		$this->table('institution_site_custom_values');
         parent::initialize($config);
 		
-		$this->hasMany('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->hasMany('InstitutionSites', ['className' => 'Institution.InstitutionSites', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {

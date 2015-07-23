@@ -9,6 +9,6 @@ class FieldOptionsTable extends AppTable {
 		$config['Created'] = false;
 		parent::initialize($config);
 
-		$this->hasMany('FieldOptionValues', ['className' => 'FieldOption.FieldOptionValues']);
+		$this->hasMany('FieldOptionValues', ['className' => 'FieldOption.FieldOptionValues', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

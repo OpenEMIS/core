@@ -39,7 +39,8 @@
 
 .pagination > li > a,
 .panel-breadcrumb li a,
-.panel-breadcrumb i {
+.panel-breadcrumb i,
+.section-header {
 	color: #476B8F;
 }
 
@@ -66,7 +67,7 @@
 }
 
 .header-navigation .btn-group .btn:hover {
-	background-color: #476B8F;
+	background-color: #476B8F;	
 }
 
 .table-in-view::-webkit-scrollbar-thumb {

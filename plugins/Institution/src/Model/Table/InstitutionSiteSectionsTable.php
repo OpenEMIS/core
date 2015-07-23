@@ -27,8 +27,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->belongsTo('InstitutionSiteShifts', 	['className' => 'Institution.InstitutionSiteShifts','foreignKey' => 'institution_site_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades']);
-		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades', 'dependent' => true]);
+		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents', 'dependent' => true]);
 
 		$this->belongsToMany('InstitutionSiteClasses', [
 			'className' => 'Institution.InstitutionSiteClasses',
@@ -47,6 +47,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+
+		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		if (array_key_exists($this->alias(), $this->request->data)) {
+			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		} else if ($this->action == 'edit' && isset($this->request->pass[1])) {
+			$id = $this->request->pass[1];
+			if ($this->exists($id)) {
+				$this->_selectedAcademicPeriodId = $this->get($id)->academic_period_id;
+			}
+		}
+
 		$this->ControllerAction->field('section_number', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('modified', ['visible' => false]);
@@ -86,9 +97,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'security_user_id', 
-			'male_students', 'female_students', 'classes',
+			'name', 'security_user_id', 'male_students', 'female_students', 'classes',
 		]);
+
 	}
 
 
@@ -224,7 +235,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'InstitutionSiteShifts',
 			'Staff',
 			'InstitutionSiteSectionGrades.EducationGrades',
-			'InstitutionSiteSectionStudents.Users.Genders'
+			'InstitutionSiteSectionStudents.Users.Genders',
+			'InstitutionSiteSectionStudents.EducationGrades'
 		]);
 	}
 
@@ -268,7 +280,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		/**
 		 * add/edit form setup
 		 */
-		$staffOptions = $this->getStaffOptions();
+		$staffOptions = $this->getStaffOptions('add');
 		if ($this->_selectedGradeType == 'single') {
 	    	if (array_key_exists($this->alias(), $this->request->data)) {
 		    	$_data = $this->request->data[$this->alias()];
@@ -372,7 +384,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 			$data['InstitutionSiteSections'] = $data['MultiSections'];
 			unset($data['MultiSections']);
-			
+
 			$sections = $this->newEntities($data['InstitutionSiteSections']);
 			$error = false;
 			foreach ($sections as $section) {
@@ -465,7 +477,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		// $this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
 
-		// pr($data);
+		// pr($data);die;
 		/**
 		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
@@ -488,6 +500,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
+		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -507,17 +520,21 @@ class InstitutionSiteSectionsTable extends AppTable {
 				foreach ($this->request->data[$this->alias()]['institution_site_section_students'] as $row) {
 					if ($row['status'] == 1 && array_key_exists($row['security_user_id'], $studentOptions)) {
 						$id = $row['security_user_id'];
-						$students[] = $this->createVirtualStudentEntity($id, $entity);
+						if ($id != 0) {
+							$students[] = $this->createVirtualStudentEntity($id, $entity);
+						}
 						unset($studentOptions[$id]);
 					}
 				}
 			}
 			/**
-			 * Insert the newly record into the UI table & unset the record from studentOptions
+			 * Insert the newly added record into the UI table & unset the record from studentOptions
 			 */
-			if (array_key_exists('student_id', $this->request->data)) {
+			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']>0) {
 				$id = $this->request->data['student_id'];
-				$students[] = $this->createVirtualStudentEntity($id, $entity);
+				if ($id != 0) {
+					$students[] = $this->createVirtualStudentEntity($id, $entity);
+				}
 				unset($studentOptions[$id]);
 			}
 		} else {
@@ -549,9 +566,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		if (array_key_exists($this->alias(), $this->request->data)) {
-			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
-		}
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
@@ -596,18 +610,18 @@ class InstitutionSiteSectionsTable extends AppTable {
 		if ($action == 'edit') {
 
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['options'] = $this->getStaffOptions();
+				$attr['options'] = $this->getStaffOptions('edit');
 			}
 
 		} elseif ($action == 'add') {
 
 			// $attr['type'] = 'select';
 
-		} elseif ($action == 'view') {
+		} elseif (in_array($action, ['view', 'index'])) {
 
 			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['options'] = $this->getStaffOptions();
+				$attr['options'] = $this->getStaffOptions('view');
 			}
 			
 		}
@@ -652,7 +666,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$students = $this->Institutions->InstitutionSiteStudents;
 		$query = $students->find();
-		$query = $query->contain(['Users', 'EducationProgrammes'=>['EducationGrades']]);
+		$query = $query->contain(['Users', 'EducationProgrammes.EducationGrades']);
 		$query = $query->where([
 				$students->aliasField('institution_site_id') => $this->institutionId,
 				'OR' => array(
@@ -683,23 +697,25 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$list = $query->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
 		foreach ($list as $skey => $obj) {
-			$studentGradeEligible = $obj->education_programme->education_grades;
-			$studentGradeKeys = array();
-			foreach ($studentGradeEligible as $key => $value) {
-				$studentGradeKeys[] = $value->id;
-			}
-
-			$studentProgramEligible = false;
-			foreach ($studentGradeKeys as $key => $value) {
-				if (in_array($value, $sectionGrades)) {
-					$studentProgramEligible = true;
+			if ($obj->has('education_programme') && $obj->education_programme->has('education_grades')) {
+				$studentGradeEligible = $obj->education_programme->education_grades;
+				$studentGradeKeys = array();
+				foreach ($studentGradeEligible as $key => $value) {
+					$studentGradeKeys[] = $value->id;
 				}
-			}
-			if ($studentProgramEligible) {
-				if (isset($obj->user)) {
-					$studentOptions[$obj->user->id] = $obj->user->name_with_id;
-				} else {
-					$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
+
+				$studentProgramEligible = false;
+				foreach ($studentGradeKeys as $key => $value) {
+					if (in_array($value, $sectionGrades)) {
+						$studentProgramEligible = true;
+					}
+				}
+				if ($studentProgramEligible) {
+					if (isset($obj->user)) {
+						$studentOptions[$obj->user->id] = $obj->user->name_with_id;
+					} else {
+						$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
+					}
 				}
 			}
 		}
@@ -733,18 +749,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $studentOptions;
 	}
 
-	protected function getStaffOptions() {
+	protected function getStaffOptions($action='edit') {
 		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
         $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
 
         // TODO-Hanafi: add date conditions as commented below
-        // pr($startDate);
-        // pr($endDate);
         $Staff = $this->Institutions->InstitutionSiteStaff;
 		$query = $Staff->find('all')
 						->find('withBelongsTo')
+						->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
 						->find('byInstitution', ['Institutions.id'=>$this->institutionId])
 						->where([
 							$Staff->aliasField('end_date') . ' IS NULL',
@@ -769,7 +784,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 						// 		]
 						// ])
 							;
-		$options = [];
+		if (in_array($action, ['edit', 'add'])) {
+			$options = [0=>'-- Select Teacher or Leave Blank --'];
+		} else {
+			$options = [0=>'No Teacher Assigned'];
+		}
 		foreach ($query->toArray() as $key => $value) {
 			if ($value->has('user')) {
 				$options[$value->user->id] = $value->user->name;
@@ -807,7 +826,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 	
 	protected function createVirtualStudentEntity($id, $entity) {
-		$userData = $this->Institutions->InstitutionSiteStudents->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+		$userData = $this->Institutions->InstitutionSiteStudents->find()
+			->contain(['Users'=>['Genders']])
+			->where(['security_user_id'=>$id])
+			->first();
+
 		$data = [
 			'id'=>$this->getExistingRecordId($id, $entity),
 			'security_user_id'=>$id,
@@ -879,10 +902,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 		);
 
 		if($gradeId!==false) {
-			$multiGradeOptions['joins'] = array(
+			$multiGradeOptions['join'] = array(
 				array(
 					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
+					'alias' => 'InstitutionSiteSectionGrades',
 					'conditions' => array(
 						'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id',
 						'InstitutionSiteSectionGrades.education_grade_id = ' . $gradeId,
