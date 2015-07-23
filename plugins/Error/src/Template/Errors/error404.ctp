@@ -3,6 +3,8 @@ $this->extend('OpenEmis./Layout/Container');
 $this->assign('contentHeader', '404 Forbidden');
 $this->start('contentBody');
 
+$baseUrl = $this->Url->build('/');
+$baseUrl .= 'Dashboard';
 ?>
 
 <div class="panel">
@@ -18,7 +20,7 @@ $this->start('contentBody');
 			</div>
 			<div class="error-buttons">
 				<a class="btn btn-default" href="javascript:history.back()"><i class="fa fa-chevron-left"></i> Back</a>
-				<a class="btn btn-default" href="../Users"><i class="fa fa-home"></i> Home</a>
+				<a class="btn btn-default" href="<?=$baseUrl ?>"><i class="fa fa-home"></i> Home</a>
 			</div>	
 		</div>
 	</div>
