@@ -1,39 +1,45 @@
+<?php echo $this->Html->script('doughnut', ['block' => true]); ?>
 <div class="overview-wrapper alert overview-box">
 	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
 	<div class="data-section">
 		<i class="kd-institutions icon"></i>
 		<div class="data-field">
 			<h4>Total Institutions:</h4>
-			<h1 class="data-header"><?= $institutionSiteArray['count'] ?></h1>
+			<h1 class="data-header">
+			<?= $institutionCount ?>
+			</h1>
 		</div>
 	</div>
+	<script>
+		function getRandomColor() {
+		    var letters = '0123456789ABCDEF'.split('');
+		    var color = '#';
+		    for (var i = 0; i < 6; i++ ) {
+		        color += letters[ Math.floor(Math.random() * 16) ];
+		    }
+	    	return color;
+		}
+	</script>
+	<?php
+	$doughnut = $this->element('doughnut');
 
-	<div class="data-section">
+	// Start for loop for items in institutionSiteArray
+	foreach ($institutionSiteArray as $key => $value) {
+	?>
+	<div class="data-section">		
 		<div class="data-field">
-			<?php echo $this->element('doughnut') ?>
-			<h4>Types</h4>
+		<?php echo $doughnut ?>
+			<h4><?=ucfirst($key)?></h4>
 			<?php
-				foreach($institutionSiteArray['type'] as $siteCount){
-					echo '<p><div class="data-blue"></div><strong>'.$siteCount['institution_site_type']['name'].':</strong> '.$siteCount['count'].'</p>';
+				foreach($institutionSiteArray[$key] as $siteCount){
+					echo '<p class="'.$key.'" data-key="'.$siteCount['institution_site_'.$key]['name'].'" data-value="'.$siteCount['count'].'"><div class="data-pink"></div><strong>'.$siteCount['institution_site_'.$key]['name'].':</strong> '.$siteCount['count'].'</p>';
 				}
 			?>
 		</div>
 	</div>
-
-	<div class="data-section">
-		<div class="data-field">
-			<?php echo $this->element('doughnut') ?>
-			<h4>Types</h4>
-			<?php
-				foreach($institutionSiteArray['sector'] as $siteCount){
-					echo '<p><div class="data-blue"></div><strong>'.$siteCount['institution_sector_type']['name'].':</strong> '.$siteCount['count'].'</p>';
-				}
-			?>
-		</div>
-	</div>
-
-	<div class="data-section data-field">
-		<h4>Total Male Students</h4>
-		<h1 class="data-header">200, 000</h1>
-	</div>
+	
+	<?php
+	// End For loop for items in institutionSiteArray
+	}
+	?>
 </div>
