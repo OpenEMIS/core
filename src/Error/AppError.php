@@ -1,18 +1,18 @@
 <?php
 namespace App\Error;
 
-use Cake\Routing\Exception\MissingControllerException;
-use Cake\Network\Exception\NotFoundException;
 use Cake\Error\ErrorHandler;
 
 class AppError extends ErrorHandler
 {
 	protected function _displayException($exception) {
-		$renderer = App::className($this->_options['exceptionRenderer'], 'Error');
+        $this->_options['exceptionRenderer'] = 'App\Error\AppExceptionRenderer';
+        parent::_displayException($exception);
     }
 
     protected function _displayError($error, $debug) {
-
+        //The parent will check if the debug mode is set to true, if it is true it will render the debug
+        //parent::_displayError($error, $debug);
     }
 
 }
