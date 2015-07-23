@@ -24,6 +24,12 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		parent::indexBeforePaginate($event, $request, $options);
 		if ($this->Session->check('Institutions.id')) {
@@ -89,7 +95,7 @@ class StudentsTable extends BaseTable {
 
 	public function onUpdateFieldStudentStatus(Event $event, array $attr, $action, $request) {
 		if ($action != 'index') {
-			$StudentStatus = TableRegistry::get('FieldOption.StudentStatuses');
+			$StudentStatus = TableRegistry::get('Student.StudentStatuses');
 			$statusOptions = $StudentStatus->getList()->toArray();
 			
 			$attr['options'] = $statusOptions;
@@ -378,5 +384,22 @@ class StudentsTable extends BaseTable {
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+	}
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    	if ($action == 'view' || $action == 'edit') {
+			$toolbarButtons['transfer'] = $buttons['back'];
+			$toolbarButtons['transfer']['url'] = [
+	    		'plugin' => $buttons['back']['url']['plugin'],
+	    		'controller' => $buttons['back']['url']['controller'],
+	    		'action' => 'Transfers',
+	    		'add',
+	    		// $this->request->params['pass'][1]
+	    	];
+			$toolbarButtons['transfer']['type'] = 'button';
+			$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+			$toolbarButtons['transfer']['attr'] = $attr;
+			$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+		}
 	}
 }
