@@ -2,9 +2,7 @@
 
 namespace App\Error;
 
-use Cake\Controller\Controller;
 use Cake\Error\ExceptionRenderer;
-use Cake\Network\Exception\HttpException;
 
 class AppExceptionRenderer extends ExceptionRenderer
 {
