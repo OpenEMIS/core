@@ -67,7 +67,8 @@ trait MessagesTrait {
 			'noClasses' => 'No Classes',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
-			'amount' => 'Amount'
+			'amount' => 'Amount',
+			'total' => 'Total'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -134,6 +135,9 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
+		'StudentFees' => [
+			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
 		// 	'last_date_absent' => 'Last Day Of Absence'
@@ -184,14 +188,17 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'There are no available Sections.',
+			'noSections' => 'No Available Sections'
 		],
 		'InstitutionSiteStudentAbsences' => [
-			'noSections' => 'There are no available Sections.',
-			'noStudents' => 'There are no available Students.'
+			'noSections' => 'No Available Sections',
+			'noStudents' => 'No Available Students'
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'There are no available Staff.',
+			'noStaff' => 'No Available Staff'
+		],
+		'StaffAbsences' => [
+			'noStaff' => 'No Available Staff'
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
@@ -592,9 +599,9 @@ trait MessagesTrait {
 				]
 			]
 		],
-		'Translation' => [
-			'success' => 'The language has been successfully compiled',
-			'failed' => 'The language has not been compiled due to errors encountered',
+		'Translations' => [
+			'success' => 'The language has been successfully compiled.',
+			'failed' => 'The language has not been compiled due to errors encountered.',
 		],
 	];
 
