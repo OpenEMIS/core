@@ -26,13 +26,13 @@
 	// Start for loop for items in institutionSiteArray
 	foreach ($institutionSiteArray as $key => $value) {
 	?>
-	<div class="data-section">		
+	<div class="data-section">
+	<?php echo $doughnut ?>	
 		<div class="data-field">
-		<?php echo $doughnut ?>
 			<h4><?=ucfirst($key)?></h4>
 			<?php
 				foreach($institutionSiteArray[$key] as $siteCount){
-					echo '<p class="'.$key.'" data-key="'.$siteCount['institution_site_'.$key]['name'].'" data-value="'.$siteCount['count'].'"><div class="data-pink"></div><strong>'.$siteCount['institution_site_'.$key]['name'].':</strong> '.$siteCount['count'].'</p>';
+					echo '<div class=data type="'.$key.'" data-key="'.$siteCount['institution_site_'.$key]['name'].'" data-value="'.$siteCount['count'].'" ><div class="data-pink"></div><strong>'.$siteCount['institution_site_'.$key]['name'].':</strong> '.$siteCount['count'].'</div>';
 				}
 			?>
 		</div>
