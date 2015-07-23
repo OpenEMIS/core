@@ -1,12 +1,14 @@
 <?php
 namespace App\Model\Behavior;
 
+use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
@@ -90,6 +92,7 @@ class TrackActivityBehavior extends Behavior {
 							$obj['field_type'] = $fieldType;
 								
 							$allData = ['old'=>$oldValue, 'new'=>$newValue];
+							$track = true;
 							foreach ($allData as $allDataKey=>$allDataValue) {
 
 								// if related model exists, get related data
@@ -97,7 +100,14 @@ class TrackActivityBehavior extends Behavior {
 									$relatedModelSchema = $relatedModel->schema();
 
 									if ($relatedModelSchema->column('name')) {
-										$obj[$allDataKey.'_value'] = $relatedModel->get($allDataValue)->name;
+										try {
+											$obj[$allDataKey.'_value'] = $relatedModel->get($allDataValue)->name;
+										} catch (RecordNotFoundException $ex) {
+											$track = false;
+											Log::write('debug', $ex->getMessage());
+											Log::write('debug', $allDataKey);
+											break;
+										}
 									} else {
 										$obj[$allDataKey.'_value'] = ($allDataValue) ? $allDataValue : ' ';
 									}
@@ -106,17 +116,18 @@ class TrackActivityBehavior extends Behavior {
 									// check if field is supposed to be a foreignKey
 									if (substr_count($field, '_id')>0) {
 										// log if relation is missing
-										$this->log($field." is not defined in belongsTo ".$model->alias()." @ TrackActivityBehaviour beforeSave()", 'debug');
+										Log::write('debug', $field." is not defined in belongsTo ".$model->alias()." @ TrackActivityBehaviour beforeSave()");
 									}
 									$obj[$allDataKey.'_value'] = ($allDataValue) ? $allDataValue : ' ';
 								}
 							}
 
-							$obj['operation'] = 'edit';
-							$data = $ActivityModel->newEntity();
-							$data = $ActivityModel->patchEntity($data, $obj);
-							$ActivityModel->save($data);
-
+							if ($track) {
+								$obj['operation'] = 'edit';
+								$data = $ActivityModel->newEntity();
+								$data = $ActivityModel->patchEntity($data, $obj);
+								$ActivityModel->save($data);
+							}
 						}
 					}
 				}

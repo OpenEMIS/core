@@ -111,8 +111,12 @@ class StudentAttendancesTable extends AppTable {
 			$types = $this->getSelectOptions('Absence.types');
 			$type = $types['EXCUSED'];
 
-			if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
-				$type = $types['UNEXCUSED'];
+			if (empty($entity->StudentAbsences['id'])) {
+				$type = '<i class="fa fa-check"></i>';
+			} else {
+				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+					$type = $types['UNEXCUSED'];
+				}
 			}
 		}
 
@@ -176,9 +180,9 @@ class StudentAttendancesTable extends AppTable {
 
 				$typeOptions = $this->getSelectOptions('Absence.types');
 				if (empty($absenceResult->student_absence_reason)) {
-					$absenceType = 'EXCUSED';
-				} else {
 					$absenceType = 'UNEXCUSED';
+				} else {
+					$absenceType = 'EXCUSED';
 				}
 				if ($absenceResult->full_day == 0) {
 					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
@@ -224,16 +228,29 @@ class StudentAttendancesTable extends AppTable {
 		// End setup periods
 
 		if ($selectedPeriod != 0) {
+			$todayDate = date("Y-m-d");
 			$this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
 			// Setup week options
 			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
 			$weekStr = 'Week %d (%s - %s)';
 			$weekOptions = [];
+			$currentWeek = null;
 			foreach ($weeks as $index => $dates) {
+				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
+					$weekStr = __('Current Week') . ' %d (%s - %s)';
+					$currentWeek = $index;
+				} else {
+					$weekStr = 'Week %d (%s - %s)';
+				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedWeek = $this->queryString('week', $weekOptions);
+			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
+			if ($selectedYear == date("Y")) {
+				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+			} else {
+				$selectedWeek = $this->queryString('week', $weekOptions);
+			}
 			$this->advancedSelectOptions($weekOptions, $selectedWeek);
 			$this->controller->set(compact('weekOptions', 'selectedWeek'));
 			// end setup weeks
