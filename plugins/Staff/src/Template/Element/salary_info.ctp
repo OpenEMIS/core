@@ -3,18 +3,21 @@
 $fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: null;
 $operation = (array_key_exists('operation', $attr))? $attr['operation']: null;
 $totalAmount = 0;
+$addBtnName = "";
 
 switch ($fieldName) {
 	case 'salary_additions':
 	$operand = 'plus';
 	$optionName = 'salary_addition';
 	$totalAmount = $data->additions;
+	$addBtnName = "Addition";
 	break;
 
 	case 'salary_deductions':
 	$operand = 'minus';
 	$optionName = 'salary_deduction';
 	$totalAmount = $data->deductions;
+	$addBtnName = "Deduction";
 	break;
 }	
 ?>
@@ -32,7 +35,7 @@ switch ($fieldName) {
 	<div class="table-toolbar">
 		<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()">
 			<i class="fa fa-plus"></i> 
-			<span>Add</span>
+			<span>Add <?= $addBtnName ?></span>
 		</button>
 	</div>
 	<div class="table-in-view col-md-4 table-responsive">
