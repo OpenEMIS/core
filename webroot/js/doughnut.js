@@ -8,28 +8,19 @@ var randomColorFactor = function(){ return Math.round(Math.random()*50)};
 var doughnutData = [];
 
 // Test data
-var data = [
-	[
-		['Male', 10],
-		['Female', 20],
-		['Mix', 5]
-	],
-	[
-		['North', 10],
-		['South', 20],
-		['East', 5],
-		['West', 9]
-	],
-	[
-		['N', 10],
-		['S', 20],
-		['E', 5],
-		['W', 9]
-	]
-];
+var data = [];
 
 var Doughnut = {
 	init: function(){
+		$('.canvas-holder').each( function(i, obj){
+			var arr = [];
+			$(obj).next().closest('div').find('div.data').each(function(j, objData){
+				var dataKey = $(objData).attr('data-key');
+				var dataValue = $(objData).attr('data-value');
+				arr.push([dataKey, dataValue]);
+			});
+			data.push(arr);
+		});
 		var allDoughnuts = document.getElementsByClassName('chart-area');
 		for ( i = 0; i < allDoughnuts.length ; i++ ) {
 			Doughnut.populate(allDoughnuts[i]);
@@ -48,6 +39,9 @@ var Doughnut = {
 		});
 		doughnutData = [];
 		window.myDoughnut.update();
+	},
+	getData: function(obj){
+
 	},
 	randomize: function(){
 		$('#randomizeData').click(function(){
