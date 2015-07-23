@@ -10,27 +10,31 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use App\Model\Traits\OptionsTrait;
 
 class WorkflowsTable extends AppTable {
-	private $_contain = ['FieldOptionValues'];
-	private $_fieldOrder = ['workflow_model_id'];
+	use OptionsTrait;
+
+	private $_fieldOrder = ['workflow_model_id', 'code', 'name'];
+	private $_contain = ['Filters'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 		$this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('WorkflowSubmodels', ['className' => 'Workflow.WorkflowSubmodels', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->belongsToMany('FieldOptionValues', [
-			'className' => 'FieldOptionValues',
-			'joinTable' => 'workflow_submodels',
+		$this->belongsToMany('Filters', [
+			'className' => 'FieldOption.FieldOptionValues',
+			'joinTable' => 'workflows_filters',
 			'foreignKey' => 'workflow_id',
-			'targetForeignKey' => 'submodel_reference'
+			'targetForeignKey' => 'filter_id',
+			'through' => 'Workflow.WorkflowsFilters',
+			'dependent' => true
 		]);
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		parent::beforeSave($event, $entity, $options);
-		//Auto insert default workflow_steps when add
+		// Auto insert default workflow_steps when add
 		if ($entity->isNew()) {
 			$data = [
 				'workflow_steps' => [
@@ -45,44 +49,75 @@ class WorkflowsTable extends AppTable {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		if (isset($entity->apply_to_all) && $entity->apply_to_all == 1) {
-			$where = [
-				$this->aliasField('workflow_model_id') => $entity->workflow_model_id,
-				$this->aliasField('id') . ' <> ' => $entity->id
-			];
+			$workflowIds = $this
+				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+				->where([
+					$this->aliasField('workflow_model_id') => $entity->workflow_model_id
+				])
+				->toArray();
 
-			$workflowIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where($where)->toArray();
-			$this->WorkflowSubmodels->deleteAll([
-				$this->WorkflowSubmodels->aliasField('workflow_id IN') => $workflowIds,
-				$this->WorkflowSubmodels->aliasField('submodel_reference') => 0
+			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+			$WorkflowsFilters->deleteAll([
+				'OR' => [
+					[
+						$WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds,
+						$WorkflowsFilters->aliasField('filter_id') => 0
+					],
+					$WorkflowsFilters->aliasField('workflow_id') => $entity->id
+				]
 			]);
 
-			$WorkflowSubmodelTable = $this->WorkflowSubmodels;
-			$workflowSubmodel = $WorkflowSubmodelTable->newEntity();
-			$workflowSubmodel->workflow_id = $entity->id;
-			$workflowSubmodel->submodel_reference = 0;
-			if ($WorkflowSubmodelTable->save($workflowSubmodel)) {
+			$filterData = [
+				'workflow_id' => $entity->id,
+				'filter_id' => 0
+			];
+			$filterEntity = $WorkflowsFilters->newEntity($filterData);
+
+			if ($WorkflowsFilters->save($filterEntity)) {
 			} else {
-				$this->WorkflowSubmodels->log($workflowSubmodel->errors(), 'debug');
+				$WorkflowsFilters->log($filterEntity->errors(), 'debug');
 			}
 		}
 	}
 
-	public function beforeAction(Event $event) {
-		//Add new fields
-		$this->ControllerAction->field('apply_to_all', [
-			'type' => 'select',
-			'visible' => true
-		]);
-	}
-
 	public function afterAction(Event $event) {
-		$this->_fieldOrder[] = 'code';
-		$this->_fieldOrder[] = 'name';
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
+	public function onGetApplyToAll(Event $event, Entity $entity) {
+		if (sizeof($entity->filters) > 0) {
+			$value = __('No');
+		} else {
+			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+			$results = $WorkflowsFilters
+				->find()
+				->where([
+					$WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+					$WorkflowsFilters->aliasField('filter_id') => 0
+				])
+				->all();
+
+			if ($results->isEmpty()) {
+				$value = __('No');
+			} else {
+				$value = __('Yes');
+			}
+		}
+
+		return $value;
+    }
+
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('apply_to_all');
+		$this->ControllerAction->field('filters', [
+			'type' => 'chosenSelect'
+		]);
+
+		$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$options['contain'] = array_merge($options['contain'], $this->_contain);
+        $options['contain'] = array_merge($options['contain'], $this->_contain);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
@@ -90,48 +125,12 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$selectedModel = $entity->workflow_model_id;
-		$submodel = $this->WorkflowModels->findById($selectedModel)->first()->submodel;
-		if (is_null($submodel)) {
-			$this->fields['apply_to_all']['visible'] = false;
-		} else {
-			$this->fields['apply_to_all']['visible'] = true;
+		$this->setRequestQuery($entity);
 
-			$modelAlias = $this->ControllerAction->getModel($submodel)['model'];
-			$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
-
-			$submodelTable = TableRegistry::get($submodel);
-			$submodelOptions = $submodelTable->getList()->toArray();
-
-			$this->ControllerAction->addField($labelText, [
-				'type' => 'chosenSelect',
-				'fieldNameKey' => 'field_option_values',
-				'fieldName' => $this->alias() . '.field_option_values._ids',
-				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),
-				'options' => $submodelOptions,
-				'order' => 3,
-				'visible' => true,
-				'attr' => [
-					'onchange' => 'if($(this).val()){$("#workflows-apply-to-all").val(0);};'
-				]
-			]);
-
-			$this->_fieldOrder[] = 'apply_to_all';
-			$this->_fieldOrder[] = $labelText;
-		}
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		list($modelOptions, , $applyToAllOptions) = array_values($this->getSelectOptions());
-
-		$this->fields['workflow_model_id']['options'] = $modelOptions;
-		$this->fields['workflow_model_id']['onChangeReload'] = true;
-
-		$this->fields['apply_to_all']['options'] = $applyToAllOptions;
-		$this->fields['apply_to_all']['attr'] = [
-			'onchange' => 'if(this.value == 1){$("#workflows-field-option-values-ids").val("").trigger("chosen:updated");};'
-		];
+		$this->ControllerAction->field('apply_to_all');
+		$this->ControllerAction->field('filters', [
+			'type' => 'chosenSelect'
+		]);
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -144,102 +143,156 @@ class WorkflowsTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['associated'] = $this->_contain;
-	}
+    public function addEditAfterAction(Event $event, Entity $entity) {
+    	list($modelOptions, $selectedModel, $applyToAllOptions, $selectedApplyToAll) = array_values($this->_getSelectOptions());
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		$selectedModel = $entity->workflow_model_id;
-		$submodel = $this->WorkflowModels->findById($selectedModel)->first()->submodel;
-
-		if (is_null($submodel)) {
-			$this->fields['apply_to_all']['visible'] = false;
-		} else {
-			$this->fields['apply_to_all']['visible'] = true;
-
-			$modelAlias = $this->ControllerAction->getModel($submodel)['model'];
-			$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
-
-			$submodelTable = TableRegistry::get($submodel);
-			$submodelOptions = $submodelTable->getList()->toArray();
-
-			$this->ControllerAction->addField($labelText, [
-				'type' => 'chosenSelect',
-				'fieldNameKey' => 'field_option_values',
-				'fieldName' => $this->alias() . '.field_option_values._ids',
-				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),
-				'options' => $submodelOptions,
-				'visible' => true,
-				'attr' => [
-					'onchange' => 'if($(this).val()){$("#workflows-apply-to-all").val(0);};'
-				]
-			]);
-
-			$this->_fieldOrder[] = 'apply_to_all';
-			$this->_fieldOrder[] = $labelText;
-		}
-
-		return $entity;
-	}
-
-	public function addOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, $selectedModel, ,$selectedApplyToAll) = array_values($this->getSelectOptions());
-
-		$entity->workflow_model_id = $selectedModel;
-		$entity->apply_to_all = $selectedApplyToAll;
-
-		return $entity;
+    	$this->ControllerAction->field('workflow_model_id', [
+    		'options' => $modelOptions
+    	]);
+		$this->ControllerAction->field('apply_to_all', [
+    		'options' => $applyToAllOptions
+    	]);
+		$this->ControllerAction->field('filters', [
+			'type' => 'chosenSelect'
+		]);
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, , , $selectedApplyToAll) = array_values($this->getSelectOptions());
-
-		$results = $this->WorkflowSubmodels
-			->find('all')
-			->where([
-				$this->WorkflowSubmodels->aliasField('workflow_id') => $entity->id,
-				$this->WorkflowSubmodels->aliasField('submodel_reference') => 0		
-			]);
-
-		if (!$results->isEmpty()) {
-			$selectedApplyToAll = 1;
-		}
-		$entity->apply_to_all = $selectedApplyToAll;
-
-		return $entity;
+		$this->setRequestQuery($entity);
 	}
 
-    public function onGetApplyToAll(Event $event, Entity $entity) {
-    	$list = [];
-		if (!empty($entity->field_option_values)) {
-			foreach ($entity->field_option_values as $obj) {
-				$list[] = $obj->name;
-			}
-		} else {
-			$results = $this->WorkflowSubmodels
-				->find('all')
-				->where([
-					$this->WorkflowSubmodels->aliasField('workflow_id') => $entity->id,
-					$this->WorkflowSubmodels->aliasField('submodel_reference') => 0
-				]);
+	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$modelOptions = $attr['options'];
+			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
+			$this->advancedSelectOptions($modelOptions, $selectedModel);
 
-			if (!$results->isEmpty()) {
-				$list[] = __('Apply To All');
+			$attr['options'] = $modelOptions;
+			$attr['onChangeReload'] = 'changeModel';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$applyToAllOptions = $attr['options'];
+			$selectedApplyToAll = !is_null($request->query('apply_all')) ? $request->query('apply_all') : key($applyToAllOptions);
+			$this->advancedSelectOptions($applyToAllOptions, $selectedApplyToAll);
+
+			$attr['options'] = $applyToAllOptions;
+			$attr['onChangeReload'] = 'changeApplyToAll';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldFilters(Event $event, array $attr, $action, $request) {
+		if ($action == 'view') {
+			$selectedModel = $request->query('model');
+			$selectedApplyToAll = $request->query('apply_all');
+		} else if ($action == 'add' || $action == 'edit') {
+			$modelOptions = $this->fields['workflow_model_id']['options'];
+			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
+
+			$applyToAllOptions = $this->fields['apply_to_all']['options'];
+			$selectedApplyToAll = !is_null($request->query('apply_all')) ? $request->query('apply_all') : key($applyToAllOptions);
+		}
+
+		if (isset($selectedModel) && !is_null($selectedModel)) {
+			$filter = $this->WorkflowModels->get($selectedModel)->filter;
+			if (empty($filter)) {
+				$this->fields['apply_to_all']['visible'] = false;
+				$attr['visible'] = false;
+			} else {
+				$this->fields['apply_to_all']['visible'] = true;
+
+				if ($selectedApplyToAll == 1) {
+					$attr['visible'] = false;
+					$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'code', 'name'];
+				} else {
+					$modelAlias = $this->ControllerAction->getModel($filter)['model'];
+					$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
+					$filterOptions = TableRegistry::get($filter)->getList()->toArray();
+
+					$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
+					$attr['options'] = $filterOptions;
+					$attr['attr']['label'] = __(Inflector::humanize($labelText));
+					$attr['visible'] = true;
+
+					$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
+				}
 			}
 		}
 
-        return implode(', ', $list);
-    }
+		return $attr;
+	}
 
-	public function getSelectOptions() {
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['model']);
+		unset($request->query['apply_all']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
+					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
+				}
+			}
+		}
+	}
+
+	public function addEditOnChangeApplyToAll(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['model']);
+		unset($request->query['apply_all']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
+					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
+				}
+				if (array_key_exists('apply_to_all', $request->data[$this->alias()])) {
+					$request->query['apply_all'] = $request->data[$this->alias()]['apply_to_all'];
+				}
+			}
+		}
+	}
+
+	public function setRequestQuery(Entity $entity) {
+		// Set model and apply_all
+		$this->request->query['model'] = $entity->workflow_model_id;
+
+		if (sizeof($entity->filters) > 0) {
+			$this->request->query['apply_all'] = 0;
+		} else {
+			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+			$results = $WorkflowsFilters
+				->find()
+				->where([
+					$WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+					$WorkflowsFilters->aliasField('filter_id') => 0
+				])
+				->all();
+
+			if ($results->isEmpty()) {
+				$this->request->query['apply_all'] = 0;
+			} else {
+				$this->request->query['apply_all'] = 1;
+			}
+		}
+		// End
+	}
+
+	public function _getSelectOptions() {
 		//Return all required options and their key
-		$modelOptions = $this->WorkflowModels->find('list')->toArray();
-		$selectedModel = key($modelOptions);
+		$modelOptions = $this->WorkflowModels
+			->find('list')
+			->toArray();
+		$selectedModel = !is_null($this->request->query('model')) ? $this->request->query('model') : key($modelOptions);
 
-		$applyToAllOptions = [0 => __('No'), 1 => __('Yes')];
-		$selectedApplyToAll = key($applyToAllOptions);
+		$applyToAllOptions = $this->getSelectOptions('general.yesno');
+		$selectedApplyToAll = !is_null($this->request->query('apply_all')) ? $this->request->query('apply_all') : key($applyToAllOptions);
 
 		return compact('modelOptions', 'selectedModel', 'applyToAllOptions', 'selectedApplyToAll');
 	}
