@@ -8,7 +8,7 @@ use Cake\ORM\TableRegistry;
 class InstitutionSiteStaff extends Entity {
 	protected $_virtual = ['name', 'openemis_id', 'default_identity_type'];
 	
-	protected function _getStaffName() {
+	protected function _getName() {
 		return $this->user->name_with_id;
 	}
 
