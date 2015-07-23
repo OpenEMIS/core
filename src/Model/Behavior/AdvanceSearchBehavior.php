@@ -104,7 +104,10 @@ class AdvanceSearchBehavior extends Behavior {
 				$conditions[$this->model->aliasField($key)] = $value;
         	}
         }
-        $query->where($conditions);
+
+        if (!empty($conditions)) {
+        	$query->where($conditions);
+        }
 	}
 
 
