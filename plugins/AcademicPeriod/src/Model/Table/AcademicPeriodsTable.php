@@ -24,6 +24,9 @@ class AcademicPeriodsTable extends AppTable {
  	        ->add('end_date', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'start_date', false]
 	    	    ])
+ 	        ->add('current', 'ruleValidateNeeded', [
+				'rule' => ['validateNeeded', 'current'],
+			])
 	        ;
 	}
 
