@@ -1,0 +1,7 @@
+.autocomplete-loader {
+	float: left;
+	background-image: url('../img/loader.gif');
+	height: 16px;
+	width: 16px;
+	margin: 7px 0 0 5px;
+}
