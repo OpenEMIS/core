@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Network\Exception\NotFoundException;
 
 class AcademicPeriodsTable extends AppTable {
 	private $_fieldOrder = ['visible', 'current', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
@@ -21,10 +22,15 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$additionalParameters = ['available = 1 AND visible > 0'];
+
 		return $validator
  	        ->add('end_date', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'start_date', false]
 	    	    ])
+ 	        ->add('current', 'ruleValidateNeeded', [
+				'rule' => ['validateNeeded', 'current', $additionalParameters],
+			])
 	        ;
 	}
 
@@ -265,21 +271,35 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function getCurrent() {
-		$result = $this->find()
-			->select([$this->aliasField('id')])
-			->where([
-				$this->aliasField('available') => 1,
-				$this->aliasField('visible').' > 0',
-				$this->aliasField('current') => 1
-			])
-			->first()
-			->toArray()
-			;
-		if(!empty($result['id'])){
-			return $result['id'];
-		}else{
-			return '';
+		$query = $this->find()
+					->select([$this->aliasField('id')])
+					->where([
+						$this->aliasField('available') => 1,
+						$this->aliasField('visible').' > 0',
+						$this->aliasField('current') => 1,
+						$this->aliasField('parent_id').' > 0',
+					])
+					->order(['start_date DESC']);		
+		$countQuery = $query->count();
+		if($countQuery > 0) {
+			$result = $query->first();
+			return $result->id;
+		} else {
+			$query = $this->find()
+					->select([$this->aliasField('id')])
+					->where([
+						$this->aliasField('available') => 1,
+						$this->aliasField('visible').' > 0',
+						$this->aliasField('parent_id').' > 0',
+					])
+					->order(['start_date DESC']);
+			$countQuery = $query->count();
+			if($countQuery > 0) {
+				$result = $query->first();
+				return $result->id;
+			} else {
+				return 0;
+			}
 		}
 	}
-
 }

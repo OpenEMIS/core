@@ -602,6 +602,9 @@ trait MessagesTrait {
 			'AcademicPeriods' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'current' => [
+					'ruleValidateNeeded' => 'Academic Period needs to be set as current'
 				]
 			]
 		],
