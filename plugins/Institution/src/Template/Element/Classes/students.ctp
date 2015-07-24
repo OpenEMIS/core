@@ -9,7 +9,8 @@
 	<?php
 		echo $this->Form->input('student_id', [
 			'label' => $this->Label->get('Users.add_student'),
-			'onchange' => "$('#reload').val('add').click();"
+			'onchange' => "$('#reload').val('add').click();",
+            'options' => $attr['data']['studentOptions']
 		]);
 		?>
 	</div>
