@@ -19,7 +19,6 @@ class InfrastructureCustomFormsTable extends CustomFormsTable {
 		];
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomFields', [
 			'className' => 'Infrastructure.InfrastructureCustomFields',
 			'joinTable' => 'infrastructure_custom_forms_fields',
