@@ -22,6 +22,14 @@ class UsersTable extends BaseTable {
 		$this->addBehavior('Area.Areapicker');
 	}
 
+	public function afterAction(Event $event) {
+		if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
+			if (isset($this->fields['openemis_no']['attr'])) {
+	        	unset($this->fields['openemis_no']['attr']);
+	        }
+        }
+    }
+
 	// autocomplete used for UserGroups
 	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
