@@ -47,10 +47,13 @@ INSERT INTO `student_statuses` (`id`, `code`, `name`) VALUES
 DROP TABLE IF EXISTS `institution_site_student_transfers`;
 CREATE TABLE IF NOT EXISTS `institution_site_student_transfers` (
   `id` int(11) NOT NULL,
-  `description` text DEFAULT NULL,
-  `institution_site_student_id` int(11) NOT NULL,
-  `studen_status_id` int(3) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `student_status_id` int(3) NOT NULL,
   `institution_site_id` int(11) NOT NULL,
+  `education_programme_id` int(11) NOT NULL,
+  `institution_site_section_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,

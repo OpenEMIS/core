@@ -257,6 +257,9 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Classes',
 			'noStaff' => 'No Available Staff'
 		],
+		'StudentTransfers' => [
+			'noProgrammes' => 'No Available Programmes'
+		],
 
 
 		// Validation Messages

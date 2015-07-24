@@ -31,6 +31,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->EducationGrades = $this->EducationProgrammes->EducationGrades;
 		$this->AcademicPeriods = $this->Institutions->InstitutionSiteShifts->AcademicPeriods;
 
+		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
