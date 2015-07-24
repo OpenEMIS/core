@@ -50,12 +50,14 @@ class SystemGroupsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['name', 'no_of_users']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$query = $request->query;
-		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$queryParams = $request->query;
+
+		$query->find('inInstitutions');
+
+		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+			$query->order([$this->aliasField('name') => 'asc']);
 		}
-		$options['finder'] = ['inInstitutions' => []];
 	}
 
 	public function findInInstitutions(Query $query, array $options) {
