@@ -77,7 +77,7 @@ class StaffBehavior extends Behavior {
 					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE'];
 
 					// start (date and year) handling
-					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
+					//$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
 					
 					$data[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'];
 					
@@ -94,6 +94,20 @@ class StaffBehavior extends Behavior {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
 		$options['associated'] = ['InstitutionSiteStaff'];
+
+		// Jeff: workaround, needs to redo this logic
+		if (isset($data[$this->_table->alias()]['institution_site_staff'])) {
+			$obj = $data[$this->_table->alias()]['institution_site_staff'];
+			if (!empty($obj) && isset($obj[0]) && isset($obj[0]['institution_site_id'])) {
+				if ($obj[0]['institution_site_id'] == 0) {
+					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = date('Y-m-d');
+					$data[$this->_table->alias()]['institution_site_staff'][0]['end_date'] = date('Y-m-d', time()+86400);
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = 0;
+				}
+			}
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);

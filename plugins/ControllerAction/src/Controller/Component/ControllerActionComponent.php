@@ -756,7 +756,19 @@ class ControllerActionComponent extends Component {
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 
-				if ($model->save($entity)) {
+				$process = function ($model, $entity) {
+					return $model->save($entity);
+				};
+
+				// Event: onBeforeSave
+				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
+				if ($event->isStopped()) { return $event->result; }
+				if (is_callable($event->result)) {
+					$process = $event->result;
+				}
+				// End Event
+
+				if ($process($model, $entity)) {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
 					
