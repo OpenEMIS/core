@@ -82,17 +82,15 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('HighChart', [
-        	'number_of_institutions_by_type' => [
+        	'donut' => [
         		'_function' => 'getNumberOfInstitutionsByType',
-				'chart' => ['backgroundColor' => 'rgba(255, 255, 255, 0.002)'],
-				'title' => ['text'=>null],
-				'exporting' => ['enabled' => false],
-				'credits' => ['enabled' => false],
+				'chart' => ['backgroundColor' => 'rgba(255, 255, 255, 0.002)'],	
 				'tooltip' => ['pointFormat' => '{point.y}'],
 				'plotOptions' => [
 					'pie' => [
 						'dataLabels' => ['enabled' => false],
-						'showInLegend' => true
+						'showInLegend' => true,
+						'center' => ['35%', '60%']
 					]
 				],
 				'legend' => [
@@ -100,8 +98,9 @@ class InstitutionsTable extends AppTable  {
 					'verticalAlign' => 'middle',
 					'align' => 'right',
 					'layout' => 'vertical',
+					'floating' => true,
 					'itemStyle' => [
-						'font' => '10pt sans-serif'
+						'fontSize' => '10px'
 					]
 				],
 			]
@@ -269,53 +268,102 @@ class InstitutionsTable extends AppTable  {
 			$institutionCount = $institutionRecords
 				->count();
 
-			// Type: chart
-			$institutionSiteTypesCount = $institutionRecords
-				->contain(['InstitutionSiteTypes'])
-				->select([
-					'count' => $institutionRecords->func()->count('institution_site_type_id'),
-					'InstitutionSiteTypes.name'
-				])
-				->group('institution_site_type_id')
-				->toArray();
+			$models = [
+				'InstitutionSiteTypes' => 'institution_site_type_id',
+				'InstitutionSiteSectors' => 'institution_site_sector_id',
+				'InstitutionSiteLocalities' => 'institution_site_locality_id'
+			];
 
-			// Sector: chart
-			$institutionRecords = $this->find();
-			$institutionSiteSectorCount = $institutionRecords
-				->contain(['InstitutionSiteSectors'])
-				->select([
-					'count' => $institutionRecords->func()->count('institution_site_sector_id'),
-					'InstitutionSiteSectors.name'
-				])
-				->group('institution_site_sector_id')
-				->toArray();
-			// Locality: chart
-			$institutionRecords = $this->find();
-			$institutionSiteLocalityCount = $institutionRecords
-				->contain(['InstitutionSiteLocalities'])
-				->select([
-					'count' => $institutionRecords->func()->count('institution_site_locality_id'),
-					'InstitutionSiteLocalities.name'
-				])
-				->group('institution_site_locality_id')
-				->toArray();
+			foreach ($models as $model => $key) {
+				// $institutionSiteArray[$model] = $institutionRecords
+				// 	->contain([$model])
+				// 	->select([
+				// 		'count' => $institutionRecords->func()->count($key),
+				// 		$model.'.name'
+				// 	])
+				// 	->group($key)
+				// 	->toArray();
 
-			$institutionSiteArray['type'] =  $institutionSiteTypesCount;
-			$institutionSiteArray['sector'] =  $institutionSiteSectorCount;
-			$institutionSiteArray['locality'] = $institutionSiteLocalityCount;
+				$institutionSiteArray[$model] = $this->getDonutChart([$model => $key]);
+			}
+
+			// // Type: chart
+			// $institutionSiteTypesCount = $institutionRecords
+			// 	->contain(['InstitutionSiteTypes'])
+			// 	->select([
+			// 		'count' => $institutionRecords->func()->count('institution_site_type_id'),
+			// 		'InstitutionSiteTypes.name'
+			// 	])
+			// 	->group('institution_site_type_id')
+			// 	->toArray();
+
+			// // Sector: chart
+			// $institutionRecords = $this->find();
+			// $institutionSiteSectorCount = $institutionRecords
+			// 	->contain(['InstitutionSiteSectors'])
+			// 	->select([
+			// 		'count' => $institutionRecords->func()->count('institution_site_sector_id'),
+			// 		'InstitutionSiteSectors.name'
+			// 	])
+			// 	->group('institution_site_sector_id')
+			// 	->toArray();
+			// // Locality: chart
+			// $institutionRecords = $this->find();
+			// $institutionSiteLocalityCount = $institutionRecords
+			// 	->contain(['InstitutionSiteLocalities'])
+			// 	->select([
+			// 		'count' => $institutionRecords->func()->count('institution_site_locality_id'),
+			// 		'InstitutionSiteLocalities.name'
+			// 	])
+			// 	->group('institution_site_locality_id')
+			// 	->toArray();
+
+			// $institutionSiteArray['type'] =  $institutionSiteTypesCount;
+			// $institutionSiteArray['sector'] =  $institutionSiteSectorCount;
+			// $institutionSiteArray['locality'] = $institutionSiteLocalityCount;
+
+			// $highChartDatas = [$this->getDonutChart('type')];
 
 			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [ 
 	            	'institutionCount' => $institutionCount,
-	            	'institutionSiteArray' => $institutionSiteArray
+	            	'institutionSiteArray' => $institutionSiteArray,
+	            	//'highChartDatas' => $highChartDatas
 	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
 	    $config['formButtons'] = false;
+	}
+
+	public function getNumberOfInstitutionsByType($params=[]) {
+		//pr($params);die;
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteTypes.'.$key] = $value;
+		}
+		$institutionRecords = $this->find();
+		// Type: chart
+		$institutionSiteTypesCount = $institutionRecords
+			->contain(['InstitutionSiteTypes'])
+			->select([
+				'count' => $institutionRecords->func()->count('institution_site_type_id'),
+				'InstitutionSiteTypes.name'
+			])
+			->group('institution_site_type_id')
+			->toArray();
+
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($institutionSiteTypesCount as $value) {
+			$dataSet[] = [$value['institution_site_type']['name'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
 	}
 
 

@@ -1,4 +1,9 @@
-<?php echo $this->Html->script('doughnut', ['block' => true]); ?>
+<?php
+echo $this->Html->script('doughnut', ['block' => true]); 
+echo $this->Html->script('highchart/highcharts', ['block' => true]);
+echo $this->Html->script('dashboards', ['block' => true]);
+?>
+
 <div class="overview-wrapper alert overview-box">
 	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
 	<div class="data-section">
@@ -20,26 +25,11 @@
 	    	return color;
 		}
 	</script>
-	<?php
-	$doughnut = $this->element('doughnut');
-
-	// Start for loop for items in institutionSiteArray
-	foreach ($institutionSiteArray as $key => $value) {
-	?>
+	<?php foreach ( $institutionSiteArray as $key => $highChartData ) : ?>
 	<div class="data-section">
-	<?php echo $doughnut ?>	
 		<div class="data-field">
-			<h4><?=ucfirst($key)?></h4>
-			<?php
-				foreach($institutionSiteArray[$key] as $siteCount){
-					echo '<div class=data type="'.$key.'" data-key="'.$siteCount['institution_site_'.$key]['name'].'" data-value="'.$siteCount['count'].'" ><div class="data-pink"></div><strong>'.$siteCount['institution_site_'.$key]['name'].':</strong> '.$siteCount['count'].'</div>';
-				}
-			?>
+				<div class="highchart"><?php echo $highChartData; ?></div>
 		</div>
 	</div>
-	
-	<?php
-	// End For loop for items in institutionSiteArray
-	}
-	?>
+	<?php endforeach ?>
 </div>
