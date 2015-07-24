@@ -77,7 +77,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
-	public function onPopulateSelectOptions(Event $event, $query) {
+	public function onPopulateSelectOptions(Event $event, Query $query) {
 		return $this->getList($query);
 	}
 
@@ -142,7 +142,11 @@ class AppTable extends Table {
 	public function formatTime(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('time_format');
-		return $dateObject->format($format);
+		$value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
+        }
+		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
@@ -158,7 +162,11 @@ class AppTable extends Table {
 	public function formatDateTime(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
-		return $dateObject->format($format);
+		$value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
+        }
+		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onGetFieldLabel'

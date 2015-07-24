@@ -177,9 +177,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		$paginateOptions['finder'] = ['byGrades' => []];
-		$paginateOptions['conditions'][][$this->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query
+		->find('byGrades')
+		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId]);
 	}
 
     public function findByGrades(Query $query, array $options) {

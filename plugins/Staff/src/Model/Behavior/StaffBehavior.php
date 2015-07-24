@@ -5,22 +5,18 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class StaffBehavior extends Behavior {
-	public function initialize(array $config) {
-	}
-
-	public function beforeFind(Event $event, Query $query, $options) {
-		$query
-			->join([
-				'table' => 'institution_site_staff',
-				'alias' => 'InstitutionSiteStaff',
-				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStaff.security_user_id']
-			])
-			->group($this->_table->aliasField('id'));
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain([], true);
+		$query->innerJoin(
+			['InstitutionSiteStaff' => 'institution_site_staff'],
+			['InstitutionSiteStaff.security_user_id = ' . $this->_table->aliasField('id')]
+		)
+		->group($this->_table->aliasField('id'));
 	}
 
 	public function implementedEvents() {
@@ -28,6 +24,7 @@ class StaffBehavior extends Behavior {
 		$newEvent = [
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 		];

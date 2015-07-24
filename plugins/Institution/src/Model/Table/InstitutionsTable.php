@@ -273,21 +273,30 @@ class InstitutionsTable extends AppTable  {
 		return $entity->Areas['name'];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$query = $request->query;
-		$options['contain'] = ['InstitutionSiteTypes'];
-		$options['fields'] = [
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain([], true);
+		$query->contain(['InstitutionSiteTypes']);
+		$query->select([
 			$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
 			'Areas.name', 'InstitutionSiteTypes.name'
-		];
-		$options['join'] = [
-			[
-				'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
-				'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
-			]
-		];
-		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+		]);
+		$query->innerJoin(['Areas' => 'areas'], ['Areas.id = ' . $this->aliasField('area_id')]);
+		
+		// $options['contain'] = ['InstitutionSiteTypes'];
+		// $options['fields'] = [
+		// 	$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
+		// 	'Areas.name', 'InstitutionSiteTypes.name'
+		// ];
+		// $options['join'] = [
+		// 	[
+		// 		'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+		// 		'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+		// 	]
+		// ];
+
+		$queryParams = $request->query;
+		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+			$query->order([$this->aliasField('name') => 'asc']);
 		}
 	}
 

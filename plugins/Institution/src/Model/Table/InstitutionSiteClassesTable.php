@@ -200,10 +200,11 @@ class InstitutionSiteClassesTable extends AppTable {
 			]);
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		$paginateOptions['finder'] = ['bySections' => []];
-		$paginateOptions['contain'][] = 'Teachers';
-		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriodId;
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query
+		->find('bySections')
+		->contain(['Teachers'])
+		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId]);
 	}
 
 
