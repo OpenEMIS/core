@@ -54,4 +54,21 @@ class UsersTable extends BaseTable {
 		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 	}
+
+	public function viewBeforeAction(Event $event) {
+		$this->hideFieldsBasedOnRole();
+	}	
+
+	public function addEditBeforeAction(Event $event) {
+		$this->hideFieldsBasedOnRole();
+	}	
+
+	public function hideFieldsBasedOnRole(){
+		//hide Address, postal code, gender and birthdate from user account page
+		$roleName = $this->controller->name;
+		$this->ControllerAction->field('address', ['visible' => false]);
+		$this->ControllerAction->field('postal_code', ['visible' => false]);
+		$this->ControllerAction->field('gender_id', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', ['visible' => false]);
+	}
 }
