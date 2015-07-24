@@ -175,7 +175,6 @@ class InstitutionsController extends AppController  {
 			} else {
 				$query->where([$model->aliasField('institution_site_id') => $session->read('Institutions.id')]);
 			}
-			// $options['conditions'][$model->aliasField('institution_site_id')] = $session->read('Institutions.id');
 		}
 	}
 
