@@ -178,7 +178,7 @@ class UsersTable extends AppTable {
 		$query->find('notSuperAdmin');
 		
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
+			// $query->order(['name' => 'asc']);
 		}
 
 		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
