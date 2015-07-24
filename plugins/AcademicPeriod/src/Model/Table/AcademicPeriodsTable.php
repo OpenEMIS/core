@@ -273,80 +273,35 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function getCurrent() {
-		$result = $this->find()
-			->select([$this->aliasField('id')])
-			->where([
-				$this->aliasField('available') => 1,
-				$this->aliasField('visible').' > 0',
-				$this->aliasField('current') => 1
-			])
-			->first();
-		if(!empty($result)) {
-			$result->toArray();
-			return (!empty($result['id'])) ? $result['id'] : '';
-		}	else {
-			return $this->patchCurrentPeriod();
-		}
-	}
-
-	public function patchCurrentPeriod(){
-		$today_date = date('Y-m-d');
-		$selectedCurrentIdThroughPatch = 0;
-
-		//clear any other academic period whose current is set to 1, while being available = 1 and visible = 0
-		$academicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$academicPeriods =  $this->find();
-		foreach($academicPeriods as $academicPeriod) {
-			$academicPeriod->current = 0;
-			$academicPeriodTable->save($academicPeriod);
-		}
-
-		//patch data to contain at least 1 academic record set to current
-		//pick period that current date falls between start and end dates
 		$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
 						$this->aliasField('available') => 1,
 						$this->aliasField('visible').' > 0',
-					]);
-
-		$result = $query
-					->andWhere(['"'.$today_date.'" BETWEEN start_date AND end_date'])
-					->order(['start_date DESC'])
-					->first();		
-
-		if(!empty($result))	{
-			$result->current = 1;
-			if($academicPeriodTable->save($result))
-				$selectedCurrentIdThroughPatch = $result->id;
+						$this->aliasField('current') => 1,
+						$this->aliasField('parent_id').' > 0',
+					])
+					->order(['start_date DESC']);		
+		$countQuery = $query->count();
+		if($countQuery > 0) {
+			$result = $query->first();
+			return $result->id;
 		} else {
-			//pick the latest academic period
-			$latestAcademicPeriod = $query
-									->order(['start_date DESC'])
-									->first();
-			if(!empty($latestAcademicPeriod)) {
-				$latestAcademicPeriod->current = 1;
-				$academicPeriodTable->save($latestAcademicPeriod);
-				$selectedCurrentIdThroughPatch = $latestAcademicPeriod->id;
+			$query = $this->find()
+					->select([$this->aliasField('id')])
+					->where([
+						$this->aliasField('available') => 1,
+						$this->aliasField('visible').' > 0',
+						$this->aliasField('parent_id').' > 0',
+					])
+					->order(['start_date DESC']);
+			$countQuery = $query->count();
+			if($countQuery > 0) {
+				$result = $query->first();
+				return $result->id;
 			} else {
-				//no visible nor available academic period
-				$anyAvailablePeriod = $this->find()
-										->select([$this->aliasField('id')])
-										->order(['start_date DESC'])
-										->first();
-				if(!empty($anyAvailablePeriod)) {
-					$anyAvailablePeriod->current = 1;
-					$academicPeriodTable->save($anyAvailablePeriod);
-					$selectedCurrentIdThroughPatch = $anyAvailablePeriod->id;
-				} else {
-					//nothing found in database
-					throw new NotFoundException('AcademicPeriod table is empty. kindly approach Administrator.');
-				}
-											
-			}						
-
+				return 0;
+			}
 		}
-		return $selectedCurrentIdThroughPatch;
 	}
-
 }
