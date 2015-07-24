@@ -24,6 +24,37 @@ class StudentTransfersTable extends AppTable {
     	return $events;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    	if ($entity->isNew()) {
+			$institutionId = $this->Session->read('Institutions.id');
+			$selectedStudent = $this->Session->read($this->alias().'.security_user_id');
+			$status = $this->StudentStatuses
+				->find()
+				->where([$this->StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
+				->first()
+				->id;
+	
+			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');			
+			$InstitutionSiteStudents->updateAll(
+				['student_status_id' => $status],
+				[
+					'institution_site_id' => $institutionId,
+					'security_user_id' => $selectedStudent
+				]
+			);
+
+			// Rediect
+			$this->Alert->success('StudentTransfers.request');
+
+			$Students = TableRegistry::get('Institution.Students');
+			$action = $this->ControllerAction->buttons['view']['url'];
+			$action['action'] = $Students->alias();
+			$action[] = $selectedStudent;
+			return $this->controller->redirect($action);
+			// End
+		}
+    }
+
 	public function addOnInitialize(Event $event, Entity $entity) {
 		// Set all selected values only
 		list(, $selectedInstitution, , $selectedPeriod, , $selectedProgramme, , $selectedGrade, , $selectedSection) = array_values($this->_getSelectOptions());
@@ -46,6 +77,33 @@ class StudentTransfersTable extends AppTable {
 			$this->ControllerAction->field('education_grade');
 			$this->ControllerAction->field('institution_site_section_id');
 			$this->ControllerAction->field('student_status_id');
+			// Start Date and End Date
+			if ($this->action == 'add') {
+				$selectedPeriod = $this->request->data[$this->alias()]['academic_period'];
+				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
+				$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+
+				$this->ControllerAction->field('start_date', [
+					'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+				]);
+				$this->ControllerAction->field('end_date', [
+					'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+				]);
+
+				$todayDate = date("Y-m-d");
+				if ($todayDate >= $startDate->format('Y-m-d') && $todayDate <= $endDate->format('Y-m-d')) {
+					$entity->start_date = $todayDate;
+					$entity->end_date = $todayDate;
+				} else {
+					$entity->start_date = $startDate->format('Y-m-d');
+					$entity->end_date = $startDate->format('Y-m-d');
+				}
+			} else if ($this->action == 'edit') {
+				$this->ControllerAction->field('start_date');
+				$this->ControllerAction->field('end_date');
+			}
+			// End
 			$this->ControllerAction->field('start_date');
 			$this->ControllerAction->field('end_date');
 
@@ -199,7 +257,7 @@ class StudentTransfersTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		$Students = TableRegistry::get('Institution.Students');
 		$toolbarButtons['back']['url']['action'] = $Students->alias();
-		$toolbarButtons['back']['url'][0] = 'edit';
+		$toolbarButtons['back']['url'][0] = 'view';
 		$toolbarButtons['back']['url'][] = $this->Session->read($this->alias().'.security_user_id');
 	}
 
