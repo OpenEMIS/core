@@ -269,6 +269,9 @@ trait MessagesTrait {
 				'noSections' => 'There is no section under the selected academic period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+				],
+				'email' => [
+					'ruleValidEmail' => 'Please enter a valid Email'
 				]
 			],
 			
