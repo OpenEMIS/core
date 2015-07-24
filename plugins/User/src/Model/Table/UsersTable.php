@@ -44,7 +44,7 @@ class UsersTable extends AppTable {
 		$this->table('security_users');
 		parent::initialize($config);
 
-		$this->fieldOrder1 = new ArrayObject(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
+		$this->fieldOrder1 = new ArrayObject(['photo_content', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
 		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
@@ -293,6 +293,9 @@ class UsersTable extends AppTable {
 		} else {
 			$id = $this->Session->read($roleName.'.security_user_id');
 		}
+
+		$fieldOrder = array_merge($this->fieldOrder1->getArrayCopy(), $this->fieldOrder2->getArrayCopy());
+		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 
 	public function addEditBeforeAction(Event $event) {
