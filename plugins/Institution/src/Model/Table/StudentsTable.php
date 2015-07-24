@@ -387,19 +387,24 @@ class StudentsTable extends BaseTable {
 	}
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($action == 'view' || $action == 'edit') {
-			$toolbarButtons['transfer'] = $buttons['back'];
-			$toolbarButtons['transfer']['url'] = [
-	    		'plugin' => $buttons['back']['url']['plugin'],
-	    		'controller' => $buttons['back']['url']['controller'],
-	    		'action' => 'Transfers',
-	    		'add',
-	    		// $this->request->params['pass'][1]
-	    	];
-			$toolbarButtons['transfer']['type'] = 'button';
-			$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
-			$toolbarButtons['transfer']['attr'] = $attr;
-			$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+    	if ($action == 'view') {
+    		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+    		if ($this->AccessControl->check([$this->controller->name, $StudentTransfers->alias()])) {
+	    		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+	    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $this->request->params['pass'][1]);
+
+				$toolbarButtons['transfer'] = $buttons['back'];
+				$toolbarButtons['transfer']['url'] = [
+		    		'plugin' => $buttons['back']['url']['plugin'],
+		    		'controller' => $buttons['back']['url']['controller'],
+		    		'action' => 'Transfers',
+		    		'add'
+		    	];
+				$toolbarButtons['transfer']['type'] = 'button';
+				$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+				$toolbarButtons['transfer']['attr'] = $attr;
+				$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+			}
 		}
 	}
 }
