@@ -1,7 +1,3 @@
--- PHPOE-1561
-INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('Notices', 'created', NULL, 'Date', 1, NOW());
--- end PHPOE-1561
-
 -- PHPOE-1647
 
 CREATE TABLE IF NOT EXISTS `institution_grade_students` (
