@@ -22,7 +22,7 @@ class UsersTable extends BaseTable {
 		$this->addBehavior('Area.Areapicker');
 	}
 
-	public function afterAction(Event $event) {
+	public function addAfterAction(Event $event) {
 		if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
 			if (isset($this->fields['openemis_no']['attr'])) {
 	        	unset($this->fields['openemis_no']['attr']);
