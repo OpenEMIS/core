@@ -2,8 +2,8 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -70,12 +70,12 @@ class InstitutionRubricsTable extends AppTable {
         $this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
-		$options['conditions'][$this->aliasField('status')] = $selectedStatus;
-		$options['order'] = [
-			$this->AcademicPeriods->aliasField('order')
-		];
+
+		$query
+			->where([$this->aliasField('status') => $selectedStatus])
+			->order([$this->AcademicPeriods->aliasField('order')]);
 	}
 
 	public function _buildRecords($status=0) {

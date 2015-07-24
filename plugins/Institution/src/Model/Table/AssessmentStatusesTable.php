@@ -78,8 +78,8 @@ class AssessmentStatusesTable extends AppTable {
 	}
 	
 	// Event: ControllerAction.Model.index.beforePaginate
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$options['finder'] = ['inStatus' => []];
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->find('inStatus');
 	}
 
 	public function findInStatus(Query $query, array $options) {
