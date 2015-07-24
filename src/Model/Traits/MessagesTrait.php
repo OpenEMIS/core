@@ -258,6 +258,7 @@ trait MessagesTrait {
 			'noStaff' => 'No Available Staff'
 		],
 		'StudentTransfers' => [
+			'request' => 'Transfer request has been submitted successfully.',
 			'noProgrammes' => 'No Available Programmes'
 		],
 
