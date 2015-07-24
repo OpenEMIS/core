@@ -239,7 +239,7 @@ class ValidationBehavior extends Behavior {
 		return $flag;
 	}
 
-	public static function validateNeeded($field, $fieldName, array $globalData) {
+	public static function validateNeeded($field, $fieldName, array $additionalParameters, array $globalData) {
 		$flag = false;
 
 		if($field == "0"){
@@ -250,6 +250,10 @@ class ValidationBehavior extends Behavior {
 				$recordWithField = $newEntity->find()
 											->select([$fieldName])
 											->where([$fieldName => 1]);
+
+				if(!empty($additionalParameters))
+					$recordWithField->andWhere($additionalParameters);
+													
 				$total = $recordWithField->count();				
 				$flag = ($total > 0) ? true : false;
 			}
