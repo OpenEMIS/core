@@ -95,14 +95,13 @@ class CustomFormsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($moduleOptions, $selectedModule) = array_values($this->_getSelectOptions());
         $this->controller->set(compact('moduleOptions', 'selectedModule'));
 
-		$options['conditions'][] = [
-        	$this->aliasField('custom_module_id') => $selectedModule
-        ];
-        $options['contain'] = array_merge($options['contain'], $this->_contain);
+        $query
+			->where([$this->aliasField('custom_module_id') => $selectedModule])
+			->contain($this->_contain);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
