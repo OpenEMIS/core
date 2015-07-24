@@ -18,7 +18,7 @@ class CustomFormsTable extends AppTable {
 	private $_contain = ['CustomFilters', 'CustomFields'];
 	private $filterClass = [
 		'className' => 'FieldOption.FieldOptionValues',
-		'joinTable' => 'custom_form_filters',
+		'joinTable' => 'custom_forms_filters',
 		'foreignKey' => 'custom_form_id',
 		'targetForeignKey' => 'custom_filter_id',
 		'through' => 'CustomField.CustomFormsFilters',
