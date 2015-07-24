@@ -81,6 +81,31 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('HighChart', [
+        	'number_of_institutions_by_type' => [
+        		'_function' => 'getNumberOfInstitutionsByType',
+				'chart' => ['backgroundColor' => 'rgba(255, 255, 255, 0.002)'],
+				'title' => ['text'=>null],
+				'exporting' => ['enabled' => false],
+				'credits' => ['enabled' => false],
+				'tooltip' => ['pointFormat' => '{point.y}'],
+				'plotOptions' => [
+					'pie' => [
+						'dataLabels' => ['enabled' => false],
+						'showInLegend' => true
+					]
+				],
+				'legend' => [
+					'enabled' => true,
+					'verticalAlign' => 'middle',
+					'align' => 'right',
+					'layout' => 'vertical',
+					'itemStyle' => [
+						'font' => '10pt sans-serif'
+					]
+				],
+			]
+		]);
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
