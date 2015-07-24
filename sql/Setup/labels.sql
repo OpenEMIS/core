@@ -184,3 +184,21 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `creat
 ('StaffAbsences', 'absence_type', NULL, 'Type', 1, NOW()),
 ('StaffAbsences', 'staff_absence_reason_id', NULL, 'Reason', 1, NOW())
 ;
+
+-- PHPOE-1561
+INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('Notices', 'created', NULL, 'Date', 1, NOW());
+-- end PHPOE-1561
+
+-- PHPOE-1577
+INSERT INTO `labels` (`module`, `created_user_id`, `created`, `field`, `en`) VALUES
+('Translations', 1, Now(), 'en', 'English'),
+('Translations', 1, Now(), 'ar', 'العربية'),
+('Translations', 1, Now(), 'zh', ' 中文'),
+('Translations', 1, Now(), 'fr', 'Français'),
+('Translations', 1, Now(), 'ru', 'русский'),
+('Translations', 1, Now(), 'es', 'español');
+-- end PHPOE-1577
+
+-- PHPOE-1669
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StaffPositions', 'security_user_id', 'Staff', '1', NOW());
+-- end PHPOE-1669
