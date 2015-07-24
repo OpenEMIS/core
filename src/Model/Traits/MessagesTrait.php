@@ -272,6 +272,12 @@ trait MessagesTrait {
 				],
 				'email' => [
 					'ruleValidEmail' => 'Please enter a valid Email'
+				],
+				'longitude' => [
+					'ruleLongitude' => 'Please enter a valid Longitude'
+				],
+				'latitude' => [
+					'ruleLatitude' => 'Please enter a valid Latitude'
 				]
 			],
 			
