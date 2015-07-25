@@ -67,13 +67,15 @@ trait MessagesTrait {
 			'noClasses' => 'No Classes',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
-			'amount' => 'Amount'
+			'amount' => 'Amount',
+			'total' => 'Total'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
 		'InfrastructureTypes' => [
+			'noLevels' => 'No Available Levels',
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'InfrastructureCustomFields' => [
@@ -133,6 +135,9 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
+		'StudentFees' => [
+			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
 		// 	'last_date_absent' => 'Last Day Of Absence'
@@ -183,10 +188,17 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'There are no available Sections.',
+			'noSections' => 'No Available Sections'
+		],
+		'InstitutionSiteStudentAbsences' => [
+			'noSections' => 'No Available Sections',
+			'noStudents' => 'No Available Students'
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'There are no available Staff.',
+			'noStaff' => 'No Available Staff'
+		],
+		'StaffAbsences' => [
+			'noStaff' => 'No Available Staff'
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
@@ -268,6 +280,9 @@ trait MessagesTrait {
 			],
 
 			'InstitutionSiteProgrammes' => [
+				'education_programme_id' => [
+					'unique' => 'This Education Programme already exists in the system'
+				],
 				'noGrade' => 'There is no grade selected',
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
@@ -298,7 +313,12 @@ trait MessagesTrait {
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
 				'staffTypeId' => 'You need to configure Staff Types first.'
-			]
+			],
+			'StudentGuardians' => [
+				'guardianRelationId' => 'You need to configure Guardian Relations first.',
+				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
+
+			],
 		],
 		'User' => [
 			'Users' => [
@@ -575,6 +595,10 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			]
+		],
+		'Translations' => [
+			'success' => 'The language has been successfully compiled.',
+			'failed' => 'The language has not been compiled due to errors encountered.',
 		],
 	];
 

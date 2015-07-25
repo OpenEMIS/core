@@ -75,8 +75,12 @@ class StaffAttendancesTable extends AppTable {
 			$types = $this->getSelectOptions('Absence.types');
 			$type = $types['EXCUSED'];
 
-			if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
-				$type = $types['UNEXCUSED'];
+			if (empty($entity->StaffAbsences['id'])) {
+				$type = '<i class="fa fa-check"></i>';
+			} else {
+				if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
+					$type = $types['UNEXCUSED'];
+				}
 			}
 		}
 
@@ -140,9 +144,9 @@ class StaffAttendancesTable extends AppTable {
 
 				$typeOptions = $this->getSelectOptions('Absence.types');
 				if (empty($absenceResult->staff_absence_reason)) {
-					$absenceType = 'EXCUSED';
-				} else {
 					$absenceType = 'UNEXCUSED';
+				} else {
+					$absenceType = 'EXCUSED';
 				}
 				if ($absenceResult->full_day == 0) {
 					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
@@ -191,16 +195,29 @@ class StaffAttendancesTable extends AppTable {
 		// End setup periods
 
 		if ($selectedPeriod != 0) {
+			$todayDate = date("Y-m-d");
 			$this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
 			// Setup week options
 			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
 			$weekStr = 'Week %d (%s - %s)';
 			$weekOptions = [];
+			$currentWeek = null;
 			foreach ($weeks as $index => $dates) {
+				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
+					$weekStr = __('Current Week') . ' %d (%s - %s)';
+					$currentWeek = $index;
+				} else {
+					$weekStr = 'Week %d (%s - %s)';
+				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedWeek = $this->queryString('week', $weekOptions);
+			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
+			if ($selectedYear == date("Y") && !is_null($currentWeek)) {
+				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+			} else {
+				$selectedWeek = $this->queryString('week', $weekOptions);
+			}
 			$this->advancedSelectOptions($weekOptions, $selectedWeek);
 			$this->controller->set(compact('weekOptions', 'selectedWeek'));
 			// end setup weeks
@@ -302,8 +319,37 @@ class StaffAttendancesTable extends AppTable {
 
 		$conditions = ['StaffAbsences.security_user_id = StaffAttendances.security_user_id'];
 		if (is_array($date)) {
-			$conditions['StaffAbsences.start_date >= '] = $date[0]->format('Y-m-d');
-			$conditions['StaffAbsences.start_date <= '] = $date[1]->format('Y-m-d');
+			$startDate = $date[0]->format('Y-m-d');
+			$endDate = $date[1]->format('Y-m-d');
+
+			$conditions['OR'] = [
+				'OR' => [
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date >=' => $startDate,
+						'StaffAbsences.start_date <=' => $endDate
+					],
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date <=' => $startDate,
+						'StaffAbsences.end_date >=' => $startDate
+					],
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date <=' => $endDate,
+						'StaffAbsences.end_date >=' => $endDate
+					],
+					[
+						'StaffAbsences.end_date IS NOT NULL',
+						'StaffAbsences.start_date >=' => $startDate,
+						'StaffAbsences.end_date <=' => $startDate
+					]
+				],
+				[
+					'StaffAbsences.end_date IS NULL',
+					'StaffAbsences.start_date <=' => $endDate
+				]
+			];
 		} else {
 			$conditions['StaffAbsences.start_date <= '] = $date->format('Y-m-d');
 			$conditions['StaffAbsences.end_date >= '] = $date->format('Y-m-d');

@@ -7,8 +7,6 @@ $this->start('toolbar');
 			echo $this->element($btn['element'], $btn['data'], $btn['options']);
 		}
 	}
-	// echo $this->Html->link('<i class="fa kd-upload"></i>', [], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Import' , 'escape' => false]);
-	// echo $this->Html->link('<i class="fa kd-download"></i>', [], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Export' ,'escape' => false]);
 $this->end();
 
 $this->start('panelBody');

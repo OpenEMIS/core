@@ -14,6 +14,10 @@ class InfrastructureTypesTable extends AppTable {
 		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);
 	}
 
+	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
 	public function indexBeforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
@@ -25,8 +29,11 @@ class InfrastructureTypesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
 		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
+
+        if (empty($levelOptions)) {
+        	$this->Alert->warning('InfrastructureTypes.noLevels');
+        }
 
 		$options['conditions'][] = [
         	$this->aliasField('infrastructure_level_id') => $selectedLevel
@@ -35,22 +42,21 @@ class InfrastructureTypesTable extends AppTable {
 
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
-		list(, $selectedLevel) = array_values($this->getSelectOptions());
+		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
 		$this->fields['infrastructure_level_id']['type'] = 'hidden';
 		$this->fields['infrastructure_level_id']['attr']['value'] = $selectedLevel;
 
-		$LevelName = $this->Levels
-			->find('all')
-			->select([$this->Levels->aliasField('name')])
-			->where([$this->Levels->aliasField('id') => $selectedLevel])
-			->first();
+		$levelName = '';
+		if (!empty($levelOptions)) {
+			$levelName = $this->Levels->get($selectedLevel)->name;
+		}
+
 		$this->ControllerAction->field('level_name', [
 			'type' => 'readonly',
-			'attr' => ['value' => $LevelName->name]
+			'attr' => ['value' => $levelName]
 		]);
 
 		array_unshift($this->_fieldOrder, "level_name");
-		$this->setFieldOrder();
 	}
 
 	public function getSelectOptions() {
@@ -61,9 +67,5 @@ class InfrastructureTypesTable extends AppTable {
 		$selectedLevel = !is_null($levelId) ? $levelId : key($levelOptions);
 
 		return compact('levelOptions', 'selectedLevel');
-	}
-
-	public function setFieldOrder() {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 }

@@ -12,6 +12,11 @@ class InstitutionSiteCustomFieldsTable extends AppTable {
 		$this->hasMany('InstitutionSites', ['className' => 'Institution.InstitutionSites', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		
+		return $validator;
+	}
+
 	public function beforeAction() {
 		
 	}

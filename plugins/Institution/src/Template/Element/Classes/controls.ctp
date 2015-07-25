@@ -26,6 +26,7 @@
 					'options' => $sectionOptions,
 					'url' => $baseUrl,
 					'data-named-key' => 'section_id',
+					'data-named-group' => 'academic_period_id',
 				));
 			}
 

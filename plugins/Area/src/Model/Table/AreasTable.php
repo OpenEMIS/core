@@ -146,4 +146,31 @@ class AreasTable extends AppTable {
 
 		return $attr;
 	}
+
+	// autocomplete used for UserGroups
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->contain('Levels')
+			->where([
+				'OR' => [
+					$this->aliasField('name') . ' LIKE' => $search,
+					$this->aliasField('code') . ' LIKE' => $search,
+					'Levels.name LIKE' => $search
+				]
+			])
+			->order(['Levels.level', $this->aliasField('order')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s (%s)', $obj->level->name, $obj->name, $obj->code),
+				'value' => $obj->id
+			];
+		}
+		return $data;
+	}
 }

@@ -10,10 +10,12 @@ class InfrastructureCustomFieldsTable extends CustomFieldsTable {
 		$this->hasMany('CustomTableColumns', ['className' => 'Infrastructure.InfrastructureCustomTableColumns', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomTableRows', ['className' => 'Infrastructure.InfrastructureCustomTableRows', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomForms', [
-			'className' => 'Infrastructure.InfrastructureLevels',
-			'joinTable' => 'infrastructure_level_fields',
+			'className' => 'Infrastructure.InfrastructureCustomForms',
+			'joinTable' => 'infrastructure_custom_forms_fields',
 			'foreignKey' => 'infrastructure_custom_field_id',
-			'targetForeignKey' => 'infrastructure_level_id'
+			'targetForeignKey' => 'infrastructure_custom_form_id',
+			'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+			'dependent' => true
 		]);
 	}
 }
