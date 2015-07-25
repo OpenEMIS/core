@@ -30,9 +30,22 @@ class StaffBehavior extends Behavior {
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
+			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
+	}
+
+	public function afterAction(Event $event) {
+		if ($this->_table->action == 'index') {
+			$indexDashboard = 'Student.Students/dashboard';
+			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
 	}
 
 	public function addBeforeAction(Event $event) {
