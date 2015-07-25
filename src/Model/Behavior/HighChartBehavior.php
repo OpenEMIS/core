@@ -60,24 +60,22 @@ class HighChartBehavior extends Behavior {
 		$selectedConfig['title'] = ['text' => null];
 		$selectedConfig['chart'] = 
 					['backgroundColor' => 'rgba(255, 255, 255, 0.002)',
-					'marginTop' => 0,
-					'marginBottom' => 0,
-					'marginRight' => 0,
-					'marginLeft' => 0,
+					'margin' => 0,
+					'spacingTop' => 0,
+					'spacingBottom' => 10,
+					'spacingLeft' => 90,
 					'height' => 100];
 		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}'];
 		$selectedConfig['plotOptions'] = 
 					['pie' => ['dataLabels' => [
 							'enabled' => false],
 							'showInLegend' => true,
-							'center' => ['18%', '50%']]];
+							'center' => ['20%', '50%']]];
 		$selectedConfig['legend'] = 
 					['enabled' => true,
-					'verticalAlign' => 'top',
-					'align' => 'right',
+					'verticalAlign' => 'bottom',
+					'align' => 'left',
 					'layout' => 'vertical',
-					'itemMarginBottom' => 0,
-					'itemMarginTop' => 0,
 					'itemStyle' => ['fontSize' => '8pt']];
 		unset($selectedConfig['_function']);
 		$options = array_replace_recursive($selectedConfig, $options);
