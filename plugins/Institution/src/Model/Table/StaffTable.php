@@ -186,11 +186,6 @@ class StaffTable extends BaseTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = true;
-		return $attr;
-	}
-
 	public function onUpdateFieldFTE(Event $event, array $attr, $action, $request) {
 		if (array_key_exists('institution_site_position_id', $this->fields)) {
 			if (array_key_exists('options', $this->fields['institution_site_position_id'])) {
