@@ -50,16 +50,17 @@ class StaffBehavior extends Behavior {
 		$this->_table->ControllerAction->field('name', []);
 		$this->_table->ControllerAction->field('default_identity_type', []);
 		$this->_table->ControllerAction->field('staff_institution_name', []);
-		$this->_table->ControllerAction->field('staff_status', []);
+		$this->_table->ControllerAction->field('staffstatus', []);
 
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'staff_institution_name', 'staff_status']);
+			'name', 'default_identity_type', 'staff_institution_name', 'staffstatus']);
 
 		$indexDashboard = 'Staff.Staff/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// this method should rightfully be in institution userbehavior - need to move this in an issue after guardian module is in prod
 		if (array_key_exists('new', $this->_table->request->query)) {
 			if ($this->_table->Session->check($this->_table->alias().'.add.'.$this->_table->request->query['new'])) {
 				$institutionStaffData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
@@ -72,12 +73,14 @@ class StaffBehavior extends Behavior {
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
 
 					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'];
+
 					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
 
 					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE'];
 
 					// start (date and year) handling
-					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
+					//$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
 					
 					$data[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'];
 					
@@ -94,6 +97,20 @@ class StaffBehavior extends Behavior {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
 		$options['associated'] = ['InstitutionSiteStaff'];
+
+		// Jeff: workaround, needs to redo this logic
+		if (isset($data[$this->_table->alias()]['institution_site_staff'])) {
+			$obj = $data[$this->_table->alias()]['institution_site_staff'];
+			if (!empty($obj) && isset($obj[0]) && isset($obj[0]['institution_site_id'])) {
+				if ($obj[0]['institution_site_id'] == 0) {
+					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = date('Y-m-d');
+					$data[$this->_table->alias()]['institution_site_staff'][0]['end_date'] = date('Y-m-d', time()+86400);
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = 0;
+					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = 0;
+				}
+			}
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);

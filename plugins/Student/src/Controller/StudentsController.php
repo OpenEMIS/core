@@ -20,9 +20,16 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->ControllerAction->model()->addBehavior('CustomField.Record', [
 			'behavior' => 'Student',
+			'fieldKey' => 'student_custom_field_id',
+			'tableColumnKey' => 'student_custom_table_column_id',
+			'tableRowKey' => 'student_custom_table_row_id',
+			'formKey' => 'student_custom_form_id',
+			'filterKey' => 'student_custom_filter_id',
+			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
 			'recordKey' => 'security_user_id',
-			'fieldValueKey' => ['className' => 'Student.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellKey' => ['className' => 'Student.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 		$this->ControllerAction->model()->addBehavior('AdvanceSearch');
@@ -32,26 +39,25 @@ class StudentsController extends AppController {
 		]);
 
 		$this->ControllerAction->models = [
-		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
-		'Contacts' 			=> ['className' => 'User.Contacts'],
-		'Identities' 		=> ['className' => 'User.Identities'],
-		'Languages' 		=> ['className' => 'User.UserLanguages'],
-		'Comments' 			=> ['className' => 'User.Comments'],
-		'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
-		'Awards' 			=> ['className' => 'User.Awards'],
-		'Attachments' 		=> ['className' => 'User.Attachments'],
-		'Guardians' 		=> ['className' => 'Student.Guardians'],
-		'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
-		'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
-		'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
-		'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
-		'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
-		'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
-		'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
-		'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-		'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
-		'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
-
+			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Contacts' 			=> ['className' => 'User.Contacts'],
+			'Identities' 		=> ['className' => 'User.Identities'],
+			'Languages' 		=> ['className' => 'User.UserLanguages'],
+			'Comments' 			=> ['className' => 'User.Comments'],
+			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
+			'Awards' 			=> ['className' => 'User.Awards'],
+			'Attachments' 		=> ['className' => 'User.Attachments'],
+			'Guardians' 		=> ['className' => 'Student.Guardians'],
+			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
+			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
+			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
+			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
+			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
+			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
+			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
+			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
+			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
 
 		$this->loadComponent('Paginator');
@@ -94,6 +100,7 @@ class StudentsController extends AppController {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
+		
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
 			$action = false;
@@ -108,7 +115,7 @@ class StudentsController extends AppController {
 				if (strtolower($action) != 'index')	{
 					if (in_array('Guardian', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
-							$persona = $this->Users->get($params['pass'][1]);
+							$persona = $model->get($params['pass'][1]);
 							if (is_object($persona)) {
 								$this->Navigation->addCrumb($persona->name);
 							}

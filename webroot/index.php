@@ -31,7 +31,12 @@ use Cake\Network\Response;
 use Cake\Routing\DispatcherFactory;
 
 $dispatcher = DispatcherFactory::create();
-$dispatcher->dispatch(
-    Request::createFromGlobals(),
-    new Response()
-);
+
+try {
+	$dispatcher->dispatch(
+	    Request::createFromGlobals(),
+	    new Response()
+	);
+} catch (Exception $ex) {
+	pr($ex->getMessage());
+}
