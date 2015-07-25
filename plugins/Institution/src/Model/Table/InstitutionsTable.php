@@ -81,30 +81,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
-        $this->addBehavior('HighChart', [
-        	'donut' => [
-        		'_function' => 'getNumberOfInstitutionsByType',
-				'chart' => ['backgroundColor' => 'rgba(255, 255, 255, 0.002)'],	
-				'tooltip' => ['pointFormat' => '{point.y}'],
-				'plotOptions' => [
-					'pie' => [
-						'dataLabels' => ['enabled' => false],
-						'showInLegend' => true,
-						'center' => ['35%', '60%']
-					]
-				],
-				'legend' => [
-					'enabled' => true,
-					'verticalAlign' => 'middle',
-					'align' => 'right',
-					'layout' => 'vertical',
-					'floating' => true,
-					'itemStyle' => [
-						'fontSize' => '10px'
-					]
-				],
-			]
-		]);
+        $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -269,60 +246,14 @@ class InstitutionsTable extends AppTable  {
 				->count();
 
 			$models = [
-				'InstitutionSiteTypes' => 'institution_site_type_id',
-				'InstitutionSiteSectors' => 'institution_site_sector_id',
-				'InstitutionSiteLocalities' => 'institution_site_locality_id'
+				'Type' => ['InstitutionSiteTypes', 'institution_site_type_id'],
+				'Sector' => ['InstitutionSiteSectors', 'institution_site_sector_id'],
+				'Locality' => ['InstitutionSiteLocalities', 'institution_site_locality_id'],
 			];
 
-			foreach ($models as $model => $key) {
-				// $institutionSiteArray[$model] = $institutionRecords
-				// 	->contain([$model])
-				// 	->select([
-				// 		'count' => $institutionRecords->func()->count($key),
-				// 		$model.'.name'
-				// 	])
-				// 	->group($key)
-				// 	->toArray();
-
-				$institutionSiteArray[$model] = $this->getDonutChart([$model => $key]);
+			foreach ($models as $key => $model) {
+				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
 			}
-
-			// // Type: chart
-			// $institutionSiteTypesCount = $institutionRecords
-			// 	->contain(['InstitutionSiteTypes'])
-			// 	->select([
-			// 		'count' => $institutionRecords->func()->count('institution_site_type_id'),
-			// 		'InstitutionSiteTypes.name'
-			// 	])
-			// 	->group('institution_site_type_id')
-			// 	->toArray();
-
-			// // Sector: chart
-			// $institutionRecords = $this->find();
-			// $institutionSiteSectorCount = $institutionRecords
-			// 	->contain(['InstitutionSiteSectors'])
-			// 	->select([
-			// 		'count' => $institutionRecords->func()->count('institution_site_sector_id'),
-			// 		'InstitutionSiteSectors.name'
-			// 	])
-			// 	->group('institution_site_sector_id')
-			// 	->toArray();
-			// // Locality: chart
-			// $institutionRecords = $this->find();
-			// $institutionSiteLocalityCount = $institutionRecords
-			// 	->contain(['InstitutionSiteLocalities'])
-			// 	->select([
-			// 		'count' => $institutionRecords->func()->count('institution_site_locality_id'),
-			// 		'InstitutionSiteLocalities.name'
-			// 	])
-			// 	->group('institution_site_locality_id')
-			// 	->toArray();
-
-			// $institutionSiteArray['type'] =  $institutionSiteTypesCount;
-			// $institutionSiteArray['sector'] =  $institutionSiteSectorCount;
-			// $institutionSiteArray['locality'] = $institutionSiteLocalityCount;
-
-			// $highChartDatas = [$this->getDonutChart('type')];
 
 			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
@@ -330,7 +261,6 @@ class InstitutionsTable extends AppTable  {
 	            'data' => [ 
 	            	'institutionCount' => $institutionCount,
 	            	'institutionSiteArray' => $institutionSiteArray,
-	            	//'highChartDatas' => $highChartDatas
 	            ],
 	            'options' => [],
 	            'order' => 1
@@ -339,30 +269,45 @@ class InstitutionsTable extends AppTable  {
 	    $config['formButtons'] = false;
 	}
 
-	public function getNumberOfInstitutionsByType($params=[]) {
-		//pr($params);die;
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions['InstitutionSiteTypes.'.$key] = $value;
-		}
-		$institutionRecords = $this->find();
-		// Type: chart
-		$institutionSiteTypesCount = $institutionRecords
-			->contain(['InstitutionSiteTypes'])
-			->select([
-				'count' => $institutionRecords->func()->count('institution_site_type_id'),
-				'InstitutionSiteTypes.name'
-			])
-			->group('institution_site_type_id')
-			->toArray();
+	public function getNumberOfInstitutionsByModel($params=[]) {
 
-		// Creating the data set		
-		$dataSet = [];
-		foreach ($institutionSiteTypesCount as $value) {
-			$dataSet[] = [$value['institution_site_type']['name'], $value['count']];
+		if (!empty($params)) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+
+			$modelName = $params[0];
+			$modelId = $params[1];
+
+			foreach ($conditions as $key => $value) {
+				$_conditions[$modelName.'.'.$key] = $value;
+			}
+			$institutionRecords = $this->find();
+			
+			$selectString = $modelName.'.name';
+			$institutionSiteTypesCount = $institutionRecords
+				->contain([$modelName])
+				->select([
+					'count' => $institutionRecords->func()->count($modelId),
+					$selectString
+				])
+				->group($modelId)
+				->toArray();
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteTypesCount as $value) {
+
+				// To get the name from the array
+				$text = $modelId;
+	            if (substr($text, -3) === '_id') {
+	                $text = substr($text, 0, -3);
+	            }
+
+	            // Compile the dataset
+				$dataSet[] = [$value[$text]['name'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
 		}
-		$params['dataSet'] = $dataSet;
 		return $params;
 	}
 
