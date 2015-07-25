@@ -24,6 +24,7 @@ var dashboards = {
 			console.log(json);
 			obj = JSON.parse(json);
 			$(group).highcharts(obj);
+			$(group).css({"display":"block"});
 		});
 	}
 }
