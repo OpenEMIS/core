@@ -29,9 +29,11 @@ class InstitutionSiteStudentsTable extends AppTable {
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => 'Years']],
 				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_site_student_gender' => [
+				'_function' => 'getNumberOfStudentsByGender'
 			]
 		]);
-
 	}
 
 
@@ -164,5 +166,49 @@ class InstitutionSiteStudentsTable extends AppTable {
 		
 		return $params;
 	}
+
+	public function getNumberOfStudentsByGender($params=[]) {
+
+		//if (!empty($params)) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+
+			// $modelName = $params[0];
+			// $modelId = $params[1];
+
+			foreach ($conditions as $key => $value) {
+				$_conditions[$modelName.'.'.$key] = $value;
+			}
+			$institutionSiteRecords = $this->find();
+			
+			$institutionSiteStudentCount = $institutionSiteRecords
+				->contain(['Users', 'Users.Genders'])
+				->select([
+					'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+					'gender' => 'Genders.name'
+				])
+				//->where()
+				->group('gender_id')
+				->toArray();
+
+			$modelId = 'gender_id';
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStudentCount as $value) {
+
+				//To get the name from the array
+				$text = $modelId;
+	            if (substr($text, -3) === '_id') {
+	                $text = substr($text, 0, -3);
+	            }
+
+	            //Compile the dataset
+				$dataSet[] = [$value[$text], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		//}
+		return $params;
+	}
+
 
 }

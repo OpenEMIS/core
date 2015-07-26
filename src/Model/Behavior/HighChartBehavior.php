@@ -61,10 +61,9 @@ class HighChartBehavior extends Behavior {
 		$selectedConfig['chart'] = 
 					['backgroundColor' => 'rgba(255, 255, 255, 0.002)',
 					'margin' => 0,
-					'spacingTop' => 0,
+					'spacingTop' => -5,
 					'spacingBottom' => 10,
-					'spacingLeft' => 90,
-					'height' => 100];
+					'spacingLeft' => 90];
 		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}'];
 		$selectedConfig['plotOptions'] = 
 					['pie' => ['dataLabels' => [

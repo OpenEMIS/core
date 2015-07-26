@@ -62,11 +62,45 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function afterAction(Event $event) {
+		$alias = $this->_table->alias;
+		// $tableName = $this->_table->registryAlias();
+		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$institutionSiteArray = [];
+		switch($alias){
+			case "Students":
+				$session = $this->_table->Session;
+				$institutionId = $session->read('Institutions.id');
+				// Total Students: number
+
+				$query = $table->find()
+					->where([$table->aliasField('institution_site_id') => $institutionId])
+					->count();
+
+				break;
+			case "Users":
+				$query = $table->find()
+					->count();
+				break;
+		}
+		$models = [
+			'Gender' => ['InstitutionSiteTypes', 'institution_site_type_id'],
+			//'Age' => ['InstitutionSiteSectors', 'institution_site_sector_id'],
+			//'Grade' => ['InstitutionSiteLocalities', 'institution_site_locality_id'],
+		];
+		
+		//$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+		foreach ($models as $key => $model) {
+			$institutionSiteArray[$key] = $table->getDonutChart('institution_site_student_gender');
+		}
+
 		if ($this->_table->action == 'index') {
-			$indexDashboard = 'Student.Students/dashboard';
+			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [
+	            	'institutionCount' => $query,
+	            	'institutionSiteArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
