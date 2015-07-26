@@ -169,16 +169,6 @@ class InstitutionSiteStudentsTable extends AppTable {
 
 	public function getNumberOfStudentsByGender($params=[]) {
 
-		//if (!empty($params)) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
-
-			// $modelName = $params[0];
-			// $modelId = $params[1];
-
-			foreach ($conditions as $key => $value) {
-				$_conditions[$modelName.'.'.$key] = $value;
-			}
 			$institutionSiteRecords = $this->find();
 			
 			$institutionSiteStudentCount = $institutionSiteRecords
@@ -187,15 +177,16 @@ class InstitutionSiteStudentsTable extends AppTable {
 					'count' => $institutionSiteRecords->func()->count('security_user_id'),	
 					'gender' => 'Genders.name'
 				])
-				//->where()
-				->group('gender_id')
-				->toArray();
+				->group('gender_id');
+
+			if (!empty($params)) {
+				$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
+			}	
 
 			$modelId = 'gender_id';
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionSiteStudentCount as $value) {
-
+			foreach ($institutionSiteStudentCount->toArray() as $value) {
 				//To get the name from the array
 				$text = $modelId;
 	            if (substr($text, -3) === '_id') {

@@ -29,6 +29,9 @@ class InstitutionSiteStaffTable extends AppTable {
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => 'Position Type']],
 				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_site_staff_gender' => [
+				'_function' => 'getNumberOfStaffsByGender'
 			]
 		]);
 
@@ -242,6 +245,40 @@ class InstitutionSiteStaffTable extends AppTable {
 		$params['options']['xAxis']['categories'] = array_values($positionTypes);
 		$params['dataSet'] = $dataSet;
 
+		return $params;
+	}
+
+	public function getNumberOfStaffsByGender($params=[]) {
+
+			$institutionSiteRecords = $this->find();
+			
+			$institutionSiteStaffCount = $institutionSiteRecords
+				->contain(['Users', 'Users.Genders'])
+				->select([
+					'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+					'gender' => 'Genders.name'
+				])
+				->group('gender_id');
+
+			if (!empty($params)) {
+				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
+			}	
+
+			$modelId = 'gender_id';
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStaffCount->toArray() as $value) {
+				//To get the name from the array
+				$text = $modelId;
+	            if (substr($text, -3) === '_id') {
+	                $text = substr($text, 0, -3);
+	            }
+
+	            //Compile the dataset
+				$dataSet[] = [$value[$text], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		//}
 		return $params;
 	}
 

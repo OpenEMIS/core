@@ -75,22 +75,15 @@ class StudentBehavior extends Behavior {
 				$query = $table->find()
 					->where([$table->aliasField('institution_site_id') => $institutionId])
 					->count();
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
+					['institution_site_id' => $institutionId]);
 
 				break;
 			case "Users":
 				$query = $table->find()
 					->count();
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender');
 				break;
-		}
-		$models = [
-			'Gender' => ['InstitutionSiteTypes', 'institution_site_type_id'],
-			//'Age' => ['InstitutionSiteSectors', 'institution_site_sector_id'],
-			//'Grade' => ['InstitutionSiteLocalities', 'institution_site_locality_id'],
-		];
-		
-		//$table = TableRegistry::get('Institution.InstitutionSiteStudents');
-		foreach ($models as $key => $model) {
-			$institutionSiteArray[$key] = $table->getDonutChart('institution_site_student_gender');
 		}
 
 		if ($this->_table->action == 'index') {

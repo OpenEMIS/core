@@ -4,6 +4,7 @@ namespace Staff\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
@@ -37,11 +38,44 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function afterAction(Event $event) {
+		$alias = $this->_table->alias;
+		// $tableName = $this->_table->registryAlias();
+		$table = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$institutionSiteArray = [];
+		switch($alias){
+			case "Staff":
+				$session = $this->_table->Session;
+				$institutionId = $session->read('Institutions.id');
+				// Total Students: number
+
+				$query = $table->find()
+					->where([$table->aliasField('institution_site_id') => $institutionId])
+					->count();
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', 
+					['institution_site_id' => $institutionId]);
+
+				break;
+			case "Users":
+				$query = $table->find()
+					->count();
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender');
+				break;
+		}
 		if ($this->_table->action == 'index') {
-			$indexDashboard = 'Student.Students/dashboard';
+			// $indexDashboard = 'Student.Students/dashboard';
+			// $this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
+	  //           'name' => $indexDashboard,
+	  //           'data' => [],
+	  //           'options' => [],
+	  //           'order' => 1
+	  //       ];
+			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [
+	            	'institutionCount' => $query,
+	            	'institutionSiteArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
