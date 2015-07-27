@@ -8,6 +8,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 
 
 class InstitutionSiteStudentsTable extends AppTable {
@@ -32,6 +33,9 @@ class InstitutionSiteStudentsTable extends AppTable {
 			],
 			'institution_site_student_gender' => [
 				'_function' => 'getNumberOfStudentsByGender'
+			],
+			'institution_site_student_age' => [
+				'_function' => 'getNumberOfStudentsByAge'
 			]
 		]);
 	}
@@ -169,35 +173,50 @@ class InstitutionSiteStudentsTable extends AppTable {
 
 	public function getNumberOfStudentsByGender($params=[]) {
 
-			$institutionSiteRecords = $this->find();
-			
-			$institutionSiteStudentCount = $institutionSiteRecords
-				->contain(['Users', 'Users.Genders'])
-				->select([
-					'count' => $institutionSiteRecords->func()->count('security_user_id'),	
-					'gender' => 'Genders.name'
-				])
-				->group('gender_id');
+		$institutionSiteRecords = $this->find();
+		
+		$institutionSiteStudentCount = $institutionSiteRecords
+			->contain(['Users', 'Users.Genders'])
+			->select([
+				'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+				'gender' => 'Genders.name'
+			])
+			->group('gender_id');
 
-			if (!empty($params)) {
-				$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
-			}	
+		if (!empty($params)) {
+			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
+		}	
 
-			$modelId = 'gender_id';
-			// Creating the data set		
-			$dataSet = [];
-			foreach ($institutionSiteStudentCount->toArray() as $value) {
-				//To get the name from the array
-				$text = $modelId;
-	            if (substr($text, -3) === '_id') {
-	                $text = substr($text, 0, -3);
-	            }
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($institutionSiteStudentCount->toArray() as $value) {
+            //Compile the dataset
+			$dataSet[] = [$value['gender'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
+	}
 
-	            //Compile the dataset
-				$dataSet[] = [$value[$text], $value['count']];
-			}
-			$params['dataSet'] = $dataSet;
-		//}
+	public function getNumberOfStudentsByAge($params=[]) {
+
+		$institutionSiteRecords = $this->find();
+		$today = Time::today();
+
+		$institutionSiteStudentCount = $institutionSiteRecords
+			->contain(['Users']);
+			// ->group('gender_id');
+		$institutionSiteStudentCount = $institutionSiteStudentCount->toArray();
+		if (!empty($params)) {
+			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
+		}	
+
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($institutionSiteStudentCount as $value) {
+            //Compile the dataset
+			$dataSet[] = [$value['gender'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
 		return $params;
 	}
 
