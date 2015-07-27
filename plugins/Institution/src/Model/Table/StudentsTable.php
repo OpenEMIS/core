@@ -390,20 +390,47 @@ class StudentsTable extends BaseTable {
     	if ($action == 'view') {
     		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
     		if ($this->AccessControl->check([$this->controller->name, $StudentTransfers->alias()])) {
-	    		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
-	    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $this->request->params['pass'][1]);
+    				$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+    				$selectedStudent = $this->request->params['pass'][1];
+		    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $selectedStudent);
 
-				$toolbarButtons['transfer'] = $buttons['back'];
-				$toolbarButtons['transfer']['url'] = [
-		    		'plugin' => $buttons['back']['url']['plugin'],
-		    		'controller' => $buttons['back']['url']['controller'],
-		    		'action' => 'Transfers',
-		    		'add'
-		    	];
-				$toolbarButtons['transfer']['type'] = 'button';
-				$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
-				$toolbarButtons['transfer']['attr'] = $attr;
-				$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+		    		// Show Transfer button only if the Student Status is Current
+		    		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+					$institutionId = $this->Session->read('Institutions.id');
+					$currentStatus = $StudentStatuses
+						->find()
+						->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+						->first()
+						->id;
+
+					$studentStatusId = $InstitutionSiteStudents
+						->find()
+						->select([
+							$InstitutionSiteStudents->aliasField('student_status_id')
+						])
+						->where([
+							$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
+							$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+						])
+						->first()
+						->student_status_id;
+					// End
+
+		    		if ($studentStatusId == $currentStatus) {
+						$toolbarButtons['transfer'] = $buttons['back'];
+						$toolbarButtons['transfer']['url'] = [
+				    		'plugin' => $buttons['back']['url']['plugin'],
+				    		'controller' => $buttons['back']['url']['controller'],
+				    		'action' => 'Transfers',
+				    		'add'
+				    	];
+						$toolbarButtons['transfer']['type'] = 'button';
+						$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+						$toolbarButtons['transfer']['attr'] = $attr;
+						$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+					}
 			}
 		}
 	}
