@@ -14,13 +14,13 @@ class StudentTransfersTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
-		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_site_id']);
 	}
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
     	return $events;
     }
 
@@ -262,5 +262,48 @@ class StudentTransfersTable extends AppTable {
 		// End
 
 		return compact('institutionOptions', 'selectedInstitution', 'periodOptions', 'selectedPeriod', 'programmeOptions', 'selectedProgramme');
+	}
+
+	// Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+    	if ($AccessControl->check(['Institutions', $this->alias()])) {
+			$resultSet = $this
+				->find()
+				->where([
+					$this->aliasField('status') => 0
+				])
+				->contain(['Users', 'Institutions', 'EducationProgrammes', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->order([
+					$this->aliasField('created')
+				])
+				->toArray();
+
+			foreach ($resultSet as $key => $obj) {
+				$data[] = [
+					'request_title' => sprintf('Transfer of student (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name),
+					'receive_date' => date('Y-m-d', strtotime($obj->modified)),
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->created_user->username,
+					'type' => __('Student Transfer')
+				];
+			}
+    	}
+
+		// check for student transfer permission
+		// $AccessControl->check(['controller' => 'Institutions', 'action' => 'StudentTransfers', 'view']);
+
+		// check if the user has access to that school
+		// $AccessControl->getAccessibleInstitutions()
+
+		// $resultSet = $this->find()->where()->all();
+		// $listOfEntities = [];
+
+		// foreach ($resultSet as $entity) {
+			// $entity->request_title = 'xxx';
+			// $entity->receive_date = 'xxx';
+			// $listOfEntities[] = $entity;
+		// }
+
+		// return $listOfEntities;
 	}
 }
