@@ -122,7 +122,11 @@ class AppTable extends Table {
 	public function formatDate(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
-		return $dateObject->format($format);
+        $value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
+        }
+		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'

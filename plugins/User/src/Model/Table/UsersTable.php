@@ -35,7 +35,7 @@ class UsersTable extends AppTable {
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
-	private $specialFields = ['default_identity_type','student_status','staff_status','student_institution_name','staff_institution_name','programme_section'];
+	private $specialFields = ['default_identity_type','student_status','staffstatus','student_institution_name','staff_institution_name','programme_section'];
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -92,6 +92,11 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('last_login', ['visible' => false]);
 		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+
+		if ($this->action == 'add') {
+			$this->ControllerAction->field('username', ['visible' => true]);
+			$this->ControllerAction->field('password', ['visible' => true, 'type' => 'password']);
+		}
 	}
 
 	public function afterAction(Event $event) {
@@ -142,7 +147,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);
@@ -371,8 +376,8 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('username')
+			->allowEmpty('password')
 			->add('address', [])
-			->add('password', [])
 			->allowEmpty('photo_content')
 			;
 		return $validator;
@@ -420,7 +425,7 @@ class UsersTable extends AppTable {
 					$value = $defaultIdentity->name;
 
 				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-			} else if($field == 'student_status' || $field == 'staff_status') {
+			} else if($field == 'student_status' || $field == 'staffstatus') {
 				return 'Status';
 			} else if($field == 'student_institution_name' || $field == 'staff_institution_name') {
 				return 'Institution Name';
