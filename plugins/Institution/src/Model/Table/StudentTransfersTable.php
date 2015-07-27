@@ -12,10 +12,10 @@ class StudentTransfersTable extends AppTable {
 		$this->table('institution_site_student_transfers');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses', 'foreignKey' => 'student_status_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_site_id']);
 	}
 
 	public function implementedEvents() {
@@ -26,15 +26,16 @@ class StudentTransfersTable extends AppTable {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
     	if ($entity->isNew()) {
-			$institutionId = $this->Session->read('Institutions.id');
-			$selectedStudent = $this->Session->read($this->alias().'.security_user_id');
-			$status = $this->StudentStatuses
+			$institutionId = $entity->previous_institution_site_id;
+			$selectedStudent = $entity->security_user_id;
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$status = $StudentStatuses
 				->find()
-				->where([$this->StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
+				->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
 				->first()
 				->id;
 	
-			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');			
+			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
 			$InstitutionSiteStudents->updateAll(
 				['student_status_id' => $status],
 				[
@@ -57,13 +58,11 @@ class StudentTransfersTable extends AppTable {
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		// Set all selected values only
-		list(, $selectedInstitution, , $selectedPeriod, , $selectedProgramme, , $selectedGrade, , $selectedSection) = array_values($this->_getSelectOptions());
+		list(, $selectedInstitution, , $selectedPeriod, , $selectedProgramme) = array_values($this->_getSelectOptions());
 
 		$this->request->data[$this->alias()]['institution_site_id'] = $selectedInstitution;
 		$this->request->data[$this->alias()]['academic_period'] = $selectedPeriod;
 		$this->request->data[$this->alias()]['education_programme_id'] = $selectedProgramme;
-		$this->request->data[$this->alias()]['education_grade'] = $selectedGrade;
-		$this->request->data[$this->alias()]['institution_site_section_id'] = $selectedSection;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -74,9 +73,8 @@ class StudentTransfersTable extends AppTable {
 			$this->ControllerAction->field('institution_site_id');
 			$this->ControllerAction->field('academic_period');
 			$this->ControllerAction->field('education_programme_id');
-			$this->ControllerAction->field('education_grade');
-			$this->ControllerAction->field('institution_site_section_id');
-			$this->ControllerAction->field('student_status_id');
+			$this->ControllerAction->field('status');
+			$this->ControllerAction->field('previous_institution_site_id');
 			// Start Date and End Date
 			if ($this->action == 'add') {
 				$selectedPeriod = $this->request->data[$this->alias()]['academic_period'];
@@ -104,14 +102,11 @@ class StudentTransfersTable extends AppTable {
 				$this->ControllerAction->field('end_date');
 			}
 			// End
-			$this->ControllerAction->field('start_date');
-			$this->ControllerAction->field('end_date');
 
 			$this->ControllerAction->setFieldOrder([
 				'student',
 				'institution_site_id', 'academic_period', 'education_programme_id',
-				'education_grade', 'institution_site_section_id',
-				'student_status_id', 'start_date', 'end_date'
+				'status', 'start_date', 'end_date', 'previous_institution_site_id'
 			]);
 		} else {
 			$Students = TableRegistry::get('Institution.Students');
@@ -199,56 +194,23 @@ class StudentTransfersTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, $request) {
-		$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
-		$selectedGrade = $request->data[$this->alias()]['education_grade'];
-
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$gradeOptions = $EducationGrades
-			->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-			->find('visible')
-			->find('order')
-			->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-			->toArray();
-		$this->advancedSelectOptions($gradeOptions, $selectedGrade);
-
-		$attr['options'] = $gradeOptions;
-		$attr['onChangeReload'] = 'changeGrade';
-
-		return $attr;
-	}
-
-	public function onUpdateFieldInstitutionSiteSectionId(Event $event, array $attr, $action, $request) {
-		$selectedInstitution = $request->data[$this->alias()]['institution_site_id'];
-		$selectedGrade = $request->data[$this->alias()]['education_grade'];
-		$selectedSection = $request->data[$this->alias()]['institution_site_section_id'];
-
-		$Sections = $this->InstitutionSiteSections;
-		$SectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
-		$sectionOptions = $SectionGrades
-			->find()
-			->find('list', ['keyField' => 'institution_site_section_id', 'valueField' => 'institution_site_section.name'])
-			->where([$SectionGrades->aliasField('education_grade_id') => $selectedGrade])
-			->contain([$Sections->alias()])
-			->where([$Sections->aliasField('institution_site_id') => $selectedInstitution])
-			->toArray();
-		$this->advancedSelectOptions($sectionOptions, $selectedSection);
-
-		$attr['options'] = $sectionOptions;
-
-		return $attr;
-	}
-
-	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$status = $this->StudentStatuses
-				->find()
-				->where([$this->StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
-				->first()
-				->id;
+			$status = 0; // New
 
 			$attr['type'] = 'hidden';
 			$attr['attr']['value'] = $status;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldPreviousInstitutionSiteId(Event $event, array $attr, $action, $request) {
+		if ($action == 'add') {
+			$institutionId = $this->Session->read('Institutions.id');
+
+			$attr['type'] = 'hidden';
+			$attr['attr']['value'] = $institutionId;
 		}
 
 		return $attr;
@@ -259,9 +221,6 @@ class StudentTransfersTable extends AppTable {
 		$toolbarButtons['back']['url']['action'] = $Students->alias();
 		$toolbarButtons['back']['url'][0] = 'view';
 		$toolbarButtons['back']['url'][] = $this->Session->read($this->alias().'.security_user_id');
-	}
-
-	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 	}
 
 	public function _getSelectOptions() {
@@ -302,30 +261,6 @@ class StudentTransfersTable extends AppTable {
 		$selectedProgramme = key($programmeOptions);
 		// End
 
-		// Education Grade
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$gradeOptions = $EducationGrades
-			->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-			->find('visible')
-			->find('order')
-			->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-			->toArray();
-		$selectedGrade = key($gradeOptions);
-		// End
-
-		// Section
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$SectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
-		$sectionOptions = $SectionGrades
-			->find()
-			->find('list', ['keyField' => 'institution_site_section_id', 'valueField' => 'institution_site_section.name'])
-			->where([$SectionGrades->aliasField('education_grade_id') => $selectedGrade])
-			->contain([$Sections->alias()])
-			->where([$Sections->aliasField('institution_site_id') => $selectedInstitution])
-			->toArray();
-		$selectedSection = key($sectionOptions);
-		// End
-
-		return compact('institutionOptions', 'selectedInstitution', 'periodOptions', 'selectedPeriod', 'programmeOptions', 'selectedProgramme', 'gradeOptions', 'selectedGrade', 'sectionOptions', 'selectedSection');
+		return compact('institutionOptions', 'selectedInstitution', 'periodOptions', 'selectedPeriod', 'programmeOptions', 'selectedProgramme');
 	}
 }
