@@ -84,6 +84,8 @@ class StudentBehavior extends Behavior {
 					->count();
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
 					['institution_site_id' => $institutionId]);
+				$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
+					['institution_site_id' => $institutionId]);
 
 				break;
 			case "Users":
