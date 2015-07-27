@@ -1,9 +1,12 @@
 <?php
 namespace Staff\Controller;
 
-use App\Controller\AppController;
+use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Table;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use App\Controller\AppController;
 
 class StaffController extends AppController {
 	public $activeObj = null;
@@ -146,16 +149,16 @@ class StaffController extends AppController {
 		}
 	}
 
-	public function beforePaginate($event, $model, $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
 		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-			if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
-				$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
-				if (!array_key_exists('conditions', $options)) {
-					$options['conditions'] = [];
+			if ($session->check('Staff.security_user_id')) {
+				$userId = $session->read('Staff.security_user_id');
+
+				if ($model->hasField('security_user_id')) {
+					$query->where([$model->aliasField('security_user_id') => $userId]);
 				}
-				$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
 			} else {
 				$this->Alert->warning('general.noData');
 				$this->redirect(['action' => 'index']);
