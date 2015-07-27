@@ -26,7 +26,16 @@ $this->start('panelBody');
 						</tr> 
 					</thead> 
 					<tbody class="table_body">
-
+						<?php foreach ($workbenchData as $key => $obj) : ?>
+							<tr>
+								<td></td>
+								<td><?= $obj['request_title'] ?></td>
+								<td><?= $obj['receive_date'] ?></td>
+								<td><?= $obj['due_date'] ?></td>
+								<td><?= $obj['requester'] ?></td>
+								<td><?= $obj['type'] ?></td>
+							</tr>
+						<?php endforeach ?>
 					</tbody>
 				</table>
 			</div>
