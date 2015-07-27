@@ -39,26 +39,25 @@ class StudentsController extends AppController {
 		]);
 
 		$this->ControllerAction->models = [
-		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
-		'Contacts' 			=> ['className' => 'User.Contacts'],
-		'Identities' 		=> ['className' => 'User.Identities'],
-		'Languages' 		=> ['className' => 'User.UserLanguages'],
-		'Comments' 			=> ['className' => 'User.Comments'],
-		'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
-		'Awards' 			=> ['className' => 'User.Awards'],
-		'Attachments' 		=> ['className' => 'User.Attachments'],
-		'Guardians' 		=> ['className' => 'Student.Guardians'],
-		'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
-		'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
-		'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
-		'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
-		'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
-		'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
-		'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
-		'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-		'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
-		'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
-
+			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Contacts' 			=> ['className' => 'User.Contacts'],
+			'Identities' 		=> ['className' => 'User.Identities'],
+			'Languages' 		=> ['className' => 'User.UserLanguages'],
+			'Comments' 			=> ['className' => 'User.Comments'],
+			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
+			'Awards' 			=> ['className' => 'User.Awards'],
+			'Attachments' 		=> ['className' => 'User.Attachments'],
+			'Guardians' 		=> ['className' => 'Student.Guardians'],
+			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
+			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
+			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
+			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
+			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
+			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
+			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
+			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
+			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
 
 		$this->loadComponent('Paginator');
