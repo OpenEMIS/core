@@ -21,6 +21,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
 use Cake\I18n\I18n;
@@ -539,7 +540,7 @@ class ControllerActionComponent extends Component {
 		}
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
-			$order = [$this->model->aliasField($this->orderField) => 'asc'];
+			$order = [$model->aliasField($this->orderField) => 'asc'];
 		}
 
 		$paginateOptions = new ArrayObject(['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions]);
@@ -615,7 +616,7 @@ class ControllerActionComponent extends Component {
 		}
 
 		$event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
-		$event = $model->eventManager()->dispatch($event);
+		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
 		$modal = $this->getModalOptions('remove');
@@ -734,7 +735,19 @@ class ControllerActionComponent extends Component {
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 
-				if ($model->save($entity)) {
+				$process = function ($model, $entity) {
+					return $model->save($entity);
+				};
+
+				// Event: onBeforeSave
+				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
+				if ($event->isStopped()) { return $event->result; }
+				if (is_callable($event->result)) {
+					$process = $event->result;
+				}
+				// End Event
+
+				if ($process($model, $entity)) {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
 					

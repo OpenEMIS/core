@@ -1,31 +1,46 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use App\Model\Table\AppTable;
 
 class AccountsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
 
-		// todo:mlee cannot extend user table -  too much baggage
-		// need to automate association adding
-		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$this->belongsToMany('Roles', [
+			'className' => 'Security.SecurityRoles',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_user_id',
+			'targetForeignKey' => 'security_role_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
+	}
 
-		$this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->requirePresence('gender_id', 'create')
+			->add('password' , [
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6],
+					'on' => 'update'
+				]
+			])
+			->add('retype_password' , [
+				'ruleCompare' => [
+					'rule' => ['comparePasswords', 'password'],
+					'on' => 'update'
+				]
+			])
+			;
 	}
 
 	private function setTabElements() {
@@ -60,20 +75,22 @@ class AccountsTable extends AppTable {
 			];
 		}
 
-		$back = $this->controller->viewVars['toolbarButtons']['back'];
-		if ($back['url']['action'] == 'Accounts' && $back['url'][0] == 'index') {
-			if ($back['url']['controller'] == 'Securities') {
-				$back['url']['action'] = 'Users';
-				$back['url'][0] = 'index';
-			} else {
-				$back['url']['action'] = 'index';
-				unset($back['url'][0]);
-			}
-			$this->controller->viewVars['toolbarButtons']['back'] = $back;
-		}
-
 		$this->controller->set('selectedAction', $this->alias);
-        $this->controller->set('tabElements', $tabElements);
+		$this->controller->set('tabElements', $tabElements);
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if ($toolbarButtons->offsetExists('back')) {
+				unset($toolbarButtons['back']);
+			}
+		}
 	}
 
 	public function afterAction(Event $event) {
@@ -81,7 +98,7 @@ class AccountsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$fieldsNeeded = ['username','password'];
+		$fieldsNeeded = ['username','password', 'last_login'];
 		foreach ($this->fields as $key => $value) {
 			if (!in_array($key, $fieldsNeeded)) {
 				$this->fields[$key]['visible'] = false;
@@ -90,7 +107,9 @@ class AccountsTable extends AppTable {
 			}
 		}
 
-		$this->fields['password']['type'] = 'password';
+		$this->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
+		$this->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true]]);
+
 		$this->ControllerAction->setFieldOrder(['username', 'password']);
 
 		if (strtolower($this->action) != 'index') {
@@ -98,9 +117,50 @@ class AccountsTable extends AppTable {
 		}
 	}
 
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('roles', [
+			'type' => 'role_table', 
+			'valueClass' => 'table-full-width',
+			'visible' => ['index' => false, 'view' => true, 'edit' => false]
+		]);
+		$this->ControllerAction->setFieldOrder(['username', 'last_login', 'roles']);
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query) {
+		$query->contain([], true);
+		$query->contain(['Roles']);
+	}
+
+	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('Groups'), __('Roles')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'roles';
+
+		$Group = TableRegistry::get('Security.SecurityGroups');
+
+		if ($action == 'view') {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$groupId = $obj['_joinData']->security_group_id;
+					$groupEntity = $Group->get($groupId);
+
+					$rowData = [];
+					$rowData[] = $groupEntity->name;
+					$rowData[] = $obj->name;
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
+	}
+
 	public function editBeforeAction(Event $event)  {
-		$this->ControllerAction->addField('retype_password', []);
-		$this->fields['retype_password']['type'] = 'password';
+		$this->ControllerAction->field('retype_password', ['type' => 'password']);
 
 		$this->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 	}
@@ -108,25 +168,5 @@ class AccountsTable extends AppTable {
 	public function editBeforeQuery(Event $event, Query $query) {
 		// not retrieving password so the field wil be empty. not needed anyway.
 		$query->select([$this->primaryKey(), 'username']);
-	}
-
-	public function validationDefault(Validator $validator) {
-		return $validator
-			->requirePresence('gender_id', 'create')
-			->add('password' , [
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6],
-					'on' => 'update',
-					'message' => 'Password must be at least 6 characters'
-				]
-			])
-			->add('retype_password' , [
-				'ruleCompare' => [
-					'rule' => ['comparePasswords', 'password'],
-					'on' => 'update',
-					'message' => 'Both passwords do not match'
-				]
-			])
-			;
 	}
 }
