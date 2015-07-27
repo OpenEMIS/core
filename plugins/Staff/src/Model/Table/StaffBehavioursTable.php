@@ -29,16 +29,13 @@ class StaffBehavioursTable extends AppTable {
 	public function beforeAction() {
 		$this->ControllerAction->field('openemis_no', ['type' => 'string']);
 		$this->ControllerAction->field('academic_period');
-		$this->ControllerAction->field('section');
 		$this->ControllerAction->field('security_user_id', ['type' => 'string']);
 		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
 		$this->ControllerAction->field('academic_period', ['visible' => true]);
-		$this->ControllerAction->field('section', ['visible' => true]);
 	}	
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('academic_period', ['visible' => false]);
-		$this->ControllerAction->field('section', ['visible' => false]);
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
@@ -52,61 +49,30 @@ class StaffBehavioursTable extends AppTable {
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
 
-			// Setup period options
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$periodOptions = $AcademicPeriod->getList();
-			
-			$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+
 			$institutionId = $this->Session->read('Institutions.id');
 			$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
-			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-				'callable' => function($id) use ($Sections, $institutionId) {
-					return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
-				}
-			]);
-			// End setup periods
+			
 			$start_date = null;
 			$end_date = null;
 			if ($selectedPeriod != 0) {
 				$this->controller->set(compact('periodOptions', 'selectedPeriod'));
+					// $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+					// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+					// 	'callable' => function($id) use ($Sections, $institutionId) {
+					// 		return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
+					// 	}
+					// ]);
 
-				// Setup section options
-				$sectionOptions = $Sections
-					->find('list')
-					->where([
-						$Sections->aliasField('institution_site_id') => $institutionId, 
-						$Sections->aliasField('academic_period_id') => $selectedPeriod
-					])
-					->toArray();
-
-				$selectedSection = $this->queryString('section_id', $sectionOptions);
-				$this->advancedSelectOptions($sectionOptions, $selectedSection);
-				$this->controller->set(compact('sectionOptions', 'selectedSection'));
-				// End setup sections
-				
-				$selectedPeriodEntity = $AcademicPeriod->get($selectedPeriod);
-				$start_date =$selectedPeriodEntity->start_date;
-				$end_date = $selectedPeriodEntity->end_date;
 			}	
-
-			$Staff = TableRegistry::get('Institution.InstitutionSiteSections');
-			$staff = $Staff
-						->findAllById($selectedSection)
-						->contain(['Staff'])
-						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
-						->toArray();
-		
-			$existingStaff = is_array($staff) ? array_keys($staff) : array();	
 
 			$settings['pagination'] = false;
 			$query
 				->find('all')
 				->contain(['Users'])
-			    ->where(function ($exp, $q) use ($existingStaff) {
-			        return $exp->in('security_user_id', $existingStaff);	
-			    })
 			    ->andWhere(['institution_site_id' => $institutionId]);
 
 			if(!is_null($start_date) && !is_null($end_date)){
@@ -122,43 +88,28 @@ class StaffBehavioursTable extends AppTable {
 
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period', ['visible' => false]);
-		$this->ControllerAction->field('section', ['visible' => false]);
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'security_user_id', 'staff_behaviour_category_id']);
 	}
 
 	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->field('openemis_no', ['visible' => false]);
 		$this->ControllerAction->field('academic_period', ['visible' => false]);
-		$this->ControllerAction->field('section', ['visible' => false]);
 		$this->ControllerAction->setFieldOrder(['security_user_id', 'staff_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('openemis_no', ['visible' => false]);
 		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
-		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'staff_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+		$this->ControllerAction->setFieldOrder(['academic_period', 'security_user_id', 'staff_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 
 		$periodOptions = $AcademicPeriod->getList();
 		$selectedPeriod = $this->queryString('period', $periodOptions);
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections
-					->find()
-					->where([
-						$Sections->aliasField('institution_site_id') => $institutionId,
-						$Sections->aliasField('academic_period_id') => $id
-					])
-					->count();
-			}
-		]);
-
+	
 		if ($request->is(['post', 'put'])) {
 			$selectedPeriod = $this->request->data($this->aliasField('academic_period'));
 		}
@@ -189,64 +140,31 @@ class StaffBehavioursTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
-		$institutionId = $this->Session->read('Institutions.id');
-		$selectedPeriod = $this->request->query('period');
-
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$sectionOptions = $Sections
-			->find('list')
-			->where([
-				$Sections->aliasField('institution_site_id') => $institutionId,
-				$Sections->aliasField('academic_period_id') => $selectedPeriod
-			])
-			->order([$Sections->aliasField('section_number') => 'ASC'])
-			->toArray();
-
-		$selectedSection = $this->queryString('section', $sectionOptions);
-
-		$this->advancedSelectOptions($sectionOptions, $selectedSection, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
-			'callable' => function($id) use ($Sections) {
-				return $Sections
-					->find()
-					->where([
-						$Sections->aliasField('id') => $id
-					])
-					->count();
-			}
-		]);	
-
-		if ($request->is(['post', 'put'])) {
-			$selectedSection = $this->request->data($this->aliasField('section'));
-		}
-		$request->query['section'] = $selectedSection;
-
-		$attr['options'] = $sectionOptions;
-		$attr['onChangeReload'] = true;
-		if ($action != 'add') {
-			$attr['visible'] = false;
-		}
-		$attr['type'] = 'select';
-
-		return $attr;
-	}
-
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
 			$staff = [];
 
-			$sectionId = $this->request->query('section');
-			$Staff = TableRegistry::get('Institution.InstitutionSiteSections');
-			if (!is_null($sectionId)) {
-				$staff = $Staff
-						->findAllById($sectionId)
-						->contain(['Staff'])
-						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
-						->toArray();
-			}
+			$institutionId = $this->Session->read('Institutions.id');
+			$selectedPeriod = $this->request->query['period'];
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+			$selectedPeriodObj = $AcademicPeriod->get($selectedPeriod);
 
-			$attr['options'] = $staff;
+			if(!is_null($selectedPeriodObj->start_date))
+				$academic_period_start_date = date_format($selectedPeriodObj->start_date, 'Y-m-d');
+
+			if(!is_null($selectedPeriodObj->end_date))
+				$academic_period_end_date = date_format($selectedPeriodObj->end_date, 'Y-m-d');
+
+			$staff = $InstitutionSiteStaff
+						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
+						->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'institution_site_id' => $institutionId])
+						->contain(['Users'])
+						->group(['security_user_id'])
+						->toArray();
+
+			$attr['options'] = $staff;			
+
 		} 
 		return $attr;
 	}
@@ -255,22 +173,5 @@ class StaffBehavioursTable extends AppTable {
 		return $entity->user->openemis_no;
 	}
 
-	public function validationDefault(Validator $validator) {
-		//get start and end date of selected academic period 
-		$selectedPeriod = $this->request->query('period');
-		if($selectedPeriod) {
-			$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
-			$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
-			$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
 
-			$validator
-			->add('date_of_behaviour', 
-					'ruleCheckInputWithinRange', 
-						['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
-				
-				)
-			;
-			return $validator;
-		}
-	}
 }
