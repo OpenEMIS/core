@@ -71,7 +71,7 @@ class HighChartBehavior extends Behavior {
 							'showInLegend' => true,
 							'center' => ['20%', '50%']]];
 		$selectedConfig['legend'] = 
-					['enabled' => true,
+					['enabled' => false,
 					'verticalAlign' => 'bottom',
 					'align' => 'left',
 					'layout' => 'vertical',

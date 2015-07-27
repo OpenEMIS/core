@@ -18,8 +18,8 @@ echo $this->Html->script('dashboards', ['block' => true]);
 	<?php foreach ( $institutionSiteArray as $key => $highChartData ) : ?>
 	<div class="data-section" style="vertical-align: middle;">
 		<div class="data-field">
-			<h4 style="float:left;"><?=$key?>:</h4>
-				<div class="highchart" style="height: 98px; display: none; width:200px; float: right; position: relative; right: 30px;"><?php echo $highChartData; ?></div>
+				<h4 style="float:right; position: relative;  top: 5px; right:370px"><?=$key?></h4>
+				<div class="highchart" style="height: 98px; width:200px; float: left; position: relative; right: 30px;"><?php echo $highChartData; ?></div>
 		</div>
 	</div>
 	<?php endforeach ?>
