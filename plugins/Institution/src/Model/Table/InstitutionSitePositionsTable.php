@@ -151,8 +151,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		// start Current Staff List field
 		$Staff = $this->Institutions->InstitutionSiteStaff;
 		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
-							->where([$Staff->aliasField('end_date').' IS NULL'])
-							->orWhere([$Staff->aliasField('end_date').' >= DATE(NOW())'])
+							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo');
 
