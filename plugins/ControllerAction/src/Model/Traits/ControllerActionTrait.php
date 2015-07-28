@@ -96,8 +96,8 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
-		'ControllerAction.Model.edit.afterSave'				=> 'editAfterSave', // changes redirect url after a successful save
-		// public function editAfterSave(Event $event, Controller $controller) {}
+		'ControllerAction.Model.edit.afterSave'				=> 'editAfterSave', // extra processing after saving
+		// public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
 		//'ControllerAction.Model.edit.onReload'			=> 'editOnReload',
 		// public function editOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
