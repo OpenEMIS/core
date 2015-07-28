@@ -95,9 +95,12 @@ class UserGroupsTable extends AppTable {
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
+
+		$roleOptions = $this->Roles->find('list')->toArray();
 		$this->ControllerAction->field('users', [
 			'type' => 'user_table', 
 			'valueClass' => 'table-full-width',
+			'roleOptions' => $roleOptions,
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
@@ -293,19 +296,20 @@ class UserGroupsTable extends AppTable {
 		if ($action == 'index') {
 			// not showing
 		} else if ($action == 'view') {
+			$roleOptions = $attr['roleOptions'];
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
 					$rowData[] = $obj->openemis_no;
 					$rowData[] = $obj->name;
+					$roleId = $obj->_joinData->security_role_id;
 
-					foreach ($entity->roles as $role) {
-						if ($obj->_joinData->security_role_id == $role->_joinData->security_role_id
-						&& 	$obj->_joinData->security_user_id == $role->_joinData->security_user_id) {
-							$rowData[] = $role->name;
-							break;
-						}
+					if (array_key_exists($roleId, $roleOptions)) {
+						$rowData[] = $roleOptions[$roleId];
+					} else {
+						$this->log(__METHOD__ . ': Orphan record found for role id: ' . $roleId, 'debug');
+						$rowData[] = '';
 					}
 					$tableCells[] = $rowData;
 				}
@@ -429,14 +433,17 @@ class UserGroupsTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+	// same logic also in SystemGroups, may consider moving it into a behavior
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// users can't save properly using associated method
 		// until we find a better solution, saving of users for groups will be done in afterSave as of now
+		$id = $entity->id;
+		$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$GroupUsers->deleteAll(['security_group_id' => $id]);
+
 		if ($entity->has('users')) {
 			$users = $entity->users;
 			if (!empty($users)) {
-				$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-				$id = $entity->id;
 				foreach ($users as $user) {
 					$query = $GroupUsers->find()->where([
 						$GroupUsers->aliasField('security_user_id') => $user['_joinData']['security_user_id'],
@@ -458,6 +465,7 @@ class UserGroupsTable extends AppTable {
 		}
 	}
 
+	// also exists in SystemGroups
 	private function filterDuplicateUserRoles(ArrayObject $data) {
 		if (array_key_exists('users', $data[$this->alias()])) {
 			$roles = [];
@@ -472,6 +480,8 @@ class UserGroupsTable extends AppTable {
 					$roles[] = $userRole;
 				}
 			}
+		} else {
+			$data[$this->alias()]['users'] = [];
 		}
 	}
 
