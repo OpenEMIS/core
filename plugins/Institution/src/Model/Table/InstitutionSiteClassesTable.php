@@ -65,7 +65,7 @@ class InstitutionSiteClassesTable extends AppTable {
     	$this->ControllerAction->field('modified_user_id', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('no_of_seats', ['type' => 'integer', 'attr'=>['min' => 1], 'visible' => false]);
-		$this->ControllerAction->field('section_name', ['type' => 'select', 'visible' => ['view'=>true], 'onChangeReload' => true]);
+		$this->ControllerAction->field('class_name', ['type' => 'select', 'visible' => ['view'=>true], 'onChangeReload' => true]);
 
 		$this->ControllerAction->field('students', [
 			'label' => '',
@@ -228,7 +228,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		// 	'targetForeignKey' => 'security_user_id'
 		// ]);
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'section_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
+			'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
 		]);
 	}
 
@@ -245,7 +245,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($entity->institution_site_section_classes as $key => $value) {
 			$sections[] = $value->institution_site_section->name;
 		}
-		$entity->section_name = implode(', ', $sections);
+		$entity->class_name = implode(', ', $sections);
 		
 		// pr($entity->teachers);
 		// pr($this->fields['teachers']);
@@ -280,10 +280,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->fields['students']['visible'] = false;
 		$this->fields['education_subject_id']['visible'] = false;
 
-		$this->fields['section_name']['visible'] = true;
+		$this->fields['class_name']['visible'] = true;
 		$this->fields['classes']['visible'] = true;
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'section_name', 'classes',
+			'academic_period_id', 'class_name', 'classes',
 		]);
 
 		$Sections = $this->InstitutionSiteSections;
@@ -304,11 +304,11 @@ class InstitutionSiteClassesTable extends AppTable {
 										'institution_site_id'=>$this->institutionId
 									])
 									->toArray();
-		$this->_selectedSectionId = $this->postString('section_name', $sectionOptions);
+		$this->_selectedSectionId = $this->postString('class_name', $sectionOptions);
 		$this->advancedSelectOptions($sectionOptions, $this->_selectedSectionId);
 		
 		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-		$this->fields['section_name']['options'] = $sectionOptions;
+		$this->fields['class_name']['options'] = $sectionOptions;
 
 	}
 
@@ -325,7 +325,7 @@ class InstitutionSiteClassesTable extends AppTable {
 					$class['institution_site_section_classes'] = [
 						[
 							'status' => 1,
-							'institution_site_section_id' => $commonData['section_name']
+							'institution_site_section_id' => $commonData['class_name']
 						]
 					];
 					$data['InstitutionSiteClasses'][] = $class;
