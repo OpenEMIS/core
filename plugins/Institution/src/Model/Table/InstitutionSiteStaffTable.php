@@ -172,14 +172,16 @@ class InstitutionSiteStaffTable extends AppTable {
 	}
 
 	public function findByPeriod(Query $query, array $options) {
-		if (array_key_exists('institution_site_id', $options)
+		if (array_key_exists('Institutions.id', $options)
 			&& array_key_exists('academic_period_start_date', $options)
 			&& array_key_exists('academic_period_end_date', $options)) {
-			$institution_site_id = $options['institution_site_id'];
+
+			$institution_site_id = $options['Institutions.id'];
 			$academic_period_start_date = $options['academic_period_start_date'];
 			$academic_period_end_date = $options['academic_period_end_date'];
+
 			return $query
-					->where(['institution_site_id' => $options['institution_site_id'], 
+					->where([$this->aliasField('institution_site_id') => $options['Institutions.id'], 
 						'OR' => array(
 									array(
 										$this->aliasField('end_date').' IS NOT NULL',
@@ -207,9 +209,6 @@ class InstitutionSiteStaffTable extends AppTable {
 		} else {
 			return $query;
 		}
-
-
-		
 	}	
 
 }
