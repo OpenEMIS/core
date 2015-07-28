@@ -53,8 +53,12 @@ class StaffBehavior extends Behavior {
 					->count();
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', 
 					['institution_site_id' => $institutionId, 'key' => 'Gender']);
-				$institutionSiteArray['Qualification'] = $table->getDonutChart('institution_site_staff_qualification', 
-					['institution_site_id' => $institutionId, 'key' => 'Qualification']);
+				// $institutionSiteArray['Qualification'] = $table->getDonutChart('institution_site_staff_qualification', 
+				// 	['institution_site_id' => $institutionId, 'key' => 'Qualification']);
+
+				$table = TableRegistry::get('Staff.Licenses');
+				$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
+					['institution_site_id' => $institutionId, 'key' => 'Licenses']);
 
 				break;
 			case "Users":
@@ -64,19 +68,13 @@ class StaffBehavior extends Behavior {
 				break;
 		}
 		if ($this->_table->action == 'index') {
-			// $indexDashboard = 'Student.Students/dashboard';
-			// $this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
-	  //           'name' => $indexDashboard,
-	  //           'data' => [],
-	  //           'options' => [],
-	  //           'order' => 1
-	  //       ];
 			$indexDashboard = 'Institution.Institutions/dashboard';
 			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
-	            	'institutionCount' => $query,
-	            	'institutionSiteArray' => $institutionSiteArray,
+	            	'model' => 'staff',
+	            	'modelCount' => $query,
+	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
 	            'order' => 1

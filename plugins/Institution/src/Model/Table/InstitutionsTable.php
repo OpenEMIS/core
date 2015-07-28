@@ -261,8 +261,9 @@ class InstitutionsTable extends AppTable  {
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [ 
-	            	'institutionCount' => $institutionCount,
-	            	'institutionSiteArray' => $institutionSiteArray,
+	            	'model' => 'institutions',
+	            	'modelCount' => $institutionCount,
+	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
 	            'order' => 1

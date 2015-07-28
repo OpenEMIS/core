@@ -103,8 +103,9 @@ class StudentBehavior extends Behavior {
 			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
-	            	'institutionCount' => $query,
-	            	'institutionSiteArray' => $institutionSiteArray,
+	            	'model' => 'students',
+	            	'modelCount' => $query,
+	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
 	            'order' => 1
