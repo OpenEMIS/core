@@ -48,16 +48,26 @@ class HighChartBehavior extends Behavior {
 		$params = call_user_func_array([$model, $function], [$params]);
 
 		$dataSet = [];
+		$key = '';
 		if (!empty($params['dataSet'])) {
 			$dataSet = $params['dataSet'];
-		}
+			if(array_key_exists('key', $params)){
+				$key = $params['key'];
 
+			}
+		}
 		$options = [];
 		if (!empty($params['options'])) {
 			$options = $params['options'];
 		}
 		// Configuration for the donut chart
-		$selectedConfig['title'] = ['text' => null];
+		$selectedConfig['title'] = 
+					['text' => $key,
+					'align' => 'center',
+					'verticalAlign' => 'middle',
+					'x' => '-40',
+					'y' => '12',
+					'style' => ['fontSize' => '14px', 'fontWeight'=> '400']];
 		$selectedConfig['chart'] = 
 					['backgroundColor' => 'rgba(255, 255, 255, 0.002)',
 					'margin' => 0,
@@ -68,8 +78,8 @@ class HighChartBehavior extends Behavior {
 		$selectedConfig['plotOptions'] = 
 					['pie' => ['dataLabels' => [
 							'enabled' => false],
-							'showInLegend' => true,
-							'center' => ['20%', '50%']]];
+							'showInLegend' => false,
+							'center' => ['50%', '50%']]];
 		$selectedConfig['legend'] = 
 					['enabled' => false,
 					'verticalAlign' => 'bottom',
@@ -78,7 +88,7 @@ class HighChartBehavior extends Behavior {
 					'itemStyle' => ['fontSize' => '8pt']];
 		unset($selectedConfig['_function']);
 		$options = array_replace_recursive($selectedConfig, $options);
-		$options['series'][] = ['type' => 'pie', 'innerSize' => '50%', 'data' => array_values($dataSet)];
+		$options['series'][] = ['type' => 'pie', 'innerSize' => '85%', 'data' => array_values($dataSet)];
 		$options['credits'] = ['enabled' => false];
 		return json_encode($options, JSON_NUMERIC_CHECK);
 	}
