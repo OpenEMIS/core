@@ -889,7 +889,7 @@ class ControllerActionComponent extends Component {
 						$action = $this->buttons['view']['url'];
 
 						// Event: editAfterSave
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, [$this->controller]);
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, $params);
 						if ($event->isStopped()) { return $event->result; }
 						// End Event
 						
