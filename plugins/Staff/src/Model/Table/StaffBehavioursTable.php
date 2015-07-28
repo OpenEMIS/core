@@ -70,7 +70,7 @@ class StaffBehavioursTable extends AppTable {
 						$academic_period_end_date = self::getFormattedDate($selectedPeriodObj->end_date);
 
 					return $InstitutionSiteStaff
-								->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'institution_site_id' => $institutionId])
+								->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'Institutions.id' => $institutionId])
 								->group(['security_user_id'])
 								->count();
 				}
@@ -142,7 +142,7 @@ class StaffBehavioursTable extends AppTable {
 					$academic_period_end_date = self::getFormattedDate($selectedPeriodObj->end_date);
 
 				return $InstitutionSiteStaff
-							->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'institution_site_id' => $institutionId])
+							->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'Institutions.id' => $institutionId])
 							->group(['security_user_id'])
 							->count();
 			}
@@ -196,7 +196,7 @@ class StaffBehavioursTable extends AppTable {
 
 			$staff = $InstitutionSiteStaff
 						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
-						->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'institution_site_id' => $institutionId])
+						->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'Institutions.id' => $institutionId])
 						->contain(['Users'])
 						->group(['security_user_id'])
 						->toArray();
