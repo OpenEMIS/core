@@ -65,4 +65,19 @@ class QualificationsTable extends AppTable {
 		;
 	}
 
+	public function getNumberOfStaffByQualification($params=[]){
+		$$QualificationRecord = $this->find();
+		$QualificationCount = $QualificationRecord
+			->contain(['Users', 'QualificationLevels', 'Users.InstitutionSiteStaff'])
+			// ->select([
+			// 'qualification' => 'QualificationLevels.name',
+			// 	'count' => $QualificationRecord->func()->count('security_user_id')
+			// ])
+			//->where(['InstitutionSiteStaff.institution_site_id' => 1])
+			->toArray();
+
+		pr($qualificationCount);
+		return $params;
+	}
+
 }
