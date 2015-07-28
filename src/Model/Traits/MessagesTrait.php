@@ -319,6 +319,11 @@ trait MessagesTrait {
 				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
 
 			],
+			'StaffPositions' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
 		],
 		'User' => [
 			'Users' => [
