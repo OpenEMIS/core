@@ -172,9 +172,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 	}
 
 	public function getNumberOfStudentsByGender($params=[]) {
-
 		$institutionSiteRecords = $this->find();
-		
 		$institutionSiteStudentCount = $institutionSiteRecords
 			->contain(['Users', 'Users.Genders'])
 			->select([
@@ -183,7 +181,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 			])
 			->group('gender_id');
 
-		if (!empty($params)) {
+		if (!empty($params['institution_site_id'])) {
 			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
 		}	
 
@@ -198,18 +196,27 @@ class InstitutionSiteStudentsTable extends AppTable {
 	}
 
 	public function getNumberOfStudentsByAge($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStudents.'.$key] = $value;
+		}
+
+		$studentsConditions = [
+			'Users.date_of_death IS NULL',
+		];
+
+		$studentsConditions = array_merge($studentsConditions, $_conditions);
 
 		$institutionSiteRecords = $this->find();
 		$today = Time::today();
-
 		$institutionSiteStudentCount = $institutionSiteRecords
-			->contain(['Users']);
-			// ->group('gender_id');
+			->contain(['Users'])
+			->select([
+				// add what to select here
+			])
+			->where($studentsConditions);
 		$institutionSiteStudentCount = $institutionSiteStudentCount->toArray();
-		if (!empty($params)) {
-			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
-		}	
-
 		// Creating the data set		
 		$dataSet = [];
 		foreach ($institutionSiteStudentCount as $value) {

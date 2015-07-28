@@ -15,11 +15,10 @@ echo $this->Html->script('dashboards', ['block' => true]);
 			</h1>
 		</div>
 	</div>
-	<?php foreach ( $institutionSiteArray as $key => $highChartData ) : ?>
+	<?php foreach ( $institutionSiteArray as $highChartData ) : ?>
 	<div class="data-section" style="vertical-align: middle;">
-		<div class="data-field">
-				<h4 style="float:right; position: relative;  top: 5px; right:370px"><?=$key?></h4>
-				<div class="highchart" style="height: 98px; width:200px; float: left; position: relative; right: 30px;"><?php echo $highChartData; ?></div>
+		<div class="data-field" style="postion: relative; display: inline-block">
+				<div class="highchart" style="height: 140px; width:140px;"><?php echo $highChartData; ?></div>
 		</div>
 	</div>
 	<?php endforeach ?>

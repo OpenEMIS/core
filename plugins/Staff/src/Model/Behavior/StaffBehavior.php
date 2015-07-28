@@ -52,13 +52,15 @@ class StaffBehavior extends Behavior {
 					->where([$table->aliasField('institution_site_id') => $institutionId])
 					->count();
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', 
-					['institution_site_id' => $institutionId]);
+					['institution_site_id' => $institutionId, 'key' => 'Gender']);
+				$institutionSiteArray['Qualification'] = $table->getDonutChart('institution_site_staff_qualification', 
+					['institution_site_id' => $institutionId, 'key' => 'Qualification']);
 
 				break;
 			case "Users":
 				$query = $table->find()
 					->count();
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender');
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', ['key' => 'Gender']);
 				break;
 		}
 		if ($this->_table->action == 'index') {
