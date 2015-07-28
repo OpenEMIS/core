@@ -179,12 +179,11 @@ class InstitutionSiteStudentsTable extends AppTable {
 				'count' => $institutionSiteRecords->func()->count('security_user_id'),	
 				'gender' => 'Genders.name'
 			])
-			->group('gender_id');
+			->group('gender');
 
 		if (!empty($params['institution_site_id'])) {
 			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
 		}	
-
 		// Creating the data set		
 		$dataSet = [];
 		foreach ($institutionSiteStudentCount->toArray() as $value) {
@@ -207,29 +206,46 @@ class InstitutionSiteStudentsTable extends AppTable {
 		];
 
 		$studentsConditions = array_merge($studentsConditions, $_conditions);
+		$today = Time::today();
 
 		$institutionSiteRecords = $this->find();
-		$today = Time::today();
-		$institutionSiteStudentCount = $institutionSiteRecords
+		$query = $institutionSiteRecords
 			->contain(['Users'])
 			->select([
-				'age' => $institutionSiteRecords->func()->dateDiff([$institutionSiteRecords->func()->now(),'Users.date_of_birth']) 
+				'age' => $institutionSiteRecords->func()->dateDiff([
+					$institutionSiteRecords->func()->now(),
+					'Users.date_of_birth' => 'literal'
+				])
 			])
-			// ->innerJoin(['Users' => 'security_users'], [
-			// 		'Users.id = ' . $this->aliasField('security_user_id')
-			// 	])
-			->where($studentsConditions);
-		$institutionSiteStudentCount = $institutionSiteStudentCount->sql();
-		pr($institutionSiteStudentCount);
+			->where($studentsConditions)
+			->order('age');
 
+		$institutionSiteStudentCount = $query->toArray();
+
+		$prev_value = ['value' => null, 'amount' => null];
+
+		$convertAge = [];
 		
-		// // Creating the data set		
-		// $dataSet = [];
-		// foreach ($institutionSiteStudentCount as $value) {
-  //           //Compile the dataset
-		// 	$dataSet[] = [$value['gender'], $value['count']];
-		// }
-		// $params['dataSet'] = $dataSet;
+		foreach($institutionSiteStudentCount as $val){
+			$convertAge[] = floor($val['age']/365.25);
+		}
+		$result = [];
+		foreach ($convertAge as $val) {
+	    	if ($prev_value['age'] != $val) {
+	        	unset($prev_value);
+	        	$prev_value = ['age' => $val, 'count' => 0];
+	        	$result[] =& $prev_value;
+	    	}
+    		$prev_value['count']++;
+		}
+		
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($result as $value) {
+            //Compile the dataset
+			$dataSet[] = ['Age '.$value['age'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
 		return $params;
 	}
 
