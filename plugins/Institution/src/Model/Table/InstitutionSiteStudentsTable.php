@@ -213,17 +213,23 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$institutionSiteStudentCount = $institutionSiteRecords
 			->contain(['Users'])
 			->select([
-				// add what to select here
+				'age' => $institutionSiteRecords->func()->dateDiff([$institutionSiteRecords->func()->now(),'Users.date_of_birth']) 
 			])
+			// ->innerJoin(['Users' => 'security_users'], [
+			// 		'Users.id = ' . $this->aliasField('security_user_id')
+			// 	])
 			->where($studentsConditions);
-		$institutionSiteStudentCount = $institutionSiteStudentCount->toArray();
-		// Creating the data set		
-		$dataSet = [];
-		foreach ($institutionSiteStudentCount as $value) {
-            //Compile the dataset
-			$dataSet[] = [$value['gender'], $value['count']];
-		}
-		$params['dataSet'] = $dataSet;
+		$institutionSiteStudentCount = $institutionSiteStudentCount->sql();
+		pr($institutionSiteStudentCount);
+
+		
+		// // Creating the data set		
+		// $dataSet = [];
+		// foreach ($institutionSiteStudentCount as $value) {
+  //           //Compile the dataset
+		// 	$dataSet[] = [$value['gender'], $value['count']];
+		// }
+		// $params['dataSet'] = $dataSet;
 		return $params;
 	}
 
