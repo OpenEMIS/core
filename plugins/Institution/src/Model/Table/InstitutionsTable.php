@@ -248,9 +248,9 @@ class InstitutionsTable extends AppTable  {
 				->count();
 
 			$models = [
-				'Type' => ['InstitutionSiteTypes', 'institution_site_type_id'],
-				'Sector' => ['InstitutionSiteSectors', 'institution_site_sector_id'],
-				'Locality' => ['InstitutionSiteLocalities', 'institution_site_locality_id'],
+				['InstitutionSiteTypes', 'institution_site_type_id', 'Type'],
+				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector'],
+				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality'],
 			];
 
 			foreach ($models as $key => $model) {
@@ -279,6 +279,8 @@ class InstitutionsTable extends AppTable  {
 
 			$modelName = $params[0];
 			$modelId = $params[1];
+			$key = $params[2];
+			$params['key'] = $key;
 
 			foreach ($conditions as $key => $value) {
 				$_conditions[$modelName.'.'.$key] = $value;
@@ -290,23 +292,16 @@ class InstitutionsTable extends AppTable  {
 				->contain([$modelName])
 				->select([
 					'count' => $institutionRecords->func()->count($modelId),
-					$selectString
+					'name' => $selectString
 				])
 				->group($modelId)
 				->toArray();
 
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionSiteTypesCount as $value) {
-
-				// To get the name from the array
-				$text = $modelId;
-	            if (substr($text, -3) === '_id') {
-	                $text = substr($text, 0, -3);
-	            }
-
+			foreach ($institutionSiteTypesCount as $key => $value) {
 	            // Compile the dataset
-				$dataSet[] = [$value[$text]['name'], $value['count']];
+				$dataSet[] = [$value['name'], $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}

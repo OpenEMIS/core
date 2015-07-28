@@ -32,7 +32,10 @@ class InstitutionSiteStaffTable extends AppTable {
 			],
 			'institution_site_staff_gender' => [
 				'_function' => 'getNumberOfStaffsByGender'
-			]
+			],
+			'institution_site_staff_qualification' => [
+				'_function' => 'getNumberOfStaffsByQualification'
+			],
 		]);
 
 	}
@@ -260,22 +263,73 @@ class InstitutionSiteStaffTable extends AppTable {
 				])
 				->group('gender_id');
 
-			if (!empty($params)) {
+			if (!empty($params['institution_site_id'])) {
 				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
 			}	
 
-			$modelId = 'gender_id';
 			// Creating the data set		
 			$dataSet = [];
 			foreach ($institutionSiteStaffCount->toArray() as $value) {
-				//To get the name from the array
-				$text = $modelId;
-	            if (substr($text, -3) === '_id') {
-	                $text = substr($text, 0, -3);
-	            }
-
 	            //Compile the dataset
-				$dataSet[] = [$value[$text], $value['count']];
+				$dataSet[] = [$value['gender'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		//}
+		return $params;
+	}
+
+	public function getNumberOfStaffsByQualification($params=[]) {
+
+			$institutionSiteRecords = $this->find();
+			
+			$institutionSiteStaffCount = $institutionSiteRecords
+				->contain(['Users']);
+				// ->select([
+				// 	'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+
+				// ])
+				// ->group('gender_id');
+
+			if (!empty($params['institution_site_id'])) {
+				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
+			}
+			$institutionSiteStaffCount = $institutionSiteStaffCount->toArray();
+			pr($institutionSiteStaffCount);
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStaffCount as $value) {
+	            //Compile the dataset
+				//$dataSet[] = [$value['gender'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		//}
+		return $params;
+	}
+
+	public function getNumberOfStaffsByLicence($params=[]) {
+
+			$institutionSiteRecords = $this->find();
+			
+			$institutionSiteStaffCount = $institutionSiteRecords
+				->contain(['Users']);
+				// ->select([
+				// 	'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+
+				// ])
+				// ->group('gender_id');
+
+			if (!empty($params['institution_site_id'])) {
+				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
+			}
+			$institutionSiteStaffCount = $institutionSiteStaffCount->toArray();
+			pr($institutionSiteStaffCount);
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStaffCount as $value) {
+	            //Compile the dataset
+				//$dataSet[] = [$value['gender'], $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		//}
