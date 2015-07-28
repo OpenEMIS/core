@@ -257,7 +257,7 @@ class InstitutionsTable extends AppTable  {
 				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
 			}
 
-			$indexDashboard = 'Institution.Institutions/dashboard';
+			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [ 
