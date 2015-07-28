@@ -45,9 +45,10 @@ class StaffTable extends BaseTable {
 
 		$query->contain([
 			'Positions.StaffPositionTitles',
-			'StaffStatuses'
+			'StaffStatuses',
+			'Users'
 		])
-		->where(['InstitutionSiteStaff.institution_site_id' => $institutionId]);
+		->group(['InstitutionSiteStaff.security_user_id']);
 	}
 
 	public function addBeforeAction(Event $event) {
