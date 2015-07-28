@@ -8,7 +8,7 @@ class SecurityGroupUsersTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
-		$this->belongsTo('SecurityGroups', ['className' => 'Security.SecurityGroups']);
+		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 	}
 
