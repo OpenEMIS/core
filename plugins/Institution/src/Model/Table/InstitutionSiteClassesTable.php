@@ -718,38 +718,16 @@ class InstitutionSiteClassesTable extends AppTable {
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
         $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
 
-        // TODO-Hanafi: add date conditions as commented below
         $Staff = $this->Institutions->InstitutionSiteStaff;
 		$query = $Staff->find('all')
 						->find('withBelongsTo')
 						->find('byInstitution', ['Institutions.id' => $this->institutionId])
 						->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
+						->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodObj->id])
 						->where([
 							$Staff->aliasField('institution_site_position_id') 
 						])
-						->where([
-							$Staff->aliasField('end_date') . ' IS NULL',
-							$Staff->aliasField('start_date') . ' >= ' . $endDate
-						])
-						// ->where(['OR' => [
-						// 			[
-						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
-						// 				$Staff->aliasField('start_date') . ' <= ' . $startDate,
-						// 				$Staff->aliasField('end_date') . ' >= ' . $startDate
-						// 			],
-						// 			[
-						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
-						// 				$Staff->aliasField('start_date') . ' <= ' . $endDate,
-						// 				$Staff->aliasField('end_date') . ' >= ' . $endDate
-						// 			],
-						// 			[
-						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
-						// 				$Staff->aliasField('start_date') . ' >= ' . $startDate,
-						// 				$Staff->aliasField('end_date') . ' <= ' . $endDate
-						// 			]
-						// 		]
-						// ])
-							;
+						;
 		$options = [];
 		foreach ($query->toArray() as $key => $value) {
 			if ($value->has('user')) {
