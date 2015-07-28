@@ -54,19 +54,36 @@ class StaffBehavioursTable extends AppTable {
 
 			$institutionId = $this->Session->read('Institutions.id');
 			$selectedPeriod = $this->queryString('period_id', $periodOptions);
+	
+			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
 
-			
+			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
+				'callable' => function($id) use ($InstitutionSiteStaff, $AcademicPeriod, $institutionId) {
+
+					$selectedPeriodObj = $AcademicPeriod->get($id);
+
+					if(!is_null($selectedPeriodObj->start_date))
+						$academic_period_start_date = self::getFormattedDate($selectedPeriodObj->start_date);
+
+					if(!is_null($selectedPeriodObj->end_date))
+						$academic_period_end_date = self::getFormattedDate($selectedPeriodObj->end_date);
+
+					return $InstitutionSiteStaff
+								->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'institution_site_id' => $institutionId])
+								->group(['security_user_id'])
+								->count();
+				}
+			]);
+
 			$start_date = null;
 			$end_date = null;
 			if ($selectedPeriod != 0) {
 				$this->controller->set(compact('periodOptions', 'selectedPeriod'));
-					// $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-					// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-					// 	'callable' => function($id) use ($Sections, $institutionId) {
-					// 		return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
-					// 	}
-					// ]);
 
+				$selectedPeriodEntity = $AcademicPeriod->get($selectedPeriod);
+				$start_date =$selectedPeriodEntity->start_date;
+				$end_date = $selectedPeriodEntity->end_date;
 			}	
 
 			$settings['pagination'] = false;
@@ -109,6 +126,27 @@ class StaffBehavioursTable extends AppTable {
 
 		$periodOptions = $AcademicPeriod->getList();
 		$selectedPeriod = $this->queryString('period', $periodOptions);
+
+		$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
+			'callable' => function($id) use ($InstitutionSiteStaff, $AcademicPeriod, $institutionId) {
+
+				$selectedPeriodObj = $AcademicPeriod->get($id);
+
+				if(!is_null($selectedPeriodObj->start_date))
+					$academic_period_start_date = self::getFormattedDate($selectedPeriodObj->start_date);
+
+				if(!is_null($selectedPeriodObj->end_date))
+					$academic_period_end_date = self::getFormattedDate($selectedPeriodObj->end_date);
+
+				return $InstitutionSiteStaff
+							->find('byPeriod', ['academic_period_start_date' => $academic_period_start_date, 'academic_period_end_date' => $academic_period_end_date, 'institution_site_id' => $institutionId])
+							->group(['security_user_id'])
+							->count();
+			}
+		]);
 	
 		if ($request->is(['post', 'put'])) {
 			$selectedPeriod = $this->request->data($this->aliasField('academic_period'));
@@ -151,10 +189,10 @@ class StaffBehavioursTable extends AppTable {
 			$selectedPeriodObj = $AcademicPeriod->get($selectedPeriod);
 
 			if(!is_null($selectedPeriodObj->start_date))
-				$academic_period_start_date = date_format($selectedPeriodObj->start_date, 'Y-m-d');
+				$academic_period_start_date = self::getFormattedDate($selectedPeriodObj->start_date); //date_format($selectedPeriodObj->start_date, 'Y-m-d');
 
 			if(!is_null($selectedPeriodObj->end_date))
-				$academic_period_end_date = date_format($selectedPeriodObj->end_date, 'Y-m-d');
+				$academic_period_end_date = self::getFormattedDate($selectedPeriodObj->end_date); //date_format($selectedPeriodObj->end_date, 'Y-m-d');
 
 			$staff = $InstitutionSiteStaff
 						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
@@ -173,5 +211,27 @@ class StaffBehavioursTable extends AppTable {
 		return $entity->user->openemis_no;
 	}
 
+	public function getFormattedDate($given_date){
+		return date_format($given_date, 'Y-m-d');
+	}
+
+	public function validationDefault(Validator $validator) {
+		//get start and end date of selected academic period 
+		$selectedPeriod = $this->request->query('period');
+		if($selectedPeriod) {
+			$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
+			$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
+			$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
+
+			$validator
+			->add('date_of_behaviour', 
+					'ruleCheckInputWithinRange', 
+						['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
+				
+				)
+			;
+			return $validator;
+		}
+	}
 
 }
