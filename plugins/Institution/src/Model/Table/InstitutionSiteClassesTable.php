@@ -518,38 +518,13 @@ class InstitutionSiteClassesTable extends AppTable {
 		/**
 		 * @todo should have additional filter; by start_date, end_date & education_programme_id
 		 */
-		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
-		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
-        $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
 		$students = $this->Institutions->InstitutionSiteStudents;
-		$query = $students->find()
+		$query = $students
+			->find('all')
+			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
 			->contain(['Users'])
 			->where([
-				'InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id,
-				// Check date behavior to be the same as institution site section table
-				'OR' => array(
-					'OR' => array(
-						array(
-							$students->aliasField('end_date').' IS NOT NULL',
-							$students->aliasField('start_date').' <= "' . $startDate . '"',
-							$students->aliasField('end_date').' >= "' . $startDate . '"'
-						),
-						array(
-							$students->aliasField('end_date').' IS NOT NULL',
-							$students->aliasField('start_date').' <= "' . $endDate . '"',
-							$students->aliasField('end_date').' >= "' . $endDate . '"'
-						),
-						array(
-							$students->aliasField('end_date').' IS NOT NULL',
-							$students->aliasField('start_date').' >= "' . $startDate . '"',
-							$students->aliasField('end_date').' <= "' . $endDate . '"'
-						)
-					),
-					array(
-						$students->aliasField('end_date').' IS NULL',
-						$students->aliasField('start_date').' <= "' . $endDate . '"'
-					)
-				)
+				'InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id
 			])
 			->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
