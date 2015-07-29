@@ -156,19 +156,16 @@ class StaffController extends AppController {
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
+		
+		if ($session->check('Staff.security_user_id')) {
+			$userId = $session->read('Staff.security_user_id');
 
-		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-			if ($session->check('Staff.security_user_id')) {
-				$userId = $session->read('Staff.security_user_id');
-
-				if ($model->hasField('security_user_id')) {
-					$query->where([$model->aliasField('security_user_id') => $userId]);
-				}
-			} else {
-				$this->Alert->warning('general.noData');
-				$this->redirect(['action' => 'index']);
-				return false;
+			if ($model->hasField('security_user_id')) {
+				$query->where([$model->aliasField('security_user_id') => $userId]);
 			}
+		} else {
+			$this->Alert->warning('general.noData');
+			return $this->redirect(['action' => 'index']);
 		}
 		return $options;
 	}
