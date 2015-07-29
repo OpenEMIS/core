@@ -8,17 +8,16 @@ class HighChartBehavior extends Behavior {
 
 	public function initialize(array $config) {}
 
-	public function getHighChart($chart, $params = array()) {
+	public function getHighChart($chart, $params = []) {
 		$model = $this->_table;
 		$selectedConfig = $this->config($chart);
 		$function = $selectedConfig['_function'];
-		$params = call_user_func_array(array($model, $function), array($params));
+		$params = call_user_func_array([$model, $function], [$params]);
 
 		$dataSet = [];
 		if (!empty($params['dataSet'])) {
 			$dataSet = $params['dataSet'];
 		}
-
 		$options = [];
 		if (!empty($params['options'])) {
 			$options = $params['options'];
@@ -37,9 +36,60 @@ class HighChartBehavior extends Behavior {
 		foreach ($dataSet as $key => $obj) {
 			$dataSet[$key]['data'] = array_values($obj['data']);
 		}
-
 		$options['series'] = array_values($dataSet);
+		$options['credits'] = ['enabled' => false];
+		return json_encode($options, JSON_NUMERIC_CHECK);
+	}
 
+	public function getDonutChart($chart, $params = array()) {
+		$model = $this->_table;
+		$selectedConfig = $this->config($chart);
+		$function = $selectedConfig['_function'];
+		$params = call_user_func_array([$model, $function], [$params]);
+
+		$dataSet = [];
+		$key = '';
+		if (!empty($params['dataSet'])) {
+			$dataSet = $params['dataSet'];
+			if(array_key_exists('key', $params)){
+				$key = $params['key'];
+
+			}
+		}
+		$options = [];
+		if (!empty($params['options'])) {
+			$options = $params['options'];
+		}
+		// Configuration for the donut chart
+		$selectedConfig['title'] = 
+					['text' => $key,
+					'align' => 'center',
+					'verticalAlign' => 'middle',
+					'x' => '-40',
+					'y' => '12',
+					'style' => ['fontSize' => '14px', 'fontWeight'=> '400']];
+		$selectedConfig['chart'] = 
+					['backgroundColor' => 'rgba(255, 255, 255, 0.002)',
+					'margin' => 0,
+					'spacingTop' => -5,
+					'spacingBottom' => 10,
+					'spacingLeft' => 90];
+		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}'];
+		$selectedConfig['plotOptions'] = 
+					['pie' => ['dataLabels' => [
+							'enabled' => false],
+							'showInLegend' => false,
+							'center' => ['50%', '50%']]];
+		$selectedConfig['legend'] = 
+					['enabled' => false,
+					'verticalAlign' => 'bottom',
+					'align' => 'left',
+					'layout' => 'vertical',
+					'itemStyle' => ['fontSize' => '8pt']];
+		unset($selectedConfig['_function']);
+		$options = array_replace_recursive($selectedConfig, $options);
+		$options['series'][] = ['type' => 'pie', 'innerSize' => '85%', 'data' => array_values($dataSet)];
+		$options['credits'] = ['enabled' => false];
 		return json_encode($options, JSON_NUMERIC_CHECK);
 	}
 

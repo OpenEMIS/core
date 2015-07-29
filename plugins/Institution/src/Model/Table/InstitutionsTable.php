@@ -83,6 +83,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -244,15 +245,72 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
-			$indexDashboard = 'Institution.Institutions/dashboard';
+			$institutionRecords = $this->find();
+
+			// Total Institutions: number
+			$institutionCount = $institutionRecords
+				->count();
+
+			$models = [
+				['InstitutionSiteTypes', 'institution_site_type_id', 'Type'],
+				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector'],
+				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality'],
+			];
+
+			foreach ($models as $key => $model) {
+				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
+			}
+
+			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [ 
+	            	'model' => 'institutions',
+	            	'modelCount' => $institutionCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
 	    $config['formButtons'] = false;
+	}
+
+	public function getNumberOfInstitutionsByModel($params=[]) {
+
+		if (!empty($params)) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+
+			$modelName = $params[0];
+			$modelId = $params[1];
+			$key = $params[2];
+			$params['key'] = $key;
+
+			foreach ($conditions as $key => $value) {
+				$_conditions[$modelName.'.'.$key] = $value;
+			}
+			$institutionRecords = $this->find();
+			
+			$selectString = $modelName.'.name';
+			$institutionSiteTypesCount = $institutionRecords
+				->contain([$modelName])
+				->select([
+					'count' => $institutionRecords->func()->count($modelId),
+					'name' => $selectString
+				])
+				->group($modelId)
+				->toArray();
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteTypesCount as $key => $value) {
+	            // Compile the dataset
+				$dataSet[] = [$value['name'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		}
+		return $params;
 	}
 
 
