@@ -11,16 +11,17 @@ use Cake\Network\Request;
 class InstitutionBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.index.beforePaginate'] = 'indexBeforePaginate';
+
+		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
+		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
 		return $events;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
-			$options['finder'] = ['byAccess' => ['userId' => $userId, 'options' => $options]];
+			$query->find('byAccess', ['userId' => $userId, 'options' => $options['query']]);
 		}
-		// $query->find('byAccess');
 	}
 
 	public function findByAccess(Query $query, array $options) {
@@ -46,7 +47,7 @@ class InstitutionBehavior extends Behavior {
 		->union(
 			$this->_table->find()
 			->contain($findOptions['contain'])
-			->select($findOptions['fields'])
+			->select($findOptions['select'])
 			->join($findOptions['join'])
 			->innerJoin(['SecurityGroupInstitutionSite' => 'security_group_institution_sites'], [
 				'SecurityGroupInstitutionSite.institution_site_id = ' . $this->_table->aliasField('id')
