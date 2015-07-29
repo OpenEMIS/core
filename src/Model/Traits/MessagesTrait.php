@@ -259,6 +259,8 @@ trait MessagesTrait {
 		],
 		'StudentTransfers' => [
 			'request' => 'Transfer request has been submitted successfully.',
+			'approve' => 'Transfer request has been approved successfully.',
+			'reject' => 'Transfer request has been rejected successfully.',
 			'noProgrammes' => 'No Available Programmes'
 		],
 
@@ -333,6 +335,11 @@ trait MessagesTrait {
 
 			],
 			'StaffPositions' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'StudentTransfers' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
