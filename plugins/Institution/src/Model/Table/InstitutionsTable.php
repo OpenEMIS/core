@@ -54,7 +54,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 		
-		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'dependent' => true]);
+		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'foreignKey' => 'institution_id', 'dependent' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
@@ -83,6 +83,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -194,14 +195,19 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
         if ($entity->isNew()) {
-
-			$data = ['name' => $entity->name];
-			$obj = $SecurityGroup->newEntity();
-			$obj = $SecurityGroup->patchEntity($obj, $data);
+			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
 			$securityGroup = $SecurityGroup->save($obj);
 			if ($securityGroup) {
+				// add the relationship of security group and institutions
+				$securityInstitution = $SecurityInstitutions->newEntity([
+					'security_group_id' => $securityGroup->id, 
+					'institution_site_id' => $entity->id
+				]);
+				$SecurityInstitutions->save($securityInstitution);
+
 				$this->trackActivity = false;
 				$entity->security_group_id = $securityGroup->id;
 				if (!$this->save($entity)) {
@@ -212,7 +218,6 @@ class InstitutionsTable extends AppTable  {
 			}
 
         } else {
-
 			$securityGroupId = $entity->security_group_id;
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);
@@ -240,15 +245,72 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
-			$indexDashboard = 'Institution.Institutions/dashboard';
+			$institutionRecords = $this->find();
+
+			// Total Institutions: number
+			$institutionCount = $institutionRecords
+				->count();
+
+			$models = [
+				['InstitutionSiteTypes', 'institution_site_type_id', 'Type'],
+				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector'],
+				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality'],
+			];
+
+			foreach ($models as $key => $model) {
+				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
+			}
+
+			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [ 
+	            	'model' => 'institutions',
+	            	'modelCount' => $institutionCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
 	    $config['formButtons'] = false;
+	}
+
+	public function getNumberOfInstitutionsByModel($params=[]) {
+
+		if (!empty($params)) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+
+			$modelName = $params[0];
+			$modelId = $params[1];
+			$key = $params[2];
+			$params['key'] = $key;
+
+			foreach ($conditions as $key => $value) {
+				$_conditions[$modelName.'.'.$key] = $value;
+			}
+			$institutionRecords = $this->find();
+			
+			$selectString = $modelName.'.name';
+			$institutionSiteTypesCount = $institutionRecords
+				->contain([$modelName])
+				->select([
+					'count' => $institutionRecords->func()->count($modelId),
+					'name' => $selectString
+				])
+				->group($modelId)
+				->toArray();
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteTypesCount as $key => $value) {
+	            // Compile the dataset
+				$dataSet[] = [$value['name'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		}
+		return $params;
 	}
 
 
@@ -273,21 +335,29 @@ class InstitutionsTable extends AppTable  {
 		return $entity->Areas['name'];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$query = $request->query;
-		$options['contain'] = ['InstitutionSiteTypes'];
-		$options['fields'] = [
-			$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-			'Areas.name', 'InstitutionSiteTypes.name'
-		];
-		$options['join'] = [
-			[
-				'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
-				'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// the query options are setup so that Security.InstitutionBehavior can reuse it
+		$options['query'] = [
+			'contain' => ['InstitutionSiteTypes'],
+			'select' => [
+				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
+				'Areas.name', 'InstitutionSiteTypes.name'
+			],
+			'join' => [
+				[
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+					'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+				]
 			]
 		];
-		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+		$query->contain([], true);
+		$query->contain($options['query']['contain']);
+		$query->select($options['query']['select']);
+		$query->join($options['query']['join']);
+
+		$queryParams = $request->query;
+		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+			$query->order([$this->aliasField('name') => 'asc']);
 		}
 	}
 

@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -68,12 +69,9 @@ class AreaAdministrativesTable extends AppTable {
 		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-
-		$options['conditions'][] = [
-        	$this->aliasField('parent_id') => $parentId
-        ];
+        $query->where([$this->aliasField('parent_id') => $parentId]);
 	}
 
 	public function addEditBeforeAction(Event $event) {

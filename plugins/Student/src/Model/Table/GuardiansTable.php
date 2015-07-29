@@ -13,8 +13,6 @@ class GuardiansTable extends BaseTable {
 		$this->entityClass('User.User');
 		$this->addBehavior('Guardian.Guardian');
 		$this->addBehavior('Student.GuardianStudent', ['associatedModel' => $this->GuardianStudents]);
-		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
-		// $this->addBehavior('Institution.User', ['associatedModel' => $this->StudentGuardians]);
 	}
 
 	public function autoCompleteUserList() {
