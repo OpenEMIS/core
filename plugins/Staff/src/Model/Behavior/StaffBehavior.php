@@ -37,6 +37,7 @@ class StaffBehavior extends Behavior {
 		return $events;
 	}
 
+	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		$alias = $this->_table->alias;
 		$table = TableRegistry::get('Institution.InstitutionSiteStaff');

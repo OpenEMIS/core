@@ -34,6 +34,7 @@ class LicensesTable extends AppTable {
 		;
 	}
 
+	// Use for Mini dashboard (Institution Staff)
 	public function getNumberOfStaffByLicenses($params=[]){
 		$institutionId = 0;
 		if(!empty ($params['institution_site_id'])){
