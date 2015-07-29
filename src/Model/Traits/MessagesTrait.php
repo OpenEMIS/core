@@ -63,8 +63,8 @@ trait MessagesTrait {
 			'description' => 'Description',
 			'default' => 'Default',
 			'reject' => 'Reject',
-			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes',
+			'noSections' => 'No Classes',
+			'noClasses' => 'No Subjects',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
 			'amount' => 'Amount',
@@ -107,26 +107,26 @@ trait MessagesTrait {
 			'end_time' => 'End Time',
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Sections',
+			'noSections' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
 			'security_user_id' => 'Home Room Teacher',
-			'section' => 'Section',
-			'single_grade_field' => 'Single Grade Sections',
-			'multi_grade_field' => 'Multi-Grades Section',
+			'section' => 'Class',
+			'single_grade_field' => 'Single Grade Classes',
+			'multi_grade_field' => 'Multi-Grades Class',
 			
-			'emptyName' => 'Section name should not be empty',
+			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
-			'emptyNameSecurityUserId' => 'Section name and Home Roome Teacher should not be empty',
-			'emptySecurityUserIdName' => 'Section name and Home Roome Teacher should not be empty'
+			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
+			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty'
 		],
 		'InstitutionSiteClasses' => [
-			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes',
-			'classes' => 'Classes',
+			'noSections' => 'No Classes',
+			'noClasses' => 'No Subjects',
+			'classes' => 'Subjects',
 			'education_subject' => 'Subject',
-			'class' => 'Class',
+			'class' => 'Subject',
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
@@ -150,8 +150,8 @@ trait MessagesTrait {
 		],
 		'InstitutionAssessmentResults' => [
 			'noSubjects' => 'There are no available Subjects.',
-			'noSections' => 'There are no available Sections.',
-			'noClasses' => 'There are no available Classes.',
+			'noSections' => 'There are no available Classes.',
+			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
 			'reject' => [
@@ -188,10 +188,10 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'No Available Sections'
+			'noSections' => 'No Available Classes'
 		],
 		'InstitutionSiteStudentAbsences' => [
-			'noSections' => 'No Available Sections',
+			'noSections' => 'No Available Classes',
 			'noStudents' => 'No Available Students'
 		],
 		'StaffAttendances' => [
@@ -253,8 +253,8 @@ trait MessagesTrait {
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
-			'noSections' => 'No Available Sections',
-			'noClasses' => 'No Available Classes',
+			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
 
@@ -263,10 +263,10 @@ trait MessagesTrait {
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There is no subject in the selected section',
+				'noSubjectsInSection' => 'There is no subject in the selected class',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
-				'noSections' => 'There is no section under the selected academic period',
+				'noSections' => 'There is no class under the selected academic period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
 				],
@@ -283,9 +283,9 @@ trait MessagesTrait {
 			
 			'InstitutionSiteSections' => [
 				'noGrade' => 'There is no grade selected',
-				'emptyName' => 'Section name should not be empty',
+				'emptyName' => 'Class name should not be empty',
 				'emptySecurityUserId' => 'Home Room Teacher should not be empty',
-				'emptyNameSecurityUserId' => 'Section name and Home Room Teacher should not be empty',
+				'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			],
 
 			'InstitutionSiteProgrammes' => [
@@ -314,7 +314,7 @@ trait MessagesTrait {
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
 				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
-				'sections' => 'You need to configure Sections first.',
+				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
 			],
 			'InstitutionSiteStaff' => [
