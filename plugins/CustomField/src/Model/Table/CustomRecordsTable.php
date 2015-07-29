@@ -26,14 +26,13 @@ class CustomRecordsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
-
         $this->controller->set(compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
-		$options['conditions'][] = [
-        	$this->aliasField('custom_form_id') => $selectedForm
-        ];
-        $options['contain'] = array_merge($options['contain'], $this->_contain);
+
+		$query
+			->where([$this->aliasField('custom_form_id') => $selectedForm])
+			->contain($this->_contain);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

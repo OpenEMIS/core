@@ -2,12 +2,14 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 
+// Should not be in used anymore, refer to SecurityRolesTable
 class UserRolesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('security_roles');
@@ -79,10 +81,9 @@ class UserRolesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$selectedGroup = $request->query['security_group_id'];
-
-		$options['conditions'][$this->aliasField('security_group_id')] = $selectedGroup;
+		$query->where([$this->aliasField('security_group_id') => $selectedGroup]);
 	}
 
 	public function addBeforeAction(Event $event) {
