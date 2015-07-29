@@ -58,6 +58,10 @@ class UsersTable extends BaseTable {
 		return $data;
 	}
 
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->find('notSuperAdmin');
+	}
+
 	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
@@ -65,7 +69,15 @@ class UsersTable extends BaseTable {
 
 	public function viewBeforeAction(Event $event) {
 		$this->hideFieldsBasedOnRole();
-	}	
+	}
+
+	public function findNotSuperAdmin(Query $query, array $options) {
+		return $query->where([$this->aliasField('super_admin') => 0]);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->find('notSuperAdmin');
+	}
 
 	public function addEditBeforeAction(Event $event) {
 		$this->hideFieldsBasedOnRole();

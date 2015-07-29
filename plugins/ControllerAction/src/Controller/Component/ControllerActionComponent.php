@@ -507,8 +507,12 @@ class ControllerActionComponent extends Component {
 		return $contain;
 	}
 
+	public function getSearchKey() {
+		return $this->Session->read($this->model->alias().'.search.key');
+	}
+
 	public function search($model, $order = []) {
-		$alias = $model->alias();
+		$alias = $this->model->alias();
 		$controller = $this->controller;
 		$request = $this->request;
 		$limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
@@ -530,8 +534,6 @@ class ControllerActionComponent extends Component {
 
 		$query = $model->find();
 
-		// $conditions = isset($options['conditions']) ? $options['conditions'] : [];
-
 		$contain = $this->getContains($model);
 		if (!empty($contain)) {
 			$query->contain($contain);
@@ -541,7 +543,7 @@ class ControllerActionComponent extends Component {
 		if (!empty($search)) {
 			foreach($schema as $name => $obj) {
 				if ($obj['type'] == 'string' && $name != 'password') {
-					$OR["$alias.$name LIKE"] = '%' . $search . '%';
+					$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
 				}
 			}
 		}
@@ -549,19 +551,6 @@ class ControllerActionComponent extends Component {
 		if (!empty($OR)) {
 			$query->where(['OR' => $OR]);
 		}
-
-
-		// $conditions = [];
-
-		// all string fields are searchable by default
-		// $OR = isset($conditions['OR']) ? $conditions['OR'] : [];
-		// if (!empty($search)) {
-		// 	foreach($schema as $name => $obj) {
-		// 		if ($obj['type'] == 'string' && $name != 'password') {
-		// 			$OR["$alias.$name LIKE"] = '%' . $search . '%';
-		// 		}
-		// 	}
-		// }
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
 			$query->order([$model->aliasField($this->orderField) => 'asc']);
@@ -583,7 +572,6 @@ class ControllerActionComponent extends Component {
 		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $query, $options]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		// $data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
 		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
@@ -952,7 +940,7 @@ class ControllerActionComponent extends Component {
 			$id = $request->data[$primaryKey];
 			$deleteOptions = new ArrayObject([]);
 
-			$process = function () use ($id, $model, $deleteOptions) {
+			$process = function ($model, $id, $deleteOptions) {
 				$entity = $model->get($id);
 				return $model->delete($entity, $deleteOptions->getArrayCopy());
 			};
@@ -967,7 +955,7 @@ class ControllerActionComponent extends Component {
 			// End Event
 
 			if ($this->removeStraightAway) {
-				if ($process()) {
+				if ($process($model, $id, $deleteOptions)) {
 					$this->Alert->success('general.delete.success');
 				} else {
 					$this->Alert->error('general.delete.failed');
