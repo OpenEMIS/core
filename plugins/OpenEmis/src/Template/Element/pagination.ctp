@@ -1,11 +1,12 @@
 <?php
-$totalRecords = $this->Paginator->counter('{{count}}');
+$params = $this->Paginator->params();
+$totalRecords = $params['count'];
 ?>
 
 <?php if ($totalRecords > 0) : ?>
 <div class="pagination-wrapper">
 	<?php
-	$totalPages = $this->Paginator->counter('{{pages}}');
+	$totalPages = $params['pageCount'];
 
 	if ($totalPages > 1) :
 	?>
