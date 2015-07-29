@@ -176,6 +176,7 @@ class SecurityRolesTable extends AppTable {
 				// this will show only roles of the user by group
 				$query = $GroupRoles
 					->find()
+					->find('visible')
 					->contain('SecurityRoles')
 					->order(['SecurityRoles.order'])
 					->where([
@@ -203,6 +204,7 @@ class SecurityRolesTable extends AppTable {
 		} else { // super admin will show all roles of system and group specific
 			$roleOptions = $this
 				->find('list')
+				->find('visible')
 				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
 				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
 				->toArray()
