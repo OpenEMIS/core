@@ -157,17 +157,21 @@ class StaffController extends AppController {
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 		
-		if ($session->check('Staff.security_user_id')) {
-			$userId = $session->read('Staff.security_user_id');
-
-			if ($model->hasField('security_user_id')) {
-				$query->where([$model->aliasField('security_user_id') => $userId]);
+		if ($model->alias() != 'InstitutionSiteStaff') {
+			if ($session->check('Staff.security_user_id')) {
+				if ($model->hasField('security_user_id')) {
+					$userId = $session->read('Staff.security_user_id');
+					$query->where([$model->aliasField('security_user_id') => $userId]);
+				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
 			}
 		} else {
-			$this->Alert->warning('general.noData');
-			return $this->redirect(['action' => 'index']);
+			// we only show distinct records at system level
+			$query->group([$model->aliasField('security_user_id')]);
 		}
-		return $options;
 	}
 
 	public function excel($id=0) {

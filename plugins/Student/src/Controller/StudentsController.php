@@ -146,7 +146,7 @@ class StudentsController extends AppController {
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('security_user_id') => $this->activeObj->id
-						]);
+					]);
 					
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -180,6 +180,9 @@ class StudentsController extends AppController {
 				$event->stopPropagation();
 				return $this->redirect(['action' => 'index']);
 			}
+		} else {
+			// we only show distinct records at system level
+			$query->group([$model->aliasField('security_user_id')]);
 		}
 	}
 
@@ -187,9 +190,4 @@ class StudentsController extends AppController {
 		$this->Users->excel($id);
 		$this->autoRender = false;
 	}
-
-	public function afterFilter(Event $event) {
-		$session = $this->request->session();
-	}
-
 }
