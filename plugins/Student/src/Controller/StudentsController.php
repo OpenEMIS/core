@@ -111,8 +111,13 @@ class StudentsController extends AppController {
 			}
 
 			$persona = false;
+			$alias = $model->alias;
+			// temporary fix for renaming Sections and Classes
+			if ($alias == 'Sections') $alias = 'Classes';
+			else if ($alias == 'Classes') $alias = 'Subjects';
+			
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 				if (strtolower($action) != 'index')	{
 					if (in_array('Guardian', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
@@ -126,10 +131,10 @@ class StudentsController extends AppController {
 					}
 				}
 			} else {
-				$this->Navigation->addCrumb($model->getHeader($model->alias));
+				$this->Navigation->addCrumb($model->getHeader($alias));
 			}
 
-			$header = $this->activeObj->name . ' - ' . $model->getHeader($model->alias);
+			$header = $this->activeObj->name . ' - ' . $model->getHeader($alias);
 
 			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
@@ -148,7 +153,7 @@ class StudentsController extends AppController {
 					 */
 					if (!$exists) {
 						$this->Alert->warning('general.notExists');
-						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
 				}
 			}
