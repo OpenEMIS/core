@@ -48,7 +48,7 @@ DROP TABLE IF EXISTS `institution_site_student_transfers`;
 CREATE TABLE IF NOT EXISTS `institution_site_student_transfers` (
   `id` int(11) NOT NULL,
   `start_date` date NOT NULL,
-  `end_date` date DEFAULT NULL,
+  `end_date` date NOT NULL,
   `security_user_id` int(11) NOT NULL,
   `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Approve, 2 -> Reject',
   `institution_site_id` int(11) NOT NULL,

@@ -99,7 +99,7 @@ class AppController extends Controller {
 			$session->write('System.home', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		}
 
-		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard'];
+		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'];
 		$session->write('System.home', $homeUrl);
 
 		if ($this->Auth->user('super_admin') == 1) {

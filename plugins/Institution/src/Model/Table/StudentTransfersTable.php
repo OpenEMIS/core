@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class StudentTransfersTable extends AppTable {
 	public function initialize(array $config) {
@@ -17,6 +18,14 @@ class StudentTransfersTable extends AppTable {
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_site_id']);
 	}
 
+	public function validationDefault(Validator $validator) {
+		return $validator
+ 	        ->add('end_date', 'ruleCompareDateReverse', [
+		            'rule' => ['compareDateReverse', 'start_date', false]
+	    	    ])
+	        ;
+	}
+
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -25,16 +34,17 @@ class StudentTransfersTable extends AppTable {
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-    	if ($entity->isNew()) {
+		if ($entity->isNew()) {
 			$institutionId = $entity->previous_institution_site_id;
 			$selectedStudent = $entity->security_user_id;
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
 			$status = $StudentStatuses
 				->find()
 				->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
 				->first()
 				->id;
-	
+
 			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
 			$InstitutionSiteStudents->updateAll(
 				['student_status_id' => $status],
@@ -44,15 +54,15 @@ class StudentTransfersTable extends AppTable {
 				]
 			);
 
-			// Rediect
 			$this->Alert->success('StudentTransfers.request');
 
 			$Students = TableRegistry::get('Institution.Students');
-			$action = $this->ControllerAction->buttons['view']['url'];
+			$action = $this->ControllerAction->buttons['add']['url'];
 			$action['action'] = $Students->alias();
-			$action[] = $selectedStudent;
+			$action[0] = 'view';
+			$action[1] = $selectedStudent;
+
 			return $this->controller->redirect($action);
-			// End
 		}
     }
 
@@ -60,6 +70,7 @@ class StudentTransfersTable extends AppTable {
 		// Set all selected values only
 		list(, $selectedInstitution, , $selectedPeriod, , $selectedProgramme) = array_values($this->_getSelectOptions());
 
+		$this->request->data[$this->alias()]['security_user_id'] = $this->Session->read($this->alias().'.security_user_id');
 		$this->request->data[$this->alias()]['institution_site_id'] = $selectedInstitution;
 		$this->request->data[$this->alias()]['academic_period'] = $selectedPeriod;
 		$this->request->data[$this->alias()]['education_programme_id'] = $selectedProgramme;
@@ -76,30 +87,25 @@ class StudentTransfersTable extends AppTable {
 			$this->ControllerAction->field('status');
 			$this->ControllerAction->field('previous_institution_site_id');
 			// Start Date and End Date
-			if ($this->action == 'add') {
-				$selectedPeriod = $this->request->data[$this->alias()]['academic_period'];
-				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
-				$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+			$selectedPeriod = $this->request->data[$this->alias()]['academic_period'];
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
+			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
 
-				$this->ControllerAction->field('start_date', [
-					'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
-				]);
-				$this->ControllerAction->field('end_date', [
-					'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
-				]);
+			$this->ControllerAction->field('start_date', [
+				'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+			]);
+			$this->ControllerAction->field('end_date', [
+				'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+			]);
 
-				$todayDate = date("Y-m-d");
-				if ($todayDate >= $startDate->format('Y-m-d') && $todayDate <= $endDate->format('Y-m-d')) {
-					$entity->start_date = $todayDate;
-					$entity->end_date = $todayDate;
-				} else {
-					$entity->start_date = $startDate->format('Y-m-d');
-					$entity->end_date = $startDate->format('Y-m-d');
-				}
-			} else if ($this->action == 'edit') {
-				$this->ControllerAction->field('start_date');
-				$this->ControllerAction->field('end_date');
+			$todayDate = date("Y-m-d");
+			if ($todayDate >= $startDate->format('Y-m-d') && $todayDate <= $endDate->format('Y-m-d')) {
+				$entity->start_date = $todayDate;
+				$entity->end_date = $todayDate;
+			} else {
+				$entity->start_date = $startDate->format('Y-m-d');
+				$entity->end_date = $startDate->format('Y-m-d');
 			}
 			// End
 
@@ -117,8 +123,30 @@ class StudentTransfersTable extends AppTable {
 		}
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity) {
+		// Set all selected values only
+		$this->request->data[$this->alias()]['security_user_id'] = $entity->security_user_id;
+		$this->request->data[$this->alias()]['institution_site_id'] = $entity->institution_site_id;
+		$this->request->data[$this->alias()]['education_programme_id'] = $entity->education_programme_id;
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('student');
+		$this->ControllerAction->field('security_user_id');
+		$this->ControllerAction->field('institution_site_id');
+		$this->ControllerAction->field('education_programme_id');
+		$this->ControllerAction->field('status');
+		$this->ControllerAction->field('previous_institution_site_id');
+
+		$this->ControllerAction->setFieldOrder([
+			'student',
+			'institution_site_id', 'education_programme_id',
+			'status', 'start_date', 'end_date', 'previous_institution_site_id'
+		]);
+	}
+
 	public function onUpdateFieldStudent(Event $event, array $attr, $action, $request) {
-		$selectedStudent = $this->Session->read($this->alias().'.security_user_id');
+		$selectedStudent = $request->data[$this->alias()]['security_user_id'];
 
 		$attr['type'] = 'readonly';
 		$attr['attr']['value'] = $this->Users->get($selectedStudent)->name_with_id;
@@ -127,7 +155,7 @@ class StudentTransfersTable extends AppTable {
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
-		$selectedStudent = $this->Session->read($this->alias().'.security_user_id');
+		$selectedStudent = $request->data[$this->alias()]['security_user_id'];
 
 		$attr['type'] = 'hidden';
 		$attr['attr']['value'] = $selectedStudent;
@@ -136,15 +164,22 @@ class StudentTransfersTable extends AppTable {
 	}
 
 	public function onUpdateFieldInstitutionSiteId(Event $event, array $attr, $action, $request) {
-		$institutionId = $this->Session->read('Institutions.id');
-		$institutionOptions = $this->Institutions
-			->find('list')
-			->where([$this->Institutions->aliasField('id <>') => $institutionId])
-			->toArray();
+		if ($action == 'add') {
+			$institutionId = $this->Session->read('Institutions.id');
+			$institutionOptions = $this->Institutions
+				->find('list')
+				->where([$this->Institutions->aliasField('id <>') => $institutionId])
+				->toArray();
 
-		$attr['type'] = 'select';
-		$attr['options'] = $institutionOptions;
-		$attr['onChangeReload'] = 'changeInstitution';
+			$attr['type'] = 'select';
+			$attr['options'] = $institutionOptions;
+			$attr['onChangeReload'] = 'changeInstitution';
+		} else if ($action == 'edit') {
+			$selectedInstitution = $request->data[$this->alias()]['institution_site_id'];
+
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $this->Institutions->get($selectedInstitution)->name;
+		}
 
 		return $attr;
 	}
@@ -174,22 +209,29 @@ class StudentTransfersTable extends AppTable {
 	}
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
-		$selectedInstitution = $request->data[$this->alias()]['institution_site_id'];
-		$selectedPeriod = $request->data[$this->alias()]['academic_period'];
-		$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
+		if ($action == 'add') {
+			$selectedInstitution = $request->data[$this->alias()]['institution_site_id'];
+			$selectedPeriod = $request->data[$this->alias()]['academic_period'];
+			$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
 
-		$Programmes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
-		$programmeOptions = $Programmes
-			->find('list', ['keyField' => 'education_programme_id', 'valueField' => 'cycle_programme_name'])
-			->where([$Programmes->aliasField('institution_site_id') => $selectedInstitution])
-			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-			->order('EducationSystems.order', 'EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order')
-			->toArray();
-		$this->advancedSelectOptions($programmeOptions, $selectedProgramme);
-		
-		$attr['options'] = $programmeOptions;
-		$attr['onChangeReload'] = 'changeProgramme';
+			$Programmes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
+			$programmeOptions = $Programmes
+				->find('list', ['keyField' => 'education_programme_id', 'valueField' => 'cycle_programme_name'])
+				->where([$Programmes->aliasField('institution_site_id') => $selectedInstitution])
+				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+				->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+				->order('EducationSystems.order', 'EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order')
+				->toArray();
+			$this->advancedSelectOptions($programmeOptions, $selectedProgramme);
+			
+			$attr['options'] = $programmeOptions;
+			$attr['onChangeReload'] = 'changeProgramme';
+		} else if ($action == 'edit') {
+			$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
+
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $this->EducationProgrammes->get($selectedProgramme)->cycle_programme_name;
+		}
 
 		return $attr;
 	}
@@ -200,6 +242,8 @@ class StudentTransfersTable extends AppTable {
 
 			$attr['type'] = 'hidden';
 			$attr['attr']['value'] = $status;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'hidden';
 		}
 
 		return $attr;
@@ -211,16 +255,22 @@ class StudentTransfersTable extends AppTable {
 
 			$attr['type'] = 'hidden';
 			$attr['attr']['value'] = $institutionId;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'hidden';
 		}
 
 		return $attr;
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		$Students = TableRegistry::get('Institution.Students');
-		$toolbarButtons['back']['url']['action'] = $Students->alias();
-		$toolbarButtons['back']['url'][0] = 'view';
-		$toolbarButtons['back']['url'][] = $this->Session->read($this->alias().'.security_user_id');
+		if ($action == 'add') {
+			$Students = TableRegistry::get('Institution.Students');
+			$toolbarButtons['back']['url']['action'] = $Students->alias();
+			$toolbarButtons['back']['url'][0] = 'view';
+			$toolbarButtons['back']['url'][] = $this->Session->read($this->alias().'.security_user_id');
+		} else if ($action == 'edit') {
+			unset($toolbarButtons['back']);
+		}
 	}
 
 	public function _getSelectOptions() {
@@ -234,7 +284,6 @@ class StudentTransfersTable extends AppTable {
 		$selectedSection = null;
 
 		//Return all required options and their key
-		// Institutions
 		$institutionId = $this->Session->read('Institutions.id');
 		$institutionOptions = $this->Institutions
 			->find('list')
@@ -279,8 +328,17 @@ class StudentTransfersTable extends AppTable {
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
+				$requestTitle = sprintf('Transfer of student (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name);
+				$url = [
+					'plugin' => false,
+					'controller' => 'Dashboard',
+					'action' => 'Transfers',
+					'edit',
+					$obj->id
+				];
+
 				$data[] = [
-					'request_title' => sprintf('Transfer of student (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name),
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
 					'receive_date' => date('Y-m-d', strtotime($obj->modified)),
 					'due_date' => '<i class="fa fa-minus"></i>',
 					'requester' => $obj->created_user->username,
@@ -288,22 +346,120 @@ class StudentTransfersTable extends AppTable {
 				];
 			}
     	}
+	}
 
-		// check for student transfer permission
-		// $AccessControl->check(['controller' => 'Institutions', 'action' => 'StudentTransfers', 'view']);
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'edit') {
+			$buttons[0] = [
+				'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
+				'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
+			];
 
-		// check if the user has access to that school
-		// $AccessControl->getAccessibleInstitutions()
+			$buttons[1] = [
+				'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
+				'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
+			];
+		}
+	}
 
-		// $resultSet = $this->find()->where()->all();
-		// $listOfEntities = [];
+	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// Update status to Transferred in previous school
+    	$institutionId = $entity->previous_institution_site_id;
+		$selectedStudent = $entity->security_user_id;
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
-		// foreach ($resultSet as $entity) {
-			// $entity->request_title = 'xxx';
-			// $entity->receive_date = 'xxx';
-			// $listOfEntities[] = $entity;
-		// }
+		$status = $StudentStatuses
+			->find()
+			->where([$StudentStatuses->aliasField('code') => 'TRANSFERRED'])
+			->first()
+			->id;
 
-		// return $listOfEntities;
+		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$InstitutionSiteStudents->updateAll(
+			['student_status_id' => $status],
+			[
+				'institution_site_id' => $institutionId,
+				'security_user_id' => $selectedStudent
+			]
+		);
+		// End
+
+		// Update status to 1 => approve
+		$this->updateAll(
+			['status' => 1],
+			[
+				'id' => $entity->id
+			]
+		);
+		// End
+
+		// Add Student to new school
+		$currentStatus = $StudentStatuses
+			->find()
+			->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+			->first()
+			->id;
+
+		$requestData = [
+			'start_date' => $entity->start_date,
+			'start_year' => date("Y", strtotime($entity->start_date)),
+			'end_date' => $entity->end_date,
+			'end_year' => date("Y", strtotime($entity->end_date)),
+			'security_user_id' => $entity->security_user_id,
+			'student_status_id' => $currentStatus,
+			'institution_site_id' => $entity->institution_site_id,
+			'education_programme_id' => $entity->education_programme_id
+		];
+
+		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$studentEntity = $InstitutionSiteStudents->newEntity($requestData);
+
+		if ($InstitutionSiteStudents->save($studentEntity)) {
+		} else {
+			$this->log($studentEntity->errors(), 'debug');
+		}
+		// End
+
+		$this->Alert->success('StudentTransfers.approve');
+		$event->stopPropagation();
+
+		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+	}
+
+	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// Update status to Current in previous school
+    	$institutionId = $entity->previous_institution_site_id;
+		$selectedStudent = $entity->security_user_id;
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+		$status = $StudentStatuses
+			->find()
+			->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+			->first()
+			->id;
+
+		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$InstitutionSiteStudents->updateAll(
+			['student_status_id' => $status],
+			[
+				'institution_site_id' => $institutionId,
+				'security_user_id' => $selectedStudent
+			]
+		);
+		// End
+
+		// Update status to 2 => reject
+		$this->updateAll(
+			['status' => 2],
+			[
+				'id' => $entity->id
+			]
+		);
+		// End
+
+		$this->Alert->success('StudentTransfers.reject');
+		$event->stopPropagation();
+
+		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 	}
 }
