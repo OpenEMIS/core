@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 use App\Controller\AppController;
 
 class DashboardController extends AppController {
@@ -11,6 +12,10 @@ class DashboardController extends AppController {
 
 		// $this->ControllerAction->model('Notices');
 		// $this->loadComponent('Paginator');
+
+		$this->ControllerAction->models = [
+			'Transfers' 		=> ['className' => 'Institution.StudentTransfers', 'actions' => ['edit']]
+		];
 
 		$this->loadComponent('WorkBench', [
 			'models' => [
@@ -26,6 +31,11 @@ class DashboardController extends AppController {
 
     	$header = __('Dashboard');
 		$this->set('contentHeader', $header);
+    }
+
+    public function onInitialize(Event $event, Table $model) {
+    	$header = __($model->alias);
+    	$this->set('contentHeader', $header);
     }
 
 	public function index() {
