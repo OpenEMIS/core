@@ -119,12 +119,12 @@ class StudentFeesTable extends AppTable {
 			;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		$paginateOptions['finder'] = ['byGrades' => [
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->find('byGrades', [
 			'institution_id'=>$this->institutionId,
 			'education_grade_id'=>$this->_selectedEducationGradeId,
 			'academic_period_id'=>$this->_selectedAcademicPeriodId
-		]];
+		]);
 	}
 
 

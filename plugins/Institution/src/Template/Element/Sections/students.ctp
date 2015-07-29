@@ -51,7 +51,7 @@
 					<td><?= $obj->user->openemis_no ?></td>
 					<td><?= $obj->user->name ?></td>
 					<td><?= $obj->user->gender->name ?></td>
-					<td><?= $obj->user->date_of_birth_formatted ?></td>
+					<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
 					<td>
 						<?php
 						echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.education_grade_id", array(

@@ -39,16 +39,16 @@ class StaffTable extends BaseTable {
 		return $entity->staff_status->name;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$session = $request->session();
 		$institutionId = $session->read('Institutions.id');
 
-		$options['conditions']['InstitutionSiteStaff.institution_site_id'] = $institutionId;
-		$options['contain'] = [
-			'Users',
+		$query->contain([
 			'Positions.StaffPositionTitles',
-			'StaffStatuses'
-		];
+			'StaffStatuses',
+			'Users'
+		])
+		->group(['InstitutionSiteStaff.security_user_id']);
 	}
 
 	public function addBeforeAction(Event $event) {

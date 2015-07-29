@@ -4,6 +4,7 @@ namespace App\Model\Table;
 use ArrayObject;
 use Cake\I18n\Time;
 use Cake\ORM\Table;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
@@ -69,10 +70,11 @@ class ConfigItemsTable extends AppTable {
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query['type_value'];
-		$options['finder'] = ['visible' => []];
-		$options['conditions'][$this->aliasField('type')] = $type;
+		$query
+			->find('visible')
+			->where([$this->aliasField('type') => $type]);
 	}
 
 
