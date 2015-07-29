@@ -143,19 +143,17 @@ class InstitutionSitePositionsTable extends AppTable {
 				$id = $session->read($this->aliasField('id'));
 			}
 		}
+
 		if (!isset($id)) {
 			die('no position id specified');
 		}
 		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->InstitutionSiteStaff;
-		$currentStaff = $Staff ->find('all')
-							->where([$Staff->aliasField('end_date').' IS NULL'])
+		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
+							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
 							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo')
-							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
-							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
-							;
+							->find('withBelongsTo');
 
 		$this->fields['current_staff_list']['data'] = $currentStaff;
 		$totalCurrentFTE = '0.00';
@@ -167,14 +165,12 @@ class InstitutionSitePositionsTable extends AppTable {
 		$this->fields['current_staff_list']['totalCurrentFTE'] = $totalCurrentFTE;
 		// end Current Staff List field
 
-		// start Current Staff List field
-		$pastStaff = $Staff ->find('all')
+		// start PAST Staff List field
+		$pastStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
+							->andWhere([$Staff->aliasField('end_date').' < DATE(NOW())'])
 							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo')
-							->find('byPositions', ['InstitutionSitePositions.id'=>$id])
-							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
-							;
+							->find('withBelongsTo');
 
 		$this->fields['past_staff_list']['data'] = $pastStaff;
 		// end Current Staff List field

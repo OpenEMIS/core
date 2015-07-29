@@ -7,27 +7,13 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Utility\Inflector;
 use Cake\Network\Request;
 use Cake\Controller\Controller;
 
 class UserBehavior extends Behavior {
-	
 	private $associatedModel;
 	public function initialize(array $config) {
 		$this->associatedModel = (array_key_exists('associatedModel', $config))? $config['associatedModel']: null;
-	}
-
-	public function beforeFind(Event $event, Query $query, $options) {
-		$session = $this->_table->request->session();
-		if ($session->check('Institutions.id')) {
-			$institutionId = $session->read('Institutions.id');
-		} else {
-			$institutionId = 0;
-		}
-		$query
-			->where(['institution_site_id = '.$institutionId])
-			;
 	}
 
 	public function implementedEvents() {

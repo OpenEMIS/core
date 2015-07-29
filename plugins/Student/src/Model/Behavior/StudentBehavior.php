@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 
 class StudentBehavior extends Behavior {
@@ -20,15 +21,13 @@ class StudentBehavior extends Behavior {
 		]);
 	}
 
-	public function beforeFind(Event $event, Query $query, $options) {
-		$query
-			->join([
-				'table' => 'institution_site_students',
-				'alias' => 'InstitutionSiteStudents',
-				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStudents.security_user_id']
-			])
-			->group($this->_table->aliasField('id'));
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain([], true);
+		$query->innerJoin(
+			['InstitutionSiteStudents' => 'institution_site_students'],
+			['InstitutionSiteStudents.security_user_id = ' . $this->_table->aliasField('id')]
+		)
+		->group($this->_table->aliasField('id'));
 	}
 
 	public function implementedEvents() {
@@ -36,6 +35,7 @@ class StudentBehavior extends Behavior {
 		$newEvent = [
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.afterAction' => 'afterAction',
@@ -68,12 +68,56 @@ class StudentBehavior extends Behavior {
 		// $this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
+	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
+		$alias = $this->_table->alias;
+		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$institutionSiteArray = [];
+		switch($alias){
+			// For Institution Students
+			case "Students":
+				$session = $this->_table->Session;
+				$institutionId = $session->read('Institutions.id');
+
+				// Get number of student in institution
+				$studentCount = $table->find()
+					->where([$table->aliasField('institution_site_id') => $institutionId])
+					->count();
+
+				// Get Gender
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
+					['institution_site_id' => $institutionId, 'key'=>'Gender']);
+
+				// Get Age
+				$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
+					['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
+
+				// Get Grades
+				$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
+					['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
+				break;
+
+			// For Students
+			case "Users":
+				// Get total number of students
+				$studentCount = $table->find()
+					->count();
+
+				// Get the gender for all students
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
+				break;
+		}
+
 		if ($this->_table->action == 'index') {
-			$indexDashboard = 'Student.Students/dashboard';
+			$indexDashboard = 'dashboard';
 			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [
+	            	'model' => 'students',
+	            	'modelCount' => $studentCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];

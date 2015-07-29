@@ -46,8 +46,8 @@ $description = __d('open_emis', $_productName);
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
 				'class' => 'form-horizontal'
 			]);
-			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false]);
-			echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false]);
+			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
+			echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
 			?>
 			
 			<div class="input-select-wrapper">

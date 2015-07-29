@@ -8,6 +8,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 
 
 class InstitutionSiteStudentsTable extends AppTable {
@@ -29,9 +30,14 @@ class InstitutionSiteStudentsTable extends AppTable {
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => 'Years']],
 				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_site_student_gender' => [
+				'_function' => 'getNumberOfStudentsByGender'
+			],
+			'institution_site_student_age' => [
+				'_function' => 'getNumberOfStudentsByAge'
 			]
 		]);
-
 	}
 
 
@@ -164,5 +170,89 @@ class InstitutionSiteStudentsTable extends AppTable {
 		
 		return $params;
 	}
+
+	// Function use by the mini dashboard (For Institution Students and Students)
+	public function getNumberOfStudentsByGender($params=[]) {
+		$institutionSiteRecords = $this->find();
+		$institutionSiteStudentCount = $institutionSiteRecords
+			->contain(['Users', 'Users.Genders'])
+			->select([
+				'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+				'gender' => 'Genders.name'
+			])
+			->group('gender');
+
+		if (!empty($params['institution_site_id'])) {
+			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
+		}	
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($institutionSiteStudentCount->toArray() as $value) {
+            //Compile the dataset
+			$dataSet[] = [$value['gender'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
+	}
+
+	// Function use by the mini dashboard (For Institution Students)
+	public function getNumberOfStudentsByAge($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStudents.'.$key] = $value;
+		}
+
+		$studentsConditions = [
+			'Users.date_of_death IS NULL',
+		];
+
+		$studentsConditions = array_merge($studentsConditions, $_conditions);
+		$today = Time::today();
+
+		$institutionSiteRecords = $this->find();
+		$query = $institutionSiteRecords
+			->contain(['Users'])
+			->select([
+				'age' => $institutionSiteRecords->func()->dateDiff([
+					$institutionSiteRecords->func()->now(),
+					'Users.date_of_birth' => 'literal'
+				])
+			])
+			->where($studentsConditions)
+			->order('age');
+
+		$institutionSiteStudentCount = $query->toArray();
+
+		$prev_value = ['value' => null, 'amount' => null];
+
+		$convertAge = [];
+		
+		// (Logic to be reviewed)
+		// Calculate the age taking account to the average of leap years 
+		foreach($institutionSiteStudentCount as $val){
+			$convertAge[] = floor($val['age']/365.25);
+		}
+		// Count and sort the age
+		$result = [];
+		foreach ($convertAge as $val) {
+	    	if ($prev_value['age'] != $val) {
+	        	unset($prev_value);
+	        	$prev_value = ['age' => $val, 'count' => 0];
+	        	$result[] =& $prev_value;
+	    	}
+    		$prev_value['count']++;
+		}
+		
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($result as $value) {
+            //Compile the dataset
+			$dataSet[] = ['Age '.$value['age'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
+	}
+
 
 }
