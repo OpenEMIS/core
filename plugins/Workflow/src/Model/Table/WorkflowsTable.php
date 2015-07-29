@@ -81,8 +81,8 @@ class WorkflowsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$options['contain'] = array_merge($options['contain'], $this->_contain);
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain($this->_contain);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

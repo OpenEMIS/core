@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
 use App\Controller\AppController;
@@ -161,17 +162,17 @@ class StudentsController extends AppController {
 	}
 
 
-	public function beforePaginate($event, $model, $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
 		if ($model->alias() != 'Guardians') {
 			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('Students.security_user_id')) {
-					$securityUserId = $this->ControllerAction->Session->read('Students.security_user_id');
-					if (!array_key_exists('conditions', $options)) {
-						$options['conditions'] = [];
+				if ($session->check('Students.security_user_id')) {
+					$userId = $session->read('Students.security_user_id');
+
+					if ($model->hasField('security_user_id')) {
+						$query->where([$model->aliasField('security_user_id') => $userId]);
 					}
-					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
 				} else {
 					$this->Alert->warning('general.noData');
 					$this->redirect(['action' => 'index']);
@@ -179,7 +180,6 @@ class StudentsController extends AppController {
 				}
 			}
 		}
-		
 		return $options;
 	}
 
