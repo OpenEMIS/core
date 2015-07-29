@@ -171,44 +171,4 @@ class InstitutionSiteStaffTable extends AppTable {
 		return $params;
 	}
 
-	public function findByPeriod(Query $query, array $options) {
-		if (array_key_exists('Institutions.id', $options)
-			&& array_key_exists('academic_period_start_date', $options)
-			&& array_key_exists('academic_period_end_date', $options)) {
-
-			$institution_site_id = $options['Institutions.id'];
-			$academic_period_start_date = $options['academic_period_start_date'];
-			$academic_period_end_date = $options['academic_period_end_date'];
-
-			return $query
-					->where([$this->aliasField('institution_site_id') => $options['Institutions.id'], 
-						'OR' => array(
-									array(
-										$this->aliasField('end_date').' IS NOT NULL',
-										$this->aliasField('end_date').' BETWEEN "'.$academic_period_start_date.'" AND "'.$academic_period_end_date.'"'
-									),
-									array(
-										$this->aliasField('start_date').' IS NOT NULL',
-										$this->aliasField('start_date').' BETWEEN "'.$academic_period_start_date.'" AND "'.$academic_period_end_date.'"'
-									),
-									array(
-										$this->aliasField('end_date').' IS NOT NULL',
-										$this->aliasField('start_date').' IS NOT NULL',
-										$this->aliasField('start_date').' >= "' . $academic_period_start_date . '"',
-										$this->aliasField('end_date').' <= "' . $academic_period_end_date . '"',
-									),
-									array(
-										$this->aliasField('end_date').' IS NOT NULL',
-										$this->aliasField('start_date').' IS NOT NULL',
-										$this->aliasField('start_date').' <= "' . $academic_period_start_date . '"',
-										$this->aliasField('end_date').' >= "' . $academic_period_end_date . '"',
-									)
-							)	
-						]);	   
-
-		} else {
-			return $query;
-		}
-	}	
-
 }
