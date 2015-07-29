@@ -4,6 +4,7 @@ namespace Staff\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
@@ -17,9 +18,67 @@ class StaffBehavior extends Behavior {
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
+			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
+	}
+
+	// Logic for the mini dashboard
+	public function afterAction(Event $event) {
+		$alias = $this->_table->alias;
+		$table = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$institutionSiteArray = [];
+		switch($alias){
+
+			// For Institution Staff
+			case "Staff":
+				$session = $this->_table->Session;
+				$institutionId = $session->read('Institutions.id');
+				// Total Students: number
+
+				// Get Number of staff in an institution
+				$staffCount = $table->find()
+					->where([$table->aliasField('institution_site_id') => $institutionId])
+					->count();
+
+				// Get Gender
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', 
+					['institution_site_id' => $institutionId, 'key' => 'Gender']);
+
+				// To be implemented when the qualification table is fixed
+				// $institutionSiteArray['Qualification'] = $table->getDonutChart('institution_site_staff_qualification', 
+				// 	['institution_site_id' => $institutionId, 'key' => 'Qualification']);
+
+				// Get Staff Licenses
+				$table = TableRegistry::get('Staff.Licenses');
+				$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
+					['institution_site_id' => $institutionId, 'key' => 'Licenses']);
+
+				break;
+
+			// For Staffs
+			case "Users":
+				// Get Number of staffs
+				$staffCount = $table->find()
+					->count();
+				// Get Staff genders
+				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', ['key' => 'Gender']);
+				break;
+		}
+		if ($this->_table->action == 'index') {
+			$indexDashboard = 'dashboard';
+			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $staffCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
 	}
 
 	public function addBeforeAction(Event $event) {
