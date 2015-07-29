@@ -26,14 +26,56 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		if ($this->_table->alias() == 'Users') {
-			$query->contain([], true);
-			$query->innerJoin(
-				['InstitutionSiteStaff' => 'institution_site_staff'],
-				['InstitutionSiteStaff.security_user_id = ' . $this->_table->aliasField('id')]
-			)
-			->group($this->_table->aliasField('id'));
+		$query->contain(['Users', 'Institutions', 'StaffStatuses']);
+
+		$search = $this->_table->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			$searchString = '%' . $search . '%';
+			$query->where(['Users.openemis_no LIKE' => $searchString]);
+			$query->orWhere(['Users.first_name LIKE' => $searchString]);
+			$query->orWhere(['Users.middle_name LIKE' => $searchString]);
+			$query->orWhere(['Users.third_name LIKE' => $searchString]);
+			$query->orWhere(['Users.last_name LIKE' => $searchString]);
 		}
+	}
+
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		$settings['model'] = 'Institution.InstitutionSiteStaff';
+
+		$this->_table->ControllerAction->field('name');
+		$this->_table->ControllerAction->field('default_identity_type');
+		$this->_table->ControllerAction->field('institution');
+		$this->_table->ControllerAction->field('staff_status');
+
+		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
+			'name', 'default_identity_type', 'institution', 'staff_status']);
+	}
+
+	public function onGetInstitution(Event $event, Entity $entity) {
+		return $entity->institution->name;
+	}
+
+	public function onGetStaffStatus(Event $event, Entity $entity) {
+		$name = '';
+		if ($entity instanceof User) {
+			$session = $event->subject()->request->session();
+			$institutionId = $session->read('Institutions.id');
+
+			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+			$obj = $InstitutionSiteStaff->find()
+				->contain('StaffStatuses')
+				->where([
+					$InstitutionSiteStaff->aliasField('institution_site_id') => $institutionId,
+					$InstitutionSiteStaff->aliasField('security_user_id') => $entity->id
+				])
+				->first();
+			$name = $obj->staff_status->name;
+		} else { // from Institutions -> Staff
+			if (!empty($entity->staff_status)) {
+				$name = $entity->staff_status->name;
+			}
+		}
+		return $name;
 	}
 
 	// Logic for the mini dashboard
@@ -100,21 +142,6 @@ class StaffBehavior extends Behavior {
 			'value' => 0
 		]);
 		$this->_table->fields['openemis_no']['attr']['value'] = $this->_table->getUniqueOpenemisId(['model'=>Inflector::singularize('Staff')]);
-	}
-
-	public function indexBeforeAction(Event $event) {
-		$this->_table->fields['staff_institution_name']['visible'] = true;
-
-		$this->_table->ControllerAction->field('name', []);
-		$this->_table->ControllerAction->field('default_identity_type', []);
-		$this->_table->ControllerAction->field('staff_institution_name', []);
-		$this->_table->ControllerAction->field('staffstatus', []);
-
-		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'staff_institution_name', 'staffstatus']);
-
-		$indexDashboard = 'Staff.Staff/dashboard';
-		$this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

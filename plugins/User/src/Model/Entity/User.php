@@ -10,7 +10,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'staff_institution_name'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -68,21 +68,4 @@ class User extends Entity {
 		}
 		return $data;
 	}
-
-    protected function _getStaffInstitutionName() {
-        $data = "";
-        $securityUserId = $this->id;
-
-        $InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
-        $InstitutionSite = $InstitutionSiteStaff
-                ->find()
-                ->contain(['Institutions'])
-                ->where(['security_user_id' => $securityUserId])
-                ->first();
-
-        if(!empty($InstitutionSite->institution))
-            $data = $InstitutionSite->institution->name;
-
-        return $data;
-    }
 }
