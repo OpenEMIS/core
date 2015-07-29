@@ -11,8 +11,8 @@ echo $this->Html->script('dashboards', ['block' => true]);
 		vertical-align: middle;
 	}
 	.minidashboard-donut {
-		height: 140px;
-		width: 140px;
+		height: 100px;
+		width: 100px;
 		visibility: hidden;
 	}
 </style>

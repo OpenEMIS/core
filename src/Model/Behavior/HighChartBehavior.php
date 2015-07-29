@@ -67,7 +67,7 @@ class HighChartBehavior extends Behavior {
 					'verticalAlign' => 'middle',
 					'x' => '-40',
 					'y' => '12',
-					'style' => ['fontSize' => '14px', 'fontWeight'=> '400']];
+					'style' => ['fontSize' => '12px', 'fontWeight'=> '400']];
 		$selectedConfig['chart'] = 
 					['backgroundColor' => 'rgba(255, 255, 255, 0.002)',
 					'margin' => 0,
