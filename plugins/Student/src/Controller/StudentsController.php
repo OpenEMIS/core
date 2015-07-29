@@ -166,26 +166,21 @@ class StudentsController extends AppController {
 		}
 	}
 
-
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
-		if ($model->alias() != 'Guardians') {
-			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($session->check('Students.security_user_id')) {
+		if ($model->alias() != 'InstitutionSiteStudents') {
+			if ($session->check('Students.security_user_id')) {
+				if ($model->hasField('security_user_id')) {
 					$userId = $session->read('Students.security_user_id');
-
-					if ($model->hasField('security_user_id')) {
-						$query->where([$model->aliasField('security_user_id') => $userId]);
-					}
-				} else {
-					$this->Alert->warning('general.noData');
-					$this->redirect(['action' => 'index']);
-					return false;
+					$query->where([$model->aliasField('security_user_id') => $userId]);
 				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
 			}
 		}
-		return $options;
 	}
 
 	public function excel($id=0) {

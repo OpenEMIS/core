@@ -24,6 +24,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes','foreignKey' => 'education_programme_id']);
 		$this->belongsTo('StudentStatuses',		['className' => 'FieldOption.StudentStatuses', 	'foreignKey' => 'student_status_id']);
 
+		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('HighChart', [
         	'number_of_students_by_year' => [
         		'_function' => 'getNumberOfStudentsByYear',
@@ -39,9 +40,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 			]
 		]);
 	}
-
-
-
+	
 	// public function addBeforeAction(Event $event) {
 	// 	$this->ControllerAction->field('institution');
 	// 	$this->ControllerAction->field('academic_period');

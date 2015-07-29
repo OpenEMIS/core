@@ -26,23 +26,15 @@ class StudentsTable extends BaseTable {
 
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		// parent::indexBeforePaginate($event, $request, $query, $options);
-		// if ($this->Session->check('Institutions.id')) {
-		// 	$institutionId = $this->Session->read('Institutions.id');
-		// 	// $options['contain'] = ['InstitutionSiteStudents'];
-		// 	$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
-		// }
-// pr($this->fields);
-		// $query->contain([
-		// 	'Users'
-		// ])
-		// ->group(['InstitutionSiteStudents.security_user_id']);
+		parent::indexBeforePaginate($event, $request, $query, $options);
+		if ($this->Session->check('Institutions.id')) {
+			$institutionId = $this->Session->read('Institutions.id');
+			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
+		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
-
-		// $settings['model'] = 'Institution.InstitutionSiteStudents';
 
 		$this->ControllerAction->field('programme_section', []);
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
@@ -138,7 +130,7 @@ class StudentsTable extends BaseTable {
 			$statusOptions = $StudentStatus->getList()->toArray();
 			
 			$attr['options'] = $statusOptions;
-			$attr['order'] = 66;
+			// $attr['order'] = 66;
 
 			if ($action == 'edit') {
 				$userId = $request->pass[1];
@@ -170,6 +162,14 @@ class StudentsTable extends BaseTable {
 		]);
 	}
 	// End Jeff: temporary workaround
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function($model, $id, $options) {
+			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+			return $InstitutionStudents->delete($InstitutionStudents->get($id));
+		};
+		return $process;
+	}
 
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
@@ -379,14 +379,7 @@ class StudentsTable extends BaseTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if (array_key_exists('remove', $buttons)) {
-			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
-				// pr($entity);cthreeone
-				if (isset($entity->institution_site_students)) {
-					if (array_key_exists(0, $entity->institution_site_students)) {
-						$buttons['remove']['attr']['field-value'] = $entity->institution_site_students[0]->id;
-					}
-				}
-			}
+			$buttons['remove']['attr']['field-value'] = $entity->id;
 		}
 		
 		return $buttons;
