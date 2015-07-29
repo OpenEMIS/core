@@ -235,13 +235,15 @@ class InstitutionSiteStudentsTable extends AppTable {
 		}
 		// Count and sort the age
 		$result = [];
+		$prevValue['age'] = "";
+		$prevValue['count'] = "";
 		foreach ($convertAge as $val) {
 	    	if ($prev_value['age'] != $val) {
 	        	unset($prev_value);
-	        	$prev_value = ['age' => $val, 'count' => 0];
+	        	$prevValue = ['age' => $val, 'count' => 0];
 	        	$result[] =& $prev_value;
 	    	}
-    		$prev_value['count']++;
+    		$prevValue['count']++;
 		}
 		
 		// Creating the data set		
@@ -253,6 +255,4 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$params['dataSet'] = $dataSet;
 		return $params;
 	}
-
-
 }
