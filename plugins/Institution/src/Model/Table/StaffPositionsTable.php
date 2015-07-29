@@ -97,7 +97,6 @@ class StaffPositionsTable extends AppTable {
 		if (empty($attr['options'])){
 			$this->_table->ControllerAction->Alert->warning('Institution.StaffPositions.staffStatusId');
 		}
-		
 		return $attr;
 	}
 
@@ -125,5 +124,14 @@ class StaffPositionsTable extends AppTable {
 	    		$toolbarButtons['list']['url']['1'] = $staffPosition->institution_site_position_id;
     		}
     	} 
+	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator
+ 	        ->add('end_date', 'ruleCompareDateReverse', [
+		            'rule' => ['compareDateReverse', 'start_date', false]
+	    	    ])
+	        ;
+		return $validator;
 	}
 }
