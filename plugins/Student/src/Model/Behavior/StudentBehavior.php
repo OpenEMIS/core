@@ -68,6 +68,7 @@ class StudentBehavior extends Behavior {
 		// $this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
+	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		$alias = $this->_table->alias;
 		$table = TableRegistry::get('Institution.InstitutionSiteStudents');

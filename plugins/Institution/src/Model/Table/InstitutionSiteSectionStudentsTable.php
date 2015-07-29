@@ -171,6 +171,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 		return $params;
 	}
 
+	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];

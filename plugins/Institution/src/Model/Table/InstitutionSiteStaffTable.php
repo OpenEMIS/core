@@ -251,10 +251,9 @@ class InstitutionSiteStaffTable extends AppTable {
 		return $params;
 	}
 
+	// Logic for mini dashboard (Institution Staff and Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
-
 			$institutionSiteRecords = $this->find();
-			
 			$institutionSiteStaffCount = $institutionSiteRecords
 				->contain(['Users', 'Users.Genders'])
 				->select([
@@ -277,63 +276,4 @@ class InstitutionSiteStaffTable extends AppTable {
 		//}
 		return $params;
 	}
-
-	public function getNumberOfStaffsByQualification($params=[]) {
-
-			$institutionSiteRecords = $this->find();
-			
-			$institutionSiteStaffCount = $institutionSiteRecords
-				->contain(['Users']);
-				// ->select([
-				// 	'count' => $institutionSiteRecords->func()->count('security_user_id'),	
-
-				// ])
-				// ->group('gender_id');
-
-			if (!empty($params['institution_site_id'])) {
-				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
-			}
-			$institutionSiteStaffCount = $institutionSiteStaffCount->toArray();
-			pr($institutionSiteStaffCount);
-
-			// Creating the data set		
-			$dataSet = [];
-			foreach ($institutionSiteStaffCount as $value) {
-	            //Compile the dataset
-				//$dataSet[] = [$value['gender'], $value['count']];
-			}
-			$params['dataSet'] = $dataSet;
-		//}
-		return $params;
-	}
-
-	public function getNumberOfStaffsByLicence($params=[]) {
-
-			$institutionSiteRecords = $this->find();
-			
-			$institutionSiteStaffCount = $institutionSiteRecords
-				->contain(['Users']);
-				// ->select([
-				// 	'count' => $institutionSiteRecords->func()->count('security_user_id'),	
-
-				// ])
-				// ->group('gender_id');
-
-			if (!empty($params['institution_site_id'])) {
-				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
-			}
-			$institutionSiteStaffCount = $institutionSiteStaffCount->toArray();
-			pr($institutionSiteStaffCount);
-
-			// Creating the data set		
-			$dataSet = [];
-			foreach ($institutionSiteStaffCount as $value) {
-	            //Compile the dataset
-				//$dataSet[] = [$value['gender'], $value['count']];
-			}
-			$params['dataSet'] = $dataSet;
-		//}
-		return $params;
-	}
-
 }
