@@ -69,14 +69,12 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain($this->_contain);
+		list($workflowOptions, $selectedWorkflow) = array_values($this->_getSelectOptions());
+		$this->controller->set(compact('workflowOptions', 'selectedWorkflow'));
 
-		// list($workflowOptions, $selectedWorkflow) = array_values($this->_getSelectOptions());
-		// $this->controller->set(compact('workflowOptions', 'selectedWorkflow'));
-
-		// $options['conditions'][] = [
-			// $this->aliasField('workflow_id') => $selectedWorkflow
-		// ];
+		$query
+			->contain($this->_contain)
+			->where([$this->aliasField('workflow_id') => $selectedWorkflow]);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
