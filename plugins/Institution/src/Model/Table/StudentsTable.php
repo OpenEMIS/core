@@ -24,18 +24,26 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		parent::indexBeforePaginate($event, $request, $query, $options);
-		if ($this->Session->check('Institutions.id')) {
-			$institutionId = $this->Session->read('Institutions.id');
-			$options['contain'] = ['InstitutionSiteStudents'];
-			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
-		}
-	}
 
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// parent::indexBeforePaginate($event, $request, $query, $options);
+		// if ($this->Session->check('Institutions.id')) {
+		// 	$institutionId = $this->Session->read('Institutions.id');
+		// 	// $options['contain'] = ['InstitutionSiteStudents'];
+		// 	$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
+		// }
+// pr($this->fields);
+		// $query->contain([
+		// 	'Users'
+		// ])
+		// ->group(['InstitutionSiteStudents.security_user_id']);
+	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
+
+		// $settings['model'] = 'Institution.InstitutionSiteStudents';
+
 		$this->ControllerAction->field('programme_section', []);
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programme_section', 'student_status']);

@@ -10,7 +10,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -99,23 +99,6 @@ class User extends Entity {
 
         if(!empty($InstitutionSite->institution))
             $data = $InstitutionSite->institution->name;
-
-        return $data;
-    }
-
-    protected function _getStudentStatus() {
-        $data = "";
-        $securityUserId = $this->id;
-
-        $InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-        $StudentStatus = $InstitutionSiteStudents
-                ->find()
-                ->contain(['StudentStatuses'])
-                ->where(['security_user_id' => $securityUserId])
-                ->first();
-     
-        if(!empty($StudentStatus->student_status))
-            $data = $StudentStatus->student_status->name;
 
         return $data;
     }

@@ -40,9 +40,6 @@ class StaffTable extends BaseTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$session = $request->session();
-		$institutionId = $session->read('Institutions.id');
-
 		$query->contain([
 			'Positions.StaffPositionTitles',
 			'StaffStatuses',
