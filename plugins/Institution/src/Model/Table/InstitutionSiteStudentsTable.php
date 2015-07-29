@@ -171,6 +171,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		return $params;
 	}
 
+	// Function use by the mini dashboard (For Institution Students and Students)
 	public function getNumberOfStudentsByGender($params=[]) {
 		$institutionSiteRecords = $this->find();
 		$institutionSiteStudentCount = $institutionSiteRecords
@@ -194,6 +195,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		return $params;
 	}
 
+	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByAge($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
@@ -226,9 +228,12 @@ class InstitutionSiteStudentsTable extends AppTable {
 
 		$convertAge = [];
 		
+		// (Logic to be reviewed)
+		// Calculate the age taking account to the average of leap years 
 		foreach($institutionSiteStudentCount as $val){
 			$convertAge[] = floor($val['age']/365.25);
 		}
+		// Count and sort the age
 		$result = [];
 		foreach ($convertAge as $val) {
 	    	if ($prev_value['age'] != $val) {
