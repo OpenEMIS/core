@@ -19,6 +19,8 @@ class SurveyFormsTable extends CustomFormsTable {
 			'through' => 'Survey.SurveyFormsQuestions',
 			'dependent' => true
 		]);
+
+		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -36,6 +38,22 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
 		return $entity->custom_module->code;
+	}
+
+	public function beforeAction(Event $event){
+		$this->ControllerAction->field('questions', [
+			'label' => '',
+			'override' => true,
+			'type' => 'element',
+			'element' => 'Survey.Form/questions',
+			'data' => [	
+				// 'students'=>[],
+				// 'studentOptions'=>[],
+				// 'categoryOptions'=>$categoryOptions
+			],
+			'visible' => ['view'=>true, 'edit'=>true]
+			// 'visible' => false
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
