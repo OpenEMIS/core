@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 
 class StudentBehavior extends Behavior {
@@ -20,15 +21,13 @@ class StudentBehavior extends Behavior {
 		]);
 	}
 
-	public function beforeFind(Event $event, Query $query, $options) {
-		$query
-			->join([
-				'table' => 'institution_site_students',
-				'alias' => 'InstitutionSiteStudents',
-				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'InstitutionSiteStudents.security_user_id']
-			])
-			->group($this->_table->aliasField('id'));
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain([], true);
+		$query->innerJoin(
+			['InstitutionSiteStudents' => 'institution_site_students'],
+			['InstitutionSiteStudents.security_user_id = ' . $this->_table->aliasField('id')]
+		)
+		->group($this->_table->aliasField('id'));
 	}
 
 	public function implementedEvents() {
@@ -36,6 +35,7 @@ class StudentBehavior extends Behavior {
 		$newEvent = [
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.afterAction' => 'afterAction',

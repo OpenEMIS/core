@@ -269,6 +269,15 @@ trait MessagesTrait {
 				'noSections' => 'There is no section under the selected academic period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+				],
+				'email' => [
+					'ruleValidEmail' => 'Please enter a valid Email'
+				],
+				'longitude' => [
+					'ruleLongitude' => 'Please enter a valid Longitude'
+				],
+				'latitude' => [
+					'ruleLatitude' => 'Please enter a valid Latitude'
 				]
 			],
 			
@@ -593,6 +602,9 @@ trait MessagesTrait {
 			'AcademicPeriods' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'current' => [
+					'ruleValidateNeeded' => 'Academic Period needs to be set as current'
 				]
 			]
 		],

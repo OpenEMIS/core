@@ -3,6 +3,7 @@ namespace Infrastructure\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -27,7 +28,7 @@ class InfrastructureTypesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
 
@@ -35,9 +36,7 @@ class InfrastructureTypesTable extends AppTable {
         	$this->Alert->warning('InfrastructureTypes.noLevels');
         }
 
-		$options['conditions'][] = [
-        	$this->aliasField('infrastructure_level_id') => $selectedLevel
-        ];
+		$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 	}
 
 	public function addEditBeforeAction(Event $event) {
