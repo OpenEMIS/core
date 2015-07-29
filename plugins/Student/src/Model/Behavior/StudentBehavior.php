@@ -22,12 +22,16 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain([], true);
-		$query->innerJoin(
-			['InstitutionSiteStudents' => 'institution_site_students'],
-			['InstitutionSiteStudents.security_user_id = ' . $this->_table->aliasField('id')]
-		)
-		->group($this->_table->aliasField('id'));
+		if ($this->_table->alias() == 'Users') {
+			// $query->contain([], true);
+			// $query->innerJoin(
+			// 	['InstitutionSiteStudents' => 'institution_site_students'],
+			// 	['InstitutionSiteStudents.security_user_id = ' . $this->_table->aliasField('id')]
+			// )
+			// ->group($this->_table->aliasField('id'));
+		}
+		$query->contain(['Users'])
+		->group($this->_table->aliasField('security_user_id'));
 	}
 
 	public function implementedEvents() {
@@ -44,6 +48,10 @@ class StudentBehavior extends Behavior {
 		return $events;
 	}
 
+	// public function onGetStudentStatus(Event $event, Entity $entity) {
+	// 	return $entity->student_status->name;
+	// }
+
 	public function addBeforeAction(Event $event) {
 		$name = $this->_table->alias();
 		$this->_table->ControllerAction->addField('institution_site_students.0.institution_site_id', [
@@ -53,7 +61,9 @@ class StudentBehavior extends Behavior {
 		$this->_table->fields['openemis_no']['attr']['value'] = $this->_table->getUniqueOpenemisId(['model'=>Inflector::singularize('Student')]);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		$settings['model'] = 'Institution.InstitutionSiteStudents';
+
 		$this->_table->fields['student_institution_name']['visible'] = true;
 
 		$this->_table->ControllerAction->field('name', []);
@@ -70,7 +80,7 @@ class StudentBehavior extends Behavior {
 
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
-		$alias = $this->_table->alias;
+		$alias = $this->_table->alias();
 		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
 		$institutionSiteArray = [];
 		switch($alias){
