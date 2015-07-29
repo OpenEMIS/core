@@ -194,14 +194,19 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
         if ($entity->isNew()) {
-
-			$data = ['name' => $entity->name];
-			$obj = $SecurityGroup->newEntity();
-			$obj = $SecurityGroup->patchEntity($obj, $data);
+			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
 			$securityGroup = $SecurityGroup->save($obj);
 			if ($securityGroup) {
+				// add the relationship of security group and institutions
+				$securityInstitution = $SecurityInstitutions->newEntity([
+					'security_group_id' => $securityGroup->id, 
+					'institution_site_id' => $entity->id
+				]);
+				$SecurityInstitutions->save($securityInstitution);
+
 				$this->trackActivity = false;
 				$entity->security_group_id = $securityGroup->id;
 				if (!$this->save($entity)) {
@@ -212,7 +217,6 @@ class InstitutionsTable extends AppTable  {
 			}
 
         } else {
-
 			$securityGroupId = $entity->security_group_id;
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);
@@ -274,25 +278,24 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// the query options are setup so that Security.InstitutionBehavior can reuse it
+		$options['query'] = [
+			'contain' => ['InstitutionSiteTypes'],
+			'select' => [
+				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
+				'Areas.name', 'InstitutionSiteTypes.name'
+			],
+			'join' => [
+				[
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+					'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+				]
+			]
+		];
 		$query->contain([], true);
-		$query->contain(['InstitutionSiteTypes']);
-		$query->select([
-			$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-			'Areas.name', 'InstitutionSiteTypes.name'
-		]);
-		$query->innerJoin(['Areas' => 'areas'], ['Areas.id = ' . $this->aliasField('area_id')]);
-		
-		// $options['contain'] = ['InstitutionSiteTypes'];
-		// $options['fields'] = [
-		// 	$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-		// 	'Areas.name', 'InstitutionSiteTypes.name'
-		// ];
-		// $options['join'] = [
-		// 	[
-		// 		'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
-		// 		'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
-		// 	]
-		// ];
+		$query->contain($options['query']['contain']);
+		$query->select($options['query']['select']);
+		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
