@@ -659,7 +659,7 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id)->contain($contain);
+			$query = $model->find()->where([$idKey => $id])->contain($contain);
 
 			// Event: viewEditBeforeQuery
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
@@ -824,7 +824,7 @@ class ControllerActionComponent extends Component {
 		// End Event
 
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id);
+			$query = $model->find()->where([$idKey => $id]);
 
 			// Event: viewEditBeforeQuery
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
