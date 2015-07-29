@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -62,14 +63,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->fields['comment']['visible'] = false;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-
-        $options['conditions'][] = [
-        	$this->aliasField('infrastructure_level_id') => $selectedLevel
-        ];
-
 		$this->controller->set(compact('levelOptions', 'selectedLevel'));
+
+		$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 	}
 
 	public function addEditBeforeAction(Event $event) {

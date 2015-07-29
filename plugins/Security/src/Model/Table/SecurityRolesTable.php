@@ -87,17 +87,17 @@ class SecurityRolesTable extends AppTable {
 		return $attr;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query('type');
 		
 		$selectedGroup = $request->query('security_group_id');
 		if ($type == 'system') {
-			$options['conditions']['OR'] = [
-				$this->aliasField('security_group_id') . ' = 0', // custom system defined roles
-				$this->aliasField('security_group_id') . ' = -1' // fixed system defined roles
-			];
+
+			$query
+			->where([$this->aliasField('security_group_id') => 0])		// custom system defined roles
+			->orWhere([$this->aliasField('security_group_id') => -1]);	// fixed system defined roles
 		} else {
-			$options['conditions'][$this->aliasField('security_group_id')] = $selectedGroup;
+			$query->where([$this->aliasField('security_group_id') => $selectedGroup]);
 		}
 	}
 

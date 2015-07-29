@@ -24,17 +24,12 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		parent::indexBeforePaginate($event, $request, $options);
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		parent::indexBeforePaginate($event, $request, $query, $options);
 		if ($this->Session->check('Institutions.id')) {
 			$institutionId = $this->Session->read('Institutions.id');
-			$options['contain'] = [
-				'InstitutionSiteStudents' => [
-					'conditions' => [
-						'InstitutionSiteStudents.institution_site_id' => $institutionId
-					]
-				]
-			];
+			
+			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 		}
 	}
 
