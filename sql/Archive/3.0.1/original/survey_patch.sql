@@ -83,7 +83,7 @@ BEGIN
 		END IF;
 
 		IF questionType <> 1 THEN
-			INSERT INTO `survey_forms_questions` (`id`, `survey_form_id`, `survey_question_id`, `section`, `order`) VALUES (uuid(), formId, questionId, @sectionName, questionType);
+			INSERT INTO `survey_forms_questions` (`id`, `survey_form_id`, `survey_question_id`, `section`, `order`) VALUES (uuid(), formId, questionId, @sectionName, questionOrder);
 		END IF;
 
 	END LOOP read_loop;

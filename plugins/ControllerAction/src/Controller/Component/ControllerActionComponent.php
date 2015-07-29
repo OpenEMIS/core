@@ -497,6 +497,16 @@ class ControllerActionComponent extends Component {
 		return $modal;
 	}
 
+	public function getContains($model, $type = 'belongsTo') { // type is not being used atm
+		$contain = [];
+		foreach ($model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+				$contain[] = $assoc->name();
+			}
+		}
+		return $contain;
+	}
+
 	public function search($model, $order = []) {
 		$alias = $model->alias();
 		$controller = $this->controller;
@@ -517,17 +527,17 @@ class ControllerActionComponent extends Component {
 				}
 			}
 		}
-		$conditions = isset($options['conditions']) ? $options['conditions'] : [];
 
-		$contain = [];
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
-			}
+		$query = $model->find();
+
+		// $conditions = isset($options['conditions']) ? $options['conditions'] : [];
+
+		$contain = $this->getContains($model);
+		if (!empty($contain)) {
+			$query->contain($contain);
 		}
 
-		// all string fields are searchable by default
-		$OR = isset($conditions['OR']) ? $conditions['OR'] : [];
+		$OR = [];
 		if (!empty($search)) {
 			foreach($schema as $name => $obj) {
 				if ($obj['type'] == 'string' && $name != 'password') {
@@ -535,35 +545,46 @@ class ControllerActionComponent extends Component {
 				}
 			}
 		}
+
 		if (!empty($OR)) {
-			$conditions['OR'] = $OR;
+			$query->where(['OR' => $OR]);
 		}
+
+
+		// $conditions = [];
+
+		// all string fields are searchable by default
+		// $OR = isset($conditions['OR']) ? $conditions['OR'] : [];
+		// if (!empty($search)) {
+		// 	foreach($schema as $name => $obj) {
+		// 		if ($obj['type'] == 'string' && $name != 'password') {
+		// 			$OR["$alias.$name LIKE"] = '%' . $search . '%';
+		// 		}
+		// 	}
+		// }
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
-			$order = [$model->aliasField($this->orderField) => 'asc'];
+			$query->order([$model->aliasField($this->orderField) => 'asc']);
 		}
 
-		$paginateOptions = new ArrayObject(['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions]);
-		if (!empty($contain)) {
-			$paginateOptions['contain'] = $contain;
-		}
+		$options = new ArrayObject(['limit' => $this->pageOptions[$limit]]);
 
 		$this->Session->write($alias.'.search.key', $search);
 		$this->request->data['Search']['searchField'] = $search;
 		$this->request->data['Search']['limit'] = $limit;
-		// $controller->set('search', $search);
-		// $controller->set('pageOptions', $this->pageOptions);
+		
 		$this->config['search'] = $search;
 		$this->config['pageOptions'] = $this->pageOptions;
 
-		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $paginateOptions]);
+		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $query, $options]);
 		$event = $this->controller->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
-		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $paginateOptions]);
+		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $query, $options]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		$data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
+		// $data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
+		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
 		$event = $this->model->eventManager()->dispatch($event);
@@ -868,7 +889,7 @@ class ControllerActionComponent extends Component {
 						$action = $this->buttons['view']['url'];
 
 						// Event: editAfterSave
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, [$this->controller]);
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, $params);
 						if ($event->isStopped()) { return $event->result; }
 						// End Event
 						

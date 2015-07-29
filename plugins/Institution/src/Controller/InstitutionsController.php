@@ -4,6 +4,7 @@ namespace Institution\Controller;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -165,17 +166,17 @@ class InstitutionsController extends AppController  {
 		}
 	}
 
-	public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
 		if ($model->hasField('institution_site_id')) {
 			if (!$session->check('Institutions.id')) {
 				$this->Alert->error('general.notExists');
+				// should redirect
+			} else {
+				$query->where([$model->aliasField('institution_site_id') => $session->read('Institutions.id')]);
 			}
-			$options['conditions'][$model->aliasField('institution_site_id')] = $session->read('Institutions.id');
 		}
-		
-		return $options;
 	}
 
 	public function excel($id=0) {
