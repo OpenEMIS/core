@@ -10,7 +10,7 @@ use App\Model\Traits\UserTrait;
 class User extends Entity {
 	use UserTrait;
 
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status', 'programme_section'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'student_institution_name', 'staff_institution_name', 'student_status'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -118,50 +118,5 @@ class User extends Entity {
             $data = $StudentStatus->student_status->name;
 
         return $data;
-    }
-
-    protected function _getProgrammeSection() {
-		if ($this->has('institution_site_students')) {
-			$education_programme_id = $this->institution_site_students[0]->education_programme_id;
-			$institutionId = $this->institution_site_students[0]->institution_site_id;
-			$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-
-			$query = $EducationProgrammes
-				->find()
-				->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $education_programme_id])
-				->first();
-			$educationProgrammeName = ($query)? $query->name: '';
-
-			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$query = $InstitutionSiteSectionStudents->find()
-				->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $this->id])
-				->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc')
-				;
-
-			if (isset($institutionId)) {
-				$query->contain(
-					[
-						'InstitutionSiteSections'  => function ($q) use ($institutionId) {
-							return $q
-								->select(['id', 'name'])
-								->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
-							}
-					]
-				);
-			} else {
-				$query->contain('InstitutionSiteSections');
-			}
-
-			$sectionName = [];
-			foreach ($query as $key => $value) {
-				if ($value->institution_site_section) {
-					if (isset($value->institution_site_section->name)) {
-						$sectionName[] = $value->institution_site_section->name;
-					}
-				}
-			}
-			// sectionName
-			return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
-		}		
     }
 }
