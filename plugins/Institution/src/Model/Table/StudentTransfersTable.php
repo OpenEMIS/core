@@ -145,6 +145,18 @@ class StudentTransfersTable extends AppTable {
 		]);
 	}
 
+	/* to be implemented with custom autocomplete
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		if ($action == 'edit') {
+			$includes['autocomplete'] = [
+				'include' => true, 
+				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+			];
+		}
+	}
+	*/
+
 	public function onUpdateFieldStudent(Event $event, array $attr, $action, $request) {
 		$selectedStudent = $request->data[$this->alias()]['security_user_id'];
 
@@ -173,7 +185,17 @@ class StudentTransfersTable extends AppTable {
 
 			$attr['type'] = 'select';
 			$attr['options'] = $institutionOptions;
-			$attr['onChangeReload'] = 'changeInstitution';
+
+			/* to be implemented with custom autocomplete
+			$attr['type'] = 'string';
+			$attr['attr'] = [
+				'class' => 'autocomplete',
+				'autocomplete-url' => '/core_v3/Institutions/Transfers/ajaxInstitutionAutocomplete',
+				'autocomplete-class' => 'error-message',
+				'autocomplete-no-results' => __('No Institution found.'),
+				'value' => ''
+			];
+			*/
 		} else if ($action == 'edit') {
 			$selectedInstitution = $request->data[$this->alias()]['institution_site_id'];
 
@@ -462,4 +484,18 @@ class StudentTransfersTable extends AppTable {
 
 		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 	}
+
+	/* to be implemented with custom autocomplete
+	public function ajaxInstitutionAutocomplete() {
+		$this->controller->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$term = $this->request->query['term'];
+			$data = $this->Institutions->autocomplete($term);
+			echo json_encode($data);
+			die;
+		}
+	}
+	*/
 }
