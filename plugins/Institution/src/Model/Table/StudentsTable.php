@@ -28,7 +28,7 @@ class StudentsTable extends BaseTable {
 		parent::indexBeforePaginate($event, $request, $query, $options);
 		if ($this->Session->check('Institutions.id')) {
 			$institutionId = $this->Session->read('Institutions.id');
-			
+			$options['contain'] = ['InstitutionSiteStudents'];
 			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 		}
 	}
@@ -39,6 +39,48 @@ class StudentsTable extends BaseTable {
 		$this->ControllerAction->field('programme_section', []);
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programme_section', 'student_status']);
+	}
+
+	public function onGetProgrammeSection(Event $event, Entity $entity) {
+		$institutionSite = $entity->institution_site_students;
+		$educationProgrammeId = $institutionSite[0]->education_programme_id;
+		$institutionId = $institutionSite[0]->institution_site_id;
+
+		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+		$query = $EducationProgrammes
+			->find()
+			->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $educationProgrammeId])
+			->first();
+		$educationProgrammeName = ($query)? $query->name: '';
+
+		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$query = $InstitutionSiteSectionStudents->find()
+			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $entity->id])
+			->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc');
+
+		if (isset($institutionId)) {
+			$query->contain(
+				[
+					'InstitutionSiteSections'  => function ($q) use ($institutionId) {
+						return $q
+							->select(['id', 'name'])
+							->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
+						}
+				]
+			);
+		} else {
+			$query->contain('InstitutionSiteSections');
+		}
+
+		$sectionName = [];
+		foreach ($query as $key => $value) {
+			if ($value->institution_site_section) {
+				if (isset($value->institution_site_section->name)) {
+					$sectionName[] = $value->institution_site_section->name;
+				}
+			}
+		}
+		return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
 	}
 
 	public function addAfterAction(Event $event) {
