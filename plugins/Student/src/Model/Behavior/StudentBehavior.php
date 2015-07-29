@@ -50,6 +50,22 @@ class StudentBehavior extends Behavior {
 		}
 	}
 
+	public function onGetName(Event $event, Entity $entity) {
+		return $entity->user->name;
+	}
+
+	public function onGetOpenemisNo(Event $event, Entity $entity) {
+		return $entity->user->openemis_no;
+	}
+
+	public function onGetDefaultIdentityType(Event $event, Entity $entity) {
+		return $entity->user->default_identity_type;
+	}
+
+	public function onGetInstitution(Event $event, Entity $entity) {
+		return $entity->institution->name;
+	}
+
 	public function onGetStudentStatus(Event $event, Entity $entity) {
 		$name = '';
 		if ($entity instanceof User) {
@@ -71,22 +87,6 @@ class StudentBehavior extends Behavior {
 			}
 		}
 		return $name;
-	}
-
-	public function onGetName(Event $event, Entity $entity) {
-		return $entity->user->name;
-	}
-
-	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
-	}
-
-	public function onGetDefaultIdentityType(Event $event, Entity $entity) {
-		return $entity->user->default_identity_type;
-	}
-
-	public function onGetInstitution(Event $event, Entity $entity) {
-		return $entity->institution->name;
 	}
 
 	public function addBeforeAction(Event $event) {

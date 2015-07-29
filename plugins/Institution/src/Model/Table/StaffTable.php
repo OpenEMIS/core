@@ -21,31 +21,25 @@ class StaffTable extends BaseTable {
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStaff]);
 	}
 
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		parent::indexBeforePaginate($event, $request, $query, $options);
+		$query->contain(['Positions.StaffPositionTitles']);
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
 
-		$settings['model'] = 'Institution.InstitutionSiteStaff';
-
-		$this->ControllerAction->field('position', []);
+		$this->ControllerAction->field('position');
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'position', 'staffstatus']);
+			'name', 'default_identity_type', 'position', 'staff_status']);
 	}
 
 	public function onGetPosition(Event $event, Entity $entity) {
 		return $entity->position->staff_position_title->name;
 	}
 
-	public function onGetStaffstatus(Event $event, Entity $entity) {
+	public function onGetStaffStatus(Event $event, Entity $entity) {
 		return $entity->staff_status->name;
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain([
-			'Positions.StaffPositionTitles',
-			'StaffStatuses',
-			'Users'
-		])
-		->group(['InstitutionSiteStaff.security_user_id']);
 	}
 
 	public function addBeforeAction(Event $event) {
