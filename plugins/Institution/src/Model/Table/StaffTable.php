@@ -21,34 +21,48 @@ class StaffTable extends BaseTable {
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStaff]);
 	}
 
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		parent::indexBeforePaginate($event, $request, $query, $options);
+		$query->contain(['Positions.StaffPositionTitles']);
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
 
-		$settings['model'] = 'Institution.InstitutionSiteStaff';
-
-		$this->ControllerAction->field('position', []);
+		$this->ControllerAction->field('position');
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'position', 'staffstatus']);
+			'name', 'default_identity_type', 'position', 'staff_status']);
 	}
 
 	public function onGetPosition(Event $event, Entity $entity) {
 		return $entity->position->staff_position_title->name;
 	}
 
-	public function onGetStaffstatus(Event $event, Entity $entity) {
+	public function onGetStaffStatus(Event $event, Entity $entity) {
 		return $entity->staff_status->name;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$session = $request->session();
-		$institutionId = $session->read('Institutions.id');
-
-		$query->contain([
-			'Positions.StaffPositionTitles',
-			'StaffStatuses',
-			'Users'
-		])
-		->group(['InstitutionSiteStaff.security_user_id']);
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$InstitutionStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$session = $this->request->session();
+		$institutionSiteId = $session->read('Institutions.id');
+		$numberOfStaffRecord = $InstitutionStaff->find()->where(['security_user_id' => $id])->count();
+		if ($numberOfStaffRecord <= 1) {
+			$process = function($model, $id, $options) use ($InstitutionStaff, $institutionSiteId){
+				return $InstitutionStaff->updateAll(
+					['institution_site_id' => 0],
+					['security_user_id' => $id, 'institution_site_id' => $institutionSiteId]
+				);
+			};
+		} else {
+			$process = function($model, $id, $options) use ($InstitutionStaff, $institutionSiteId) {
+				return $InstitutionStaff->deleteAll([
+					'institution_site_id' => $institutionSiteId,
+					'security_user_id' => $id
+				]);
+			};
+		}
+		return $process;
 	}
 
 	public function addBeforeAction(Event $event) {
@@ -183,11 +197,6 @@ class StaffTable extends BaseTable {
 			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.securityRoleId');
 		}
 
-		return $attr;
-	}
-
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = true;
 		return $attr;
 	}
 
@@ -334,8 +343,8 @@ class StaffTable extends BaseTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		foreach (['view', 'edit'] as $value) {
-			$buttons[$value]['url'][1] = $entity->security_user_id;
+		if (array_key_exists('remove', $buttons)) {
+			$buttons['remove']['attr']['field-value'] = $entity->id;
 		}
 		
 		return $buttons;
