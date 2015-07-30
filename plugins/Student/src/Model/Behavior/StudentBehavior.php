@@ -47,6 +47,11 @@ class StudentBehavior extends Behavior {
 			$query->orWhere(['Users.middle_name LIKE' => $searchString]);
 			$query->orWhere(['Users.third_name LIKE' => $searchString]);
 			$query->orWhere(['Users.last_name LIKE' => $searchString]);
+			if ($request->params['controller'] == 'Institutions') {
+				$session = $event->subject()->request->session();
+				$institutionId = $session->read('Institutions.id');
+				$query->andWhere(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
+			}
 		}
 	}
 
