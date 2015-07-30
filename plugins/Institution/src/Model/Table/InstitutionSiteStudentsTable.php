@@ -234,6 +234,8 @@ class InstitutionSiteStudentsTable extends AppTable {
 		}
 		// Count and sort the age
 		$result = [];
+		$prev_value['age'] = "";
+		$prev_value['count'] = "";
 		foreach ($convertAge as $val) {
 	    	if ($prev_value['age'] != $val) {
 	        	unset($prev_value);

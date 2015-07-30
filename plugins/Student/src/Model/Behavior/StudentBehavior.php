@@ -55,7 +55,9 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
+		if (!empty ($entity->user->openemis_no)) {
+			return $entity->user->openemis_no;
+		}
 	}
 
 	public function onGetDefaultIdentityType(Event $event, Entity $entity) {
@@ -63,7 +65,9 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
-		return $entity->institution->name;
+		if(!empty($entity->institution->name)) {
+			return $entity->institution->name;
+		}
 	}
 
 	public function onGetStudentStatus(Event $event, Entity $entity) {

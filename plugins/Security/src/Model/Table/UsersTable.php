@@ -1,9 +1,12 @@
 <?php
 namespace Security\Model\Table;
 
+use ArrayObject;
 use User\Model\Table\UsersTable as BaseTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\Network\Request;
 
 class UsersTable extends BaseTable {
 	public function initialize(array $config) {

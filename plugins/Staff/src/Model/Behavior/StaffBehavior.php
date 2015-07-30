@@ -52,7 +52,10 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
-		return $entity->institution->name;
+		// Check if the user is assigned to an institution name
+		if(!empty ($entity->institution->name)){
+			return $entity->institution->name;
+		}
 	}
 
 	public function onGetStaffStatus(Event $event, Entity $entity) {

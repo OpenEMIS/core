@@ -42,6 +42,29 @@ class StaffTable extends BaseTable {
 		return $entity->staff_status->name;
 	}
 
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$InstitutionStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$session = $this->request->session();
+		$institutionSiteId = $session->read('Institutions.id');
+		$numberOfStaffRecord = $InstitutionStaff->find()->where(['security_user_id' => $id])->count();
+		if ($numberOfStaffRecord <= 1) {
+			$process = function($model, $id, $options) use ($InstitutionStaff, $institutionSiteId){
+				return $InstitutionStaff->updateAll(
+					['institution_site_id' => 0],
+					['security_user_id' => $id, 'institution_site_id' => $institutionSiteId]
+				);
+			};
+		} else {
+			$process = function($model, $id, $options) use ($InstitutionStaff, $institutionSiteId) {
+				return $InstitutionStaff->deleteAll([
+					'institution_site_id' => $institutionSiteId,
+					'security_user_id' => $id
+				]);
+			};
+		}
+		return $process;
+	}
+
 	public function addBeforeAction(Event $event) {
 		if (array_key_exists('new', $this->request->query)) {
 
@@ -320,8 +343,8 @@ class StaffTable extends BaseTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		foreach (['view', 'edit'] as $value) {
-			$buttons[$value]['url'][1] = $entity->security_user_id;
+		if (array_key_exists('remove', $buttons)) {
+			$buttons['remove']['attr']['field-value'] = $entity->id;
 		}
 		
 		return $buttons;
