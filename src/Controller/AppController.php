@@ -102,17 +102,19 @@ class AppController extends Controller {
 		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'];
 		$session->write('System.home', $homeUrl);
 
-		if ($this->Auth->user('super_admin') == 1) {
-			$session->write('Auth.User.roles', __('System Administrator'));
-		} else {
-			$rolesList = $this->AccessControl->getRolesByUser();
-			$roles = [];
-			foreach ($rolesList as $obj) {
-				if (!empty($obj->security_group) && !empty($obj->security_role)) {
-					$roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
+		if (!is_null($this->Auth->user())) { // if user is logged in
+			if ($this->Auth->user('super_admin') == 1) {
+				$session->write('System.User.roles', __('System Administrator'));
+			} else {
+				$rolesList = $this->AccessControl->getRolesByUser();
+				$roles = [];
+				foreach ($rolesList as $obj) {
+					if (!empty($obj->security_group) && !empty($obj->security_role)) {
+						$roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
+					}
 				}
+				$session->write('System.User.roles', implode(', ', $roles));
 			}
-			$session->write('Auth.User.roles', implode(', ', $roles));
 		}
 
 		$this->set('theme', $theme);
