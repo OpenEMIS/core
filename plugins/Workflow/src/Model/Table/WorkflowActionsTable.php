@@ -1,7 +1,10 @@
 <?php
 namespace Workflow\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class WorkflowActionsTable extends AppTable {
@@ -20,5 +23,12 @@ class WorkflowActionsTable extends AppTable {
 			->notEmpty('name', 'Please enter a name.');
 
 		return $validator;
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew()) {
+			// Always mark visible to dirty to handle retain Field Options when update all visible to 0
+			$entity->dirty('visible', true);
+		}
 	}
 }

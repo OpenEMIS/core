@@ -22,7 +22,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$this->belongsTo('Users', 		 		['className' => 'User.Users', 					'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 	'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes','foreignKey' => 'education_programme_id']);
-		$this->belongsTo('StudentStatuses',		['className' => 'FieldOption.StudentStatuses', 	'foreignKey' => 'student_status_id']);
+		$this->belongsTo('StudentStatuses',		['className' => 'Student.StudentStatuses', 	'foreignKey' => 'student_status_id']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('HighChart', [
