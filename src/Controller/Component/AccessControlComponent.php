@@ -200,4 +200,11 @@ class AccessControlComponent extends Component {
 
 		return $data;
 	}
+
+	// to be implemented for Student Transfer
+	public function getInstitutionsByUser($userId = null, $url = null) {
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+	}
 }
