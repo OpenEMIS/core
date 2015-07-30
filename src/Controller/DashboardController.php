@@ -17,7 +17,7 @@ class DashboardController extends AppController {
 			'Transfers' 		=> ['className' => 'Institution.StudentTransfers', 'actions' => ['edit']]
 		];
 
-		$this->loadComponent('WorkBench', [
+		$this->loadComponent('Workbench', [
 			'models' => [
 				'Institution.StudentTransfers',
 				'Institution.StudentDropout'
@@ -39,7 +39,7 @@ class DashboardController extends AppController {
     }
 
 	public function index() {
-		$workbenchData = $this->WorkBench->getList();
+		$workbenchData = $this->Workbench->getList();
 
 		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
 		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
