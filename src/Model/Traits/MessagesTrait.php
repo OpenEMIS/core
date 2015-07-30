@@ -612,6 +612,13 @@ trait MessagesTrait {
 			'success' => 'The language has been successfully compiled.',
 			'failed' => 'The language has not been compiled due to errors encountered.',
 		],
+		'Security' => [
+			'Users' => [
+				'username' => [
+					'ruleUnique' => 'This username is already in use'
+				]
+			]
+		]
 	];
 
 	public function getMessage($code) {
