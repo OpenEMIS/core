@@ -68,13 +68,13 @@ a:[data-toggle="tooltip"] {
 	z-index: 9999px;
 }
 
+.center {
+	text-align: center !important;
+}
+
 .overflow-y-hidden {
 	-ms-overflow-y: hidden !important;
 	    overflow-y: hidden !important;
-}
-
-.center {
-	text-align: center;
 }
 
 /* HEADINGS */
@@ -714,7 +714,7 @@ body.large {
 .panel-toolbar .checkbox {
 	display: block;
 	float: left;
-	margin: 12px 10px !important;
+	margin: 10px !important;
 	padding: 0 !important;
 	width: 95px !important;
 }
@@ -1355,6 +1355,7 @@ input[type="checkbox"] {
 	-ms-overflow-x: scroll;
 	    overflow-x: scroll;  
 	overflow-x: visible;
+	clear: both;
 }
 
 .tab-content .table-responsive {
@@ -1796,63 +1797,44 @@ table tr.sorting-row td {background-color: #8b8;}
 
 /* View with Sections and Map */
 
-.section {
-	display: inline-block;
-	width: 100%;
-	margin-bottom: 20px;
-	border: 1px solid #DDD;
-	-webkit-border-radius: 3px;
-	        border-radius: 3px;
-}
-
 .section-header {
-	background-color: #EFEFEF;
-	border-bottom: 1px solid #DDD;
-	color: #6B6B6B;
+	display: block;
+	background-color: #E2E2E2;
+	border: 1px solid #CCC;
+	color: #333;
 	font-weight: bold;
-	padding: 7px 20px 5px;
-	margin: 0;
+	padding: 10px;
+	margin: 20px 0 0;
 	-webkit-border-top-left-radius: 3px;
 	border-top-right-radius: 3px;
 	        border-top-left-radius: 3px;
 	        border-top-right-radius: 3px;
+	clear: both;        
 }
 
-.section .row:nth-of-type(even),
-.section .row:nth-of-type(odd),
-.section label {
-	background-color: #FFF !important;
-	border: 0 !important;
-}
-
-.section #googlemap {
-	padding: 4px 4px 0 4px;
-}
-
-.section #googlemap iframe {
+#googlemap iframe {
 	height: 300px !important;
 	width: 100%;
 }
 
 /* View with Sections and tables */
-.section .table-responsive table thead,
-.section .table-responsive table thead tr,
-.section .table-responsive {
-	padding: 10px;
-}
-
-.section .kd-check {
+.green {
 	color: green;
 	font-size: 10px;
 }
 
-.section .kd-cross {
+.red {
 	color: red;
 	font-size: 9px;
 }
 
+.grey {
+	color: #888;
+	font-size: 9px;
+}
+
 .section-header .icheck-input {
-	margin: -3px 5px 0px -10px !important;
+	margin: -3px 5px 0 0 !important;
 }
 
 .form-control {
@@ -2199,7 +2181,8 @@ td.center .icheck-input input {
 }
 
 .file-input-text p,
-.file-input-buttons p {
+.file-input-buttons p,
+.input-text p {
 	clear: both;
 	padding: 8px 0 0;
 	font-style: italic;
