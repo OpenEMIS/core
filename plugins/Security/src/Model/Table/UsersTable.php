@@ -23,13 +23,13 @@ class UsersTable extends BaseTable {
 		$this->addBehavior('Area.Areapicker');
 	}
 
-	public function addAfterAction(Event $event) {
-		if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
-			if (isset($this->fields['openemis_no']['attr'])) {
-	        	unset($this->fields['openemis_no']['attr']);
-	        }
-        }
-    }
+	// public function addAfterAction(Event $event) {
+	// 	if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
+	// 		if (isset($this->fields['openemis_no']['attr'])) {
+	//         	unset($this->fields['openemis_no']['attr']);
+	//         }
+ //        }
+ //    }
 
 	// autocomplete used for UserGroups
 	public function autocomplete($search) {
@@ -77,9 +77,7 @@ class UsersTable extends BaseTable {
 	public function addBeforeAction(Event $event) {
 		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
 		
-		//$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'attr' => ['value' => $uniqueOpenemisId]]);
-		$this->fields['openemis_no']['attr']['readonly'] = true;
-		$this->fields['openemis_no']['attr']['value'] = $uniqueOpenemisId;
+		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'attr' => ['value' => $uniqueOpenemisId]]);
 	}
 
 	public function hideFieldsBasedOnRole(){
