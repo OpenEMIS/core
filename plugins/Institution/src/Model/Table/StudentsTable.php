@@ -24,6 +24,21 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		parent::indexBeforePaginate($event, $request, $query, $options);
+		if ($this->Session->check('Institutions.id')) {
+			$institutionId = $this->Session->read('Institutions.id');
+			
+			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
+		}
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
 
@@ -115,7 +130,7 @@ class StudentsTable extends BaseTable {
 
 	public function onUpdateFieldStudentStatus(Event $event, array $attr, $action, $request) {
 		if ($action != 'index') {
-			$StudentStatus = TableRegistry::get('FieldOption.StudentStatuses');
+			$StudentStatus = TableRegistry::get('Student.StudentStatuses');
 			$statusOptions = $StudentStatus->getList()->toArray();
 			
 			$attr['options'] = $statusOptions;
@@ -421,5 +436,54 @@ class StudentsTable extends BaseTable {
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+	}
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    	if ($action == 'view') {
+    		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+    		if ($this->AccessControl->check([$this->controller->name, 'Transfers', 'add'])) {
+    				$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+    				$selectedStudent = $this->request->params['pass'][1];
+		    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $selectedStudent);
+
+		    		// Show Transfer button only if the Student Status is Current
+		    		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+					$institutionId = $this->Session->read('Institutions.id');
+					$currentStatus = $StudentStatuses
+						->find()
+						->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+						->first()
+						->id;
+
+					$studentStatusId = $InstitutionSiteStudents
+						->find()
+						->select([
+							$InstitutionSiteStudents->aliasField('student_status_id')
+						])
+						->where([
+							$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
+							$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+						])
+						->first()
+						->student_status_id;
+					// End
+
+		    		if ($studentStatusId == $currentStatus) {
+						$toolbarButtons['transfer'] = $buttons['back'];
+						$toolbarButtons['transfer']['url'] = [
+				    		'plugin' => $buttons['back']['url']['plugin'],
+				    		'controller' => $buttons['back']['url']['controller'],
+				    		'action' => 'Transfers',
+				    		'add'
+				    	];
+						$toolbarButtons['transfer']['type'] = 'button';
+						$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+						$toolbarButtons['transfer']['attr'] = $attr;
+						$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+					}
+			}
+		}
 	}
 }
