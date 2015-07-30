@@ -33,10 +33,8 @@ class StudentsTable extends BaseTable {
 	}
 
 	public function onGetProgrammeSection(Event $event, Entity $entity) {
-		$institutionSite = $entity->institution_site_students;
-		$educationProgrammeId = $institutionSite[0]->education_programme_id;
-		$institutionId = $institutionSite[0]->institution_site_id;
-
+		$educationProgrammeId = $entity->education_programme_id;
+		$institutionId = $entity->institution->id;
 		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 		$query = $EducationProgrammes
 			->find()
@@ -155,10 +153,26 @@ class StudentsTable extends BaseTable {
 	// End Jeff: temporary workaround
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
-			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-			return $InstitutionStudents->delete($InstitutionStudents->get($id));
-		};
+		$InstitutionStudent = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$session = $this->request->session();
+		$institutionSiteId = $session->read('Institutions.id');
+		$securityUserId = $InstitutionStudent->get($id)->security_user_id;
+		$numberOfStudentRecord = $InstitutionStudent->find()->where(['security_user_id' => $id])->count();
+		if ($numberOfStudentRecord <= 1) {
+			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId){
+				return $InstitutionStudent->updateAll(
+					['institution_site_id' => 0],
+					['security_user_id' => $securityUserId, 'institution_site_id' => $institutionSiteId]
+				);
+			};
+		} else {
+			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId) {
+				return $InstitutionStudent->deleteAll([
+					'institution_site_id' => $institutionSiteId,
+					'security_user_id' => $securityUserId
+				]);
+			};
+		}
 		return $process;
 	}
 

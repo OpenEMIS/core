@@ -459,14 +459,17 @@ class UsersTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$actions = ['view', 'edit'];
-		foreach ($actions as $action) {
-			if (array_key_exists($action, $buttons)) {
-				$buttons[$action]['url'][1] = $entity->security_user_id;
+
+		if ($this->controller->name != 'Securities') {
+			$actions = ['view', 'edit'];
+			foreach ($actions as $action) {
+				if (array_key_exists($action, $buttons)) {
+					$buttons[$action]['url'][1] = $entity->security_user_id;
+				}
 			}
-		}
-		if (array_key_exists('remove', $buttons)) {
-			$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
+			if (array_key_exists('remove', $buttons)) {
+				$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
+			}
 		}
 		
 		return $buttons;
