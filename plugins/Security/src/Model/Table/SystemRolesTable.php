@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 
+// Should not be in used anymore, refer to SecurityRolesTable
 class SystemRolesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('security_roles');

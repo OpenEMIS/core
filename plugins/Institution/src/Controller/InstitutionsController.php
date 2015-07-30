@@ -41,6 +41,7 @@ class InstitutionsController extends AppController  {
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view']],
 			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
+			'Transfers' 		=> ['className' => 'Institution.StudentTransfers', 'actions' => ['index', 'add']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
@@ -107,8 +108,13 @@ class InstitutionsController extends AppController  {
 			}
 
 			$persona = false;
+			$alias = $model->alias;
+			// temporary fix for renaming Sections and Classes
+			if ($alias == 'Sections') $alias = 'Classes';
+			else if ($alias == 'Classes') $alias = 'Subjects';
+
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $alias]);
 				if (strtolower($action) != 'index')	{
 					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
@@ -122,14 +128,14 @@ class InstitutionsController extends AppController  {
 					}
 				}
 			} else {
-				$this->Navigation->addCrumb($model->getHeader($model->alias));
+				$this->Navigation->addCrumb($model->getHeader($alias));
 			}
 
 			$header = $this->activeObj->name;
 			if ($persona) {
 				$header .= ' - ' . $persona->name;
 			} else {
-				$header .= ' - ' . $model->getHeader($model->alias);
+				$header .= ' - ' . $model->getHeader($alias);
 			}
 
 			if ($model->hasField('institution_site_id') && !is_null($this->activeObj)) {
@@ -153,7 +159,7 @@ class InstitutionsController extends AppController  {
 					 */
 					if (!$exists) {
 						$this->Alert->warning('general.notExists');
-						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $alias]);
 					}
 				}
 			}
@@ -169,12 +175,14 @@ class InstitutionsController extends AppController  {
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
-		if ($model->hasField('institution_site_id')) {
-			if (!$session->check('Institutions.id')) {
-				$this->Alert->error('general.notExists');
-				// should redirect
-			} else {
-				$query->where([$model->aliasField('institution_site_id') => $session->read('Institutions.id')]);
+		if (!$this->request->is('ajax')) {
+			if ($model->hasField('institution_site_id')) {
+				if (!$session->check('Institutions.id')) {
+					$this->Alert->error('general.notExists');
+					// should redirect
+				} else {
+					$query->where([$model->aliasField('institution_site_id') => $session->read('Institutions.id')]);
+				}
 			}
 		}
 	}

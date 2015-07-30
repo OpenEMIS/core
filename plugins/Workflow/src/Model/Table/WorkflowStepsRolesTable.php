@@ -3,7 +3,7 @@ namespace Workflow\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class WorkflowStepRolesTable extends AppTable {
+class WorkflowStepsRolesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 

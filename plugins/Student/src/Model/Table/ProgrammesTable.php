@@ -11,7 +11,7 @@ class ProgrammesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('User', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('StudentStatus', ['className' => 'FieldOption.StudentStatuses']);
+		$this->belongsTo('StudentStatus', ['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationProgramme', ['className' => 'Education.EducationProgrammes']);
 		$this->belongsTo('InstitutionSite', ['className' => 'Institution.InstitutionSites']);
 	}

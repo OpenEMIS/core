@@ -21,12 +21,10 @@ var dashboards = {
 	init: function() {
 		$.each($('.highchart'), function(key, group) {
 			json = $(group).html();
+			console.log(json);
 			obj = JSON.parse(json);
 			$(group).highcharts(obj);
-		});
-
-		$.each($('text:contains("Highcharts.com")'), function(key, text) {
-			$(text).html('');
+			$(group).css({"visibility":"visible"});
 		});
 	}
 }

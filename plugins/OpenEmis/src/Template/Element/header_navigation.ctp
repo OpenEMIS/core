@@ -22,8 +22,8 @@ $dropdown = [
 ];
 
 $roles = '';
-if ($session->check('Auth.User.roles')) {
-	$roles = $session->read('Auth.User.roles');
+if ($session->check('System.User.roles')) {
+	$roles = $session->read('System.User.roles');
 }
 ?>
 
