@@ -42,12 +42,12 @@ class StudentsTable extends BaseTable {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
 
-		$this->ControllerAction->field('programme_section', []);
+		$this->ControllerAction->field('programme_class');
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'programme_section', 'student_status']);
+			'name', 'default_identity_type', 'programme_class', 'student_status']);
 	}
 
-	public function onGetProgrammeSection(Event $event, Entity $entity) {
+	public function onGetProgrammeClass(Event $event, Entity $entity) {
 		$educationProgrammeId = $entity->education_programme_id;
 		$institutionId = $entity->institution->id;
 		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
