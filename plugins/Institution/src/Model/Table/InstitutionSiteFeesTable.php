@@ -39,7 +39,7 @@ class InstitutionSiteFeesTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-    	$this->ControllerAction->field('total', ['type' => 'float', 'visible' => ['index'=>true, 'edit'=>true]]);
+    	$this->ControllerAction->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
     	$this->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'visible' => ['edit'=>true]]);
     	$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
     	$this->ControllerAction->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
