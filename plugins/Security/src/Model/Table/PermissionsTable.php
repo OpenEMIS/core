@@ -45,7 +45,7 @@ class PermissionsTable extends AppTable {
 				$options['checked'] = 'checked';
 			} else if ($flag == -1) {
 				$options['disabled'] = 'disabled';
-				$html .= $Form->hidden("$alias.$id.$operation", ['value' => 0]);
+			$html .= $Form->hidden("$alias.$id.$operation", ['value' => 0]);
 			}
 			
 			$permissionId = isset($entity->Permissions['id']) ? $entity->Permissions['id'] : 0;
@@ -62,7 +62,7 @@ class PermissionsTable extends AppTable {
 				]
 			];
 		} else {
-			$icons = [-1 => '<i class="fa fa-minus"></i>', 0 => '<i class="fa fa-close"></i>', 1 => '<i class="fa fa-check"></i>'];
+			$icons = [-1 => '<i class="fa fa-minus grey"></i>', 0 => '<i class="fa kd-cross red"></i>', 1 => '<i class="fa kd-check green"></i>'];
 			$html = $icons[$flag];
 		}
 		return $html;
@@ -146,7 +146,7 @@ class PermissionsTable extends AppTable {
 		$roleId = $this->request->pass[1];
 		$settings['pagination'] = false;
 		
-		$this->clean($query, $roleId);
+		// $this->clean($query, $roleId);
 
 		$modules = ['Institutions', 'Students', 'Staff', 'Reports', 'Administration'];
 		$this->setupTabElements($modules);
@@ -156,14 +156,6 @@ class PermissionsTable extends AppTable {
 			$module = current($modules);
 		}
 		$controller->set('selectedAction', $module);
-
-		$categoryOptions = $this->setupToolbarElements($module);
-		$selectedCategory = $this->request->query('category');
-
-		if (empty($selectedCategory)) {
-			$selectedCategory = current($categoryOptions);
-		}
-		$controller->set('selectedCategory', $selectedCategory);
 
 		$query = $this->SecurityFunctions
 			->find()
@@ -176,18 +168,13 @@ class PermissionsTable extends AppTable {
 				'Permissions.id', 'Permissions._view', 'Permissions._add', 'Permissions._edit',
 				'Permissions._delete', 'Permissions._execute'
 			])
-			->join([
-				[
-					'table' => 'security_role_functions', 'alias' => 'Permissions', 'type' => 'LEFT',
-					'conditions' => [
-						'Permissions.security_function_id = SecurityFunctions.id',
-						'Permissions.security_role_id = ' . $roleId
-					]
-				]
-			])
-			->where(['SecurityFunctions.module' => $module, 'SecurityFunctions.category' => $selectedCategory])
+			->leftJoin(
+				['Permissions' => 'security_role_functions'], 
+				['Permissions.security_function_id = SecurityFunctions.id', 'Permissions.security_role_id = ' . $roleId]
+			)
+			->where(['SecurityFunctions.module' => $module])
 			->order([
-				'SecurityFunctions.order'
+				'SecurityFunctions.order', 'SecurityFunctions.category'
 			])
 			;
 
@@ -253,35 +240,18 @@ class PermissionsTable extends AppTable {
 		$controller->set('tabElements', $tabElements);
 	}
 
-	private function setupToolbarElements($module) {
-		$categoryOptions = $this->SecurityFunctions
-			->find('list', ['keyField' => 'category', 'valueField' => 'category'])
-			->distinct(['category'])
-			->where(['module' => $module])
-			->order(['SecurityFunctions.order'])
-			->toArray()
-		;
-
-		$toolbarElements = [
-			['name' => 'Security.Permissions/categories', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-		$this->controller->set('categoryOptions', $categoryOptions);
-		return $categoryOptions;
-	}
-
 	// clean up old security functions
-	private function clean(Query $query, $roleId) {
-		$resultSet = $query
-			->contain(['SecurityFunctions'])
-			->where([$this->aliasField('security_role_id') => $roleId])
-			->all()
-		;
+	// private function clean(Query $query, $roleId) {
+	// 	$resultSet = $query
+	// 		->contain(['SecurityFunctions'])
+	// 		->where([$this->aliasField('security_role_id') => $roleId])
+	// 		->all()
+	// 	;
 		
-		foreach ($resultSet as $entity) {
-			if (empty($entity->security_function)) {
-				$this->delete($entity);
-			}
-		}
-	}
+	// 	foreach ($resultSet as $entity) {
+	// 		if (empty($entity->security_function)) {
+	// 			$this->delete($entity);
+	// 		}
+	// 	}
+	// }
 }

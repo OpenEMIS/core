@@ -459,9 +459,9 @@ class ControllerActionComponent extends Component {
 
 	public function render() {
 		if (empty($this->plugin)) {
-			$path = APP . 'View' . DS . $this->controller->name . DS;
+			$path = APP . 'Template' . DS . $this->controller->name . DS;
 		} else {
-			$path = APP . 'Plugin' . DS . $this->plugin . DS . 'View' . DS;
+			$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'Template' . DS;
 		}
 		$ctp = $this->ctpFolder . DS . $this->currentAction;
 
