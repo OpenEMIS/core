@@ -173,7 +173,7 @@ class InstitutionsController extends AppController  {
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-
+		
 		if ($model->hasField('institution_site_id')) {
 			if (!$session->check('Institutions.id')) {
 				$this->Alert->error('general.notExists');
