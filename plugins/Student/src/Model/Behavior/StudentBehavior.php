@@ -82,7 +82,10 @@ class StudentBehavior extends Behavior {
 				// Get number of student in institution
 				$studentCount = $table->find()
 					->where([$table->aliasField('institution_site_id') => $institutionId])
-					->count();
+					->distinct(['security_user_id'])
+					->count(['security_user_id']);
+
+				pr($studentCount->sql());
 
 				// Get Gender
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
@@ -102,7 +105,8 @@ class StudentBehavior extends Behavior {
 			case "Users":
 				// Get total number of students
 				$studentCount = $table->find()
-					->count();
+					->distinct(['security_user_id'])
+					->count(['security_user_id']);
 
 				// Get the gender for all students
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
