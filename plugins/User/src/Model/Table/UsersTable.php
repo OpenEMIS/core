@@ -35,8 +35,6 @@ class UsersTable extends AppTable {
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
-	private $specialFields = ['default_identity_type','student_status','staffstatus','student_institution_name','staff_institution_name','programme_section'];
-
 	public $fieldOrder1;
 	public $fieldOrder2;
 
@@ -404,26 +402,22 @@ class UsersTable extends AppTable {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if (in_array($field, $this->specialFields)) {
-			if ($field == 'default_identity_type') {
-				$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-				$defaultIdentity = $IdentityType
-								   ->find()
-								   ->contain(['FieldOptions'])
-								   ->where(['FieldOptions.code' => 'IdentityTypes']) //, 'IdentityTypes.default' => 1
-								   ->order(['IdentityTypes.default DESC'])
-								   ->first();
-				if ($defaultIdentity)
-					$value = $defaultIdentity->name;
+		if ($field == 'default_identity_type') {
+			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentity = $IdentityType
+							   ->find()
+							   ->contain(['FieldOptions'])
+							   ->where(['FieldOptions.code' => 'IdentityTypes'])
+							   ->order(['IdentityTypes.default DESC'])
+							   ->first();
+			if ($defaultIdentity)
+				$value = $defaultIdentity->name;
 
-				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-			} else if ($field == 'student_status' || $field == 'staff_status') {
-				return 'Status';
-			} else if ($field == 'student_institution_name' || $field == 'staff_institution_name') {
-				return 'Institution';
-			} else if ($field == 'programme_section') {
-				return 'Programme<span class="divider"></span>Section';
-			}	
+			return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		} else if ($field == 'student_status' || $field == 'staff_status') {
+			return 'Status';
+		} else if ($field == 'programme_class') {
+			return 'Programme<span class="divider"></span>Class';
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
