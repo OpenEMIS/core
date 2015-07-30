@@ -16,6 +16,12 @@ ALTER TABLE `workflows_filters` CHANGE `submodel_reference` `filter_id` INT(11) 
 
 -- 23rd July 2015
 
+-- security_functions
+INSERT INTO `security_functions`
+(`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+('Transfer Request', 'Institutions', 'Institutions', 'Students', 1000, NULL, NULL, NULL, NULL, 'Transfers.add', 1019, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+('Transfer Approval', 'Dashboard', 'Institutions', 'Students', 1000, NULL, NULL, NULL, NULL, 'Transfers.edit', 1020, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
 -- New table - student_statuses
 DROP TABLE IF EXISTS `student_statuses`;
 CREATE TABLE IF NOT EXISTS `student_statuses` (

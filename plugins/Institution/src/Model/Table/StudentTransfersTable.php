@@ -189,6 +189,7 @@ class StudentTransfersTable extends AppTable {
 
 			$attr['type'] = 'select';
 			$attr['options'] = $institutionOptions;
+			$attr['onChangeReload'] = 'changeInstitution';
 
 			/* to be implemented with custom autocomplete
 			$attr['type'] = 'string';
@@ -361,7 +362,8 @@ class StudentTransfersTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-    	if ($AccessControl->check(['Institutions', $this->alias()])) {
+    	if ($AccessControl->check(['Dashboard', 'Transfers', 'edit'])) {
+    		// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'Transfers', 'edit']);
 			$resultSet = $this
 				->find()
 				->where([

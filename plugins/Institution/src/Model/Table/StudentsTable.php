@@ -384,7 +384,7 @@ class StudentsTable extends BaseTable {
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     	if ($action == 'view') {
     		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
-    		if ($this->AccessControl->check([$this->controller->name, $StudentTransfers->alias()])) {
+    		if ($this->AccessControl->check([$this->controller->name, 'Transfers', 'add'])) {
     				$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
     				$selectedStudent = $this->request->params['pass'][1];
 		    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $selectedStudent);
