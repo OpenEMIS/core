@@ -24,21 +24,52 @@ class StudentsTable extends BaseTable {
 		// deletion onBeforeDelete new insert or update 
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		parent::indexBeforePaginate($event, $request, $query, $options);
-		if ($this->Session->check('Institutions.id')) {
-			$institutionId = $this->Session->read('Institutions.id');
-			
-			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
-		}
-	}
-
-
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
+
 		$this->ControllerAction->field('programme_section', []);
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'name', 'default_identity_type', 'programme_section', 'student_status']);
+	}
+
+	public function onGetProgrammeSection(Event $event, Entity $entity) {
+		$educationProgrammeId = $entity->education_programme_id;
+		$institutionId = $entity->institution->id;
+		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+		$query = $EducationProgrammes
+			->find()
+			->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $educationProgrammeId])
+			->first();
+		$educationProgrammeName = ($query)? $query->name: '';
+
+		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$query = $InstitutionSiteSectionStudents->find()
+			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $entity->id])
+			->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc');
+
+		if (isset($institutionId)) {
+			$query->contain(
+				[
+					'InstitutionSiteSections'  => function ($q) use ($institutionId) {
+						return $q
+							->select(['id', 'name'])
+							->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
+						}
+				]
+			);
+		} else {
+			$query->contain('InstitutionSiteSections');
+		}
+
+		$sectionName = [];
+		foreach ($query as $key => $value) {
+			if ($value->institution_site_section) {
+				if (isset($value->institution_site_section->name)) {
+					$sectionName[] = $value->institution_site_section->name;
+				}
+			}
+		}
+		return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
 	}
 
 	public function addAfterAction(Event $event) {
@@ -88,7 +119,7 @@ class StudentsTable extends BaseTable {
 			$statusOptions = $StudentStatus->getList()->toArray();
 			
 			$attr['options'] = $statusOptions;
-			$attr['order'] = 66;
+			// $attr['order'] = 66;
 
 			if ($action == 'edit') {
 				$userId = $request->pass[1];
@@ -120,6 +151,30 @@ class StudentsTable extends BaseTable {
 		]);
 	}
 	// End Jeff: temporary workaround
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$InstitutionStudent = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$session = $this->request->session();
+		$institutionSiteId = $session->read('Institutions.id');
+		$securityUserId = $InstitutionStudent->get($id)->security_user_id;
+		$numberOfStudentRecord = $InstitutionStudent->find()->where(['security_user_id' => $id])->count();
+		if ($numberOfStudentRecord <= 1) {
+			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId){
+				return $InstitutionStudent->updateAll(
+					['institution_site_id' => 0],
+					['security_user_id' => $securityUserId, 'institution_site_id' => $institutionSiteId]
+				);
+			};
+		} else {
+			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId) {
+				return $InstitutionStudent->deleteAll([
+					'institution_site_id' => $institutionSiteId,
+					'security_user_id' => $securityUserId
+				]);
+			};
+		}
+		return $process;
+	}
 
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
@@ -329,14 +384,7 @@ class StudentsTable extends BaseTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if (array_key_exists('remove', $buttons)) {
-			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
-				// pr($entity);cthreeone
-				if (isset($entity->institution_site_students)) {
-					if (array_key_exists(0, $entity->institution_site_students)) {
-						$buttons['remove']['attr']['field-value'] = $entity->institution_site_students[0]->id;
-					}
-				}
-			}
+			$buttons['remove']['attr']['field-value'] = $entity->id;
 		}
 		
 		return $buttons;
