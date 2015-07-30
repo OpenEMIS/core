@@ -13,6 +13,7 @@ UPDATE `labels` SET `en` = '中文' WHERE `labels`.`module` = 'Translations' AND
 
 INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('InstitutionSiteSections', 'classes', NULL, 'Subjects', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('InstitutionSiteSections', 'number_of_sections', NULL, 'Number Of Classes', '1', NOW());
+INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('Students', 'section', NULL, 'Class', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('StudentSections', 'institution_site_section_id', NULL, 'Class', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('StudentClasses', 'institution_site_section_id', NULL, 'Class', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `created`) VALUES ('StudentClasses', 'institution_site_class_id', NULL, 'Name', '1', NOW());

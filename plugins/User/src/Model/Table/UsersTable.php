@@ -35,8 +35,6 @@ class UsersTable extends AppTable {
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
-	private $specialFields = ['default_identity_type','student_status','staffstatus','student_institution_name','staff_institution_name','programme_section'];
-
 	public $fieldOrder1;
 	public $fieldOrder2;
 
@@ -179,8 +177,6 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$queryParams = $request->query;
-
-		$query->find('notSuperAdmin');
 		
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			// $query->order(['name' => 'asc']);
@@ -262,15 +258,6 @@ class UsersTable extends AppTable {
 				])
 			->group(['Identities.number'])
 			->order(['Identities.number' => $options['direction']]);	   
-	}	
-
-
-	public function findNotSuperAdmin(Query $query, array $options) {
-		return $query->where([$this->aliasField('super_admin') => 0]);
-	}
-
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->find('notSuperAdmin');
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -415,44 +402,40 @@ class UsersTable extends AppTable {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if(in_array($field, $this->specialFields)){
-			if($field == 'default_identity_type') {
-				$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-				$defaultIdentity = $IdentityType
-								   ->find()
-								   ->contain(['FieldOptions'])
-								   ->where(['FieldOptions.code' => 'IdentityTypes']) //, 'IdentityTypes.default' => 1
-								   ->order(['IdentityTypes.default DESC'])
-								   ->first();
-				if($defaultIdentity)
-					$value = $defaultIdentity->name;
+		if ($field == 'default_identity_type') {
+			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentity = $IdentityType
+							   ->find()
+							   ->contain(['FieldOptions'])
+							   ->where(['FieldOptions.code' => 'IdentityTypes'])
+							   ->order(['IdentityTypes.default DESC'])
+							   ->first();
+			if ($defaultIdentity)
+				$value = $defaultIdentity->name;
 
-				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-			} else if($field == 'student_status' || $field == 'staffstatus') {
-				return 'Status';
-			} else if($field == 'student_institution_name' || $field == 'staff_institution_name') {
-				return 'Institution Name';
-			} else if($field == 'programme_section') {
-				return 'Programme<span class="divider"></span>Section';
-			}	
+			return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		} else if ($field == 'student_status' || $field == 'staff_status') {
+			return 'Status';
+		} else if ($field == 'programme_class') {
+			return 'Programme<span class="divider"></span>Class';
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
 
-	public function getDefaultImgMsg(){
+	public function getDefaultImgMsg() {
 		return $this->defaultImgMsg;
 	}
 
-	public function getDefaultImgIndexClass(){
+	public function getDefaultImgIndexClass() {
 		return $this->defaultImgIndexClass;
 	}
 
-	public function getDefaultImgViewClass(){
+	public function getDefaultImgViewClass() {
 		return $this->defaultImgViewClass;
 	}
 
-	public function getDefaultImgView(){
+	public function getDefaultImgView() {
 		$value = "";
 		$controllerName = $this->controller->name;	
 
@@ -468,27 +451,21 @@ class UsersTable extends AppTable {
 		return $value;
 	}
 
-	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
-		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
-			$file = $entity->photo_content;
-			if(!empty($file['tmp_name'])){
-				$entity->photo_content = file_get_contents($file['tmp_name']);
-				if(!empty($file['name'])){
-					$pathInfo = pathinfo($file['name']);
-					$entity->photo_name = uniqid() . '.' . $pathInfo['extension'];
-				}
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-			} else if($file['error'] > 0) {
-				$entity->photo_content = null;
-				$entity->photo_name = null;
+		if ($this->controller->name != 'Securities') {
+			$actions = ['view', 'edit'];
+			foreach ($actions as $action) {
+				if (array_key_exists($action, $buttons)) {
+					$buttons[$action]['url'][1] = $entity->security_user_id;
+				}
+			}
+			if (array_key_exists('remove', $buttons)) {
+				$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
 			}
 		}
-
-		if(empty($entity->photo_content)){
-			$entity->photo_content = null;
-			$entity->photo_name = null;
-		}
-
-		parent::beforeSave($event, $entity, $options);
-	}*/
+		
+		return $buttons;
+	}
 }

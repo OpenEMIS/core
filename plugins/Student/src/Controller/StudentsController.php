@@ -146,7 +146,7 @@ class StudentsController extends AppController {
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('security_user_id') => $this->activeObj->id
-						]);
+					]);
 					
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -166,35 +166,28 @@ class StudentsController extends AppController {
 		}
 	}
 
-
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
-		if ($model->alias() != 'Guardians') {
-			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($session->check('Students.security_user_id')) {
+		if ($model->alias() != 'InstitutionSiteStudents') {
+			if ($session->check('Students.security_user_id')) {
+				if ($model->hasField('security_user_id')) {
 					$userId = $session->read('Students.security_user_id');
-
-					if ($model->hasField('security_user_id')) {
-						$query->where([$model->aliasField('security_user_id') => $userId]);
-					}
-				} else {
-					$this->Alert->warning('general.noData');
-					$this->redirect(['action' => 'index']);
-					return false;
+					$query->where([$model->aliasField('security_user_id') => $userId]);
 				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
 			}
+		} else {
+			// we only show distinct records at system level
+			$query->group([$model->aliasField('security_user_id')]);
 		}
-		return $options;
 	}
 
 	public function excel($id=0) {
 		$this->Users->excel($id);
 		$this->autoRender = false;
 	}
-
-	public function afterFilter(Event $event) {
-		$session = $this->request->session();
-	}
-
 }
