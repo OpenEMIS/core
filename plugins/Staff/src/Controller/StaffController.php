@@ -31,6 +31,7 @@ class StaffController extends AppController {
 			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Staff.StaffActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('AdvanceSearch');
         $this->ControllerAction->model()->addBehavior('Excel', [
 			'excludes' => ['password', 'photo_name'],
 			'filename' => 'Staff'
