@@ -125,7 +125,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		if (isset($data[$this->alias()]['institution_site_grades']) && count($data[$this->alias()]['institution_site_grades']>0)) {
 			foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
 				if (isset($row['education_grade_id'])) {
-					$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
 					$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
 				} else {
 					if ($row['id']!='') {

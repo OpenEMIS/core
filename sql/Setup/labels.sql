@@ -182,7 +182,11 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `creat
 ('StaffAbsences', 'start_time', NULL, 'Start Time Absent', 1, NOW()),
 ('StaffAbsences', 'end_time', NULL, 'End Time Absent', 1, NOW()),
 ('StaffAbsences', 'absence_type', NULL, 'Type', 1, NOW()),
-('StaffAbsences', 'staff_absence_reason_id', NULL, 'Reason', 1, NOW())
+('StaffAbsences', 'staff_absence_reason_id', NULL, 'Reason', 1, NOW()),
+-- InstitutionGradeStudents
+('InstitutionGradeStudents', 'openemis_no', NULL, 'OpenEMIS ID', 1, NOW()),
+('InstitutionGradeStudents', 'security_user_id', NULL, 'Student', 1, NOW()),
+('InstitutionGradeStudents', 'education_grade_id', NULL, 'Next Grade', 1, NOW())
 ;
 
 -- PHPOE-1561

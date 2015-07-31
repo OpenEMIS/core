@@ -263,7 +263,11 @@ trait MessagesTrait {
 			'reject' => 'Transfer request has been rejected successfully.',
 			'noProgrammes' => 'No Available Programmes'
 		],
-
+		'InstitutionGradeStudents' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noData' => 'There are no available Students for Promotion/Graduation.'
+		],
 
 		// Validation Messages
 		'Institution' => [
