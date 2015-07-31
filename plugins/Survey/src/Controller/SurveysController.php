@@ -3,6 +3,7 @@ namespace Survey\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
+use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 
@@ -51,7 +52,7 @@ class SurveysController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
     	if ($model->alias == 'Status') {
 	        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->_getSelectOptions());
 	        $this->set(compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
@@ -59,10 +60,12 @@ class SurveysController extends AppController
 	        $todayDate = date('Y-m-d');
 	        $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
 
-	        $options['conditions'][] = [
-	            $model->aliasField('survey_form_id') => $selectedForm
-	        ];
-	        $options['conditions'][] = ($selectedStatus == 1) ? [$model->aliasField('date_disabled >=') => $todayTimestamp] : [$model->aliasField('date_disabled <') => $todayTimestamp];
+	        $query->where([$model->aliasField('survey_form_id') => $selectedForm]);
+	        if ($selectedStatus == 1) {
+				$query->where([$model->aliasField('date_disabled >=') => $todayTimestamp]);
+	        } else {
+				$query->where([$model->aliasField('date_disabled <') => $todayTimestamp]);
+	        }
     	}
     }
 

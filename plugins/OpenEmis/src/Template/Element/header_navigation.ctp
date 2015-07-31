@@ -20,12 +20,17 @@ $dropdown = [
 		'icon' => 'fa-power-off'
 	]
 ];
+
+$roles = '';
+if ($session->check('System.User.roles')) {
+	$roles = $session->read('System.User.roles');
+}
 ?>
 
 <div class="header-navigation">
 	<div class="username">
 		<span><?php echo sprintf('%s %s', $firstName, $lastName) ?></span>
-		<a class="btn" data-toggle="tooltip" data-placement="bottom" title="User Role: Principal"><i class="kd-role"></i></a>
+		<a class="btn" data-toggle="tooltip" data-placement="bottom" title="<?= $roles ?>"><i class="kd-role"></i></a>
 	</div>
 
 	<div class="btn-group">

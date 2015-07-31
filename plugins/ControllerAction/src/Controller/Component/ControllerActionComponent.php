@@ -497,8 +497,22 @@ class ControllerActionComponent extends Component {
 		return $modal;
 	}
 
+	public function getContains($model, $type = 'belongsTo') { // type is not being used atm
+		$contain = [];
+		foreach ($model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+				$contain[] = $assoc->name();
+			}
+		}
+		return $contain;
+	}
+
+	public function getSearchKey() {
+		return $this->Session->read($this->model->alias().'.search.key');
+	}
+
 	public function search($model, $order = []) {
-		$alias = $model->alias();
+		$alias = $this->model->alias();
 		$controller = $this->controller;
 		$request = $this->request;
 		$limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
@@ -517,53 +531,48 @@ class ControllerActionComponent extends Component {
 				}
 			}
 		}
-		$conditions = isset($options['conditions']) ? $options['conditions'] : [];
 
-		$contain = [];
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
-			}
+		$query = $model->find();
+
+		$contain = $this->getContains($model);
+		if (!empty($contain)) {
+			$query->contain($contain);
 		}
 
-		// all string fields are searchable by default
-		$OR = isset($conditions['OR']) ? $conditions['OR'] : [];
+		$OR = [];
 		if (!empty($search)) {
 			foreach($schema as $name => $obj) {
 				if ($obj['type'] == 'string' && $name != 'password') {
-					$OR["$alias.$name LIKE"] = '%' . $search . '%';
+					$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
 				}
 			}
 		}
+
 		if (!empty($OR)) {
-			$conditions['OR'] = $OR;
+			$query->where(['OR' => $OR]);
 		}
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
-			$order = [$model->aliasField($this->orderField) => 'asc'];
+			$query->order([$model->aliasField($this->orderField) => 'asc']);
 		}
 
-		$paginateOptions = new ArrayObject(['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions]);
-		if (!empty($contain)) {
-			$paginateOptions['contain'] = $contain;
-		}
+		$options = new ArrayObject(['limit' => $this->pageOptions[$limit]]);
 
 		$this->Session->write($alias.'.search.key', $search);
 		$this->request->data['Search']['searchField'] = $search;
 		$this->request->data['Search']['limit'] = $limit;
-		// $controller->set('search', $search);
-		// $controller->set('pageOptions', $this->pageOptions);
+		
 		$this->config['search'] = $search;
 		$this->config['pageOptions'] = $this->pageOptions;
 
-		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $paginateOptions]);
+		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $query, $options]);
 		$event = $this->controller->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
-		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $paginateOptions]);
+		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $query, $options]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		$data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
+		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
 		$event = $this->model->eventManager()->dispatch($event);
@@ -650,7 +659,7 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id)->contain($contain);
+			$query = $model->find()->where([$idKey => $id])->contain($contain);
 
 			// Event: viewEditBeforeQuery
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
@@ -815,7 +824,7 @@ class ControllerActionComponent extends Component {
 		// End Event
 
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id);
+			$query = $model->find()->where([$idKey => $id]);
 
 			// Event: viewEditBeforeQuery
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
@@ -868,7 +877,7 @@ class ControllerActionComponent extends Component {
 						$action = $this->buttons['view']['url'];
 
 						// Event: editAfterSave
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, [$this->controller]);
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, $params);
 						if ($event->isStopped()) { return $event->result; }
 						// End Event
 						
@@ -931,7 +940,7 @@ class ControllerActionComponent extends Component {
 			$id = $request->data[$primaryKey];
 			$deleteOptions = new ArrayObject([]);
 
-			$process = function () use ($id, $model, $deleteOptions) {
+			$process = function ($model, $id, $deleteOptions) {
 				$entity = $model->get($id);
 				return $model->delete($entity, $deleteOptions->getArrayCopy());
 			};
@@ -946,7 +955,7 @@ class ControllerActionComponent extends Component {
 			// End Event
 
 			if ($this->removeStraightAway) {
-				if ($process()) {
+				if ($process($model, $id, $deleteOptions)) {
 					$this->Alert->success('general.delete.success');
 				} else {
 					$this->Alert->error('general.delete.failed');

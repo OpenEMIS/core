@@ -130,12 +130,12 @@ class InstitutionAssessmentsTable extends AppTable {
         $this->ControllerAction->setFieldOrder($fieldOrder);
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
-		$options['conditions'][$this->aliasField('status')] = $selectedStatus;
-		$options['order'] = [
-			$this->AcademicPeriods->aliasField('order')
-		];
+
+		$query
+			->where([$this->aliasField('status') => $selectedStatus])
+			->order([$this->AcademicPeriods->aliasField('order')]);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

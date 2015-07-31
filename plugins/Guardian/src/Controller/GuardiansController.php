@@ -1,9 +1,12 @@
 <?php
 namespace Guardian\Controller;
 
-use App\Controller\AppController;
+use ArrayObject;
+
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
+use Cake\ORM\Table;
+use Cake\ORM\Query;
+use App\Controller\AppController;
 
 class GuardiansController extends AppController {
 	public $activeObj = null;
@@ -13,25 +16,17 @@ class GuardiansController extends AppController {
 
 		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Guardian.Guardian');
-		
-		// $this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Guardian', 'roleFields' =>['Identities', 'Nationalities', 'Contacts']]);
-		// $this->ControllerAction->model()->addBehavior('CustomField.Record', [
-		// 	'behavior' => 'Guardian',
-		// 	'recordKey' => 'security_user_id',
-		// 	'fieldValueKey' => ['className' => 'Guardian.GuardianCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-		// 	'tableCellKey' => ['className' => 'Guardian.GuardianCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
-		// ]);
-
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Guardian.GuardianActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('AdvanceSearch');
 
 		$this->ControllerAction->models = [
-		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
-		'Contacts' 			=> ['className' => 'User.Contacts'],
-		'Identities' 		=> ['className' => 'User.Identities'],
-		'Languages' 		=> ['className' => 'User.UserLanguages'],
-		'Comments' 			=> ['className' => 'User.Comments'],
-		'Attachments' 		=> ['className' => 'User.Attachments'],
-		'History' 			=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
+			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Contacts' 			=> ['className' => 'User.Contacts'],
+			'Identities' 		=> ['className' => 'User.Identities'],
+			'Languages' 		=> ['className' => 'User.UserLanguages'],
+			'Comments' 			=> ['className' => 'User.Comments'],
+			'Attachments' 		=> ['className' => 'User.Attachments'],
+			'History' 			=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
 		];
 
 		$this->loadComponent('Paginator');
@@ -122,16 +117,16 @@ class GuardiansController extends AppController {
 		}
 	}
 
-	public function beforePaginate($event, $model, $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
 		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-			if ($this->ControllerAction->Session->check('Guardians.security_user_id')) {
-				$securityUserId = $this->ControllerAction->Session->read('Guardians.security_user_id');
-				if (!array_key_exists('conditions', $options)) {
-					$options['conditions'] = [];
+			if ($session->check('Guardians.security_user_id')) {
+				$userId = $session->read('Guardians.security_user_id');
+
+				if ($model->hasField('security_user_id')) {
+					$query->where([$model->aliasField('security_user_id') => $userId]);
 				}
-				$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
 			} else {
 				$this->Alert->warning('general.noData');
 				$this->redirect(['action' => 'index']);
@@ -140,9 +135,4 @@ class GuardiansController extends AppController {
 		}
 		return $options;
 	}
-
-	public function afterFilter(Event $event) {
-		$session = $this->request->session();
-	}
-
 }
