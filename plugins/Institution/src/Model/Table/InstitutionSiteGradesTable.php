@@ -13,6 +13,7 @@ class InstitutionSiteGradesTable extends AppTable {
 		$this->belongsTo('InstitutionSiteProgrammes',	['className' => 'Institution.InstitutionSiteProgrammes']);
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		
+		$this->addBehavior('AcademicPeriod.Period');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -56,8 +57,7 @@ class InstitutionSiteGradesTable extends AppTable {
 		$query = $this->find('all')
 					->contain(['EducationGrades'])
 					->where([
-						'institution_site_programme_id IN' => $institutionSiteProgrammesId,
-						'status' => 1
+						'institution_site_programme_id IN' => $institutionSiteProgrammesId
 					])
 					->order(['EducationGrades.education_programme_id', 'EducationGrades.order'])
 					;
@@ -90,8 +90,7 @@ class InstitutionSiteGradesTable extends AppTable {
 		$query = $this->find('all')
 					->contain(['EducationGrades'])
 					->where([
-						'institution_site_programme_id IN' => $institutionSiteProgrammesId,
-						'status' => 1
+						'institution_site_programme_id IN' => $institutionSiteProgrammesId
 					])
 					->order(['EducationGrades.education_programme_id', 'EducationGrades.order'])
 					;
