@@ -19,6 +19,8 @@ class InstitutionGradeStudentsTable extends AppTable {
 	private $statusOptions = [];
 	private $statusMap = [];
 
+	private $dataCount = null;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
@@ -101,33 +103,6 @@ class InstitutionGradeStudentsTable extends AppTable {
 		}
 
 		return $html;
-	}
-
-	public function beforeAction(Event $event) {
-		$statuses = $this->StudentStatuses->find()->all();
-
-		foreach ($statuses as $entity) {
-			$this->statusOptions[$entity->id] = $entity->name;
-			$this->statusMap[$entity->code] = $entity->id;
-		}
-
-		$promotedChoices = ['PROMOTED', 'REPEATED'];
-		$promotedOptions = [];
-
-		foreach ($promotedChoices as $code) {
-			$promotedOptions[$this->statusMap[$code]] = $this->statusOptions[$this->statusMap[$code]];
-		}
-		$promotedOptions = [
-			$this->statusMap['PROMOTED'] => $this->statusOptions[$this->statusMap['PROMOTED']],
-			$this->statusMap['REPEATED'] => $this->statusOptions[$this->statusMap['REPEATED']]
-		];
-		// pr($promotedOptions);
-
-		$graduatedOptions = [
-			$this->statusMap['GRADUATED'] => $this->statusOptions[$this->statusMap['GRADUATED']],
-			$this->statusMap['REPEATED'] => $this->statusOptions[$this->statusMap['REPEATED']]
-		];
-		// pr($graduatedOptions);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -222,40 +197,37 @@ class InstitutionGradeStudentsTable extends AppTable {
 					])
 					->first();
 
-				if (!is_null($this->nextGrade)) {
-					$statusList = ['PROMOTED', 'REPEATED'];
-
-					$this->nextStatusId = $this->StudentStatuses
-						->find()
-						->where([$this->StudentStatuses->aliasField('code') => 'PROMOTED'])
-						->first()
-						->id;
-				} else {
-					$statusList = ['GRADUATED', 'REPEATED'];
-
-					$this->nextStatusId = $this->StudentStatuses
-						->find()
-						->where([$this->StudentStatuses->aliasField('code') => 'GRADUATED'])
-						->first()
-						->id;
+				// Student Statuses
+				$statuses = $this->StudentStatuses
+					->find()
+					->all();
+				$statusOptions = [];
+				foreach ($statuses as $entity) {
+					$statusOptions[$entity->id] = $entity->name;
+					$this->statusMap[$entity->code] = $entity->id;
 				}
 
-				$this->repeatStatusId = $this->StudentStatuses
-					->find()
-					->where([$this->StudentStatuses->aliasField('code') => 'REPEATED'])
-					->first()
-					->id;
+				$promotedOptions = [
+					$this->statusMap['PROMOTED'] => $statusOptions[$this->statusMap['PROMOTED']],
+					$this->statusMap['REPEATED'] => $statusOptions[$this->statusMap['REPEATED']]
+				];
 
-				$this->currentStatusId = $this->StudentStatuses
-					->find()
-					->where([$this->StudentStatuses->aliasField('code') => 'CURRENT'])
-					->first()
-					->id;
+				$graduatedOptions = [
+					$this->statusMap['GRADUATED'] => $statusOptions[$this->statusMap['GRADUATED']],
+					$this->statusMap['REPEATED'] => $statusOptions[$this->statusMap['REPEATED']]
+				];
+				// End
 
-				$this->statusOptions = $this->StudentStatuses
-					->find('list')
-					->where([$this->StudentStatuses->aliasField('code IN') => $statusList])
-					->toArray();
+				if (!is_null($this->nextGrade)) {
+					$this->statusOptions = $promotedOptions;
+					$this->nextStatusId = $this->statusMap['PROMOTED'];
+				} else {
+					$this->statusOptions = $graduatedOptions;
+					$this->nextStatusId = $this->statusMap['GRADUATED'];
+				}
+
+				$this->repeatStatusId = $this->statusMap['REPEATED'];
+				$this->currentStatusId = $this->statusMap['CURRENT'];
 			}
 			// End
 
@@ -281,23 +253,22 @@ class InstitutionGradeStudentsTable extends AppTable {
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		// if ($data->count() == 0) {
-		// 	// There are no available Students for Promotion/Graduation.
-		// 	$this->Alert->info('InstitutionGradeStudents.noData');
-		// 	$event->stopPropagation();
-		// 	$action = ['action' => 'Grades', 'index'];
-		// 	$params = $this->ControllerAction->paramsQuery();
-		// 	unset($params['mode']);
-		// 	$action = array_merge($action, $params);
-		// 	return $this->controller->redirect($action);
-		// }
+		$this->dataCount = $data->count();
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if (!is_null($this->request->query('mode'))) {
-			$config['formButtons'] = true;
-			$config['url'] = $config['buttons']['index']['url'];
-			$config['url'][0] = 'indexEdit';
+			if (!is_null($this->nextPeriod)) {
+				if ($this->dataCount > 0) {
+					$config['formButtons'] = true;
+					$config['url'] = $config['buttons']['index']['url'];
+					$config['url'][0] = 'indexEdit';
+				} else {
+					$this->Alert->info('InstitutionGradeStudents.noData');
+				}
+			} else {
+				$this->Alert->warning('InstitutionGradeStudents.noPeriods');
+			}
 		}
 	}
 
