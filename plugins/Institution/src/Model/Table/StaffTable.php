@@ -19,6 +19,7 @@ class StaffTable extends BaseTable {
 		$this->addBehavior('Staff.Staff');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStaff]);
+		$this->addBehavior('AdvanceSearch');
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
