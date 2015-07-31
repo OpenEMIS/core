@@ -26,91 +26,10 @@ class PermissionsTable extends AppTable {
 			$flag = -1;
 		} else if (!empty($entity->Permissions)) {
 			if (!is_null($entity->Permissions[$operation])) {
-				$flag = 1;
+				$flag = $entity->Permissions[$operation];
 			}
 		}
 		return $flag;
-	}
-
-	private function showOperation(Event $event, $entity, $operation) {
-		// $mode = $this->request->query('mode');
-		// $html = '';
-		// $flag = $this->check($entity, $operation);
-		// $alias = $this->alias();
-
-		// if ($mode == 'edit') {
-		// 	$id = $entity->id;
-		// 	$roleId = $this->request->pass[1];
-		// 	$Form = $event->subject()->Form;
-		// 	$options = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false];
-		// 	if ($flag == 1) {
-		// 		$options['checked'] = 'checked';
-		// 	} else if ($flag == -1) {
-		// 		$options['disabled'] = 'disabled';
-		// 	$html .= $Form->hidden("$alias.$id.$operation", ['value' => 0]);
-		// 	}
-			
-		// 	$permissionId = isset($entity->Permissions['id']) ? $entity->Permissions['id'] : 0;
-		// 	$html .= $Form->input("$alias.$id.$operation", $options);
-		// 	$html .= $Form->hidden("$alias.$id.id", ['value' => $permissionId]);
-		// 	$html .= $Form->hidden("$alias.$id.security_function_id", ['value' => $id]);
-		// 	$html .= $Form->hidden("$alias.$id.security_role_id", ['value' => $roleId]);
-		// 	$event->subject()->HtmlField->includes['icheck'] = [
-		// 		'include' => true,
-		// 		'css' => 'OpenEmis.../plugins/icheck/skins/minimal/blue',
-		// 		'js' => [
-		// 			'OpenEmis.../plugins/icheck/jquery.icheck.min',
-		// 			'OpenEmis.../plugins/tableCheckable/jquery.tableCheckable'
-		// 		]
-		// 	];
-		// } else {
-		// 	$icons = [-1 => '<i class="fa fa-minus grey"></i>', 0 => '<i class="fa kd-cross red"></i>', 1 => '<i class="fa kd-check green"></i>'];
-		// 	$html = $icons[$flag];
-		// }
-		// return $html;
-	}
-
-	public function onGetFunction(Event $event, Entity $entity) {
-		return $entity->name;
-	}
-
-	public function onGetView(Event $event, Entity $entity) {
-		return $this->showOperation($event, $entity, '_view');
-	}
-
-	public function onGetEdit(Event $event, Entity $entity) {
-		return $this->showOperation($event, $entity, '_edit');
-	}
-
-	public function onGetAdd(Event $event, Entity $entity) {
-		return $this->showOperation($event, $entity, '_add');
-	}
-
-	public function onGetDelete(Event $event, Entity $entity) {
-		return $this->showOperation($event, $entity, '_delete');
-	}
-
-	public function onGetExecute(Event $event, Entity $entity) {
-		return $this->showOperation($event, $entity, '_execute');
-	}
-
-	public function indexEdit() {
-		$controller = $this->controller;
-
-		if ($this->request->is(['post', 'put'])) {
-			$data = $this->request->data($this->alias());
-			$entities = $this->newEntities($data);
-
-			foreach ($entities as $entity) {
-				$this->save($entity);
-			}
-			$url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()];
-			$url = array_merge($url, $this->request->query, $this->request->pass);
-			$url[0] = 'index';
-			unset($url['mode']);
-			
-			return $this->controller->redirect($url);
-		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -139,15 +58,6 @@ class PermissionsTable extends AppTable {
 		$controller->set('operations', $this->operations);
 	}
 
-	public function afterAction(Event $event, ArrayObject $config) {
-		if ($this->request->query('mode') == 'edit') {
-			$config['formButtons'] = true;
-			$config['url'] = $config['buttons']['index']['url'];
-			$config['url'][0] = 'indexEdit';
-			$config['url'][1] = $this->request->pass[1];
-		}
-	}
-
 	// Event: ControllerAction.Model.index.beforeAction
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$controller = $this->controller;
@@ -160,9 +70,7 @@ class PermissionsTable extends AppTable {
 		$module = $this->request->query('module');
 		$settings['pagination'] = false;
 		
-		// $this->clean($query, $roleId);
-		
-		$query = $this->getPermissions($roleId, $module);
+		$query = $this->SecurityFunctions->find()->find('permissions', ['roleId' => $roleId, 'module' => $module]);
 		return $query;
 	}
 
@@ -187,39 +95,27 @@ class PermissionsTable extends AppTable {
 		return $list;
 	}
 
-	private function getPermissions($roleId, $module) {
-		$query = $this->SecurityFunctions
-			->find()
-			->find('visible')
-			->select([
-				'SecurityFunctions.id', 'SecurityFunctions.name', 'SecurityFunctions.controller', 
-				'SecurityFunctions.module', 'SecurityFunctions.category', 
-				'SecurityFunctions._view', 'SecurityFunctions._add', 'SecurityFunctions._edit',
-				'SecurityFunctions._delete', 'SecurityFunctions._execute',
-				'Permissions.id', 'Permissions._view', 'Permissions._add', 'Permissions._edit',
-				'Permissions._delete', 'Permissions._execute'
-			])
-			->leftJoin(
-				['Permissions' => 'security_role_functions'], 
-				['Permissions.security_function_id = SecurityFunctions.id', 'Permissions.security_role_id = ' . $roleId]
-			)
-			->where(['SecurityFunctions.module' => $module])
-			->order([
-				'SecurityFunctions.order'
-			])
-			;
-		return $query;
-	}
-
-	public function edit($id=0) {
+	public function edit($roleId=0) {
 		$request = $this->request;
-		$primaryKey = $this->primaryKey();
-		$idKey = $this->aliasField($primaryKey);
+		$params = $this->ControllerAction->paramsQuery();
 
-		if ($this->exists([$idKey => $id])) {
+		if ($request->is(['post', 'put'])) {
+			// pr($request->data);die;
+			$permissions = $request->data($this->alias());
+			if (!empty($permissions)) {
+				foreach ($permissions as $row) {
+					$defaultData = ['_view' => 0, '_edit' => 0, '_add' => 0, '_delete' => 0, '_execute' => 0, 'security_role_id' => $roleId];
+					$entity = $this->newEntity(array_merge($defaultData, $row));
+					$this->save($entity);
+				}
+			}
+			$this->Alert->success('general.edit.success');
+
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), 'index', $roleId], $params);
+			return $this->controller->redirect($action);
+		} else {
 			$module = $this->request->query('module');
-			$query = $this->getPermissions($id, $module);
-
+			$query = $this->SecurityFunctions->find()->find('permissions', ['roleId' => $roleId, 'module' => $module]);
 			$data = $query->all();
 
 			$list = [];
@@ -234,12 +130,6 @@ class PermissionsTable extends AppTable {
 				$list[$obj->category][] = $obj;
 			}
 			$this->controller->set('data', $list);
-
-		} else {
-			$this->Alert->warning('general.notExists');
-			$params = $this->ControllerAction->params();
-			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index'], $params);
-			return $this->controller->redirect($action);
 		}
 	}
 
@@ -292,19 +182,4 @@ class PermissionsTable extends AppTable {
 		}
 		$controller->set('tabElements', $tabElements);
 	}
-
-	// clean up old security functions
-	// private function clean(Query $query, $roleId) {
-	// 	$resultSet = $query
-	// 		->contain(['SecurityFunctions'])
-	// 		->where([$this->aliasField('security_role_id') => $roleId])
-	// 		->all()
-	// 	;
-		
-	// 	foreach ($resultSet as $entity) {
-	// 		if (empty($entity->security_function)) {
-	// 			$this->delete($entity);
-	// 		}
-	// 	}
-	// }
 }

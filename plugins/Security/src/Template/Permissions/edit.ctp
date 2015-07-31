@@ -31,6 +31,7 @@ $this->start('panelBody');
 	$this->Form->templates($template);
 	
 	echo $this->Form->create(null, $formOptions);
+	$i = 0;
 
 	foreach ($data as $section => $list) {
 		// add the sections
@@ -45,9 +46,11 @@ $this->start('panelBody');
 				<tbody>
 			';
 
-		foreach ($list as $i => $obj) {
+		foreach ($list as $obj) {
 			echo '<tr>'; // start row
 			echo '<td>' . $obj->name . '</td>'; // function name
+			echo $this->Form->hidden("$alias.$i.id", ['value' => $obj->Permissions['id']]);
+			echo $this->Form->hidden("$alias.$i.security_function_id", ['value' => $obj->id]);
 
 			// function operations
 			foreach ($operations as $op) {
@@ -61,7 +64,9 @@ $this->start('panelBody');
 				}
 				echo $this->Form->input("$alias.$i.$op", $checkboxOptions);
 				echo '</td>';
+
 			}
+			$i++;
 			// end function operations
 
 			echo '</tr>'; // end row
