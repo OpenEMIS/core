@@ -138,7 +138,7 @@ class NavigationComponent extends Component {
 								'Education Structure' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
-									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
+									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Subjects', 'Certifications', 'FieldOfStudies', 'ProgrammeOrientations']
 								],
 								'Assessments' => [
 									'collapse' => true,
@@ -187,11 +187,13 @@ class NavigationComponent extends Component {
 								],
 								'System Configurations' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
+									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index'],
+									'selected' => ['add', 'view', 'edit']
 								],
 								'Notices' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']
+									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index'],
+									'selected' => ['add', 'view', 'edit']
 								]
 							]
 						],
@@ -285,7 +287,7 @@ class NavigationComponent extends Component {
 			'Students' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['Transfers']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['Transfers', 'Accounts']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
@@ -296,7 +298,7 @@ class NavigationComponent extends Component {
 			'Staff' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['Accounts']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences']]
 				]
