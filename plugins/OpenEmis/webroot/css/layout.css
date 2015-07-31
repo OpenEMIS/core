@@ -2065,7 +2065,7 @@ td.center .icheck-input input {
 
 /* Autocomplete */
 .ui-autocomplete {
-	max-height: 120px !important;
+	max-height: 320px !important;
 	overflow: scroll;
 }
 
