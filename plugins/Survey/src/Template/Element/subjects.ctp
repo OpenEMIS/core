@@ -18,15 +18,15 @@
 	?>
 	<div class="clearfix"></div>
 		<hr>
-		<h3><?= __('Education Subjects')?></h3>
+		<h3><?= __('Survey Questions')?></h3>
 		<div class="clearfix">
 			<?= 
-				$this->Form->input($ControllerAction['table']->alias().".education_subject_id", [
-					'label' => $this->Label->get('EducationGrades.add_subject'),
+				$this->Form->input($ControllerAction['table']->alias().".survey_question_id", [
+					'label' => $this->Label->get('SurveyForms.add_question'),
 					'type' => 'select',
-					//'options' => $attr['options'],
+					'options' => $attr['options'],
 					'value' => 0,
-					'onchange' => "$('#reload').val('addSubject').click();"
+					'onchange' => "$('#reload').val('addQuestion').click();"
 				]);
 			?>
 		</div>
