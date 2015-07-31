@@ -3,6 +3,7 @@ namespace Rubric\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
+use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
@@ -63,41 +64,37 @@ class RubricsController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function beforePaginate(Event $event, Table $model, ArrayObject $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
     	if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
-			$query = $this->request->query;
+			$request = $this->request;
 
-			$templateOptions = TableRegistry::get('Rubric.RubricTemplates')->find('list')->toArray();
-	        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
+			$RubricTemplates = TableRegistry::get('Rubric.RubricTemplates');
+			$templateOptions = $RubricTemplates
+				->find('list')
+				->toArray();
+	        $selectedTemplate = !is_null($request->query('template')) ? $request->query('template') : key($templateOptions);
 
 			$columns = $model->schema()->columns();
 			if (in_array('rubric_section_id', $columns)) {
 				$RubricSections = TableRegistry::get('Rubric.RubricSections');
-				$sectionOptions = $RubricSections->find('list')
+				$sectionOptions = $RubricSections
+					->find('list')
 		        	->find('order')
 		        	->where([$RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
 		        	->toArray();
-		        
-		        $selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
+		        $selectedSection = !is_null($request->query('section')) ? $request->query('section') : key($sectionOptions);
 
-		        $options['conditions'][] = [
-		        	$model->aliasField('rubric_section_id') => $selectedSection
-		        ];
+		        $query->where([$model->aliasField('rubric_section_id') => $selectedSection]);
 
-				$this->set('selectedSection', $selectedSection);
-				$this->set('sectionOptions', $sectionOptions);
+				$this->set(compact('sectionOptions', 'selectedSection'));
 			} else {
 				$options['conditions'][] = [
 		        	$model->aliasField('rubric_template_id') => $selectedTemplate
 		        ];
 			}
+			$query->order([$model->aliasField('order')]);
 
-	        $options['order'] = [
-	        	$model->aliasField('order')
-	        ];
-
-	        $this->set('selectedTemplate', $selectedTemplate);
-	        $this->set('templateOptions', $templateOptions);
+			$this->set(compact('templateOptions', 'selectedTemplate'));
     	}
     }
 }

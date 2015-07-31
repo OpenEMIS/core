@@ -80,16 +80,13 @@ class GuardianStudentBehavior extends Behavior {
 	}
 
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		if ($this->_table->Session->check('Students.security_user_id')) {
 			$studentSecurityUserId = $this->_table->Session->read('Students.security_user_id');
-			$options['contain'] = [
-				'GuardianStudents' => [
-					'conditions' => [
-						'GuardianStudents.student_user_id' => $studentSecurityUserId
-					]
-				]
-			];
+
+			$query->contain(['GuardianStudents' => function ($q) use ($studentSecurityUserId) {
+				return $q->where(['GuardianStudents.student_user_id' => $studentSecurityUserId]);
+			}]);
 		}
 	}
 

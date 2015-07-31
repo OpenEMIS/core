@@ -29,6 +29,7 @@ require dirname(__DIR__) . '/config/bootstrap.php';
 use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Routing\DispatcherFactory;
+use Cake\Log\Log;
 
 $dispatcher = DispatcherFactory::create();
 
@@ -38,5 +39,7 @@ try {
 	    new Response()
 	);
 } catch (Exception $ex) {
-	pr($ex->getMessage());
+	Log::write('error', '[URL] ' . $_SERVER['REQUEST_URI']);
+    Log::write('error', $ex->getMessage());
+	throw $ex;
 }

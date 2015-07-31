@@ -4,6 +4,7 @@ namespace Localization\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\I18n\I18n;
@@ -62,10 +63,13 @@ class TranslationsTable extends AppTable {
 		$includes['localization'] = ['include' => true, 'js' => 'Localization.translations'];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$searchField = $request->data['Search']['searchField'];
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		// Append the condition to the existing condition in the options
-		$options['conditions']['OR'][] = $this->aliasField('en')." LIKE '%".$searchField."%'";
+		$searchField = $request->data['Search']['searchField'];
+
+		if (!empty($searchField)) {
+			$query->orWhere([$this->aliasField('en')." LIKE '%" . $searchField . "%'"]);
+		}
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {

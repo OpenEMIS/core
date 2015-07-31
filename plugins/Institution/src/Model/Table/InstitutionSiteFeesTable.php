@@ -84,12 +84,14 @@ class InstitutionSiteFeesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		$paginateOptions['finder'] = ['withProgrammes' => ['selectedOption' => $request->query('academic_period_id')]];
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$academicPeriodId = $request->query('academic_period_id');
+		$query
+			->find('withProgrammes')
+			->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
 	}
 
     public function findWithProgrammes(Query $query, array $options) {
-    	$query->where([$this->aliasField('academic_period_id') => $options['selectedOption']]);
     	return $query->contain(['EducationGrades'=>['EducationProgrammes']]);
     }
 
@@ -136,6 +138,7 @@ class InstitutionSiteFeesTable extends AppTable {
 
 		$this->fields['academic_period_id']['type'] = 'readonly';
 		$this->fields['education_grade_id']['type'] = 'readonly';
+		$this->ControllerAction->field('total', ['visible' => false]);
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

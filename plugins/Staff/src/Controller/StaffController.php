@@ -1,9 +1,12 @@
 <?php
 namespace Staff\Controller;
 
-use App\Controller\AppController;
+use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Table;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use App\Controller\AppController;
 
 class StaffController extends AppController {
 	public $activeObj = null;
@@ -28,6 +31,7 @@ class StaffController extends AppController {
 			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Staff.StaffActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('AdvanceSearch');
         $this->ControllerAction->model()->addBehavior('Excel', [
 			'excludes' => ['password', 'photo_name'],
 			'filename' => 'Staff'
@@ -105,16 +109,21 @@ class StaffController extends AppController {
 				$action = $params['pass'][0];
 			}
 
+			$alias = $model->alias;
+			// temporary fix for renaming Sections and Classes
+			if ($alias == 'Sections') $alias = 'Classes';
+			else if ($alias == 'Classes') $alias = 'Subjects';
+
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $model->alias]);
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
 				if (strtolower($action) != 'index')	{
 					$this->Navigation->addCrumb(ucwords($action));
 				}
 			} else {
-				$this->Navigation->addCrumb($model->getHeader($model->alias));
+				$this->Navigation->addCrumb($model->getHeader($alias));
 			}
 
-			$header = $this->activeObj->name . ' - ' . $model->getHeader($model->alias);
+			$header = $this->activeObj->name . ' - ' . $model->getHeader($alias);
 
 			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
@@ -133,7 +142,7 @@ class StaffController extends AppController {
 					 */
 					if (!$exists) {
 						$this->Alert->warning('general.notExists');
-						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $model->alias]);
+						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
 					}
 				}
 			}
@@ -146,23 +155,24 @@ class StaffController extends AppController {
 		}
 	}
 
-	public function beforePaginate($event, $model, $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-
-		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-			if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
-				$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
-				if (!array_key_exists('conditions', $options)) {
-					$options['conditions'] = [];
+		
+		if ($model->alias() != 'InstitutionSiteStaff') {
+			if ($session->check('Staff.security_user_id')) {
+				if ($model->hasField('security_user_id')) {
+					$userId = $session->read('Staff.security_user_id');
+					$query->where([$model->aliasField('security_user_id') => $userId]);
 				}
-				$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
 			} else {
 				$this->Alert->warning('general.noData');
-				$this->redirect(['action' => 'index']);
-				return false;
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
 			}
+		} else {
+			// we only show distinct records at system level
+			$query->group([$model->aliasField('security_user_id')]);
 		}
-		return $options;
 	}
 
 	public function excel($id=0) {
