@@ -48,15 +48,9 @@ class StudentBehavior extends Behavior {
 		}
 
 		if (!empty($search)) {
-			$firstFlag = true;
+			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
 			foreach ($searchParams as $key => $value) {
 				$searchString = '%' . $value . '%';
-				if ($firstFlag) {
-					$query->where(['Users.openemis_no LIKE' => $searchString]);
-				} else {
-					$query->orWhere(['Users.openemis_no LIKE' => $searchString]);
-				}
-				$firstFlag = false;
 				$query->orWhere(['Users.first_name LIKE' => $searchString]);
 				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
 				$query->orWhere(['Users.third_name LIKE' => $searchString]);
@@ -151,8 +145,6 @@ class StudentBehavior extends Behavior {
 					->where([$table->aliasField('institution_site_id') => $institutionId])
 					->distinct(['security_user_id'])
 					->count(['security_user_id']);
-
-				pr($studentCount->sql());
 
 				// Get Gender
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
