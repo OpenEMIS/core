@@ -187,11 +187,13 @@ class NavigationComponent extends Component {
 								],
 								'System Configurations' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
+									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index'],
+									'selected' => ['view', 'edit']
 								],
 								'Notices' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']
+									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index'],
+									'selected' => ['add', 'view', 'edit']
 								]
 							]
 						],
