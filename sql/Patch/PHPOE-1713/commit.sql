@@ -96,6 +96,35 @@ WHERE `id` = @funcId;
 UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
 SET @id := @id + 1;
 
+-- Assessments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Assessments' AND `name` = 'Items';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Assessments.index|Assessments.view',
+`_edit` = 'Assessments.edit',
+`_add` = 'Assessments.add',
+`_delete` = 'Assessments.remove',
+`_execute` = NULL,
+`name` = 'Assessments'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+DELETE FROM `security_functions` WHERE `id` = @id;
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`)
+VALUES (@id, 'Grading Types', 'Assessments', 'Administration', 'Assessments', 5000, 'GradingTypes.index|GradingTypes.view|GradingOptions.index|GradingOptions.view', 'GradingTypes.edit|GradingOptions.edit', 'GradingTypes.add|GradingOptions.add', 'GradingTypes.remove|GradingOptions.remove', @id, 1, 1, NOW());
+SET @id := @id + 1;
+
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Assessments' AND `name` = 'Status';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Status.index|Status.view',
+`_edit` = 'Status.edit',
+`_add` = 'Status.add',
+`_delete` = 'Status.remove',
+`_execute` = NULL,
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
 
 
 
