@@ -238,10 +238,10 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$prevValue['age'] = "";
 		$prevValue['count'] = "";
 		foreach ($convertAge as $val) {
-	    	if ($prev_value['age'] != $val) {
-	        	unset($prev_value);
+	    	if ($prevValue['age'] != $val) {
+	        	unset($prevValue);
 	        	$prevValue = ['age' => $val, 'count' => 0];
-	        	$result[] =& $prev_value;
+	        	$result[] =& $prevValue;
 	    	}
     		$prevValue['count']++;
 		}
