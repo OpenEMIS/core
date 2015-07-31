@@ -17,6 +17,7 @@ class StudentsTable extends BaseTable {
 		$this->addBehavior('Student.Student');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
+		$this->addBehavior('AdvanceSearch');
 
 		// $this->addBehavior('Institution.Role', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// new aftersave
