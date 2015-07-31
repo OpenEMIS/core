@@ -93,7 +93,7 @@ class UsersTable extends BaseTable {
 		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
 		
 		// first value is for the hidden field value, the second value is for the readonly value
-		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
+		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
 	}
 
 	public function hideFieldsBasedOnRole(){
