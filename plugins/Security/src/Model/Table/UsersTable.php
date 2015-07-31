@@ -7,6 +7,7 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 
 class UsersTable extends BaseTable {
 	public function initialize(array $config) {
@@ -25,13 +26,13 @@ class UsersTable extends BaseTable {
 		$this->addBehavior('Area.Areapicker');
 	}
 
-	public function addAfterAction(Event $event) {
-		if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
-			if (isset($this->fields['openemis_no']['attr'])) {
-	        	unset($this->fields['openemis_no']['attr']);
-	        }
-        }
-    }
+	// public function addAfterAction(Event $event) {
+	// 	if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
+	// 		if (isset($this->fields['openemis_no']['attr'])) {
+	//         	unset($this->fields['openemis_no']['attr']);
+	//         }
+ //        }
+ //    }
 
 	// autocomplete used for UserGroups
 	public function autocomplete($search) {
@@ -71,6 +72,7 @@ class UsersTable extends BaseTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
+		parent::viewBeforeAction($event);
 		$this->hideFieldsBasedOnRole();
 	}
 
@@ -83,15 +85,30 @@ class UsersTable extends BaseTable {
 	}
 
 	public function addEditBeforeAction(Event $event) {
+		parent::addEditBeforeAction($event);
 		$this->hideFieldsBasedOnRole();
-	}	
+	}
+
+	public function addBeforeAction(Event $event) {
+		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
+		
+		// first value is for the hidden field value, the second value is for the readonly value
+		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
+	}
 
 	public function hideFieldsBasedOnRole(){
 		//hide Address, postal code, gender and birthdate from user account page
 		$roleName = $this->controller->name;
 		$this->ControllerAction->field('address', ['visible' => false]);
 		$this->ControllerAction->field('postal_code', ['visible' => false]);
-		$this->ControllerAction->field('gender_id', ['visible' => false]);
-		$this->ControllerAction->field('date_of_birth', ['visible' => false]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		parent::validationDefault($validator);
+		$validator
+			->allowEmpty('address')
+			->allowEmpty('postal_code')
+			;
+		return $validator;
 	}
 }
