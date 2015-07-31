@@ -17,6 +17,7 @@ class GuardiansController extends AppController {
 		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Guardian.Guardian');
         $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Guardian.GuardianActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+        $this->ControllerAction->model()->addBehavior('AdvanceSearch');
 
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
