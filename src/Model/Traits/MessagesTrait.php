@@ -219,6 +219,9 @@ trait MessagesTrait {
 		'SurveyStatuses' => [
 			'survey_template_id' => 'Survey Template'
 		],
+		'SurveyForms' => [
+			'add_question' => 'Add Question'
+		],
 		'time' => [
 			'start' => 'Start Time',
 			'end' => 'End Time',
