@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 
 class PermissionsTable extends AppTable {
-	private $operations = ['_view', '_add', '_edit', '_delete', '_execute'];
+	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
 
 	public function initialize(array $config) {
 		$this->table('security_role_functions');

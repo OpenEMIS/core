@@ -20,80 +20,66 @@ $(document).ready(function() {
 var Security = {
 	operations: ['_view', '_edit', '_add', '_delete', '_execute'],
 	init: function() {
-		$('#permissions input[type="hidden"]:disabled').removeAttr('disabled');
-		$('#permissions .module_checkbox').change(Security.toggleModule);
-		
-		// $('input:not(:disabled)');
-		$('[checkbox-toggle] input[type="checkbox"]:not(:disabled)').on('ifChecked', function(event) {
-			console.log(event.type);
-		});
-		// $('#_edit:not(:disabled)').change(Security.toggleOperation);
-		// $('#_add:not(:disabled)').change(Security.toggleOperation);
-		// $('#_delete:not(:disabled)').change(Security.toggleOperation);
-		// $('#_execute:not(:disabled)').change(Security.toggleOperation);
+		// dependent on icheck plugin, please refer to scriptBottom.ctp for Checkable object
+		$('#permissions [checkbox-toggle-target]').on('ifToggled', Security.toggleModule);
+		$('[checkbox-toggle] input[type="checkbox"]:not(:disabled)').on('ifToggled', Security.toggleOperation);
 	},
 	
 	toggleModule: function() {
-		var checked = $(this).is(':checked');console.log(checked);
-		var parent = $(this).closest('.section_group');
-		
-		parent.find('tr input[type="checkbox"]').each(function() {
-			if(!$(this).is(':disabled')) {
-				$(this).prop('checked', checked);
+		var obj = $(this);
+		var checked = obj.is(':checked') ? 'check' : 'uncheck';
+		var target = obj.attr('checkbox-toggle-target');
+
+		$('[checkbox-toggle="' + target + '"] input[type="checkbox"]').each(function() {
+			if (!$(this).is(':disabled')) {
+				$(this).off('ifToggled');
+				$(this).iCheck(checked);
+				$(this).on('ifToggled', Security.toggleOperation);
 			}
-			Security.checkModuleToggled($(this));
 		});
 	},
 	
-	checkModuleToggled: function(obj) {
-		var checked = false;
-		var section = obj.closest('.section_group');
-		section.find('tr input[type="checkbox"]').each(function() {
-			if(!$(this).closest('tr').hasClass('none')) {
-				if($(this).is(':checked')) checked = true;
-			}
-		});
-		section.find('.module_checkbox').prop('checked', checked);
-		// enable parent function to show top navigation
-		
-		$('tr.none').each(function() {
-			var parentId = $(this).attr('parent-id');
-			var functionId = $(this).attr('function-id');
-			var isChecked = false;
-			var selector = parentId!=-1 
-						 ? ('tr[function-id="' + parentId + '"]')
-						 : ('tr[parent-id="' + functionId + '"]');
-			
-			$(selector).each(function() {
-				if($(this).find('#_view').is(':checked') && !isChecked) {
-					isChecked = true;
-					return false;
+	checkModuleToggled: function(obj, checked) {
+		var parent = obj.closest('[checkbox-toggle]');
+		var module = $('[checkbox-toggle-target="' + parent.attr('checkbox-toggle') + '"]');
+
+		module.off('ifToggled');
+		if (checked == 'check') {
+			module.iCheck('check');
+		} else {
+			var found = false;
+			parent.find('input[type="checkbox"]').each(function() {
+				if ($(this).is(':checked')) {
+					found = true;
+					return false; // break the loop
 				}
 			});
-			$(this).find('input[type="checkbox"]:not(:disabled)').each(function() {
-				$(this).prop('checked', isChecked);
-			});
-		});
+			if (!found) {
+				module.iCheck('uncheck');
+			}
+		}
+		module.on('ifToggled', Security.toggleModule);
 	},
 	
 	toggleOperation: function() {
 		var obj = $(this);
-		var checked = obj.is(':checked');
+		var operations = Security.operations.slice();
+		var op, selector;
+
+		var checked = obj.is(':checked') ? 'check' : 'uncheck';
 		var parent = obj.closest('tr');
 		var id = obj.attr('id');
-		var operations = Security.operations.slice();
-		var op, opObj, selector;
-		
-		if(!checked) operations.reverse();
+
+		if (checked == 'uncheck') operations.reverse();
 		for(var i in operations) {
 			op = operations[i];
 			if(id !== op) {
 				selector = '#'+op+':not(:disabled)';
-				parent.find(selector).prop('checked', checked);
+				parent.find(selector).iCheck(checked);
 			} else {
 				break;
 			}
 		}
-		Security.checkModuleToggled(obj);
+		Security.checkModuleToggled(obj, checked);
 	}
 };
