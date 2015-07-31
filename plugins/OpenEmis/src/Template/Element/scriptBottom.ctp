@@ -47,7 +47,13 @@ var Checkable = {
 			$('.table-checkable')
 		        .tableCheckable ()
 			        .on ('masterChecked', function (event, master, slaves) { 
-			            if ($.fn.iCheck) { $(slaves).iCheck ('update'); }
+			            if ($.fn.iCheck) { 
+			            	$(slaves).each(function(){
+			            		if(! $( this ).is(':disabled') ){
+			            			$( this ).iCheck( 'update' );
+			            		}
+			            	});
+			            }
 			        })
 			        .on ('slaveChecked', function (event, master, slave) {
 			            if ($.fn.iCheck) { $(master).iCheck ('update'); }
