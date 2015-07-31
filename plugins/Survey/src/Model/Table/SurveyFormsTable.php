@@ -40,7 +40,66 @@ class SurveyFormsTable extends CustomFormsTable {
 		return $entity->custom_module->code;
 	}
 
+	public function onGetCustomSectionElement(Event $event, $action, $entity, $attr, $options=[]) {
+		switch ($action){
+			case "view":
+
+				$tableHeaders = [__('Name'), __('Code'), __('Hours Required')];
+				$tableCells = [];
+
+				// $educationSubjects = $entity->extractOriginal(['education_subjects']);
+				// foreach ($educationSubjects['education_subjects'] as $key => $obj) {
+				// 	if ($obj->_joinData->visible == 1) {
+				// 		$rowData = [];
+				// 		$rowData[] = $obj->name;
+				// 		$rowData[] = $obj->code;
+				// 		$rowData[] = $obj->_joinData->hours_required;
+				// 		$tableCells[] = $rowData;
+				// 	}
+				// }
+				$attr['tableHeaders'] = $tableHeaders;
+		    	$attr['tableCells'] = $tableCells;
+
+				break;
+
+			case "add":
+			case "edit":
+
+				break;
+		}
+		return $event->subject()->renderElement('Survey.subjects', ['attr' => $attr]);
+	}
+
+	public function onGetCustomFieldsElement(Event $event, $action, $entity, $attr, $options=[]) {
+		switch ($action){
+			case "index":
+
+				break;
+			case "view":
+				return 'asd';
+				break;
+
+			case "add":
+			case "edit":
+
+				break;
+		}
+		// return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
+	}
 	public function beforeAction(Event $event){
+		parent::beforeAction($event);
+		$this->ControllerAction->field('section', ['type' => 'custom_section', 'valueClass' => 'table-full-width']);
+		// $this->fields['apply_to_all']['visible'] = false;
+		// $this->fields['custom_filters']['visible'] = false;
+	}
+
+	public function indexBeforeAction(Event $event) {
+		parent::indexBeforeAction($event);
+		$this->fields['apply_to_all']['visible'] = false;
+		$this->fields['custom_filters']['visible'] = false;
+	}
+
+	public function editBeforeAction(Event $event){
 		$this->ControllerAction->field('questions', [
 			'label' => '',
 			'override' => true,
@@ -51,15 +110,9 @@ class SurveyFormsTable extends CustomFormsTable {
 				// 'studentOptions'=>[],
 				// 'categoryOptions'=>$categoryOptions
 			],
-			'visible' => ['view'=>true, 'edit'=>true]
+			'visible' => ['edit'=>true]
 			// 'visible' => false
 		]);
-	}
-
-	public function indexBeforeAction(Event $event) {
-		parent::indexBeforeAction($event);
-		$this->fields['apply_to_all']['visible'] = false;
-		$this->fields['custom_filters']['visible'] = false;
 	}
 
 	public function _getSelectOptions() {
