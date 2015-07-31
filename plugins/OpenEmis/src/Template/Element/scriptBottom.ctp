@@ -31,12 +31,6 @@ var Checkable = {
 	},
 
 	initICheck: function() {
-		var disabledArray = new Array();
-		$('.icheck-input').each(function(){
-			if($(this).is(':disabled')){
-				disabledArray.push(this);
-			}
-		});
 		if ($.fn.iCheck) {
 			$('.icheck-input').iCheck({
 				checkboxClass: 'icheckbox_minimal-grey',
@@ -44,9 +38,6 @@ var Checkable = {
 				inheritClass: true
 			}).on ('ifChanged', function (e) {
 				$(e.currentTarget).trigger ('change');
-				$( disabledArray ).each(function(){
-					$(this).iCheck('check');
-				});
 			});
 		}
 	},
@@ -56,7 +47,13 @@ var Checkable = {
 			$('.table-checkable')
 		        .tableCheckable ()
 			        .on ('masterChecked', function (event, master, slaves) { 
-			            if ($.fn.iCheck) { $(slaves).iCheck ('update'); }
+			            if ($.fn.iCheck) { 
+			            	$(slaves).each(function(){
+			            		if(! $( this ).is(':disabled') ){
+			            			$( this ).iCheck( 'update' );
+			            		}
+			            	});
+			            }
 			        })
 			        .on ('slaveChecked', function (event, master, slave) {
 			            if ($.fn.iCheck) { $(master).iCheck ('update'); }
