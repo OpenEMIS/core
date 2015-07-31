@@ -17,10 +17,25 @@ $(document).ready(function() {
 	Security.init();
 });
 
+// dependent on icheck plugin, please refer to scriptBottom.ctp for Checkable object
 var Security = {
 	operations: ['_view', '_edit', '_add', '_delete', '_execute'],
 	init: function() {
-		// dependent on icheck plugin, please refer to scriptBottom.ctp for Checkable object
+		// to check the module checkbox if any of the function within the module is checked
+		$('#permissions [checkbox-toggle-target]').each(function() {
+			var obj = $(this);
+			var target = obj.attr('checkbox-toggle-target');
+
+			$('[checkbox-toggle="' + target + '"] input[type="checkbox"]').each(function() {
+				if (!$(this).is(':disabled')) {
+					if ($(this).is(':checked')) {
+						obj.iCheck('check');
+						return false;
+					}
+				}
+			});
+		});
+		
 		$('#permissions [checkbox-toggle-target]').on('ifToggled', Security.toggleModule);
 		$('[checkbox-toggle] input[type="checkbox"]:not(:disabled)').on('ifToggled', Security.toggleOperation);
 	},
