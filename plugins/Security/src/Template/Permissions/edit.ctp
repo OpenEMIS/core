@@ -34,9 +34,9 @@ $this->start('panelBody');
 
 	foreach ($data as $section => $list) {
 		// add the sections
-		echo '<h6 class="section-header" checkbox-toggle-target="' . $section . '">';
-		// echo '<input type="checkbox" class="icheck-input" onchange="" />' . $section . '</h6>';
-		echo '<input type="checkbox" />' . $section . '</h6>';
+		echo '<h6 class="section-header">';
+		echo '<input type="checkbox" class="icheck-input" checkbox-toggle-target="' . $section . '" />' . $section;
+		echo '</h6>';
 
 		// add the table under each section
 		echo '<div class="table-responsive" checkbox-toggle="' . $section . '">
@@ -51,8 +51,7 @@ $this->start('panelBody');
 
 			// function operations
 			foreach ($operations as $op) {
-				// $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
-				$checkboxOptions = ['type' => 'checkbox', 'label' => false, 'div' => false];
+				$checkboxOptions = ['type' => 'checkbox', 'id' => $op, 'class' => 'icheck-input', 'label' => false, 'div' => false];
 				echo '<td class="center">';
 				$permission = $obj->Permissions[$op];
 				if ($permission == -1) {
