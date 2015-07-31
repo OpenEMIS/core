@@ -186,7 +186,7 @@ class StudentsTable extends BaseTable {
 				return $InstitutionStudent->deleteAll([
 					'institution_site_id' => $institutionSiteId,
 					'security_user_id' => $securityUserId
-				]);
+				]);	
 			};
 		}
 		return $process;
@@ -198,25 +198,31 @@ class StudentsTable extends BaseTable {
 			$this->autoRender = false;
 			$this->ControllerAction->autoRender = false;
 			$term = $this->ControllerAction->request->query('term');
-			$search = "";
-			if(isset($term)){
-				$search = '%'.$term.'%';
-			}
-
-			$conditions = array(
-				'OR' => array(
-					'Users.openemis_no LIKE' => $search,
-					'Users.first_name LIKE' => $search,
-					'Users.middle_name LIKE' => $search,
-					'Users.third_name LIKE' => $search,
-					'Users.last_name LIKE' => $search
-				)
-			);
+			$search = $term;
+			$searchParams = explode(' ', $search);
 
 			$list = $this->InstitutionSiteStudents
 					->find('all')
 					->contain(['Users'])
-					->where($conditions);
+					;
+
+			$searchParams = explode(' ', $search);
+			foreach ($searchParams as $key => $value) {
+				if (empty($searchParams[$key])) {
+					unset($searchParams[$key]);
+				}
+			}
+
+			if (!empty($search)) {
+				$list->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
+				foreach ($searchParams as $key => $value) {
+					$searchString = '%' . $value . '%';
+					$list->orWhere(['Users.first_name LIKE' => $searchString]);
+					$list->orWhere(['Users.middle_name LIKE' => $searchString]);
+					$list->orWhere(['Users.third_name LIKE' => $searchString]);
+					$list->orWhere(['Users.last_name LIKE' => $searchString]);
+				}
+			}
 
 			$session = $this->request->session();
 			if ($session->check($this->controller->name.'.'.$this->alias)) {
