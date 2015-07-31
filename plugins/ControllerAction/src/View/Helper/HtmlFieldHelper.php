@@ -269,6 +269,9 @@ class HtmlFieldHelper extends Helper {
 			// no logic required
 		} else if ($action == 'edit') {
 			$options['type'] = 'hidden';
+			if (array_key_exists('attr', $attr) && array_key_exists('value', $attr['attr'])) {
+				$options['value'] = $attr['attr']['value'];
+			}
 			if (array_key_exists('value', $attr)) {
 				$options['value'] = $attr['value'];
 			}

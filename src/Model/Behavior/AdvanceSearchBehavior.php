@@ -4,6 +4,7 @@ namespace App\Model\Behavior;
 use ArrayObject;
 use Cake\I18n\Time;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -96,15 +97,17 @@ class AdvanceSearchBehavior extends Behavior {
 		$this->data = (isset($this->_table->request->data['AdvanceSearch']) && isset($this->_table->request->data['AdvanceSearch'][$this->modelAlias])) ? $this->_table->request->data['AdvanceSearch'][$this->modelAlias] : [];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
 		$conditions = '';
 		foreach ($this->data as $key=>$value) {
 			if (!empty($value) && $value>0) {
 				$conditions[$this->model->aliasField($key)] = $value;
         	}
         }
-        $paginateOptions['conditions'][] = $conditions;
-        // pr($paginateOptions);die;
+
+        if (!empty($conditions)) {
+        	$query->where($conditions);
+        }
 	}
 
 

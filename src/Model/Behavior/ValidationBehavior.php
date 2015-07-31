@@ -239,6 +239,31 @@ class ValidationBehavior extends Behavior {
 		return $flag;
 	}
 
+	public static function validateNeeded($field, $fieldName, array $additionalParameters, array $globalData) {
+		$flag = false;
+
+		if($field == "0"){
+			$tableObj =  get_object_vars($globalData['providers']['table']);
+			if(!empty($tableObj)) {
+				$className = $tableObj['controller']->modelClass;
+				$newEntity = TableRegistry::get($className);
+				$recordWithField = $newEntity->find()
+											->select([$fieldName])
+											->where([$fieldName => 1]);
+
+				if(!empty($additionalParameters))
+					$recordWithField->andWhere($additionalParameters);
+													
+				$total = $recordWithField->count();				
+				$flag = ($total > 0) ? true : false;
+			}
+		} else {
+			$flag = true;
+		}
+
+		return $flag;
+	}	
+
 	public static function contactValueValidate($field, array $globalData) {
 		$flag = false;
 		$contactOption = $globalData['data']['contact_option_id'];

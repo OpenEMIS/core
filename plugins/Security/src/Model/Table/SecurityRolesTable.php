@@ -30,6 +30,8 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+		$this->addBehavior('Reorder');
 	}
 
 	public function beforeAction(Event $event) {
@@ -55,16 +57,13 @@ class SecurityRolesTable extends AppTable {
 		}
 		$this->controller->set('selectedAction', $selectedAction);
 
-		$this->ControllerAction->field('security_group_id');
+		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
 
 		if ($selectedAction == 'user') {
 			$toolbarElements = [
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
-			$this->ControllerAction->setFieldOrder(['visible', 'name']);
-		} else {
-			$this->ControllerAction->setFieldOrder(['security_group_id', 'name', 'visible']);
 		}
 	}
 
@@ -72,37 +71,40 @@ class SecurityRolesTable extends AppTable {
 		if ($action == 'index') {
 			$attr['visible'] = false;
 		}
-		// TODO-jeff: need to restrict to roles that have access to their groups
-		$groupOptions = $this->SecurityGroups->find('list')
-			->find('byUser', ['userId' => $this->Auth->user('id')])
-			->toArray();
 
-		$selectedGroup = $this->queryString('security_group_id', $groupOptions);
-		$this->advancedSelectOptions($groupOptions, $selectedGroup);
-		$request->query['security_group_id'] = $selectedGroup;
+		$viewType = $attr['viewType'];
+		if ($viewType == 'user') {
+			// TODO-jeff: need to restrict to roles that have access to their groups
+			$groupOptions = $this->SecurityGroups->find('list')
+				->find('byUser', ['userId' => $this->Auth->user('id')])
+				->toArray();
 
-		$this->controller->set('groupOptions', $groupOptions);
-		$attr['options'] = $groupOptions;
+			$selectedGroup = $this->queryString('security_group_id', $groupOptions);
+			$this->advancedSelectOptions($groupOptions, $selectedGroup);
+			$request->query['security_group_id'] = $selectedGroup;
+
+			$this->controller->set('groupOptions', $groupOptions);
+			$attr['options'] = $groupOptions;
+		} else {
+			$attr['type'] = 'hidden';
+			$attr['value'] = 0;
+		}
 
 		return $attr;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query('type');
 		
 		$selectedGroup = $request->query('security_group_id');
 		if ($type == 'system') {
-			$options['conditions']['OR'] = [
-				$this->aliasField('security_group_id') . ' = 0', // custom system defined roles
-				$this->aliasField('security_group_id') . ' = -1' // fixed system defined roles
-			];
-		} else {
-			$options['conditions'][$this->aliasField('security_group_id')] = $selectedGroup;
-		}
-	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('order', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
+			$query
+			->where([$this->aliasField('security_group_id') => 0])		// custom system defined roles
+			->orWhere([$this->aliasField('security_group_id') => -1]);	// fixed system defined roles
+		} else {
+			$query->where([$this->aliasField('security_group_id') => $selectedGroup]);
+		}
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -121,7 +123,21 @@ class SecurityRolesTable extends AppTable {
 		// }
 
 		$buttons = array_merge($permissionBtn, $buttons);
-		// pr($buttons);
+
+		$groupId = $entity->security_group_id;
+		// -1 = system roles, we are not allowing users to modify system roles
+		// removing all buttons from the menu
+		if ($groupId == -1) {
+			if (array_key_exists('view', $buttons)) {
+				unset($buttons['view']);
+			}
+			if (array_key_exists('edit', $buttons)) {
+				unset($buttons['edit']);
+			}
+			if (array_key_exists('remove', $buttons)) {
+				unset($buttons['remove']);
+			}
+		}
 		return $buttons;
 	}
 
@@ -160,6 +176,7 @@ class SecurityRolesTable extends AppTable {
 				// this will show only roles of the user by group
 				$query = $GroupRoles
 					->find()
+					->find('visible')
 					->contain('SecurityRoles')
 					->order(['SecurityRoles.order'])
 					->where([
@@ -187,6 +204,7 @@ class SecurityRolesTable extends AppTable {
 		} else { // super admin will show all roles of system and group specific
 			$roleOptions = $this
 				->find('list')
+				->find('visible')
 				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
 				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
 				->toArray()

@@ -2,6 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -44,14 +45,11 @@ class ResultsTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$contain = $options['contain'];
-		foreach ($contain as $i => $association) {
-			if ($association == 'AssessmentItems') {
-				$contain[$i] = 'AssessmentItems.EducationSubjects';
-				$contain[] = 'AssessmentItems.Assessments';
-			}
-		}
-		$options['contain'] = $contain;
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain([], true);
+		$query->contain([
+			'AssessmentItems.EducationSubjects',
+			'AssessmentItems.Assessments'
+		]);
 	}
 }

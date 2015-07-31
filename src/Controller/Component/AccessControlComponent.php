@@ -185,4 +185,26 @@ class AccessControlComponent extends Component {
 
 		return $ignored;
 	}
+
+	public function getRolesByUser($userId = null) {
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$data = $SecurityGroupUsers
+		->find()
+		->contain(['SecurityRoles', 'SecurityGroups'])
+		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+		->all();
+
+		return $data;
+	}
+
+	// to be implemented for Student Transfer
+	public function getInstitutionsByUser($userId = null, $url = null) {
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+	}
 }

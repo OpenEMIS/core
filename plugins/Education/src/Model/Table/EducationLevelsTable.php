@@ -25,14 +25,11 @@ class EducationLevelsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
-
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
 
-		$options['conditions'][] = [
-        	$this->aliasField('education_system_id') => $selectedSystem
-        ];
+		$query->where([$this->aliasField('education_system_id') => $selectedSystem]);
 	}
 
 	public function addEditBeforeAction(Event $event) {

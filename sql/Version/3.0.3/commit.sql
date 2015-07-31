@@ -1,0 +1,14 @@
+-- PHPOE-1577
+ALTER TABLE `translations` 
+ADD PRIMARY KEY (`id`),
+CHANGE COLUMN `eng` `en` TEXT NOT NULL,
+CHANGE COLUMN `ara` `ar` TEXT NULL DEFAULT NULL,
+CHANGE COLUMN `chi` `zh` TEXT NULL DEFAULT NULL,
+CHANGE COLUMN `spa` `es` TEXT NULL DEFAULT NULL,
+CHANGE COLUMN `fre` `fr` TEXT NULL DEFAULT NULL,
+CHANGE COLUMN `rus` `ru` TEXT NULL DEFAULT NULL;
+-- end PHPOE-1577
+
+-- DB version
+UPDATE `config_items` SET `value` = '3.0.3' WHERE `code` = 'db_version';
+-- end DB version
