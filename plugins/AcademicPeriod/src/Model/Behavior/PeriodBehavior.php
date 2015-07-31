@@ -34,7 +34,7 @@ class PeriodBehavior extends Behavior {
 					[
 						$this->_table->aliasField('end_date') . ' IS NOT NULL',
 						$this->_table->aliasField('start_date') . ' >=' => $startDate,
-						$this->_table->aliasField('end_date') . ' <=' => $startDate
+						$this->_table->aliasField('end_date') . ' <=' => $endDate
 					]
 				],
 				[
