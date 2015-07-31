@@ -40,13 +40,29 @@ class StudentBehavior extends Behavior {
 		$query->contain(['Users', 'Institutions', 'StudentStatuses']);
 
 		$search = $this->_table->ControllerAction->getSearchKey();
+		$searchParams = explode(' ', $search);
+		foreach ($searchParams as $key => $value) {
+			if (empty($searchParams[$key])) {
+				unset($searchParams[$key]);
+			}
+		}
+
 		if (!empty($search)) {
-			$searchString = '%' . $search . '%';
-			$query->where(['Users.openemis_no LIKE' => $searchString]);
-			$query->orWhere(['Users.first_name LIKE' => $searchString]);
-			$query->orWhere(['Users.middle_name LIKE' => $searchString]);
-			$query->orWhere(['Users.third_name LIKE' => $searchString]);
-			$query->orWhere(['Users.last_name LIKE' => $searchString]);
+			$firstFlag = true;
+			foreach ($searchParams as $key => $value) {
+				$searchString = '%' . $value . '%';
+				if ($firstFlag) {
+					$query->where(['Users.openemis_no LIKE' => $searchString]);
+				} else {
+					$query->orWhere(['Users.openemis_no LIKE' => $searchString]);
+				}
+				$firstFlag = false;
+				$query->orWhere(['Users.first_name LIKE' => $searchString]);
+				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
+				$query->orWhere(['Users.third_name LIKE' => $searchString]);
+				$query->orWhere(['Users.last_name LIKE' => $searchString]);
+			}
+			
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $request->session();
 				$institutionId = $session->read('Institutions.id');
