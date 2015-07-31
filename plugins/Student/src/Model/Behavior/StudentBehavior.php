@@ -136,8 +136,6 @@ class StudentBehavior extends Behavior {
 					->distinct(['security_user_id'])
 					->count(['security_user_id']);
 
-				pr($studentCount->sql());
-
 				// Get Gender
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
 					['institution_site_id' => $institutionId, 'key'=>'Gender']);
