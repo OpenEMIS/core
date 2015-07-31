@@ -6,7 +6,7 @@
 			'class' => 'form-control search-input focus',
 			'data-input-name' => 'Search[searchField]',
 			'placeholder' => __('Search'),
-			'onkeypress' => 'if (event.code == "Enter") jsForm.submit()'
+			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()'
 		]);
 		?>
 		<span class="input-group-btn">
