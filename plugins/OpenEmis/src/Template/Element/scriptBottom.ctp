@@ -31,6 +31,12 @@ var Checkable = {
 	},
 
 	initICheck: function() {
+		var disabledArray = new Array();
+		$('.icheck-input').each(function(){
+			if($(this).is(':disabled')){
+				disabledArray.push(this);
+			}
+		});
 		if ($.fn.iCheck) {
 			$('.icheck-input').iCheck({
 				checkboxClass: 'icheckbox_minimal-grey',
@@ -38,6 +44,9 @@ var Checkable = {
 				inheritClass: true
 			}).on ('ifChanged', function (e) {
 				$(e.currentTarget).trigger ('change');
+				$( disabledArray ).each(function(){
+					$(this).iCheck('check');
+				});
 			});
 		}
 	},
