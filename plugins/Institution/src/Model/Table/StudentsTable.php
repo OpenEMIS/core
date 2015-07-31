@@ -214,15 +214,9 @@ class StudentsTable extends BaseTable {
 			}
 
 			if (!empty($search)) {
-				$firstFlag = true;
+				$list->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
 				foreach ($searchParams as $key => $value) {
 					$searchString = '%' . $value . '%';
-					if ($firstFlag) {
-						$list->where(['Users.openemis_no LIKE' => $searchString]);
-					} else {
-						$list->orWhere(['Users.openemis_no LIKE' => $searchString]);
-					}
-					$firstFlag = false;
 					$list->orWhere(['Users.first_name LIKE' => $searchString]);
 					$list->orWhere(['Users.middle_name LIKE' => $searchString]);
 					$list->orWhere(['Users.third_name LIKE' => $searchString]);

@@ -46,15 +46,9 @@ class UserBehavior extends Behavior {
 		}
 
 		if (!empty($search)) {
-			$firstFlag = true;
+			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
 			foreach ($searchParams as $key => $value) {
 				$searchString = '%' . $value . '%';
-				if ($firstFlag) {
-					$query->where(['Users.openemis_no LIKE' => $searchString]);
-				} else {
-					$query->orWhere(['Users.openemis_no LIKE' => $searchString]);
-				}
-				$firstFlag = false;
 				$query->orWhere(['Users.first_name LIKE' => $searchString]);
 				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
 				$query->orWhere(['Users.third_name LIKE' => $searchString]);
