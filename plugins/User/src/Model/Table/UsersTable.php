@@ -91,9 +91,13 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 
-		$this->ControllerAction->field('date_of_birth', ['date_options' => 
-			['endDate' => date('d-m-Y', strtotime("-2 year"))]
-		]);
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
 
 		if ($this->action == 'add') {
 			$this->ControllerAction->field('username', ['visible' => true]);
