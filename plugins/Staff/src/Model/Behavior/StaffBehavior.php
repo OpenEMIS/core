@@ -102,7 +102,8 @@ class StaffBehavior extends Behavior {
 				// Get Number of staff in an institution
 				$staffCount = $table->find()
 					->where([$table->aliasField('institution_site_id') => $institutionId])
-					->count();
+					->distinct(['security_user_id'])
+					->count(['security_user_id']);
 
 				// Get Gender
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', 
@@ -123,7 +124,8 @@ class StaffBehavior extends Behavior {
 			case "Users":
 				// Get Number of staffs
 				$staffCount = $table->find()
-					->count();
+					->distinct(['security_user_id'])
+					->count(['security_user_id']);
 				// Get Staff genders
 				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', ['key' => 'Gender']);
 				break;
