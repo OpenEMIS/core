@@ -160,6 +160,7 @@ class PermissionsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$toolbarButtons['back']['url']['action'] = 'Permissions';
 			$toolbarButtons['back']['url'][0] = 'index';
+			unset($toolbarButtons['list']);
 		}
     }
 
