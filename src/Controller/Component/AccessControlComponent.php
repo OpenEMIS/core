@@ -25,7 +25,7 @@ class AccessControlComponent extends Component {
 		$this->Session = $this->request->session();
 
 		// $this->Session->delete('Permissions');
-		// pr($this->Session->read('Permissions'));
+		// pr($this->Session->read('Permissions.Securities.Roles.add'));
 		if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
 			if (!$this->Session->check('Permissions')) {
 				$this->buildPermissions();
@@ -59,10 +59,6 @@ class AccessControlComponent extends Component {
 				}
 			}
 		}
-	}
-
-	public function startup(Event $event) {
-		// pr($this->ControllerAction->buttons);
 	}
 
 	public function buildPermissions() {
@@ -140,12 +136,11 @@ class AccessControlComponent extends Component {
 			return true;
 		}
 
-		if (array_key_exists('plugin', $url)) {
-			unset($url['plugin']);
-		}
-		
-		while (is_numeric(end($url))) { // remove any other pass values such as id
-			array_pop($url);
+		// we only need controller and action
+		foreach ($url as $i => $val) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val)) {
+				unset($url[$i]);
+			}
 		}
 
 		if (empty($url)) {
