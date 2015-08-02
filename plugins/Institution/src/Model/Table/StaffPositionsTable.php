@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-
+use Cake\I18n\Time;
 
 class StaffPositionsTable extends AppTable {
 	//public $useTable = false;
@@ -29,7 +29,13 @@ class StaffPositionsTable extends AppTable {
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('position', ['type' => 'readonly', 'attr' => ['value' => $entity->position->staff_position_title->name]]);
 		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
-		$this->ControllerAction->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $this->formatDate($entity->start_date)]]);
+
+		if ($entity->start_date instanceof Time) {
+			$startDate = $this->formatDate($entity->start_date);
+		} else {
+			$startDate = $this->formatDate(new Time(strtotime($entity->start_date)));
+		}
+		$this->ControllerAction->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $startDate]]);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {
@@ -97,7 +103,6 @@ class StaffPositionsTable extends AppTable {
 		if (empty($attr['options'])){
 			$this->_table->ControllerAction->Alert->warning('Institution.StaffPositions.staffStatusId');
 		}
-		
 		return $attr;
 	}
 
@@ -125,5 +130,15 @@ class StaffPositionsTable extends AppTable {
 	    		$toolbarButtons['list']['url']['1'] = $staffPosition->institution_site_position_id;
     		}
     	} 
+	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator
+				->allowEmpty('end_date')
+	 	        ->add('end_date', 'ruleCompareDateReverse', [
+			            'rule' => ['compareDateReverse', 'start_date', false]
+		    	    ])
+	        ;
+		return $validator;
 	}
 }

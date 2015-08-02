@@ -40,6 +40,6 @@ try {
 	);
 } catch (Exception $ex) {
 	Log::write('error', '[URL] ' . $_SERVER['REQUEST_URI']);
-	Log::write('error', $ex->getMessage());
+    Log::write('error', $ex->getMessage());
 	throw $ex;
 }

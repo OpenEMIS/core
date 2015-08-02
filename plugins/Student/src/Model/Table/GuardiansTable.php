@@ -13,6 +13,7 @@ class GuardiansTable extends BaseTable {
 		$this->entityClass('User.User');
 		$this->addBehavior('Guardian.Guardian');
 		$this->addBehavior('Student.GuardianStudent', ['associatedModel' => $this->GuardianStudents]);
+		$this->addBehavior('AdvanceSearch');
 	}
 
 	public function autoCompleteUserList() {
@@ -21,26 +22,31 @@ class GuardiansTable extends BaseTable {
 			$this->autoRender = false;
 			$this->ControllerAction->autoRender = false;
 			$term = $this->ControllerAction->request->query('term');
-			$search = "";
-			if(isset($term)){
-				$search = '%'.$term.'%';
-			}
-
-			$conditions = array(
-				'OR' => array(
-					'GuardianUsers.openemis_no LIKE' => $search,
-					'GuardianUsers.first_name LIKE' => $search,
-					'GuardianUsers.middle_name LIKE' => $search,
-					'GuardianUsers.third_name LIKE' => $search,
-					'GuardianUsers.last_name LIKE' => $search
-				)
-			);
+			$search = $term;
+			$searchParams = explode(' ', $search);
 
 			$list = $this->StudentGuardians
 					->find('all')
-					->contain(['GuardianUsers'])
-					->where($conditions)
+					->contain(['Users'])
 					;
+
+			$searchParams = explode(' ', $search);
+			foreach ($searchParams as $key => $value) {
+				if (empty($searchParams[$key])) {
+					unset($searchParams[$key]);
+				}
+			}
+
+			if (!empty($search)) {
+				$list->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
+				foreach ($searchParams as $key => $value) {
+					$searchString = '%' . $value . '%';
+					$list->orWhere(['Users.first_name LIKE' => $searchString]);
+					$list->orWhere(['Users.middle_name LIKE' => $searchString]);
+					$list->orWhere(['Users.third_name LIKE' => $searchString]);
+					$list->orWhere(['Users.last_name LIKE' => $searchString]);
+				}
+			}
 
 			$session = $this->request->session();
 
