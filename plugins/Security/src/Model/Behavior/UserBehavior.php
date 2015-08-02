@@ -1,8 +1,10 @@
 <?php
 namespace Security\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Network\Request;
 
 class UserBehavior extends Behavior {
 	public function initialize(array $config) {
