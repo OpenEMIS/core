@@ -605,6 +605,33 @@ SET @id := @id + 1;
 -- DELETE ALL UNUSED FUNCTIONS
 DELETE FROM `security_functions` WHERE `id` < 1000;
 
+-- for class security
+UPDATE `security_functions` SET 
+`name` = 'All Classes'
+WHERE `id` = 1006;
+
+-- shift all functions down by 1
+UPDATE `security_functions` SET
+`id` = `id` + 1,
+`order` = `order` + 1
+WHERE `id` > 1006 AND `id` < 2000
+ORDER BY `id` DESC;
+
+-- insert a new functions after All Classes
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`)
+VALUES (1007, 'My Classes', 'Institutions', 'Institutions', 'Details', 1000, 
+'MyClasses.index|MyClasses.view|Sections.index|Sections.view', 
+'MyClasses.edit|Sections.edit', 
+NULL, 
+NULL, NULL, 1007, 1, 1, NOW());
+
+-- update role function mapping
+UPDATE `security_role_functions` SET
+`security_function_id` = `security_function_id` + 1
+WHERE `security_function_id` > 1006 AND `security_function_id` < 2000
+ORDER BY `security_function_id` DESC;
+-- end class security
+
 -- Clean up missing functions from roles
 DELETE FROM `security_role_functions` 
 WHERE NOT EXISTS (SELECT 1 FROM `security_functions` WHERE `security_functions`.`id` = `security_role_functions`.`security_function_id`);
