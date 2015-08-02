@@ -211,6 +211,7 @@ Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
 Plugin::load('Assessment', ['routes' => true, 'autoload' => true]);
 Plugin::load('Security', ['routes' => true, 'autoload' => true]);
 Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
+Plugin::load('Report', ['routes' => true, 'autoload' => true]);
 Plugin::load('Rubric', ['routes' => true, 'autoload' => true]);
 Plugin::load('Workflow', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomField', ['routes' => true, 'autoload' => true]);
