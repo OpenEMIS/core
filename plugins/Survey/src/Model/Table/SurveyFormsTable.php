@@ -58,24 +58,21 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function onGetCustomQuestionElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
+			case "index":
+				// No implementation yet
+				break;
+
 			case "view":
-
-				$tableHeaders = [__('Name'), __('Code'), __('Hours Required')];
+				$tableHeaders = [__('Questions')];
 				$tableCells = [];
-
-				// $educationSubjects = $entity->extractOriginal(['education_subjects']);
-				// foreach ($educationSubjects['education_subjects'] as $key => $obj) {
-				// 	if ($obj->_joinData->visible == 1) {
-				// 		$rowData = [];
-				// 		$rowData[] = $obj->name;
-				// 		$rowData[] = $obj->code;
-				// 		$rowData[] = $obj->_joinData->hours_required;
-				// 		$tableCells[] = $rowData;
-				// 	}
-				// }
+				$surveyQuestions = $entity->extractOriginal(['custom_fields']);
+				foreach ($surveyQuestions['custom_fields'] as $key => $obj) {
+						$rowData = [];
+						$rowData[] = $obj->name;;
+						$tableCells[] = $rowData;
+				}
 				$attr['tableHeaders'] = $tableHeaders;
 		    	$attr['tableCells'] = $tableCells;
-
 				break;
 
 			case "add":
@@ -92,7 +89,6 @@ class SurveyFormsTable extends CustomFormsTable {
 				$arrayQuestions = [];
 				// Showing the list of the questions that are already added
 				if ($this->request->is(['get'])) {
-					pr('get');
 					$surveyQuestions = $entity->extractOriginal(['custom_fields']);
 					foreach ($surveyQuestions['custom_fields'] as $key => $obj) {
 						$arrayQuestions[] = [
@@ -104,13 +100,16 @@ class SurveyFormsTable extends CustomFormsTable {
 					}
 				} else if ($this->request->is(['post', 'put'])) {
 					$requestData = $this->request->data;
-					//	pr('post');
-					// if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
-					// 	foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
-					// 		$arraySubjects[] = $obj['_joinData'];
-					// 	}
-					// }
-					//pr($entity);
+					if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
+							$arrayQuestions[] = [
+								'name' => $obj['_joinData']['name'],
+								'survey_question_id' => $obj['id'],
+								'survey_form_id' => $obj['_joinData']['survey_form_id'],
+								'id' => $obj['_joinData']['id']
+							];
+						}
+					}
 					if (array_key_exists('survey_question_id', $requestData[$this->alias()])) {
 						$questionId = $requestData[$this->alias()]['survey_question_id'];
 						$questionObj = $this->CustomFields
@@ -123,7 +122,6 @@ class SurveyFormsTable extends CustomFormsTable {
 							'custom_module_id' => $entity->custom_module_id,
 						];
 					}
-
 				}
 				foreach ($arrayQuestions as $key => $obj) {
 					$fieldPrefix = $attr['model'] . '.custom_fields.' . $cellCount++;
@@ -132,10 +130,12 @@ class SurveyFormsTable extends CustomFormsTable {
 					$surveyQuestionName = $obj['name'];
 					$surveyQuestionId = $obj['survey_question_id'];
 					$surveyFormId = $obj['survey_form_id'];
+					
 					$cellData = "";
 					$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $surveyQuestionId]);
 					$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $surveyQuestionName]);
 					$cellData .= $form->hidden($joinDataPrefix.".survey_form_id", ['value' => $surveyFormId]);
+					
 					if (isset($obj['id'])) {
 						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
 					}
@@ -144,17 +144,17 @@ class SurveyFormsTable extends CustomFormsTable {
 					$rowData[] = $cellData;
 					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$tableCells[] = $rowData;
-					unset($subjectOptions[$obj['survey_question_id']]);
+
+					unset($questionOptions[$obj['survey_question_id']]);
 				}
-				// Table Headers
 				$attr['tableHeaders'] = $tableHeaders;
 	    		$attr['tableCells'] = $tableCells;
 
 				$questionOptions[-1] = "-- ".__('Add Question') ." --";
 	    		ksort($questionOptions);
 	    		$attr['options'] = $questionOptions;
-
 				break;
+
 		}
 		return $event->subject()->renderElement('Survey.subjects', ['attr' => $attr]);
 	}
