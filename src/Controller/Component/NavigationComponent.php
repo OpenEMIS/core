@@ -91,6 +91,8 @@ class NavigationComponent extends Component {
 		} else {
 			// do nothing
 		}
+		$navigations['items']['Reports']['items'] = $this->getReportNavigation();
+		$navigations['items']['Administration']['items'] = $this->getAdministrationNavigation();
 
 		return $navigations;
 	}
@@ -115,141 +117,12 @@ class NavigationComponent extends Component {
 					'collapse' => true,
 					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				],
-				// 'Reports' => [
-				// 	'collapse' => true,
-				// 	'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
-				// ],
-				'Administration' => [
+				'Reports' => [
 					'collapse' => true,
-					'items' => [
-						'System Setup' => [
-							'collapse' => true,
-							'items' => [
-								'Administrative Boundaries' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas', 'index'],
-									'selected' => ['Levels', 'AdministrativeLevels', 'Administratives']
-								],
-								'Academic Periods' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods', 'index'],
-									'selected' => ['Levels']
-								],
-								'Education Structure' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
-									'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
-								],
-								'Assessments' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments', 'index'],
-									'selected' => ['GradingTypes', 'GradingOptions', 'Status']
-								],
-								'Field Options' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
-									'selected' => ['index', 'add', 'view', 'edit', 'remove']
-								],
-								'Custom Field' => [
-									'collapse' => true,
-									'items' => [
-										'General' => [
-											'collapse' => true,
-											'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
-											'selected' => ['Pages']
-										],
-										'Institution' => [
-											'collapse' => true,
-											'url' => ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields', 'action' => 'Fields'],
-											'selected' => ['Pages']
-										],
-										'Student' => [
-											'collapse' => true,
-											'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
-											'selected' => ['Pages']
-										],
-										'Staff' => [
-											'collapse' => true,
-											'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
-											'selected' => ['Pages']
-										],
-										'Infrastructure' => [
-											'collapse' => true,
-											'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
-											'selected' => ['Pages', 'Levels', 'Types']
-										],
-									]
-								],
-								'Translations' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index'],
-									'selected' => ['add', 'view', 'edit']
-								],
-								'System Configurations' => [
-									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index'],
-									'selected' => ['view', 'edit']
-								],
-								'Notices' => [
-									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index'],
-									'selected' => ['add', 'view', 'edit']
-								]
-							]
-						],
-						'Security' => [
-							'collapse' => true,
-							'items' => [
-								'Users' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Users'],
-									'selected' => ['Accounts']
-								],
-								'Groups' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups'],
-									'selected' => ['UserGroups', 'SystemGroups']
-								],
-								'Roles' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles'],
-									'selected' => ['Roles', 'Permissions']
-								]
-							]
-						],
-						'Survey' => [
-							'collapse' => true,
-							'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
-							'selected' => ['Questions', 'Forms', 'Status']
-						],
-						'Communications' => [
-							'collapse' => true,
-							'items' => [
-								'Questions' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Questions']
-								],
-								'Responses' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Responses']
-								],
-								'Logs' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Logs']
-								]
-							]
-						],
-						'Rubric' => [
-							'collapse' => true,
-							'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates'],
-							'selected' => ['Sections', 'Criterias', 'Options', 'Status']
-						],
-						'Workflow' => [
-							'collapse' => true,
-							'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Workflows'],
-							'selected' => ['Steps']
-						]
-					]
+					// 'url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'index']
+				],
+				'Administration' => [
+					'collapse' => true
 				]
 			]
 		];
@@ -445,6 +318,148 @@ class NavigationComponent extends Component {
 					'History' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'History']]
 				]
 			],
+		];
+		return $navigation;
+	}
+
+	public function getReportNavigation() {
+		$navigation = [
+			'Institution' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Institutions']],
+			'Student' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Students']],
+			'Staff' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Staff']]
+		];
+		return $navigation;
+	}
+
+	public function getAdministrationNavigation() {
+		$navigation = [
+			'System Setup' => [
+				'collapse' => true,
+				'items' => [
+					'Administrative Boundaries' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas', 'index'],
+						'selected' => ['Levels', 'AdministrativeLevels', 'Administratives']
+					],
+					'Academic Periods' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods', 'index'],
+						'selected' => ['Levels']
+					],
+					'Education Structure' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
+						'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Setup']
+					],
+					'Assessments' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments', 'index'],
+						'selected' => ['GradingTypes', 'GradingOptions', 'Status']
+					],
+					'Field Options' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
+						'selected' => ['index', 'add', 'view', 'edit', 'remove']
+					],
+					'Custom Field' => [
+						'collapse' => true,
+						'items' => [
+							'General' => [
+								'collapse' => true,
+								'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
+								'selected' => ['Pages']
+							],
+							'Institution' => [
+								'collapse' => true,
+								'url' => ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields', 'action' => 'Fields'],
+								'selected' => ['Pages']
+							],
+							'Student' => [
+								'collapse' => true,
+								'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
+								'selected' => ['Pages']
+							],
+							'Staff' => [
+								'collapse' => true,
+								'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
+								'selected' => ['Pages']
+							],
+							'Infrastructure' => [
+								'collapse' => true,
+								'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
+								'selected' => ['Pages', 'Levels', 'Types']
+							],
+						]
+					],
+					'Translations' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index'],
+						'selected' => ['add', 'view', 'edit']
+					],
+					'System Configurations' => [
+						'collapse' => true,
+						'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index'],
+						'selected' => ['view', 'edit']
+					],
+					'Notices' => [
+						'collapse' => true,
+						'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index'],
+						'selected' => ['add', 'view', 'edit']
+					]
+				]
+			],
+			'Security' => [
+				'collapse' => true,
+				'items' => [
+					'Users' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Users'],
+						'selected' => ['Accounts']
+					],
+					'Groups' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups'],
+						'selected' => ['UserGroups', 'SystemGroups']
+					],
+					'Roles' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles'],
+						'selected' => ['Roles', 'Permissions']
+					]
+				]
+			],
+			'Survey' => [
+				'collapse' => true,
+				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
+				'selected' => ['Questions', 'Forms', 'Status']
+			],
+			'Communications' => [
+				'collapse' => true,
+				'items' => [
+					'Questions' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Questions']
+					],
+					'Responses' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Responses']
+					],
+					'Logs' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Logs']
+					]
+				]
+			],
+			'Rubric' => [
+				'collapse' => true,
+				'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates'],
+				'selected' => ['Sections', 'Criterias', 'Options', 'Status']
+			],
+			'Workflow' => [
+				'collapse' => true,
+				'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Workflows'],
+				'selected' => ['Steps']
+			]
 		];
 		return $navigation;
 	}

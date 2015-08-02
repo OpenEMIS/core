@@ -21,6 +21,10 @@ class UsersController extends AppController {
 		$username = '';
 		$password = '';
         $session = $this->request->session();
+
+        if ($this->Auth->user()) {
+        	return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+        }
 		
 		if ($this->request->is('post') && $this->request->data['submit'] == 'reload') {
 			//$username = $this->request->data['User']['username'];
