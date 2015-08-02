@@ -352,8 +352,11 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		// Section
 		$institutionId = $this->Session->read('Institutions.id');
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$userId = $this->Auth->user('id');
+		$AccessControl = $this->AccessControl;
 		$sectionOptions = $Sections
 			->find('list')
+			->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 			->where([
 				$Sections->aliasField('institution_site_id') => $institutionId,
 				$Sections->aliasField('academic_period_id') => $selectedPeriod
