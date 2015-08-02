@@ -29,6 +29,13 @@
 					'onchange' => "$('#reload').val('addQuestion').click();"
 				]);
 			?>
+			<?= 
+				$this->Form->input($ControllerAction['table']->alias().".section", [
+					'label' => 'Add Section',
+					'type' => 'text',
+					'onchange' => "$('#reload').val('addQuestion').click();"
+				]);
+			?>
 		</div>
 	</div>
 
