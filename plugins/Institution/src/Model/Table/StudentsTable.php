@@ -17,12 +17,19 @@ class StudentsTable extends BaseTable {
 		$this->addBehavior('Student.Student');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
+		$this->addBehavior('AdvanceSearch');
 
 		// $this->addBehavior('Institution.Role', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// new aftersave
 		// existing aftersave update instaed of new one
 		// deletion onBeforeDelete new insert or update 
 	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		parent::indexBeforePaginate($event, $request, $query, $options);
@@ -33,12 +40,52 @@ class StudentsTable extends BaseTable {
 		}
 	}
 
-
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $query, $settings);
-		$this->ControllerAction->field('programme_section', []);
+
+		$this->ControllerAction->field('programme_class');
 		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'programme_section', 'student_status']);
+			'name', 'default_identity_type', 'programme_class', 'student_status']);
+	}
+
+	public function onGetProgrammeClass(Event $event, Entity $entity) {
+		$educationProgrammeId = $entity->education_programme_id;
+		$institutionId = $entity->institution->id;
+		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+		$query = $EducationProgrammes
+			->find()
+			->where([$EducationProgrammes->aliasField($EducationProgrammes->primaryKey()) => $educationProgrammeId])
+			->first();
+		$educationProgrammeName = ($query)? $query->name: '';
+
+		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$query = $InstitutionSiteSectionStudents->find()
+			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $entity->id])
+			->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc');
+
+		if (isset($institutionId)) {
+			$query->contain(
+				[
+					'InstitutionSiteSections'  => function ($q) use ($institutionId) {
+						return $q
+							->select(['id', 'name'])
+							->where(['InstitutionSiteSections.institution_site_id' => $institutionId]);
+						}
+				]
+			);
+		} else {
+			$query->contain('InstitutionSiteSections');
+		}
+
+		$sectionName = [];
+		foreach ($query as $key => $value) {
+			if ($value->institution_site_section) {
+				if (isset($value->institution_site_section->name)) {
+					$sectionName[] = $value->institution_site_section->name;
+				}
+			}
+		}
+		return $educationProgrammeName . '<span class="divider"></span>' . implode(', ', $sectionName);
 	}
 
 	public function addAfterAction(Event $event) {
@@ -84,11 +131,11 @@ class StudentsTable extends BaseTable {
 
 	public function onUpdateFieldStudentStatus(Event $event, array $attr, $action, $request) {
 		if ($action != 'index') {
-			$StudentStatus = TableRegistry::get('FieldOption.StudentStatuses');
+			$StudentStatus = TableRegistry::get('Student.StudentStatuses');
 			$statusOptions = $StudentStatus->getList()->toArray();
 			
 			$attr['options'] = $statusOptions;
-			$attr['order'] = 66;
+			// $attr['order'] = 66;
 
 			if ($action == 'edit') {
 				$userId = $request->pass[1];
@@ -121,31 +168,61 @@ class StudentsTable extends BaseTable {
 	}
 	// End Jeff: temporary workaround
 
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$InstitutionStudent = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$session = $this->request->session();
+		$institutionSiteId = $session->read('Institutions.id');
+		$securityUserId = $InstitutionStudent->get($id)->security_user_id;
+		$numberOfStudentRecord = $InstitutionStudent->find()->where(['security_user_id' => $id])->count();
+		if ($numberOfStudentRecord <= 1) {
+			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId){
+				return $InstitutionStudent->updateAll(
+					['institution_site_id' => 0],
+					['security_user_id' => $securityUserId, 'institution_site_id' => $institutionSiteId]
+				);
+			};
+		} else {
+			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId) {
+				return $InstitutionStudent->deleteAll([
+					'institution_site_id' => $institutionSiteId,
+					'security_user_id' => $securityUserId
+				]);	
+			};
+		}
+		return $process;
+	}
+
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
 			$this->layout = 'ajax';
 			$this->autoRender = false;
 			$this->ControllerAction->autoRender = false;
 			$term = $this->ControllerAction->request->query('term');
-			$search = "";
-			if(isset($term)){
-				$search = '%'.$term.'%';
-			}
-
-			$conditions = array(
-				'OR' => array(
-					'Users.openemis_no LIKE' => $search,
-					'Users.first_name LIKE' => $search,
-					'Users.middle_name LIKE' => $search,
-					'Users.third_name LIKE' => $search,
-					'Users.last_name LIKE' => $search
-				)
-			);
+			$search = $term;
+			$searchParams = explode(' ', $search);
 
 			$list = $this->InstitutionSiteStudents
 					->find('all')
 					->contain(['Users'])
-					->where($conditions);
+					;
+
+			$searchParams = explode(' ', $search);
+			foreach ($searchParams as $key => $value) {
+				if (empty($searchParams[$key])) {
+					unset($searchParams[$key]);
+				}
+			}
+
+			if (!empty($search)) {
+				$list->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
+				foreach ($searchParams as $key => $value) {
+					$searchString = '%' . $value . '%';
+					$list->orWhere(['Users.first_name LIKE' => $searchString]);
+					$list->orWhere(['Users.middle_name LIKE' => $searchString]);
+					$list->orWhere(['Users.third_name LIKE' => $searchString]);
+					$list->orWhere(['Users.last_name LIKE' => $searchString]);
+				}
+			}
 
 			$session = $this->request->session();
 			if ($session->check($this->controller->name.'.'.$this->alias)) {
@@ -329,14 +406,7 @@ class StudentsTable extends BaseTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if (array_key_exists('remove', $buttons)) {
-			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
-				// pr($entity);cthreeone
-				if (isset($entity->institution_site_students)) {
-					if (array_key_exists(0, $entity->institution_site_students)) {
-						$buttons['remove']['attr']['field-value'] = $entity->institution_site_students[0]->id;
-					}
-				}
-			}
+			$buttons['remove']['attr']['field-value'] = $entity->id;
 		}
 		
 		return $buttons;
@@ -373,5 +443,54 @@ class StudentsTable extends BaseTable {
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
+	}
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    	if ($action == 'view') {
+    		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+    		if ($this->AccessControl->check([$this->controller->name, 'Transfers', 'add'])) {
+    				$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
+    				$selectedStudent = $this->request->params['pass'][1];
+		    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $selectedStudent);
+
+		    		// Show Transfer button only if the Student Status is Current
+		    		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+					$institutionId = $this->Session->read('Institutions.id');
+					$currentStatus = $StudentStatuses
+						->find()
+						->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+						->first()
+						->id;
+
+					$studentStatusId = $InstitutionSiteStudents
+						->find()
+						->select([
+							$InstitutionSiteStudents->aliasField('student_status_id')
+						])
+						->where([
+							$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
+							$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+						])
+						->first()
+						->student_status_id;
+					// End
+
+		    		if ($studentStatusId == $currentStatus) {
+						$toolbarButtons['transfer'] = $buttons['back'];
+						$toolbarButtons['transfer']['url'] = [
+				    		'plugin' => $buttons['back']['url']['plugin'],
+				    		'controller' => $buttons['back']['url']['controller'],
+				    		'action' => 'Transfers',
+				    		'add'
+				    	];
+						$toolbarButtons['transfer']['type'] = 'button';
+						$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+						$toolbarButtons['transfer']['attr'] = $attr;
+						$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+					}
+			}
+		}
 	}
 }

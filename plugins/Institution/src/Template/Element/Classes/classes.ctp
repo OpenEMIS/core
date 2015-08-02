@@ -12,7 +12,7 @@
 				<tr>
 					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 					<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
-					<th><?= $this->Label->get($attr['model'] .'.class') ?></th>
+					<th><?= $this->Label->get('general.name') ?></th>
 					<th><?= $this->Label->get($attr['model'] .'.teacher') ?></th>
 				</tr>
 			</thead>
