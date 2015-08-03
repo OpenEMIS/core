@@ -47,7 +47,6 @@
 			?>
 			<button onclick="$('#reload').val('addSection').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
 		</div>
-	</div>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
