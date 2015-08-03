@@ -5,6 +5,7 @@ use CustomField\Model\Table\CustomFormsTable;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use ArrayObject;
 
 class SurveyFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
@@ -17,10 +18,10 @@ class SurveyFormsTable extends CustomFormsTable {
 			'foreignKey' => 'survey_form_id',
 			'targetForeignKey' => 'survey_question_id',
 			'through' => 'Survey.SurveyFormsQuestions',
-			'dependent' => true
+			'dependent' => true,
 		]);
 
-		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
+		//$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -39,7 +40,8 @@ class SurveyFormsTable extends CustomFormsTable {
 	public function beforeAction(Event $event){
 		parent::beforeAction($event);
 		$this->ControllerAction->field('question', ['type' => 'custom_question', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
-		$this->ControllerAction->field('custom_fields', ['visible' => false]);
+		//$this->ControllerAction->field('custom_fields', ['visible' => false]);
+		//$this->ControllerAction->field('custom_fields');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -49,11 +51,28 @@ class SurveyFormsTable extends CustomFormsTable {
 	}
 
 	public function afterAction(Event $event){
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'apply_to_all', 'custom_filters', 'name', 'description', 'custom_fields', 'question']);
+		unset($this->fields['custom_fields']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'apply_to_all', 'custom_filters', 'name', 'description', 'question']);
 	}
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
 		return $entity->custom_module->code;
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+
+		// To handle when delete all subjects
+		if (!array_key_exists('custom_fields', $data[$this->alias()])) {
+			$data[$this->alias()]['custom_fields'] = [];
+		}
+
+		// Required by patchEntity for associated data
+		$newOptions = [];
+		$newOptions['associated'] = ['CustomFields._joinData'];
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
 	}
 
 	public function onGetCustomQuestionElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -65,10 +84,26 @@ class SurveyFormsTable extends CustomFormsTable {
 			case "view":
 				$tableHeaders = [__('Questions')];
 				$tableCells = [];
-				$surveyQuestions = $entity->extractOriginal(['custom_fields']);
-				foreach ($surveyQuestions['custom_fields'] as $key => $obj) {
+
+				$surveyFormId = $this->request->pass[1];
+				$surveyQuestions = $this->SurveyFormsQuestions
+					->find('all')
+					->select([
+							'id' => 'SurveyFormsQuestions.survey_question_id',
+							'name' => 'SurveyQuestions.name'
+						])		
+					->innerJoin(['SurveyQuestions' => 'survey_questions'],
+						[
+							'SurveyQuestions.id = ' . $this->SurveyFormsQuestions->aliasField('survey_question_id'),
+						]
+					)
+					->order(['SurveyFormsQuestions.order'])
+					->where(['SurveyFormsQuestions.survey_form_id' => $surveyFormId])
+					->toArray();
+
+				foreach ($surveyQuestions as $key => $obj) {
 						$rowData = [];
-						$rowData[] = $obj->name;;
+						$rowData[] = $obj['name'];
 						$tableCells[] = $rowData;
 				}
 				$attr['tableHeaders'] = $tableHeaders;
@@ -89,32 +124,58 @@ class SurveyFormsTable extends CustomFormsTable {
 				$arrayQuestions = [];
 				// Showing the list of the questions that are already added
 				if ($this->request->is(['get'])) {
-					$surveyQuestions = $entity->extractOriginal(['custom_fields']);
-					foreach ($surveyQuestions['custom_fields'] as $key => $obj) {
+					$surveyFormId = $this->request->pass[1];
+					$surveyQuestions = $this->SurveyFormsQuestions
+						->find('all')
+						->select([
+								'name' => 'SurveyQuestions.name',
+								'survey_question_id' => 'SurveyFormsQuestions.survey_question_id',
+								'survey_form_id' => 'SurveyFormsQuestions.survey_form_id',
+								'id' => 'SurveyFormsQuestions.id'
+
+							])		
+						->innerJoin(['SurveyQuestions' => 'survey_questions'],
+							[
+								'SurveyQuestions.id = ' . $this->SurveyFormsQuestions->aliasField('survey_question_id'),
+							]
+						)
+						->order(['SurveyFormsQuestions.order'])
+						->where(['SurveyFormsQuestions.survey_form_id' => $surveyFormId])
+						->toArray();
+
+					foreach ($surveyQuestions as $key => $obj) {
 						$arrayQuestions[] = [
 							'name' => $obj->name,
-							'survey_question_id' => $obj->id,
-							'survey_form_id' => $obj->_joinData->survey_form_id,
-							'id' => $obj->_joinData->id
+							'survey_question_id' => $obj->survey_question_id,
+							'survey_form_id' => $obj->survey_form_id,
+							'id' => $obj->id
 						];
 					}
 				} else if ($this->request->is(['post', 'put'])) {
+
 					$requestData = $this->request->data;
+					pr($requestData);die;
 					if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
 						foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
-							$arrayQuestions[] = [
-								'name' => $obj['_joinData']['name'],
-								'survey_question_id' => $obj['id'],
-								'survey_form_id' => $obj['_joinData']['survey_form_id'],
-								'id' => $obj['_joinData']['id']
-							];
+							if(!empty($obj['_joinData']['id'])){
+								$arrayQuestions[] = [
+									'name' => $obj['_joinData']['name'],
+									'survey_question_id' => $obj['id'],
+									'survey_form_id' => $obj['_joinData']['survey_form_id'],
+									'id' => $obj['_joinData']['id']
+								];
+							}else{
+								$arrayQuestions[] = [
+									'name' => $obj['_joinData']['name'],
+									'survey_question_id' => $obj['id'],
+									'survey_form_id' => $obj['_joinData']['survey_form_id'],
+								];
+							}
 						}
 					}
 					if (array_key_exists('survey_question_id', $requestData[$this->alias()])) {
 						$questionId = $requestData[$this->alias()]['survey_question_id'];
-						$questionObj = $this->CustomFields
-							->findById($questionId)
-							->first();
+						$questionObj = $this->CustomFields->get($questionId);
 						$arrayQuestions[] = [
 							'name' => $questionObj->name,
 							'survey_question_id' => $questionObj->id,
@@ -123,6 +184,7 @@ class SurveyFormsTable extends CustomFormsTable {
 						];
 					}
 				}
+				$count = 0;
 				foreach ($arrayQuestions as $key => $obj) {
 					$fieldPrefix = $attr['model'] . '.custom_fields.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';
@@ -130,11 +192,13 @@ class SurveyFormsTable extends CustomFormsTable {
 					$surveyQuestionName = $obj['name'];
 					$surveyQuestionId = $obj['survey_question_id'];
 					$surveyFormId = $obj['survey_form_id'];
-					
+
 					$cellData = "";
 					$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $surveyQuestionId]);
 					$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $surveyQuestionName]);
 					$cellData .= $form->hidden($joinDataPrefix.".survey_form_id", ['value' => $surveyFormId]);
+					$cellData .= $form->hidden($joinDataPrefix.".survey_question_id", ['value' => $surveyQuestionId]);
+					$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$count]);
 					
 					if (isset($obj['id'])) {
 						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
@@ -142,13 +206,15 @@ class SurveyFormsTable extends CustomFormsTable {
 					$rowData = [];
 					$rowData[] = $surveyQuestionName;
 					$rowData[] = $cellData;
-					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					$rowData[] = '<button onclick="jsTable.doRemoveWithAppend(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 					$tableCells[] = $rowData;
 
 					unset($questionOptions[$obj['survey_question_id']]);
 				}
 				$attr['tableHeaders'] = $tableHeaders;
 	    		$attr['tableCells'] = $tableCells;
+	    		$attr['reorder'] = true;
 
 				$questionOptions[-1] = "-- ".__('Add Question') ." --";
 	    		ksort($questionOptions);
