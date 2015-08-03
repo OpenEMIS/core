@@ -197,6 +197,7 @@ class SurveyFormsTable extends CustomFormsTable {
 					$cellData .= $form->hidden($joinDataPrefix.".survey_form_id", ['value' => $surveyFormId]);
 					$cellData .= $form->hidden($joinDataPrefix.".survey_question_id", ['value' => $surveyQuestionId]);
 					$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$count, 'class' => 'order']);
+					$cellData .= $form->hidden($joinDataPrefix.".section", ['value' => '', 'class' => 'section']);
 					
 					if (isset($obj['id'])) {
 						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
