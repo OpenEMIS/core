@@ -17,6 +17,7 @@ var Reorder = {
 		// Sortable only when mouse over the arrows
 		$( "td.sorter" ).mousedown(function() {
 			// Sortable on tbody
+			var url = $(event.target).closest('table').attr('url');
 			var tbody = $(this).closest('tbody');
 			tbody.sortable({
 				forcePlaceholderSize: true,	
@@ -24,20 +25,26 @@ var Reorder = {
 				cursor: "none",
 				axis: "y",
 				stop: function(event, ui){
-					var url = $(event.target).closest('table').attr('url');
-					currentOrder = Reorder.getOrder("td","data-row-id");
-					if(! Reorder.compare(currentOrder,originalOrder)){
-						$.ajax({
-							cache: false,
-							url: url,
-							type: "POST",
-							data: {
-								ids: JSON.stringify(currentOrder)
-							},
-							traditional: true,
-							success: function(data){
-								originalOrder = currentOrder;
-							}
+					if (url) {
+						currentOrder = Reorder.getOrder("td","data-row-id");
+						if(! Reorder.compare(currentOrder,originalOrder)){
+							$.ajax({
+								cache: false,
+								url: url,
+								type: "POST",
+								data: {
+									ids: JSON.stringify(currentOrder)
+								},
+								traditional: true,
+								success: function(data){
+									originalOrder = currentOrder;
+								}
+							});
+						}
+					} else {
+						var count = 1;
+						$(".order").each(function(){
+							$(this).val(count++);
 						});
 					}
 				}
