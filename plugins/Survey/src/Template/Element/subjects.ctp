@@ -15,6 +15,15 @@
 	<?php
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+		$reorder = isset($attr['reorder']) ? $attr['reorder'] : [];
+	
+		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 1;
+
+		if ($displayReorder) {
+			echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
+			echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
+			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
+		}
 	?>
 	<div class="clearfix"></div>
 		<hr>
@@ -33,14 +42,14 @@
 				$this->Form->input($ControllerAction['table']->alias().".section", [
 					'label' => 'Add Section',
 					'type' => 'text',
-					'onchange' => "$('#reload').val('addQuestion').click();"
+					'onchange' => "$('#reload').val('addSection').click();"
 				]);
 			?>
+			<button onclick="$('#reload').val('addSection').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
 		</div>
 	</div>
-
 	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered table-input">
+		<table class="table table-striped table-hover table-bordered table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
