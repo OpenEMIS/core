@@ -335,11 +335,14 @@ class AppTable extends Table {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
-		if (in_array('modified_user_id', $columns)) {
-			$entity->modified_user_id = 1;
-		}
-		if (in_array('created_user_id', $columns)) {
-			$entity->created_user_id = 1;
+		$userId = $_SESSION['Auth']['User']['id'];
+		if (!is_null($userId)) {
+			if (in_array('modified_user_id', $columns)) {
+				$entity->modified_user_id = $userId;
+			}
+			if (in_array('created_user_id', $columns)) {
+				$entity->created_user_id = $userId;
+			}
 		}
 	}
 
