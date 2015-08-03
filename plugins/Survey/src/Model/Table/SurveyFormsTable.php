@@ -152,9 +152,7 @@ class SurveyFormsTable extends CustomFormsTable {
 						];
 					}
 				} else if ($this->request->is(['post', 'put'])) {
-
 					$requestData = $this->request->data;
-					pr($requestData);die;
 					if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
 						foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
 							if(!empty($obj['_joinData']['id'])){
@@ -198,7 +196,7 @@ class SurveyFormsTable extends CustomFormsTable {
 					$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $surveyQuestionName]);
 					$cellData .= $form->hidden($joinDataPrefix.".survey_form_id", ['value' => $surveyFormId]);
 					$cellData .= $form->hidden($joinDataPrefix.".survey_question_id", ['value' => $surveyQuestionId]);
-					$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$count]);
+					$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$count, 'class' => 'order']);
 					
 					if (isset($obj['id'])) {
 						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
