@@ -9,5 +9,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 
 		$this->belongsTo('CustomForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
+
+		$this->removeBehavior('Reorder');
 	}
 }
