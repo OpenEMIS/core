@@ -41,11 +41,10 @@
 			<?= 
 				$this->Form->input($ControllerAction['table']->alias().".section", [
 					'label' => 'Add Section',
-					'type' => 'text',
-					'onchange' => "$('#reload').val('addSection').click();"
+					'type' => 'text'
 				]);
 			?>
-			<button onclick="$('#reload').val('addSection').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
+			<button onclick="SurveyForm.addSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
 		</div>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
