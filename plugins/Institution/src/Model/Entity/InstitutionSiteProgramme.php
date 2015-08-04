@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class InstitutionSiteProgramme extends Entity {
-	protected $_virtual = ['education_level'];
+	protected $_virtual = ['education_level', 'cycle_programme_name'];
 
     protected function _getEducationLevel() {
         $name = '';
@@ -20,4 +20,17 @@ class InstitutionSiteProgramme extends Entity {
 
     	return $name;
 	}
+
+    protected function _getCycleProgrammeName() {
+        $name = $this->education_programme->name;
+        if (!$this->has('education_programme') && $this->education_programme->has('cycle_programme_name')) {
+            $name = $this->education_programme->cycle_programme_name;
+        } else {
+            $table = TableRegistry::get('Education.EducationCycles');
+            $cycleId = $this->education_programme->education_cycle_id;
+            $name = $table->get($cycleId)->name . ' - ' . $name;
+        }
+
+        return $name;
+    }
 }

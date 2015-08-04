@@ -6,9 +6,10 @@ use App\Model\Table\AppTable;
 
 class SecurityGroupUsersTable extends AppTable {
 	public function initialize(array $config) {
+		parent::initialize($config);
 		$this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
-		$this->belongsTo('SecurityGroups', ['className' => 'Security.SecurityGroups']);
-		$this->belongsTo('Users', ['className' => 'User.Users']);
+		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
+		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 	}
 
 	public function insertSecurityRoleForInstitution($data) {
