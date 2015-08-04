@@ -12,6 +12,8 @@ that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warra
 or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+
+ControllerActionComponent - Version 3.0.1
 */
 
 namespace ControllerAction\Controller\Component;
@@ -21,8 +23,12 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
+use Cake\I18n\I18n;
+use Cake\Core\Configure;
+use Cake\Log\Log;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -32,7 +38,7 @@ class ControllerActionComponent extends Component {
 	private $ctpFolder;
 	private $paramsPass;
 	private $config;
-	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
+	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
 
 	public $model = null;
 	public $models = [];
@@ -45,6 +51,7 @@ class ControllerActionComponent extends Component {
 	public $templatePath = '/ControllerAction/';
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
+	public $debug = false;
 
 	public $components = ['ControllerAction.Alert', 'Paginator'];
 
@@ -64,6 +71,8 @@ class ControllerActionComponent extends Component {
 		$this->controller = $controller;
 		$this->Session = $this->request->session();
 		$this->config = new ArrayObject([]);
+
+		$this->debug = Configure::read('debug');
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
@@ -77,8 +86,10 @@ class ControllerActionComponent extends Component {
 				$this->request->params['action'] = 'ComponentAction';
 				$this->initComponentsForModel();
 			} else { // check if it's a model action
+				$this->debug(__METHOD__, ': Searching Models');
 				foreach ($this->models as $name => $attr) {
 					if (strtolower($action) === strtolower($name)) { // model class found
+						$this->debug(__METHOD__, ': ' . $name . ' found');
 						$currentAction = 'index';
 						if (!empty($this->paramsPass)) {
 							$currentAction = array_shift($this->paramsPass);
@@ -93,6 +104,7 @@ class ControllerActionComponent extends Component {
 						$this->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
 
+						$this->debug(__METHOD__, ': Event -> ControllerAction.Controller.onInitialize');
 						$event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model]);
 						$event = $this->controller->eventManager()->dispatch($event);
 						if ($event->isStopped()) { return $event->result; }
@@ -102,6 +114,7 @@ class ControllerActionComponent extends Component {
 					}
 				}
 			}
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.beforeAction');
 			$event = new Event('ControllerAction.Model.beforeAction', $this);
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
@@ -128,6 +141,7 @@ class ControllerActionComponent extends Component {
 				$this->config['formButtons'] = true; // need better solution
 			}
 
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
@@ -135,10 +149,7 @@ class ControllerActionComponent extends Component {
 
 			uasort($this->model->fields, [$this, 'sortFields']);
 			$this->config['fields'] = $this->model->fields;
-
-			/**
-			 * ControllerAction viewVar is being used by Positions/current.ctp, Positions/past.ctp & HtmlFieldHelper -> binary()
-			 */
+			
 			$controller->set('ControllerAction', $this->config);
 
 			// deprecated: backward compatible
@@ -162,6 +173,9 @@ class ControllerActionComponent extends Component {
 			}
 
 			// make field sortable by default if it is a string data-type
+			if (!array_key_exists('type', $attr)) {
+				$this->log($key, 'debug');
+			}
 			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
 			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
@@ -171,6 +185,7 @@ class ControllerActionComponent extends Component {
 					$associatedObject = $this->getAssociatedBelongsToModel($key);
 					
 					$query = $associatedObject->find('list');
+					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onPopulateSelectOptions');
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
 					$event = $associatedObject->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
@@ -241,6 +256,25 @@ class ControllerActionComponent extends Component {
 			$value = $this->controller->viewVars[$key];
 		}
 		return $value;
+	}
+
+	public function paramsPass() {
+		$params = $this->request->pass;
+		if ($this->triggerFrom == 'Model') {
+			if ($this->triggerFrom == 'Model') {
+				unset($params[0]);
+			}
+		}
+		return $params;
+	}
+
+	public function paramsQuery() {
+		return $this->request->query;
+	}
+
+	public function params() {
+		$params = $this->paramsPass();
+		return array_merge($params, $this->paramsQuery());
 	}
 
 	public function buildDefaultValidation() {
@@ -392,6 +426,7 @@ class ControllerActionComponent extends Component {
 		}
 		
 		$params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
 		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
 		if ($event->isStopped()) { return $event->result; }
 
@@ -399,6 +434,7 @@ class ControllerActionComponent extends Component {
 	}
 
 	private function initComponentsForModel() {
+		$this->debug(__METHOD__);
 		$this->model->controller = $this->controller;
 		$this->model->request = $this->request;
 		$this->model->Session = $this->request->session();
@@ -438,9 +474,9 @@ class ControllerActionComponent extends Component {
 
 	public function render() {
 		if (empty($this->plugin)) {
-			$path = APP . 'View' . DS . $this->controller->name . DS;
+			$path = APP . 'Template' . DS . $this->controller->name . DS;
 		} else {
-			$path = APP . 'Plugin' . DS . $this->plugin . DS . 'View' . DS;
+			$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'Template' . DS;
 		}
 		$ctp = $this->ctpFolder . DS . $this->currentAction;
 
@@ -476,8 +512,22 @@ class ControllerActionComponent extends Component {
 		return $modal;
 	}
 
+	public function getContains($model, $type = 'belongsTo') { // type is not being used atm
+		$contain = [];
+		foreach ($model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+				$contain[] = $assoc->name();
+			}
+		}
+		return $contain;
+	}
+
+	public function getSearchKey() {
+		return $this->Session->read($this->model->alias().'.search.key');
+	}
+
 	public function search($model, $order = []) {
-		$alias = $model->alias();
+		$alias = $this->model->alias();
 		$controller = $this->controller;
 		$request = $this->request;
 		$limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
@@ -496,54 +546,52 @@ class ControllerActionComponent extends Component {
 				}
 			}
 		}
-		$conditions = isset($options['conditions']) ? $options['conditions'] : [];
 
-		$contain = [];
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
-			}
+		$query = $model->find();
+
+		$contain = $this->getContains($model);
+		if (!empty($contain)) {
+			$query->contain($contain);
 		}
 
-		// all string fields are searchable by default
-		$OR = isset($conditions['OR']) ? $conditions['OR'] : [];
+		$OR = [];
 		if (!empty($search)) {
 			foreach($schema as $name => $obj) {
 				if ($obj['type'] == 'string' && $name != 'password') {
-					$OR["$alias.$name LIKE"] = '%' . $search . '%';
+					$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
 				}
 			}
 		}
+
 		if (!empty($OR)) {
-			$conditions['OR'] = $OR;
+			$query->where(['OR' => $OR]);
 		}
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
-			$order = [$this->model->aliasField($this->orderField) => 'asc'];
+			$query->order([$model->aliasField($this->orderField) => 'asc']);
 		}
 
-		$paginateOptions = new ArrayObject(['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions]);
-		if (!empty($contain)) {
-			$paginateOptions['contain'] = $contain;
-		}
+		$options = new ArrayObject(['limit' => $this->pageOptions[$limit]]);
 
 		$this->Session->write($alias.'.search.key', $search);
 		$this->request->data['Search']['searchField'] = $search;
 		$this->request->data['Search']['limit'] = $limit;
-		// $controller->set('search', $search);
-		// $controller->set('pageOptions', $this->pageOptions);
+		
 		$this->config['search'] = $search;
 		$this->config['pageOptions'] = $this->pageOptions;
 
-		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $paginateOptions]);
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Controller.beforePaginate');
+		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $query, $options]);
 		$event = $this->controller->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
-		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $paginateOptions]);
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.beforePaginate');
+		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $query, $options]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
-		$data = $this->Paginator->paginate($model, $paginateOptions->getArrayCopy());
+		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');
 		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
@@ -560,6 +608,7 @@ class ControllerActionComponent extends Component {
 		$settings = new ArrayObject(['pagination' => true, 'model' => $model->registryAlias()]);
 		$query = $model->find();
 
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.beforeAction');
 		$event = new Event('ControllerAction.Model.index.beforeAction', $this, [$query, $settings]);
 		$event = $model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
@@ -594,8 +643,12 @@ class ControllerActionComponent extends Component {
 			$this->Alert->info('general.noData');
 		}
 
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterAction');
 		$event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
-		$event = $model->eventManager()->dispatch($event);
+		$event = $this->model->eventManager()->dispatch($event);
+		if (!empty($event->result)) {
+			$data = $event->result;
+		}
 		if ($event->isStopped()) { return $event->result; }
 
 		$modal = $this->getModalOptions('remove');
@@ -610,6 +663,7 @@ class ControllerActionComponent extends Component {
 		$idKey = $model->aliasField($primaryKey);
 		
 		// Event: viewBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.beforeAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
@@ -629,14 +683,16 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id)->contain($contain);
+			$query = $model->find()->where([$idKey => $id])->contain($contain);
 
 			// Event: viewEditBeforeQuery
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
 			// Event: viewBeforeQuery
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.beforeQuery');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
@@ -650,6 +706,7 @@ class ControllerActionComponent extends Component {
 			}
 
 			// Event: viewAfterAction
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.afterAction');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.afterAction', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
@@ -671,11 +728,13 @@ class ControllerActionComponent extends Component {
 		$request = $this->request;
 
 		// Event: addEditBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
 
 		// Event: addBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
@@ -684,6 +743,7 @@ class ControllerActionComponent extends Component {
 
 		if ($request->is(['get'])) {
 			// Event: addOnInitialize
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
@@ -696,11 +756,13 @@ class ControllerActionComponent extends Component {
 
 			if ($submit == 'save') {
 				// Event: addEditBeforePatch
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 				
 				// Event: addBeforePatch
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforePatch');
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
@@ -710,15 +772,30 @@ class ControllerActionComponent extends Component {
 				$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
 
 				// Event: addAfterPatch
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterPatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 
-				if ($model->save($entity)) {
+				$process = function ($model, $entity) {
+					return $model->save($entity);
+				};
+
+				// Event: onBeforeSave
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeSave');
+				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
+				if ($event->isStopped()) { return $event->result; }
+				if (is_callable($event->result)) {
+					$process = $event->result;
+				}
+				// End Event
+
+				if ($process($model, $entity)) {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
 					
 					// Event: addAfterSave
+					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
 					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
@@ -734,6 +811,7 @@ class ControllerActionComponent extends Component {
 
 				// Event: addEditOnReload
 				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
+				$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 				$method = 'addEdit' . ucfirst($methodKey);
 				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
@@ -741,6 +819,7 @@ class ControllerActionComponent extends Component {
 
 				// Event: addOnReload
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
+				$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 				$method = 'add' . ucfirst($methodKey);
 				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
@@ -753,11 +832,13 @@ class ControllerActionComponent extends Component {
 		}
 
 		// Event: addEditAfterAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.afterAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
 
 		// Event: addAfterAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterAction', null, [$entity]);
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
@@ -772,24 +853,28 @@ class ControllerActionComponent extends Component {
 		$idKey = $model->aliasField($primaryKey);
 
 		// Event: addEditBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
 		
 		// Event: editBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeAction');
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
 
 		if ($model->exists([$idKey => $id])) {
-			$query = $model->findById($id);
+			$query = $model->find()->where([$idKey => $id]);
 
 			// Event: viewEditBeforeQuery
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
 			// Event: editBeforeQuery
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeQuery');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
@@ -804,6 +889,7 @@ class ControllerActionComponent extends Component {
 			
 			if ($this->request->is(['get'])) {
 				// Event: editOnInitialize
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.onInitialize');
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.onInitialize', null, [$entity]);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
@@ -816,11 +902,13 @@ class ControllerActionComponent extends Component {
 
 				if ($submit == 'save') {
 					// Event: addEditBeforePatch
+					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
 					$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 					
 					// Event: editBeforePatch
+					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforePatch');
 					$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforePatch', null, $params);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
@@ -835,7 +923,8 @@ class ControllerActionComponent extends Component {
 						$action = $this->buttons['view']['url'];
 
 						// Event: editAfterSave
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, [$this->controller]);
+						$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterSave');
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, $params);
 						if ($event->isStopped()) { return $event->result; }
 						// End Event
 						
@@ -851,6 +940,7 @@ class ControllerActionComponent extends Component {
 
 					// Event: addEditOnReload
 					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
+					$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 					$method = 'addEdit' . ucfirst($methodKey);
 					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
@@ -858,6 +948,7 @@ class ControllerActionComponent extends Component {
 
 					// Event: editOnReload
 					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
+					$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 					$method = 'edit' . ucfirst($methodKey);
 					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
@@ -870,11 +961,13 @@ class ControllerActionComponent extends Component {
 			}
 
 			// Event: addEditAfterAction
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.afterAction');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
 			// Event: editAfterAction
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterAction');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterAction', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
@@ -898,13 +991,14 @@ class ControllerActionComponent extends Component {
 			$id = $request->data[$primaryKey];
 			$deleteOptions = new ArrayObject([]);
 
-			$process = function () use ($id, $model, $deleteOptions) {
+			$process = function ($model, $id, $deleteOptions) {
 				$entity = $model->get($id);
 				return $model->delete($entity, $deleteOptions->getArrayCopy());
 			};
 
 			// Event: onBeforeDelete
 			$params = [$deleteOptions, $id];
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
 			$event = $this->dispatchEvent($model, 'ControllerAction.Model.onBeforeDelete', null, $params);
 			if ($event->isStopped()) { return $event->result; }
 			if (is_callable($event->result)) {
@@ -913,7 +1007,7 @@ class ControllerActionComponent extends Component {
 			// End Event
 
 			if ($this->removeStraightAway) {
-				if ($process()) {
+				if ($process($model, $id, $deleteOptions)) {
 					$this->Alert->success('general.delete.success');
 				} else {
 					$this->Alert->error('general.delete.failed');
@@ -1172,6 +1266,7 @@ class ControllerActionComponent extends Component {
 		$method = 'onUpdateField' . Inflector::camelize($field);
 		$eventKey = 'ControllerAction.Model.' . $method;
 		$params = [$attr, $this->currentAction, $this->request];
+		$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 		$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
 		if (is_array($event->result)) {
 			$model->fields[$field] = $event->result;
@@ -1288,5 +1383,13 @@ class ControllerActionComponent extends Component {
 
 	public function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	}
+
+	public function debug($method, $message='') {
+		if ($this->debug) {
+			$pos = strrpos($method, "\\")+1;
+			$method = substr($method, $pos);
+			Log::write('debug', $method . $message);
+		}
 	}
 }

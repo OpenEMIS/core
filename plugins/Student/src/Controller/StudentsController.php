@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
 use App\Controller\AppController;
@@ -20,9 +21,16 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->ControllerAction->model()->addBehavior('CustomField.Record', [
 			'behavior' => 'Student',
+			'fieldKey' => 'student_custom_field_id',
+			'tableColumnKey' => 'student_custom_table_column_id',
+			'tableRowKey' => 'student_custom_table_row_id',
+			'formKey' => 'student_custom_form_id',
+			'filterKey' => 'student_custom_filter_id',
+			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
 			'recordKey' => 'security_user_id',
-			'fieldValueKey' => ['className' => 'Student.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellKey' => ['className' => 'Student.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 		$this->ControllerAction->model()->addBehavior('AdvanceSearch');
@@ -32,26 +40,25 @@ class StudentsController extends AppController {
 		]);
 
 		$this->ControllerAction->models = [
-		'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
-		'Contacts' 			=> ['className' => 'User.Contacts'],
-		'Identities' 		=> ['className' => 'User.Identities'],
-		'Languages' 		=> ['className' => 'User.UserLanguages'],
-		'Comments' 			=> ['className' => 'User.Comments'],
-		'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
-		'Awards' 			=> ['className' => 'User.Awards'],
-		'Attachments' 		=> ['className' => 'User.Attachments'],
-		'Guardians' 		=> ['className' => 'Student.Guardians'],
-		'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
-		'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
-		'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
-		'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
-		'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
-		'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
-		'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
-		'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-		'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
-		'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
-
+			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Contacts' 			=> ['className' => 'User.Contacts'],
+			'Identities' 		=> ['className' => 'User.Identities'],
+			'Languages' 		=> ['className' => 'User.UserLanguages'],
+			'Comments' 			=> ['className' => 'User.Comments'],
+			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
+			'Awards' 			=> ['className' => 'User.Awards'],
+			'Attachments' 		=> ['className' => 'User.Attachments'],
+			'Guardians' 		=> ['className' => 'Student.Guardians'],
+			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
+			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
+			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
+			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
+			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
+			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
+			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
+			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
+			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
 
 		$this->loadComponent('Paginator');
@@ -104,8 +111,13 @@ class StudentsController extends AppController {
 			}
 
 			$persona = false;
+			$alias = $model->alias;
+			// temporary fix for renaming Sections and Classes
+			if ($alias == 'Sections') $alias = 'Classes';
+			else if ($alias == 'Classes') $alias = 'Subjects';
+			
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 				if (strtolower($action) != 'index')	{
 					if (in_array('Guardian', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
@@ -119,10 +131,10 @@ class StudentsController extends AppController {
 					}
 				}
 			} else {
-				$this->Navigation->addCrumb($model->getHeader($model->alias));
+				$this->Navigation->addCrumb($model->getHeader($alias));
 			}
 
-			$header = $this->activeObj->name . ' - ' . $model->getHeader($model->alias);
+			$header = $this->activeObj->name . ' - ' . $model->getHeader($alias);
 
 			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
@@ -134,14 +146,14 @@ class StudentsController extends AppController {
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('security_user_id') => $this->activeObj->id
-						]);
+					]);
 					
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
 					if (!$exists) {
 						$this->Alert->warning('general.notExists');
-						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
 				}
 			}
@@ -154,36 +166,28 @@ class StudentsController extends AppController {
 		}
 	}
 
-
-	public function beforePaginate($event, $model, $options) {
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
-		if ($model->alias() != 'Guardians') {
-			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('Students.security_user_id')) {
-					$securityUserId = $this->ControllerAction->Session->read('Students.security_user_id');
-					if (!array_key_exists('conditions', $options)) {
-						$options['conditions'] = [];
-					}
-					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
-				} else {
-					$this->Alert->warning('general.noData');
-					$this->redirect(['action' => 'index']);
-					return false;
+		if ($model->alias() != 'InstitutionSiteStudents') {
+			if ($session->check('Students.security_user_id')) {
+				if ($model->hasField('security_user_id')) {
+					$userId = $session->read('Students.security_user_id');
+					$query->where([$model->aliasField('security_user_id') => $userId]);
 				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
 			}
+		} else {
+			// we only show distinct records at system level
+			$query->group([$model->aliasField('security_user_id')]);
 		}
-		
-		return $options;
 	}
 
 	public function excel($id=0) {
 		$this->Users->excel($id);
 		$this->autoRender = false;
 	}
-
-	public function afterFilter(Event $event) {
-		$session = $this->request->session();
-	}
-
 }

@@ -29,11 +29,13 @@ foreach ($data as $entity) {
 	if ($displayAction) {
 		$buttons = $indexButtons->getArrayCopy();
 		$event = $this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons->getArrayCopy()]);
-		if (!empty($event->result)) {
-			$buttons = $event->result;
+		$buttons = $event->result;
+		
+		if (empty($buttons)) {
+			$row[] = '';
+		} else {
+			$row[] = [$this->element('OpenEmis.actions', ['entity' => $entity, 'buttons' => $buttons]), ['class' => 'rowlink-skip']];
 		}
-
-		$row[] = [$this->element('OpenEmis.actions', ['entity' => $entity, 'buttons' => $buttons]), ['class' => 'rowlink-skip']];
 	}
 	if ($displayReorder) {
 		$row[] = [$this->element('OpenEmis.reorder', ['entity' => $entity]), ['class' => 'sorter rowlink-skip']];

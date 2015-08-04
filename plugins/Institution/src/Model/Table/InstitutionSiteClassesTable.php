@@ -26,9 +26,9 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses']);
+		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
 
 		$this->belongsToMany('Teachers', [
 			'className' => 'User.Users',
@@ -65,7 +65,7 @@ class InstitutionSiteClassesTable extends AppTable {
     	$this->ControllerAction->field('modified_user_id', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('no_of_seats', ['type' => 'integer', 'attr'=>['min' => 1], 'visible' => false]);
-		$this->ControllerAction->field('section_name', ['type' => 'select', 'visible' => ['view'=>true], 'onChangeReload' => true]);
+		$this->ControllerAction->field('class_name', ['type' => 'select', 'visible' => ['view'=>true], 'onChangeReload' => true]);
 
 		$this->ControllerAction->field('students', [
 			'label' => '',
@@ -200,10 +200,11 @@ class InstitutionSiteClassesTable extends AppTable {
 			]);
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		$paginateOptions['finder'] = ['bySections' => []];
-		$paginateOptions['contain'][] = 'Teachers';
-		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriodId;
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query
+		->find('bySections')
+		->contain(['Teachers'])
+		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId]);
 	}
 
 
@@ -227,7 +228,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		// 	'targetForeignKey' => 'security_user_id'
 		// ]);
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'section_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
+			'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
 		]);
 	}
 
@@ -244,7 +245,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($entity->institution_site_section_classes as $key => $value) {
 			$sections[] = $value->institution_site_section->name;
 		}
-		$entity->section_name = implode(', ', $sections);
+		$entity->class_name = implode(', ', $sections);
 		
 		// pr($entity->teachers);
 		// pr($this->fields['teachers']);
@@ -279,10 +280,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->fields['students']['visible'] = false;
 		$this->fields['education_subject_id']['visible'] = false;
 
-		$this->fields['section_name']['visible'] = true;
+		$this->fields['class_name']['visible'] = true;
 		$this->fields['classes']['visible'] = true;
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'section_name', 'classes',
+			'academic_period_id', 'class_name', 'classes',
 		]);
 
 		$Sections = $this->InstitutionSiteSections;
@@ -303,11 +304,11 @@ class InstitutionSiteClassesTable extends AppTable {
 										'institution_site_id'=>$this->institutionId
 									])
 									->toArray();
-		$this->_selectedSectionId = $this->postString('section_name', $sectionOptions);
+		$this->_selectedSectionId = $this->postString('class_name', $sectionOptions);
 		$this->advancedSelectOptions($sectionOptions, $this->_selectedSectionId);
 		
 		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-		$this->fields['section_name']['options'] = $sectionOptions;
+		$this->fields['class_name']['options'] = $sectionOptions;
 
 	}
 
@@ -324,7 +325,7 @@ class InstitutionSiteClassesTable extends AppTable {
 					$class['institution_site_section_classes'] = [
 						[
 							'status' => 1,
-							'institution_site_section_id' => $commonData['section_name']
+							'institution_site_section_id' => $commonData['class_name']
 						]
 					];
 					$data['InstitutionSiteClasses'][] = $class;
@@ -514,7 +515,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->_selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
 
 		$teacherOptions = $this->getTeacherOptions();
-
 		/**
 		 * @todo should have additional filter; by start_date, end_date & education_programme_id
 		 */
@@ -568,7 +568,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 
-		$this->fields['teachers']['options'] = $teacherOptions;
+		if (!empty($teacherOptions)) {
+			$this->fields['teachers']['options'] = $teacherOptions;
+		}
 		$this->fields['students']['data'] = [
 			'students' => $students,
 			'studentOptions' => $studentOptions
@@ -716,38 +718,16 @@ class InstitutionSiteClassesTable extends AppTable {
 		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
         $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
 
-        // TODO-Hanafi: add date conditions as commented below
         $Staff = $this->Institutions->InstitutionSiteStaff;
 		$query = $Staff->find('all')
 						->find('withBelongsTo')
 						->find('byInstitution', ['Institutions.id' => $this->institutionId])
 						->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
+						->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodObj->id])
 						->where([
 							$Staff->aliasField('institution_site_position_id') 
 						])
-						->where([
-							$Staff->aliasField('end_date') . ' IS NULL',
-							$Staff->aliasField('start_date') . ' >= ' . $endDate
-						])
-						// ->where(['OR' => [
-						// 			[
-						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
-						// 				$Staff->aliasField('start_date') . ' <= ' . $startDate,
-						// 				$Staff->aliasField('end_date') . ' >= ' . $startDate
-						// 			],
-						// 			[
-						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
-						// 				$Staff->aliasField('start_date') . ' <= ' . $endDate,
-						// 				$Staff->aliasField('end_date') . ' >= ' . $endDate
-						// 			],
-						// 			[
-						// 				$Staff->aliasField('end_date') . ' IS NOT NULL',
-						// 				$Staff->aliasField('start_date') . ' >= ' . $startDate,
-						// 				$Staff->aliasField('end_date') . ' <= ' . $endDate
-						// 			]
-						// 		]
-						// ])
-							;
+						;
 		$options = [];
 		foreach ($query->toArray() as $key => $value) {
 			if ($value->has('user')) {

@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -14,7 +15,7 @@ use App\Model\Table\AppTable;
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
-        parent::initialize($config); 
+        parent::initialize($config);
 
 		/**
 		 * fieldOption tables
@@ -30,9 +31,6 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		/**
-		 * This model uses TrackActivityBehavior
-		 */
 		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments', 'dependent' => true]);
 
@@ -55,17 +53,37 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
+		
+		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'foreignKey' => 'institution_id', 'dependent' => true]);
 
-		// pr($this->validator());
+		$this->belongsToMany('SecurityGroups', [
+			'className' => 'Security.SystemGroups',
+			'joinTable' => 'security_group_institution_sites',
+			'foreignKey' => 'institution_site_id', 
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupInstitutions',
+			'dependent' => true
+		]);
+
 		$this->addBehavior('CustomField.Record', [
+			'fieldKey' => 'institution_custom_field_id',
+			'tableColumnKey' => 'institution_custom_table_column_id',
+			'tableRowKey' => 'institution_custom_table_row_id',
+			'formKey' => 'institution_custom_form_id',
+			'filterKey' => 'institution_custom_filter_id',
+			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
 			'recordKey' => 'institution_site_id',
-			'fieldValueKey' => ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellKey' => ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+        $this->addBehavior('Security.Institution');
+        $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -168,71 +186,131 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_id', ['type' => 'select']);
-
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, $options) {
-		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
-		// echo 'Options<br/>';pr($options);pr('<hr/>');
-		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
-		// die('afterSave');
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+
         if ($entity->isNew()) {
-			// $addSecurityGroupParams = array(
-			// 	'SecurityGroup' => array(
-			// 		'name' => $this->data['InstitutionSite']['name']
-			// 	),
-			// 	'GroupInstitutionSite' => array(
-			// 		'0' => array(
-			// 			'institution_site_id' => $this->data['InstitutionSite']['id']
-			// 		)
-			// 	)
-			// );
-			// $securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
-			// if ($securityGroup) {
-			// 	$this->trackActivity = false;
-			// 	$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
-			// 	if (!$this->save()) {
-			// 		return false;
-			// 	}
-			// } else {
-			// 	return false;
-			// }
+			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
+			$securityGroup = $SecurityGroup->save($obj);
+			if ($securityGroup) {
+				// add the relationship of security group and institutions
+				$securityInstitution = $SecurityInstitutions->newEntity([
+					'security_group_id' => $securityGroup->id, 
+					'institution_site_id' => $entity->id
+				]);
+				$SecurityInstitutions->save($securityInstitution);
+
+				$this->trackActivity = false;
+				$entity->security_group_id = $securityGroup->id;
+				if (!$this->save($entity)) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+
         } else {
-			// $securityGroupId = $this->field('security_group_id');
-			// if (!empty($securityGroupId)) {
-			// 	$this->SecurityGroup->read(null, $securityGroupId);
-			// 	if (is_object($this->SecurityGroup)) {
-			// 		$editSecurityGroupParams = array(
-			// 			'SecurityGroup' => array(
-			// 				'id' => $securityGroupId,
-			// 				'name' => $this->data['InstitutionSite']['name']
-			// 			)
-			// 		);
-			// 		if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
-			// 			return false;
-			// 		}
-			// 	}
-			// }
+			$securityGroupId = $entity->security_group_id;
+			if (!empty($securityGroupId)) {
+				$obj = $SecurityGroup->get($securityGroupId);
+				if (is_object($obj)) {
+					$data = ['name' => $entity->name];
+					$obj = $SecurityGroup->patchEntity($obj, $data);
+					$securityGroup = $SecurityGroup->save($obj);
+					if (!$securityGroup) {
+						return false;
+					}
+				}
+			}
+
         }
         return true;
 	}
 
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$securityGroupId = $entity->security_group_id;
+		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
+
+		$groupEntity = $SecurityGroup->get($securityGroupId);
+		$SecurityGroup->delete($groupEntity);
+	}
+
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
-			$indexDashboard = 'Institution.Institutions/dashboard';
+			$institutionRecords = $this->find();
+
+			// Total Institutions: number
+			$institutionCount = $institutionRecords
+				->count();
+
+			$models = [
+				['InstitutionSiteTypes', 'institution_site_type_id', 'Type'],
+				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector'],
+				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality'],
+			];
+
+			foreach ($models as $key => $model) {
+				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
+			}
+
+			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [],
+	            'data' => [ 
+	            	'model' => 'institutions',
+	            	'modelCount' => $institutionCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
 	    $config['formButtons'] = false;
+	}
+
+	public function getNumberOfInstitutionsByModel($params=[]) {
+
+		if (!empty($params)) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+
+			$modelName = $params[0];
+			$modelId = $params[1];
+			$key = $params[2];
+			$params['key'] = $key;
+
+			foreach ($conditions as $key => $value) {
+				$_conditions[$modelName.'.'.$key] = $value;
+			}
+			$institutionRecords = $this->find();
+			
+			$selectString = $modelName.'.name';
+			$institutionSiteTypesCount = $institutionRecords
+				->contain([$modelName])
+				->select([
+					'count' => $institutionRecords->func()->count($modelId),
+					'name' => $selectString
+				])
+				->group($modelId)
+				->toArray();
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteTypesCount as $key => $value) {
+	            // Compile the dataset
+				$dataSet[] = [$value['name'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		}
+		return $params;
 	}
 
 
@@ -253,10 +331,33 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$query = $request->query;
-		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+	public function onGetAreaId(Event $event, Entity $entity) {
+		return $entity->Areas['name'];
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// the query options are setup so that Security.InstitutionBehavior can reuse it
+		$options['query'] = [
+			'contain' => ['InstitutionSiteTypes'],
+			'select' => [
+				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
+				'Areas.name', 'InstitutionSiteTypes.name'
+			],
+			'join' => [
+				[
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+					'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+				]
+			]
+		];
+		$query->contain([], true);
+		$query->contain($options['query']['contain']);
+		$query->select($options['query']['select']);
+		$query->join($options['query']['join']);
+
+		$queryParams = $request->query;
+		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+			$query->order([$this->aliasField('name') => 'asc']);
 		}
 	}
 
@@ -285,4 +386,37 @@ class InstitutionsTable extends AppTable  {
 ** essential methods
 **
 ******************************************************************************************************************/
+	
+	// autocomplete used for UserGroups
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('name') . ' LIKE' => $search,
+					$this->aliasField('code') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s (%s)', $obj->name, $obj->code),
+				'value' => $obj->id
+			];
+		}
+		return $data;
+	}
+
+	public function onUpdateFieldInstitutionSiteTypeId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['onChangeReload'] = true;
+		}
+
+		return $attr;
+	}
 }

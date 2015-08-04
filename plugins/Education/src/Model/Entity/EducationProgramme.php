@@ -6,6 +6,8 @@ use Cake\ORM\TableRegistry;
 
 class EducationProgramme extends Entity
 {
+    protected $_virtual = ['cycle_programme_name'];
+
     protected function _getCycleProgrammeName() {
     	$name = $this->name;
     	if ($this->has('education_cycle') && $this->education_cycle->has('name')) {

@@ -103,7 +103,7 @@ class StudentBehavioursTable extends AppTable {
 					;
 
 		foreach($matching as $key=>$academic) {
-			$periodOptions[$academic->id] = (!is_null($academic->InstitutionSiteSections['id'])) ? $academic->name : $academic->name." [No Sections]";
+			$periodOptions[$academic->id] = (!is_null($academic->InstitutionSiteSections['id'])) ? $academic->name : $academic->name." [No Classes]";
 		}	
 
 		$attr['options'] = $periodOptions;

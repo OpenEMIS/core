@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
 use App\Model\Table\AppTable;
 
 class InstitutionSiteProgrammesTable extends AppTable {
@@ -32,6 +31,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->EducationGrades = $this->EducationProgrammes->EducationGrades;
 		$this->AcademicPeriods = $this->Institutions->InstitutionSiteShifts->AcademicPeriods;
 
+		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
@@ -41,7 +41,12 @@ class InstitutionSiteProgrammesTable extends AppTable {
  	        ->add('end_date', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'start_date', false]
 	    	    ])
-	        ;
+ 	    	->add('education_programme_id', [
+	    		'unique' => [
+			        'rule' => ['validateUnique', ['scope' => 'institution_site_id']],
+			        'provider' => 'table'
+			    ]
+		    ]);
 		return $validator;
 	}
 

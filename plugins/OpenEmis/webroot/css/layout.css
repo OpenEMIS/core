@@ -68,6 +68,10 @@ a:[data-toggle="tooltip"] {
 	z-index: 9999px;
 }
 
+.center {
+	text-align: center !important;
+}
+
 .overflow-y-hidden {
 	-ms-overflow-y: hidden !important;
 	    overflow-y: hidden !important;
@@ -710,7 +714,7 @@ body.large {
 .panel-toolbar .checkbox {
 	display: block;
 	float: left;
-	margin: 12px 10px !important;
+	margin: 10px !important;
 	padding: 0 !important;
 	width: 95px !important;
 }
@@ -1326,6 +1330,7 @@ input[type="checkbox"] {
 	background-color: #FFF !important;
 	margin-top: -1px;
 	padding: 7px 10px 6px !important;
+	color: #555 !important;
 }
 
 .nav-tabs > li.active > a:focus {
@@ -1350,6 +1355,7 @@ input[type="checkbox"] {
 	-ms-overflow-x: scroll;
 	    overflow-x: scroll;  
 	overflow-x: visible;
+	clear: both;
 }
 
 .tab-content .table-responsive {
@@ -1791,63 +1797,44 @@ table tr.sorting-row td {background-color: #8b8;}
 
 /* View with Sections and Map */
 
-.section {
-	display: inline-block;
-	width: 100%;
-	margin-bottom: 20px;
-	border: 1px solid #DDD;
-	-webkit-border-radius: 3px;
-	        border-radius: 3px;
-}
-
 .section-header {
-	background-color: #EFEFEF;
-	border-bottom: 1px solid #DDD;
-	color: #6B6B6B;
+	display: block;
+	background-color: #E2E2E2;
+	border: 1px solid #CCC;
+	color: #333;
 	font-weight: bold;
-	padding: 7px 20px 5px;
-	margin: 0;
+	padding: 10px;
+	margin: 20px 0 0;
 	-webkit-border-top-left-radius: 3px;
 	border-top-right-radius: 3px;
 	        border-top-left-radius: 3px;
 	        border-top-right-radius: 3px;
+	clear: both;        
 }
 
-.section .row:nth-of-type(even),
-.section .row:nth-of-type(odd),
-.section label {
-	background-color: #FFF !important;
-	border: 0 !important;
-}
-
-.section #googlemap {
-	padding: 4px 4px 0 4px;
-}
-
-.section #googlemap iframe {
+#googlemap iframe {
 	height: 300px !important;
 	width: 100%;
 }
 
 /* View with Sections and tables */
-.section .table-responsive table thead,
-.section .table-responsive table thead tr,
-.section .table-responsive {
-	padding: 10px;
-}
-
-.section .kd-check {
+.green {
 	color: green;
 	font-size: 10px;
 }
 
-.section .kd-cross {
+.red {
 	color: red;
 	font-size: 9px;
 }
 
+.grey {
+	color: #888;
+	font-size: 9px;
+}
+
 .section-header .icheck-input {
-	margin: -3px 5px 0px -10px !important;
+	margin: -3px 5px 0 0 !important;
 }
 
 .form-control {
@@ -1990,6 +1977,15 @@ label + select {
 	        border-radius: 3px;
 }
 
+td.center .icheck-input {
+    float: none !important;
+    margin: 0 auto !important;
+}
+
+td.center .icheck-input input {
+	min-width: 18px;
+}
+
 /* Multi Select Input */
 
 .form-horizontal .chosen-container {
@@ -2051,7 +2047,7 @@ label + select {
 
 /* Autocomplete */
 .ui-autocomplete {
-	max-height: 120px !important;
+	max-height: 320px !important;
 	overflow: scroll;
 }
 
@@ -2143,7 +2139,7 @@ label + select {
 	right: -1px;
 	top: -1px;
 	height: 34px !important;
-	width: 55px !important;
+	width: 54px !important;
 	padding: 8px;
 	cursor: pointer;
 	-webkit-border-top-right-radius: 3px !important;
@@ -2160,7 +2156,7 @@ label + select {
 	border-radius: 0;
 	border-right: 0 !important;
 	height: 34px !important;
-	width: 51px !important;	
+	width: 52px !important;	
 }
 
 .fileinput-filename {
@@ -2185,7 +2181,8 @@ label + select {
 }
 
 .file-input-text p,
-.file-input-buttons p {
+.file-input-buttons p,
+.input-text p {
 	clear: both;
 	padding: 8px 0 0;
 	font-style: italic;
@@ -2942,8 +2939,6 @@ footer {
 	margin: 1px;
 	padding: 10px;
 	border-right: 1px solid #DDD;
-	-webkit-border-radius: 3px;
-	        border-radius: 3px;
 }
 
 .login .password:after {
@@ -3033,6 +3028,50 @@ footer {
 .login-box .btn-login:hover {
 	background-color: #6B6B6B;
 	transition: all 1s ease;	
+}
+
+/* ERROR PAGE */
+.error-wrapper {
+	padding: 20px;
+	min-height: 145px;
+	width: 50%;
+	margin: 0 auto;
+}
+
+.error-icon {
+	width: 100%;
+	display: inline-block;
+	float: left;
+	margin: 0 auto;	
+	text-align: center;	
+	padding: 20px;
+}
+
+.error-icon i {
+	font-size: 200px;
+	color: #999;
+}
+
+.error-text,
+.error-buttons {
+	width: 100%;
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+.error-text h5 {
+	color: #CC5C5C;	
+	margin: 15px 0;	
+	line-height: 1.4em;
+}	
+
+.error-text a {
+	color: #CC5C5C;		
+	text-decoration: underline;		
+}
+
+.error-text a:hover {
+	text-decoration: none;
 }
 
 /* Small devices (tablets, 768px and up) */
@@ -3338,6 +3377,11 @@ footer {
 	.chrome .fuelux .wizard-buttons .btn-prev {
 		float: left;
 		margin: 1px 0 0 10px;		
+	}
+
+	/* ERROR PAGES */
+	.error-wrapper {
+		width: 100%;
 	}
 }
 
@@ -3700,6 +3744,12 @@ footer {
 
 	.error-message {
 		margin: 0 28% 10px;
+	}
+
+	/* PANEL TOOLBAR */
+	.panel-toolbar .checkbox {
+		clear: both;
+		float: none;
 	}
 
 	/* PAGINATION */
