@@ -49,11 +49,11 @@ class ReportListBehavior extends Behavior {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'index') {
-			$toolbarButtons['export']['url'] = ['plugin' => 'Report', 'controller' => 'Reports', 'action' => $this->_table->alias(), 'export'];
-			$toolbarButtons['export']['type'] = 'button';
-			$toolbarButtons['export']['label'] = '<i class="fa kd-export"></i>';
-			$toolbarButtons['export']['attr'] = $attr;
-			$toolbarButtons['export']['attr']['title'] = __('Generate');
+			$toolbarButtons['add']['url'] = ['plugin' => 'Report', 'controller' => 'Reports', 'action' => $this->_table->alias(), 'export'];
+			$toolbarButtons['add']['type'] = 'button';
+			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
+			$toolbarButtons['add']['attr'] = $attr;
+			$toolbarButtons['add']['attr']['title'] = __('Add Report');
 		} else {
 			$toolbarButtons['back'] = $buttons['back'];
 			$toolbarButtons['back']['type'] = 'button';
@@ -114,7 +114,7 @@ class ReportListBehavior extends Behavior {
 
 		$id = $ReportProgress->addReport($obj);
 		if ($id !== false) {
-			// $ReportProgress->generate($id);
+			$ReportProgress->generate($id);
 		}
 	}
 }
