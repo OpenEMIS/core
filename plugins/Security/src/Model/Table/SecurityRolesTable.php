@@ -1,7 +1,6 @@
 <?php
 namespace Security\Model\Table;
 
-
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -10,7 +9,6 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
-
 
 class SecurityRolesTable extends AppTable {
 	use MessagesTrait;
@@ -23,6 +21,17 @@ class SecurityRolesTable extends AppTable {
 			'className' => 'Security.SecurityFunctions',
 			'through' => 'Security.SecurityRoleFunctions'
 		]);
+
+		$this->belongsToMany('GroupUsers', [
+			'className' => 'Security.UserGroups',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
+
+		$this->addBehavior('Reorder');
 	}
 
 	public function beforeAction(Event $event) {
@@ -39,63 +48,89 @@ class SecurityRolesTable extends AppTable {
 				'text' => $this->getMessage($this->aliasField('systemRoles'))
 			]
 		];
-		$this->controller->set('tabElements', $tabElements);
+
+		// check for roles privileges
+		if (!$this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
+			unset($tabElements['user']);
+			unset($types[0]);
+		} else if (!$this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
+			unset($tabElements['system']);
+			unset($types[1]);
+		}
 
 		$selectedAction = $this->request->query('type');
 		if (empty($selectedAction) || !in_array($selectedAction, $types)) {
-			$selectedAction = 'user';
-			$this->request->query['type'] = $selectedAction;
+			$selectedAction = current($types);
 		}
+
+		$this->request->query['type'] = $selectedAction;
+		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $selectedAction);
 
-		$this->ControllerAction->field('security_group_id');
+		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
 
 		if ($selectedAction == 'user') {
 			$toolbarElements = [
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
-			$this->ControllerAction->setFieldOrder(['visible', 'name']);
-		} else {
-			$this->ControllerAction->setFieldOrder(['security_group_id', 'name', 'visible']);
 		}
+	}
+
+	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+		// to handle buttons visibility on a different set of permissions
+		$selectedAction = $this->request->query('type');
+		if (!empty($selectedAction)) {
+			$actions = ['user' => 'UserRoles', 'system' => 'SystemRoles'];
+			
+			$permissions = ['add', 'edit', 'remove'];
+			foreach ($permissions as $permission) {
+				if (!$this->AccessControl->check(['Securities', $actions[$selectedAction], $permission])) {
+					unset($buttons[$permission]);
+				}
+			}
+		}
+		parent::onInitializeButtons($event, $buttons, $action, $isFromModel);
 	}
 
 	public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'index') {
 			$attr['visible'] = false;
 		}
-		// TODO-jeff: need to restrict to roles that have access to their groups
-		$groupOptions = $this->SecurityGroups->find('list')
-			->find('byUser', ['userId' => $this->Auth->user('id')])
-			->toArray();
 
-		$selectedGroup = $this->queryString('security_group_id', $groupOptions);
-		$this->advancedSelectOptions($groupOptions, $selectedGroup);
-		$request->query['security_group_id'] = $selectedGroup;
+		$viewType = $attr['viewType'];
+		if ($viewType == 'user') {
+			// TODO-jeff: need to restrict to roles that have access to their groups
+			$groupOptions = $this->SecurityGroups->find('list')
+				->find('byUser', ['userId' => $this->Auth->user('id')])
+				->toArray();
 
-		$this->controller->set('groupOptions', $groupOptions);
-		$attr['options'] = $groupOptions;
+			$selectedGroup = $this->queryString('security_group_id', $groupOptions);
+			$this->advancedSelectOptions($groupOptions, $selectedGroup);
+			$request->query['security_group_id'] = $selectedGroup;
+
+			$this->controller->set('groupOptions', $groupOptions);
+			$attr['options'] = $groupOptions;
+		} else {
+			$attr['type'] = 'hidden';
+			$attr['value'] = 0;
+		}
 
 		return $attr;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query('type');
 		
 		$selectedGroup = $request->query('security_group_id');
 		if ($type == 'system') {
-			$options['conditions']['OR'] = [
-				$this->aliasField('security_group_id') . ' = 0', // custom system defined roles
-				$this->aliasField('security_group_id') . ' = -1' // fixed system defined roles
-			];
-		} else {
-			$options['conditions'][$this->aliasField('security_group_id')] = $selectedGroup;
-		}
-	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('order', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
+			$query
+			->where([$this->aliasField('security_group_id') => 0])		// custom system defined roles
+			->orWhere([$this->aliasField('security_group_id') => -1]);	// fixed system defined roles
+		} else {
+			$query->where([$this->aliasField('security_group_id') => $selectedGroup]);
+		}
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -114,7 +149,21 @@ class SecurityRolesTable extends AppTable {
 		// }
 
 		$buttons = array_merge($permissionBtn, $buttons);
-		// pr($buttons);
+
+		$groupId = $entity->security_group_id;
+		// -1 = system roles, we are not allowing users to modify system roles
+		// removing all buttons from the menu
+		if ($groupId == -1) {
+			if (array_key_exists('view', $buttons)) {
+				unset($buttons['view']);
+			}
+			if (array_key_exists('edit', $buttons)) {
+				unset($buttons['edit']);
+			}
+			if (array_key_exists('remove', $buttons)) {
+				unset($buttons['remove']);
+			}
+		}
 		return $buttons;
 	}
 
@@ -135,5 +184,58 @@ class SecurityRolesTable extends AppTable {
 		} 
 
 		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
+	}
+
+	// this function will return all roles (system roles & user roles) that has lower
+	// privileges than the current role of the user in a specific group
+	public function getPrivilegedRoleOptionsByGroup($groupId, $userId=null) {
+		$roleOptions = [];
+
+		// -1 is system defined roles (not editable)
+		// 0 is system defined roles (editable)
+		// >1 is user defined roles in specific group
+		$groupIds = [-1, 0, $groupId];
+
+		if (!is_null($userId)) { // userId will be null if he/she is a super admin
+			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+			foreach ($groupIds as $id) {
+				// this will show only roles of the user by group
+				$query = $GroupRoles
+					->find()
+					->find('visible')
+					->contain('SecurityRoles')
+					->order(['SecurityRoles.order'])
+					->where([
+						$GroupRoles->aliasField('security_group_id') => $groupId,
+						$GroupRoles->aliasField('security_user_id') => $userId,
+						'SecurityRoles.security_group_id' => $id
+					])
+				;
+
+				// first find the roles based on current role of user
+				$highestRole = $query->first();
+
+				if (!is_null($highestRole)) {
+					// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+					$roleList = $this->find('list')
+						->where([
+							$this->aliasField('security_group_id') => $id,
+							$this->aliasField('order') . ' > ' => $highestRole->security_role->order,
+						])
+						->toArray()
+					;
+					$roleOptions = $roleOptions + $roleList;
+				}
+			}
+		} else { // super admin will show all roles of system and group specific
+			$roleOptions = $this
+				->find('list')
+				->find('visible')
+				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
+				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+				->toArray()
+			;
+		}
+		return $roleOptions;
 	}
 }

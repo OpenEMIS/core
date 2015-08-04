@@ -5,22 +5,37 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class GuardianBehavior extends Behavior {
-	public function initialize(array $config) {
-	}
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain([], true);
+		$query->innerJoin(
+			['GuardianStudents' => 'student_guardians'],
+			['GuardianStudents.guardian_user_id = ' . $this->_table->aliasField('id')]
+		)
+		->group($this->_table->aliasField('id'));
 
-	public function beforeFind(Event $event, Query $query, $options) {
-		$query
-			->join([
-				'table' => 'student_guardians',
-				'alias' => 'GuardianStudents',
-				'type' => 'INNER',
-				'conditions' => [$this->_table->aliasField('id').' = '. 'GuardianStudents.guardian_user_id']
-			])
-			->group($this->_table->aliasField('id'));
+		$search = $this->_table->ControllerAction->getSearchKey();
+		$searchParams = explode(' ', $search);
+		foreach ($searchParams as $key => $value) {
+			if (empty($searchParams[$key])) {
+				unset($searchParams[$key]);
+			}
+		}
+
+		if (!empty($search)) {
+			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
+			foreach ($searchParams as $key => $value) {
+				$searchString = '%' . $value . '%';
+				$query->orWhere(['Users.first_name LIKE' => $searchString]);
+				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
+				$query->orWhere(['Users.third_name LIKE' => $searchString]);
+				$query->orWhere(['Users.last_name LIKE' => $searchString]);
+			}
+		}
 	}
 
 	public function implementedEvents() {
@@ -28,6 +43,7 @@ class GuardianBehavior extends Behavior {
 		$newEvent = [
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 		];

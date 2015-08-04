@@ -1,8 +1,11 @@
 <?php
 namespace Security\Model\Behavior;
 
+use ArrayObject;
+use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Network\Request;
 
 class UserBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -12,6 +15,7 @@ class UserBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -34,4 +38,27 @@ class UserBehavior extends Behavior {
 		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
 			'username', 'name', 'last_login', 'status']);
 	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$search = $this->_table->ControllerAction->getSearchKey();
+		$searchParams = explode(' ', $search);
+		foreach ($searchParams as $key => $value) {
+			if (empty($searchParams[$key])) {
+				unset($searchParams[$key]);
+			}
+		}
+
+		if (!empty($search)) {
+			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
+			foreach ($searchParams as $key => $value) {
+				$searchString = '%' . $value . '%';
+				$query->orWhere(['Users.first_name LIKE' => $searchString]);
+				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
+				$query->orWhere(['Users.third_name LIKE' => $searchString]);
+				$query->orWhere(['Users.last_name LIKE' => $searchString]);
+			}
+		}
+	}
+
+
 }

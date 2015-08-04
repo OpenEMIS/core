@@ -63,17 +63,19 @@ trait MessagesTrait {
 			'description' => 'Description',
 			'default' => 'Default',
 			'reject' => 'Reject',
-			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes',
+			'noSections' => 'No Classes',
+			'noClasses' => 'No Subjects',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
-			'amount' => 'Amount'
+			'amount' => 'Amount',
+			'total' => 'Total'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
 		'InfrastructureTypes' => [
+			'noLevels' => 'No Available Levels',
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'InfrastructureCustomFields' => [
@@ -105,26 +107,26 @@ trait MessagesTrait {
 			'end_time' => 'End Time',
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Sections',
+			'noSections' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
 			'security_user_id' => 'Home Room Teacher',
-			'section' => 'Section',
-			'single_grade_field' => 'Single Grade Sections',
-			'multi_grade_field' => 'Multi-Grades Section',
+			'section' => 'Class',
+			'single_grade_field' => 'Single Grade Classes',
+			'multi_grade_field' => 'Multi-Grades Class',
 			
-			'emptyName' => 'Section name should not be empty',
+			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
-			'emptyNameSecurityUserId' => 'Section name and Home Roome Teacher should not be empty',
-			'emptySecurityUserIdName' => 'Section name and Home Roome Teacher should not be empty'
+			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
+			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty'
 		],
 		'InstitutionSiteClasses' => [
-			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes',
-			'classes' => 'Classes',
+			'noSections' => 'No Classes',
+			'noClasses' => 'No Subjects',
+			'classes' => 'Subjects',
 			'education_subject' => 'Subject',
-			'class' => 'Class',
+			'class' => 'Subject',
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
@@ -132,6 +134,9 @@ trait MessagesTrait {
 		'InstitutionSiteFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+		],
+		'StudentFees' => [
+			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
@@ -145,8 +150,8 @@ trait MessagesTrait {
 		],
 		'InstitutionAssessmentResults' => [
 			'noSubjects' => 'There are no available Subjects.',
-			'noSections' => 'There are no available Sections.',
-			'noClasses' => 'There are no available Classes.',
+			'noSections' => 'There are no available Classes.',
+			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
 			'reject' => [
@@ -183,10 +188,17 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'There are no available Sections.',
+			'noSections' => 'No Available Classes'
+		],
+		'InstitutionSiteStudentAbsences' => [
+			'noSections' => 'No Available Classes',
+			'noStudents' => 'No Available Students'
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'There are no available Staff.',
+			'noStaff' => 'No Available Staff'
+		],
+		'StaffAbsences' => [
+			'noStaff' => 'No Available Staff'
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
@@ -241,9 +253,15 @@ trait MessagesTrait {
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
-			'noSections' => 'No Available Sections',
-			'noClasses' => 'No Available Classes',
+			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
+		],
+		'StudentTransfers' => [
+			'request' => 'Transfer request has been submitted successfully.',
+			'approve' => 'Transfer request has been approved successfully.',
+			'reject' => 'Transfer request has been rejected successfully.',
+			'noProgrammes' => 'No Available Programmes'
 		],
 
 
@@ -251,23 +269,35 @@ trait MessagesTrait {
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There is no subject in the selected section',
+				'noSubjectsInSection' => 'There is no subject in the selected class',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
-				'noSections' => 'There is no section under the selected academic period',
+				'noSections' => 'There is no class under the selected academic period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+				],
+				'email' => [
+					'ruleValidEmail' => 'Please enter a valid Email'
+				],
+				'longitude' => [
+					'ruleLongitude' => 'Please enter a valid Longitude'
+				],
+				'latitude' => [
+					'ruleLatitude' => 'Please enter a valid Latitude'
 				]
 			],
 			
 			'InstitutionSiteSections' => [
 				'noGrade' => 'There is no grade selected',
-				'emptyName' => 'Section name should not be empty',
+				'emptyName' => 'Class name should not be empty',
 				'emptySecurityUserId' => 'Home Room Teacher should not be empty',
-				'emptyNameSecurityUserId' => 'Section name and Home Room Teacher should not be empty',
+				'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			],
 
 			'InstitutionSiteProgrammes' => [
+				'education_programme_id' => [
+					'unique' => 'This Education Programme already exists in the system'
+				],
 				'noGrade' => 'There is no grade selected',
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
@@ -290,7 +320,7 @@ trait MessagesTrait {
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
 				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
-				'sections' => 'You need to configure Sections first.',
+				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
 			],
 			'InstitutionSiteStaff' => [
@@ -304,6 +334,16 @@ trait MessagesTrait {
 				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
 
 			],
+			'StaffPositions' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'StudentTransfers' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
 		],
 		'User' => [
 			'Users' => [
@@ -578,9 +618,23 @@ trait MessagesTrait {
 			'AcademicPeriods' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'current' => [
+					'ruleValidateNeeded' => 'Academic Period needs to be set as current'
 				]
 			]
 		],
+		'Translations' => [
+			'success' => 'The language has been successfully compiled.',
+			'failed' => 'The language has not been compiled due to errors encountered.',
+		],
+		'Security' => [
+			'Users' => [
+				'username' => [
+					'ruleUnique' => 'This username is already in use'
+				]
+			]
+		]
 	];
 
 	public function getMessage($code) {
