@@ -119,7 +119,8 @@ trait MessagesTrait {
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
-			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty'
+			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
+
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Classes',
