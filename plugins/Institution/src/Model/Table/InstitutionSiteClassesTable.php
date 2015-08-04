@@ -513,15 +513,15 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
-
 		$teacherOptions = $this->getTeacherOptions();
+
 		/**
 		 * @todo should have additional filter; by start_date, end_date & education_programme_id
 		 */
-		$query = $this
-			->Institutions
-			->InstitutionSiteStudents
-			->find()
+		$students = $this->Institutions->InstitutionSiteStudents;
+		$query = $students
+			->find('all')
+			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
 			->contain(['Users'])
 			->where([
 				'InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id
