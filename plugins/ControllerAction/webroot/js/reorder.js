@@ -4,8 +4,29 @@ $( document ).ready( function() {
 
 var Reorder = {
 	init: function() {
-		var currentOrder = Reorder.getOrder("td","data-row-id");
-		var originalOrder = currentOrder;
+		
+
+		// Sortable only when mouse over the arrows
+		$( "td.sorter").mousedown(function() {
+			Reorder.sortableRow(this);
+		});
+
+		// Add a listener to check for mouse click within the table fired by sorter class
+		$( "#sortable tbody" ).on("mousedown", ".sorter", function() {
+			Reorder.sortableRow(this);
+		});
+
+		// Disable sortable on any other portion of the body if the mouse is move away
+		$( document ).on("mouseup", function(){
+			if ($("#sortable tbody").hasClass('ui-sortable')) {
+				$( "#sortable tbody" ).sortable('disable');
+			}
+		});
+	},
+
+	sortableRow: function(obj){
+
+		var originalOrder = Reorder.getOrder("td","data-row-id");
 
 		var preventCollapse = function(e, ui) {
 			ui.children().each(function() {
@@ -14,50 +35,40 @@ var Reorder = {
 			return ui;
 		};
 
-		// Sortable only when mouse over the arrows
-		$( "#sortable tbody" ).on("mousedown", "td.sorter", function() {
-		//$( "td.sorter").mousedown(function() {
-			// Sortable on tbody
-			var url = $(event.target).closest('table').attr('url');
-			var tbody = $(this).closest('tbody');
-			tbody.sortable({
-				forcePlaceholderSize: true,	
-				helper: preventCollapse,
-				cursor: "none",
-				axis: "y",
-				stop: function(event, ui){
-					if (url) {
-						currentOrder = Reorder.getOrder("td","data-row-id");
-						if(! Reorder.compare(currentOrder,originalOrder)){
-							$.ajax({
-								cache: false,
-								url: url,
-								type: "POST",
-								data: {
-									ids: JSON.stringify(currentOrder)
-								},
-								traditional: true,
-								success: function(data){
-									originalOrder = currentOrder;
-								}
-							});
-						}
-					} else {
-						Reorder.updateOrder();
-						SurveyForm.updateSection();
+		// Sortable on tbody
+		var url = $(obj).closest('table').attr('url');
+		var tbody = $(obj).closest('tbody');
+		tbody.sortable({
+			forcePlaceholderSize: true,	
+			helper: preventCollapse,
+			cursor: "none",
+			axis: "y",
+			stop: function(event, ui){
+				if (url) {
+					currentOrder = Reorder.getOrder("td","data-row-id");
+					if(! Reorder.compare(currentOrder,originalOrder)){
+						$.ajax({
+							cache: false,
+							url: url,
+							type: "POST",
+							data: {
+								ids: JSON.stringify(currentOrder)
+							},
+							traditional: true,
+							success: function(data){
+								originalOrder = currentOrder;
+							}
+						});
 					}
+				} else {
+					Reorder.updateOrder();
+					SurveyForm.updateSection();
 				}
-			});
-			
-			// Re-enable the sortable if the mouse has already been release
-			tbody.sortable('enable');
-		})
-
-		// Disable sortable on any other portion of the body if the mouse is move away
-		$( document ).on("mouseup", function(){
-			$( "#sortable tbody" ).sortable();
-			$( "#sortable tbody" ).sortable('disable');
+			}
 		});
+		
+		// Re-enable the sortable if the mouse has already been release
+		tbody.sortable('enable');
 	},
 
 	updateOrder: function(){
