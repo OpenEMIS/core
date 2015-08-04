@@ -257,11 +257,12 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
-		'StudentTransfers' => [
+		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
+		],
+		'TransferApprovals' => [
 			'approve' => 'Transfer request has been approved successfully.',
-			'reject' => 'Transfer request has been rejected successfully.',
-			'noProgrammes' => 'No Available Programmes'
+			'reject' => 'Transfer request has been rejected successfully.'
 		],
 
 
@@ -339,7 +340,7 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
-			'StudentTransfers' => [
+			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
