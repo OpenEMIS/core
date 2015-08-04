@@ -15,7 +15,8 @@ var Reorder = {
 		};
 
 		// Sortable only when mouse over the arrows
-		$( "td.sorter" ).mousedown(function() {
+		$( "#sortable tbody" ).on("mousedown", "td.sorter", function() {
+		//$( "td.sorter").mousedown(function() {
 			// Sortable on tbody
 			var url = $(event.target).closest('table').attr('url');
 			var tbody = $(this).closest('tbody');
@@ -42,21 +43,27 @@ var Reorder = {
 							});
 						}
 					} else {
-						var count = 1;
-						$(".order").each(function(){
-							$(this).val(count++);
-						});
+						Reorder.updateOrder();
+						SurveyForm.updateSection();
 					}
 				}
-			}).disableSelection();
+			});
 			
 			// Re-enable the sortable if the mouse has already been release
 			tbody.sortable('enable');
 		})
 
 		// Disable sortable on any other portion of the body if the mouse is move away
-		$( document ).mouseup( function(){
+		$( document ).on("mouseup", function(){
+			$( "#sortable tbody" ).sortable();
 			$( "#sortable tbody" ).sortable('disable');
+		});
+	},
+
+	updateOrder: function(){
+		var count = 1;
+		$(".order").each(function(){
+			$(this).val(count++);
 		});
 	},
 
@@ -75,5 +82,5 @@ var Reorder = {
 		return $( htmlTag ).map(function(){
 			return $(this).attr( attributeName );
 		}).get();
-	}
+	},
 };
