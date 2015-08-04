@@ -39,7 +39,7 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function beforeAction(Event $event){
 		parent::beforeAction($event);
-		$this->ControllerAction->field('question', ['type' => 'custom_question', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
+		$this->ControllerAction->field('survey_question', ['type' => 'custom_survey_question', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -50,7 +50,7 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function afterAction(Event $event){
 		unset($this->fields['custom_fields']);
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'apply_to_all', 'custom_filters', 'name', 'description', 'question']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'apply_to_all', 'custom_filters', 'name', 'description', 'survey_question']);
 	}
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
@@ -73,7 +73,7 @@ class SurveyFormsTable extends CustomFormsTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function onGetCustomQuestionElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomSurveyQuestionElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
 			case "index":
 				// No implementation yet
