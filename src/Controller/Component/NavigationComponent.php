@@ -180,6 +180,11 @@ class NavigationComponent extends Component {
 										],
 									]
 								],
+								'Labels' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'Labels', 'action' => 'index'],
+									'selected' => ['index', 'view', 'edit']
+								],
 								'Translations' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index'],

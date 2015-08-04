@@ -9,7 +9,7 @@
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<th><?= $this->Label->get('Users.openemis_no'); ?></th>
+					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
 					<th><?= $this->Label->get('date.start'); ?></th>
 					<th><?= $this->Label->get('date.end'); ?></th>

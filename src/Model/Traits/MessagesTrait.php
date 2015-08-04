@@ -1,5 +1,6 @@
 <?php
 namespace App\Model\Traits;
+use Cake\Cache\Cache;
 
 trait MessagesTrait {
 	public $messages = [
@@ -86,7 +87,6 @@ trait MessagesTrait {
 			'date_closed' => 'Date Closed',
 		],
 		'InstitutionSiteStaff' => [
-			'start_date' => 'Start Date',
 			'fte' => 'FTE',
 			'total_fte' => 'Total FTE',
 		],
@@ -102,16 +102,12 @@ trait MessagesTrait {
 			'end_date' => 'End Date',
 			'education_grade' => 'Education Grades'
 		],
-		'InstitutionSiteShifts' => [
-			'start_time' => 'Start Time',
-			'end_time' => 'End Time',
-		],
 		'InstitutionSiteSections' => [
 			'noSections' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
-			'security_user_id' => 'Home Room Teacher',
+			// 'security_user_id' => 'Home Room Teacher',
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Multi-Grades Class',
@@ -166,16 +162,9 @@ trait MessagesTrait {
 		'EducationGrades' => [
 			'add_subject' => 'Add Subject'
 		],
-		'RubricSections' => [
-			'rubric_template_id' => 'Rubric Template'
-		],
 		'RubricCriterias' => [
-			'rubric_section_id' => 'Rubric Section',
+			//'rubric_section_id' => 'Rubric Section',
 			'criterias' => 'Criterias'
-		],
-		'RubricTemplateOptions' => [
-			'rubric_template_id' => 'Rubric Template',
-			'weighting' => 'Weighting'
 		],
 		'security' => [
 			'login' => [
@@ -200,24 +189,11 @@ trait MessagesTrait {
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
 		],
-		'StaffBehaviours' => [
-			'date_of_behaviour' => 'Date',
-			'time_of_behaviour' => 'Time',
-		],
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
 		],
 		'SystemRoles' => [
 			'tabTitle' => 'System Roles'
-		],
-		'SurveyTemplates' => [
-			'survey_module_id' => 'Module'
-		],
-		'SurveyQuestions' => [
-			'survey_template_id' => 'Survey Template'
-		],
-		'SurveyStatuses' => [
-			'survey_template_id' => 'Survey Template'
 		],
 		'time' => [
 			'start' => 'Start Time',
@@ -226,12 +202,6 @@ trait MessagesTrait {
 			'to' => 'To'
 		],
 		'Users' => [
-			'photo_content' => 'Photo Image',
-			'start_date' => 'Start Date',
-			'openemis_no' => 'OpenEMIS ID',
-			'name' => 'Name',
-			'gender' => 'Gender',
-			'date_of_birth' => 'Date Of Birth',
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
@@ -645,8 +615,12 @@ trait MessagesTrait {
 			if (isset($message[$i])) {
 				$message = $message[$i];
 			} else {
-				$message = '[Message Not Found]';
-				break;
+				//check whether label exists in cache
+				$message = Cache::read($code);
+				if($message === false) {
+					$message = '[Message Not Found]';
+					break;
+				}
 			}
 		}
 		return !is_array($message) ? __($message) : $message;
