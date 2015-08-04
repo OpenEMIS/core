@@ -30,7 +30,7 @@ class LabelsTable extends AppTable {
 
 	public function storeLabelsInCache() {
 		// Will only clear expired keys.
-		Cache::clear(false);
+		//Cache::clear(false);
 		
 		$cacheFolder = new Folder(CACHE.'labels');
 		$files = $cacheFolder->find();
