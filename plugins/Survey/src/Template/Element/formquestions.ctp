@@ -16,15 +16,30 @@
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 		$reorder = isset($attr['reorder']) ? $attr['reorder'] : [];
+		echo $this->Html->script('Survey.surveyform', ['block' => true]);
 	
 		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 1;
 
 		if ($displayReorder) {
 			echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
 			echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
-			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
+			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];	
 		}
 	?>
+	<style>
+		.draggableTable {
+			width: 100%;
+			min-height: 20px;
+    		padding: 10px;
+    		border: grey 2px dashed;
+		}
+		.draggableTable tr {
+			background-color:#FCF6CF;
+		}
+		.draggableTableCaption {
+			color: black;
+		}
+	</style>
 	<div class="clearfix"></div>
 		<hr>
 		<h3><?= __('Survey Questions')?></h3>
@@ -41,10 +56,11 @@
 			<?= 
 				$this->Form->input($ControllerAction['table']->alias().".section", [
 					'label' => 'Add Section',
-					'type' => 'text'
+					'type' => 'text',
+					'id' => 'sectionTxt'
 				]);
 			?>
-			<button onclick="SurveyForm.addSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
+			<button onclick="SurveyForm.addSection('#sectionTxt');" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
 		</div>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>

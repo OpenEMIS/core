@@ -40,8 +40,6 @@ class SurveyFormsTable extends CustomFormsTable {
 	public function beforeAction(Event $event){
 		parent::beforeAction($event);
 		$this->ControllerAction->field('question', ['type' => 'custom_question', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
-		//$this->ControllerAction->field('custom_fields', ['visible' => false]);
-		//$this->ControllerAction->field('custom_fields');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -90,7 +88,8 @@ class SurveyFormsTable extends CustomFormsTable {
 					->find('all')
 					->select([
 							'id' => 'SurveyFormsQuestions.survey_question_id',
-							'name' => 'SurveyQuestions.name'
+							'name' => 'SurveyQuestions.name',
+							'section' => 'SurveyFormsQuestions.section'
 						])		
 					->innerJoin(['SurveyQuestions' => 'survey_questions'],
 						[
@@ -100,8 +99,19 @@ class SurveyFormsTable extends CustomFormsTable {
 					->order(['SurveyFormsQuestions.order'])
 					->where(['SurveyFormsQuestions.survey_form_id' => $surveyFormId])
 					->toArray();
-
+				$sectionName = "";
+				$printSection = false;
 				foreach ($surveyQuestions as $key => $obj) {
+						if (!empty($obj['section']) && $obj['section'] != $sectionName) {
+							$sectionName = $obj['section'];
+							$printSection = true;
+						}
+						if (!empty($sectionName) && ($printSection)) {
+							$rowData = [];
+							$rowData[] = '<div class="section-header">'.$sectionName.'</div>';
+							$tableCells[] = $rowData;
+							$printSection = false;
+						}
 						$rowData = [];
 						$rowData[] = $obj['name'];
 						$tableCells[] = $rowData;
@@ -112,7 +122,7 @@ class SurveyFormsTable extends CustomFormsTable {
 
 			case "add":
 			case "edit":
-				$tableHeaders = [__('Questions'), '' , ''];
+				$tableHeaders = [__('Questions') , ''];
 				$tableCells = [];
 				$cellCount = 0;
 				$form = $event->subject()->Form;
@@ -131,8 +141,8 @@ class SurveyFormsTable extends CustomFormsTable {
 								'name' => 'SurveyQuestions.name',
 								'survey_question_id' => 'SurveyFormsQuestions.survey_question_id',
 								'survey_form_id' => 'SurveyFormsQuestions.survey_form_id',
-								'id' => 'SurveyFormsQuestions.id'
-
+								'id' => 'SurveyFormsQuestions.id',
+								'section' => 'SurveyFormsQuestions.section'
 							])		
 						->innerJoin(['SurveyQuestions' => 'survey_questions'],
 							[
@@ -148,7 +158,8 @@ class SurveyFormsTable extends CustomFormsTable {
 							'name' => $obj->name,
 							'survey_question_id' => $obj->survey_question_id,
 							'survey_form_id' => $obj->survey_form_id,
-							'id' => $obj->id
+							'id' => $obj->id,
+							'section' => $obj->section
 						];
 					}
 				} else if ($this->request->is(['post', 'put'])) {
@@ -160,13 +171,15 @@ class SurveyFormsTable extends CustomFormsTable {
 									'name' => $obj['_joinData']['name'],
 									'survey_question_id' => $obj['id'],
 									'survey_form_id' => $obj['_joinData']['survey_form_id'],
-									'id' => $obj['_joinData']['id']
+									'id' => $obj['_joinData']['id'], 
+									'section' => $obj['_joinData']['section']
 								];
 							}else{
 								$arrayQuestions[] = [
 									'name' => $obj['_joinData']['name'],
 									'survey_question_id' => $obj['id'],
 									'survey_form_id' => $obj['_joinData']['survey_form_id'],
+									'section' => $obj['_joinData']['section']
 								];
 							}
 						}
@@ -183,6 +196,8 @@ class SurveyFormsTable extends CustomFormsTable {
 					}
 				}
 				$count = 0;
+				$sectionName = "";
+				$printSection = false;
 				foreach ($arrayQuestions as $key => $obj) {
 					$fieldPrefix = $attr['model'] . '.custom_fields.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';
@@ -190,6 +205,14 @@ class SurveyFormsTable extends CustomFormsTable {
 					$surveyQuestionName = $obj['name'];
 					$surveyQuestionId = $obj['survey_question_id'];
 					$surveyFormId = $obj['survey_form_id'];
+					$surveySection = "";
+					if(!empty($obj['section'])){
+						$surveySection = $obj['section'];
+					}
+					if($sectionName != $surveySection){
+						$sectionName = $surveySection;
+						$printSection = true;
+					}
 
 					$cellData = "";
 					$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $surveyQuestionId]);
@@ -197,14 +220,21 @@ class SurveyFormsTable extends CustomFormsTable {
 					$cellData .= $form->hidden($joinDataPrefix.".survey_form_id", ['value' => $surveyFormId]);
 					$cellData .= $form->hidden($joinDataPrefix.".survey_question_id", ['value' => $surveyQuestionId]);
 					$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$count, 'class' => 'order']);
-					$cellData .= $form->hidden($joinDataPrefix.".section", ['value' => '', 'class' => 'section']);
+					$cellData .= $form->hidden($joinDataPrefix.".section", ['value' => $surveySection, 'class' => 'section']);
 					
 					if (isset($obj['id'])) {
 						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
 					}
+					if (! empty($sectionName) && ($printSection)) {
+						$rowData = [];
+						$rowData[] = '<div class="section-header">'.$sectionName.'</div>';
+						$rowData[] = '<button onclick="jsTable.doRemoveWithAppend(this); SurveyForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+						$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
+						$printSection = false;
+						$tableCells[] = $rowData;
+					} 
 					$rowData = [];
-					$rowData[] = $surveyQuestionName;
-					$rowData[] = $cellData;
+					$rowData[] = $surveyQuestionName.$cellData;
 					$rowData[] = '<button onclick="jsTable.doRemoveWithAppend(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 					$tableCells[] = $rowData;
@@ -221,7 +251,7 @@ class SurveyFormsTable extends CustomFormsTable {
 				break;
 
 		}
-		return $event->subject()->renderElement('Survey.subjects', ['attr' => $attr]);
+		return $event->subject()->renderElement('Survey.formquestions', ['attr' => $attr]);
 	}
 
 

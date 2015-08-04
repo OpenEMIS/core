@@ -129,17 +129,6 @@ var jsTable = {
 		jsTable.fixTable();
 	},
 
-	// To be complete
-	doRemoveWithAppend: function(obj, selectObj) {
-        if($(obj).closest('tr').length>0) {
-            $(obj).closest('tr').remove();
-            $(selectObj).append(
-        		$('<option></option>').val(val).html(text)
-        	);
-        }
-		jsTable.fixTable();
-	},
-
 	doRemoveColumn: function(obj) {
 		var colnum = $(obj).closest("th").prevAll("th").length + 1;
 		$(obj).closest("table").find("td:nth-child(" + colnum + "), th:nth-child(" + colnum + ")").remove();
