@@ -46,21 +46,23 @@ class StaffTable extends BaseTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$InstitutionStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
 		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institutions.id');
-		$numberOfStaffRecord = $InstitutionStaff->find()->where(['security_user_id' => $id])->count();
-		if ($numberOfStaffRecord <= 1) {
-			$process = function($model, $id, $options) use ($InstitutionStaff, $institutionSiteId){
+		$institutionId = $session->read('Institutions.id');
+		$securityUserId = $InstitutionStaff->get($id)->security_user_id;
+
+		$count = $InstitutionStaff->find()
+		->where(['institution_site_id' => $institutionId, 'security_user_id' => $securityUserId])
+		->count();
+
+		if ($count <= 1) { // retain the last record because we need it to get the student record
+			$process = function($model, $id, $options) use ($InstitutionStaff) {
 				return $InstitutionStaff->updateAll(
-					['institution_site_id' => 0],
-					['security_user_id' => $id, 'institution_site_id' => $institutionSiteId]
+					['institution_site_id' => 0, 'FTE' => 0],
+					['id' => $id]
 				);
 			};
 		} else {
-			$process = function($model, $id, $options) use ($InstitutionStaff, $institutionSiteId) {
-				return $InstitutionStaff->deleteAll([
-					'institution_site_id' => $institutionSiteId,
-					'security_user_id' => $id
-				]);
+			$process = function($model, $id, $options) use ($InstitutionStaff) {
+				return $InstitutionStaff->deleteAll(['id' => $id]);
 			};
 		}
 		return $process;
