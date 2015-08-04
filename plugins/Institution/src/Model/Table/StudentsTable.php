@@ -171,22 +171,23 @@ class StudentsTable extends BaseTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$InstitutionStudent = TableRegistry::get('Institution.InstitutionSiteStudents');
 		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institutions.id');
+		$institutionId = $session->read('Institutions.id');
 		$securityUserId = $InstitutionStudent->get($id)->security_user_id;
-		$numberOfStudentRecord = $InstitutionStudent->find()->where(['security_user_id' => $id])->count();
-		if ($numberOfStudentRecord <= 1) {
-			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId){
+
+		$count = $InstitutionStudent->find()
+		->where(['institution_site_id' => $institutionId, 'security_user_id' => $securityUserId])
+		->count();
+
+		if ($count <= 1) { // retain the last record because we need it to get the student record
+			$process = function($model, $id, $options) use ($InstitutionStudent) {
 				return $InstitutionStudent->updateAll(
 					['institution_site_id' => 0],
-					['security_user_id' => $securityUserId, 'institution_site_id' => $institutionSiteId]
+					['id' => $id]
 				);
 			};
 		} else {
-			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId) {
-				return $InstitutionStudent->deleteAll([
-					'institution_site_id' => $institutionSiteId,
-					'security_user_id' => $securityUserId
-				]);	
+			$process = function($model, $id, $options) use ($InstitutionStudent) {
+				return $InstitutionStudent->deleteAll(['id' => $id]);	
 			};
 		}
 		return $process;
@@ -424,7 +425,7 @@ class StudentsTable extends BaseTable {
 	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$this->addOnReload($event, $entity, $data, $options);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
-		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_programme_id']);
+	unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_programme_id']);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_grade']);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
