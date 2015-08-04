@@ -56,7 +56,7 @@ class InstitutionSiteFeesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->setFieldOrder([
 			'education_programme', 'education_grade_id', 'total'
 		]);
@@ -70,21 +70,25 @@ class InstitutionSiteFeesTable extends AppTable {
 			}
 		]);
 
-		$toolbarElements = [
-            ['name' => 'Institution.Fees/controls', 
-             'data' => [
-	            	'academicPeriodOptions'=>$this->_academicPeriodOptions,
-	            ],
-	         'options' => []
-            ]
-        ];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
+		// Get the localization option from localization component
+		$academicPeriodOptions = $this->_academicPeriodOptions;
 		
+		$this->controller->set(compact('academicPeriodOptions'));
+
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$this->controller->set('selectedOption', $selectedOption);
+
+		$toolbarElements = [
+			['name' => 'Institution.Fees/controls', 'data' => [], 'options' => []]
+		];
+		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->find('withProgrammes');
+		$academicPeriodId = $request->query('academic_period_id');
+		$query
+			->find('withProgrammes')
+			->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
 	}
 
     public function findWithProgrammes(Query $query, array $options) {
