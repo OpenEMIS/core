@@ -8,6 +8,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Log\Log;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 
 class ReportProgressTable extends AppTable  {
@@ -52,15 +54,19 @@ class ReportProgressTable extends AppTable  {
 	}
 
 	public function generate($id) {
-		$params = array('Report', 'run', $id);
-		$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
-		$nohup = 'nohup %s >> %stmp/logs/reports.log & echo $!';
-		$shellCmd = sprintf($nohup, $cmd, APP);
-		$this->log($shellCmd, 'debug');
-		//pr($shellCmd);
-		$pid = exec($shellCmd);
-		$this->id = $id;
-		$this->saveField('pid', $pid);
+		$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
+		$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+
+		try {
+			$entity = $this->get($id);
+			$pid = exec($shellCmd);
+			Log::write('debug', $shellCmd);
+			$entity->pid = $pid;
+			$this->save($entity);
+		} catch(RecordNotFoundException $ex) {
+			Log::write('error', __METHOD__ . ' Record Id (' . $id. ' ) not found');
+		}
 	}
 
 	public function purge($userId) {
