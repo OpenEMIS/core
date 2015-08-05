@@ -304,9 +304,15 @@ class InstitutionSiteClassesTable extends AppTable {
 										'institution_site_id'=>$this->institutionId
 									])
 									->toArray();
+		$SectionGrades = $this->InstitutionSiteSectionGrades;
 		$this->_selectedSectionId = $this->postString('class_name', $sectionOptions);
-		$this->advancedSelectOptions($sectionOptions, $this->_selectedSectionId);
-		
+		$this->advancedSelectOptions($sectionOptions, $this->_selectedSectionId, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+			'callable' => function($id) use ($SectionGrades) {
+				return $SectionGrades->findByInstitutionSiteSectionId($id)->count();
+			}
+		]);
+
 		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
 		$this->fields['class_name']['options'] = $sectionOptions;
 
@@ -582,7 +588,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$subjects = $this->getSubjectOptions(true);
 		$this->fields['education_subject_id']['type'] = 'readonly';
 		if (array_key_exists($entity->education_subject_id, $subjects)) {
-			$this->fields['education_subject_id']['attr']['value'] = $subjects[$entity->education_subject_id]->name;
+			$this->fields['education_subject_id']['attr']['value'] = $subjects[$entity->education_subject_id];
 		} else {
 			$this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
 		}
