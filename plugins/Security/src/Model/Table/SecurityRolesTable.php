@@ -48,13 +48,23 @@ class SecurityRolesTable extends AppTable {
 				'text' => $this->getMessage($this->aliasField('systemRoles'))
 			]
 		];
-		$this->controller->set('tabElements', $tabElements);
+
+		// check for roles privileges
+		if (!$this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
+			unset($tabElements['user']);
+			unset($types[0]);
+		} else if (!$this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
+			unset($tabElements['system']);
+			unset($types[1]);
+		}
 
 		$selectedAction = $this->request->query('type');
 		if (empty($selectedAction) || !in_array($selectedAction, $types)) {
-			$selectedAction = 'user';
-			$this->request->query['type'] = $selectedAction;
+			$selectedAction = current($types);
 		}
+
+		$this->request->query['type'] = $selectedAction;
+		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $selectedAction);
 
 		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
@@ -65,6 +75,22 @@ class SecurityRolesTable extends AppTable {
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
 		}
+	}
+
+	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+		// to handle buttons visibility on a different set of permissions
+		$selectedAction = $this->request->query('type');
+		if (!empty($selectedAction)) {
+			$actions = ['user' => 'UserRoles', 'system' => 'SystemRoles'];
+			
+			$permissions = ['add', 'edit', 'remove'];
+			foreach ($permissions as $permission) {
+				if (!$this->AccessControl->check(['Securities', $actions[$selectedAction], $permission])) {
+					unset($buttons[$permission]);
+				}
+			}
+		}
+		parent::onInitializeButtons($event, $buttons, $action, $isFromModel);
 	}
 
 	public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request) {

@@ -39,6 +39,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
 		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
+
+		// this behavior restricts current user to see All Classes or My Classes
+		$this->addBehavior('Security.InstitutionClass');
 	}
 
 	public function validationDefault(Validator $validator) {
