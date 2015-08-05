@@ -29,22 +29,9 @@ class StaffBehavior extends Behavior {
 		$query->contain(['Users', 'Institutions', 'StaffStatuses']);
 
 		$search = $this->_table->ControllerAction->getSearchKey();
-		$searchParams = explode(' ', $search);
-		foreach ($searchParams as $key => $value) {
-			if (empty($searchParams[$key])) {
-				unset($searchParams[$key]);
-			}
-		}
 
 		if (!empty($search)) {
-			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-			foreach ($searchParams as $key => $value) {
-				$searchString = '%' . $value . '%';
-				$query->orWhere(['Users.first_name LIKE' => $searchString]);
-				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
-				$query->orWhere(['Users.third_name LIKE' => $searchString]);
-				$query->orWhere(['Users.last_name LIKE' => $searchString]);
-			}
+			$query = $this->_table->addSearchConditions($query, ['searchTerm' => $search]);
 
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $event->subject()->request->session();

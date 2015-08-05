@@ -54,6 +54,7 @@ class UsersTable extends AppTable {
 		]);
 
 		$this->addBehavior('Area.Areapicker');
+		$this->addBehavior('User.AdvancedNameSearch');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
