@@ -13,7 +13,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 3.0.1
+ControllerActionComponent - Current Version 3.0.2
+3.0.2 (Jeff) - removed debug message on event (ControllerAction.Model.onPopulateSelectOptions)
+3.0.1 (Jeff) - add debug messages on all events triggered by this component
 */
 
 namespace ControllerAction\Controller\Component;
@@ -80,6 +82,7 @@ class ControllerActionComponent extends Component {
 		$controller = $this->controller;
 		
 		$action = $this->request->params['action'];
+		$this->debug('Startup');
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
 				$this->currentAction = $action;
@@ -185,7 +188,7 @@ class ControllerActionComponent extends Component {
 					$associatedObject = $this->getAssociatedBelongsToModel($key);
 					
 					$query = $associatedObject->find('list');
-					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onPopulateSelectOptions');
+					
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
 					$event = $associatedObject->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
@@ -469,6 +472,7 @@ class ControllerActionComponent extends Component {
 		if (!$result instanceof Response) {
 			$this->render();
 		}
+		$this->debug('processAction');
 		return $result;
 	}
 
@@ -1387,8 +1391,11 @@ class ControllerActionComponent extends Component {
 
 	public function debug($method, $message='') {
 		if ($this->debug) {
-			$pos = strrpos($method, "\\")+1;
-			$method = substr($method, $pos);
+			$pos = strrpos($method, "\\");
+			if ($pos !== false) {
+				$pos++;
+				$method = substr($method, $pos);
+			}
 			Log::write('debug', $method . $message);
 		}
 	}
