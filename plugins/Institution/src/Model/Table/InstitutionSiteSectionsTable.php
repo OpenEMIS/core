@@ -229,7 +229,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				}
 			}
 		]);
-			// pr($gradeOptions);
 
 		$toolbarElements = [
             ['name' => 'Institution.Sections/controls', 
@@ -466,11 +465,10 @@ class InstitutionSiteSectionsTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$commonData = $data['InstitutionSiteSections'];
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$process = function ($model, $entity) use ($data) {
+			$commonData = $data['InstitutionSiteSections'];
 
-		if ($this->_selectedGradeType == 'single') {
-			// pr($data);
 			foreach($data['MultiSections'] as $key => $row) {
 				$data['MultiSections'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
 				$data['MultiSections'][$key]['institution_site_id'] = $commonData['institution_site_id'];
@@ -483,7 +481,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			// $data['InstitutionSiteSections'] = $data['MultiSections'];
 			// unset($data['MultiSections']);
 
-			$sections = $this->newEntities($data['MultiSections']);
+			$sections = $model->newEntities($data['MultiSections']);
 			$error = false;
 			foreach ($sections as $key=>$section) {
 			    if ($section->errors()) {
@@ -493,29 +491,34 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 			if (!$error) {
 				foreach ($sections as $section) {
-			    	$this->save($section);
+			    	$model->save($section);
 				}
-				$this->Alert->success('general.add.success');
-				$action = $this->ControllerAction->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return true;
 			} else {
 				$errorMessage='';
 				foreach ($error as $key=>$value) {
 					$errorMessage .= Inflector::classify($key);
 				}
-				$this->log($error, 'debug');
+				$model->log($error, 'debug');
 				/**
 				 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
 				 */
-				foreach ($this->fields as $value) {
+				foreach ($model->fields as $value) {
 					if ($value['field'] != 'name') {
-						$this->validator()->remove($value['field']);
+						$model->validator()->remove($value['field']);
 					}
 				}
-				$this->Alert->error('Institution.'.$this->alias().'.empty'.$errorMessage);
-				$this->fields['single_grade_field']['data']['sections'] = $sections;
+				$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
+				$model->fields['single_grade_field']['data']['sections'] = $sections;
+				$model->request->data['MultiSections'] = $data['MultiSections'];
+				return false;
 			}
-		} else {
+		};
+		return $process;
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($this->_selectedGradeType != 'single') {
 			if (isset($data['InstitutionSiteSections']['institution_site_section_grades']) && count($data['InstitutionSiteSections']['institution_site_section_grades'])>0) {
 				foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {
 					$data['InstitutionSiteSections']['institution_site_section_grades'][$key]['status'] = 1;
