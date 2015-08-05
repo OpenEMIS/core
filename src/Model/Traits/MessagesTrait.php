@@ -123,6 +123,7 @@ trait MessagesTrait {
 
 		],
 		'InstitutionSiteClasses' => [
+			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
 			'classes' => 'Subjects',
@@ -270,7 +271,7 @@ trait MessagesTrait {
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There is no subject in the selected class',
+				'noSubjectsInSection' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
 				'noSections' => 'There is no class under the selected academic period',
