@@ -38,6 +38,25 @@ class StudentsTable extends BaseTable {
 			
 			$query->where(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 		}
+
+		//Student Statuses
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$statusOptions = $StudentStatuses
+			->find('list')
+			->toArray();
+		$selectedStatus = $this->queryString('status_id', $statusOptions);
+		$this->advancedSelectOptions($statusOptions, $selectedStatus);
+
+		$query->where(['InstitutionSiteStudents.student_status_id' => $selectedStatus]);
+
+		if (!empty($statusOptions)) {
+			$toolbarElements = [
+				['name' => 'Institution.Students/controls', 'data' => [], 'options' => []]
+			];
+			$this->controller->set('toolbarElements', $toolbarElements);
+			$this->controller->set('statusOptions', $statusOptions);
+		}
+		// End
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -171,22 +190,23 @@ class StudentsTable extends BaseTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$InstitutionStudent = TableRegistry::get('Institution.InstitutionSiteStudents');
 		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institutions.id');
+		$institutionId = $session->read('Institutions.id');
 		$securityUserId = $InstitutionStudent->get($id)->security_user_id;
-		$numberOfStudentRecord = $InstitutionStudent->find()->where(['security_user_id' => $id])->count();
-		if ($numberOfStudentRecord <= 1) {
-			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId){
+
+		$count = $InstitutionStudent->find()
+		->where(['institution_site_id' => $institutionId, 'security_user_id' => $securityUserId])
+		->count();
+
+		if ($count <= 1) { // retain the last record because we need it to get the student record
+			$process = function($model, $id, $options) use ($InstitutionStudent) {
 				return $InstitutionStudent->updateAll(
 					['institution_site_id' => 0],
-					['security_user_id' => $securityUserId, 'institution_site_id' => $institutionSiteId]
+					['id' => $id]
 				);
 			};
 		} else {
-			$process = function($model, $id, $options) use ($InstitutionStudent, $institutionSiteId, $securityUserId) {
-				return $InstitutionStudent->deleteAll([
-					'institution_site_id' => $institutionSiteId,
-					'security_user_id' => $securityUserId
-				]);	
+			$process = function($model, $id, $options) use ($InstitutionStudent) {
+				return $InstitutionStudent->deleteAll(['id' => $id]);	
 			};
 		}
 		return $process;
@@ -424,7 +444,7 @@ class StudentsTable extends BaseTable {
 	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$this->addOnReload($event, $entity, $data, $options);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
-		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_programme_id']);
+	unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_programme_id']);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['education_grade']);
 		unset($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]['section']);
 		// pr($data[$this->alias()][$this->InstitutionSiteStudents->table()][0]);
@@ -447,49 +467,75 @@ class StudentsTable extends BaseTable {
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     	if ($action == 'view') {
-    		$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
-    		if ($this->AccessControl->check([$this->controller->name, 'Transfers', 'add'])) {
-    				$StudentTransfers = TableRegistry::get('Institution.StudentTransfers');
-    				$selectedStudent = $this->request->params['pass'][1];
-		    		$this->Session->write($StudentTransfers->alias().'.security_user_id', $selectedStudent);
+    		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
+				$selectedStudent = $this->request->params['pass'][1];
+	    		$this->Session->write($TransferRequests->alias().'.security_user_id', $selectedStudent);
 
-		    		// Show Transfer button only if the Student Status is Current
-		    		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-		    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+	    		// Show Transfer button only if the Student Status is Current
+	    		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+	    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
-					$institutionId = $this->Session->read('Institutions.id');
-					$currentStatus = $StudentStatuses
+				$institutionId = $this->Session->read('Institutions.id');
+				$currentStatus = $StudentStatuses
+					->find()
+					->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+					->first()
+					->id;
+				$pendingStatus = $StudentStatuses
+					->find()
+					->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
+					->first()
+					->id;
+
+				$studentStatusId = $InstitutionSiteStudents
+					->find()
+					->select([
+						$InstitutionSiteStudents->aliasField('student_status_id')
+					])
+					->where([
+						$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
+						$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+					])
+					->first()
+					->student_status_id;
+				// End
+
+	    		if ($studentStatusId == $currentStatus) {
+					$toolbarButtons['transfer'] = $buttons['back'];
+					$toolbarButtons['transfer']['url'] = [
+			    		'plugin' => $buttons['back']['url']['plugin'],
+			    		'controller' => $buttons['back']['url']['controller'],
+			    		'action' => 'TransferRequests',
+			    		'add'
+			    	];
+					$toolbarButtons['transfer']['type'] = 'button';
+					$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+					$toolbarButtons['transfer']['attr'] = $attr;
+					$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+				} else if ($studentStatusId == $pendingStatus) {
+					$transferRequest = $TransferRequests
 						->find()
-						->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
-						->first()
-						->id;
-
-					$studentStatusId = $InstitutionSiteStudents
-						->find()
-						->select([
-							$InstitutionSiteStudents->aliasField('student_status_id')
-						])
 						->where([
-							$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
-							$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
+							$TransferRequests->aliasField('security_user_id') => $selectedStudent,
+							$TransferRequests->aliasField('status') => 0
 						])
-						->first()
-						->student_status_id;
-					// End
+						->first();
 
-		    		if ($studentStatusId == $currentStatus) {
-						$toolbarButtons['transfer'] = $buttons['back'];
-						$toolbarButtons['transfer']['url'] = [
-				    		'plugin' => $buttons['back']['url']['plugin'],
-				    		'controller' => $buttons['back']['url']['controller'],
-				    		'action' => 'Transfers',
-				    		'add'
-				    	];
-						$toolbarButtons['transfer']['type'] = 'button';
-						$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
-						$toolbarButtons['transfer']['attr'] = $attr;
-						$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
-					}
+					$toolbarButtons['transfer'] = $buttons['back'];
+					$toolbarButtons['transfer']['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+			    		'controller' => $buttons['back']['url']['controller'],
+			    		'action' => 'TransferRequests',
+			    		'edit',
+			    		$transferRequest->id
+			    	];
+					$toolbarButtons['transfer']['type'] = 'button';
+					$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
+					$toolbarButtons['transfer']['attr'] = $attr;
+					$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+				}
 			}
 		}
 	}
