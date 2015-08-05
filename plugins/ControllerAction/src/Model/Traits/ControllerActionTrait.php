@@ -55,13 +55,13 @@ trait ControllerActionTrait {
 		// public function viewBeforeAction(Event $event) {}
 
 		'ControllerAction.Model.view.beforeQuery'			=> 'viewBeforeQuery',
-		// public function viewBeforeAction(Event $event, Query $query) {}
+		// public function viewBeforeQuery(Event $event, Query $query) {}
 
 		'ControllerAction.Model.view.afterAction'			=> 'viewAfterAction',
-		// public function viewBeforeAction(Event $event, Entity $entity) {}
+		// public function viewAfterAction(Event $event, Entity $entity) {}
 
 		'ControllerAction.Model.add.beforeAction'			=> 'addBeforeAction', // called before any add logic is executed
-		// public function viewBeforeAction(Event $event)
+		// public function addBeforeAction(Event $event)
 
 		'ControllerAction.Model.add.onInitialize'			=> 'addOnInitialize', // called on http get
 		// public function addOnInitialize(Event $event, Entity $entity) {}
