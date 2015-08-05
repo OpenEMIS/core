@@ -95,6 +95,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'fieldNameKey' => 'teachers',
 			'fieldName' => $this->alias() . '.teachers._ids',
 			'placeholder' => $this->getMessage('Users.select_teacher'),
+			'valueWhenEmpty' => 'No Teacher Assigned',
 			'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
 		]);
 
@@ -318,67 +319,79 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$commonData = $data['InstitutionSiteClasses'];
-		$data['InstitutionSiteClasses'] = [];
-		$error = false;
-		$classes = false;
-		if (isset($data['MultiClasses']) && count($data['MultiClasses'])>0) {
-			foreach ($data['MultiClasses'] as $key=>$class) {
-				if (isset($class['education_subject_id']) && isset($class['institution_site_class_staff'])) {
-					$class['academic_period_id'] = $commonData['academic_period_id'];
-					$class['institution_site_id'] = $commonData['institution_site_id'];
-					$class['institution_site_section_classes'] = [
-						[
-							'status' => 1,
-							'institution_site_section_id' => $commonData['class_name']
-						]
-					];
-					$data['InstitutionSiteClasses'][] = $class;
-				}
-			}
-			$class = null;
-			
-			if (empty($data['InstitutionSiteClasses'])) {
-				$error = 'Institution.Institutions.noSubjectSelected';
-			} else {
-				$classes = $this->newEntities($data['InstitutionSiteClasses']);
-				/**
-				 * check individual entity for any error
-				 */
-				foreach ($classes as $class) {
-				    if ($class->errors()) {
-				    	$error = $class->errors();
-				    }
-				}
-			}
-		} else {
-			$error = 'Institution.Institutions.noSubjectsInSection';
-		}
-
-		if (!$error && $classes) {
-			foreach ($classes as $class) {
-		    	$this->save($class);
-			}
-			$this->Alert->success('general.add.success');
-			$action = $this->ControllerAction->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		} else {
-			$this->log($error, 'debug');
-			if (is_array($error)) {
-				$this->Alert->error('general.add.failed');
-			} else {
-				/**
-				 * unset all field validation except for "institution_site_id" to trigger validation error in ControllerActionComponent
-				 */
-				foreach ($this->fields as $value) {
-					if ($value['field'] != 'institution_site_id') {
-						$this->validator()->remove($value['field']);
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$process = function ($model, $entity) use ($data) {
+			$commonData = $data['InstitutionSiteClasses'];
+			$error = false;
+			$classes = false;
+			if (isset($data['MultiClasses']) && count($data['MultiClasses'])>0) {
+				foreach ($data['MultiClasses'] as $key=>$row) {
+					if (isset($row['education_subject_id']) && isset($row['institution_site_class_staff'])) {
+						// pr($row);die;
+						$subjectSelected = true;
+						$classes[$key] = [
+							'key' => $key,
+							'name' => $row['name'],
+							'education_subject_id' => $row['education_subject_id'],
+							'academic_period_id' => $commonData['academic_period_id'],
+							'institution_site_id' => $commonData['institution_site_id'],
+							'institution_site_section_classes' => [
+								[
+									'status' => 1,
+									'institution_site_section_id' => $commonData['class_name']
+								]
+							]
+						];
+						if ($row['institution_site_class_staff'][0]['security_user_id']!=0) {
+							$classes[$key]['institution_site_class_staff'] = $row['institution_site_class_staff'];
+						}
 					}
 				}
-				$this->Alert->error($error);
+				
+				if (!$classes) {
+					$error = 'Institution.Institutions.noSubjectSelected';
+				} else {
+					$classes = $model->newEntities($classes);
+					/**
+					 * check individual entity for any error
+					 */
+					foreach ($classes as $class) {
+						// pr($class);
+					    if ($class->errors()) {
+					    	$error = $class->errors();
+					    	$data['MultiClasses'][$class->key]['errors'] = $error;
+					    }
+					}
+				}
+			} else {
+				$error = 'Institution.Institutions.noSubjectsInSection';
 			}
-		}
+
+			if (!$error && $classes) {
+				foreach ($classes as $class) {
+			    	$model->save($class);
+				}
+				return true;
+			} else {
+				$model->log($error, 'debug');
+				if (is_array($error)) {
+					$model->Alert->error('general.add.failed');
+				} else {
+					/**
+					 * unset all field validation except for "institution_site_id" to trigger validation error in ControllerActionComponent
+					 */
+					foreach ($model->fields as $value) {
+						if ($value['field'] != 'institution_site_id') {
+							$model->validator()->remove($value['field']);
+						}
+					}
+					$model->Alert->error($error);
+				}
+				$model->request->data = $data;
+				return false;
+			}
+		};
+		return $process;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -389,13 +402,12 @@ class InstitutionSiteClassesTable extends AppTable {
 				->contain(['Users'])
 				->where(['InstitutionSiteStaff.institution_site_id'=>$this->institutionId])
 				->toArray();
-		$teachers = [];
+		$teachers = [0=>'-- Select Teacher or Leave Blank --'];
 		foreach ($query as $key => $value) {
 			if ($value->has('user')) {
 				$teachers[$value->user->id] = $value->user->name;
 			}
 		}
-
 		$subjects = $this->getSubjectOptions();
 		$existedSubjects = $this->getExistedSubjects(true);
 		$this->fields['classes']['data'] = [
@@ -403,7 +415,6 @@ class InstitutionSiteClassesTable extends AppTable {
 			'subjects' => $subjects,
 			'existedSubjects' => $existedSubjects
 		];
-
 		return $entity;
 	}
 
@@ -706,7 +717,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
-				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->education_subject->name;
+				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->name;
 			}
 			$data = $subjectList;
 		} else {
