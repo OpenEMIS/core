@@ -13,7 +13,10 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.4
+ControllerActionComponent - Current Version 3.0.5
+3.0.5 (Jeff) - renamed beforeRender to afterAction, afterAction is called in processAction() now. 
+			 - this change is necessary to be compatible with CakePHP v3.1.0
+			 - optimized getContains to only fetch id and name instead of all fields which are not being used most of the time
 3.0.4 (Jeff) - added sortable types in renderFields() to be able to sort by date/time
 3.0.3 (Jeff) - added in search() to implement auto_contain|auto_search|auto_order options to be used in indexBeforePaginate
 3.0.2 (Jeff) - removed debug message on event (ControllerAction.Model.onPopulateSelectOptions)
@@ -127,39 +130,6 @@ class ControllerActionComponent extends Component {
 		}
 		if (!is_null($this->model)) {
 			$this->initButtons();
-		}
-	}
-
-	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
-	public function beforeRender(Event $event) {
-		$controller = $this->controller;
-		if (!is_null($this->model) && !empty($this->model->fields)) {
-			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
-
-			$this->renderFields();
-
-			$this->config['action'] = $this->currentAction;
-			$this->config['table'] = $this->model;
-			$this->config['fields'] = $this->model->fields;
-			$this->config['buttons'] = $this->buttons;
-			if (!array_key_exists('formButtons', $this->config)) {
-				$this->config['formButtons'] = true; // need better solution
-			}
-
-			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
-			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
-			$event = $this->model->eventManager()->dispatch($event);
-			if ($event->isStopped()) { return $event->result; }
-			$this->request->params['action'] = $action;
-
-			uasort($this->model->fields, [$this, 'sortFields']);
-			$this->config['fields'] = $this->model->fields;
-			
-			$controller->set('ControllerAction', $this->config);
-
-			// deprecated: backward compatible
-			$controller->set('action', $this->currentAction);
-			$controller->set('model', $this->model->alias());
 		}
 	}
 
@@ -473,11 +443,45 @@ class ControllerActionComponent extends Component {
 				}
 			}
 		}
+		$this->debug('processAction');
+		$this->afterAction();
+
 		if (!$result instanceof Response) {
 			$this->render();
 		}
-		$this->debug('processAction');
 		return $result;
+	}
+
+	public function afterAction() {
+		$controller = $this->controller;
+		if (!is_null($this->model) && !empty($this->model->fields)) {
+			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
+
+			$this->renderFields();
+
+			$this->config['action'] = $this->currentAction;
+			$this->config['table'] = $this->model;
+			$this->config['fields'] = $this->model->fields;
+			$this->config['buttons'] = $this->buttons;
+			if (!array_key_exists('formButtons', $this->config)) {
+				$this->config['formButtons'] = true; // need better solution
+			}
+
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
+			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
+			$event = $this->model->eventManager()->dispatch($event);
+			if ($event->isStopped()) { return $event->result; }
+			$this->request->params['action'] = $action;
+
+			uasort($this->model->fields, [$this, 'sortFields']);
+			$this->config['fields'] = $this->model->fields;
+			
+			$controller->set('ControllerAction', $this->config);
+
+			// deprecated: backward compatible
+			$controller->set('action', $this->currentAction);
+			$controller->set('model', $this->model->alias());
+		}
 	}
 
 	public function render() {
@@ -524,7 +528,14 @@ class ControllerActionComponent extends Component {
 		$contain = [];
 		foreach ($model->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
+				$columns = $assoc->schema()->columns();
+				if (in_array('name', $columns)) {
+					$contain[$assoc->name()] = ['fields' => ['id', 'name']];
+				} else if (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
+					$contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
+				} else {
+					$contain[$assoc->name()] = [];
+				}
 			}
 		}
 		return $contain;

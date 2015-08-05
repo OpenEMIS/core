@@ -214,7 +214,7 @@ class StudentsTable extends BaseTable {
 
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
-			$this->layout = 'ajax';
+			$this->getView()->layout('ajax');
 			$this->autoRender = false;
 			$this->ControllerAction->autoRender = false;
 			$term = $this->ControllerAction->request->query('term');
