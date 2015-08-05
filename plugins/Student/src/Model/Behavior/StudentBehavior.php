@@ -40,28 +40,21 @@ class StudentBehavior extends Behavior {
 		$query->contain(['Users', 'Institutions', 'StudentStatuses']);
 
 		$search = $this->_table->ControllerAction->getSearchKey();
-		$searchParams = explode(' ', $search);
-		foreach ($searchParams as $key => $value) {
-			if (empty($searchParams[$key])) {
-				unset($searchParams[$key]);
-			}
-		}
 
 		if (!empty($search)) {
-			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-			foreach ($searchParams as $key => $value) {
-				$searchString = '%' . $value . '%';
-				$query->orWhere(['Users.first_name LIKE' => $searchString]);
-				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
-				$query->orWhere(['Users.third_name LIKE' => $searchString]);
-				$query->orWhere(['Users.last_name LIKE' => $searchString]);
-			}
+			$query = $this->_table->addSearchConditions($query, ['searchTerm' => $search]);
 			
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $request->session();
 				$institutionId = $session->read('Institutions.id');
 				$query->andWhere(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 			}
+		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
+			$query->where(['InstitutionSiteStudents.institution_site_id IN ' => $institutionIds]);
 		}
 	}
 
