@@ -39,8 +39,7 @@
 
 .pagination > li > a,
 .panel-breadcrumb li a,
-.panel-breadcrumb i,
-.section-header {
+.panel-breadcrumb i {
 	color: #476B8F;
 }
 

@@ -179,25 +179,6 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
-		$periodOptions = $attr['options'];
-		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
-
-		$institutionId = $this->Session->read('Institutions.id');
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections
-					->find()
-					->where([
-						$Sections->aliasField('institution_site_id') => $institutionId,
-						$Sections->aliasField('academic_period_id') => $id
-					])
-					->count();
-			}
-		]);
-
-		$attr['options'] = $periodOptions;
 		$attr['onChangeReload'] = 'changePeriod';
 		if ($action != 'add') {
 			$attr['visible'] = false;
@@ -207,23 +188,6 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
-		$sectionOptions = $attr['options'];
-		$selectedSection = !is_null($request->query('section')) ? $request->query('section') : key($sectionOptions);
-
-		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$this->advancedSelectOptions($sectionOptions, $selectedSection, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-			'callable' => function($id) use ($Students) {
-				return $Students
-					->find()
-					->where([
-						$Students->aliasField('institution_site_section_id') => $id
-					])
-					->count();
-			}
-		]);
-
-		$attr['options'] = $sectionOptions;
 		$attr['onChangeReload'] = 'changeSection';
 		if ($action != 'add') {
 			$attr['visible'] = false;
@@ -343,17 +307,34 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 
 	public function _getSelectOptions() {
 		//Return all required options and their key
-		// Academic Period
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$institutionId = $this->Session->read('Institutions.id');
+
+		// Academic Period
 		$periodOptions = $AcademicPeriod->getList();
 		$selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : key($periodOptions);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'callable' => function($id) use ($Sections, $institutionId) {
+				return $Sections
+					->find()
+					->where([
+						$Sections->aliasField('institution_site_id') => $institutionId,
+						$Sections->aliasField('academic_period_id') => $id
+					])
+					->count();
+			}
+		]);
 		// End
 
 		// Section
-		$institutionId = $this->Session->read('Institutions.id');
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$userId = $this->Auth->user('id');
+		$AccessControl = $this->AccessControl;
 		$sectionOptions = $Sections
 			->find('list')
+			->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 			->where([
 				$Sections->aliasField('institution_site_id') => $institutionId,
 				$Sections->aliasField('academic_period_id') => $selectedPeriod
@@ -361,6 +342,17 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			->order([$Sections->aliasField('section_number') => 'ASC'])
 			->toArray();
 		$selectedSection = !is_null($this->request->query('section')) ? $this->request->query('section') : key($sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $selectedSection, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+			'callable' => function($id) use ($Students) {
+				return $Students
+					->find()
+					->where([
+						$Students->aliasField('institution_site_section_id') => $id
+					])
+					->count();
+			}
+		]);
 		// End
 		
 		// Student
