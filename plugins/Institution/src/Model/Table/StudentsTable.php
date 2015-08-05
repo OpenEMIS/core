@@ -79,7 +79,7 @@ class StudentsTable extends BaseTable {
 
 		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 		$query = $InstitutionSiteSectionStudents->find()
-			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $entity->id])
+			->where([$InstitutionSiteSectionStudents->aliasField('security_user_id') => $entity->security_user_id])
 			->order($InstitutionSiteSectionStudents->aliasField($InstitutionSiteSectionStudents->primaryKey()).' desc');
 
 		if (isset($institutionId)) {
