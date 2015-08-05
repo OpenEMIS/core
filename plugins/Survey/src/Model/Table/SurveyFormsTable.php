@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use ArrayObject;
+use Cake\ORM\TableRegistry;
 
 class SurveyFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
@@ -79,7 +80,8 @@ class SurveyFormsTable extends CustomFormsTable {
      * @return array List of survey questions that are associated with the form
      */
 	public function getSurveyFormQuestions($surveyFormId){
-		return $surveyQuestions = $this->SurveyFormsQuestions
+		$table = TableRegistry::get('SurveyFormsQuestions');
+		return $table
 					->find('all')
 					->select([
 							'name' => 'SurveyQuestions.name',
@@ -90,7 +92,7 @@ class SurveyFormsTable extends CustomFormsTable {
 							])		
 					->innerJoin(['SurveyQuestions' => 'survey_questions'],
 						[
-							'SurveyQuestions.id = ' . $this->SurveyFormsQuestions->aliasField('survey_question_id'),
+							'SurveyQuestions.id = ' . $table->aliasField('survey_question_id'),
 						]
 					)
 					->order(['SurveyFormsQuestions.order'])
@@ -146,17 +148,19 @@ class SurveyFormsTable extends CustomFormsTable {
 				$arrayQuestions = [];
 				// Showing the list of the questions that are already added
 				if ($this->request->is(['get'])) {
-					$surveyFormId = $this->request->pass[1];
-					$surveyQuestions = $this->getSurveyFormQuestions($surveyFormId);
+					if(isset($this->request->pass[1])){
+						$surveyFormId = $this->request->pass[1];
+						$surveyQuestions = $this->getSurveyFormQuestions($surveyFormId);
 
-					foreach ($surveyQuestions as $key => $obj) {
-						$arrayQuestions[] = [
-							'name' => $obj->name,
-							'survey_question_id' => $obj->survey_question_id,
-							'survey_form_id' => $obj->survey_form_id,
-							'id' => $obj->id,
-							'section' => $obj->section
-						];
+						foreach ($surveyQuestions as $key => $obj) {
+							$arrayQuestions[] = [
+								'name' => $obj->name,
+								'survey_question_id' => $obj->survey_question_id,
+								'survey_form_id' => $obj->survey_form_id,
+								'id' => $obj->id,
+								'section' => $obj->section
+							];
+						}
 					}
 				} else if ($this->request->is(['post', 'put'])) {
 
