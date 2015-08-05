@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.3
+ControllerActionComponent - Current Version 3.0.4
+3.0.4 (Jeff) - added sortable types in renderFields() to be able to sort by date/time
 3.0.3 (Jeff) - added in search() to implement auto_contain|auto_search|auto_order options to be used in indexBeforePaginate
 3.0.2 (Jeff) - removed debug message on event (ControllerAction.Model.onPopulateSelectOptions)
 3.0.1 (Jeff) - add debug messages on all events triggered by this component
@@ -180,7 +181,9 @@ class ControllerActionComponent extends Component {
 			if (!array_key_exists('type', $attr)) {
 				$this->log($key, 'debug');
 			}
-			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
+
+			$sortableTypes = ['string', 'date', 'time', 'datetime'];
+			if (in_array($attr['type'], $sortableTypes) && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
 			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 				if ($this->isForeignKey($key)) {
@@ -791,7 +794,7 @@ class ControllerActionComponent extends Component {
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
 				$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-
+// pr($entity);die;
 				// Event: addAfterPatch
 				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterPatch', null, $params);
