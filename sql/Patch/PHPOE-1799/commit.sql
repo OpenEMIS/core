@@ -1,5 +1,11 @@
 -- 30th July 2015
+INSERT INTO `db_patches` VALUES ('PHPOE-1799');
 
+-- institution_student_transfers
+ALTER TABLE `institution_student_transfers` ADD `academic_period_id` INT(11) NOT NULL AFTER `institution_id`;
+ALTER TABLE `institution_student_transfers` CHANGE `education_programme_id` `education_grade_id` INT(11) NOT NULL;
+
+-- institution_grade_students
 DROP TABLE IF EXISTS `institution_grade_students`;
 CREATE TABLE IF NOT EXISTS `institution_grade_students` (
   `id` char(36) NOT NULL,
@@ -8,7 +14,9 @@ CREATE TABLE IF NOT EXISTS `institution_grade_students` (
   `education_grade_id` int(11) NOT NULL,
   `academic_period_id` int(11) NOT NULL,
   `start_date` date NOT NULL,
+  `start_year` int(4) NOT NULL,
   `end_date` date DEFAULT NULL,
+  `end_year` int(4) DEFAULT NULL,
   `institution_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -32,9 +40,9 @@ SET `institution_site_grades`.`start_date` = `institution_site_programmes`.`star
 `institution_site_grades`.`end_year` = YEAR(`institution_site_programmes`.`end_year`);
 
 -- insert student_statuses
-INSERT INTO `student_statuses` (`code`, `name`) VALUES
-('PROMOTED', 'Promoted'),
-('REPEATED', 'Repeated');
+INSERT INTO `student_statuses` (`id`, `code`, `name`) VALUES
+(7, 'PROMOTED', 'Promoted'),
+(8, 'REPEATED', 'Repeated');
 
 -- patch institution_grade_students
 TRUNCATE TABLE `institution_grade_students`;
@@ -65,7 +73,7 @@ BEGIN
 		LEAVE read_loop;
 	END IF;
 
-		INSERT INTO `institution_grade_students` (`id`, `student_status_id`, `security_user_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `institution_id`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, institutionId);
+		INSERT INTO `institution_grade_students` (`id`, `student_status_id`, `security_user_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, YEAR(startDate), YEAR(endDate), institutionId);
 
 	END LOOP read_loop;
 

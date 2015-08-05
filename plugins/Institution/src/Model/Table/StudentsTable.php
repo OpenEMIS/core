@@ -473,7 +473,7 @@ class StudentsTable extends BaseTable {
 	    		$this->Session->write($TransferRequests->alias().'.security_user_id', $selectedStudent);
 
 	    		// Show Transfer button only if the Student Status is Current
-	    		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+	    		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
 	    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
 				$institutionId = $this->Session->read('Institutions.id');
@@ -488,20 +488,16 @@ class StudentsTable extends BaseTable {
 					->first()
 					->id;
 
-				$studentStatusId = $InstitutionSiteStudents
+				$gradeStudent = $InstitutionGradeStudents
 					->find()
-					->select([
-						$InstitutionSiteStudents->aliasField('student_status_id')
-					])
 					->where([
-						$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
-						$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+						$InstitutionGradeStudents->aliasField('institution_id') => $institutionId,
+						$InstitutionGradeStudents->aliasField('security_user_id') => $selectedStudent
 					])
-					->first()
-					->student_status_id;
+					->first();
 				// End
 
-	    		if ($studentStatusId == $currentStatus) {
+	    		if ($gradeStudent->student_status_id == $currentStatus) {
 					$toolbarButtons['transfer'] = $buttons['back'];
 					$toolbarButtons['transfer']['url'] = [
 			    		'plugin' => $buttons['back']['url']['plugin'],
@@ -513,7 +509,7 @@ class StudentsTable extends BaseTable {
 					$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
 					$toolbarButtons['transfer']['attr'] = $attr;
 					$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
-				} else if ($studentStatusId == $pendingStatus) {
+				} else if ($gradeStudent->student_status_id == $pendingStatus) {
 					$transferRequest = $TransferRequests
 						->find()
 						->where([
