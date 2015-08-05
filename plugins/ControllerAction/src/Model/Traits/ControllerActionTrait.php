@@ -46,7 +46,7 @@ trait ControllerActionTrait {
 		// public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {}
 
 		'ControllerAction.Model.index.afterPaginate'		=> 'indexAfterPaginate',
-		// 
+		// public function indexAfterPaginate(Event $event, $data) {}
 
 		'ControllerAction.Model.index.afterAction'			=> 'indexAfterAction',
 		// 

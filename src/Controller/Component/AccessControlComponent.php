@@ -25,7 +25,7 @@ class AccessControlComponent extends Component {
 		$this->Session = $this->request->session();
 
 		// $this->Session->delete('Permissions');
-		// pr($this->Session->read('Permissions'));
+		// pr($this->Session->read('Permissions.Securities.Roles.add'));
 		if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
 			if (!$this->Session->check('Permissions')) {
 				$this->buildPermissions();
@@ -59,10 +59,6 @@ class AccessControlComponent extends Component {
 				}
 			}
 		}
-	}
-
-	public function startup(Event $event) {
-		// pr($this->ControllerAction->buttons);
 	}
 
 	public function buildPermissions() {
@@ -140,12 +136,11 @@ class AccessControlComponent extends Component {
 			return true;
 		}
 
-		if (array_key_exists('plugin', $url)) {
-			unset($url['plugin']);
-		}
-		
-		while (is_numeric(end($url))) { // remove any other pass values such as id
-			array_pop($url);
+		// we only need controller and action
+		foreach ($url as $i => $val) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val)) {
+				unset($url[$i]);
+			}
 		}
 
 		if (empty($url)) {
@@ -201,10 +196,37 @@ class AccessControlComponent extends Component {
 		return $data;
 	}
 
-	// to be implemented for Student Transfer
-	public function getInstitutionsByUser($userId = null, $url = null) {
+	public function getInstitutionsByUser($userId = null) {
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
 		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$groupIds = $SecurityGroupUsers
+		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
+		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+		->toArray();
+
+		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$institutionIds = $SecurityGroupInstitutions
+		->find('list', ['keyField' => 'institution_site_id', 'valueField' => 'institution_site_id'])
+		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
+		->toArray();
+
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$areaInstitutions = $SecurityGroupAreas
+		->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
+		->select(['Institutions.id'])
+		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
+		->innerJoin(['Areas' => 'areas'], [
+			'Areas.lft >= AreaAll.lft',
+			'Areas.rght <= AreaAll.rght'
+		])
+		->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.area_id = Areas.id'])
+		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
+		->toArray();
+
+		$institutionIds = $institutionIds + $areaInstitutions;
+		return $institutionIds;
 	}
 }

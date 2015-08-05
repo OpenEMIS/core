@@ -320,8 +320,11 @@ class StudentAttendancesTable extends AppTable {
 			// End setup days
 
 			// Setup section options
+			$userId = $this->Auth->user('id');
+			$AccessControl = $this->AccessControl;
 			$sectionOptions = $Sections
 				->find('list')
+				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 				->where([
 					$Sections->aliasField('institution_site_id') => $institutionId, 
 					$Sections->aliasField('academic_period_id') => $selectedPeriod
