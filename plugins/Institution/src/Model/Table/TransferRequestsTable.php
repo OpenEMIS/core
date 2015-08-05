@@ -14,7 +14,8 @@ class TransferRequestsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 	}
@@ -45,11 +46,11 @@ class TransferRequestsTable extends AppTable {
 				->first()
 				->id;
 
-			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-			$InstitutionSiteStudents->updateAll(
+			$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+			$InstitutionGradeStudents->updateAll(
 				['student_status_id' => $status],
 				[
-					'institution_site_id' => $institutionId,
+					'institution_id' => $institutionId,
 					'security_user_id' => $selectedStudent
 				]
 			);
@@ -70,23 +71,25 @@ class TransferRequestsTable extends AppTable {
 		$institutionId = $this->Session->read('Institutions.id');
 		$selectedStudent = $this->Session->read($this->alias().'.security_user_id');
 
-		$InstitutionSiteStudents = TableRegistry::get('Institutions.InstitutionSiteStudents');
-		$student = $InstitutionSiteStudents
+		$InstitutionGradeStudents = TableRegistry::get('Institutions.InstitutionGradeStudents');
+		$student = $InstitutionGradeStudents
 			->find()
 			->where([
-				$InstitutionSiteStudents->aliasField('institution_site_id') => $institutionId,
-				$InstitutionSiteStudents->aliasField('security_user_id') => $selectedStudent
+				$InstitutionGradeStudents->aliasField('institution_id') => $institutionId,
+				$InstitutionGradeStudents->aliasField('security_user_id') => $selectedStudent
 			])
 			->first();
 
 		$entity->security_user_id = $selectedStudent;
-		$entity->education_programme_id = $student->education_programme_id;
+		$entity->academic_period_id = $student->academic_period_id;
+		$entity->education_grade_id = $student->education_grade_id;
 		$entity->start_date = date('Y-m-d', strtotime($student->start_date));
 		$entity->end_date = date('Y-m-d', strtotime($student->end_date));
 		$entity->previous_institution_id = $institutionId;
 
 		$this->request->data[$this->alias()]['security_user_id'] = $entity->security_user_id;
-		$this->request->data[$this->alias()]['education_programme_id'] = $entity->education_programme_id;
+		$this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
+		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['previous_institution_id'] = $entity->previous_institution_id;
@@ -98,7 +101,8 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->field('student');
 			$this->ControllerAction->field('security_user_id');
 			$this->ControllerAction->field('institution_id');
-			$this->ControllerAction->field('education_programme_id');
+			$this->ControllerAction->field('academic_period_id');
+			$this->ControllerAction->field('education_grade_id');
 			$this->ControllerAction->field('status');
 			$this->ControllerAction->field('start_date');
 			$this->ControllerAction->field('end_date');
@@ -108,7 +112,7 @@ class TransferRequestsTable extends AppTable {
 
 			$this->ControllerAction->setFieldOrder([
 				'student',
-				'institution_id', 'education_programme_id',
+				'institution_id', 'academic_period_id', 'education_grade_id',
 				'status', 'start_date', 'end_date', 
 				'student_transfer_reason_id', 'comment',
 				'previous_institution_id'
@@ -126,7 +130,7 @@ class TransferRequestsTable extends AppTable {
 		// Set all selected values only
 		$this->request->data[$this->alias()]['security_user_id'] = $entity->security_user_id;
 		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
-		$this->request->data[$this->alias()]['education_programme_id'] = $entity->education_programme_id;
+		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
@@ -152,7 +156,8 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('security_user_id');
 		$this->ControllerAction->field('institution_id');
-		$this->ControllerAction->field('education_programme_id');
+		$this->ControllerAction->field('academic_period_id');
+		$this->ControllerAction->field('education_grade_id');
 		$this->ControllerAction->field('status');
 		$this->ControllerAction->field('start_date');
 		$this->ControllerAction->field('end_date');
@@ -162,7 +167,7 @@ class TransferRequestsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'student',
-			'institution_id', 'education_programme_id',
+			'institution_id', 'academic_period_id', 'education_grade_id',
 			'status', 'start_date', 'end_date',
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
@@ -201,18 +206,18 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
+			$selectedGrade = $request->data[$this->alias()]['education_grade_id'];
 
-			$InstitutionSiteProgrammes = TableRegistry::get('Institutions.InstitutionSiteProgrammes');
+			$InstitutionSiteGrades = TableRegistry::get('Institutions.InstitutionSiteGrades');
 			$institutionId = $this->Session->read('Institutions.id');
 			$institutionOptions = $this->Institutions
 				->find('list')
 				->join([
-					'table' => $InstitutionSiteProgrammes->_table,
-					'alias' => $InstitutionSiteProgrammes->alias(),
+					'table' => $InstitutionSiteGrades->_table,
+					'alias' => $InstitutionSiteGrades->alias(),
 					'conditions' => [
-						$InstitutionSiteProgrammes->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
-						$InstitutionSiteProgrammes->aliasField('education_programme_id') => $selectedProgramme,
+						$InstitutionSiteGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
+						$InstitutionSiteGrades->aliasField('education_grade_id') => $selectedGrade,
 					]
 				])
 				->where([$this->Institutions->aliasField('id <>') => $institutionId])
@@ -241,12 +246,25 @@ class TransferRequestsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
+		if ($action == 'add') {
+			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
+
+			$attr['type'] = 'hidden';
+			$attr['attr']['value'] = $selectedPeriod;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'hidden';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
+			$selectedGrade = $request->data[$this->alias()]['education_grade_id'];
 
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->EducationProgrammes->get($selectedProgramme)->cycle_programme_name;
+			$attr['attr']['value'] = $this->EducationGrades->get($selectedGrade)->programme_grade_name;
 		}
 
 		return $attr;

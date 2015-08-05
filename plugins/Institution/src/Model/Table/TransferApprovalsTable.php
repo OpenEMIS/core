@@ -14,7 +14,8 @@ class TransferApprovalsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 	}
@@ -38,7 +39,8 @@ class TransferApprovalsTable extends AppTable {
 		// Set all selected values only
 		$this->request->data[$this->alias()]['security_user_id'] = $entity->security_user_id;
 		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
-		$this->request->data[$this->alias()]['education_programme_id'] = $entity->education_programme_id;
+		$this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
+		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
@@ -48,7 +50,8 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('security_user_id');
 		$this->ControllerAction->field('institution_id');
-		$this->ControllerAction->field('education_programme_id');
+		$this->ControllerAction->field('academic_period_id');
+		$this->ControllerAction->field('education_grade_id');
 		$this->ControllerAction->field('status');
 		$this->ControllerAction->field('start_date');
 		$this->ControllerAction->field('end_date');
@@ -58,7 +61,7 @@ class TransferApprovalsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'student',
-			'institution_id', 'education_programme_id',
+			'institution_id', 'academic_period_id', 'education_grade_id',
 			'status', 'start_date', 'end_date',
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
@@ -94,12 +97,20 @@ class TransferApprovalsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			$selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
+			$attr['type'] = 'hidden';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			$selectedGrade = $request->data[$this->alias()]['education_grade_id'];
 
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->EducationProgrammes->get($selectedProgramme)->cycle_programme_name;
+			$attr['attr']['value'] = $this->EducationGrades->get($selectedGrade)->programme_grade_name;
 		}
 
 		return $attr;
@@ -177,7 +188,7 @@ class TransferApprovalsTable extends AppTable {
 				->where([
 					$this->aliasField('status') => 0
 				])
-				->contain(['Users', 'Institutions', 'EducationProgrammes', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
 				->order([
 					$this->aliasField('created')
 				])
@@ -236,11 +247,11 @@ class TransferApprovalsTable extends AppTable {
 			->first()
 			->id;
 
-		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$InstitutionSiteStudents->updateAll(
+		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+		$InstitutionGradeStudents->updateAll(
 			['student_status_id' => $status],
 			[
-				'institution_site_id' => $institutionId,
+				'institution_id' => $institutionId,
 				'security_user_id' => $selectedStudent
 			]
 		);
@@ -264,19 +275,18 @@ class TransferApprovalsTable extends AppTable {
 
 		$requestData = [
 			'start_date' => $transferEntity->start_date,
-			'start_year' => date("Y", strtotime($transferEntity->start_date)),
 			'end_date' => $transferEntity->end_date,
-			'end_year' => date("Y", strtotime($transferEntity->end_date)),
 			'security_user_id' => $transferEntity->security_user_id,
 			'student_status_id' => $currentStatus,
-			'institution_site_id' => $transferEntity->institution_id,
-			'education_programme_id' => $transferEntity->education_programme_id
+			'institution_id' => $transferEntity->institution_id,
+			'academic_period_id' => $transferEntity->academic_period_id,
+			'education_grade_id' => $transferEntity->education_grade_id
 		];
 
-		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$studentEntity = $InstitutionSiteStudents->newEntity($requestData);
+		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+		$studentEntity = $InstitutionGradeStudents->newEntity($requestData);
 
-		if ($InstitutionSiteStudents->save($studentEntity)) {
+		if ($InstitutionGradeStudents->save($studentEntity)) {
 		} else {
 			$this->log($studentEntity->errors(), 'debug');
 		}
@@ -300,11 +310,11 @@ class TransferApprovalsTable extends AppTable {
 			->first()
 			->id;
 
-		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$InstitutionSiteStudents->updateAll(
+		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+		$InstitutionGradeStudents->updateAll(
 			['student_status_id' => $status],
 			[
-				'institution_site_id' => $institutionId,
+				'institution_id' => $institutionId,
 				'security_user_id' => $selectedStudent
 			]
 		);

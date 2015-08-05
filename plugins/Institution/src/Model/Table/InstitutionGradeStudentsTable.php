@@ -27,6 +27,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
 	public function implementedEvents() {
