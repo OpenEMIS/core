@@ -266,8 +266,8 @@ trait MessagesTrait {
 		'InstitutionGradeStudents' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
-			'noPeriods' => 'You need to configure Academic Periods for Promotion/Graduation.',
-			'noData' => 'There are no available Students for Promotion/Graduation.'
+			'noData' => 'There are no available Students for Promotion/Graduation.',
+			'next_period' => 'Next Academic Period'
 		],
 
 		// Validation Messages

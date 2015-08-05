@@ -10,7 +10,6 @@ use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
 class InstitutionGradeStudentsTable extends AppTable {
-	private $nextPeriod = null;
 	private $nextGrade = null;
 
 	private $nextStatusId = null;	// promoted / graduated
@@ -45,43 +44,35 @@ class InstitutionGradeStudentsTable extends AppTable {
 	}
 
 	public function onGetStudentStatusId(Event $event, Entity $entity) {
-		if (!is_null($this->nextPeriod)) {
-			$html = '';
+		$html = '';
 
-			$selectedPeriod = $this->request->query('period');
-			$selectedGrade = $this->request->query('grade');
-			$institutionId = $this->Session->read('Institutions.id');
-			$periodId = $this->nextPeriod->id;
-			$startDate = date('Y-m-d', strtotime($this->nextPeriod->start_date));
-			$endDate = date('Y-m-d', strtotime($this->nextPeriod->end_date));
-			$id = $entity->user->id;
+		$selectedPeriod = $this->request->query('period');
+		$selectedGrade = $this->request->query('grade');
+		$institutionId = $this->Session->read('Institutions.id');
+		$id = $entity->user->id;
 
-			$alias = Inflector::underscore($this->alias());
-			$fieldPrefix = $this->EducationGrades->alias() . '.'.$alias.'.' . $id;
-			$Form = $event->subject()->Form;
+		$alias = Inflector::underscore($this->alias());
+		$fieldPrefix = $this->EducationGrades->alias() . '.'.$alias.'.' . $id;
+		$Form = $event->subject()->Form;
 
-			$html .= $Form->hidden($this->EducationGrades->alias().".academic_period_id", ['value' => $selectedPeriod]);
-			$html .= $Form->hidden($this->EducationGrades->alias().".education_grade_id", ['value' => $selectedGrade]);
-			$html .= $Form->hidden($this->EducationGrades->alias().".next_status_id", ['value' => $this->nextStatusId]);
-			$html .= $Form->hidden($this->EducationGrades->alias().".repeat_status_id", ['value' => $this->repeatStatusId]);
-			$html .= $Form->hidden($this->EducationGrades->alias().".current_status_id", ['value' => $this->currentStatusId]);
+		$html .= $Form->hidden($this->EducationGrades->alias().".academic_period_id", ['value' => $selectedPeriod]);
+		$html .= $Form->hidden($this->EducationGrades->alias().".education_grade_id", ['value' => $selectedGrade]);
+		$html .= $Form->hidden($this->EducationGrades->alias().".next_status_id", ['value' => $this->nextStatusId]);
+		$html .= $Form->hidden($this->EducationGrades->alias().".repeat_status_id", ['value' => $this->repeatStatusId]);
+		$html .= $Form->hidden($this->EducationGrades->alias().".current_status_id", ['value' => $this->currentStatusId]);
 
-			$options = ['type' => 'select', 'label' => false, 'options' => $this->statusOptions, 'onChange' => '$(".grade_'.$id.'").hide();$("#grade_'.$id.'_"+$(this).val()).show();'];
-			$html .= $Form->input($fieldPrefix.".student_status_id", $options);
-			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
-			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
-			$html .= $Form->hidden($fieldPrefix.".academic_period_id", ['value' => $periodId]);
-			$html .= $Form->hidden($fieldPrefix.".start_date", ['value' => $startDate]);
-			$html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $endDate]);
+		$options = ['type' => 'select', 'label' => false, 'options' => $this->statusOptions, 'onChange' => '$(".grade_'.$id.'").hide();$("#grade_'.$id.'_"+$(this).val()).show();'];
+		$html .= $Form->input($fieldPrefix.".student_status_id", $options);
+		$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
+		$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 
-			if (!is_null($this->nextGrade)) {
-				$gradeId = $this->nextGrade->id;
-				$html .= $Form->hidden($fieldPrefix.".education_grade_id", ['value' => $gradeId]);
-			}
+		if (!is_null($this->nextGrade)) {
+			$gradeId = $this->nextGrade->id;
+			$html .= $Form->hidden($fieldPrefix.".education_grade_id", ['value' => $gradeId]);
+		}
 
-			if (!is_null($this->request->query('mode'))) {
-				return $html;
-			}
+		if (!is_null($this->request->query('mode'))) {
+			return $html;
 		}
 	}
 
@@ -92,14 +83,26 @@ class InstitutionGradeStudentsTable extends AppTable {
 		$selectedGrade = $this->request->query('grade');
 		$currentGrade = $this->EducationGrades->get($selectedGrade);
 
-		$html .= '<span class="grade_'.$id.'" id="grade_'.$id.'_'.$this->repeatStatusId.'" style="display: none">';
-			$html .= $currentGrade->programme_grade_name;
-		$html .= '</span>';
-
-		if (!is_null($this->nextGrade)) {
-			$html .= '<span class="grade_'.$id.'" id="grade_'.$id.'_'.$this->nextStatusId.'">';
-				$html .= $this->nextGrade->programme_grade_name;
+		if (!is_null($this->request->query('mode'))) {
+			$html .= '<span class="grade_'.$id.'" id="grade_'.$id.'_'.$this->repeatStatusId.'" style="display: none">';
+				$html .= $currentGrade->programme_grade_name;
 			$html .= '</span>';
+
+			if (!is_null($this->nextGrade)) {
+				$html .= '<span class="grade_'.$id.'" id="grade_'.$id.'_'.$this->nextStatusId.'">';
+					$html .= $this->nextGrade->programme_grade_name;
+				$html .= '</span>';
+			}
+		} else {
+			if ($entity->student_status_id == $this->repeatStatusId) {
+				$html .= $currentGrade->programme_grade_name;
+			} else {
+				if (!is_null($this->nextGrade)) {
+					$html .= $this->nextGrade->programme_grade_name;
+				} else {
+					$html .= '&nbsp;';
+				}
+			}
 		}
 
 		return $html;
@@ -168,20 +171,6 @@ class InstitutionGradeStudentsTable extends AppTable {
 			// End
 
 			$this->controller->set(compact('periodOptions', 'gradeOptions'));
-
-			// Next Period
-			$currentPeriod = $this->AcademicPeriods->get($selectedPeriod);
-			$nextPeriodOrder = $currentPeriod->order;
-			$nextPeriodOrder--;
-
-			$this->nextPeriod = $this->AcademicPeriods
-				->find()
-				->where([
-					$this->AcademicPeriods->aliasField('academic_period_level_id') => $currentPeriod->academic_period_level_id,
-					$this->AcademicPeriods->aliasField('order') => $nextPeriodOrder
-				])
-				->first();
-			// End
 
 			// Next Grade
 			if ($selectedGrade != 0) {
@@ -258,16 +247,22 @@ class InstitutionGradeStudentsTable extends AppTable {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if (!is_null($this->request->query('mode'))) {
-			if (!is_null($this->nextPeriod)) {
-				if ($this->dataCount > 0) {
-					$config['formButtons'] = true;
-					$config['url'] = $config['buttons']['index']['url'];
-					$config['url'][0] = 'indexEdit';
-				} else {
-					$this->Alert->info('InstitutionGradeStudents.noData');
-				}
+			if ($this->dataCount > 0) {
+				$config['formButtons'] = true;
+				$config['url'] = $config['buttons']['index']['url'];
+				$config['url'][0] = 'indexEdit';
+
+				// Next Academic Period
+				$indexElements = $this->controller->viewVars['indexElements'];
+				$periodOptions = $this->AcademicPeriods->getYearList();
+				$selectedPeriod = $this->request->query('period');
+				unset($periodOptions[$selectedPeriod]);
+				$fieldName = $this->EducationGrades->alias() . ".next_academic_period_id";
+				$indexElements[] = ['name' => 'Institution.Transfers/periods', 'data' => [ 'field_name' => $fieldName, 'periods' => $periodOptions], 'options' => [], 'order' => 1];
+				$this->controller->set(compact('indexElements'));
+				// End
 			} else {
-				$this->Alert->warning('InstitutionGradeStudents.noPeriods');
+				$this->Alert->info('InstitutionGradeStudents.noData');
 			}
 		}
 	}
@@ -301,13 +296,15 @@ class InstitutionGradeStudentsTable extends AppTable {
 			$requestData = $this->request->data;
 
 			if (array_key_exists($this->EducationGrades->alias(), $requestData)) {
-				if (array_key_exists('institution_grade_students', $requestData[$this->EducationGrades->alias()])) {
-					$academicPeriodId = $requestData[$this->EducationGrades->alias()]['academic_period_id'];
-					$educationGradeId = $requestData[$this->EducationGrades->alias()]['education_grade_id'];
-					$nextStatusId = $requestData[$this->EducationGrades->alias()]['next_status_id'];
-					$repeatStatusId = $requestData[$this->EducationGrades->alias()]['repeat_status_id'];
-					$currentStatusId = $requestData[$this->EducationGrades->alias()]['current_status_id'];
+				$academicPeriodId = $requestData[$this->EducationGrades->alias()]['academic_period_id'];
+				$educationGradeId = $requestData[$this->EducationGrades->alias()]['education_grade_id'];
+				$nextAcademicPeriodId = $requestData[$this->EducationGrades->alias()]['next_academic_period_id'];
+				$nextStatusId = $requestData[$this->EducationGrades->alias()]['next_status_id'];
+				$repeatStatusId = $requestData[$this->EducationGrades->alias()]['repeat_status_id'];
+				$currentStatusId = $requestData[$this->EducationGrades->alias()]['current_status_id'];
+				$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
 
+				if (array_key_exists('institution_grade_students', $requestData[$this->EducationGrades->alias()])) {
 					foreach ($requestData[$this->EducationGrades->alias()]['institution_grade_students'] as $key => $obj) {
 						if ($obj['student_status_id'] == $repeatStatusId) {
 							$status = $repeatStatusId;
@@ -316,6 +313,9 @@ class InstitutionGradeStudentsTable extends AppTable {
 							$status = $nextStatusId;
 						}
 						$obj['student_status_id'] = $currentStatusId;
+						$obj['academic_period_id'] = $nextPeriod->id;
+						$obj['start_date'] = date('Y-m-d', strtotime($nextPeriod->start_date));
+						$obj['end_data'] = date('Y-m-d', strtotime($nextPeriod->end_date));
 
 						$this->updateAll(['student_status_id' => $status], [
 							'security_user_id' => $obj['security_user_id'],
