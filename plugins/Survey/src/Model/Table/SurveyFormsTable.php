@@ -189,14 +189,16 @@ class SurveyFormsTable extends CustomFormsTable {
 					}
 					if (array_key_exists('survey_question_id', $requestData[$this->alias()])) {
 						$questionId = $requestData[$this->alias()]['survey_question_id'];
-						$questionObj = $this->CustomFields->get($questionId);
-						$sectionName = $entity->section;
-						$arrayQuestions[] = [
-								'name' => $questionObj->name,
-								'survey_question_id' => $questionObj->id,
-								'survey_form_id' => $entity->id,
-								'section' => $sectionName,
-							];
+						if($questionId != -1){
+							$questionObj = $this->CustomFields->get($questionId);
+							$sectionName = $entity->section;
+							$arrayQuestions[] = [
+									'name' => $questionObj->name,
+									'survey_question_id' => $questionObj->id,
+									'survey_form_id' => $entity->id,
+									'section' => $sectionName,
+								];
+						}
 						// To be implemented in the future (To add questions to the specified section)
 						// if(empty($sectionName)){
 						// 	array_unshift($arrayQuestions, [
