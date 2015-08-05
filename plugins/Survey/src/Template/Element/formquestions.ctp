@@ -55,12 +55,23 @@
 			?>
 			<?= 
 				$this->Form->input($ControllerAction['table']->alias().".section", [
+					'label' => $this->Label->get('SurveyForms.add_to_section'),
+					'type' => 'select',
+					'options' => '',
+					'value' => 0,
+					'id' => 'sectionDropdown'
+				]);
+			?>
+			<?= 
+				$this->Form->input($ControllerAction['table']->alias().".sectiontxt", [
 					'label' => 'Add Section',
 					'type' => 'text',
 					'id' => 'sectionTxt'
 				]);
 			?>
-			<button onclick="SurveyForm.addSection('#sectionTxt');" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><span><?=__('Add Section')?></span></button>
+			<div class="form-buttons">
+				<div class="button-label"></div><button onclick="SurveyForm.addSection('#sectionTxt');" type="button" class="btn btn-default"><span><?=__('Add Section')?></span></button>
+			</div>
 		</div>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>

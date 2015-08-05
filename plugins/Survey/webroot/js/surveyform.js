@@ -1,6 +1,7 @@
 $( document ).ready( function() {
 	SurveyForm.updateSection();
 	SurveyForm.changeTextBoxBehavior('#sectionTxt');
+	SurveyForm.populateOptions();
 });
 
 
@@ -18,7 +19,17 @@ var SurveyForm = {
 			prependHTML += "</tr>";
 			$('#sortable').find('tbody').first().prepend(prependHTML);
 			SurveyForm.updateSection();
+			SurveyForm.populateOptions();
 		}
+	},
+
+	populateOptions: function(){
+		$('#sectionDropdown').html('');
+		$('#sectionDropdown').append($('<option></option>').val('').html('-- Select a Section --'));
+		$('#sortable').find('.section-header').each(function(){
+			var sectionName = $(this).html();
+			$('#sectionDropdown').append($('<option></option>').val(sectionName).html(sectionName));
+		});
 	},
 
 	updateSection: function(){
