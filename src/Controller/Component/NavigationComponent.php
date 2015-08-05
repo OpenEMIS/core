@@ -23,6 +23,7 @@ class NavigationComponent extends Component {
 			'selected' => sizeof($options)==0
 		);
 		$this->breadcrumbs[] = $item;
+		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
 	}
 
 	public function substituteCrumb($oldTitle, $title, $options=array()) {
@@ -35,14 +36,13 @@ class NavigationComponent extends Component {
 		$this->addCrumb($title, $options);
 	}
 
-	public function beforeRender(Event $event) {
+	public function beforeFilter(Event $event) {
 		$controller = $this->controller;
 		
 		$navigations = $this->buildNavigation();
 		$this->checkPermissions($navigations);
 
 		$controller->set('_navigations', $navigations);
-		$controller->set('_breadcrumbs', $this->breadcrumbs);
 	}
 
 	public function checkPermissions(&$navigations) {

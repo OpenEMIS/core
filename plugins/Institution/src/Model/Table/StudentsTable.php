@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Validation\Validator;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 
@@ -16,7 +15,7 @@ class StudentsTable extends AppTable {
 		$this->table('institution_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+		$this->belongsTo('Users',			['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_id']);
@@ -33,9 +32,14 @@ class StudentsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$institutionId = $this->Session->read('Institutions.id');
 		$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
+
+	// public function onGetStudentId(Event $event, Entity $entity) {
+	// 	pr($entity);
+	// }
 
 	public function addAfterAction(Event $event) {
 		$this->ControllerAction->field('academic_period_id');
@@ -43,11 +47,8 @@ class StudentsTable extends AppTable {
 
 		$selectedPeriod = $this->request->data($this->aliasField('academic_period_id'));
 		$period = $this->AcademicPeriods->get($selectedPeriod);
-		$institutionId = $this->Session->read('Institutions.id');
 
 		$this->ControllerAction->field('id', ['value' => Text::uuid()]);
-		
-		
 		$this->ControllerAction->field('start_date', ['period' => $period]);
 		$this->ControllerAction->field('end_date', ['period' => $period]);
 		$this->ControllerAction->field('student_id');
