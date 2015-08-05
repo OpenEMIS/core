@@ -96,9 +96,10 @@ class HasMany extends Association
             throw new InvalidArgumentException($message);
         }
 
+        $foreignKey = (array)$this->foreignKey();
         $properties = array_combine(
-            (array)$this->foreignKey(),
-            $entity->extract((array)$this->source()->primaryKey())
+            $foreignKey,
+            $entity->extract((array)$this->bindingKey())
         );
         $target = $this->target();
         $original = $targetEntities;
@@ -113,7 +114,10 @@ class HasMany extends Association
                 $targetEntity = clone $targetEntity;
             }
 
-            $targetEntity->set($properties, ['guard' => false]);
+            if ($properties !== $targetEntity->extract($foreignKey)) {
+                $targetEntity->set($properties, ['guard' => false]);
+            }
+
             if ($target->save($targetEntity, $options)) {
                 $targetEntities[$k] = $targetEntity;
                 continue;
