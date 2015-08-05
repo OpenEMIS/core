@@ -7,6 +7,7 @@ use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\I18n\I18n;
 
 class ControllerActionHelper extends Helper {
 	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label'];
@@ -133,6 +134,14 @@ class ControllerActionHelper extends Helper {
 			}
 		}
 		return $visible;
+	}
+
+	public function locale($locale = null) {
+		if (!empty($locale)) {
+			return I18n::locale($locale);
+		} else {
+			return I18n::locale();
+		}
 	}
 
 	public function getTableHeaders($fields, $model, &$dataKeys) {
