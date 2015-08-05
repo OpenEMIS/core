@@ -63,6 +63,12 @@ class StudentBehavior extends Behavior {
 				$query->andWhere(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 			}
 		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
+			$query->where(['InstitutionSiteStudents.institution_site_id IN ' => $institutionIds]);
+		}
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
