@@ -5,29 +5,6 @@ INSERT INTO `db_patches` VALUES ('PHPOE-1799');
 ALTER TABLE `institution_student_transfers` ADD `academic_period_id` INT(11) NOT NULL AFTER `institution_id`;
 ALTER TABLE `institution_student_transfers` CHANGE `education_programme_id` `education_grade_id` INT(11) NOT NULL;
 
--- institution_grade_students
-DROP TABLE IF EXISTS `institution_grade_students`;
-CREATE TABLE IF NOT EXISTS `institution_grade_students` (
-  `id` char(36) NOT NULL,
-  `student_status_id` int(11) NOT NULL,
-  `security_user_id` int(11) NOT NULL,
-  `education_grade_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `start_date` date NOT NULL,
-  `start_year` int(4) NOT NULL,
-  `end_date` date DEFAULT NULL,
-  `end_year` int(4) DEFAULT NULL,
-  `institution_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `institution_grade_students`
-  ADD PRIMARY KEY (`id`), ADD KEY `security_user_id` (`security_user_id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `institution_id` (`institution_id`);
-
 -- patch institution_site_grades
 ALTER TABLE `institution_site_grades` DROP `status`;
 ALTER TABLE `institution_site_grades` ADD `start_date` DATE NOT NULL AFTER `education_grade_id`, ADD `start_year` INT(4) NOT NULL AFTER `start_date`, ADD `end_date` DATE NULL AFTER `start_year`, ADD `end_year` INT(4) NULL AFTER `end_date`;
@@ -44,8 +21,31 @@ INSERT INTO `student_statuses` (`id`, `code`, `name`) VALUES
 (7, 'PROMOTED', 'Promoted'),
 (8, 'REPEATED', 'Repeated');
 
--- patch institution_grade_students
-TRUNCATE TABLE `institution_grade_students`;
+-- institution_students
+DROP TABLE IF EXISTS `institution_students`;
+CREATE TABLE IF NOT EXISTS `institution_students` (
+  `id` char(36) NOT NULL,
+  `student_status_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `education_grade_id` int(11) NOT NULL,
+  `academic_period_id` int(11) NOT NULL,
+  `start_date` date NOT NULL,
+  `start_year` int(4) NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `end_year` int(4) DEFAULT NULL,
+  `institution_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_students`
+  ADD PRIMARY KEY (`id`), ADD KEY `student_id` (`student_id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `institution_id` (`institution_id`);
+
+-- patch institution_students
+TRUNCATE TABLE `institution_students`;
 
 DELIMITER $$
 
@@ -73,7 +73,7 @@ BEGIN
 		LEAVE read_loop;
 	END IF;
 
-		INSERT INTO `institution_grade_students` (`id`, `student_status_id`, `security_user_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`, `created_user_id`, `created`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, YEAR(startDate), YEAR(endDate), institutionId, 1, NOW());
+		INSERT INTO `institution_students` (`id`, `student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`, `created_user_id`, `created`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, YEAR(startDate), YEAR(endDate), institutionId, 1, NOW());
 
 	END LOOP read_loop;
 

@@ -137,6 +137,10 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
+		'Students' => [
+			'noGrades' => 'No Grades',
+			'noStudents' => 'No Student found'
+		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
 		],

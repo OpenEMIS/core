@@ -177,7 +177,14 @@ class InstitutionsController extends AppController  {
 		$session = $this->request->session();
 
 		if (!$this->request->is('ajax')) {
-			if ($model->hasField('institution_site_id')) {
+			if ($model->hasField('institution_id')) {
+				if (!$session->check('Institutions.id')) {
+					$this->Alert->error('general.notExists');
+					// should redirect
+				} else {
+					$query->where([$model->aliasField('institution_id') => $session->read('Institutions.id')]);
+				}
+			} else if ($model->hasField('institution_site_id')) { // will need to remove this part once we change institution_sites to institutions
 				if (!$session->check('Institutions.id')) {
 					$this->Alert->error('general.notExists');
 					// should redirect
