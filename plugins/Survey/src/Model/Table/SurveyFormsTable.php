@@ -228,14 +228,14 @@ class SurveyFormsTable extends CustomFormsTable {
 					if (! empty($sectionName) && ($printSection)) {
 						$rowData = [];
 						$rowData[] = '<div class="section-header">'.$sectionName.'</div>';
-						$rowData[] = '<button onclick="jsTable.doRemoveWithAppend(this); SurveyForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+						$rowData[] = '<button onclick="jsTable.doRemove(this); SurveyForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 						$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 						$printSection = false;
 						$tableCells[] = $rowData;
 					} 
 					$rowData = [];
 					$rowData[] = $surveyQuestionName.$cellData;
-					$rowData[] = '<button onclick="jsTable.doRemoveWithAppend(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 					$tableCells[] = $rowData;
 

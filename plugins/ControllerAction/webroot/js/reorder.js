@@ -5,26 +5,18 @@ $( document ).ready( function() {
 var Reorder = {
 	init: function() {
 		
-
 		// Sortable only when mouse over the arrows
 		$( "td.sorter").mousedown(function() {
-			Reorder.sortableRow(this);
-		});
-
-		// Add a listener to check for mouse click within the table fired by sorter class
-		$( "#sortable tbody" ).on("mousedown", ".sorter", function() {
-			Reorder.sortableRow(this);
+			Reorder.enableSortable(this);
 		});
 
 		// Disable sortable on any other portion of the body if the mouse is move away
 		$( document ).on("mouseup", function(){
-			if ($("#sortable tbody").hasClass('ui-sortable')) {
-				$( "#sortable tbody" ).sortable('disable');
-			}
+			Reorder.disableSortable();
 		});
 	},
 
-	sortableRow: function(obj){
+	enableSortable: function(obj){
 
 		var originalOrder = Reorder.getOrder("td","data-row-id");
 
@@ -69,6 +61,12 @@ var Reorder = {
 		
 		// Re-enable the sortable if the mouse has already been release
 		tbody.sortable('enable');
+	},
+
+	disableSortable: function(){
+		if ($("#sortable tbody").hasClass('ui-sortable')) {
+			$( "#sortable tbody" ).sortable('disable');
+		}
 	},
 
 	updateOrder: function(){

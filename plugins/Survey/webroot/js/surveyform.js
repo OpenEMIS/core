@@ -7,16 +7,18 @@ $( document ).ready( function() {
 var SurveyForm = {
 	addSection: function(objClassId){
 		var sectionName = $(objClassId).val();
-		var prependHTML = "<tr>";
-		prependHTML += "<td>";
-		prependHTML += "<div class=section-header>" + sectionName +"</div>";
-		prependHTML += "</td>";
-		prependHTML += "<td><button onclick='jsTable.doRemoveWithAppend(this)' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button></td>";
-		prependHTML += "<td class='sorter rowlink-skip'><div class='reorder-icon'><i class='fa fa-arrows-alt'></i></div></td>";
-		prependHTML += "</td>";
-		prependHTML += "</tr>";
-		$('#sortable').find('tbody').first().prepend(prependHTML);
-		SurveyForm.updateSection();
+		if(! SurveyForm.checkSectionExist(sectionName)){
+			var prependHTML = "<tr>";
+			prependHTML += "<td>";
+			prependHTML += "<div class=section-header>" + sectionName +"</div>";
+			prependHTML += "</td>";
+			prependHTML += "<td><button onclick='jsTable.doRemove(this); SurveyForm.updateSection();' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button></td>";
+			prependHTML += "<td class='sorter rowlink-skip' onmousedown='Reorder.enableSortable(this);'><div class='reorder-icon'><a><i class='fa fa-arrows-alt'></i></a></div></td>";
+			prependHTML += "</td>";
+			prependHTML += "</tr>";
+			$('#sortable').find('tbody').first().prepend(prependHTML);
+			SurveyForm.updateSection();
+		}
 	},
 
 	updateSection: function(){
@@ -34,6 +36,16 @@ var SurveyForm = {
 			}
 		});	
 	}, 
+
+	checkSectionExist: function(sectionName){
+		var found = false;
+		$('#sortable').find('.section').each(function(){
+			if($(this).val() == sectionName){
+				found = true;
+			}
+		});
+		return found;
+	},
 
 	changeTextBoxBehavior: function(objClassId){
 		$( document ).on("keypress", objClassId, function(e){
