@@ -21,7 +21,7 @@ var SurveyForm = {
 			prependHTML += "</tr>";
 			$('#sortable').find('tbody').first().prepend(prependHTML);
 			SurveyForm.updateSection();
-			SurveyForm.populateOptions();
+			//SurveyForm.populateOptions();
 		}
 	},
 
