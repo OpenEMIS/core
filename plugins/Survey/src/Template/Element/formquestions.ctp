@@ -11,35 +11,23 @@
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
 	</div>
-<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+<?php elseif ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
 	<?php
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 		$reorder = isset($attr['reorder']) ? $attr['reorder'] : [];
 		echo $this->Html->script('Survey.surveyform', ['block' => true]);
-	
-		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 1;
-
+		
+		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 0;
 		if ($displayReorder) {
 			echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
 			echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
 			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];	
+		}else{
+			$tableHeaders[] = [__('') => ['class' => 'cell-reorder']];
+			$displayReorder = true;
 		}
 	?>
-	<style>
-		.draggableTable {
-			width: 100%;
-			min-height: 20px;
-    		padding: 10px;
-    		border: grey 2px dashed;
-		}
-		.draggableTable tr {
-			background-color:#FCF6CF;
-		}
-		.draggableTableCaption {
-			color: black;
-		}
-	</style>
 	<div class="clearfix"></div>
 		<hr>
 		<h3><?= __('Survey Questions')?></h3>
