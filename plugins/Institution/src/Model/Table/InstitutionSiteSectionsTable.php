@@ -57,15 +57,23 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public static function uniqueNamePerAcademicPeriod($field, array $globalData) {
+		$data = $globalData['data'];
 		$model = $globalData['providers']['table'];
 		$exists = $model->find('all')
+			->select(['id'])
 			->where([
 				$model->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
 				$model->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
 				$model->aliasField('name') => $field,
 			])
-			->count();
-		if ($exists>0) {
+			->toArray();
+		if (!empty($exists)) {
+			foreach ($exists as $key => $value) {
+				if ($value->id == $data['id']) {
+					return true;
+					break;
+				}
+			}
 			return false;
 		} else {
 			return true;
