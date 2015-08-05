@@ -29,7 +29,7 @@ class ProgrammesTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->contain(['StudentStatuses', 'EducationProgrammes', 'Institutions']);
 		$query->select([
 			$this->aliasField('start_date'),

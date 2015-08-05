@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.2
+ControllerActionComponent - Current Version 3.0.3
+3.0.3 (Jeff) - added in search() to implement auto_contain|auto_search|auto_order options to be used in indexBeforePaginate
 3.0.2 (Jeff) - removed debug message on event (ControllerAction.Model.onPopulateSelectOptions)
 3.0.1 (Jeff) - add debug messages on all events triggered by this component
 */
@@ -54,7 +55,6 @@ class ControllerActionComponent extends Component {
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
 	public $debug = false;
-	public $searchFunction = true;
 
 	public $components = ['ControllerAction.Alert', 'Paginator'];
 
@@ -102,7 +102,6 @@ class ControllerActionComponent extends Component {
 						$actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
 
 						$this->model($attr['className'], $actions);
-						$this->searchFunction = (array_key_exists('searchFunction', $attr))? $attr['searchFunction']: $this->searchFunction;
 						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias();
@@ -555,31 +554,12 @@ class ControllerActionComponent extends Component {
 
 		$query = $model->find();
 
-		$contain = $this->getContains($model);
-		if (!empty($contain)) {
-			$query->contain($contain);
-		}
-
-		if ($this->searchFunction) {
-			$OR = [];
-			if (!empty($search)) {
-				foreach($schema as $name => $obj) {
-					if ($obj['type'] == 'string' && $name != 'password') {
-						$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
-					}
-				}
-			}
-
-			if (!empty($OR)) {
-				$query->where(['OR' => $OR]);
-			}
-		}
-
-		if (empty($order) && array_key_exists($this->orderField, $schema)) {
-			$query->order([$model->aliasField($this->orderField) => 'asc']);
-		}
-
-		$options = new ArrayObject(['limit' => $this->pageOptions[$limit]]);
+		$options = new ArrayObject([
+			'limit' => $this->pageOptions[$limit], 
+			'auto_contain' => true,
+			'auto_search' => true,
+			'auto_order' => true
+		]);
 
 		$this->Session->write($alias.'.search.key', $search);
 		$this->request->data['Search']['searchField'] = $search;
@@ -597,6 +577,39 @@ class ControllerActionComponent extends Component {
 		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $query, $options]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
+
+		if ($options['auto_contain']) {
+			$contain = $this->getContains($model);
+			if (!empty($contain)) {
+				$query->contain($contain);
+			}
+		}
+
+		if ($options['auto_search']) {
+			$OR = [];
+			if (!empty($search)) {
+				foreach($schema as $name => $obj) {
+					if ($obj['type'] == 'string' && $name != 'password') {
+						$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
+					}
+				}
+			}
+
+			if (!empty($OR)) {
+				$query->where(['OR' => $OR]);
+			}
+		}
+
+		if ($options['auto_order']) {
+			if (empty($order) && array_key_exists($this->orderField, $schema)) {
+				$query->order([$model->aliasField($this->orderField) => 'asc']);
+			}
+		}
+
+		unset($options['auto_contain']);
+		unset($options['auto_search']);
+		unset($options['auto_order']);
+
 		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');

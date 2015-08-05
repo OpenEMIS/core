@@ -63,6 +63,7 @@ class UsersTable extends BaseTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
 		$query->find('notSuperAdmin');
 	}
 

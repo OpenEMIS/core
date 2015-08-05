@@ -46,7 +46,7 @@ class ResultsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->contain([
 			'AssessmentItems.EducationSubjects',
 			'AssessmentItems.Assessments'
