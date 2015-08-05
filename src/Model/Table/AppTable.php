@@ -35,19 +35,11 @@ class AppTable extends Table {
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
-			$this->belongsTo('ModifiedUser', [
-				'className' => 'User.Users',
-				'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
-				'foreignKey' => 'modified_user_id'
-			]);
+			$this->belongsTo('ModifiedUser', ['className' => 'User.Users', 'foreignKey' => 'modified_user_id']);
 		}
 
 		if (in_array('created_user_id', $columns) && $_config['Created']) {
-			$this->belongsTo('CreatedUser', [
-				'className' => 'User.Users',
-				'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
-				'foreignKey' => 'created_user_id'
-			]);
+			$this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey' => 'created_user_id']);
 		}
 
 		if (in_array('visible', $columns)) {
