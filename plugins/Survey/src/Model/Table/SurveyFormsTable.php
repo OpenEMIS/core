@@ -73,6 +73,31 @@ class SurveyFormsTable extends CustomFormsTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
+    /**
+     * Gets the list survey form questions that are associated with the particular form
+     * @param integer Survey form ID
+     * @return array List of survey questions that are associated with the form
+     */
+	public function getSurveyFormQuestions($surveyFormId){
+		return $surveyQuestions = $this->SurveyFormsQuestions
+					->find('all')
+					->select([
+							'name' => 'SurveyQuestions.name',
+							'survey_question_id' => 'SurveyFormsQuestions.survey_question_id',
+							'survey_form_id' => 'SurveyFormsQuestions.survey_form_id',
+							'id' => 'SurveyFormsQuestions.id',
+							'section' => 'SurveyFormsQuestions.section'
+							])		
+					->innerJoin(['SurveyQuestions' => 'survey_questions'],
+						[
+							'SurveyQuestions.id = ' . $this->SurveyFormsQuestions->aliasField('survey_question_id'),
+						]
+					)
+					->order(['SurveyFormsQuestions.order'])
+					->where(['SurveyFormsQuestions.survey_form_id' => $surveyFormId])
+					->toArray();
+	}
+
 	public function onGetCustomSurveyQuestionElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
 			case "index":
@@ -84,21 +109,8 @@ class SurveyFormsTable extends CustomFormsTable {
 				$tableCells = [];
 
 				$surveyFormId = $this->request->pass[1];
-				$surveyQuestions = $this->SurveyFormsQuestions
-					->find('all')
-					->select([
-							'id' => 'SurveyFormsQuestions.survey_question_id',
-							'name' => 'SurveyQuestions.name',
-							'section' => 'SurveyFormsQuestions.section'
-						])		
-					->innerJoin(['SurveyQuestions' => 'survey_questions'],
-						[
-							'SurveyQuestions.id = ' . $this->SurveyFormsQuestions->aliasField('survey_question_id'),
-						]
-					)
-					->order(['SurveyFormsQuestions.order'])
-					->where(['SurveyFormsQuestions.survey_form_id' => $surveyFormId])
-					->toArray();
+				$surveyQuestions = $this->getSurveyFormQuestions($surveyFormId);
+
 				$sectionName = "";
 				$printSection = false;
 				foreach ($surveyQuestions as $key => $obj) {
@@ -135,23 +147,7 @@ class SurveyFormsTable extends CustomFormsTable {
 				// Showing the list of the questions that are already added
 				if ($this->request->is(['get'])) {
 					$surveyFormId = $this->request->pass[1];
-					$surveyQuestions = $this->SurveyFormsQuestions
-						->find('all')
-						->select([
-								'name' => 'SurveyQuestions.name',
-								'survey_question_id' => 'SurveyFormsQuestions.survey_question_id',
-								'survey_form_id' => 'SurveyFormsQuestions.survey_form_id',
-								'id' => 'SurveyFormsQuestions.id',
-								'section' => 'SurveyFormsQuestions.section'
-							])		
-						->innerJoin(['SurveyQuestions' => 'survey_questions'],
-							[
-								'SurveyQuestions.id = ' . $this->SurveyFormsQuestions->aliasField('survey_question_id'),
-							]
-						)
-						->order(['SurveyFormsQuestions.order'])
-						->where(['SurveyFormsQuestions.survey_form_id' => $surveyFormId])
-						->toArray();
+					$surveyQuestions = $this->getSurveyFormQuestions($surveyFormId);
 
 					foreach ($surveyQuestions as $key => $obj) {
 						$arrayQuestions[] = [
@@ -165,7 +161,7 @@ class SurveyFormsTable extends CustomFormsTable {
 				} else if ($this->request->is(['post', 'put'])) {
 
 					$requestData = $this->request->data;
-
+					$arraySection = [];
 					if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
 						foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
 							if(!empty($obj['_joinData']['id'])){
@@ -184,21 +180,43 @@ class SurveyFormsTable extends CustomFormsTable {
 									'section' => $obj['_joinData']['section']
 								];
 							}
+							$arraySection[] = $obj['_joinData']['section'];
 						}
 					}
 					if (array_key_exists('survey_question_id', $requestData[$this->alias()])) {
 						$questionId = $requestData[$this->alias()]['survey_question_id'];
 						$questionObj = $this->CustomFields->get($questionId);
 						$sectionName = $entity->section;
-						if(empty($sectionName)){
-							array_unshift($arrayQuestions, [
+						$arrayQuestions[] = [
 								'name' => $questionObj->name,
 								'survey_question_id' => $questionObj->id,
 								'survey_form_id' => $entity->id,
 								'section' => $sectionName,
-							]);
-						}
-						pr($arrayQuestions);
+							];
+						// To be implemented in the future (To add questions to the specified section)
+						// if(empty($sectionName)){
+						// 	array_unshift($arrayQuestions, [
+						// 		'name' => $questionObj->name,
+						// 		'survey_question_id' => $questionObj->id,
+						// 		'survey_form_id' => $entity->id,
+						// 		'section' => $sectionName,
+						// 	]);
+						// }else{
+							// $arrayKeys = array_keys($arraySection, $sectionName);
+							// $sectionCounter = max($arrayKeys) + 1;
+							// $res = [];
+							// $res[] = array_slice($arrayQuestions, 0, $sectionCounter, true);
+							// $res[] = [
+							// 			'name' => $questionObj->name,
+							// 			'survey_question_id' => $questionObj->id,
+							// 			'survey_form_id' => $entity->id,
+							// 			'section' => $sectionName,
+							// 		];
+							// $res[] = array_slice($arrayQuestions, $sectionCounter, count($arrayQuestions) - 1, true) ;
+    			// 			$arrayQuestions = $res;
+    			// 			pr($arrayQuestions);
+						// }
+
 					}
 
 				}
