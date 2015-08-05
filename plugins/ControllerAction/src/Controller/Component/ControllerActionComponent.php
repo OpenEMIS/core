@@ -54,6 +54,7 @@ class ControllerActionComponent extends Component {
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
 	public $debug = false;
+	public $searchFunction = true;
 
 	public $components = ['ControllerAction.Alert', 'Paginator'];
 
@@ -101,6 +102,7 @@ class ControllerActionComponent extends Component {
 						$actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
 
 						$this->model($attr['className'], $actions);
+						$this->searchFunction = (array_key_exists('searchFunction', $attr))? $attr['searchFunction']: $this->searchFunction;
 						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias();
@@ -558,17 +560,19 @@ class ControllerActionComponent extends Component {
 			$query->contain($contain);
 		}
 
-		$OR = [];
-		if (!empty($search)) {
-			foreach($schema as $name => $obj) {
-				if ($obj['type'] == 'string' && $name != 'password') {
-					$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
+		if ($this->searchFunction) {
+			$OR = [];
+			if (!empty($search)) {
+				foreach($schema as $name => $obj) {
+					if ($obj['type'] == 'string' && $name != 'password') {
+						$OR[$model->aliasField("$name").' LIKE'] = '%' . $search . '%';
+					}
 				}
 			}
-		}
 
-		if (!empty($OR)) {
-			$query->where(['OR' => $OR]);
+			if (!empty($OR)) {
+				$query->where(['OR' => $OR]);
+			}
 		}
 
 		if (empty($order) && array_key_exists($this->orderField, $schema)) {
