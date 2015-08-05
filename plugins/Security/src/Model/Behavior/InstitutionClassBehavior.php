@@ -21,7 +21,7 @@ class InstitutionClassBehavior extends Behavior {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
-			// pr($this->_table->Session->read('Permissions.Institutions.MyClasses'));
+			// pr($this->_table->Session->read('Permissions.Institutions.AllClasses'));
 			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]);
 		}
 	}
@@ -30,7 +30,7 @@ class InstitutionClassBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
-			if ($AccessControl->check(['Institutions', 'MyClasses', 'index'])) {
+			if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
 				$query->where([$this->_table->aliasField('security_user_id') => $userId]);
 			}
 		}
