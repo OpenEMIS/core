@@ -163,7 +163,9 @@ class SurveyFormsTable extends CustomFormsTable {
 						];
 					}
 				} else if ($this->request->is(['post', 'put'])) {
+
 					$requestData = $this->request->data;
+
 					if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
 						foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
 							if(!empty($obj['_joinData']['id'])){
@@ -187,13 +189,18 @@ class SurveyFormsTable extends CustomFormsTable {
 					if (array_key_exists('survey_question_id', $requestData[$this->alias()])) {
 						$questionId = $requestData[$this->alias()]['survey_question_id'];
 						$questionObj = $this->CustomFields->get($questionId);
-						$arrayQuestions[] = [
-							'name' => $questionObj->name,
-							'survey_question_id' => $questionObj->id,
-							'survey_form_id' => $entity->id,
-							'custom_module_id' => $entity->custom_module_id,
-						];
+						$sectionName = $entity->section;
+						if(empty($sectionName)){
+							array_unshift($arrayQuestions, [
+								'name' => $questionObj->name,
+								'survey_question_id' => $questionObj->id,
+								'survey_form_id' => $entity->id,
+								'section' => $sectionName,
+							]);
+						}
+						pr($arrayQuestions);
 					}
+
 				}
 				$count = 0;
 				$sectionName = "";
