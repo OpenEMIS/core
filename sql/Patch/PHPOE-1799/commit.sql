@@ -73,7 +73,7 @@ BEGIN
 		LEAVE read_loop;
 	END IF;
 
-		INSERT INTO `institution_grade_students` (`id`, `student_status_id`, `security_user_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, YEAR(startDate), YEAR(endDate), institutionId);
+		INSERT INTO `institution_grade_students` (`id`, `student_status_id`, `security_user_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`, `created_user_id`, `created`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, YEAR(startDate), YEAR(endDate), institutionId, 1, NOW());
 
 	END LOOP read_loop;
 
