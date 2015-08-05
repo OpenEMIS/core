@@ -11,7 +11,7 @@ use Cake\Utility\Inflector;
 
 class GuardianBehavior extends Behavior {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->innerJoin(
 			['GuardianStudents' => 'student_guardians'],
 			['GuardianStudents.guardian_user_id = ' . $this->_table->aliasField('id')]
