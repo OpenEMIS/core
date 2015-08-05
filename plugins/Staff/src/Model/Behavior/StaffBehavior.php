@@ -52,6 +52,12 @@ class StaffBehavior extends Behavior {
 				$query->andWhere(['InstitutionSiteStaff.institution_site_id' => $institutionId]);
 			}
 		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
+			$query->where(['InstitutionSiteStaff.institution_site_id IN ' => $institutionIds]);
+		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -68,7 +74,7 @@ class StaffBehavior extends Behavior {
 
 	public function onGetInstitution(Event $event, Entity $entity) {
 		// Check if the user is assigned to an institution name
-		if(!empty ($entity->institution->name)){
+		if(!empty ($entity->institution->name)) {
 			return $entity->institution->name;
 		}
 	}
