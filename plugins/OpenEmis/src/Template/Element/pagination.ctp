@@ -19,9 +19,16 @@ $totalRecords = $params['count'];
 	</ul>
 	<?php endif ?>
 	<div class="counter">
+		<?php 
+		$defaultLocale = $this->ControllerAction->locale();
+		$this->ControllerAction->locale('en_US'); 
+		?>
 		<?= $this->Paginator->counter([
 			'format' => 'Showing {{start}} to {{end}} of {{count}} records'
 		]) ?>
+		<?php 
+			$this->ControllerAction->locale($defaultLocale); 
+		 ?>
 	</div>
 	<div class="display-limit">
 		<span><?= __('Display') ?></span>
