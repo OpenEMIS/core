@@ -53,10 +53,49 @@ class StudentsTable extends AppTable {
 		$statusOptions = $this->StudentStatuses
 			->find('list')
 			->toArray();
-		$selectedStatus = $this->queryString('status_id', $statusOptions);
-		$this->advancedSelectOptions($statusOptions, $selectedStatus);
 
-		$query->where([$this->aliasField('student_status_id') => $selectedStatus]);
+		// Academic Periods
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
+
+		// Education Grades
+		$institutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$session = $this->Session;
+		$institutionId = $session->read('Institutions.id');
+		$educationGradesOptions = $institutionEducationGrades
+			->find('list', [
+					'keyField' => 'EducationGrades.id',
+					'valueField' => 'EducationGrades.name'
+				])
+			->select([
+					'EducationGrades.id', 'EducationGrades.name'
+				])
+			->contain(['EducationGrades'])
+			->where(['institution_site_id' => $institutionId])
+			->group('education_grade_id')
+			->toArray();
+		$addGradesOption = ['-1' => 'All Grades'];
+		$educationGradesOptions = $addGradesOption + $educationGradesOptions;
+
+		// Query Strings
+		$selectedStatus = $this->queryString('status_id', $statusOptions);
+		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
+
+		// Advanced Select Options
+		$this->advancedSelectOptions($statusOptions, $selectedStatus);
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
+		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
+
+		if($selectedEducationGrades != -1){
+			$query->where([
+				$this->aliasField('education_grade_id') => $selectedEducationGrades,
+			]);
+		}
+
+		$query->where([
+			$this->aliasField('student_status_id') => $selectedStatus,
+			$this->aliasField('academic_period_id') => $selectedAcademicPeriod
+			]);
 
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
@@ -64,7 +103,7 @@ class StudentsTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
 		}
 
-		$this->controller->set('statusOptions', $statusOptions);
+		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
 
 		// End
 	}
@@ -83,31 +122,32 @@ class StudentsTable extends AppTable {
 	// }
 
 	public function afterAction(Event $event) {
-		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$institutionSiteArray = [];
-		$session = $this->Session;
-		$institutionId = $session->read('Institutions.id');
-
-		// Get number of student in institution
-		$studentCount = $table->find()
-			->where([$table->aliasField('institution_site_id') => $institutionId])
-			->distinct(['security_user_id'])
-			->count(['security_user_id']);
-
-		// Get Gender
-		$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
-			['institution_site_id' => $institutionId, 'key'=>'Gender']);
-
-		// Get Age
-		$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
-			['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
-
-		// Get Grades
-		$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
-			['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
-
 		if ($this->action == 'index') {
+			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+			$institutionSiteArray = [];
+			$session = $this->Session;
+			$institutionId = $session->read('Institutions.id');
+
+			// Get number of student in institution
+			$studentCount = $table->find()
+				->where([$table->aliasField('institution_site_id') => $institutionId])
+				->distinct(['security_user_id'])
+				->count(['security_user_id']);
+
+			// Get Gender
+			$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
+				['institution_site_id' => $institutionId, 'key'=>'Gender']);
+
+			// Get Age
+			$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
+				['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
+
+			// Get Grades
+			$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+			$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
+				['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
+
+
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
 			
