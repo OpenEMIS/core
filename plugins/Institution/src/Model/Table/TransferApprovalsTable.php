@@ -275,7 +275,7 @@ class TransferApprovalsTable extends AppTable {
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
-				'security_user_id' => $selectedStudent,
+				'student_id' => $selectedStudent,
 				'academic_period_id' => $selectedPeriod,
 				'education_grade_id' => $selectedGrade
 			]
@@ -340,7 +340,7 @@ class TransferApprovalsTable extends AppTable {
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
-				'security_user_id' => $selectedStudent,
+				'student_id' => $selectedStudent,
 				'academic_period_id' => $selectedPeriod,
 				'education_grade_id' => $selectedGrade
 			]
