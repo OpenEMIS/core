@@ -132,18 +132,24 @@ class InstitutionGradeStudentsTable extends AppTable {
 			$GradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
 
 			// Academic Periods
-			$periodOptions = $this->AcademicPeriods->getYearList();
-			$selectedPeriod = $this->queryString('period', $periodOptions);
-			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-				'callable' => function($id) use ($Grades, $institutionId) {
-					return $Grades
-						->find()
-						->where([$Grades->aliasField('institution_site_id') => $institutionId])
-						->find('academicPeriod', ['academic_period_id' => $id])
-						->count();
-				}
-			]);
+			if (!is_null($this->request->query('mode'))) {
+				// edit mode, disabled Periods control and restrict selectedPeriod to current
+				$selectedPeriod = $this->AcademicPeriods->getCurrent();
+			} else {
+				// index mode
+				$periodOptions = $this->AcademicPeriods->getYearList();
+				$selectedPeriod = $this->queryString('period', $periodOptions);
+				$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+					'callable' => function($id) use ($Grades, $institutionId) {
+						return $Grades
+							->find()
+							->where([$Grades->aliasField('institution_site_id') => $institutionId])
+							->find('academicPeriod', ['academic_period_id' => $id])
+							->count();
+					}
+				]);
+			}
 			$this->request->query['period'] = $selectedPeriod;
 			// End
 
@@ -248,20 +254,53 @@ class InstitutionGradeStudentsTable extends AppTable {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if (!is_null($this->request->query('mode'))) {
+			// Academic Period Elements
+			$indexElements = $this->controller->viewVars['indexElements'];
+			$selectedPeriod = $this->request->query('period');
+			$currentPeriod = $this->AcademicPeriods->get($selectedPeriod);
+			$startDate = date('Y-m-d', strtotime($currentPeriod->start_date));
+
+			$where = [
+				$this->AcademicPeriods->aliasField('id <>') => $selectedPeriod,
+				$this->AcademicPeriods->aliasField('academic_period_level_id') => $currentPeriod->academic_period_level_id,
+				$this->AcademicPeriods->aliasField('start_date >=') => $startDate
+			];
+			$periodOptions = $this->AcademicPeriods
+				->find('list')
+				->find('visible')
+				->find('order')
+				->where($where)
+				->toArray();
+
+			$nextPeriod = $this->AcademicPeriods
+				->find()
+				->find('visible')
+				->where($where)
+				->order([$this->AcademicPeriods->aliasField('start_date asc')])
+				->first();
+			if (!empty($nextPeriod)) {
+				$this->advancedSelectOptions($periodOptions, $nextPeriod->id);
+			} else {
+				$this->Alert->warning('InstitutionGradeStudents.noPeriods');
+			}
+
+			$indexElements[] = [
+				'name' => 'Institution.StudentGrades/periods',
+				'data' => [
+					'alias' => $this->EducationGrades->alias(),
+					'period' => $currentPeriod->name,
+					'periods' => $periodOptions
+				],
+				'options' => [],
+				'order' => 1
+			];
+			$this->controller->set(compact('indexElements'));
+			// End
+
 			if ($this->dataCount > 0) {
 				$config['formButtons'] = true;
 				$config['url'] = $config['buttons']['index']['url'];
 				$config['url'][0] = 'indexEdit';
-
-				// Next Academic Period
-				$indexElements = $this->controller->viewVars['indexElements'];
-				$periodOptions = $this->AcademicPeriods->getYearList();
-				$selectedPeriod = $this->request->query('period');
-				unset($periodOptions[$selectedPeriod]);
-				$fieldName = $this->EducationGrades->alias() . ".next_academic_period_id";
-				$indexElements[] = ['name' => 'Institution.Transfers/periods', 'data' => [ 'field_name' => $fieldName, 'periods' => $periodOptions], 'options' => [], 'order' => 1];
-				$this->controller->set(compact('indexElements'));
-				// End
 			} else {
 				$this->Alert->info('InstitutionGradeStudents.noData');
 			}
@@ -269,18 +308,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if (is_null($this->request->query('mode'))) {
-			$toolbarButtons['edit'] = $buttons['index'];
-	    	$toolbarButtons['edit']['url'][0] = 'index';
-			$toolbarButtons['edit']['url']['mode'] = 'edit';
-			$toolbarButtons['edit']['type'] = 'button';
-			$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-			$toolbarButtons['edit']['attr'] = $attr;
-			$toolbarButtons['edit']['attr']['title'] = __('Edit');
-
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = null;
-		} else {
+		if (!is_null($this->request->query('mode'))) {
 			$toolbarButtons['back'] = $buttons['back'];
 			if ($toolbarButtons['back']['url']['mode']) {
 				unset($toolbarButtons['back']['url']['mode']);
@@ -289,6 +317,20 @@ class InstitutionGradeStudentsTable extends AppTable {
 			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 			$toolbarButtons['back']['attr'] = $attr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
+		} else {
+			$graduateButton = $buttons['index'];
+			$graduateButton['url'][0] = 'index';
+			$graduateButton['url']['mode'] = 'edit';
+			$graduateButton['type'] = 'button';
+			$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
+			$graduateButton['attr'] = $attr;
+			$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+			$graduateButton['attr']['title'] = __('Promotion') . ' / ' . __('Graduation');
+			unset($graduateButton['url']['period']);
+
+			$toolbarButtons['graduate'] = $graduateButton;
+			$toolbarButtons['back'] = $buttons['back'];
+			$toolbarButtons['back']['type'] = null;
 		}
 	}
 
@@ -345,7 +387,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
 			$url = array_merge($url, $this->request->query, $this->request->pass);
 			$url[0] = 'index';
-			unset($url['mode']);
+			unset($url['mode']);pr($url);die;
 
 			return $this->controller->redirect($url);
 		}
