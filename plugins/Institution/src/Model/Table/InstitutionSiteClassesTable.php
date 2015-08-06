@@ -470,7 +470,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		 * Assign back original record's id to the new list so as to preserve id numbers.
 		 */
 		foreach($entity->institution_site_class_students as $key => $record) {
-			$k = $record->security_user_id;
+			$k = $record->student_id;
 			if (array_key_exists('institution_site_class_students', $data[$this->alias()])) {
 				if (!array_key_exists($k, $data[$this->alias()]['institution_site_class_students'])) {			
 					$data[$this->alias()]['institution_site_class_students'][$k] = [
@@ -546,8 +546,8 @@ class InstitutionSiteClassesTable extends AppTable {
 			 */
 			if (array_key_exists('institution_site_class_students', $this->request->data[$this->alias()])) {
 				foreach ($this->request->data[$this->alias()]['institution_site_class_students'] as $row) {
-					if ($row['status']>0 && array_key_exists($row['security_user_id'], $studentOptions)) {
-						$id = $row['security_user_id'];
+					if ($row['status']>0 && array_key_exists($row['student_id'], $studentOptions)) {
+						$id = $row['student_id'];
 						$students[] = $this->createVirtualEntity($id, $entity, 'students');
 						unset($studentOptions[$id]);
 					}
@@ -579,8 +579,8 @@ class InstitutionSiteClassesTable extends AppTable {
 			 * Just unset the record from studentOptions on first page load
 			 */
 			foreach ($entity->institution_site_class_students as $row) {
-				if ($row->status>0 && array_key_exists($row->security_user_id, $studentOptions)) {
-					unset($studentOptions[$row->security_user_id]);
+				if ($row->status>0 && array_key_exists($row->student_id, $studentOptions)) {
+					unset($studentOptions[$row->student_id]);
 				}
 			}
 		}
@@ -615,15 +615,27 @@ class InstitutionSiteClassesTable extends AppTable {
 ******************************************************************************************************************/
 	protected function createVirtualEntity($id, $entity, $persona) {
 		$model = 'InstitutionSite'.ucwords(strtolower($persona));
-		$userData = $this->Institutions->$model->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
-		$data = [
-			'id'=>$this->getExistingRecordId($id, $entity, $persona),
-			'security_user_id'=>$id,
-			'institution_site_class_id'=>$entity->id,
-			'institution_site_section_id'=>$entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'],
-			'status'=>1,
-			'user'=>[]
-		];
+		if (strtolower($persona)=='students') {
+			$userData = $this->Institutions->$model->find()->contain(['Users'=>['Genders']])->where(['student_id'=>$id])->first();
+			$data = [
+				'id'=>$this->getExistingRecordId($id, $entity, $persona),
+				'student_id'=>$id,
+				'institution_site_class_id'=>$entity->id,
+				'institution_site_section_id'=>$entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'],
+				'status'=>1,
+				'user'=>[]
+			];
+		} else {
+			$userData = $this->Institutions->$model->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+			$data = [
+				'id'=>$this->getExistingRecordId($id, $entity, $persona),
+				'security_user_id'=>$id,
+				'institution_site_class_id'=>$entity->id,
+				'institution_site_section_id'=>$entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'],
+				'status'=>1,
+				'user'=>[]
+			];
+		}
 		$model = 'InstitutionSiteClass'.ucwords(strtolower($persona));
 		$newEntity = $this->$model->newEntity();
 		$newEntity = $this->$model->patchEntity($newEntity, $data);
@@ -635,8 +647,14 @@ class InstitutionSiteClassesTable extends AppTable {
 		$recordId = '';
 		$relationKey = 'institution_site_class_'.strtolower($persona);
 		foreach ($entity->$relationKey as $data) {
-			if ($data->security_user_id == $id) {
-				$recordId = $data->id;
+			if (strtolower($persona)=='students') {
+				if ($data->student_id == $id) {
+					$recordId = $data->id;
+				}
+			} else {
+				if ($data->security_user_id == $id) {
+					$recordId = $data->id;
+				}
 			}
 		}
 		return $recordId;
