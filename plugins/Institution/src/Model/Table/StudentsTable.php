@@ -490,18 +490,23 @@ class StudentsTable extends BaseTable {
 					->first();
 				// End
 
+				// Transfer button
+				$transferButton = $buttons['back'];
+				$transferButton['type'] = 'button';
+				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
+				$transferButton['attr'] = $attr;
+				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$transferButton['attr']['title'] = __('Transfer');
+				//End
+
 	    		if ($gradeStudent->student_status_id == $currentStatus) {
-					$toolbarButtons['transfer'] = $buttons['back'];
-					$toolbarButtons['transfer']['url'] = [
+	    			$transferButton['url'] = [
 			    		'plugin' => $buttons['back']['url']['plugin'],
 			    		'controller' => $buttons['back']['url']['controller'],
 			    		'action' => 'TransferRequests',
 			    		'add'
 			    	];
-					$toolbarButtons['transfer']['type'] = 'button';
-					$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
-					$toolbarButtons['transfer']['attr'] = $attr;
-					$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+					$toolbarButtons['transfer'] = $transferButton;
 				} else if ($gradeStudent->student_status_id == $pendingStatus) {
 					$transferRequest = $TransferRequests
 						->find()
@@ -512,18 +517,14 @@ class StudentsTable extends BaseTable {
 						])
 						->first();
 
-					$toolbarButtons['transfer'] = $buttons['back'];
-					$toolbarButtons['transfer']['url'] = [
+					$transferButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
 			    		'controller' => $buttons['back']['url']['controller'],
 			    		'action' => 'TransferRequests',
 			    		'edit',
 			    		$transferRequest->id
 			    	];
-					$toolbarButtons['transfer']['type'] = 'button';
-					$toolbarButtons['transfer']['label'] = '<i class="fa fa-exchange"></i>';
-					$toolbarButtons['transfer']['attr'] = $attr;
-					$toolbarButtons['transfer']['attr']['title'] = __('Transfer');
+			    	$toolbarButtons['transfer'] = $transferButton;
 				}
 			}
 		}
