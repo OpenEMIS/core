@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.6
+ControllerActionComponent - Current Version 3.0.7
+3.0.7 (Jeff) - edited ControllerAction.Controller.beforePaginate to use $this->model instead of $model
 3.0.6 (Malcolm) - $request->data = $requestData->getArrayCopy(); added after addAfterPatch dispatch event
 			 - for purpose of modifying request->data after validation (eg. unsetting a field the value can be removed from the input field after validation)
 3.0.5 (Jeff) - renamed beforeRender to afterAction, afterAction is called in processAction() now. 
@@ -585,7 +586,7 @@ class ControllerActionComponent extends Component {
 		$this->config['pageOptions'] = $this->pageOptions;
 
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Controller.beforePaginate');
-		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $query, $options]);
+		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$this->model, $query, $options]);
 		$event = $this->controller->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
