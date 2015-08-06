@@ -282,5 +282,24 @@ class ValidationBehavior extends Behavior {
 		
 	}
 
+	public static function institutionStudentId($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+
+		$existingRecords = $Students->find()
+			->where(
+				[
+					[$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id']],
+					[$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id']],
+					[$Students->aliasField('institution_id') => $globalData['data']['institution_id']],
+					[$Students->aliasField('student_id') => $globalData['data']['student_id']]
+				]
+				
+			)
+			->count();
+			;
+		return ($existingRecords <= 0);
+	}
+
+
 
 }
