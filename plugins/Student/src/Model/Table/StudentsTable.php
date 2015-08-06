@@ -12,11 +12,13 @@ use App\Model\Table\AppTable;
 use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
 class StudentsTable extends AppTable {
+	// used for type = image
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
-
 	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
+
+	public $InstitutionStudent;
 
 	public function initialize(array $config) {
 		$this->table('security_users');
@@ -32,6 +34,8 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		$this->addBehavior('AdvanceSearch');
+
+		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
 	public function implementedEvents() {
@@ -52,6 +56,34 @@ class StudentsTable extends AppTable {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$settings['model'] = 'Security.SecurityUserTypes';
 		$this->fields = []; // unset all fields first
+
+		$this->ControllerAction->field('institution', ['order' => 50]);
+		$this->ControllerAction->field('status', ['order' => 51]);
+	}
+
+	public function onGetInstitution(Event $event, Entity $entity) {
+		$userId = $entity->security_user_id;
+		$query = $this->InstitutionStudent->find()
+		->contain(['Institutions', 'StudentStatuses'])
+		->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
+		->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
+		;
+
+		$value = '';
+		if ($query->count() > 0) {
+			$obj = $query->first();
+			$value = $obj->institution->name;
+			$entity->status = $obj->student_status->name;
+		}
+		return $value;
+	}
+
+	public function onGetStatus(Event $event, Entity $entity) {
+		$value = '';
+		if ($entity->has('status')) {
+			$value = $entity->status;
+		}
+		return $value;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
