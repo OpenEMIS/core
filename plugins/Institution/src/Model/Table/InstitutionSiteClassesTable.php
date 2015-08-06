@@ -244,7 +244,9 @@ class InstitutionSiteClassesTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$sections = [];
 		foreach ($entity->institution_site_section_classes as $key => $value) {
-			$sections[] = $value->institution_site_section->name;
+			if (is_object($value->institution_site_section)) {
+				$sections[] = $value->institution_site_section->name;
+			}
 		}
 		$entity->class_name = implode(', ', $sections);
 		
@@ -710,9 +712,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			$data = $subjects;
 		}
 		if (empty($data)) {
-			if (is_object($this->Alert)) {
-				$this->Alert->warning('Institution.Institutions.noSubjectsInSection');
-			}
+			$this->Alert->warning('Institution.Institutions.noSubjectsInSection');
 		}
 		return $data;
 	}
