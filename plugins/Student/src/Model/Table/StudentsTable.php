@@ -96,6 +96,34 @@ class StudentsTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
 		}
 	}
+	
+	// Logic for the mini dashboard
+	public function afterAction(Event $event) {
+		if ($this->action == 'index') {
+			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+			$institutionSiteArray = [];
+
+			// Get total number of students
+			$studentCount = $table->find()
+				->distinct(['security_user_id'])
+				->count(['security_user_id']);
+
+			// Get the gender for all students
+			$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
+
+			$indexDashboard = 'dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'students',
+	            	'modelCount' => $studentCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
+	}
 
 	public function addBeforeAction(Event $event) {
 		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
