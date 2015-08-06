@@ -350,7 +350,7 @@ class InstitutionsTable extends AppTable  {
 				]
 			]
 		];
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->contain($options['query']['contain']);
 		$query->select($options['query']['select']);
 		$query->join($options['query']['join']);
