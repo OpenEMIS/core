@@ -87,7 +87,6 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				if (!is_null($resultObj)) {
 					$html .= $Form->hidden($fieldPrefix.".id", ['value' => $resultObj->id]);
 				}
-
 				$options = ['type' => 'number', 'label' => false, 'value' => $marks];
 				$html .= $Form->input($fieldPrefix.".marks", $options);
 				$html .= $Form->hidden($Items->alias().".id", ['value' => $itemObj->id]);
