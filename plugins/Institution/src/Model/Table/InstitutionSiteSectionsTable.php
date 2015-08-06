@@ -111,7 +111,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->ControllerAction->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->ControllerAction->field('classes', ['type' => 'integer', 'visible' => ['index'=>true]]);
 
-		$categoryOptions = $this->InstitutionSiteSectionStudents->getStudentCategoryList();
 		$this->ControllerAction->field('students', [
 			'label' => '',
 			'override' => true,
@@ -119,8 +118,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'element' => 'Institution.Sections/students',
 			'data' => [	
 				'students'=>[],
-				'studentOptions'=>[],
-				'categoryOptions'=>$categoryOptions
+				'studentOptions'=>[]
 			],
 			'visible' => ['view'=>true, 'edit'=>true]
 			// 'visible' => false
@@ -616,11 +614,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		// pr($data);die;
 		/**
-		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
+		 * In students.ctp, we set the student_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
 		 */
 		foreach($entity->institution_site_section_students as $key => $record) {
-			$k = $record->security_user_id;
+			$k = $record->student_id;
 			if (array_key_exists('institution_site_section_students', $data[$this->alias()])) {
 				if (!array_key_exists($k, $data[$this->alias()]['institution_site_section_students'])) {			
 					$data[$this->alias()]['institution_site_section_students'][$k] = [
@@ -655,8 +653,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			 */
 			if (array_key_exists('institution_site_section_students', $this->request->data[$this->alias()])) {
 				foreach ($this->request->data[$this->alias()]['institution_site_section_students'] as $row) {
-					if ($row['status'] == 1 && array_key_exists($row['security_user_id'], $studentOptions)) {
-						$id = $row['security_user_id'];
+					if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+						$id = $row['student_id'];
 						if ($id != 0) {
 							$students[] = $this->createVirtualStudentEntity($id, $entity);
 						}
@@ -679,8 +677,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			 * Just unset the record from studentOptions on first page load
 			 */
 			foreach ($entity->institution_site_section_students as $row) {
-				if ($row->status == 1 && array_key_exists($row->security_user_id, $studentOptions)) {
-					unset($studentOptions[$row->security_user_id]);
+				if ($row->status == 1 && array_key_exists($row->student_id, $studentOptions)) {
+					unset($studentOptions[$row->student_id]);
 				}
 			}
 		}
@@ -793,7 +791,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * [getStudentsOptions description]
 	 * @param  [type] $sectionEntity [description]
 	 * @return [type]                [description]
-	 * @todo  change $this->Institutions->InstitutionSiteStudents to $this->Institutions->InstitutionStudents when it the table is available
 	 */
 	protected function getStudentsOptions($sectionEntity) {
 		
@@ -808,53 +805,42 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 * Modified this query in PHPOE-1780. Use PeriodBehavior which is loaded InstitutionSiteStudents, by adding ->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
 		 * This is inline with how InstitutionSiteClassesTable populate getStudentOptions.
 		 */
-		$students = $this->Institutions->InstitutionSiteStudents;
+		$students = $this->Institutions->Students;
 		$query = $students
 			->find('all')
-			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
-			->contain(['Users', 'EducationProgrammes.EducationGrades'])
+			->find('AcademicPeriod', ['academic_period_id' => $this->_selectedAcademicPeriodId])
+			->contain(['Users'])
 			->where([
-				'InstitutionSiteStudents.institution_site_id'=>$this->institutionId
+				$students->aliasField('institution_id') => $this->institutionId
 			])
 			->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
 		foreach ($query as $skey => $obj) {
-			if ($obj->has('education_programme') && $obj->education_programme->has('education_grades')) {
-				$studentGradeEligible = $obj->education_programme->education_grades;
-				$studentGradeKeys = array();
-				foreach ($studentGradeEligible as $key => $value) {
-					$studentGradeKeys[] = $value->id;
-				}
-
-				$studentProgramEligible = false;
-				foreach ($studentGradeKeys as $key => $value) {
-					if (in_array($value, $sectionGrades)) {
-						$studentProgramEligible = true;
-					}
-				}
-				if ($studentProgramEligible) {
-					if (isset($obj->user)) {
-						$studentOptions[$obj->user->id] = $obj->user->name_with_id;
-					} else {
-						$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
-					}
+			/**
+			 * Modified this filter in PHPOE-1799.
+			 * Use institution_students table through $this->Institutions->Students where Students being the table alias.
+			 */
+			if (in_array($obj->education_grade_id, $sectionGrades)) {
+				if (isset($obj->user)) {
+					$studentOptions[$obj->user->id] = $obj->user->name_with_id;
+				} else {
+					$this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
 				}
 			}
 		}
-
-		$studentOptions = $this->attachSectionInfo($sectionEntity->id, $studentOptions, $this->institutionId, $this->_selectedAcademicPeriodId);
+		$studentOptions = $this->attachSectionInfo($sectionEntity->id, $studentOptions);
 		return $studentOptions;
 	}
 
-	public function attachSectionInfo($id, $studentOptions, $institutionId, $periodId) {
+	public function attachSectionInfo($id, $studentOptions) {
 		$query = $this->InstitutionSiteSectionStudents->find()
 					->contain(['InstitutionSiteSections'])
 					->where([
 						$this->aliasField('institution_site_id') => $this->institutionId,
-						$this->aliasField('academic_period_id') => $periodId,
+						$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
 					])
 					->where([
-							$this->InstitutionSiteSectionStudents->aliasField('security_user_id').' IN' => array_keys($studentOptions),
+							$this->InstitutionSiteSectionStudents->aliasField('student_id').' IN' => array_keys($studentOptions),
 							$this->InstitutionSiteSectionStudents->aliasField('status') => 1
 						]);
 		$sectionsWithStudents = $query->toArray();
@@ -864,8 +850,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 				if (!isset($studentOptions[$student->institution_site_section->name])) {
 					$studentOptions[$student->institution_site_section->name] = ['text' => 'Section '.$student->institution_site_section->name, 'options' => [], 'disabled' => true];
 				}
-				$studentOptions[$student->institution_site_section->name]['options'][] = ['value' => $student->security_user_id, 'text' => $studentOptions[$student->security_user_id]];
-				unset($studentOptions[$student->security_user_id]);
+				$studentOptions[$student->institution_site_section->name]['options'][] = ['value' => $student->student_id, 'text' => $studentOptions[$student->student_id]];
+				unset($studentOptions[$student->student_id]);
 			}
 		}
 		return $studentOptions;
@@ -934,17 +920,16 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 	
 	protected function createVirtualStudentEntity($id, $entity) {
-		$userData = $this->Institutions->InstitutionSiteStudents->find()
+		$userData = $this->Institutions->Students->find()
 			->contain(['Users'=>['Genders']])
-			->where(['security_user_id'=>$id])
+			->where(['student_id'=>$id])
 			->first();
 
 		$data = [
 			'id'=>$this->getExistingRecordId($id, $entity),
-			'security_user_id'=>$id,
+			'student_id'=>$id,
 			'institution_site_section_id'=>$entity->id,
 			'education_grade_id'=>0,
-			'student_category_id'=>0,
 			'status'=>1,
 			'user'=>[]
 		];
@@ -957,7 +942,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	protected function getExistingRecordId($securityId, $entity) {
 		$id = '';
 		foreach ($entity->institution_site_section_students as $student) {
-			if ($student->security_user_id == $securityId) {
+			if ($student->student_id == $securityId) {
 				$id = $student->id;
 			}
 		}
