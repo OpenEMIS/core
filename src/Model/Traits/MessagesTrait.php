@@ -358,6 +358,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			],
+			'Students' => [
+				'student_id' => [
+					'ruleInstitutionStudentId' => 'Student has already been added.'
+				]
 			]
 		],
 		'User' => [
