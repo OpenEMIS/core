@@ -233,7 +233,17 @@ class StudentsTable extends AppTable {
 		$periodOptions = $AcademicPeriod->getList();
 
 		$selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : key($periodOptions);
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, []);
+		// $this->advancedSelectOptions($periodOptions, $selectedPeriod, []);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+			'callable' => function($id) use ($Grades, $institutionId) {
+				return $Grades
+					->find()
+					->where([$Grades->aliasField('institution_site_id') => $institutionId])
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 		// End
 
 
