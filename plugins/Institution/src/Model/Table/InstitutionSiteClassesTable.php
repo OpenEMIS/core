@@ -464,7 +464,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		// $this->InstitutionSiteClassStudents->updateAll(['status'=>0], ['institution_site_class_id' => $entity->id]);
 		// $this->InstitutionSiteClassStaff->updateAll(['status'=>0], ['institution_site_class_id' => $entity->id]);
 
-
 		/**
 		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
@@ -527,7 +526,6 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 		unset($data[$this->alias()]['teachers']);
-		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -543,6 +541,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			$students = [];
 			/**
 			 * Populate records in the UI table & unset the record from studentOptions
+			 * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
 			 */
 			if (array_key_exists('institution_site_class_students', $this->request->data[$this->alias()])) {
 				foreach ($this->request->data[$this->alias()]['institution_site_class_students'] as $row) {
@@ -614,9 +613,8 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	protected function createVirtualEntity($id, $entity, $persona) {
-		$model = 'InstitutionSite'.ucwords(strtolower($persona));
 		if (strtolower($persona)=='students') {
-			$userData = $this->Institutions->$model->find()->contain(['Users'=>['Genders']])->where(['student_id'=>$id])->first();
+			$userData = $this->Institutions->Students->find()->contain(['Users'=>['Genders']])->where(['student_id'=>$id])->first();
 			$data = [
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'student_id'=>$id,
@@ -626,7 +624,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				'user'=>[]
 			];
 		} else {
-			$userData = $this->Institutions->$model->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+			$userData = $this->Institutions->InstitutionSiteStaff->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
 			$data = [
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'security_user_id'=>$id,
@@ -777,22 +775,39 @@ class InstitutionSiteClassesTable extends AppTable {
 	/**
 	 * [getStudentsOptions description]
 	 * @return [type]                [description]
-	 * @todo  change $this->Institutions->InstitutionSiteStudents to $this->Institutions->InstitutionStudents when it the table is available
 	 */
 	protected function getStudentsOptions() {
+		// $Grade = $this->InstitutionSiteSectionGrades;
+		// $sectionGradeObjects = $Grade->find()
+		// 					->contain('EducationGrades')
+		// 					->where([
+		// 						$Grade->aliasField('institution_site_section_id') => $this->selectedSectionId,
+		// 						$Grade->aliasField('status') => 1
+		// 					])
+		// 					->toArray();
+		// $sectionGrades = [];
+		// foreach ($sectionGradeObjects as $key=>$value) {
+		// 	$sectionGrades[] = $value->education_grade_id;
+		// }
 
-		$students = $this->Institutions->InstitutionSiteStudents;
+		$students = $this->Institutions->Students;
 		$query = $students
 			->find('all')
-			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
-			->contain(['Users', 'EducationProgrammes.EducationGrades'])
+			->find('AcademicPeriod', ['academic_period_id' => $this->_selectedAcademicPeriodId])
+			->contain(['Users', 'EducationGrades'])
 			->where([
-				'InstitutionSiteStudents.institution_site_id'=>$this->institutionId
+				$students->aliasField('institution_id') => $this->institutionId
 			])
 			->toArray();
-		$studentOptions = ['-1'=>$this->getMessage('Users.select_student'), '0'=>$this->getMessage('Users.add_all_student')];
+		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];
 		foreach ($query as $student) {
-			$studentOptions[$student->user->id] = $student->user->name_with_id;
+			// if (in_array($student->education_grade_id, $sectionGrades)) {
+				if (isset($student->user)) {
+					$studentOptions[$student->user->id] = $student->user->name_with_id;
+				} else {
+					$this->log('Data corrupted with no security user for student: '. $student->id, 'debug');
+				}
+			// }
 		}
 
 		return $studentOptions;
