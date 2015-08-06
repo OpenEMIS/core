@@ -14,19 +14,16 @@ class Absence extends Entity
     	$InstitutionSiteStaffAbsences = TableRegistry::get('Institution.InstitutionSiteStaffAbsences');
     	$settingWeekdays = $InstitutionSiteStaffAbsences->getWeekdaysBySetting();
 
-    	if ($this->full_day) {
-			$stampFirstDateAbsent = strtotime($this->start_date);
-			$stampLastDateAbsent = strtotime($this->end_date);
-			if(!empty($this->end_date) && $stampLastDateAbsent > $stampFirstDateAbsent){
-				$lastDateFormatted = $InstitutionSiteStaffAbsences->formatDate($this->end_date, null, false);
-				$totalWeekdays = $InstitutionSiteStaffAbsences->getAbsenceDaysBySettings($this->start_date, $this->end_date, $settingWeekdays);
-				$noOfDays = sprintf('%s (to %s)', $totalWeekdays, $lastDateFormatted);
-			}else{
-				$noOfDays = 1;
-			}
-		} else {
+		$stampFirstDateAbsent = strtotime($this->start_date);
+		$stampLastDateAbsent = strtotime($this->end_date);
+		if(!empty($this->end_date) && $stampLastDateAbsent > $stampFirstDateAbsent){
+			$lastDateFormatted = $InstitutionSiteStaffAbsences->formatDate($this->end_date, null, false);
+			$totalWeekdays = $InstitutionSiteStaffAbsences->getAbsenceDaysBySettings($this->start_date, $this->end_date, $settingWeekdays);
+			$noOfDays = sprintf('%s (to %s)', $totalWeekdays, $lastDateFormatted);
+		}else{
 			$noOfDays = 1;
 		}
+		
     	return $noOfDays;
 	}
 
