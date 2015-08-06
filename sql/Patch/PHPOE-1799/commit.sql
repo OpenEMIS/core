@@ -21,6 +21,18 @@ INSERT INTO `student_statuses` (`id`, `code`, `name`) VALUES
 (7, 'PROMOTED', 'Promoted'),
 (8, 'REPEATED', 'Repeated');
 
+-- new security_user_types table for saving different types of the same user
+DROP TABLE IF EXISTS `security_user_types`;
+CREATE TABLE IF NOT EXISTS `security_user_types` (
+  `security_user_id` int(11) NOT NULL,
+  `user_type` int(1) NOT NULL COMMENT '1 -> STUDENT, 2 -> STAFF, 3 -> GUARDIAN',
+  PRIMARY KEY (`security_user_id`, `user_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `security_user_types` SELECT `security_user_id`, 1 FROM `institution_site_students` GROUP BY `security_user_id`;
+INSERT INTO `security_user_types` SELECT `security_user_id`, 2 FROM `institution_site_staff` GROUP BY `security_user_id`;
+INSERT INTO `security_user_types` SELECT `guardian_user_id`, 3 FROM `student_guardians` GROUP BY `guardian_user_id`;
+
 -- institution_students
 DROP TABLE IF EXISTS `institution_students`;
 CREATE TABLE IF NOT EXISTS `institution_students` (

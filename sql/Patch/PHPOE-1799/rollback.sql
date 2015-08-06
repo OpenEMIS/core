@@ -1,5 +1,5 @@
 -- institution_student_transfers
-ALTER TABLE `institution_site_grades` DROP `academic_period_id`;
+ALTER TABLE `institution_student_transfers` DROP `academic_period_id`;
 ALTER TABLE `institution_student_transfers` CHANGE `education_grade_id` `education_programme_id` INT(11) NOT NULL;
 
 -- institution_students
@@ -14,6 +14,8 @@ ALTER TABLE `institution_site_grades` DROP `end_year`;
 
 -- student_statuses
 DELETE FROM `student_statuses` WHERE `code` IN ('PROMOTED', 'REPEATED');
+
+DROP TABLE IF EXISTS `security_user_types`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1799';

@@ -23,6 +23,8 @@ class UsersTable extends BaseTable {
 			'dependent' => true
 		]);
 
+		$this->hasMany('UserTypes', ['className' => 'Security.SecurityUserTypes', 'dependent' => true]);
+
 		$this->addBehavior('Area.Areapicker');
 	}
 
