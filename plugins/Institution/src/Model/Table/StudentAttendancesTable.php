@@ -48,7 +48,6 @@ class StudentAttendancesTable extends AppTable {
 		
 		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
-		$this->ControllerAction->field('student_category_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 
 		$tabElements = [

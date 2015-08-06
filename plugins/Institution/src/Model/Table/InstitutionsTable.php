@@ -45,7 +45,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences', 'dependent' => true]);
 
-		$this->hasMany('InstitutionSiteStudents', 			['className' => 'Institution.InstitutionSiteStudents', 'dependent' => true]);
+		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true]);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
@@ -54,7 +54,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 		
-		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'foreignKey' => 'institution_id', 'dependent' => true]);
+		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'foreignKey' => 'institution_id', 'dependent' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',

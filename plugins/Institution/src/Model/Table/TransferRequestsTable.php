@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
+use Cake\Controller\Controller;
 use Cake\Validation\Validator;
 
 class TransferRequestsTable extends AppTable {
@@ -26,10 +27,11 @@ class TransferRequestsTable extends AppTable {
     	return $events;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		if ($entity->isNew()) {
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$process = function($model, $entity) {
 			$institutionId = $entity->previous_institution_id;
 			$selectedStudent = $entity->security_user_id;
+			$selectedPeriod = $entity->academic_period_id;
 			$selectedGrade = $entity->education_grade_id;
 
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -39,42 +41,54 @@ class TransferRequestsTable extends AppTable {
 				->first()
 				->id;
 
-			$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
-			$InstitutionGradeStudents->updateAll(
+			$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+			$StudentPromotion->updateAll(
 				['student_status_id' => $status],
 				[
 					'institution_id' => $institutionId,
-					'security_user_id' => $selectedStudent,
+					'student_id' => $selectedStudent,
+					'academic_period_id' => $selectedPeriod,
 					'education_grade_id' => $selectedGrade
 				]
 			);
 
 			$this->Alert->success('TransferRequests.request');
-
-			$Students = TableRegistry::get('Institution.Students');
-			$action = $this->ControllerAction->buttons['add']['url'];
-			$action['action'] = $Students->alias();
-			$action[0] = 'view';
-			$action[1] = $selectedStudent;
-
-			return $this->controller->redirect($action);
-		}
+			return true;
+		};
+		return $process;
     }
+
+    public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+    	$id = $this->Session->read($this->alias().'.id');
+    	$action = $this->ControllerAction->buttons['add']['url'];
+		$action['action'] = 'Students';
+		$action[0] = 'view';
+		$action[1] = $id;
+    	$event->stopPropagation();
+    	return $this->controller->redirect($action);
+	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		$institutionId = $this->Session->read('Institutions.id');
-		$selectedStudent = $this->Session->read($this->alias().'.security_user_id');
+		$id = $this->Session->read($this->alias().'.id');
 
-		$InstitutionGradeStudents = TableRegistry::get('Institutions.InstitutionGradeStudents');
-		$student = $InstitutionGradeStudents
+		$Students = TableRegistry::get('Institution.Students');
+		$selectedStudent = $Students->get($id)->student_id;
+		$selectedPeriod = $Students->get($id)->academic_period_id;
+		$selectedGrade = $Students->get($id)->education_grade_id;
+
+		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+		$student = $StudentPromotion
 			->find()
 			->where([
-				$InstitutionGradeStudents->aliasField('institution_id') => $institutionId,
-				$InstitutionGradeStudents->aliasField('security_user_id') => $selectedStudent
+				$StudentPromotion->aliasField('institution_id') => $institutionId,
+				$StudentPromotion->aliasField('student_id') => $selectedStudent,
+				$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
+				$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
 			])
 			->first();
 
-		$entity->security_user_id = $selectedStudent;
+		$entity->security_user_id = $student->student_id;
 		$entity->academic_period_id = $student->academic_period_id;
 		$entity->education_grade_id = $student->education_grade_id;
 		$entity->start_date = date('Y-m-d', strtotime($student->start_date));
@@ -90,8 +104,7 @@ class TransferRequestsTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
-		if ($this->Session->check($this->alias().'.security_user_id')) {
-
+		if ($this->Session->check($this->alias().'.id')) {
 			$this->ControllerAction->field('transfer_status');
 			$this->ControllerAction->field('student');
 			$this->ControllerAction->field('security_user_id');
@@ -140,11 +153,12 @@ class TransferRequestsTable extends AppTable {
 		}
 
 		$Students = TableRegistry::get('Institution.Students');
+		$id = $this->Session->read($this->alias().'.id');
 		$action = $this->ControllerAction->buttons['edit']['url'];
 		$action['action'] = $Students->alias();
 		$action[0] = 'view';
-		$action[1] = $transferEntity->security_user_id;
-
+		$action[1] = $id;
+		$event->stopPropagation();
 		return $this->controller->redirect($action);
     }
 
@@ -340,7 +354,7 @@ class TransferRequestsTable extends AppTable {
 			$Students = TableRegistry::get('Institution.Students');
 			$toolbarButtons['back']['url']['action'] = $Students->alias();
 			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->Session->read($this->alias().'.security_user_id');
+			$toolbarButtons['back']['url'][1] = $this->Session->read($this->alias().'.id');
 		}
 	}
 

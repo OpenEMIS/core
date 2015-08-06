@@ -238,10 +238,9 @@ class StudentBehavior extends Behavior {
 				if ($this->_table->Session->check($sessionVar)) {
 					$institutionStudentData = $this->_table->Session->read($sessionVar);
 					$sectionData = [];
-					$sectionData['security_user_id'] = $entity->id;
+					$sectionData['student_id'] = $entity->id;
 					$sectionData['education_grade_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['education_grade'];
 					$sectionData['institution_site_section_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['section'];
-					$sectionData['student_category_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['student_status_id'];
 
 					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);	

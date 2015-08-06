@@ -31,14 +31,49 @@ class UserBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
+		$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
 		return $events;
+	}
+
+	public function beforeAction(Event $event) {
+		if ($this->_table->table() == 'security_users') {
+			$this->_table->addBehavior('Area.Areapicker');
+			$this->_table->fields['photo_content']['type'] = 'image';
+			$this->_table->fields['photo_name']['visible'] = false;
+			$this->_table->fields['super_admin']['visible'] = false;
+			$this->_table->fields['date_of_death']['visible'] = false;
+			$this->_table->fields['status']['visible'] = false;
+			$this->_table->fields['address_area_id']['type'] = 'areapicker';
+			$this->_table->fields['address_area_id']['source_model'] = 'Area.AreaAdministratives';
+			$this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
+			$this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
+			$this->_table->fields['gender_id']['type'] = 'select';
+
+			$i = 10;
+			$this->_table->fields['photo_content']['order'] = 0;
+			$this->_table->fields['first_name']['order'] = $i++;
+			$this->_table->fields['middle_name']['order'] = $i++;
+			$this->_table->fields['third_name']['order'] = $i++;
+			$this->_table->fields['last_name']['order'] = $i++;
+			$this->_table->fields['preferred_name']['order'] = $i++;
+			$this->_table->fields['gender_id']['order'] = $i++;
+			$this->_table->fields['date_of_birth']['order'] = $i++;
+			$this->_table->fields['address']['order'] = $i++;
+			$this->_table->fields['postal_code']['order'] = $i++;
+			$this->_table->fields['address_area_id']['order'] = $i++;
+			$this->_table->fields['birthplace_area_id']['order'] = $i++;
+		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->_table->ControllerAction->field('openemis_no', ['order' => 1]);
 		$this->_table->ControllerAction->field('identity', ['order' => 2]);
+
+		if ($this->_table->table() == 'security_users') {
+			$this->_table->ControllerAction->field('name', ['order' => 3, 'sort' => true]);
+		}
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
@@ -53,6 +88,14 @@ class UserBehavior extends Behavior {
 		$value = '';
 		if ($entity->has('user') && !empty($entity->user)) {
 			$value = $entity->user->default_identity_type;
+		}
+		return $value;
+	}
+
+	public function onGetName(Event $event, Entity $entity) {
+		$value = '';
+		if ($entity->has('user') && !empty($entity->user)) {
+			$value = $entity->user->name;
 		}
 		return $value;
 	}
@@ -89,5 +132,41 @@ class UserBehavior extends Behavior {
 			$value = base64_encode(stream_get_contents($fileContent));
 		}
 		return $value;
+	}
+
+	public function getUniqueOpenemisId($options = []) {
+		$prefix = '';
+		
+		if (array_key_exists('model', $options)) {
+			switch ($options['model']) {
+				case 'Student': case 'Staff': case 'Guardian':
+					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = explode(",", $prefix);
+					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
+					break;
+			}
+		}
+
+		$latest = $this->_table->find()
+			->order($this->_table->aliasField('id').' DESC')
+			->first();
+
+		
+		$latestOpenemisNo = $latest->openemis_no;
+		$latestOpenemisNo = 0;
+		if(empty($prefix)){
+			$latestDbStamp = $latestOpenemisNo;
+		}else{
+			$latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+		}
+		
+		$currentStamp = time();
+		if($latestDbStamp >= $currentStamp){
+			$newStamp = $latestDbStamp + 1;
+		}else{
+			$newStamp = $currentStamp;
+		}
+
+		return $prefix.$newStamp;
 	}
 }

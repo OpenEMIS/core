@@ -129,10 +129,9 @@ class UserBehavior extends Behavior {
 
 						// need to insert section over here because it will redirect before going to aftersave
 						if ($this->_table->hasBehavior('Student')) {
-							$sectionData['security_user_id'] = $newEntity->security_user_id;
+							$sectionData['student_id'] = $newEntity->security_user_id;
 							$sectionData['education_grade_id'] = $entity->institution_site_students[0]['education_grade'];
 							$sectionData['institution_site_section_id'] = $entity->institution_site_students[0]['section'];
-							$sectionData['student_category_id'] = $entity->institution_site_students[0]['student_status_id'];
 
 							$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 

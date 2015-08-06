@@ -241,6 +241,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',
@@ -270,7 +271,7 @@ trait MessagesTrait {
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
-		'InstitutionGradeStudents' => [
+		'StudentPromotion' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
 			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
