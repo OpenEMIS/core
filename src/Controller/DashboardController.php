@@ -34,7 +34,7 @@ class DashboardController extends AppController {
     }
 
     public function onInitialize(Event $event, Table $model) {
-    	$header = __($model->alias);
+    	$header = $model->getHeader($model->alias);
     	$this->set('contentHeader', $header);
     }
 
