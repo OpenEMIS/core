@@ -33,6 +33,7 @@ class UserBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
+		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
 		return $events;
 	}
 
@@ -132,6 +133,26 @@ class UserBehavior extends Behavior {
 			$value = base64_encode(stream_get_contents($fileContent));
 		}
 		return $value;
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'identity') {
+			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+			$identity = $IdentityType
+							   ->find()
+							   ->contain(['FieldOptions'])
+							   ->where(['FieldOptions.code' => 'IdentityTypes'])
+							   ->order(['IdentityTypes.default DESC'])
+							   ->first();
+
+			if ($identity) {
+				$value = $identity->name;
+			}
+
+			return !empty($value) ? $value : $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		} else {
+			return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
 	}
 
 	public function getUniqueOpenemisId($options = []) {
