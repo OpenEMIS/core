@@ -72,92 +72,72 @@ class StudentsController extends AppController {
 
 		if ($action == 'index') {
 			$session->delete('Students.id');
-			// $session->delete('Users.id');
-		} else if ($session->check('Students.id') || $session->check('Users.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Students.name');
+		} else if ($session->check('Students.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
-			// $id = 0;
-			// if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-			// 	$id = $this->request->pass[0];
-			// } else if ($session->check('Students.id')) {
-			// 	$id = $session->read('Students.security_user_id');
-			// } else if ($session->check('Users.id')) {
-			// 	$id = $session->read('Users.id');
-			// }
-			// if (!empty($id)) {
-			// 	$this->activeObj = $this->Students->get($id);
-			// 	$name = $this->activeObj->name;
-			// 	$header = $name .' - Overview';
-			// 	$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
-			// } else {
-			// 	return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
-			// }
-		}
+			$id = 0;
+			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
+				$id = $this->request->pass[0];
+			} else if ($session->check('Students.id')) {
+				$id = $session->read('Students.id');
+			}
 
+			if (!empty($id)) {
+				$entity = $this->Students->get($id);
+				$name = $entity->name;
+				$header = $name . ' - ' . __('Overview');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
+			}
+		}
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model) {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
 		
-		if (!is_null($this->activeObj)) {
-			$session = $this->request->session();
-			$action = false;
-			$params = $this->request->params;
-			if (isset($params['pass'][0])) {
-				$action = $params['pass'][0];
+		$session = $this->request->session();
+		if ($session->check('Students.id')) {
+			$header = '';
+			$userId = $session->read('Students.id');
+
+			if ($session->check('Students.name')) {
+				$header = $session->read('Students.name');
+				$this->Navigation->addCrumb($header, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $userId]);
 			}
 
-			$persona = false;
 			$alias = $model->alias;
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
-			
-			// if ($action) {
-			// 	$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
-			// 	if (strtolower($action) != 'index')	{
-			// 		if (in_array('Guardian', $model->behaviors()->loaded())) {
-			// 			if (isset($params['pass'][1])) {
-			// 				$persona = $model->get($params['pass'][1]);
-			// 				if (is_object($persona)) {
-			// 					$this->Navigation->addCrumb($persona->name);
-			// 				}
-			// 			}
-			// 		} else {
-			// 			$this->Navigation->addCrumb(ucwords($action));
-			// 		}
-			// 	}
-			// } else {
-			// 	$this->Navigation->addCrumb($model->getHeader($alias));
-			// }
+			$header = $header . ' - ' . $model->getHeader($alias);
 
-			// $header = $this->activeObj->name . ' - ' . $model->getHeader($alias);
-
-			// if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
-			// 	$model->fields['security_user_id']['type'] = 'hidden';
-			// 	$model->fields['security_user_id']['value'] = $this->activeObj->id;
-
-			// 	if (count($this->request->pass) > 1) {
-			// 		$modelId = $this->request->pass[1]; // id of the sub model
-
-			// 		$exists = $model->exists([
-			// 			$model->aliasField($model->primaryKey()) => $modelId,
-			// 			$model->aliasField('security_user_id') => $this->activeObj->id
-			// 		]);
-					
-			// 		/**
-			// 		 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-			// 		 */
-			// 		if (!$exists) {
-			// 			$this->Alert->warning('general.notExists');
-			// 			return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
-			// 		}
-			// 	}
-			// }
-
+			// $params = $this->request->params;
 			$this->set('contentHeader', $header);
+
+			if ($model->hasField('security_user_id')) {
+				$model->fields['security_user_id']['type'] = 'hidden';
+				$model->fields['security_user_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('security_user_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
+					}
+				}
+			}
 		} else {
 			$this->Alert->warning('general.notExists');
 			$event->stopPropagation();
@@ -167,22 +147,19 @@ class StudentsController extends AppController {
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-
-		// if ($model->alias() != 'InstitutionSiteStudents') {
-		// 	if ($session->check('Students.security_user_id')) {
-		// 		if ($model->hasField('security_user_id')) {
-		// 			$userId = $session->read('Students.security_user_id');
-		// 			$query->where([$model->aliasField('security_user_id') => $userId]);
-		// 		}
-		// 	} else {
-		// 		$this->Alert->warning('general.noData');
-		// 		$event->stopPropagation();
-		// 		return $this->redirect(['action' => 'index']);
-		// 	}
-		// } else {
-		// 	// we only show distinct records at system level
-		// 	$query->group([$model->aliasField('security_user_id')]);
-		// }
+		
+		if ($model->alias() != 'Students') {
+			if ($session->check('Students.id')) {
+				if ($model->hasField('security_user_id')) {
+					$userId = $session->read('Students.id');
+					$query->where([$model->aliasField('security_user_id') => $userId]);
+				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
+			}
+		}
 	}
 
 	public function excel($id=0) {
