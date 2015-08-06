@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
-class InstitutionGradeStudentsTable extends AppTable {
+class StudentPromotionTable extends AppTable {
 	private $nextGrade = null;
 
 	private $nextStatusId = null;	// promoted / graduated
@@ -21,6 +21,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 	private $dataCount = null;
 
 	public function initialize(array $config) {
+		$this->table('institution_grade_students');
 		parent::initialize($config);
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey'=>'security_user_id']);
@@ -129,7 +130,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 
 			$institutionId = $this->Session->read('Institutions.id');
 			$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
-			$GradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+			$GradeStudents = TableRegistry::get('Institution.StudentPromotion');
 
 			// Academic Periods
 			if (!is_null($this->request->query('mode'))) {
@@ -281,7 +282,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 			if (!empty($nextPeriod)) {
 				$this->advancedSelectOptions($periodOptions, $nextPeriod->id);
 			} else {
-				$this->Alert->warning('InstitutionGradeStudents.noPeriods');
+				$this->Alert->warning('StudentPromotion.noPeriods');
 			}
 
 			$indexElements[] = [
@@ -302,7 +303,7 @@ class InstitutionGradeStudentsTable extends AppTable {
 				$config['url'] = $config['buttons']['index']['url'];
 				$config['url'][0] = 'indexEdit';
 			} else {
-				$this->Alert->info('InstitutionGradeStudents.noData');
+				$this->Alert->info('StudentPromotion.noData');
 			}
 		}
 	}

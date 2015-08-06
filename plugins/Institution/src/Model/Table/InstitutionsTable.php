@@ -54,7 +54,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 		
-		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'foreignKey' => 'institution_id', 'dependent' => true]);
+		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'foreignKey' => 'institution_id', 'dependent' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',

@@ -36,6 +36,12 @@ class StudentsTable extends AppTable {
 		// $this->addBehavior('AdvanceSearch');
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	public function beforeAction(Event $event) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
@@ -224,13 +230,16 @@ class StudentsTable extends AppTable {
     	if ($action == 'view') {
     		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-				$selectedStudent = $this->request->params['pass'][1];
-	    		$this->Session->write($TransferRequests->alias().'.security_user_id', $selectedStudent);
-
-	    		// Show Transfer button only if the Student Status is Current
-	    		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
 	    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
+				$id = $this->request->params['pass'][1];
+				$selectedStudent = $this->get($id)->student_id;
+				$selectedPeriod = $this->get($id)->academic_period_id;
+				$selectedGrade = $this->get($id)->education_grade_id;
+	    		$this->Session->write($TransferRequests->alias().'.id', $id);
+
+	    		// Show Transfer button only if the Student Status is Current
 				$institutionId = $this->Session->read('Institutions.id');
 				$currentStatus = $StudentStatuses
 					->find()
@@ -243,11 +252,13 @@ class StudentsTable extends AppTable {
 					->first()
 					->id;
 
-				$gradeStudent = $InstitutionGradeStudents
+				$student = $StudentPromotion
 					->find()
 					->where([
-						$InstitutionGradeStudents->aliasField('institution_id') => $institutionId,
-						$InstitutionGradeStudents->aliasField('security_user_id') => $selectedStudent
+						$StudentPromotion->aliasField('institution_id') => $institutionId,
+						$StudentPromotion->aliasField('security_user_id') => $selectedStudent,
+						$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
+						$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
 					])
 					->first();
 				// End
@@ -261,7 +272,7 @@ class StudentsTable extends AppTable {
 				$transferButton['attr']['title'] = __('Transfer');
 				//End
 
-	    		if ($gradeStudent->student_status_id == $currentStatus) {
+	    		if ($student->student_status_id == $currentStatus) {
 	    			$transferButton['url'] = [
 			    		'plugin' => $buttons['back']['url']['plugin'],
 			    		'controller' => $buttons['back']['url']['controller'],
@@ -269,7 +280,7 @@ class StudentsTable extends AppTable {
 			    		'add'
 			    	];
 					$toolbarButtons['transfer'] = $transferButton;
-				} else if ($gradeStudent->student_status_id == $pendingStatus) {
+				} else if ($student->student_status_id == $pendingStatus) {
 					$transferRequest = $TransferRequests
 						->find()
 						->where([

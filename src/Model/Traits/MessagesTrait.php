@@ -271,7 +271,7 @@ trait MessagesTrait {
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
-		'InstitutionGradeStudents' => [
+		'StudentPromotion' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
 			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
