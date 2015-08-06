@@ -37,8 +37,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'targetForeignKey' => 'institution_site_class_id'
 		]);
 
+		/**
+		 * Shortcuts
+		 */
 		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
 		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
+		// $this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
 
 		// this behavior restricts current user to see All Classes or My Classes
 		$this->addBehavior('Security.InstitutionClass');
@@ -229,7 +233,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				}
 			}
 		]);
-			// pr($gradeOptions);
 
 		$toolbarElements = [
             ['name' => 'Institution.Sections/controls', 
@@ -466,11 +469,10 @@ class InstitutionSiteSectionsTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$commonData = $data['InstitutionSiteSections'];
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$process = function ($model, $entity) use ($data) {
+			$commonData = $data['InstitutionSiteSections'];
 
-		if ($this->_selectedGradeType == 'single') {
-			// pr($data);
 			foreach($data['MultiSections'] as $key => $row) {
 				$data['MultiSections'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
 				$data['MultiSections'][$key]['institution_site_id'] = $commonData['institution_site_id'];
@@ -483,39 +485,74 @@ class InstitutionSiteSectionsTable extends AppTable {
 			// $data['InstitutionSiteSections'] = $data['MultiSections'];
 			// unset($data['MultiSections']);
 
-			$sections = $this->newEntities($data['MultiSections']);
+			$sections = $model->newEntities($data['MultiSections']);
 			$error = false;
 			foreach ($sections as $key=>$section) {
 			    if ($section->errors()) {
 			    	$error = $section->errors();
 			    	$data['MultiSections'][$key]['errors'] = $error;
 			    }
+				if (!$error) {
+					$error = $model->addSectionClassesSubjects($model, $data);
+				}
 			}
 			if (!$error) {
 				foreach ($sections as $section) {
-			    	$this->save($section);
+			    	$model->save($section);
 				}
-				$this->Alert->success('general.add.success');
-				$action = $this->ControllerAction->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return true;
 			} else {
 				$errorMessage='';
 				foreach ($error as $key=>$value) {
 					$errorMessage .= Inflector::classify($key);
 				}
-				$this->log($error, 'debug');
+				$model->log($error, 'debug');
 				/**
 				 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
 				 */
-				foreach ($this->fields as $value) {
+				foreach ($model->fields as $value) {
 					if ($value['field'] != 'name') {
-						$this->validator()->remove($value['field']);
+						$model->validator()->remove($value['field']);
 					}
 				}
-				$this->Alert->error('Institution.'.$this->alias().'.empty'.$errorMessage);
-				$this->fields['single_grade_field']['data']['sections'] = $sections;
+				$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
+				$model->fields['single_grade_field']['data']['sections'] = $sections;
+				$model->request->data['MultiSections'] = $data['MultiSections'];
+				return false;
 			}
-		} else {
+		};
+		return $process;
+	}
+
+	public function addSectionClassesSubjects($model, ArrayObject $data) {
+		// $model->InstitutionSiteClasses->selectedSectionId = $model->id;
+		$subjects = $model->InstitutionSiteClasses->getSubjectOptions();
+		pr($subjects);die;
+		list($error, $classes, $data) = $model->InstitutionSiteClasses->prepareEntityObjects($model->InstitutionSiteClasses, $data);
+		pr($error);
+		pr($classes);
+		pr($data);
+		die;
+		// $process = $this->InstitutionSiteClasses->addBeforeSave($event, $entity, $data);
+		// if ($process($model, $entity)) {
+		// 	$this->Alert->success('general.add.success');
+		// 	$action = $this->buttons['index']['url'];
+			
+		// 	// Event: addAfterSave
+		// 	$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
+		// 	$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
+		// 	if ($event->isStopped()) { return $event->result; }
+		// 	// End Event
+
+		// 	return $this->controller->redirect($action);
+		// } else {
+		// 	$this->log($entity->errors(), 'debug');
+		// 	$this->Alert->error('general.add.failed');
+		// }
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($this->_selectedGradeType != 'single') {
 			if (isset($data['InstitutionSiteSections']['institution_site_section_grades']) && count($data['InstitutionSiteSections']['institution_site_section_grades'])>0) {
 				foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {
 					$data['InstitutionSiteSections']['institution_site_section_grades'][$key]['status'] = 1;
@@ -752,51 +789,36 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $options;
 	}
 
+	/**
+	 * [getStudentsOptions description]
+	 * @param  [type] $sectionEntity [description]
+	 * @return [type]                [description]
+	 * @todo  change $this->Institutions->InstitutionSiteStudents to $this->Institutions->InstitutionStudents when it the table is available
+	 */
 	protected function getStudentsOptions($sectionEntity) {
 		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
-		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
-        $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
-
 		$sectionGradeObjects = $sectionEntity->institution_site_section_grades;
 		$sectionGrades = [];
 		foreach ($sectionGradeObjects as $key=>$value) {
 			$sectionGrades[] = $value->education_grade_id;
 		}
 
+		/**
+		 * Modified this query in PHPOE-1780. Use PeriodBehavior which is loaded InstitutionSiteStudents, by adding ->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
+		 * This is inline with how InstitutionSiteClassesTable populate getStudentOptions.
+		 */
 		$students = $this->Institutions->InstitutionSiteStudents;
-		$query = $students->find();
-		$query = $query->contain(['Users', 'EducationProgrammes.EducationGrades']);
-		$query = $query->where([
-				$students->aliasField('institution_site_id') => $this->institutionId,
-				'OR' => array(
-					'OR' => array(
-						array(
-							$students->aliasField('end_date').' IS NOT NULL',
-							$students->aliasField('start_date').' <= "' . $startDate . '"',
-							$students->aliasField('end_date').' >= "' . $startDate . '"'
-						),
-						array(
-							$students->aliasField('end_date').' IS NOT NULL',
-							$students->aliasField('start_date').' <= "' . $endDate . '"',
-							$students->aliasField('end_date').' >= "' . $endDate . '"'
-						),
-						array(
-							$students->aliasField('end_date').' IS NOT NULL',
-							$students->aliasField('start_date').' >= "' . $startDate . '"',
-							$students->aliasField('end_date').' <= "' . $endDate . '"'
-						)
-					),
-					array(
-						$students->aliasField('end_date').' IS NULL',
-						$students->aliasField('start_date').' <= "' . $endDate . '"'
-					)
-				)
-			]);
-
-		$list = $query->toArray();
+		$query = $students
+			->find('all')
+			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
+			->contain(['Users', 'EducationProgrammes.EducationGrades'])
+			->where([
+				'InstitutionSiteStudents.institution_site_id'=>$this->institutionId
+			])
+			->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
-		foreach ($list as $skey => $obj) {
+		foreach ($query as $skey => $obj) {
 			if ($obj->has('education_programme') && $obj->education_programme->has('education_grades')) {
 				$studentGradeEligible = $obj->education_programme->education_grades;
 				$studentGradeKeys = array();
