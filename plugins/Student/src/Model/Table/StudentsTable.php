@@ -20,6 +20,7 @@ class StudentsTable extends AppTable {
 
 	public function initialize(array $config) {
 		$this->table('security_users');
+		$this->entityClass('User.User');
 		parent::initialize($config);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -39,8 +40,13 @@ class StudentsTable extends AppTable {
     	return $events;
     }
 
-	public function beforeAction(Event $event) {
+	// public function beforeAction(Event $event) {
 
+	// }
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		// to set the student name in headers
+		$this->request->session()->write('Students.name', $entity->name);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
