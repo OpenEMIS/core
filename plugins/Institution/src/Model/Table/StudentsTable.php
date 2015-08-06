@@ -106,6 +106,15 @@ class StudentsTable extends AppTable {
 		]);
 	}
 
+	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+		$sectionData = [];
+		$sectionData['student_id'] = $entity->student_id;
+		$sectionData['education_grade_id'] = $entity->education_grade_id;;
+		$sectionData['institution_site_section_id'] = $entity->class;;
+		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+	}
+
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
 		$attr['onChangeReload'] = 'changePeriod';
 		return $attr;
@@ -264,7 +273,6 @@ class StudentsTable extends AppTable {
 		// End
 		
 		// section
-		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 		$sectionOptions = $InstitutionSiteSections->getSectionOptions($selectedPeriod, $institutionId, $selectedGrade);
 		// $selectedSection = !is_null($this->request->query('student')) ? $this->request->query('student') : key($studentOptions);// not needed
 		// End
