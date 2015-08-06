@@ -119,9 +119,11 @@ trait MessagesTrait {
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
-			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty'
+			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
+
 		],
 		'InstitutionSiteClasses' => [
+			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
 			'classes' => 'Subjects',
@@ -275,7 +277,7 @@ trait MessagesTrait {
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There is no subject in the selected class',
+				'noSubjectsInSection' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
 				'noSections' => 'There is no class under the selected academic period',

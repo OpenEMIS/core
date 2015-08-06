@@ -127,7 +127,7 @@ class AccountsTable extends AppTable {
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query) {
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->contain(['Roles']);
 	}
 

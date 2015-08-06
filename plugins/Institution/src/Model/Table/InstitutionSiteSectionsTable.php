@@ -45,8 +45,39 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator->requirePresence('name');
+		$validator
+			->requirePresence('name')
+			->add('name', 'ruleUnique', [
+	        		'rule' => 'uniqueNamePerAcademicPeriod',
+	        		'provider' => 'table',
+	        		'message' => 'Section name has to be unique'
+			    ])
+			;
 		return $validator;
+	}
+
+	public static function uniqueNamePerAcademicPeriod($field, array $globalData) {
+		$data = $globalData['data'];
+		$model = $globalData['providers']['table'];
+		$exists = $model->find('all')
+			->select(['id'])
+			->where([
+				$model->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
+				$model->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
+				$model->aliasField('name') => $field,
+			])
+			->toArray();
+		if (!empty($exists)) {
+			foreach ($exists as $key => $value) {
+				if ($value->id == $data['id']) {
+					return true;
+					break;
+				}
+			}
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -141,29 +172,64 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {
 			$this->Alert->warning('Institutions.noGrades');
+		} else {
+			/**
+			 * Added on PHPOE-1762 for PHPOE-1766
+			 * "All Grades" option is inserted here instead of inside InstitutionSiteGrades->getInstitutionSiteGradeOptions() 
+			 * so as to avoid unadherence of User's Requirements.
+			 */
+			$gradeOptions[-1] = 'All Grades';
+			// sort options by key
+			ksort($gradeOptions);
+			/**/
 		}
+		
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
+		// pr($this->_selectedEducationGradeId);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId, $selectedAcademicPeriodId) {
-				$query = $Sections->find()
-									->join([
-										[
-											'table' => 'institution_site_section_grades',
-											'alias' => 'InstitutionSiteSectionGrades',
-											'conditions' => [
-												'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id',
-												'InstitutionSiteSectionGrades.education_grade_id' => $id
-											]
-										]
-									])
-									->where([
-										$Sections->aliasField('institution_site_id') => $institutionId,
-										$Sections->aliasField('academic_period_id') => $selectedAcademicPeriodId,
-									]);
-				return $query->count();
+				/**
+				 * If statement added on PHPOE-1762 for PHPOE-1766
+				 * If $id is -1, get all sections under the selected academic period
+				 */
+				if ($id==-1) {
+					$query = $Sections->find()
+						->join([
+							[
+								'table' => 'institution_site_section_grades',
+								'alias' => 'InstitutionSiteSectionGrades',
+								'conditions' => [
+									'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id'
+								]
+							]
+						])
+						->where([
+							$Sections->aliasField('institution_site_id') => $institutionId,
+							$Sections->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+						]);
+					return $query->count();
+				} else {
+					$query = $Sections->find()
+						->join([
+							[
+								'table' => 'institution_site_section_grades',
+								'alias' => 'InstitutionSiteSectionGrades',
+								'conditions' => [
+									'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id',
+									'InstitutionSiteSectionGrades.education_grade_id' => $id
+								]
+							]
+						])
+						->where([
+							$Sections->aliasField('institution_site_id') => $institutionId,
+							$Sections->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+						]);
+					return $query->count();
+				}
 			}
 		]);
+			// pr($gradeOptions);
 
 		$toolbarElements = [
             ['name' => 'Institution.Sections/controls', 
@@ -181,23 +247,49 @@ class InstitutionSiteSectionsTable extends AppTable {
     }
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		/**
+		 * Added on PHPOE-1762 (extra feature)
+		 */
+		$sort = $this->queryString('sort', ['name'=>'name']);
+		$direction = $this->queryString('direction', ['asc'=>'asc', 'desc'=>'desc']);
+		/**/
+
 		$query
 		->find('byGrades')
-		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId]);
+		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId])
+		/**
+		 * Added on PHPOE-1762 (extra feature)
+		 */
+		->order([$this->aliasField('name')=>$direction])
+		/**/
+		;
 	}
 
     public function findByGrades(Query $query, array $options) {
-    	return $query
-			->join([
-				[
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrades',
-					'conditions' => [
-						'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id',
-						'InstitutionSiteSectionGrades.education_grade_id' => $this->_selectedEducationGradeId
+    	if ($this->_selectedEducationGradeId != -1) {
+	    	return $query
+				->join([
+					[
+						'table' => 'institution_site_section_grades',
+						'alias' => 'InstitutionSiteSectionGrades',
+						'conditions' => [
+							'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id',
+							'InstitutionSiteSectionGrades.education_grade_id' => $this->_selectedEducationGradeId
+						]
 					]
-				]
-			]);
+				]);
+		} else {
+	    	return $query
+				->join([
+					[
+						'table' => 'institution_site_section_grades',
+						'alias' => 'InstitutionSiteSectionGrades',
+						'conditions' => [
+							'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id'
+						]
+					]
+				]);
+		}
     }
 
 
@@ -322,7 +414,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 				    'contain' => ['EducationProgrammes']
 				])->toArray();
 			}
-			$startingSectionNumber = $this->getNewSectionNumber();	
+			$startingSectionNumber = $this->getNewSectionNumber();
+
 			$this->ControllerAction->field('single_grade_field', [
 				'type' => 'element', 
 				'element' => 'Institution.Sections/single_grade',
@@ -377,6 +470,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$commonData = $data['InstitutionSiteSections'];
 
 		if ($this->_selectedGradeType == 'single') {
+			// pr($data);
 			foreach($data['MultiSections'] as $key => $row) {
 				$data['MultiSections'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
 				$data['MultiSections'][$key]['institution_site_id'] = $commonData['institution_site_id'];
@@ -386,14 +480,15 @@ class InstitutionSiteSectionsTable extends AppTable {
 						'status' => 1
 					];
 			}
-			$data['InstitutionSiteSections'] = $data['MultiSections'];
-			unset($data['MultiSections']);
+			// $data['InstitutionSiteSections'] = $data['MultiSections'];
+			// unset($data['MultiSections']);
 
-			$sections = $this->newEntities($data['InstitutionSiteSections']);
+			$sections = $this->newEntities($data['MultiSections']);
 			$error = false;
-			foreach ($sections as $section) {
+			foreach ($sections as $key=>$section) {
 			    if ($section->errors()) {
 			    	$error = $section->errors();
+			    	$data['MultiSections'][$key]['errors'] = $error;
 			    }
 			}
 			if (!$error) {
@@ -418,6 +513,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 					}
 				}
 				$this->Alert->error('Institution.'.$this->alias().'.empty'.$errorMessage);
+				$this->fields['single_grade_field']['data']['sections'] = $sections;
 			}
 		} else {
 			if (isset($data['InstitutionSiteSections']['institution_site_section_grades']) && count($data['InstitutionSiteSections']['institution_site_section_grades'])>0) {
@@ -792,20 +888,26 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 	
 	private function getNewSectionNumber() {
-		$data = $this->find()
-					->where([
-						'institution_site_id' => $this->institutionId,
-						// 'education_grade_id' => $gradeId
-					])
-					->order(['section_number DESC'])
-					->first()
-					;
-		
+		$sectionsByGrade = $this->InstitutionSiteSectionGrades
+			->find('list')
+			->where([$this->InstitutionSiteSectionGrades->aliasField('education_grade_id')=>$this->_selectedEducationGradeId])
+			->select(['institution_site_section_id'])
+			->toArray();
+		$data = $this->find('all')
+			->where([
+				$this->aliasField('section_number').' IS NOT NULL',
+				[
+					$this->aliasField('institution_site_id') => $this->institutionId,
+					$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
+					$this->aliasField('id').' IN' => $sectionsByGrade,
+				]
+			])
+			->count()
+			;
 		$number = 1;
-		if(!empty($data)){
-			$number = $data->section_number + 1;
-		}
-		
+		if(!empty($data)) {
+			$number = $data + 1;
+		}		
 		return $number;
 	}
 	
