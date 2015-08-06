@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
@@ -23,6 +24,7 @@ class StudentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('AcademicPeriod.Period');
 		// to handle field type (autocomplete)
 		$this->addBehavior('OpenEmis.autocomplete');
 		$this->addBehavior('User.User');
