@@ -30,6 +30,13 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
 		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
 
+		$this->belongsToMany('InstitutionSiteSections', [
+			'className' => 'Institution.InstitutionSiteSections',
+			'joinTable' => 'institution_site_section_classes',
+			'foreignKey' => 'institution_site_class_id',
+			'targetForeignKey' => 'institution_site_section_id'
+		]);
+
 		$this->belongsToMany('Teachers', [
 			'className' => 'User.Users',
 			'through' => 'InstitutionSiteClassStaff',
@@ -614,14 +621,19 @@ class InstitutionSiteClassesTable extends AppTable {
 ** essential functions
 **
 ******************************************************************************************************************/
-	protected function createVirtualEntity($id, $entity, $persona) {
+	public function createVirtualEntity($id, $entity, $persona) {
+		if (isset($entity->toArray()['institution_site_section_classes'])) {
+			$sectionId = $entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'];
+		} else {
+			$sectionId = $entity->toArray()['institution_site_sections'][0]['id'];
+		}
 		if (strtolower($persona)=='students') {
 			$userData = $this->Institutions->Students->find()->contain(['Users'=>['Genders']])->where(['student_id'=>$id])->first();
 			$data = [
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'student_id'=>$id,
 				'institution_site_class_id'=>$entity->id,
-				'institution_site_section_id'=>$entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'],
+				'institution_site_section_id'=>$sectionId,
 				'status'=>1,
 				'user'=>[]
 			];
@@ -631,7 +643,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'security_user_id'=>$id,
 				'institution_site_class_id'=>$entity->id,
-				'institution_site_section_id'=>$entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'],
+				'institution_site_section_id'=>$sectionId,
 				'status'=>1,
 				'user'=>[]
 			];
