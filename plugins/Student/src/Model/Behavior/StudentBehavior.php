@@ -122,35 +122,6 @@ class StudentBehavior extends Behavior {
 			'name', 'default_identity_type', 'institution', 'student_status']);
 	}
 
-	// Logic for the mini dashboard
-	public function afterAction(Event $event) {
-		$alias = $this->_table->alias();
-		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$institutionSiteArray = [];
-
-		// Get total number of students
-		$studentCount = $table->find()
-			->distinct(['security_user_id'])
-			->count(['security_user_id']);
-
-		// Get the gender for all students
-		$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
-
-		if ($this->_table->action == 'index') {
-			$indexDashboard = 'dashboard';
-			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'students',
-	            	'modelCount' => $studentCount,
-	            	'modelArray' => $institutionSiteArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
-	    }
-	}
-
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// this method should rightfully be in institution userbehavior - need to move this in an issue after guardian module is in prod
 		if (array_key_exists('new', $this->_table->request->query)) {
