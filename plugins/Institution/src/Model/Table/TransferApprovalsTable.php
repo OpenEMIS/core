@@ -20,14 +20,6 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator
- 	        ->add('end_date', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'start_date', false]
-	    	    ])
-	        ;
-	}
-
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -37,6 +29,7 @@ class TransferApprovalsTable extends AppTable {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		// Set all selected values only
+		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
 		$this->request->data[$this->alias()]['security_user_id'] = $entity->security_user_id;
 		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
 		$this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
@@ -47,6 +40,7 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('security_user_id');
 		$this->ControllerAction->field('institution_id');
@@ -60,12 +54,29 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('previous_institution_id');
 
 		$this->ControllerAction->setFieldOrder([
-			'student',
+			'transfer_status', 'student',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'status', 'start_date', 'end_date',
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
 		]);
+	}
+
+	public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			$transferStatus = $request->data[$this->alias()]['transfer_status'];
+
+			$attr['type'] = 'readonly';
+			if ($transferStatus == 0) {
+				$attr['attr']['value'] = __('New');
+			} else if ($transferStatus == 1) {
+				$attr['attr']['value'] = __('Approve');
+			} else if ($transferStatus == 2) {
+				$attr['attr']['value'] = __('Reject');
+			}
+		}
+
+		return $attr;
 	}
 
 	public function onUpdateFieldStudent(Event $event, array $attr, $action, $request) {
@@ -91,7 +102,7 @@ class TransferApprovalsTable extends AppTable {
 			$selectedInstitution = $request->data[$this->alias()]['institution_id'];
 
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->Institutions->get($selectedInstitution)->name;
+			$attr['attr']['value'] = $this->Institutions->get($selectedInstitution)->code_name;
 		}
 
 		return $attr;
@@ -134,9 +145,18 @@ class TransferApprovalsTable extends AppTable {
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
+			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 			$startDate = $request->data[$this->alias()]['start_date'];
+			$endDate = $request->data[$this->alias()]['end_date'];
+
+			$periodStartDate = $this->AcademicPeriods->get($selectedPeriod)->start_date;
+			$periodEndDate = $this->AcademicPeriods->get($selectedPeriod)->end_date;
+			if (!is_null($endDate)) {
+				$periodEndDate = $endDate->copy()->subDay();
+			}
 
 			$attr['attr']['value'] = date('d-m-Y', strtotime($startDate));
+			$attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
 		}
 
 		return $attr;
@@ -146,6 +166,7 @@ class TransferApprovalsTable extends AppTable {
 		if ($action == 'edit') {
 			$endDate = $request->data[$this->alias()]['end_date'];
 
+			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = date('d-m-Y', strtotime($endDate));
 		}
 
@@ -239,8 +260,9 @@ class TransferApprovalsTable extends AppTable {
 		// Update status to Transferred in previous school
     	$institutionId = $entity->previous_institution_id;
 		$selectedStudent = $entity->security_user_id;
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$selectedGrade = $entity->education_grade_id;
 
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$status = $StudentStatuses
 			->find()
 			->where([$StudentStatuses->aliasField('code') => 'TRANSFERRED'])
@@ -252,7 +274,8 @@ class TransferApprovalsTable extends AppTable {
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
-				'security_user_id' => $selectedStudent
+				'security_user_id' => $selectedStudent,
+				'education_grade_id' => $selectedGrade
 			]
 		);
 		// End
@@ -260,9 +283,7 @@ class TransferApprovalsTable extends AppTable {
 		// Update status to 1 => approve
 		$this->updateAll(
 			['status' => 1],
-			[
-				'id' => $entity->id
-			]
+			['id' => $entity->id]
 		);
 		// End
 
@@ -302,8 +323,9 @@ class TransferApprovalsTable extends AppTable {
 		// Update status to Current in previous school
     	$institutionId = $entity->previous_institution_id;
 		$selectedStudent = $entity->security_user_id;
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$selectedGrade = $entity->education_grade_id;
 
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$status = $StudentStatuses
 			->find()
 			->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
@@ -315,7 +337,8 @@ class TransferApprovalsTable extends AppTable {
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
-				'security_user_id' => $selectedStudent
+				'security_user_id' => $selectedStudent,
+				'education_grade_id' => $selectedGrade
 			]
 		);
 		// End
@@ -323,9 +346,7 @@ class TransferApprovalsTable extends AppTable {
 		// Update status to 2 => reject
 		$this->updateAll(
 			['status' => 2],
-			[
-				'id' => $entity->id
-			]
+			['id' => $entity->id]
 		);
 		// End
 
