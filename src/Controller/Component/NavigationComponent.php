@@ -100,18 +100,22 @@ class NavigationComponent extends Component {
 			'collapse' => false,
 			'items' => [
 				'Institutions' => [
+					'icon' => '<i class="fa kd-institutions"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
 				],
 				'Students' => [
+					'icon' => '<i class="fa kd-students"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']
 				],
 				'Staff' => [
+					'icon' => '<i class="fa kd-staff"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
 				'Guardians' => [
+					'icon' => '<i class="fa kd-guardian"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				],
@@ -119,7 +123,7 @@ class NavigationComponent extends Component {
 				// 	'collapse' => true,
 				// 	'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
 				// ],
-				'Administration' => [
+				'<i class="fa fa-cogs"></i>Administration' => [
 					'collapse' => true,
 					'items' => [
 						'System Setup' => [
