@@ -127,43 +127,14 @@ class StudentBehavior extends Behavior {
 		$alias = $this->_table->alias();
 		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
 		$institutionSiteArray = [];
-		switch($alias) {
-			// For Institution Students
-			case "Students":
-				$session = $this->_table->Session;
-				$institutionId = $session->read('Institutions.id');
 
-				// Get number of student in institution
-				$studentCount = $table->find()
-					->where([$table->aliasField('institution_site_id') => $institutionId])
-					->distinct(['security_user_id'])
-					->count(['security_user_id']);
+		// Get total number of students
+		$studentCount = $table->find()
+			->distinct(['security_user_id'])
+			->count(['security_user_id']);
 
-				// Get Gender
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
-					['institution_site_id' => $institutionId, 'key'=>'Gender']);
-
-				// Get Age
-				$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
-					['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
-
-				// Get Grades
-				$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-				$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
-					['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
-				break;
-
-			// For Students
-			case "Users":
-				// Get total number of students
-				$studentCount = $table->find()
-					->distinct(['security_user_id'])
-					->count(['security_user_id']);
-
-				// Get the gender for all students
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
-				break;
-		}
+		// Get the gender for all students
+		$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
 
 		if ($this->_table->action == 'index') {
 			$indexDashboard = 'dashboard';
