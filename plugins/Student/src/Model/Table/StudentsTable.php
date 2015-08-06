@@ -110,6 +110,14 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
 	}
 
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$userTypes = TableRegistry::get('Security.SecurityUserTypes');
+		$affectedRows = $userTypes->deleteAll([
+			'security_user_id' => $entity->id,
+			'user_type' => UserTypes::STUDENT
+		]);
+	}
+
 	public function getDefaultImgMsg() {
 		return $this->defaultImgMsg;
 	}
@@ -132,6 +140,9 @@ class StudentsTable extends AppTable {
 			if (array_key_exists($action, $buttons)) {
 				$buttons[$action]['url'][1] = $entity->security_user_id;
 			}
+		}
+		if (array_key_exists('remove', $buttons)) {
+			$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
 		}
 		return $buttons;
 	}
