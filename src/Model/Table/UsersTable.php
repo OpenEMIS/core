@@ -44,20 +44,8 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('photo_content', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
-		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
-		$controller = $this->controller;
-		$userId = $this->Auth->user('id');
-		$tabElements = [
-			'account' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'view', $userId],
-				'text' => __('Account')
-			],
-			'password' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'Users', 'password'],
-				'text' => __('Password')
-			]
-		];
+		$tabElements = $this->controller->getTabElements();
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'account');
@@ -79,6 +67,19 @@ class UsersTable extends AppTable {
 
 	public function viewBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Roles']);
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('openemis_no', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
+		$this->ControllerAction->field('last_login', ['visible' => false]);
 	}
 
 	public function password() {
@@ -161,7 +162,7 @@ class UsersTable extends AppTable {
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
-    	$attr['tableCells'] = $tableCells;
+		$attr['tableCells'] = $tableCells;
 
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
@@ -196,7 +197,7 @@ class UsersTable extends AppTable {
 					'provider' => 'table',
 				],
 				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
+					'rule' => 'alphanumeric',
 				]
 			])
 			->allowEmpty('username')
@@ -208,12 +209,28 @@ class UsersTable extends AppTable {
 	}
 
 	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
-		$toolbarButtons->exchangeArray([]);
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
+		switch ($action) {
+			case 'view':
+				foreach ($toolbarButtons as $key => $value) {
+					if (!in_array($key, ['edit'])) {
+						unset($toolbarButtons[$key]);
+					}
+				}
+				break;
+			
+			case 'edit':
+				foreach ($toolbarButtons as $key => $value) {
+					if (!in_array($key, ['back'])) {
+						unset($toolbarButtons[$key]);
+					}
+				}
+				break;
+		}
 	}
 }
