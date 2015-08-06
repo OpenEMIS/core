@@ -50,7 +50,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$selectedPeriod = $this->request->query('period');
 		$selectedClass = $this->request->query('class');
 		$subjectId = $Classes->get($selectedClass)->education_subject_id;
-		$id = $entity->id;
+		$id = $entity->security_user_id;
 
 		$itemObj = $Items
 			->find()
@@ -112,7 +112,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				$Items = TableRegistry::get('Assessment.AssessmentItems');
 				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 				$alias = Inflector::underscore($Results->alias());
-				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->id;
+				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->security_user_id;
 
 				$gradingOptions = $this->gradingOptions;
 				$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
