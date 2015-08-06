@@ -4,6 +4,7 @@ INSERT INTO `db_patches` VALUES ('PHPOE-1799');
 -- institution_student_transfers
 ALTER TABLE `institution_student_transfers` ADD `academic_period_id` INT(11) NOT NULL AFTER `institution_id`;
 ALTER TABLE `institution_student_transfers` CHANGE `education_programme_id` `education_grade_id` INT(11) NOT NULL;
+ALTER TABLE `institution_student_transfers` CHANGE `comment` `comment` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
 
 -- patch institution_site_grades
 ALTER TABLE `institution_site_grades` DROP `status`;

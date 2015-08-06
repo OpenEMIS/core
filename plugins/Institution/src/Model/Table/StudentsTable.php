@@ -177,7 +177,8 @@ class StudentsTable extends AppTable {
 			$UserTypes = $this->Users->UserTypes;
 			$query = $UserTypes->find()->contain(['Users']);
 
-			if (!empty(trim($term))) {
+			$term = trim($term);
+			if (!empty($term)) {
 				$query = $this->addSearchConditions($query, ['searchTerm' => $term]);
 			}
 			
@@ -216,4 +217,76 @@ class StudentsTable extends AppTable {
 		;
 	}
 
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    	if ($action == 'view') {
+    		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
+				$selectedStudent = $this->request->params['pass'][1];
+	    		$this->Session->write($TransferRequests->alias().'.security_user_id', $selectedStudent);
+
+	    		// Show Transfer button only if the Student Status is Current
+	    		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
+	    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+				$institutionId = $this->Session->read('Institutions.id');
+				$currentStatus = $StudentStatuses
+					->find()
+					->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+					->first()
+					->id;
+				$pendingStatus = $StudentStatuses
+					->find()
+					->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
+					->first()
+					->id;
+
+				$gradeStudent = $InstitutionGradeStudents
+					->find()
+					->where([
+						$InstitutionGradeStudents->aliasField('institution_id') => $institutionId,
+						$InstitutionGradeStudents->aliasField('security_user_id') => $selectedStudent
+					])
+					->first();
+				// End
+
+				// Transfer button
+				$transferButton = $buttons['back'];
+				$transferButton['type'] = 'button';
+				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
+				$transferButton['attr'] = $attr;
+				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$transferButton['attr']['title'] = __('Transfer');
+				//End
+
+	    		if ($gradeStudent->student_status_id == $currentStatus) {
+	    			$transferButton['url'] = [
+			    		'plugin' => $buttons['back']['url']['plugin'],
+			    		'controller' => $buttons['back']['url']['controller'],
+			    		'action' => 'TransferRequests',
+			    		'add'
+			    	];
+					$toolbarButtons['transfer'] = $transferButton;
+				} else if ($gradeStudent->student_status_id == $pendingStatus) {
+					$transferRequest = $TransferRequests
+						->find()
+						->where([
+							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
+							$TransferRequests->aliasField('security_user_id') => $selectedStudent,
+							$TransferRequests->aliasField('status') => 0
+						])
+						->first();
+
+					$transferButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+			    		'controller' => $buttons['back']['url']['controller'],
+			    		'action' => 'TransferRequests',
+			    		'edit',
+			    		$transferRequest->id
+			    	];
+			    	$toolbarButtons['transfer'] = $transferButton;
+				}
+			}
+		}
+	}
 }
