@@ -544,8 +544,10 @@ class HtmlFieldHelper extends Helper {
 				foreach ($value as $obj) {
 					$chosenSelectList[] = $obj->name;
 				}
+				$value = implode(', ', $chosenSelectList);
+			} else {
+				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}
-			$value = implode(', ', $chosenSelectList);
 		} else if ($action == 'edit') {
 			$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
 			$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
