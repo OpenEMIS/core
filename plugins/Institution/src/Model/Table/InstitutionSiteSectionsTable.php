@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
@@ -109,7 +110,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$this->ControllerAction->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->ControllerAction->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
-		$this->ControllerAction->field('classes', ['type' => 'integer', 'visible' => ['index'=>true]]);
+		$this->ControllerAction->field('classes', ['label' => 'Subjects', 'override' => true, 'type' => 'integer', 'visible' => ['index'=>true]]);
 
 		$this->ControllerAction->field('students', [
 			'label' => '',
@@ -491,7 +492,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			    	$data['MultiSections'][$key]['errors'] = $error;
 			    }
 				if (!$error) {
-					$error = $model->addSectionClassesSubjects($model, $data);
+					list($error) = $model->addSectionClassesSubjects($model, $section, $data);
 				}
 			}
 			if (!$error) {
@@ -522,31 +523,51 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $process;
 	}
 
-	public function addSectionClassesSubjects($model, ArrayObject $data) {
-		// $model->InstitutionSiteClasses->selectedSectionId = $model->id;
-		$subjects = $model->InstitutionSiteClasses->getSubjectOptions();
-		pr($subjects);die;
+	public function addSectionClassesSubjects($model, Entity $entity, ArrayObject $data) {
+		$data['InstitutionSiteClasses'] = [
+		    'academic_period_id' => $data['InstitutionSiteSections']['academic_period_id'],
+		    'class_name' => 0,
+		    'id' => '',
+		    'institution_site_id' => $data['InstitutionSiteSections']['institution_site_id'],
+		];
+		$grades = [];
+		foreach ($entity->institution_site_section_grades as $grade) {
+			$grades[] = $grade->education_grade_id;
+		}
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$gradeSubjects = $EducationGrades
+				->find()
+				->contain(['EducationSubjects'])
+				->where([
+					'EducationGrades.id IN' => $grades
+				])
+				->toArray();
+		$subjects = [];
+		foreach ($gradeSubjects as $grade) {
+			foreach ($grade->education_subjects as $subject) {
+				$subjects[$subject->id] = $subject->name;
+				$data['MultiClasses'][] = [
+				    'education_subject_id' => $subject->id,
+			        'name' => $subject->name,
+			        'institution_site_class_staff' => [
+			            0 => [
+			                'status' => 1,
+			                'security_user_id' => 0
+			            ]
+			        ]
+				];
+			}
+		}
 		list($error, $classes, $data) = $model->InstitutionSiteClasses->prepareEntityObjects($model->InstitutionSiteClasses, $data);
-		pr($error);
-		pr($classes);
-		pr($data);
-		die;
-		// $process = $this->InstitutionSiteClasses->addBeforeSave($event, $entity, $data);
-		// if ($process($model, $entity)) {
-		// 	$this->Alert->success('general.add.success');
-		// 	$action = $this->buttons['index']['url'];
-			
-		// 	// Event: addAfterSave
-		// 	$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
-		// 	$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
-		// 	if ($event->isStopped()) { return $event->result; }
-		// 	// End Event
-
-		// 	return $this->controller->redirect($action);
-		// } else {
-		// 	$this->log($entity->errors(), 'debug');
-		// 	$this->Alert->error('general.add.failed');
-		// }
+		if (!$error) {
+			$entity->institution_site_classes = $classes;
+			// pr($entity);
+		}
+		return [$error, $entity, $data];
+		// pr($error);
+		// pr($classes);
+		// pr($data);
+		// die;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
