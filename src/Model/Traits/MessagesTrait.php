@@ -241,6 +241,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',

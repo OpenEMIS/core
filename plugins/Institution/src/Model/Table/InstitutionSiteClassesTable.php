@@ -14,8 +14,8 @@ use App\Model\Table\AppTable;
 
 class InstitutionSiteClassesTable extends AppTable {
 	public $institutionId = 0;
+	public $selectedSectionId = 0;
 	private $public = 0;
-	private $_selectedSectionId = 0;
 	private $_academicPeriodOptions = [];
 	private $_selectedAcademicPeriodId = -1;
 
@@ -95,6 +95,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'fieldNameKey' => 'teachers',
 			'fieldName' => $this->alias() . '.teachers._ids',
 			'placeholder' => $this->getMessage('Users.select_teacher'),
+			'valueWhenEmpty' => 'No Teacher Assigned',
 			'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
 		]);
 
@@ -148,8 +149,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		if (empty($sectionOptions)) {
 			$this->Alert->warning('Institutions.noSections');
 		}
-		$this->_selectedSectionId = $this->queryString('section_id', $sectionOptions);
-		$this->advancedSelectOptions($sectionOptions, $this->_selectedSectionId, [
+		$this->selectedSectionId = $this->queryString('section_id', $sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Classes, $institutionId, $selectedAcademicPeriodId) {
 				$query = $Classes->find()
@@ -176,7 +177,7 @@ class InstitutionSiteClassesTable extends AppTable {
              'data' => [
 	            	'academicPeriodOptions'=>$academicPeriodOptions,
 	            	'sectionOptions'=>$sectionOptions, 
-	            	'selectedSection'=>$this->_selectedSectionId, 
+	            	'selectedSection'=>$this->selectedSectionId, 
 	            ],
 	         'options' => []
             ]
@@ -194,7 +195,7 @@ class InstitutionSiteClassesTable extends AppTable {
 					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => [
 						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClasses.id',
-						'InstitutionSiteSectionClass.institution_site_section_id' => $this->_selectedSectionId
+						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedSectionId
 					]
 				]
 			]);
@@ -305,8 +306,8 @@ class InstitutionSiteClassesTable extends AppTable {
 									])
 									->toArray();
 		$SectionGrades = $this->InstitutionSiteSectionGrades;
-		$this->_selectedSectionId = $this->postString('class_name', $sectionOptions);
-		$this->advancedSelectOptions($sectionOptions, $this->_selectedSectionId, [
+		$this->selectedSectionId = $this->postString('class_name', $sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 			'callable' => function($id) use ($SectionGrades) {
 				return $SectionGrades->findByInstitutionSiteSectionId($id)->count();
@@ -318,67 +319,81 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function prepareEntityObjects($model, ArrayObject $data) {
 		$commonData = $data['InstitutionSiteClasses'];
-		$data['InstitutionSiteClasses'] = [];
 		$error = false;
 		$classes = false;
 		if (isset($data['MultiClasses']) && count($data['MultiClasses'])>0) {
-			foreach ($data['MultiClasses'] as $key=>$class) {
-				if (isset($class['education_subject_id']) && isset($class['institution_site_class_staff'])) {
-					$class['academic_period_id'] = $commonData['academic_period_id'];
-					$class['institution_site_id'] = $commonData['institution_site_id'];
-					$class['institution_site_section_classes'] = [
-						[
-							'status' => 1,
-							'institution_site_section_id' => $commonData['class_name']
+			foreach ($data['MultiClasses'] as $key=>$row) {
+				if (isset($row['education_subject_id']) && isset($row['institution_site_class_staff'])) {
+					$subjectSelected = true;
+					$classes[$key] = [
+						'key' => $key,
+						'name' => $row['name'],
+						'education_subject_id' => $row['education_subject_id'],
+						'academic_period_id' => $commonData['academic_period_id'],
+						'institution_site_id' => $commonData['institution_site_id'],
+						'institution_site_section_classes' => [
+							[
+								'status' => 1,
+								'institution_site_section_id' => $commonData['class_name']
+							]
 						]
 					];
-					$data['InstitutionSiteClasses'][] = $class;
+					if ($row['institution_site_class_staff'][0]['security_user_id']!=0) {
+						$classes[$key]['institution_site_class_staff'] = $row['institution_site_class_staff'];
+					}
 				}
 			}
-			$class = null;
-			
-			if (empty($data['InstitutionSiteClasses'])) {
+			if (!$classes) {
 				$error = 'Institution.Institutions.noSubjectSelected';
 			} else {
-				$classes = $this->newEntities($data['InstitutionSiteClasses']);
+				$classes = $model->newEntities($classes);
 				/**
 				 * check individual entity for any error
 				 */
 				foreach ($classes as $class) {
 				    if ($class->errors()) {
 				    	$error = $class->errors();
+				    	$data['MultiClasses'][$class->key]['errors'] = $error;
 				    }
 				}
 			}
 		} else {
 			$error = 'Institution.Institutions.noSubjectsInSection';
 		}
+		return [$error, $classes, $data];
+	}
 
-		if (!$error && $classes) {
-			foreach ($classes as $class) {
-		    	$this->save($class);
-			}
-			$this->Alert->success('general.add.success');
-			$action = $this->ControllerAction->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		} else {
-			$this->log($error, 'debug');
-			if (is_array($error)) {
-				$this->Alert->error('general.add.failed');
-			} else {
-				/**
-				 * unset all field validation except for "institution_site_id" to trigger validation error in ControllerActionComponent
-				 */
-				foreach ($this->fields as $value) {
-					if ($value['field'] != 'institution_site_id') {
-						$this->validator()->remove($value['field']);
-					}
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$process = function ($model, $entity) use ($data) {
+			list($error, $classes, $data) = $model->prepareEntityObjects($model, $data);
+			pr($data);die;
+			if (!$error && $classes) {
+				foreach ($classes as $class) {
+			    	$model->save($class);
 				}
-				$this->Alert->error($error);
+				return true;
+			} else {
+				$model->log($error, 'debug');
+				if (is_array($error)) {
+					$model->Alert->error('general.add.failed');
+				} else {
+					/**
+					 * unset all field validation except for "institution_site_id" to trigger validation error in ControllerActionComponent
+					 */
+					foreach ($model->fields as $value) {
+						if ($value['field'] != 'institution_site_id') {
+							$model->validator()->remove($value['field']);
+						}
+					}
+					$model->Alert->error($error);
+				}
+				$model->request->data = $data;
+				return false;
 			}
-		}
+		};
+		return $process;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -389,13 +404,12 @@ class InstitutionSiteClassesTable extends AppTable {
 				->contain(['Users'])
 				->where(['InstitutionSiteStaff.institution_site_id'=>$this->institutionId])
 				->toArray();
-		$teachers = [];
+		$teachers = [0=>'-- Select Teacher or Leave Blank --'];
 		foreach ($query as $key => $value) {
 			if ($value->has('user')) {
 				$teachers[$value->user->id] = $value->user->name;
 			}
 		}
-
 		$subjects = $this->getSubjectOptions();
 		$existedSubjects = $this->getExistedSubjects(true);
 		$this->fields['classes']['data'] = [
@@ -403,7 +417,6 @@ class InstitutionSiteClassesTable extends AppTable {
 			'subjects' => $subjects,
 			'existedSubjects' => $existedSubjects
 		];
-
 		return $entity;
 	}
 
@@ -518,25 +531,10 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$this->_selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
+		$this->selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
 		$teacherOptions = $this->getTeacherOptions();
 
-		/**
-		 * @todo should have additional filter; by start_date, end_date & education_programme_id
-		 */
-		$students = $this->Institutions->InstitutionSiteStudents;
-		$query = $students
-			->find('all')
-			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
-			->contain(['Users'])
-			->where([
-				'InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id
-			])
-			->toArray();
-		$studentOptions = [$this->getMessage('Users.select_student')];
-		foreach ($query as $student) {
-			$studentOptions[$student->user->id] = $student->user->name_with_id;
-		}
+		$studentOptions = $this->getStudentsOptions();
 		$students = $entity->institution_site_class_students;
 		/**
 		 * Check if the request is a page reload
@@ -556,12 +554,25 @@ class InstitutionSiteClassesTable extends AppTable {
 				}
 			}
 			/**
-			 * Insert the newly record into the UI table & unset the record from studentOptions
+			 * Insert the newly added record into the UI table & unset the record from studentOptions
 			 */
-			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']!=0) {
+			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']>-1) {
 				$id = $this->request->data['student_id'];
-				$students[] = $this->createVirtualEntity($id, $entity, 'students');
-				unset($studentOptions[$id]);
+				/**
+				 * Changed in PHPOE-1780. Includes option to add all student available in the dropdown list
+				 * @var [type]
+				 */
+				if ($id==0) {
+					foreach ($studentOptions as $key=>$value) {
+						if ($key>0) {
+							$students[] = $this->createVirtualEntity($key, $entity, 'students');
+							unset($studentOptions[$key]);
+						}
+					}
+				} else {
+					$students[] = $this->createVirtualEntity($id, $entity, 'students');
+					unset($studentOptions[$id]);
+				}
 			}
 		} else {
 			/**
@@ -648,12 +659,12 @@ class InstitutionSiteClassesTable extends AppTable {
 		return $list;
 	}
 	
-	private function getSubjectOptions($listOnly=false) {
+	public function getSubjectOptions($listOnly=false) {
 		$Grade = $this->InstitutionSiteSectionGrades;
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
 							->where([
-								$Grade->aliasField('institution_site_section_id') => $this->_selectedSectionId,
+								$Grade->aliasField('institution_site_section_id') => $this->selectedSectionId,
 								$Grade->aliasField('status') => 1
 							])
 							->toArray();
@@ -683,7 +694,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			$data = $subjects;
 		}
 		if (empty($data)) {
-			$this->Alert->warning('Institution.Institutions.noSubjectsInSection');
+			if (is_object($this->Alert)) {
+				$this->Alert->warning('Institution.Institutions.noSubjectsInSection');
+			}
 		}
 		return $data;
 	}
@@ -699,14 +712,14 @@ class InstitutionSiteClassesTable extends AppTable {
 				],
 			])
 			->where([
-				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->_selectedSectionId,
+				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->selectedSectionId,
 				'InstitutionSiteSectionClasses.status' => 1
 			])
 			->toArray();
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
-				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->education_subject->name;
+				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->name;
 			}
 			$data = $subjectList;
 		} else {
@@ -741,6 +754,30 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 		return $options;
+	}
+
+	/**
+	 * [getStudentsOptions description]
+	 * @return [type]                [description]
+	 * @todo  change $this->Institutions->InstitutionSiteStudents to $this->Institutions->InstitutionStudents when it the table is available
+	 */
+	protected function getStudentsOptions() {
+
+		$students = $this->Institutions->InstitutionSiteStudents;
+		$query = $students
+			->find('all')
+			->find('AcademicPeriod', ['academic_period_id'=> $this->_selectedAcademicPeriodId])
+			->contain(['Users', 'EducationProgrammes.EducationGrades'])
+			->where([
+				'InstitutionSiteStudents.institution_site_id'=>$this->institutionId
+			])
+			->toArray();
+		$studentOptions = ['-1'=>$this->getMessage('Users.select_student'), '0'=>$this->getMessage('Users.add_all_student')];
+		foreach ($query as $student) {
+			$studentOptions[$student->user->id] = $student->user->name_with_id;
+		}
+
+		return $studentOptions;
 	}
 
 }
