@@ -257,7 +257,7 @@ class InstitutionSiteStaffTable extends AppTable {
 			$institutionSiteStaffCount = $institutionSiteRecords
 				->contain(['Users', 'Users.Genders'])
 				->select([
-					'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
 					'gender' => 'Genders.name'
 				])
 				->group('gender_id');
