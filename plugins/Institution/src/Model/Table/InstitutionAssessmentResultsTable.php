@@ -22,7 +22,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->table('institution_site_class_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 	}
@@ -138,7 +138,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('identity');
 		$this->ControllerAction->field('mark');
 		$this->ControllerAction->field('grade');
-		$this->ControllerAction->setFieldOrder(['identity', 'security_user_id', 'mark', 'grade']);
+		$this->ControllerAction->setFieldOrder(['identity', 'student_id', 'mark', 'grade']);
 
 		$institutionId = $this->Session->read('Institutions.id');
 		$selectedStatus = $this->request->query('status');
@@ -301,7 +301,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$this->Alert->warning($querySkip);
 		}
 		return $query
-				->where([$this->aliasField('security_user_id') => 0]);
+				->where([$this->aliasField('student_id') => 0]);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {

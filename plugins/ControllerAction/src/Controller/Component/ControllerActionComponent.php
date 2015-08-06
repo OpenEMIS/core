@@ -443,11 +443,14 @@ class ControllerActionComponent extends Component {
 						return $this->controller->redirect(['action' => $this->model->alias]);
 					}
 				}
+				if ($result instanceof Response) {
+					return $result;
+				}
 			}
 		}
 		$this->debug('processAction');
 		$this->afterAction();
-
+		
 		if (!$result instanceof Response) {
 			$this->render();
 		}
@@ -830,14 +833,13 @@ class ControllerActionComponent extends Component {
 
 				if ($process($model, $entity)) {
 					$this->Alert->success('general.add.success');
-					$action = $this->buttons['index']['url'];
-					
 					// Event: addAfterSave
 					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
 					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
+					$action = $this->buttons['index']['url'];
 					return $this->controller->redirect($action);
 				} else {
 					$this->log($entity->errors(), 'debug');

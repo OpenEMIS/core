@@ -260,6 +260,7 @@ class TransferApprovalsTable extends AppTable {
 		// Update status to Transferred in previous school
     	$institutionId = $entity->previous_institution_id;
 		$selectedStudent = $entity->security_user_id;
+		$selectedPeriod = $entity->academic_period_id;
 		$selectedGrade = $entity->education_grade_id;
 
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -269,12 +270,13 @@ class TransferApprovalsTable extends AppTable {
 			->first()
 			->id;
 
-		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
-		$InstitutionGradeStudents->updateAll(
+		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+		$StudentPromotion->updateAll(
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
-				'security_user_id' => $selectedStudent,
+				'student_id' => $selectedStudent,
+				'academic_period_id' => $selectedPeriod,
 				'education_grade_id' => $selectedGrade
 			]
 		);
@@ -297,17 +299,17 @@ class TransferApprovalsTable extends AppTable {
 		$requestData = [
 			'start_date' => $transferEntity->start_date,
 			'end_date' => $transferEntity->end_date,
-			'security_user_id' => $transferEntity->security_user_id,
 			'student_status_id' => $currentStatus,
 			'institution_id' => $transferEntity->institution_id,
+			'security_user_id' => $transferEntity->security_user_id,
 			'academic_period_id' => $transferEntity->academic_period_id,
 			'education_grade_id' => $transferEntity->education_grade_id
 		];
 
-		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
-		$studentEntity = $InstitutionGradeStudents->newEntity($requestData);
+		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+		$studentEntity = $StudentPromotion->newEntity($requestData);
 
-		if ($InstitutionGradeStudents->save($studentEntity)) {
+		if ($StudentPromotion->save($studentEntity)) {
 		} else {
 			$this->log($studentEntity->errors(), 'debug');
 		}
@@ -323,6 +325,7 @@ class TransferApprovalsTable extends AppTable {
 		// Update status to Current in previous school
     	$institutionId = $entity->previous_institution_id;
 		$selectedStudent = $entity->security_user_id;
+		$selectedPeriod = $entity->academic_period_id;
 		$selectedGrade = $entity->education_grade_id;
 
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -332,12 +335,13 @@ class TransferApprovalsTable extends AppTable {
 			->first()
 			->id;
 
-		$InstitutionGradeStudents = TableRegistry::get('Institution.InstitutionGradeStudents');
-		$InstitutionGradeStudents->updateAll(
+		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+		$StudentPromotion->updateAll(
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
-				'security_user_id' => $selectedStudent,
+				'student_id' => $selectedStudent,
+				'academic_period_id' => $selectedPeriod,
 				'education_grade_id' => $selectedGrade
 			]
 		);
