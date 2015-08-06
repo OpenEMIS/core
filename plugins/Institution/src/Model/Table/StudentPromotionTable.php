@@ -21,10 +21,10 @@ class StudentPromotionTable extends AppTable {
 	private $dataCount = null;
 
 	public function initialize(array $config) {
-		$this->table('institution_grade_students');
+		$this->table('institution_students');
 		parent::initialize($config);
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey'=>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -65,7 +65,7 @@ class StudentPromotionTable extends AppTable {
 
 		$options = ['type' => 'select', 'label' => false, 'options' => $this->statusOptions, 'onChange' => '$(".grade_'.$id.'").hide();$("#grade_'.$id.'_"+$(this).val()).show();'];
 		$html .= $Form->input($fieldPrefix.".student_status_id", $options);
-		$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
+		$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
 		$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 
 		if (!is_null($this->nextGrade)) {
@@ -117,7 +117,7 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('institution_id', ['visible' => false]);
 
-		$this->ControllerAction->setFieldOrder(['openemis_no', 'security_user_id', 'student_status_id', 'education_grade_id']);
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'student_status_id', 'education_grade_id']);
 
 		$settings['pagination'] = false;
 		if ($this->Session->check('Institutions.id')) {
@@ -348,8 +348,8 @@ class StudentPromotionTable extends AppTable {
 				$currentStatusId = $requestData[$this->EducationGrades->alias()]['current_status_id'];
 				$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
 
-				if (array_key_exists('institution_grade_students', $requestData[$this->EducationGrades->alias()])) {
-					foreach ($requestData[$this->EducationGrades->alias()]['institution_grade_students'] as $key => $obj) {
+				if (array_key_exists('student_promotion', $requestData[$this->EducationGrades->alias()])) {
+					foreach ($requestData[$this->EducationGrades->alias()]['student_promotion'] as $key => $obj) {
 						if ($obj['student_status_id'] == $repeatStatusId) {
 							$status = $repeatStatusId;
 							$obj['education_grade_id'] = $educationGradeId;
@@ -362,8 +362,8 @@ class StudentPromotionTable extends AppTable {
 						$obj['end_data'] = date('Y-m-d', strtotime($nextPeriod->end_date));
 
 						$this->updateAll(['student_status_id' => $status], [
-							'security_user_id' => $obj['security_user_id'],
 							'institution_id' => $obj['institution_id'],
+							'student_id' => $obj['student_id'],
 							'academic_period_id' => $academicPeriodId,
 							'education_grade_id' => $educationGradeId
 						]);
@@ -388,7 +388,7 @@ class StudentPromotionTable extends AppTable {
 			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
 			$url = array_merge($url, $this->request->query, $this->request->pass);
 			$url[0] = 'index';
-			unset($url['mode']);pr($url);die;
+			unset($url['mode']);
 
 			return $this->controller->redirect($url);
 		}
