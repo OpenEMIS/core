@@ -87,13 +87,16 @@ class NavigationHelper extends Helper {
 					$this->getMenu($attr, $html, $level, $index, $path);
 					--$level;
 				} else {
-					$aOptions = array();
+					$aOptions = ['escape' => false];
 					$selected = isset($attr['selected']) ? $attr['selected'] : [];
 					if (strtolower($attr['url']['controller']) == strtolower($controller) 
 					&&  (strtolower($attr['url']['action']) == strtolower($action) || in_array($action, $selected))) {
 						$aOptions['class'] = 'nav-active';
 					}
-					$html .= $this->Html->link(__($name), $attr['url'], $aOptions);
+					if (array_key_exists('icon', $attr)) {
+						$name = $attr['icon'].__($name);
+					}
+					$html .= $this->Html->link($name, $attr['url'], $aOptions);
 				}
 				$html .= '</li>';
 			}
