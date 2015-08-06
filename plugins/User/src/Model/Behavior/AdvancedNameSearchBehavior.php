@@ -14,9 +14,6 @@ class AdvancedNameSearchBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$newEvent = [
-		];
-		$events = array_merge($events,$newEvent);
 		return $events;
 	}
 

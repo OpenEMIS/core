@@ -9,13 +9,14 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
+use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
 class StudentsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users',			['className' => 'User.Users', 'foreignKey' => 'student_id']);
+		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_id']);
@@ -24,6 +25,8 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		// to handle field type (autocomplete)
 		$this->addBehavior('OpenEmis.autocomplete');
+		$this->addBehavior('User.User');
+		$this->addBehavior('User.AdvancedNameSearch');
 
 		// $this->addBehavior('Student.Student');
 		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
@@ -35,6 +38,32 @@ class StudentsTable extends AppTable {
 		$institutionId = $this->Session->read('Institutions.id');
 		$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// Student Statuses
+		$statusOptions = $this->StudentStatuses
+			->find('list')
+			->toArray();
+		$selectedStatus = $this->queryString('status_id', $statusOptions);
+		$this->advancedSelectOptions($statusOptions, $selectedStatus);
+
+		$query->where([$this->aliasField('student_status_id') => $selectedStatus]);
+
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+		}
+
+		if (!empty($statusOptions)) {
+			$toolbarElements = [
+				['name' => 'Institution.Students/controls', 'data' => [], 'options' => []]
+			];
+			$this->controller->set('toolbarElements', $toolbarElements);
+			$this->controller->set('statusOptions', $statusOptions);
+		}
+		// End
 	}
 
 	// public function onGetStudentId(Event $event, Entity $entity) {
@@ -135,7 +164,25 @@ class StudentsTable extends AppTable {
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-			$data = $this->Users->autocomplete($term);
+			$UserTypes = $this->Users->UserTypes;
+			$query = $UserTypes->find()->contain(['Users']);
+
+			if (!empty(trim($term))) {
+				$query = $this->addSearchConditions($query, ['searchTerm' => $term]);
+			}
+			
+			// only search for students
+			$query->where([$UserTypes->aliasField('user_type') => UserTypes::STUDENT]);
+			$list = $query->all();
+
+			$data = array();
+			foreach($list as $obj) {
+				$data[] = [
+					'label' => sprintf('%s - %s', $obj->user->openemis_no, $obj->user->name),
+					'value' => $obj->user->id
+				];
+			}
+
 			echo json_encode($data);
 			die;
 		}
