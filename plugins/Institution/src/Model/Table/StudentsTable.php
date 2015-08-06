@@ -66,6 +66,15 @@ class StudentsTable extends AppTable {
 		// End
 	}
 
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$dataArray = $data->getArrayCopy();
+
+		// removing student_id on fail
+		if (!empty($dataArray) && array_key_exists($this->alias(), $dataArray) && array_key_exists('student_id', $dataArray[$this->alias])) {
+			unset($data[$this->alias()]['student_id']);
+		}
+	}
+
 	// public function onGetStudentId(Event $event, Entity $entity) {
 	// 	pr($entity);
 	// }
@@ -138,6 +147,7 @@ class StudentsTable extends AppTable {
 		$endDate = $period->end_date->copy();
 		$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
 		$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
+		$attr['default_date'] = false;
 		return $attr;
 	}
 
@@ -187,4 +197,23 @@ class StudentsTable extends AppTable {
 			die;
 		}
 	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->add('start_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'end_date', false]
+			])
+			->add('end_date', [
+			])
+			->add('student_status_id', [
+			])
+			->add('academic_period_id', [
+			])
+			// ->allowEmpty('student_id') required for create new but disabling for now
+			->add('student_id', 'ruleInstitutionStudentId', [
+				'rule' => ['institutionStudentId'],
+			])
+		;
+	}
+
 }
