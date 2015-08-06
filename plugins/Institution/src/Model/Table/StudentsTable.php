@@ -256,7 +256,7 @@ class StudentsTable extends AppTable {
 					->find()
 					->where([
 						$StudentPromotion->aliasField('institution_id') => $institutionId,
-						$StudentPromotion->aliasField('security_user_id') => $selectedStudent,
+						$StudentPromotion->aliasField('student_id') => $selectedStudent,
 						$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
 						$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
 					])

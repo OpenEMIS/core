@@ -30,32 +30,15 @@
 				$inputOptions = [
 					'class' => 'form-control',
 					'label' => false,
-					'options' => $classOptions,
+					'options' => $gradeOptions,
 					'url' => $baseUrl,
-					'data-named-key' => 'class',
+					'data-named-key' => 'grade',
 					'escape' => false
 				];
 				if (!empty($dataNamedGroup)) {
 					$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 				}
-				// echo $this->Form->input('classes', $inputOptions);
-
-				$baseUrl = $this->Url->build([
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
-				]);
-
-				if (!empty($gradeOptions)) {
-					echo $this->Form->input('education_grade', array(
-						'class' => 'form-control',
-						'label' => false,
-						'options' => $gradeOptions,
-						'url' => $baseUrl,
-						'data-named-key' => 'grade',
-						'data-named-group' => 'period,mode'
-					));
-				}
+				echo $this->Form->input('education_grade', $inputOptions);
 			} else {
 				$baseUrl = $this->Url->build([
 					'plugin' => $this->request->params['plugin'],
