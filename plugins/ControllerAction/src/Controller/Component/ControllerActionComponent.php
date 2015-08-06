@@ -13,7 +13,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.5
+ControllerActionComponent - Current Version 3.0.6
+3.0.6 (Malcolm) - $request->data = $requestData->getArrayCopy(); added after addAfterPatch dispatch event
+			 - for purpose of modifying request->data after validation (eg. unsetting a field the value can be removed from the input field after validation)
 3.0.5 (Jeff) - renamed beforeRender to afterAction, afterAction is called in processAction() now. 
 			 - this change is necessary to be compatible with CakePHP v3.1.0
 			 - optimized getContains to only fetch id and name instead of all fields which are not being used most of the time
@@ -811,6 +813,7 @@ class ControllerActionComponent extends Component {
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterPatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
+				$request->data = $requestData->getArrayCopy();
 
 				$process = function ($model, $entity) {
 					return $model->save($entity);
