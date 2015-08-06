@@ -543,31 +543,29 @@ class InstitutionSiteSectionsTable extends AppTable {
 				])
 				->toArray();
 		$subjects = [];
+		$data['MultiClasses'] = [];
 		foreach ($gradeSubjects as $grade) {
 			foreach ($grade->education_subjects as $subject) {
-				$subjects[$subject->id] = $subject->name;
-				$data['MultiClasses'][] = [
-				    'education_subject_id' => $subject->id,
-			        'name' => $subject->name,
-			        'institution_site_class_staff' => [
-			            0 => [
-			                'status' => 1,
-			                'security_user_id' => 0
-			            ]
-			        ]
-				];
+				if (!isset($subjects[$subject->id])) {
+					$subjects[$subject->id] = $subject->name;
+					$data['MultiClasses'][] = [
+					    'education_subject_id' => $subject->id,
+				        'name' => $subject->name,
+				        'institution_site_class_staff' => [
+				            0 => [
+				                'status' => 1,
+				                'security_user_id' => 0
+				            ]
+				        ]
+					];
+				}
 			}
 		}
 		list($error, $classes, $data) = $model->InstitutionSiteClasses->prepareEntityObjects($model->InstitutionSiteClasses, $data);
 		if (!$error) {
 			$entity->institution_site_classes = $classes;
-			// pr($entity);
 		}
 		return [$error, $entity, $data];
-		// pr($error);
-		// pr($classes);
-		// pr($data);
-		// die;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -708,7 +706,27 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$gradeOptions = $this->getSectionGradeOptions($entity);
 		$this->fields['students']['data']['gradeOptions'] = $gradeOptions;
+	}
 
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+		$record = $this->find()->contain(['InstitutionSiteClasses.InstitutionSiteClassStudents', 'InstitutionSiteClasses.InstitutionSiteSections', 'InstitutionSiteSectionStudents.Users'])->where([$this->aliasField('id')=>$entity->id])->first();
+		$classes = [];
+		foreach ($record->institution_site_classes as $class) {
+			$students = [];
+			foreach($record->institution_site_section_students as $sectionStudent) {
+				$students[$sectionStudent->user->id] = $this->InstitutionSiteClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students');
+			}
+			if (count($class->institution_site_class_students)>0) {
+				foreach($class->institution_site_class_students as $classStudent) {
+					if (!$students[$classStudent->student_id]) {
+						$classStudent->status=0;
+						$students[$classStudent->student_id] = $classStudent;
+					}
+				}
+			}
+			$class->institution_site_class_students = $students;
+			$this->InstitutionSiteClasses->save($class);
+		}
 	}
 
 
