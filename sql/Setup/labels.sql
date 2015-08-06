@@ -42,7 +42,6 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`, `created_user_id`, `creat
 ('InstitutionSiteShifts', 'modified_user_id', NULL, 'Modified By', 1, NOW()),
 ('InstitutionSiteShifts', 'created_user_id', NULL, 'Created By', 1, NOW()),
 -- InstitutionSiteSections
-('InstitutionSiteSections', 'name', NULL, 'Section Name', 1, NOW()),
 ('InstitutionSiteSections', 'security_user_id', NULL, 'Home Room Teacher', 1, NOW()),
 ('InstitutionSiteSections', 'institution_site_shift_id', NULL, 'Shift', 1, NOW()),
 -- InstitutionSiteClasses
@@ -206,3 +205,9 @@ INSERT INTO `labels` (`module`, `created_user_id`, `created`, `field`, `en`) VAL
 -- PHPOE-1669
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StaffPositions', 'security_user_id', 'Staff', '1', NOW());
 -- end PHPOE-1669
+
+-- PHPOE-1780 : PHPOE-1799-2
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES 
+('InstitutionSiteSections', 'classes', 'Subjects', '1', NOW()),
+('InstitutionSiteSections', 'name', 'Class Name', '1', NOW());
+-- end PHPOE-1780 : PHPOE-1799-2
