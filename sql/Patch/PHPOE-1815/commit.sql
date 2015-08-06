@@ -1,3 +1,8 @@
+CREATE TABLE IF NOT EXISTS `db_patches` (
+  `issue` varchar(15) NOT NULL,
+  PRIMARY KEY (`issue`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 INSERT INTO `db_patches` VALUES ('PHPOE-1815');
 
 -- field_options

@@ -25,6 +25,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$this->belongsTo('StudentStatuses',		['className' => 'Student.StudentStatuses', 	'foreignKey' => 'student_status_id']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('HighChart', [
         	'number_of_students_by_year' => [
         		'_function' => 'getNumberOfStudentsByYear',
