@@ -167,7 +167,8 @@ class StudentsTable extends AppTable {
 			$UserTypes = $this->Users->UserTypes;
 			$query = $UserTypes->find()->contain(['Users']);
 
-			if (!empty(trim($term))) {
+			$term = trim($term);
+			if (!empty($term)) {
 				$query = $this->addSearchConditions($query, ['searchTerm' => $term]);
 			}
 			
