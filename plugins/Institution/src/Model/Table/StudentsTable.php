@@ -64,13 +64,8 @@ class StudentsTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
 		}
 
-		if (!empty($statusOptions)) {
-			$toolbarElements = [
-				['name' => 'Institution.Students/controls', 'data' => [], 'options' => []]
-			];
-			$this->controller->set('toolbarElements', $toolbarElements);
-			$this->controller->set('statusOptions', $statusOptions);
-		}
+		$this->controller->set('statusOptions', $statusOptions);
+
 		// End
 	}
 
@@ -86,6 +81,51 @@ class StudentsTable extends AppTable {
 	// public function onGetStudentId(Event $event, Entity $entity) {
 	// 	pr($entity);
 	// }
+
+	public function afterAction(Event $event) {
+		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$institutionSiteArray = [];
+		$session = $this->Session;
+		$institutionId = $session->read('Institutions.id');
+
+		// Get number of student in institution
+		$studentCount = $table->find()
+			->where([$table->aliasField('institution_site_id') => $institutionId])
+			->distinct(['security_user_id'])
+			->count(['security_user_id']);
+
+		// Get Gender
+		$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
+			['institution_site_id' => $institutionId, 'key'=>'Gender']);
+
+		// Get Age
+		$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
+			['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
+
+		// Get Grades
+		$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
+			['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
+
+		if ($this->action == 'index') {
+			$indexDashboard = 'dashboard';
+			$indexElements = $this->controller->viewVars['indexElements'];
+			
+			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 2];
+			
+			$indexElements[] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'students',
+	            	'modelCount' => $studentCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	        $this->controller->set('indexElements', $indexElements);
+	    }
+	}
 
 	public function addAfterAction(Event $event) {
 		$this->ControllerAction->field('academic_period_id');
