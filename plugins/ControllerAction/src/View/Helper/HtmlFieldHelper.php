@@ -466,10 +466,14 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
-			if (!is_null($value)) {
-				$attr['value'] = date('d-m-Y', strtotime($value));
-			} else if ($attr['default_date']) {
-				$attr['value'] = date('d-m-Y');
+			if (!array_key_exists('value', $attr)) {
+				if (!is_null($value)) {
+					$attr['value'] = date('d-m-Y', strtotime($value));
+				} else if ($attr['default_date']) {
+					$attr['value'] = date('d-m-Y');
+				}
+			} else {
+				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
