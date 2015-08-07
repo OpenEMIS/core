@@ -115,6 +115,10 @@ class UserBehavior extends Behavior {
 		$fileContent = null;
 		if ($entity->has('user') && !empty($entity->user)) {
 			$fileContent = $entity->user->photo_content;
+		} else {
+			if ($this->_table->table() == 'security_users') {
+				$fileContent = $entity->photo_content;
+			}
 		}
 		
 		$value = "";

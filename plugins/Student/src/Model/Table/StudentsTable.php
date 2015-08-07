@@ -13,12 +13,6 @@ use App\Model\Table\AppTable;
 use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
 class StudentsTable extends AppTable {
-	// used for type = image
-	private $defaultImgIndexClass = "profile-image-thumbnail";
-	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
-	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
-
 	public $InstitutionStudent;
 
 	public function initialize(array $config) {
@@ -212,22 +206,6 @@ class StudentsTable extends AppTable {
 			->allowEmpty('photo_content')
 			;
 		return $validator;
-	}
-
-	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
-	}
-
-	public function getDefaultImgIndexClass() {
-		return $this->defaultImgIndexClass;
-	}
-
-	public function getDefaultImgViewClass() {
-		return $this->defaultImgViewClass;
-	}
-
-	public function getDefaultImgView() {
-		return $this->defaultStudentProfileView;;
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

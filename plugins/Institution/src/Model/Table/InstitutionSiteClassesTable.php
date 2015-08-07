@@ -44,6 +44,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			'foreignKey' => 'institution_site_class_id',
 			'targetForeignKey' => 'security_user_id'
 		]);
+
+		// this behavior restricts current user to see All Subjects or My Subjects
+		$this->addBehavior('Security.InstitutionSubject');
 		
 		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
 
