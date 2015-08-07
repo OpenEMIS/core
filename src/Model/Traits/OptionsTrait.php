@@ -11,6 +11,9 @@ trait OptionsTrait {
 			'Staff' => [
 				'position_types' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
 			],
+			'Position' => [
+				'types' => ['FULL_TIME' => __('Full-Time'), 'PART_TIME' => __('Part-Time')]
+			],
 			'Absence' => [
 				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
 			],

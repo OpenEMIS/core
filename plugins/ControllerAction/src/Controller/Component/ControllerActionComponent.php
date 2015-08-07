@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.9
+ControllerActionComponent - Current Version 3.1.0
+3.1.0 (Jeff) - moved renderFields() to be called after the event (afterAction) is triggered
 3.0.9 (Jeff) - fixed getContains to retrieve only id, name and foreignKeys fields
 3.0.8 (Jeff) - fixed remove() not throwing errors if delete fails
 3.0.7 (Jeff) - edited ControllerAction.Controller.beforePaginate to use $this->model instead of $model
@@ -465,8 +466,6 @@ class ControllerActionComponent extends Component {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
-			$this->renderFields();
-
 			$this->config['action'] = $this->currentAction;
 			$this->config['table'] = $this->model;
 			$this->config['fields'] = $this->model->fields;
@@ -479,6 +478,9 @@ class ControllerActionComponent extends Component {
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
+
+			$this->renderFields();
+
 			$this->request->params['action'] = $action;
 
 			uasort($this->model->fields, [$this, 'sortFields']);

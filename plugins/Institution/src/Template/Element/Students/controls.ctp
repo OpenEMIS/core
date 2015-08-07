@@ -22,7 +22,7 @@
 				}
 
 				if (!empty($educationGradesOptions)) {
-					echo $this->Form->input('academic_period', array(
+					echo $this->Form->input('education_grade', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $educationGradesOptions,

@@ -1,5 +1,5 @@
 <?php
-namespace Student\Model\Table;
+namespace Staff\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
@@ -12,14 +12,13 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
-class StudentsTable extends AppTable {
+class StaffTable extends AppTable {
 	// used for type = image
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
-	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
 
-	public $InstitutionStudent;
+	public $InstitutionStaff;
 
 	public function initialize(array $config) {
 		$this->table('security_users');
@@ -32,48 +31,35 @@ class StudentsTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+		$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		$this->addBehavior('AdvanceSearch');
 
-		$this->addBehavior('Excel', [
-			'excludes' => ['password', 'photo_name'],
-			'filename' => 'Students'
-		]);
+		// $this->addBehavior('HighChart', [
+		// 	'number_of_students_by_year' => [
+		// 		'_function' => 'getNumberOfStudentsByYear',
+		// 		'chart' => ['type' => 'column', 'borderWidth' => 1],
+		// 		'xAxis' => ['title' => ['text' => 'Years']],
+		// 		'yAxis' => ['title' => ['text' => 'Total']]
+		// 	],
+		// 	'institution_site_student_gender' => [
+		// 		'_function' => 'getNumberOfStudentsByGender'
+		// 	],
+		// 	'institution_site_student_age' => [
+		// 		'_function' => 'getNumberOfStudentsByAge'
+		// 	]
+		// ]);
 
-		$this->addBehavior('HighChart', [
-			'number_of_students_by_year' => [
-				'_function' => 'getNumberOfStudentsByYear',
-				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Years']],
-				'yAxis' => ['title' => ['text' => 'Total']]
-			],
-			'institution_site_student_gender' => [
-				'_function' => 'getNumberOfStudentsByGender'
-			],
-			'institution_site_student_age' => [
-				'_function' => 'getNumberOfStudentsByAge'
-			]
-		]);
-
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-
-		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
+		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	// $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
 
 	// public function beforeAction(Event $event) {
 
 	// }
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		// to set the student name in headers
-		$this->request->session()->write('Students.name', $entity->name);
+		// to set the staff name in headers
+		$this->request->session()->write('Staff.name', $entity->name);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -81,37 +67,27 @@ class StudentsTable extends AppTable {
 		$this->fields = []; // unset all fields first
 
 		$this->ControllerAction->field('institution', ['order' => 50]);
-		$this->ControllerAction->field('status', ['order' => 51]);
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
 		$userId = $entity->security_user_id;
-		$query = $this->InstitutionStudent->find()
-		->contain(['Institutions', 'StudentStatuses'])
-		->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
-		->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
+		$institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
+		->contain(['Institutions'])
+		->select(['Institutions.name'])
+		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
+		->toArray();
 		;
 
 		$value = '';
-		if ($query->count() > 0) {
-			$obj = $query->first();
-			$value = $obj->institution->name;
-			$entity->status = $obj->student_status->name;
-		}
-		return $value;
-	}
-
-	public function onGetStatus(Event $event, Entity $entity) {
-		$value = '';
-		if ($entity->has('status')) {
-			$value = $entity->status;
+		if (!empty($institutions)) {
+			$value = implode(', ', $institutions);
 		}
 		return $value;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['Users']);
-		$query->where(['SecurityUserTypes.user_type' => UserTypes::STUDENT]);
+		$query->where(['SecurityUserTypes.user_type' => UserTypes::STAFF]);
 
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
@@ -124,7 +100,7 @@ class StudentsTable extends AppTable {
 		$UserTypes = TableRegistry::get('Security.SecurityUserTypes');
 
         if ($entity->isNew()) {
-			$obj = $UserTypes->newEntity(['security_user_id' => $entity->id, 'user_type' => UserTypes::STUDENT]);
+			$obj = $UserTypes->newEntity(['security_user_id' => $entity->id, 'user_type' => UserTypes::STAFF]);
 			$UserTypes = $UserTypes->save($obj);
         }
 	}
@@ -132,34 +108,34 @@ class StudentsTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
-			$userTypes = TableRegistry::get('Security.SecurityUserTypes');
-			$institutionSiteArray = [];
+			// $userTypes = TableRegistry::get('Security.SecurityUserTypes');
+			// $institutionSiteArray = [];
 
-			// Get total number of students
-			$count = $userTypes->find()
-				->distinct(['security_user_id'])
-				->where([$userTypes->aliasField('user_type') => UserTypes::STUDENT])
-				->count(['security_user_id']);
+			// // Get total number of students
+			// $count = $userTypes->find()
+			// 	->distinct(['security_user_id'])
+			// 	->where([$userTypes->aliasField('user_type') => UserTypes::STAFF])
+			// 	->count(['security_user_id']);
 
-			// Get the gender for all students
-			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_site_student_gender', ['key' => 'Gender']);
+			// // Get the gender for all students
+			// $institutionSiteArray['Gender'] = $this->getDonutChart('institution_site_student_gender', ['key' => 'Gender']);
 
-			$indexDashboard = 'dashboard';
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'students',
-	            	'modelCount' => $count,
-	            	'modelArray' => $institutionSiteArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
+			// $indexDashboard = 'dashboard';
+			// $this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	  //           'name' => $indexDashboard,
+	  //           'data' => [
+	  //           	'model' => 'students',
+	  //           	'modelCount' => $count,
+	  //           	'modelArray' => $institutionSiteArray,
+	  //           ],
+	  //           'options' => [],
+	  //           'order' => 1
+	  //       ];
 	    }
 	}
 
 	public function addBeforeAction(Event $event) {
-		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
+		$openemisNo = $this->getUniqueOpenemisId(['model' => 'Staff']);
 		$this->ControllerAction->field('openemis_no', [ 
 			'attr' => ['value' => $openemisNo],
 			'value' => $openemisNo
@@ -173,7 +149,7 @@ class StudentsTable extends AppTable {
 		$userTypes = TableRegistry::get('Security.SecurityUserTypes');
 		$affectedRows = $userTypes->deleteAll([
 			'security_user_id' => $entity->id,
-			'user_type' => UserTypes::STUDENT
+			'user_type' => UserTypes::STAFF
 		]);
 	}
 
@@ -212,22 +188,6 @@ class StudentsTable extends AppTable {
 			->allowEmpty('photo_content')
 			;
 		return $validator;
-	}
-
-	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
-	}
-
-	public function getDefaultImgIndexClass() {
-		return $this->defaultImgIndexClass;
-	}
-
-	public function getDefaultImgViewClass() {
-		return $this->defaultImgViewClass;
-	}
-
-	public function getDefaultImgView() {
-		return $this->defaultStudentProfileView;;
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

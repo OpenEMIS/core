@@ -121,6 +121,8 @@ class UserBehavior extends Behavior {
 		if (empty($fileContent) && is_null($fileContent)) {
 			if ($this->_table->alias() == 'Students') {
 				$value = $this->defaultStudentProfileIndex;
+			} else if ($this->_table->alias() == 'Staff') {
+				$value = $this->defaultStaffProfileIndex;
 			}
 			// if (($this->hasBehavior('Student')) && ($this->action == "index")) {
 			// 	$value = $this->defaultStudentProfileIndex;
@@ -142,6 +144,28 @@ class UserBehavior extends Behavior {
 			// }
 		} else {
 			$value = base64_encode(stream_get_contents($fileContent));
+		}
+		return $value;
+	}
+
+	public function getDefaultImgMsg() {
+		return $this->defaultImgMsg;
+	}
+
+	public function getDefaultImgIndexClass() {
+		return $this->defaultImgIndexClass;
+	}
+
+	public function getDefaultImgViewClass() {
+		return $this->defaultImgViewClass;
+	}
+
+	public function getDefaultImgView() {
+		$value = '';
+		if ($this->_table->alias() == 'Students') {
+			$value = $this->defaultStudentProfileView;
+		} else if ($this->_table->alias() == 'Staff') {
+			$value = $this->defaultStaffProfileView;
 		}
 		return $value;
 	}
