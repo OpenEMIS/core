@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
@@ -34,6 +35,21 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		$this->addBehavior('AdvanceSearch');
+
+		$this->addBehavior('HighChart', [
+			'number_of_students_by_year' => [
+				'_function' => 'getNumberOfStudentsByYear',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Years']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_site_student_gender' => [
+				'_function' => 'getNumberOfStudentsByGender'
+			],
+			'institution_site_student_age' => [
+				'_function' => 'getNumberOfStudentsByAge'
+			]
+		]);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
@@ -96,27 +112,37 @@ class StudentsTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
 		}
 	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$UserTypes = TableRegistry::get('Security.SecurityUserTypes');
+
+        if ($entity->isNew()) {
+			$obj = $UserTypes->newEntity(['security_user_id' => $entity->id, 'user_type' => UserTypes::STUDENT]);
+			$UserTypes = $UserTypes->save($obj);
+        }
+	}
 	
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
-			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
+			$userTypes = TableRegistry::get('Security.SecurityUserTypes');
 			$institutionSiteArray = [];
 
 			// Get total number of students
-			$studentCount = $table->find()
+			$count = $userTypes->find()
 				->distinct(['security_user_id'])
+				->where([$userTypes->aliasField('user_type') => UserTypes::STUDENT])
 				->count(['security_user_id']);
 
 			// Get the gender for all students
-			$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
+			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_site_student_gender', ['key' => 'Gender']);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'students',
-	            	'modelCount' => $studentCount,
+	            	'modelCount' => $count,
 	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
@@ -127,11 +153,9 @@ class StudentsTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
-		$this->ControllerAction->field('openemis_no', [
-			'type' => 'readonly', 
+		$this->ControllerAction->field('openemis_no', [ 
 			'attr' => ['value' => $openemisNo],
-			'value' => $openemisNo,
-			'order' => 1
+			'value' => $openemisNo
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 100]);
@@ -144,6 +168,43 @@ class StudentsTable extends AppTable {
 			'security_user_id' => $entity->id,
 			'user_type' => UserTypes::STUDENT
 		]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->allowEmpty('photo_content')
+			;
+		return $validator;
 	}
 
 	public function getDefaultImgMsg() {
@@ -173,5 +234,109 @@ class StudentsTable extends AppTable {
 			$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
 		}
 		return $buttons;
+	}
+
+	// used by highchart
+	public function getNumberOfStudentsByYear($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStudents.'.$key] = $value;
+		}
+
+		$periodConditions = $_conditions;
+		$query = $this->find();
+		$periodResult = $query
+			->select([
+				'min_year' => $query->func()->min('InstitutionSiteStudents.start_year'),
+				'max_year' => $query->func()->max('InstitutionSiteStudents.end_year')
+			])
+			->where($periodConditions)
+			->first();
+		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
+		$currentPeriodId = $AcademicPeriod->getCurrent();
+		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
+		$thisYear = $currentPeriodObj->end_year;
+		$minYear = $thisYear - 2;
+		$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
+		$maxYear = $thisYear;
+
+		$years = [];
+
+		$genderOptions = $this->Genders->getList();
+		$dataSet = [];
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = ['name' => __($value), 'data' => []];
+		}
+
+		$studentsByYearConditions = array('Genders.name IS NOT NULL');
+		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
+
+		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
+			$years[$currentYear] = $currentYear;
+			$studentsByYearConditions['OR'] = [
+				[
+					'InstitutionSiteStudents.end_year IS NOT NULL',
+					'InstitutionSiteStudents.start_year <= "' . $currentYear . '"',
+					'InstitutionSiteStudents.end_year >= "' . $currentYear . '"'
+				]
+			];
+
+			$query = $this->find();
+			$studentsByYear = $query
+				->contain(['Users.Genders'])
+				->select([
+					'Users.first_name',
+					'Genders.name',
+					'total' => $query->func()->count('InstitutionSiteStudents.id')
+				])
+				->where($studentsByYearConditions)
+				->group('Genders.name')
+				->toArray()
+				;
+ 			foreach ($dataSet as $key => $value) {
+ 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
+ 					$dataSet[$key]['data'][$currentYear] = 0;
+ 				}				
+			}
+
+			foreach ($studentsByYear as $key => $studentByYear) {
+				$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
+				$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
+				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
+			}
+		}
+
+		$params['dataSet'] = $dataSet;
+		
+		return $params;
+	}
+
+	// Function use by the mini dashboard (For Institution Students and Students)
+	public function getNumberOfStudentsByGender($params=[]) {
+		$institutionSiteRecords = $this->find();
+		$institutionSiteStudentCount = $institutionSiteRecords
+			->select([
+				'count' => $institutionSiteRecords->func()->count('DISTINCT Students.id'),	
+				'gender' => 'Genders.name'
+			])
+			->contain(['Genders'])
+			->innerJoin(['UserTypes' => 'security_user_types'], [
+				'UserTypes.security_user_id = Students.id',
+				'UserTypes.user_type' => UserTypes::STUDENT
+			])
+			->group('gender');
+
+		if (!empty($params['institution_site_id'])) {
+			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
+		}	
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($institutionSiteStudentCount->toArray() as $value) {
+			//Compile the dataset
+			$dataSet[] = [$value['gender'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
 	}
 }

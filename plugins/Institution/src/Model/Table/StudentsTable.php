@@ -48,6 +48,11 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
 
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
+		$this->ControllerAction->field('student_status_id', ['order' => 100]);
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		// Student Statuses
 		$statusOptions = $this->StudentStatuses
@@ -73,7 +78,7 @@ class StudentsTable extends AppTable {
 			->where(['institution_site_id' => $institutionId])
 			->group('education_grade_id')
 			->toArray();
-		$addGradesOption = ['-1' => 'All Grades'];
+		$addGradesOption = ['-1' => __('All Grades')];
 		$educationGradesOptions = $addGradesOption + $educationGradesOptions;
 
 		// Query Strings
@@ -86,7 +91,7 @@ class StudentsTable extends AppTable {
 		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
-		if($selectedEducationGrades != -1){
+		if ($selectedEducationGrades != -1) {
 			$query->where([
 				$this->aliasField('education_grade_id') => $selectedEducationGrades,
 			]);
@@ -95,7 +100,7 @@ class StudentsTable extends AppTable {
 		$query->where([
 			$this->aliasField('student_status_id') => $selectedStatus,
 			$this->aliasField('academic_period_id') => $selectedAcademicPeriod
-			]);
+		]);
 
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
@@ -104,7 +109,6 @@ class StudentsTable extends AppTable {
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
-
 		// End
 	}
 
@@ -117,9 +121,13 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	// public function onGetStudentId(Event $event, Entity $entity) {
-	// 	pr($entity);
-	// }
+	public function onGetEducationGradeId(Event $event, Entity $entity) {
+		$value = '';
+		if ($entity->has('education_grade')) {
+			$value = $entity->education_grade->programme_grade_name;
+		}
+		return $value;
+	}
 
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
@@ -195,8 +203,35 @@ class StudentsTable extends AppTable {
 		$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 	}
 
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
+		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+		$this->fields['student_id']['order'] = 10;
+	}
+
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('student_id', [
+			'type' => 'readonly', 
+			'order' => 10, 
+			'attr' => ['value' => $entity->user->name_with_id]
+		]);
+		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $entity->education_grade->programme_grade_name]]);
+		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
+		$this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
+		$period = $entity->academic_period;
+		$endDate = $period->end_date->copy();
+		$this->fields['start_date']['date_options'] = ['startDate' => $period->start_date->format('d-m-Y')];
+		$this->fields['end_date']['date_options'] = ['endDate' => $endDate->subDay()->format('d-m-Y')];
+	}
+
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-		$attr['onChangeReload'] = 'changePeriod';
+		if ($action == 'add') {
+			$attr['onChangeReload'] = 'changePeriod';
+		}
 		return $attr;
 	}
 
@@ -206,28 +241,34 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request) {
-		$period = $attr['period'];
-		$endDate = $period->end_date->copy();
-		$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
-		$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
-		$attr['default_date'] = false;
+		if ($action == 'add') {
+			$period = $attr['period'];
+			$endDate = $period->end_date->copy();
+			$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
+			$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
+			$attr['default_date'] = false;
+		}
 		return $attr;
 	}
 
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request) {
-		$period = $attr['period'];
-		$attr['type'] = 'readonly';
-		$attr['attr'] = ['value' => $period->end_date->format('d-m-Y')];
-		$attr['value'] = $period->end_date->format('Y-m-d');
+		if ($action == 'add') {
+			$period = $attr['period'];
+			$attr['type'] = 'readonly';
+			$attr['attr'] = ['value' => $period->end_date->format('d-m-Y')];
+			$attr['value'] = $period->end_date->format('Y-m-d');
+		}
 		return $attr;
 	}
 
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
-		$attr['type'] = 'autocomplete';
-		$attr['target'] = ['key' => 'student_id', 'name' => $this->aliasField('student_id')];
-		$attr['noResults'] = $this->getMessage($this->aliasField('noStudents'));
-		$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
-		$attr['url'] = ['controller' => 'Institutions', 'action' => 'Students', 'ajaxUserAutocomplete'];
+		if ($action == 'add') {
+			$attr['type'] = 'autocomplete';
+			$attr['target'] = ['key' => 'student_id', 'name' => $this->aliasField('student_id')];
+			$attr['noResults'] = $this->getMessage($this->aliasField('noStudents'));
+			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Students', 'ajaxUserAutocomplete'];
+		}
 		return $attr;
 	}
 
@@ -307,6 +348,7 @@ class StudentsTable extends AppTable {
 			// ->allowEmpty('student_id') required for create new but disabling for now
 			->add('student_id', 'ruleInstitutionStudentId', [
 				'rule' => ['institutionStudentId'],
+				'on' => 'create'
 			])
 		;
 	}
