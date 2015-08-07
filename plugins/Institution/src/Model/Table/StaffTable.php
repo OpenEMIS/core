@@ -268,25 +268,6 @@ class StaffTable extends AppTable {
 	    }
 	}
 
-	// public function addAfterAction(Event $event) {
-	// 	list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $sectionOptions, $selectedSection) = array_values($this->_getSelectOptions());
-
-	// 	$this->ControllerAction->field('academic_period_id', ['options' => $periodOptions]);
-	// 	$this->ControllerAction->field('education_grade_id', ['options' => $gradeOptions]);
-	// 	$this->ControllerAction->field('class', ['options' => $sectionOptions]);
-
-	// 	$period = $this->AcademicPeriods->get($selectedPeriod);
-
-	// 	$this->ControllerAction->field('id', ['value' => Text::uuid()]);
-	// 	$this->ControllerAction->field('start_date', ['period' => $period]);
-	// 	$this->ControllerAction->field('end_date', ['period' => $period]);
-	// 	$this->ControllerAction->field('student_id');
-
-	// 	$this->ControllerAction->setFieldOrder([
-	// 		'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_id'
-	// 	]);
-	// }
-
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
@@ -364,23 +345,4 @@ class StaffTable extends AppTable {
 			die;
 		}
 	}
-
-	// public function validationDefault(Validator $validator) {
-	// 	return $validator
-	// 		->add('start_date', 'ruleCompareDate', [
-	// 			'rule' => ['compareDate', 'end_date', false]
-	// 		])
-	// 		->add('end_date', [
-	// 		])
-	// 		->add('student_status_id', [
-	// 		])
-	// 		->add('academic_period_id', [
-	// 		])
-	// 		// ->allowEmpty('student_id') required for create new but disabling for now
-	// 		->add('student_id', 'ruleInstitutionStudentId', [
-	// 			'rule' => ['institutionStudentId'],
-	// 			'on' => 'create'
-	// 		])
-	// 	;
-	// }
 }
