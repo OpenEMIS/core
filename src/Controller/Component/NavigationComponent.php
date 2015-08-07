@@ -123,7 +123,8 @@ class NavigationComponent extends Component {
 				// 	'collapse' => true,
 				// 	'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
 				// ],
-				'<i class="fa fa-cogs"></i>Administration' => [
+				'Administration' => [
+					'icon' => '<i class="fa fa-cogs"></i>',
 					'collapse' => true,
 					'items' => [
 						'System Setup' => [
