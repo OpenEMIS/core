@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?-zfufvo');
-	src:url('fonts/kordit-fonts.eot?#iefix-zfufvo') format('embedded-opentype'),
-		url('fonts/kordit-fonts.ttf?-zfufvo') format('truetype'),
-		url('fonts/kordit-fonts.woff?-zfufvo') format('woff'),
-		url('fonts/kordit-fonts.svg?-zfufvo#kordit-fonts') format('svg');
+	src:url('fonts/kordit-fonts.eot?-8if37l');
+	src:url('fonts/kordit-fonts.eot?#iefix-8if37l') format('embedded-opentype'),
+		url('fonts/kordit-fonts.ttf?-8if37l') format('truetype'),
+		url('fonts/kordit-fonts.woff?-8if37l') format('woff'),
+		url('fonts/kordit-fonts.svg?-8if37l#kordit-fonts') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,6 +23,9 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.kd-guardian:before {
+	content: "\e63d";
+}
 .kd-dropout:before {
 	content: "\e63a";
 }
