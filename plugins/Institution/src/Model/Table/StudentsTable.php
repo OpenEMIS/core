@@ -129,6 +129,7 @@ class StudentsTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
+			// chart must fetch from this table instead of InstitutionSiteStudents
 			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
 			$institutionSiteArray = [];
 			$session = $this->Session;
