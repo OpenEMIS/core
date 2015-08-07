@@ -5,6 +5,7 @@ use Cake\I18n\Time;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class AccessControlComponent extends Component {
 	private $controller;
@@ -138,10 +139,11 @@ class AccessControlComponent extends Component {
 
 		// we only need controller and action
 		foreach ($url as $i => $val) {
-			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val)) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val)) {
 				unset($url[$i]);
 			}
 		}
+		// Log::write('debug', $url);
 
 		if (empty($url)) {
 			$url = [$this->controller->name, $this->action];
@@ -150,12 +152,13 @@ class AccessControlComponent extends Component {
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
 		// pr($permissionKey);
-
+		
 		if ($this->Session->check($permissionKey)) {
 			if ($roleId != 0) {
 				$roles = $this->Session->read($permissionKey);
 				return in_array($roleId, $roles);
 			} else {
+				// Log::write('debug', $permissionKey);
 				return true;
 			}
 		}

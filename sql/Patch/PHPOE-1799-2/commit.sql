@@ -11,6 +11,50 @@ ALTER TABLE `institution_site_class_students` CHANGE `security_user_id` `student
 ALTER TABLE `institution_students` CHANGE `end_date` `end_date` DATE NOT NULL ;
 ALTER TABLE `institution_students` CHANGE `end_year` `end_year` INT( 4 ) NOT NULL ;
 
+-- insert permissions for grades
+UPDATE `security_functions` SET
+`id` = `id` + 1,
+`order` = `order` + 1
+WHERE `id` > 1004 AND `id` < 2000
+ORDER BY `id` DESC;
+
 INSERT INTO `security_functions`
 (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1026, 'Grades', 'Institutions', 'Institutions', 'Details', 1000, 'Grades.index', NULL, NULL, NULL, 'Grades.indexEdit', 1026, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(1005, 'Grades', 'Institutions', 'Institutions', 'Details', 1000, 'Grades.index', NULL, NULL, NULL, 'Grades.indexEdit', 1005, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+-- update role function mapping
+UPDATE `security_role_functions` SET
+`security_function_id` = `security_function_id` + 1
+WHERE `security_function_id` > 1004 AND `security_function_id` < 2000
+ORDER BY `security_function_id` DESC;
+
+-- insert permissions for my/all subjects
+UPDATE `security_functions` SET
+`name` = 'All Subjects',
+`_view` = 'AllSubjects.index|AllSubjects.view|Classes.index|Classes.view',
+`_edit` = 'AllSubjects.edit|Classes.edit'
+WHERE `id` = 1009;
+
+UPDATE `security_functions` SET
+`id` = `id` + 1,
+`order` = `order` + 1
+WHERE `id` > 1009 AND `id` < 2000
+ORDER BY `id` DESC;
+
+INSERT INTO `security_functions`
+(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1010, 'My Subjects', 'Institutions', 'Institutions', 'Details', 1000, 'Classes.index|Classes.view', 'Classes.edit', NULL, NULL, NULL, 1010, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+-- update role function mapping
+UPDATE `security_role_functions` SET
+`security_function_id` = `security_function_id` + 1
+WHERE `security_function_id` > 1009 AND `security_function_id` < 2000
+ORDER BY `security_function_id` DESC;
+
+INSERT INTO `labels` (`module`, `field`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('Staff', 'security_user_id', NULL, 'Staff', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', '2015-08-07 00:00:00');
+INSERT INTO `labels` (`module`, `field`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('Staff', 'institution_site_position_id', NULL, 'Position', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', '2015-08-07 00:00:00');
+
+-- fix history permission
+UPDATE `security_functions` SET
+`_view` = 'History.index'
+WHERE `id` = 1001;
