@@ -84,6 +84,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
+
+
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -332,7 +334,43 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {
-		return $entity->Areas['name'];
+		$areaName = $entity->Areas['name'];
+
+		if($this->action == 'index'){
+			// Getting the system value for the area
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$areaLevel = $ConfigItems->value('institution_area_level_id');
+
+			// Getting the current area id
+			$institutionSiteId = $entity->id;
+			$areaId = $this->get($entity->id)->area_id;
+			
+			$AreaTable = TableRegistry::get('Area.Areas');
+			$path = $AreaTable
+				->find('path', ['for' => $areaId])
+				->toArray();
+
+			foreach($path as $value){
+				if ($value['area_level_id'] == $areaLevel) {
+					$areaName = $value['name'];
+				}
+			}
+		}
+
+		return $areaName;
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'area_id' && $this->action == 'index') {
+			// Getting the system value for the area
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$areaLevel = $ConfigItems->value('institution_area_level_id');
+
+			$AreaTable = TableRegistry::get('Area.AreaLevels');
+			return $AreaTable->get($areaLevel)->name;
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
