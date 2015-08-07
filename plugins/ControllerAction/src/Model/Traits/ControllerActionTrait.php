@@ -61,7 +61,7 @@ trait ControllerActionTrait {
 		// public function viewAfterAction(Event $event, Entity $entity) {}
 
 		'ControllerAction.Model.add.beforeAction'			=> 'addBeforeAction', // called before any add logic is executed
-		// public function addBeforeAction(Event $event)
+		// public function addBeforeAction(Event $event) {}
 
 		'ControllerAction.Model.add.onInitialize'			=> 'addOnInitialize', // called on http get
 		// public function addOnInitialize(Event $event, Entity $entity) {}
