@@ -11,14 +11,11 @@ use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
 
 class StudentsController extends AppController {
-	public $activeObj = null;
-
 	public function initialize() {
 		parent::initialize();
 
 		$this->ControllerAction->model('Student.Students');
-		// $this->ControllerAction->model()->addBehavior('Student.Student');
-		// $this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+		
 		// $this->ControllerAction->model()->addBehavior('CustomField.Record', [
 		// 	'behavior' => 'Student',
 		// 	'fieldKey' => 'student_custom_field_id',
@@ -31,12 +28,6 @@ class StudentsController extends AppController {
 		// 	'recordKey' => 'security_user_id',
 		// 	'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		// 	'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
-		// ]);
-		// $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		// $this->ControllerAction->model()->addBehavior('AdvanceSearch');
-		// $this->ControllerAction->model()->addBehavior('Excel', [
-		// 	'excludes' => ['password', 'photo_name'],
-		// 	'filename' => 'Students'
 		// ]);
 
 		$this->ControllerAction->models = [
@@ -162,7 +153,7 @@ class StudentsController extends AppController {
 	}
 
 	public function excel($id=0) {
-		$this->Users->excel($id);
+		$this->Students->excel($id);
 		$this->autoRender = false;
 	}
 }
