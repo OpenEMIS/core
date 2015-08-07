@@ -4,8 +4,21 @@ $( document ).ready( function() {
 
 var Reorder = {
 	init: function() {
-		var currentOrder = Reorder.getOrder("td","data-row-id");
-		var originalOrder = currentOrder;
+		
+		// Sortable only when mouse over the arrows
+		$( "td.sorter").mousedown(function() {
+			Reorder.enableSortable(this);
+		});
+
+		// Disable sortable on any other portion of the body if the mouse is move away
+		$( document ).on("mouseup", function(){
+			Reorder.disableSortable();
+		});
+	},
+
+	enableSortable: function(obj){
+
+		var originalOrder = Reorder.getOrder("td","data-row-id");
 
 		var preventCollapse = function(e, ui) {
 			ui.children().each(function() {
@@ -14,17 +27,16 @@ var Reorder = {
 			return ui;
 		};
 
-		// Sortable only when mouse over the arrows
-		$( "td.sorter" ).mousedown(function() {
-			// Sortable on tbody
-			var tbody = $(this).closest('tbody');
-			tbody.sortable({
-				forcePlaceholderSize: true,	
-				helper: preventCollapse,
-				cursor: "none",
-				axis: "y",
-				stop: function(event, ui){
-					var url = $(event.target).closest('table').attr('url');
+		// Sortable on tbody
+		var url = $(obj).closest('table').attr('url');
+		var tbody = $(obj).closest('tbody');
+		tbody.sortable({
+			forcePlaceholderSize: true,	
+			helper: preventCollapse,
+			cursor: "none",
+			axis: "y",
+			stop: function(event, ui){
+				if (url) {
 					currentOrder = Reorder.getOrder("td","data-row-id");
 					if(! Reorder.compare(currentOrder,originalOrder)){
 						$.ajax({
@@ -40,16 +52,27 @@ var Reorder = {
 							}
 						});
 					}
+				} else {
+					Reorder.updateOrder();
+					SurveyForm.updateSection();
 				}
-			}).disableSelection();
-			
-			// Re-enable the sortable if the mouse has already been release
-			tbody.sortable('enable');
-		})
+			}
+		});
+		
+		// Re-enable the sortable if the mouse has already been release
+		tbody.sortable('enable');
+	},
 
-		// Disable sortable on any other portion of the body if the mouse is move away
-		$( document ).mouseup( function(){
+	disableSortable: function(){
+		if ($("#sortable tbody").hasClass('ui-sortable')) {
 			$( "#sortable tbody" ).sortable('disable');
+		}
+	},
+
+	updateOrder: function(){
+		var count = 1;
+		$(".order").each(function(){
+			$(this).val(count++);
 		});
 	},
 
@@ -68,5 +91,5 @@ var Reorder = {
 		return $( htmlTag ).map(function(){
 			return $(this).attr( attributeName );
 		}).get();
-	}
+	},
 };
