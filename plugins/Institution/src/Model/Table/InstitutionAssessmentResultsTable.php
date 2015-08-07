@@ -50,7 +50,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$selectedPeriod = $this->request->query('period');
 		$selectedClass = $this->request->query('class');
 		$subjectId = $Classes->get($selectedClass)->education_subject_id;
-		$id = $entity->security_user_id;
+		$id = $entity->student_id;
 
 		$itemObj = $Items
 			->find()
