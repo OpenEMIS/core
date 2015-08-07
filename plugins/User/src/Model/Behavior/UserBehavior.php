@@ -25,13 +25,15 @@ class UserBehavior extends Behavior {
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
 	public function initialize(array $config) {
-		$this->_table->addBehavior('ControllerAction.FileUpload', [
-			'name' => 'photo_name',
-			'content' => 'photo_content',
-			'size' => '2MB',
-			'contentEditable' => true,
-			'allowable_file_types' => 'image'
-		]);
+		if ($this->_table->table() == 'security_users') {
+			$this->_table->addBehavior('ControllerAction.FileUpload', [
+				'name' => 'photo_name',
+				'content' => 'photo_content',
+				'size' => '2MB',
+				'contentEditable' => true,
+				'allowable_file_types' => 'image'
+			]);
+		}
 	}
 
 	public function implementedEvents() {

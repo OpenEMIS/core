@@ -113,10 +113,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$dataArray = $data->getArrayCopy();
-
-		// removing student_id on fail
-		if (!empty($dataArray) && array_key_exists($this->alias(), $dataArray) && array_key_exists('student_id', $dataArray[$this->alias])) {
+		if (!empty($entity->errors())) {
+			$entity->unsetProperty('student_id');
 			unset($data[$this->alias()]['student_id']);
 		}
 	}
@@ -195,12 +193,14 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
-		$sectionData = [];
-		$sectionData['student_id'] = $entity->student_id;
-		$sectionData['education_grade_id'] = $entity->education_grade_id;;
-		$sectionData['institution_site_section_id'] = $entity->class;;
-		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+		if ($entity->class > 0) {
+			$sectionData = [];
+			$sectionData['student_id'] = $entity->student_id;
+			$sectionData['education_grade_id'] = $entity->education_grade_id;
+			$sectionData['institution_site_section_id'] = $entity->class;
+			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+			$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+		}
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -246,6 +246,7 @@ class StudentsTable extends AppTable {
 			$endDate = $period->end_date->copy();
 			$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
 			$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
+			$attr['value'] = $period->start_date->format('d-m-Y');
 			$attr['default_date'] = false;
 		}
 		return $attr;
@@ -377,7 +378,6 @@ class StudentsTable extends AppTable {
 		]);
 		// End
 
-
 		// Grade
 		$data = $Grades->find()
 		->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
@@ -395,8 +395,8 @@ class StudentsTable extends AppTable {
 		// End
 		
 		// section
-		$sectionOptions = $InstitutionSiteSections->getSectionOptions($selectedPeriod, $institutionId, $selectedGrade);
-		// $selectedSection = !is_null($this->request->query('student')) ? $this->request->query('student') : key($studentOptions);// not needed
+		$sectionOptions = ['0' => __('-- Select Class -- ')];
+		$sectionOptions = $sectionOptions + $InstitutionSiteSections->getSectionOptions($selectedPeriod, $institutionId, $selectedGrade);
 		// End
 
 		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'sectionOptions', 'selectedSection');
