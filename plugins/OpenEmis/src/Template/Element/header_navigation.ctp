@@ -29,12 +29,12 @@ if ($session->check('System.User.roles')) {
 
 <div class="header-navigation">
 	<div class="username">
-		<span><?php echo sprintf('%s %s', $firstName, $lastName) ?></span>
+		<span><?= sprintf('%s %s', $firstName, $lastName) ?></span>
 		<a class="btn" data-toggle="tooltip" data-placement="bottom" title="<?= $roles ?>"><i class="kd-role"></i></a>
 	</div>
 
 	<div class="btn-group">
-		<a class="btn" href="<?php echo $this->Url->build($homeUrl) ?>">
+		<a class="btn" href="<?= $this->Url->build($homeUrl) ?>">
 			<i class="fa fa-home"></i>
 		</a>
 	</div>

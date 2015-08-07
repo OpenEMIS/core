@@ -4,6 +4,8 @@ namespace Education\Model\Entity;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\Log\Log;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
 class EducationGrade extends Entity
 {
@@ -16,7 +18,12 @@ class EducationGrade extends Entity
         } else {
             $table = TableRegistry::get('Education.EducationProgrammes');
             $id = $this->education_programme_id;
-            $name = $table->get($id)->name . ' - ' . $this->name;            
+            try {
+                $name = $table->get($id)->name . ' - ' . $this->name;
+            } catch (InvalidPrimaryKeyException $ex) {
+                Log::write('error', __METHOD__ . ': Education Programme primary key not found (' . $id . ')');
+                $name = $this->name;
+            }
         }
         return $name;
     }
