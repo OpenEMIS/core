@@ -319,19 +319,21 @@ class StudentPromotionTable extends AppTable {
 			$toolbarButtons['back']['attr'] = $attr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
 		} else {
-			$graduateButton = $buttons['index'];
-			$graduateButton['url'][0] = 'index';
-			$graduateButton['url']['mode'] = 'edit';
-			$graduateButton['type'] = 'button';
-			$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
-			$graduateButton['attr'] = $attr;
-			$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-			$graduateButton['attr']['title'] = __('Promotion') . ' / ' . __('Graduation');
-			unset($graduateButton['url']['period']);
+			if ($this->AccessControl->check(['Institutions', 'Grades', 'indexEdit'])) {
+				$graduateButton = $buttons['index'];
+				$graduateButton['url'][0] = 'index';
+				$graduateButton['url']['mode'] = 'edit';
+				$graduateButton['type'] = 'button';
+				$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
+				$graduateButton['attr'] = $attr;
+				$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$graduateButton['attr']['title'] = __('Promotion') . ' / ' . __('Graduation');
+				unset($graduateButton['url']['period']);
 
-			$toolbarButtons['graduate'] = $graduateButton;
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = null;
+				$toolbarButtons['graduate'] = $graduateButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
 		}
 	}
 
@@ -359,7 +361,7 @@ class StudentPromotionTable extends AppTable {
 						$obj['student_status_id'] = $currentStatusId;
 						$obj['academic_period_id'] = $nextPeriod->id;
 						$obj['start_date'] = date('Y-m-d', strtotime($nextPeriod->start_date));
-						$obj['end_data'] = date('Y-m-d', strtotime($nextPeriod->end_date));
+						$obj['end_date'] = date('Y-m-d', strtotime($nextPeriod->end_date));
 
 						$this->updateAll(['student_status_id' => $status], [
 							'institution_id' => $obj['institution_id'],
