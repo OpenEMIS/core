@@ -104,7 +104,6 @@ class StudentsController extends AppController {
 
 			if ($session->check('Students.name')) {
 				$header = $session->read('Students.name');
-				$this->Navigation->addCrumb($header, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $userId]);
 			}
 
 			$alias = $model->alias;

@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.8
+ControllerActionComponent - Current Version 3.0.9
+3.0.9 (Jeff) - fixed getContains to retrieve only id, name and foreignKeys fields
 3.0.8 (Jeff) - fixed remove() not throwing errors if delete fails
 3.0.7 (Jeff) - edited ControllerAction.Controller.beforePaginate to use $this->model instead of $model
 3.0.6 (Malcolm) - $request->data = $requestData->getArrayCopy(); added after addAfterPatch dispatch event
@@ -537,7 +538,13 @@ class ControllerActionComponent extends Component {
 			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
 				$columns = $assoc->schema()->columns();
 				if (in_array('name', $columns)) {
-					$contain[$assoc->name()] = ['fields' => ['id', 'name']];
+					$fields = ['id', 'name'];
+					foreach ($columns as $col) {
+						if ($this->endsWith($col, '_id')) {
+							$fields[] = $col;
+						}
+					}
+					$contain[$assoc->name()] = ['fields' => $fields];
 				} else if (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
 					$contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
 				} else {

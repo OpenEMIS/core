@@ -41,19 +41,22 @@ class TransferRequestsTable extends AppTable {
 				->first()
 				->id;
 
-			$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-			$StudentPromotion->updateAll(
-				['student_status_id' => $status],
-				[
-					'institution_id' => $institutionId,
-					'student_id' => $selectedStudent,
-					'academic_period_id' => $selectedPeriod,
-					'education_grade_id' => $selectedGrade
-				]
-			);
+			$result = $model->save($entity);
 
-			$this->Alert->success('TransferRequests.request');
-			return true;
+			if ($result) {
+				$Students = TableRegistry::get('Institution.Students');
+				$Students->updateAll(
+					['student_status_id' => $status],
+					[
+						'institution_id' => $institutionId,
+						'student_id' => $selectedStudent,
+						'academic_period_id' => $selectedPeriod,
+						'education_grade_id' => $selectedGrade
+					]
+				);
+				$this->Alert->success('TransferRequests.request');
+			}
+			return $result;
 		};
 		return $process;
     }

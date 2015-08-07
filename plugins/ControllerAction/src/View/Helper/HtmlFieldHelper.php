@@ -283,8 +283,12 @@ class HtmlFieldHelper extends Helper {
 
 	public function readonly($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-		if ($action == 'view') {
-			$value = $attr['value'];
+		if ($action == 'view' || $action == 'index') {
+			if (array_key_exists('value', $attr)) {
+				$value = $attr['value'];
+			} else {
+				$value = $data->$attr['field'];
+			}
 		} else if ($action == 'edit') {
 			$value = $this->disabled($action, $data, $attr, $options);
 			unset($options['disabled']);
@@ -329,7 +333,7 @@ class HtmlFieldHelper extends Helper {
 			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
 			echo $jsFunc;
 
-			if(!empty($src)){
+			if (!empty($src)) {
 				$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:60px;" /></div>' : $src;
 			}	
 		} else if ($action == 'edit') {

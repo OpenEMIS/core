@@ -20,13 +20,18 @@ class UserBehavior extends Behavior {
 	private $defaultGuardianProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 	private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 
-
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
 
 	public function initialize(array $config) {
-		
+		$this->_table->addBehavior('ControllerAction.FileUpload', [
+			'name' => 'photo_name',
+			'content' => 'photo_content',
+			'size' => '2MB',
+			'contentEditable' => true,
+			'allowable_file_types' => 'image'
+		]);
 	}
 
 	public function implementedEvents() {
@@ -40,7 +45,6 @@ class UserBehavior extends Behavior {
 	public function beforeAction(Event $event) {
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
-			$this->_table->fields['photo_content']['type'] = 'image';
 			$this->_table->fields['photo_name']['visible'] = false;
 			$this->_table->fields['super_admin']['visible'] = false;
 			$this->_table->fields['date_of_death']['visible'] = false;
@@ -52,7 +56,6 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['gender_id']['type'] = 'select';
 
 			$i = 10;
-			$this->_table->fields['photo_content']['order'] = 0;
 			$this->_table->fields['first_name']['order'] = $i++;
 			$this->_table->fields['middle_name']['order'] = $i++;
 			$this->_table->fields['third_name']['order'] = $i++;
@@ -64,12 +67,17 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['postal_code']['order'] = $i++;
 			$this->_table->fields['address_area_id']['order'] = $i++;
 			$this->_table->fields['birthplace_area_id']['order'] = $i++;
+
+			if ($this->_table->action != 'index') {
+				$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
+				$this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+			}
 		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-		$this->_table->ControllerAction->field('openemis_no', ['order' => 1]);
+		$this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$this->_table->ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
@@ -102,6 +110,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
+		$fileContent = null;
 		if ($entity->has('user') && !empty($entity->user)) {
 			$fileContent = $entity->user->photo_content;
 		}

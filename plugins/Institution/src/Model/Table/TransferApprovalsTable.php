@@ -270,8 +270,8 @@ class TransferApprovalsTable extends AppTable {
 			->first()
 			->id;
 
-		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-		$StudentPromotion->updateAll(
+		$Students = TableRegistry::get('Institution.Students');
+		$Students->updateAll(
 			['student_status_id' => $status],
 			[
 				'institution_id' => $institutionId,
@@ -301,15 +301,14 @@ class TransferApprovalsTable extends AppTable {
 			'end_date' => $transferEntity->end_date,
 			'student_status_id' => $currentStatus,
 			'institution_id' => $transferEntity->institution_id,
-			'security_user_id' => $transferEntity->security_user_id,
+			'student_id' => $transferEntity->security_user_id,
 			'academic_period_id' => $transferEntity->academic_period_id,
 			'education_grade_id' => $transferEntity->education_grade_id
 		];
+		
+		$studentEntity = $Students->newEntity($requestData);
 
-		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-		$studentEntity = $StudentPromotion->newEntity($requestData);
-
-		if ($StudentPromotion->save($studentEntity)) {
+		if ($Students->save($studentEntity)) {
 		} else {
 			$this->log($studentEntity->errors(), 'debug');
 		}
