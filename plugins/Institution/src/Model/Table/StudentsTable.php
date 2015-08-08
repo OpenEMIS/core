@@ -26,7 +26,7 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
 		// to handle field type (autocomplete)
-		$this->addBehavior('OpenEmis.autocomplete');
+		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 
