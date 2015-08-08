@@ -125,7 +125,11 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
-		return $entity->_matchingData['Users']->name;
+		$value = '';
+		if ($entity->has('_matchingData')) {
+			$value = $entity->_matchingData['Users']->name;
+		}
+		return $value;
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
