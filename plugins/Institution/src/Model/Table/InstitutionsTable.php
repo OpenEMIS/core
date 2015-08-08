@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
 use App\Model\Table\AppTable;
 
@@ -342,18 +343,21 @@ class InstitutionsTable extends AppTable  {
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 			// Getting the current area id
-			$institutionSiteId = $entity->id;
-			$areaId = $this->get($entity->id)->area_id;
-			
-			$AreaTable = TableRegistry::get('Area.Areas');
-			$path = $AreaTable
-				->find('path', ['for' => $areaId])
-				->toArray();
+			$areaId = $entity->area_id;
+			try {
+				if ($areaId > 0) {
+					$path = $this->Areas
+						->find('path', ['for' => $areaId])
+						->toArray();
 
-			foreach($path as $value){
-				if ($value['area_level_id'] == $areaLevel) {
-					$areaName = $value['name'];
+					foreach($path as $value){
+						if ($value['area_level_id'] == $areaLevel) {
+							$areaName = $value['name'];
+						}
+					}
 				}
+			} catch (InvalidPrimaryKeyException $ex) {
+				$this->log($ex->getMessage(), 'error');
 			}
 		}
 
@@ -379,7 +383,7 @@ class InstitutionsTable extends AppTable  {
 			'contain' => ['InstitutionSiteTypes'],
 			'select' => [
 				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-				'Areas.name', 'InstitutionSiteTypes.name'
+				$this->aliasField('area_id'), 'Areas.name', 'InstitutionSiteTypes.name'
 			],
 			'join' => [
 				[
