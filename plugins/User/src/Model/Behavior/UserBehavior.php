@@ -114,7 +114,7 @@ class UserBehavior extends Behavior {
 		$value = '';
 		if ($entity->has('user')) {
 			$value = $entity->user->openemis_no;
-		} else {
+		} else if ($entity->has('_matchingData')) {
 			$value = $entity->_matchingData['Users']->openemis_no;
 		}
 		return $value;
