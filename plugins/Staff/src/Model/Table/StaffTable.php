@@ -86,7 +86,6 @@ class StaffTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain(['Users']);
 		$query->where(['SecurityUserTypes.user_type' => UserTypes::STAFF]);
 
 		$search = $this->ControllerAction->getSearchKey();

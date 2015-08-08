@@ -52,6 +52,12 @@ class StaffTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain(['Positions']);
+		$sortList = ['start_date', 'end_date'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
 		// Student Statuses
 		// $statusOptions = $this->StudentStatuses
 		// 	->find('list')
@@ -125,14 +131,6 @@ class StaffTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event) {
-		$this->ControllerAction->field('security_user_id', [
-			'type' => 'autocomplete',
-			'target' => ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')],
-			'noResults' => __('No Staff found'),
-			'attr' => ['placeholder' => __('OpenEMIS ID or Name')],
-			'url' => ['controller' => 'Institutions', 'action' => 'Staff', 'ajaxUserAutocomplete']
-		]);
-
 		$this->ControllerAction->field('institution_site_position_id');
 		$this->ControllerAction->field('role');
 		$this->ControllerAction->field('FTE');
@@ -202,6 +200,23 @@ class StaffTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		} else if ($action == 'add') {
+			$attr['type'] = 'autocomplete';
+			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
+			$attr['noResults'] = __('No Staff found');
+			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Staff', 'ajaxUserAutocomplete'];
+		}
+		return $attr;
+	}
+
+	public function onGetSecurityUserId(Event $event, Entity $entity) {
+		return $entity->_matchingData['Users']->name;
+	}
+
 	public function onGetPositionType(Event $event, Entity $entity) {
 		$options = $this->getSelectOptions('Position.types');
 		$value = $options['FULL_TIME'];
@@ -223,6 +238,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('position_type');
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
+		$this->ControllerAction->field('security_user_id');
 
 		if ($this->action == 'index') {
 			// $table = TableRegistry::get('Institution.InstitutionSiteStudents');

@@ -18,11 +18,11 @@
 $noOutput = true;
 
 // Configure sqlformatter colours.
-SqlFormatter::$quote_attributes = 'style="color: #004d40;"';
-SqlFormatter::$backtick_quote_attributes = 'style="color: #26a69a;"';
-SqlFormatter::$number_attributes = 'style="color: #ec407a;"';
-SqlFormatter::$word_attributes = 'style="color: #9c27b0;"';
-SqlFormatter::$pre_attributes = 'style="color: #222; background-color: transparent;"';
+// SqlFormatter::$quote_attributes = 'style="color: #004d40;"';
+// SqlFormatter::$backtick_quote_attributes = 'style="color: #26a69a;"';
+// SqlFormatter::$number_attributes = 'style="color: #ec407a;"';
+// SqlFormatter::$word_attributes = 'style="color: #9c27b0;"';
+// SqlFormatter::$pre_attributes = 'style="color: #222; background-color: transparent;"';
 ?>
 
 <?php if (!empty($tables)): ?>
@@ -70,7 +70,8 @@ SqlFormatter::$pre_attributes = 'style="color: #222; background-color: transpare
             <tbody>
                 <?php foreach ($queries as $query): ?>
                 <tr>
-                    <td><?= SqlFormatter::format($query['query']) ?></td>
+                    
+                    <td><?= $query['query'] ?></td>
                     <td><?= h($query['rows']) ?></td>
                     <td><?= h($query['took']) ?></td>
                 </tr>
