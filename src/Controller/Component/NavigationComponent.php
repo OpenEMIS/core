@@ -115,7 +115,7 @@ class NavigationComponent extends Component {
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
 				'Guardians' => [
-					'icon' => '<i class="fa kd-guardian"></i>',
+					'icon' => '<i class="fa kd-staff"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				],
