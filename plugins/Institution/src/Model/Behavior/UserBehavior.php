@@ -10,6 +10,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Controller\Controller;
 
+// not in used anymore
+
 class UserBehavior extends Behavior {
 	private $associatedModel;
 	public function initialize(array $config) {

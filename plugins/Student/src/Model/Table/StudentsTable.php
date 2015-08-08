@@ -75,7 +75,7 @@ class StudentsTable extends AppTable {
 		$this->fields = []; // unset all fields first
 
 		$this->ControllerAction->field('institution', ['order' => 50]);
-		$this->ControllerAction->field('status', ['order' => 51]);
+		$this->ControllerAction->field('status', ['order' => 51, 'sort' => false]);
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
@@ -104,7 +104,6 @@ class StudentsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain(['Users']);
 		$query->where(['SecurityUserTypes.user_type' => UserTypes::STUDENT]);
 
 		$search = $this->ControllerAction->getSearchKey();
