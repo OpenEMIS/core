@@ -39,6 +39,7 @@ class UserBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
 		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
 		return $events;
@@ -79,42 +80,60 @@ class UserBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-		$this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+		$this->_table->ControllerAction->field('openemis_no', [
+			'type' => 'readonly',
+			'order' => 1,
+			'sort' => ['field' => 'Users.openemis_no']
+		]);
 		$this->_table->ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
-			$this->_table->ControllerAction->field('name', ['order' => 3, 'sort' => true]);
+			$this->_table->ControllerAction->field('name', [
+				'order' => 3, 
+				'sort' => ['field' => 'Users.first_name']
+			]);
+		}
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$alias = $query->repository()->alias();
+		if ($alias != 'Users') {
+			$options['auto_contain'] = false;
+			
+			$query->matching('Users');
+
+			$sortList = ['Users.openemis_no', 'Users.first_name'];
+			if (array_key_exists('sortWhitelist', $options)) {
+				$sortList = array_merge($options['sortWhitelist'], $sortList);
+			}
+			$options['sortWhitelist'] = $sortList;
 		}
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$value = '';
-		if ($entity->has('user') && !empty($entity->user)) {
+		if ($entity->has('user')) {
 			$value = $entity->user->openemis_no;
+		} else {
+			$value = $entity->_matchingData['Users']->openemis_no;
 		}
 		return $value;
 	}
 
 	public function onGetIdentity(Event $event, Entity $entity) {
-		$value = '';
-		if ($entity->has('user') && !empty($entity->user)) {
-			$value = $entity->user->default_identity_type;
-		}
-		return $value;
+		return $entity->_matchingData['Users']->default_identity_type;
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
-		$value = '';
-		if ($entity->has('user') && !empty($entity->user)) {
-			$value = $entity->user->name;
-		}
-		return $value;
+		return $entity->_matchingData['Users']->name;
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		$fileContent = null;
-		if ($entity->has('user') && !empty($entity->user)) {
+		if ($entity->has('user')) {
 			$fileContent = $entity->user->photo_content;
+		} else if ($entity->has('_matchingData')) {
+			$fileContent = $entity->_matchingData['Users']->photo_content;
 		} else {
 			if ($this->_table->table() == 'security_users') {
 				$fileContent = $entity->photo_content;

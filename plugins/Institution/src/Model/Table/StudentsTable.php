@@ -54,6 +54,13 @@ class StudentsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain(['EducationGrades']);
+		$sortList = ['start_date', 'end_date'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+
 		// Student Statuses
 		$statusOptions = $this->StudentStatuses
 			->find('list')
@@ -119,6 +126,10 @@ class StudentsTable extends AppTable {
 		}
 	}
 
+	public function onGetStudentId(Event $event, Entity $entity) {
+		return $entity->_matchingData['Users']->name;
+	}
+
 	public function onGetEducationGradeId(Event $event, Entity $entity) {
 		$value = '';
 		if ($entity->has('education_grade')) {
@@ -128,6 +139,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
+		$this->ControllerAction->field('student_id');
+
 		if ($this->action == 'index') {
 			// chart must fetch from this table instead of InstitutionSiteStudents
 			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
@@ -186,7 +199,6 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('id', ['value' => Text::uuid()]);
 		$this->ControllerAction->field('start_date', ['period' => $period]);
 		$this->ControllerAction->field('end_date', ['period' => $period]);
-		$this->ControllerAction->field('student_id');
 
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_id'
@@ -270,6 +282,8 @@ class StudentsTable extends AppTable {
 			$attr['noResults'] = $this->getMessage($this->aliasField('noStudents'));
 			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
 			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Students', 'ajaxUserAutocomplete'];
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
 		return $attr;
 	}
