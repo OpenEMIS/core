@@ -96,48 +96,25 @@ ALTER TABLE `institution_students`
 
 -- patch institution_students
 TRUNCATE TABLE `institution_students`;
-
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS student_promotion
-$$
-CREATE PROCEDURE student_promotion()
-BEGIN
-	DECLARE done INT DEFAULT FALSE;
-	DECLARE studentId, gradeId, periodId, institutionId INT(11);
-	DECLARE startDate, endDate date;
-	DECLARE student CURSOR FOR 
-		SELECT `SectionStudents`.`security_user_id`, `SectionStudents`.`education_grade_id`, `Sections`.`academic_period_id`, `Sections`.`institution_site_id`, `Periods`.`start_date`, `Periods`.`end_date`
-		FROM `institution_site_section_students` AS `SectionStudents`
-		INNER JOIN `institution_site_sections` AS `Sections` ON `Sections`.`id` = `SectionStudents`.`institution_site_section_id`
-		INNER JOIN `institution_site_grades` AS `Grades` ON `Grades`.`education_grade_id` = `SectionStudents`.`education_grade_id`
-		INNER JOIN `academic_periods` AS `Periods` ON `Periods`.`id` = `Sections`.`academic_period_id`
-		GROUP BY `SectionStudents`.`security_user_id`, `SectionStudents`.`education_grade_id`, `Sections`.`academic_period_id`, `Sections`.`institution_site_id`;
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-
-	OPEN student;
-
-	read_loop: LOOP
-	FETCH student INTO studentId, gradeId, periodId, institutionId, startDate, endDate;
-	IF done THEN
-		LEAVE read_loop;
-	END IF;
-
-		INSERT INTO `institution_students` (`id`, `student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`, `created_user_id`, `created`) VALUES (uuid(), 1, studentId, gradeId, periodId, startDate, endDate, YEAR(startDate), YEAR(endDate), institutionId, 1, NOW());
-
-	END LOOP read_loop;
-
-	CLOSE student;
-END
-$$
-
-CALL student_promotion
-$$
-
-DROP PROCEDURE IF EXISTS student_promotion
-$$
-
-DELIMITER ;
+INSERT INTO `institution_students` (`id`, `student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `start_year`, `end_year`, `institution_id`, `created_user_id`, `created`) 
+SELECT 
+uuid(),
+1,
+`SectionStudents`.`security_user_id`, 
+`SectionStudents`.`education_grade_id`,
+`Sections`.`academic_period_id`, 
+`Periods`.`start_date`, 
+`Periods`.`end_date`,
+YEAR(`Periods`.`start_date`),
+YEAR(`Periods`.`end_date`),
+`Sections`.`institution_site_id`,
+1, NOW()
+FROM `institution_site_section_students` AS `SectionStudents`
+INNER JOIN `institution_site_sections` AS `Sections` ON `Sections`.`id` = `SectionStudents`.`institution_site_section_id`
+INNER JOIN `institution_site_grades` AS `Grades` ON `Grades`.`education_grade_id` = `SectionStudents`.`education_grade_id`
+INNER JOIN `academic_periods` AS `Periods` ON `Periods`.`id` = `Sections`.`academic_period_id`
+WHERE `SectionStudents`.`security_user_id` <> 0
+GROUP BY `SectionStudents`.`security_user_id`, `SectionStudents`.`education_grade_id`, `Sections`.`academic_period_id`, `Sections`.`institution_site_id`;
 
 -- PHPOE-1799-2
 ALTER TABLE `institution_site_section_students` DROP `student_category_id`;
