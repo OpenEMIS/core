@@ -111,7 +111,8 @@ class StaffTable extends AppTable {
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (!empty($entity->errors())) {
+		$errors = $entity->errors();
+		if (!empty($errors)) {
 			$entity->unsetProperty('security_user_id');
 			unset($data[$this->alias()]['security_user_id']);
 		}
