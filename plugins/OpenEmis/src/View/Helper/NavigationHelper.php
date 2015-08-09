@@ -84,6 +84,8 @@ class NavigationHelper extends Helper {
 
 					if (array_key_exists('icon', $attr)) {
 						$name = $attr['icon'].__($name);
+					} else {
+						$name = __($name);
 					}
 					
 					$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
@@ -99,6 +101,8 @@ class NavigationHelper extends Helper {
 					}
 					if (array_key_exists('icon', $attr)) {
 						$name = $attr['icon'].__($name);
+					} else {
+						$name = __($name);
 					}
 					$html .= $this->Html->link($name, $attr['url'], $aOptions);
 				}
