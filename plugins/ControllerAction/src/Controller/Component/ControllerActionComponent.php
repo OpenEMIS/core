@@ -13,8 +13,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.2
-3.1.2 (Jeff) - added deleteStrategy for transferring of records
+ControllerActionComponent - Current Version 3.1.3
+3.1.3 (Jeff) - added new event deleteBeforeAction
+3.1.2 (Jeff) - added deleteStrategy for transferring of records, new event deleteOnInitialize
 3.1.1 (Jeff) - modified add(), edit() to allow changing of table
 3.1.0 (Jeff) - moved renderFields() to be called after the event (afterAction) is triggered
 3.0.9 (Jeff) - fixed getContains to retrieve only id, name and foreignKeys fields
@@ -1063,9 +1064,27 @@ class ControllerActionComponent extends Component {
 	public function remove($id=0) {
 		$request = $this->request;
 		$model = $this->model;
+		$settings = new ArrayObject([]);
+
+		// Event: deleteBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.beforeAction', null, [$settings]);
+		if ($event->isStopped()) { return $event->result; }
+		if ($settings->offsetExists('model')) {
+			if ($settings['model'] instanceof Table) {
+				$model = $settings['model'];
+			} else {
+				$model = TableRegistry::get($settings['model']);
+			}
+		}
+		if ($settings->offsetExists('deleteStrategy')) {
+			$this->deleteStrategy = $settings['deleteStrategy'];
+		}
+		// End Event
+
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
-		
+
 		if ($request->is('get')) {
 			if ($model->exists([$idKey => $id])) {
 				$entity = $model->get($id);
@@ -1207,119 +1226,6 @@ class ControllerActionComponent extends Component {
 		echo $file;
 		exit();
 	}
-
-	/*
-	private function removeAndTransfer($options=[]) {
-		// 'selectedOption' => false, 'selectedValue' => 0
-		$selectedOption = isset($options['selectedOption']) ? $options['selectedOption'] : false;
-
-		$selectedValue = isset($options['selectedValue']) ? $options['selectedValue'] : 0;
-		$model = $this->model;
-		$modelName = $model->alias();
-
-		if ($selectedValue == 0) {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		// $allowDelete = (isset($model->allowDelete)) ? $model->allowDelete: false;
-		// if (!$allowDelete) {
-		// 	$this->Alert->error('general.delete.failed');
-		// 	$action = $this->buttons['view']['url'];
-		// 	return $this->controller->redirect($action);
-		// }
-		$conditions = [];
-		foreach ($model->associations()->type('BelongsTo') as $key=>$value) {
-			// pr($value->alias());
-			if ($this->Session->check($value->alias())) {
-				// pr($value->primaryKey());die;
-				$conditions[] = [$model->aliasField($value->foreignKey()) => $this->Session->read($value->aliasField($value->primaryKey()))];
-			}
-		}
-		$allFieldOptionValues = $model->find('list')->where($conditions);
-		if (is_object($allFieldOptionValues)) {
-			$allFieldOptionValues = $allFieldOptionValues->toArray();
-		} else {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-		if (array_key_exists($selectedValue, $allFieldOptionValues)) {
-			// unset only if field option exists in list
-			unset($allFieldOptionValues[$selectedValue]);
-		} else {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		$currentFieldValue = $model->get($selectedValue);
-		// if no legal records to migrate to ... they are not allowed to delete
-		if (empty($allFieldOptionValues)) {
-			$this->Alert->warning('general.delete.cannotDeleteOnlyRecord');
-			$action = $this->buttons['view']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		$modifyForeignKey = [];
-		foreach ($model->associations()->type('HasMany') as $key=>$value) {
-			$alias = $value->alias();
-			$CurrModelClass = $model->{$alias};
-			$foreignKeyId = $CurrModelClass->foreignKey();
-			$modifyForeignKey[$alias] = $CurrModelClass
-				->find()
-				->where([
-						$CurrModelClass->aliasField($foreignKeyId) => $selectedValue
-					])
-				->count()
-				;
-		}
-
-		$children = false;
-		if (isset($currentFieldValue->parent_id)) {
-			$children = $model->find('all')->where(['parent_id'=>$currentFieldValue->id]);
-		}
-
-		if ($this->request->is(array('post', 'put'))) {
-			$convertValue = $this->request->data[$modelName]['convert_to'];
-			foreach ($modifyForeignKey as $key => $value) {
-				$CurrModelClass = ClassRegistry::init($key);
-				$foreignKeyId = isset($hasManyArray[$key]['foreignKey']) ? $hasManyArray[$key]['foreignKey'] : Inflector::underscore($modelName)."_id";
-				$CurrModelClass->updateAll(
-					array($key.'.'.$foreignKeyId => $convertValue),
-					array($key.'.'.$foreignKeyId => $selectedValue)
-				);
-			}
-			if (isset($currentFieldValue[$modelName]['parent_id']) && count($children)>0) {
-				foreach ($children as $c) {
-					$model->id = $c[$modelName]['id'];
-					$c[$modelName]['parent_id'] = $convertValue;
-					unset($c[$modelName]['lft']);
-					unset($c[$modelName]['rght']);
-					$model->data = $c;
-					$model->saveAll();
-				}
-			}
-			$model->id = $selectedValue;
-			if ($model->delete()) {
-				$this->Alert->success('general.delete.successAfterTransfer');
-				$action = $this->buttons['index']['url'];
-				if (isset($action[1])) {
-					unset($action[1]);
-				}
-				return $this->controller->redirect($action);
-			}
-		}
-		
-		$this->controller->set('allOtherFieldOptionValues', $allFieldOptionValues);
-		$this->controller->set(compact('header', 'currentFieldValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete', 'model', 'children'));
-		
-		die;
-		$this->autoRender = true;
-		$this->templatePath = 'OpenEmis.Element'.$this->templatePath;
-	}
-	/**/
 
 	public function reorder() {
 		$this->autoRender = false;
