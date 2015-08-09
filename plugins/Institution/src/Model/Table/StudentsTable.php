@@ -128,7 +128,13 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onGetStudentId(Event $event, Entity $entity) {
-		return $entity->_matchingData['Users']->name;
+		$value = '';
+		if ($entity->has('user')) {
+			$value = $entity->user->name;
+		} else {
+			$value = $entity->_matchingData['Users']->name;
+		}
+		return $value;
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity) {
@@ -225,6 +231,25 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$this->fields['student_id']['order'] = 10;
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$controller = $this->controller;
+		$url = ['plugin' => $controller->plugin, 'controller' => $controller->name];
+
+		$tabElements = [
+			'Students' => [
+				'url' => array_merge($url, ['action' => $this->alias(), 'view', $entity->id]),
+				'text' => __('Academic')
+			],
+			'StudentUser' => [
+				'url' => array_merge($url, ['action' => 'StudentUser', 'view', $entity->student_id, 'id' => $entity->id]),
+				'text' => __('General')
+			]
+		];
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {

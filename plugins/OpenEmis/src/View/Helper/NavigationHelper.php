@@ -83,7 +83,7 @@ class NavigationHelper extends Helper {
 					}
 
 					if (array_key_exists('icon', $attr)) {
-						$name = $attr['icon'].__($name);
+						$name = $attr['icon'].'<b>'.__($name).'</b>';
 					} else {
 						$name = __($name);
 					}
@@ -100,7 +100,7 @@ class NavigationHelper extends Helper {
 						$aOptions['class'] = 'nav-active';
 					}
 					if (array_key_exists('icon', $attr)) {
-						$name = $attr['icon'].__($name);
+						$name = $attr['icon'].'<b>'.__($name).'</b>';
 					} else {
 						$name = __($name);
 					}
