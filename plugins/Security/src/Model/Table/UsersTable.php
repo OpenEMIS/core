@@ -166,6 +166,13 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
 	}
 
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// not saving empty passwords
+		if (empty($data[$this->alias()]['password'])) {
+			unset($data[$this->alias()]['password']);
+		}
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator
 			->add('first_name', [
