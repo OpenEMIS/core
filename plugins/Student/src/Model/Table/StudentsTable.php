@@ -31,6 +31,7 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('AdvanceSearch');
 
 		$this->addBehavior('CustomField.Record', [
+			'model' => 'Student.Students',
 			'behavior' => 'Student',
 			'fieldKey' => 'student_custom_field_id',
 			'tableColumnKey' => 'student_custom_table_column_id',
