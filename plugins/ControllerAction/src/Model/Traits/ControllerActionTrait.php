@@ -117,6 +117,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction',
 		// public function addEditAfterAction(Event $event, Entity $entity) {}
 
+		'ControllerAction.Model.delete.beforeAction'		=> 'deleteBeforeAction',
+		// public function deleteBeforeAction(Event $event, ArrayObject $settings) {}
+
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
 		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {}
 
