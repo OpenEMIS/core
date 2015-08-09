@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
@@ -72,10 +73,14 @@ class InstitutionSiteProgrammesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
-		$this->fields['education_grade']['visible'] = false;
+		// $this->fields['education_grade']['visible'] = false;
 		$this->fields['education_programme_id']['type'] = 'string';
 		$this->fields['education_level']['type'] = 'string';
 		unset($this->fields['education_level']['options']);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain(['InstitutionSiteGrades.EducationGrades']);
 	}
 
 /******************************************************************************************************************

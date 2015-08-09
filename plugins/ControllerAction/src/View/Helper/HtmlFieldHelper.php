@@ -387,9 +387,9 @@ class HtmlFieldHelper extends Helper {
 		$attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
 		
 		if ($action == 'view' || $action == 'index') {
-			$value = $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		} else if ($action == 'edit') {
-			$value = $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		}
 		return $value;
 	}

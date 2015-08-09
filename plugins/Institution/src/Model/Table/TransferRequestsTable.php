@@ -247,7 +247,7 @@ class TransferRequestsTable extends AppTable {
 			$institutionOptions = $this->Institutions
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->join([
-					'table' => $InstitutionSiteGrades->_table,
+					'table' => $InstitutionSiteGrades->table(),
 					'alias' => $InstitutionSiteGrades->alias(),
 					'conditions' => [
 						$InstitutionSiteGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
