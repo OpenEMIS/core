@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
@@ -72,10 +73,14 @@ class InstitutionSiteProgrammesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
-		$this->fields['education_grade']['visible'] = false;
+		// $this->fields['education_grade']['visible'] = false;
 		$this->fields['education_programme_id']['type'] = 'string';
 		$this->fields['education_level']['type'] = 'string';
 		unset($this->fields['education_level']['options']);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain(['InstitutionSiteGrades.EducationGrades']);
 	}
 
 /******************************************************************************************************************
@@ -125,8 +130,9 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		if (isset($data[$this->alias()]['institution_site_grades']) && count($data[$this->alias()]['institution_site_grades']>0)) {
 			foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
 				if (isset($row['education_grade_id'])) {
-					$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
 					$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
+					$data[$this->alias()]['institution_site_grades'][$key]['start_date'] = $data[$this->alias()]['start_date'];
+					$data[$this->alias()]['institution_site_grades'][$key]['end_date'] = $data[$this->alias()]['end_date'];
 				} else {
 					if ($row['id']!='') {
 						$data[$this->alias()]['institution_site_grades'][$key]['status'] = 0;

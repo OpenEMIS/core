@@ -2,7 +2,17 @@
 <?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
-<?php if ($action == 'add' || $action == 'edit') : ?>
+<?php if ($action == 'index') : ?>
+
+<?php 
+$grades = [];
+foreach ($entity->institution_site_grades as $grade) {
+	$grades[] = $grade->education_grade->name;
+}
+echo implode(', ', $grades);
+?>
+
+<?php elseif ($action == 'add' || $action == 'edit') : ?>
 
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
