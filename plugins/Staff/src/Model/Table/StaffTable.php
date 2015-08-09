@@ -35,6 +35,20 @@ class StaffTable extends AppTable {
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		$this->addBehavior('AdvanceSearch');
 
+		$this->addBehavior('CustomField.Record', [
+			'behavior' => 'Staff',
+			'fieldKey' => 'staff_custom_field_id',
+			'tableColumnKey' => 'staff_custom_table_column_id',
+			'tableRowKey' => 'staff_custom_table_row_id',
+			'formKey' => 'staff_custom_form_id',
+			'filterKey' => 'staff_custom_filter_id',
+			'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+			'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+			'recordKey' => 'security_user_id',
+			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+		]);
+
 		// $this->addBehavior('HighChart', [
 		// 	'number_of_students_by_year' => [
 		// 		'_function' => 'getNumberOfStudentsByYear',

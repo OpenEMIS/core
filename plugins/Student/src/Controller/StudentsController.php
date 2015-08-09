@@ -15,21 +15,6 @@ class StudentsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->model('Student.Students');
-		
-		// $this->ControllerAction->model()->addBehavior('CustomField.Record', [
-		// 	'behavior' => 'Student',
-		// 	'fieldKey' => 'student_custom_field_id',
-		// 	'tableColumnKey' => 'student_custom_table_column_id',
-		// 	'tableRowKey' => 'student_custom_table_row_id',
-		// 	'formKey' => 'student_custom_form_id',
-		// 	'filterKey' => 'student_custom_filter_id',
-		// 	'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-		// 	'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-		// 	'recordKey' => 'security_user_id',
-		// 	'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-		// 	'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
-		// ]);
-
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],

@@ -30,6 +30,20 @@ class StudentsTable extends AppTable {
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		$this->addBehavior('AdvanceSearch');
 
+		$this->addBehavior('CustomField.Record', [
+			'behavior' => 'Student',
+			'fieldKey' => 'student_custom_field_id',
+			'tableColumnKey' => 'student_custom_table_column_id',
+			'tableRowKey' => 'student_custom_table_row_id',
+			'formKey' => 'student_custom_form_id',
+			'filterKey' => 'student_custom_filter_id',
+			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+			'recordKey' => 'security_user_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+		]);
+
 		$this->addBehavior('Excel', [
 			'excludes' => ['password', 'photo_name'],
 			'filename' => 'Students'
