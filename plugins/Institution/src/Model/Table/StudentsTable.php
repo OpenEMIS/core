@@ -195,7 +195,11 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('education_grade_id', ['options' => $gradeOptions]);
 		$this->ControllerAction->field('class', ['options' => $sectionOptions]);
 
-		$period = $this->AcademicPeriods->get($selectedPeriod);
+		if ($selectedPeriod != 0) {
+			$period = $this->AcademicPeriods->get($selectedPeriod);
+		} else {
+			$period = $this->AcademicPeriods->get(key($periodOptions));
+		}
 
 		$this->ControllerAction->field('id', ['value' => Text::uuid()]);
 		$this->ControllerAction->field('start_date', ['period' => $period]);
