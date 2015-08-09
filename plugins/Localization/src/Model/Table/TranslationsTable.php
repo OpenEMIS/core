@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\I18n\I18n;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 
 class TranslationsTable extends AppTable {
 
@@ -89,6 +90,14 @@ class TranslationsTable extends AppTable {
 			$toolbarButtons['download']['url'] = $url;
 		}
     }
-}
 
-?>
+    public function validationDefault(Validator $validator) {
+		$validator
+			->add('en', 'ruleUnique', [
+  				'rule' => 'validateUnique',
+  				'provider' => 'table'
+  			])
+	        ;
+		return $validator;
+	}
+}
