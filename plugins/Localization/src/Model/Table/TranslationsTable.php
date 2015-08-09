@@ -64,11 +64,13 @@ class TranslationsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		// Append the condition to the existing condition in the options
-		$searchField = $request->data['Search']['searchField'];
+		$options['auto_search'] = false;
+		$options['auto_contain'] = false;
+		
+		$search = $this->ControllerAction->getSearchKey();
 
-		if (!empty($searchField)) {
-			$query->orWhere([$this->aliasField('en')." LIKE '%" . $searchField . "%'"]);
+		if (!empty($search)) {
+			$query->where([$this->aliasField('en')." LIKE '%" . $search . "%'"]);
 		}
 	}
 
