@@ -13,11 +13,6 @@ use App\Model\Table\AppTable;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
-	public function initialize(array $config) {
-		parent::initialize($config);
-		$this->removeBehavior('Record');
-	}
-
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
 	}
