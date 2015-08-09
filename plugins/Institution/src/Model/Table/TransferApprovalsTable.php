@@ -21,11 +21,11 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
-    	return $events;
-    }
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+		return $events;
+	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		// Set all selected values only
@@ -202,14 +202,17 @@ class TransferApprovalsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-    	if ($AccessControl->check(['Dashboard', 'TransferApprovals', 'edit'])) {
-    		// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
+		if ($AccessControl->check(['Dashboard', 'TransferApprovals', 'edit'])) {
+			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
+			$institutionIds = $AccessControl->getInstitutionsByUser();
+
 			$resultSet = $this
 				->find()
-				->where([
-					$this->aliasField('status') => 0
-				])
 				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->where([
+					$this->aliasField('status') => 0,
+					$this->aliasField('institution_id') . ' IN ' => $institutionIds
+				])
 				->order([
 					$this->aliasField('created')
 				])
@@ -233,7 +236,7 @@ class TransferApprovalsTable extends AppTable {
 					'type' => __('Student Transfer')
 				];
 			}
-    	}
+		}
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -258,7 +261,7 @@ class TransferApprovalsTable extends AppTable {
 		}
 
 		// Update status to Transferred in previous school
-    	$institutionId = $entity->previous_institution_id;
+		$institutionId = $entity->previous_institution_id;
 		$selectedStudent = $entity->security_user_id;
 		$selectedPeriod = $entity->academic_period_id;
 		$selectedGrade = $entity->education_grade_id;
@@ -322,7 +325,7 @@ class TransferApprovalsTable extends AppTable {
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// Update status to Current in previous school
-    	$institutionId = $entity->previous_institution_id;
+		$institutionId = $entity->previous_institution_id;
 		$selectedStudent = $entity->security_user_id;
 		$selectedPeriod = $entity->academic_period_id;
 		$selectedGrade = $entity->education_grade_id;
