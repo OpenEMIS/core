@@ -283,8 +283,12 @@ class HtmlFieldHelper extends Helper {
 
 	public function readonly($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-		if ($action == 'view') {
-			$value = $attr['value'];
+		if ($action == 'view' || $action == 'index') {
+			if (array_key_exists('value', $attr)) {
+				$value = $attr['value'];
+			} else {
+				$value = $data->$attr['field'];
+			}
 		} else if ($action == 'edit') {
 			$value = $this->disabled($action, $data, $attr, $options);
 			unset($options['disabled']);
@@ -329,7 +333,7 @@ class HtmlFieldHelper extends Helper {
 			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
 			echo $jsFunc;
 
-			if(!empty($src)){
+			if (!empty($src)) {
 				$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:60px;" /></div>' : $src;
 			}	
 		} else if ($action == 'edit') {
@@ -383,9 +387,9 @@ class HtmlFieldHelper extends Helper {
 		$attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
 		
 		if ($action == 'view' || $action == 'index') {
-			$value = $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		} else if ($action == 'edit') {
-			$value = $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		}
 		return $value;
 	}
@@ -462,10 +466,14 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
-			if (!is_null($value)) {
-				$attr['value'] = date('d-m-Y', strtotime($value));
-			} else if ($attr['default_date']) {
-				$attr['value'] = date('d-m-Y');
+			if (!array_key_exists('value', $attr)) {
+				if (!is_null($value)) {
+					$attr['value'] = date('d-m-Y', strtotime($value));
+				} else if ($attr['default_date']) {
+					$attr['value'] = date('d-m-Y');
+				}
+			} else {
+				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
@@ -544,8 +552,10 @@ class HtmlFieldHelper extends Helper {
 				foreach ($value as $obj) {
 					$chosenSelectList[] = $obj->name;
 				}
+				$value = implode(', ', $chosenSelectList);
+			} else {
+				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}
-			$value = implode(', ', $chosenSelectList);
 		} else if ($action == 'edit') {
 			$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
 			$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';

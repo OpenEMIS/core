@@ -384,6 +384,8 @@ class Request implements ArrayAccess
 
         if (!$baseUrl) {
             $base = dirname(env('PHP_SELF'));
+            // Clean up additional / which cause following code to fail..
+            $base = preg_replace('#/+#', '/', $base);
 
             $indexPos = strpos($base, '/' . $webroot . '/index.php');
             if ($indexPos !== false) {
@@ -665,23 +667,6 @@ class Request implements ArrayAccess
             return true;
         }
         if (isset($detect['param']) && $this->_paramDetector($detect)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Detects if a URL extension is present.
-     *
-     * @param array $detect Detector options array.
-     * @return bool Whether or not the request is the type you are checking.
-     */
-    protected function _extensionDetector($detect)
-    {
-        if (is_string($detect['extension'])) {
-            $detect['extension'] = [$detect['extension']];
-        }
-        if (in_array($this->params['_ext'], $detect['extension'])) {
             return true;
         }
         return false;

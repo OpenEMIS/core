@@ -119,9 +119,11 @@ trait MessagesTrait {
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
-			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty'
+			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
+
 		],
 		'InstitutionSiteClasses' => [
+			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
 			'classes' => 'Subjects',
@@ -134,6 +136,10 @@ trait MessagesTrait {
 		'InstitutionSiteFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+		],
+		'Students' => [
+			'noGrades' => 'No Grades',
+			'noStudents' => 'No Student found'
 		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
@@ -219,6 +225,10 @@ trait MessagesTrait {
 		'SurveyStatuses' => [
 			'survey_template_id' => 'Survey Template'
 		],
+		'SurveyForms' => [
+			'add_question' => 'Add Question',
+			'add_to_section' => 'Add to Section'
+		],
 		'time' => [
 			'start' => 'Start Time',
 			'end' => 'End Time',
@@ -235,6 +245,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',
@@ -257,19 +268,27 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
-		'StudentTransfers' => [
+		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
-			'approve' => 'Transfer request has been approved successfully.',
-			'reject' => 'Transfer request has been rejected successfully.',
-			'noProgrammes' => 'No Available Programmes'
 		],
-
+		'TransferApprovals' => [
+			'approve' => 'Transfer request has been approved successfully.',
+			'reject' => 'Transfer request has been rejected successfully.'
+		],
+		'StudentPromotion' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
+			'noData' => 'There are no available Students for Promotion / Graduation.',
+			'current_period' => 'Current Academic Period',
+			'next_period' => 'Next Academic Period'
+		],
 
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There is no subject in the selected class',
+				'noSubjectsInSection' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
 				'noSections' => 'There is no class under the selected academic period',
@@ -339,9 +358,14 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
-			'StudentTransfers' => [
+			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'Students' => [
+				'student_id' => [
+					'ruleInstitutionStudentId' => 'Student has already been added.'
 				]
 			]
 		],

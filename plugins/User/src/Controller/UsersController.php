@@ -17,7 +17,7 @@ class UsersController extends AppController {
 	}
 
 	public function login() {
-		$this->layout = false;
+		$this->getView()->layout(false);
 		$username = '';
 		$password = '';
         $session = $this->request->session();
