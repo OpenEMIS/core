@@ -26,7 +26,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('InstitutionSiteOwnerships', 		['className' => 'Institution.Ownerships']);
 		$this->belongsTo('InstitutionSiteStatuses', 		['className' => 'Institution.Statuses']);
 		$this->belongsTo('InstitutionSiteSectors', 			['className' => 'Institution.Sectors']);
-		$this->belongsTo('InstitutionSiteProviders', 		['className' => 'Institution.Providers']);
+		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
 		$this->belongsTo('InstitutionSiteGenders', 			['className' => 'Institution.Genders']);
 
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
