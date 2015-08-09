@@ -5,6 +5,8 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
+// this table should not be used anymore, please refer to InstitutionGradesTable.php
+
 class InstitutionSiteGradesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);

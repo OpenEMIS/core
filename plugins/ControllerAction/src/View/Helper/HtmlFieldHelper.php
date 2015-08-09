@@ -205,6 +205,13 @@ class HtmlFieldHelper extends Helper {
 				$value = $data->$field;
 			}
 		} else if ($action == 'edit') {
+			if (array_key_exists('empty', $attr)) {
+				if ($attr['empty'] === true) {
+					$options['empty'] = '-- ' . __('Select') . ' --';
+				} else {
+					$options['empty'] = '-- ' . __($attr['empty']) . ' --';
+				}
+			}
 			if (isset($attr['options'])) {
 				if (empty($attr['options'])) {
 					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
