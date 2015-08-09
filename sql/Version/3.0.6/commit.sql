@@ -174,6 +174,26 @@ UPDATE `security_functions` SET
 `_view` = 'History.index'
 WHERE `id` = 1001;
 
+-- fix custom fields
+UPDATE `custom_modules` SET
+`model` = 'Student.Students'
+WHERE `code` = 'Student';
+
+UPDATE `custom_modules` SET
+`model` = 'Staff.Staff'
+WHERE `code` = 'Staff';
+
+ALTER TABLE `student_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `staff_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `infrastructure_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+ALTER TABLE `institution_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+-- end fix
+
+UPDATE `config_items` SET 
+`code` = 'institution_area_level_id',
+`type` = 'Institution'
+WHERE `name` = 'Display Area Level';
+
 -- PHPOE-1762
 INSERT INTO `db_patches` VALUES ('PHPOE-1762');
 ALTER TABLE `institution_site_sections` CHANGE `section_number` `section_number` INT(11) NULL DEFAULT NULL COMMENT 'This column is being used to determine whether this section is a multi-grade or single-grade.';

@@ -58,3 +58,25 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `
 UPDATE `security_functions` SET
 `_view` = 'History.index'
 WHERE `id` = 1001;
+
+-- fix custom fields
+UPDATE `custom_modules` SET
+`model` = 'Student.Students'
+WHERE `code` = 'Student';
+
+UPDATE `custom_modules` SET
+`model` = 'Staff.Staff'
+WHERE `code` = 'Staff';
+
+ALTER TABLE `student_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `staff_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `infrastructure_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+ALTER TABLE `institution_custom_forms_fields` CHANGE `name` `name` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+-- end fix
+
+-- fix config items
+UPDATE `config_items` SET 
+`code` = 'institution_area_level_id',
+`type` = 'Institution'
+WHERE `name` = 'Display Area Level';
+
