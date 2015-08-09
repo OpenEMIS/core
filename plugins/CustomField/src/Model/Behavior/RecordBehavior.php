@@ -59,7 +59,8 @@ class RecordBehavior extends Behavior {
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 
-		if (empty($this->config('model'))) {
+		$model = $this->config('model');
+		if (empty($model)) {
 			$this->config('model', $this->_table->registryAlias());
 		}
     }
