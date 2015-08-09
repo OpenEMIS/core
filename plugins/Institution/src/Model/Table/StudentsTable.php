@@ -395,26 +395,29 @@ class StudentsTable extends AppTable {
 		// End
 
 		// Grade
-		$data = $Grades->find()
-		->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-		->contain('EducationGrades.EducationProgrammes')
-		->where([$Grades->aliasField('institution_site_id') => $institutionId])
-		->all();
-
 		$gradeOptions = [];
-		foreach ($data as $entity) {
-			$gradeOptions[$entity->education_grade->id] = $entity->education_grade->programme_grade_name;
-		}
-
-		$selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
-		$this->advancedSelectOptions($gradeOptions, $selectedGrade, []);
-		// End
-		
-		// section
 		$sectionOptions = ['0' => __('-- Select Class -- ')];
-		$sectionOptions = $sectionOptions + $InstitutionSiteSections->getSectionOptions($selectedPeriod, $institutionId, $selectedGrade);
-		// End
 
+		if ($selectedPeriod != 0) {
+			$data = $Grades->find()
+			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+			->contain('EducationGrades.EducationProgrammes')
+			->where([$Grades->aliasField('institution_site_id') => $institutionId])
+			->all();
+
+			foreach ($data as $entity) {
+				$gradeOptions[$entity->education_grade->id] = $entity->education_grade->programme_grade_name;
+			}
+
+			$selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
+			$this->advancedSelectOptions($gradeOptions, $selectedGrade, []);
+			// End
+			
+			// section
+			$sectionOptions = $sectionOptions + $InstitutionSiteSections->getSectionOptions($selectedPeriod, $institutionId, $selectedGrade);
+			// End
+		}
+		
 		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'sectionOptions', 'selectedSection');
 	}
 
