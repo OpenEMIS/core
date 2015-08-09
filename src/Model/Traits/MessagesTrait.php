@@ -648,6 +648,13 @@ trait MessagesTrait {
 				]
 			]
 		],
+		'Localization' => [
+			'Translations' => [
+				'en' => [
+					'ruleUnique' => 'This translation is already exists'
+				]
+			]
+		],
 		'Translations' => [
 			'success' => 'The language has been successfully compiled.',
 			'failed' => 'The language has not been compiled due to errors encountered.',
