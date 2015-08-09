@@ -14,6 +14,7 @@ class InstitutionSiteGradesTable extends AppTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
 	public function validationDefault(Validator $validator) {
