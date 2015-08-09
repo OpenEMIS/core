@@ -24,6 +24,7 @@ class InstitutionsController extends AppController  {
 
 			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
 			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Grades' 			=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
 			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
@@ -41,7 +42,7 @@ class InstitutionsController extends AppController  {
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view']],
 			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
-			'Transfers' 		=> ['className' => 'Institution.StudentTransfers', 'actions' => ['index', 'add']],
+			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['add', 'edit', 'remove']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
@@ -176,7 +177,14 @@ class InstitutionsController extends AppController  {
 		$session = $this->request->session();
 
 		if (!$this->request->is('ajax')) {
-			if ($model->hasField('institution_site_id')) {
+			if ($model->hasField('institution_id')) {
+				if (!$session->check('Institutions.id')) {
+					$this->Alert->error('general.notExists');
+					// should redirect
+				} else {
+					$query->where([$model->aliasField('institution_id') => $session->read('Institutions.id')]);
+				}
+			} else if ($model->hasField('institution_site_id')) { // will need to remove this part once we change institution_sites to institutions
 				if (!$session->check('Institutions.id')) {
 					$this->Alert->error('general.notExists');
 					// should redirect

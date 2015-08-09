@@ -24,7 +24,7 @@ class StudentAttendancesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 	}
@@ -44,11 +44,10 @@ class StudentAttendancesTable extends AppTable {
 	// Event: ControllerAction.Model.beforeAction
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('openemis_no');
-		$this->ControllerAction->field('security_user_id', ['order' => 2]);
+		$this->ControllerAction->field('student_id', ['order' => 2]);
 		
 		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
-		$this->ControllerAction->field('student_category_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 
 		$tabElements = [
@@ -354,7 +353,7 @@ class StudentAttendancesTable extends AppTable {
 			//
 			$settings['pagination'] = false;
 			$query
-				->where([$this->aliasField('security_user_id') => 0]);
+				->where([$this->aliasField('student_id') => 0]);
 
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
@@ -366,7 +365,7 @@ class StudentAttendancesTable extends AppTable {
 	public function findWithAbsence(Query $query, array $options) {
 		$date = $options['date'];
 
-		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.security_user_id'];
+		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.student_id'];
 		if (is_array($date)) {
 			$startDate = $date[0]->format('Y-m-d');
 			$endDate = $date[1]->format('Y-m-d');
@@ -405,7 +404,7 @@ class StudentAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('security_user_id'), 
+    			$this->aliasField('student_id'), 
     			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
