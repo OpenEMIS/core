@@ -86,6 +86,7 @@ trait MessagesTrait {
 			'date_closed' => 'Date Closed',
 		],
 		'InstitutionSiteStaff' => [
+			'title' => 'Staff',
 			'start_date' => 'Start Date',
 			'fte' => 'FTE',
 			'total_fte' => 'Total FTE',
