@@ -155,7 +155,9 @@ class ControllerActionComponent extends Component {
 					$this->model->fields[$key]['type'] = 'select';
 				}
 				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
-					$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+					if (!array_key_exists('empty', $attr)) {
+						$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+					}
 				}
 			}
 
