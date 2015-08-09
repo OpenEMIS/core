@@ -4,6 +4,7 @@ namespace AcademicPeriod\Model\Behavior;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
 
 class PeriodBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -15,8 +16,18 @@ class PeriodBehavior extends Behavior {
 			$periodObj = $AcademicPeriods
 				->findById($options['academic_period_id'])
 				->first();
-			$startDate = date('Y-m-d', strtotime($periodObj->start_date));
-			$endDate = date('Y-m-d', strtotime($periodObj->end_date));
+
+			if ($periodObj->start_date instanceof Time) {
+				$startDate = $periodObj->start_date->format('Y-m-d');
+			} else {
+				$startDate = date('Y-m-d', strtotime($periodObj->start_date));
+			}
+
+			if ($periodObj->end_date instanceof Time) {
+				$endDate = $periodObj->end_date->format('Y-m-d');
+			} else {
+				$endDate = date('Y-m-d', strtotime($periodObj->end_date));
+			}
 
 			$conditions = [];
 			$conditions['OR'] = [
