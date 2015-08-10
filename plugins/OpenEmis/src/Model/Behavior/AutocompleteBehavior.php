@@ -35,12 +35,20 @@ class AutocompleteBehavior extends Behavior {
 			$options['type'] = 'text';
 			$options['class'] = 'autocomplete';
 			$options['autocomplete-url'] = $url;
+			// text to show for no results
 			if (array_key_exists('noResults', $attr)) {
 				$options['autocomplete-no-results'] = $attr['noResults'];
 			}
+			// action for no results
+			if (array_key_exists('onNoResults', $attr)) {
+				$options['autocomplete-on-no-results'] = $attr['onNoResults'];
+			}
+			// action before search happens
+			if (array_key_exists('onBeforeSearch', $attr)) {
+				$options['autocomplete-before-search'] = $attr['onBeforeSearch'];
+			}
 			$options['autocomplete-class'] = 'error-message';
 			$options['autocomplete-target'] = $target['key'];
-			// $options['autocomplete-submit'] = $target;
 
 			$value .= $Form->input($fieldName, $options);
 			$value .= $Form->hidden($target['name'], ['autocomplete-value' => $target['key']]);

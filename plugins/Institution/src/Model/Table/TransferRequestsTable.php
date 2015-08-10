@@ -6,7 +6,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
-use Cake\Controller\Controller;
 use Cake\Validation\Validator;
 
 class TransferRequestsTable extends AppTable {
@@ -61,7 +60,7 @@ class TransferRequestsTable extends AppTable {
 		return $process;
     }
 
-    public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
     	$id = $this->Session->read($this->alias().'.id');
     	$action = $this->ControllerAction->buttons['add']['url'];
 		$action['action'] = 'Students';

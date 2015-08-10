@@ -173,8 +173,8 @@ class StudentsTable extends AppTable {
 			'value' => $openemisNo
 		]);
 
-		$this->ControllerAction->field('username', ['order' => 100]);
-		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
+		$this->ControllerAction->field('username', ['order' => 70]);
+		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -219,6 +219,13 @@ class StudentsTable extends AppTable {
 			->allowEmpty('password')
 			->allowEmpty('photo_content')
 			;
+
+		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
 		return $validator;
 	}
 

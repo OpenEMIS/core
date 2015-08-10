@@ -50,16 +50,14 @@ class StudentsTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
+		$this->ControllerAction->field('class', ['order' => 90]);
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
+		$this->fields['start_date']['visible'] = false;
+		$this->fields['end_date']['visible'] = false;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades']);
-		$sortList = ['start_date', 'end_date'];
-		if (array_key_exists('sortWhitelist', $options)) {
-			$sortList = array_merge($options['sortWhitelist'], $sortList);
-		}
-		$options['sortWhitelist'] = $sortList;
 
 		// Student Statuses
 		$statusOptions = $this->StudentStatuses
@@ -145,6 +143,37 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
+	public function onGetClass(Event $event, Entity $entity) {
+		$value = '';
+		$academicPeriodId = $entity->academic_period_id;
+		$studentId = $entity->_matchingData['Users']->id;
+		$educationGradeId = $entity->education_grade->id;
+		$institutionId = $entity->institution_id;
+
+		$ClassStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$class = $ClassStudents->find()
+		->select(['class.name'])
+		->innerJoin(
+			['class' => 'institution_site_sections'],
+			[
+				'class.id = ' . $ClassStudents->aliasField('institution_site_section_id'),
+				'class.academic_period_id' => $academicPeriodId,
+				'class.institution_site_id' => $institutionId
+			]
+		)
+		->where([
+			$ClassStudents->aliasField('student_id') => $studentId,
+			$ClassStudents->aliasField('education_grade_id') => $educationGradeId,
+			$ClassStudents->aliasField('status') => 1
+		])
+		->first();
+
+		if ($class) {
+			$value = $class->class['name'];
+		}
+		return $value;
+	}
+
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('student_id');
 
@@ -194,7 +223,7 @@ class StudentsTable extends AppTable {
 	    }
 	}
 
-	public function addAfterAction(Event $event) {
+	public function addAfterAction(Event $event, Entity $entity) {
 		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $sectionOptions, $selectedSection) = array_values($this->_getSelectOptions());
 
 		$this->ControllerAction->field('academic_period_id', ['options' => $periodOptions]);
@@ -214,9 +243,11 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_id'
 		]);
+
+		$this->setupTabElements($entity);
 	}
 
-	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
 			$sectionData = [];
 			$sectionData['student_id'] = $entity->student_id;
@@ -234,19 +265,24 @@ class StudentsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$controller = $this->controller;
-		$url = ['plugin' => $controller->plugin, 'controller' => $controller->name];
+		$this->setupTabElements($entity);
+	}
+
+	private function setupTabElements($entity) {
+		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 
 		$tabElements = [
-			'Students' => [
-				'url' => array_merge($url, ['action' => $this->alias(), 'view', $entity->id]),
-				'text' => __('Academic')
-			],
-			'StudentUser' => [
-				'url' => array_merge($url, ['action' => 'StudentUser', 'view', $entity->student_id, 'id' => $entity->id]),
-				'text' => __('General')
-			]
+			'Students' => ['text' => __('Academic')],
+			'StudentUser' => ['text' => __('General')]
 		];
+
+		if ($this->action == 'add') {
+			$tabElements['Students']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
+			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => 'StudentUser', 'add']);
+		} else {
+			$tabElements['Students']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
+			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => 'StudentUser', 'view', $entity->student_id, 'id' => $entity->id]);
+		}
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -312,6 +348,11 @@ class StudentsTable extends AppTable {
 			$attr['noResults'] = $this->getMessage($this->aliasField('noStudents'));
 			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
 			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Students', 'ajaxUserAutocomplete'];
+
+			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
@@ -330,6 +371,17 @@ class StudentsTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$this->Session->delete('Institutions.Students.new');
+	}
+
+	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->Session->write('Institutions.Students.new', $data[$this->alias()]);
+		$event->stopPropagation();
+		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
+		return $this->controller->redirect($action);
 	}
 
 	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -426,6 +478,7 @@ class StudentsTable extends AppTable {
 		// Grade
 		$gradeOptions = [];
 		$sectionOptions = ['0' => __('-- Select Class -- ')];
+		$selectedSection = 0;
 
 		if ($selectedPeriod != 0) {
 			$data = $Grades->find()

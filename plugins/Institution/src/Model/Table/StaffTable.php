@@ -118,7 +118,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->role > 0) {
 			$obj = [
 				'id' => Text::uuid(),
