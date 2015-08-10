@@ -228,14 +228,19 @@ class StaffTable extends AppTable {
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'index') {
-			$attr['sort'] = ['field' => 'Users.first_name'];
-		} else if ($action == 'add') {
+		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
 			$attr['noResults'] = __('No Staff found');
 			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
 			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Staff', 'ajaxUserAutocomplete'];
+			
+			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
 		return $attr;
 	}
@@ -259,6 +264,17 @@ class StaffTable extends AppTable {
 			$value = ($entity->FTE * 100) . '%';
 		}
 		return $value;
+	}
+
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$this->Session->delete('Institutions.Staff.new');
+	}
+
+	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->Session->write('Institutions.Staff.new', $data[$this->alias()]);
+		$event->stopPropagation();
+		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
+		return $this->controller->redirect($action);
 	}
 
 	public function afterAction(Event $event) {
