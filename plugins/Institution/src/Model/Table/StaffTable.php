@@ -140,6 +140,32 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'security_user_id'
 		]);
+
+		$this->setupTabElements($entity);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements($entity);
+	}
+
+	private function setupTabElements($entity) {
+		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+
+		$tabElements = [
+			'Staff' => ['text' => __('Position')],
+			'StaffUser' => ['text' => __('General')]
+		];
+
+		if ($this->action == 'add') {
+			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
+			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'add']);
+		} else {
+			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
+			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'view', $entity->security_user_id, 'id' => $entity->id]);
+		}
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
