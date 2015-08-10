@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Utility\Text;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -17,30 +18,33 @@ class StaffUserTable extends UserTable {
 		$this->setupTabElements($entity);
 	}
 
-	// public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-	// 	if ($this->Session->check('Institutions.Students.new')) {
-	// 		$academicData = $this->Session->read('Institutions.Students.new');
-	// 		$academicData['student_id'] = $entity->id;
-	// 		$class = $academicData['class'];
-	// 		unset($academicData['class']);
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+		if ($this->Session->check('Institutions.Staff.new')) {
+			$positionData = $this->Session->read('Institutions.Staff.new');
+			$positionData['security_user_id'] = $entity->id;
+			$role = $positionData['role'];
+			$institutionId = $positionData['institution_site_id'];
 
-	// 		$Student = TableRegistry::get('Institution.Students');
-	// 		if ($Student->save($Student->newEntity($academicData))) {
-	// 			if ($class > 0) {
-	// 				$sectionData = [];
-	// 				$sectionData['student_id'] = $entity->id;
-	// 				$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-	// 				$sectionData['institution_site_section_id'] = $class;
-	// 				$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-	// 				$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
-	// 			}
-	// 		}
-	// 		$this->Session->delete('Institutions.Students.new');
-	// 	}
-	// 	$event->stopPropagation();
-	// 	$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'index'];
-	// 	return $this->controller->redirect($action);
-	// }
+			$Staff = TableRegistry::get('Institution.Staff');
+			if ($Staff->save($Staff->newEntity($positionData))) {
+				if ($role > 0) {
+					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
+					$obj = [
+						'id' => Text::uuid(),
+						'security_group_id' => $institutionEntity->security_group_id, 
+						'security_role_id' => $role, 
+						'security_user_id' => $entity->id
+					];
+					$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+					$GroupUsers->save($GroupUsers->newEntity($obj));
+				}
+			}
+			$this->Session->delete('Institutions.Staff.new');
+		}
+		$event->stopPropagation();
+		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'index'];
+		return $this->controller->redirect($action);
+	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
