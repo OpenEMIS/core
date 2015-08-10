@@ -192,6 +192,21 @@ class AppTable extends Table {
 		];
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
+		if ($action != 'index') {
+			$toolbarButtons['back'] = $buttons['back'];
+			$toolbarButtons['back']['type'] = 'button';
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr'] = $toolbarAttr;
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+
+			if ($action == 'remove' && $buttons['remove']['strategy'] == 'transfer') {
+				$toolbarButtons['list'] = $buttons['index'];
+				$toolbarButtons['list']['type'] = 'button';
+				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
+				$toolbarButtons['list']['attr'] = $toolbarAttr;
+				$toolbarButtons['list']['attr']['title'] = __('List');
+			}
+		}
 		if ($action == 'index') {
 			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
 				$toolbarButtons['add'] = $buttons['add'];
@@ -243,21 +258,6 @@ class AppTable extends Table {
 			// 		$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
 			// 	}
 			// }
-		}
-		if ($action != 'index') {
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = 'button';
-			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-			$toolbarButtons['back']['attr'] = $toolbarAttr;
-			$toolbarButtons['back']['attr']['title'] = __('Back');
-
-			if ($action == 'remove') {
-				$toolbarButtons['list'] = $buttons['index'];
-				$toolbarButtons['list']['type'] = 'button';
-				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
-				$toolbarButtons['list']['attr'] = $toolbarAttr;
-				$toolbarButtons['list']['attr']['title'] = __('List');
-			}
 		}
 
 		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'])) {

@@ -200,6 +200,13 @@ class StaffTable extends AppTable {
 			->allowEmpty('password')
 			->allowEmpty('photo_content')
 			;
+
+		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
 		return $validator;
 	}
 

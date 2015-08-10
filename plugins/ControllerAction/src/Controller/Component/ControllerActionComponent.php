@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.3
+ControllerActionComponent - Current Version 3.1.4
+3.1.4 (Jeff) - removed $controller param from addAfterSave and replaced with $requestData
 3.1.3 (Jeff) - added new event deleteBeforeAction
 3.1.2 (Jeff) - added deleteStrategy for transferring of records, new event deleteOnInitialize
 3.1.1 (Jeff) - modified add(), edit() to allow changing of table
@@ -870,7 +871,7 @@ class ControllerActionComponent extends Component {
 					$this->Alert->success('general.add.success');
 					// Event: addAfterSave
 					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
-					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterSave', null, [$entity, $requestData]);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
