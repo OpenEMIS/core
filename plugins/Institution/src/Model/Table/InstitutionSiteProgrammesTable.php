@@ -10,6 +10,8 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
+// this table should not be used anymore, please refer to InstitutionGradesTable.php
+
 class InstitutionSiteProgrammesTable extends AppTable {
 	public $institutionId = 0;
 	private $_levelOptions;

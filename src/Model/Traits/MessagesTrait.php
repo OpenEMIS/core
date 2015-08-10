@@ -323,6 +323,11 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
+			'InstitutionGrades' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
 			'InstitutionSiteShifts' => [
 				'start_time' => [
 					'ruleCompareDate' => 'Start Time should not be later than End Time'
