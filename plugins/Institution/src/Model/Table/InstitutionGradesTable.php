@@ -24,6 +24,16 @@ class InstitutionGradesTable extends AppTable {
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator
+			->allowEmpty('end_date')
+ 			->add('end_date', 'ruleCompareDateReverse', [
+					'rule' => ['compareDateReverse', 'start_date', false]
+				])
+ 			;
+		return $validator;
+	}
+
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('level');
@@ -34,15 +44,16 @@ class InstitutionGradesTable extends AppTable {
 			$this->ControllerAction->setFieldOrder([
 				'level', 'programme', 'start_date', 'end_date', 'education_grade_id'
 			]);
+		} else if ($this->action == 'index') {
+			$this->ControllerAction->setFieldOrder([
+				'education_grade_id', 'programme', 'level', 'start_date', 'end_date'
+			]);
 		}
-	}
-
-	public function indexAfterAction(Event $event, $data) {
-		// $this->ControllerAction
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
+		$query->order(['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']);
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -102,14 +113,27 @@ class InstitutionGradesTable extends AppTable {
 		return $entity;
 	}
 
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$level = $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;
+		// $cycle = $entity->education_grade->education_programme->education_cycle->name;
+		$programme = $entity->education_grade->education_programme->cycle_programme_name;
+		$this->fields['level']['attr']['value'] = $level;
+		$this->fields['programme']['attr']['value'] = $programme;
+		$this->fields['education_grade_id']['attr']['value'] = $entity->education_grade->name;
+		// pr($entity);
+	}
+
 	public function onGetLevel(Event $event, Entity $entity) {
-		$level = $entity->education_grade->education_programme->education_cycle->education_level->name;
-		$cycle = $entity->education_grade->education_programme->education_cycle->name;
-		return $level . ' - ' . $cycle;
+		$level = $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;
+		return $level;
 	}
 
 	public function onGetProgramme(Event $event, Entity $entity) {
-		return $entity->education_grade->education_programme->name;
+		return $programme = $entity->education_grade->education_programme->cycle_programme_name;;
 	}
 
 	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
@@ -122,6 +146,8 @@ class InstitutionGradesTable extends AppTable {
 			$attr['empty'] = true;
 			$attr['options'] = $levelOptions;
 			$attr['onChangeReload'] = 'changeLevel';
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
 		}
 		return $attr;
 	}
@@ -144,6 +170,8 @@ class InstitutionGradesTable extends AppTable {
 				$attr['options'] = $programmeOptions;
 				$attr['onChangeReload'] = 'changeProgramme';
 			}
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
 		}
 		return $attr;
 	}
@@ -176,6 +204,8 @@ class InstitutionGradesTable extends AppTable {
 				$attr['data'] = $data;
 				$attr['exists'] = $exists;
 			}
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
 		}
 		return $attr;
 	}
