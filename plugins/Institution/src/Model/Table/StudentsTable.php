@@ -185,10 +185,14 @@ class StudentsTable extends AppTable {
 			$institutionId = $session->read('Institutions.id');
 
 			// Get number of student in institution
-			$studentCount = $table->find()
-				->where([$table->aliasField('institution_site_id') => $institutionId])
-				->distinct(['security_user_id'])
-				->count(['security_user_id']);
+			$periodId = $this->request->query['academic_period_id'];
+			$studentCount = $this->find()
+				->where([
+					$this->aliasField('institution_id') => $institutionId,
+					$this->aliasField('academic_period_id') => $periodId
+				])
+				->group(['student_id'])
+				->count();
 
 			// Get Gender
 			$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
