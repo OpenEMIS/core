@@ -3,7 +3,7 @@
 <?php if ($action == 'add') : ?>
 
 <div class="input clearfix">
-	<label class="pull-left"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+	<label><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="table-in-view col-md-4 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable">
 			<thead>
