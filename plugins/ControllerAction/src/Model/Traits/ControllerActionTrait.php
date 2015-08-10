@@ -76,7 +76,7 @@ trait ControllerActionTrait {
 		// public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }
 
 		'ControllerAction.Model.add.afterSave'				=> 'addAfterSave', // changes redirect url after a successful save
-		// public function addAfterSave(Event $event, Controller $controller, Entity $entity) {}
+		// public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {}
 
 		//'ControllerAction.Model.add.onReload'				=> 'addOnReload', // called on http post
 		// public function addOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
