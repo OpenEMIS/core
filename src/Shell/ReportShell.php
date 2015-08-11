@@ -2,6 +2,7 @@
 namespace App\Shell;
 
 use Cake\Console\Shell;
+use Cake\ORM\TableRegistry;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
 class ReportShell extends Shell {
@@ -33,17 +34,24 @@ class ReportShell extends Shell {
 	}
 
 	public function doExcel($entity) {
-		$ReportProgress->id = $id;
 
 		try {
-			$params = json_decode($obj['params'], true);
-			pr($obj);
-			
-			$options = array_key_exists('options', $params) ? $params['options'] : array();
-			$name = $obj['name'];
-			$model = ClassRegistry::init($params['model']);
+			$params = json_decode($entity->params, true);
+			$feature = $params['feature'];
+			$table = TableRegistry::get($feature);
+			$name = $entity->name;
 
 			echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
+
+			$table->generateXLXS([
+				'download' => false,
+				'process' => $entity
+			]);
+
+			echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
+
+			pr($params);
+			return 0;
 
 			$format = 'xlsx';
 			$settings = array(
@@ -72,8 +80,10 @@ class ReportShell extends Shell {
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			pr($error);
-			$ReportProgress->saveField('status', -1);
-			$ReportProgress->saveField('error_message', $error);
+			$this->ReportProgress->updateAll(
+				['status' => -1, 'error_message' => $error],
+				['id' => $entity->id]
+			);
 		}
 	}
 }
