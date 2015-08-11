@@ -80,3 +80,8 @@ UPDATE `config_items` SET
 `type` = 'Institution'
 WHERE `name` = 'Display Area Level';
 
+-- fix field options
+ALTER TABLE `field_options` DROP `old_id` ;
+UPDATE `field_options` SET `plugin` = 'Institution', `code` = 'Providers' WHERE `code` = 'InstitutionSiteProviders';
+
+

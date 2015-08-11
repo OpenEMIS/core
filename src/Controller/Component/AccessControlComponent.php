@@ -165,6 +165,11 @@ class AccessControlComponent extends Component {
 		return false;
 	}
 
+	public function isAdmin() {
+		$superAdmin = $this->Auth->user('super_admin');
+		return $superAdmin == 1;
+	}
+
 	// determines whether the action is required for access control checking
 	public function isIgnored($controller, $action) {
 		$ignoreList = $this->config('ignoreList');

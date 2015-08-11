@@ -163,6 +163,34 @@ class FieldOptionValuesTable extends AppTable {
 		$entity->field_option_id = $selectedOption;
 	}
 
+	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
+		$codes = ['Providers'];
+
+		$fieldOption = $this->fieldOption;
+		if (in_array($fieldOption->code, $codes)) {
+			$settings['deleteStrategy'] = 'transfer';
+			if (empty($fieldOption->params)) {
+				$model = $fieldOption->code;
+				if (!is_null($fieldOption->plugin)) {
+					$model = $fieldOption->plugin . '.' . $model;
+				}
+				$settings['model'] = $model;
+			} else {
+
+			}
+		}
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$fieldOption = $this->fieldOption;
+		$codes = ['Providers'];
+		if (in_array($fieldOption->code, $codes)) {
+			if (empty($fieldOption->params)) {
+				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
+			}
+		}
+	}
+
 	public function getList($customOptions=[]) {
 		// pr($this);
 		$alias = $this->table();

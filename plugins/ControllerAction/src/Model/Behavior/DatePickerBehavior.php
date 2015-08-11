@@ -20,13 +20,16 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 
 class DatePickerBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity) {
 		$format = 'Y-m-d';
 		foreach ($this->config() as $field) {
 			if (!empty($entity->$field)) {
-				$entity->$field = date($format, strtotime($entity->$field));
+				if (!$entity->$field instanceof Time) {
+					$entity->$field = date($format, strtotime($entity->$field));
+				}
 			}
 		}
 	}

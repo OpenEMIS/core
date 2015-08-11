@@ -13,7 +13,10 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.1
+ControllerActionComponent - Current Version 3.1.4
+3.1.4 (Jeff) - removed $controller param from addAfterSave and replaced with $requestData
+3.1.3 (Jeff) - added new event deleteBeforeAction
+3.1.2 (Jeff) - added deleteStrategy for transferring of records, new event deleteOnInitialize
 3.1.1 (Jeff) - modified add(), edit() to allow changing of table
 3.1.0 (Jeff) - moved renderFields() to be called after the event (afterAction) is triggered
 3.0.9 (Jeff) - fixed getContains to retrieve only id, name and foreignKeys fields
@@ -41,6 +44,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\Core\Configure;
 use Cake\Log\Log;
@@ -54,6 +58,7 @@ class ControllerActionComponent extends Component {
 	private $paramsPass;
 	private $config;
 	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
+	private $deleteStrategy = 'cascade'; // cascade | transfer
 
 	public $model = null;
 	public $models = [];
@@ -61,7 +66,6 @@ class ControllerActionComponent extends Component {
 	public $orderField = 'order';
 	public $autoRender = true;
 	public $autoProcess = true;
-	public $removeStraightAway = true;
 	public $ignoreFields = ['modified', 'created'];
 	public $templatePath = '/ControllerAction/';
 	public $pageOptions = [10, 20, 30, 40, 50];
@@ -112,8 +116,9 @@ class ControllerActionComponent extends Component {
 						}
 
 						$actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
+						$options = isset($attr['options']) ? $attr['options'] : [];
 
-						$this->model($attr['className'], $actions);
+						$this->model($attr['className'], $actions, $options);
 						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias();
@@ -151,7 +156,9 @@ class ControllerActionComponent extends Component {
 					$this->model->fields[$key]['type'] = 'select';
 				}
 				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
-					$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+					if (!array_key_exists('empty', $attr)) {
+						$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+					}
 				}
 			}
 
@@ -202,7 +209,11 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
-	public function model($model=null, $actions=[]) {
+	public function model($model=null, $actions=[], $options=[]) {
+		if (array_key_exists('deleteStrategy', $options)) {
+			$this->deleteStrategy = $options['deleteStrategy'];
+		}
+
 		if (is_null($model)) {
 			return $this->model;
 		} else {
@@ -394,7 +405,7 @@ class ControllerActionComponent extends Component {
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
 		if ($buttons->offsetExists('remove')) {
-			$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
+			$buttons['remove']['strategy'] = $this->deleteStrategy;
 		}
 
 		// logic for Reorder buttons
@@ -806,7 +817,7 @@ class ControllerActionComponent extends Component {
 
 		$entity = $model->newEntity();
 
-		if ($request->is(['get'])) {
+	if ($request->is(['get'])) {
 			// Event: addOnInitialize
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
 			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
@@ -860,7 +871,7 @@ class ControllerActionComponent extends Component {
 					$this->Alert->success('general.add.success');
 					// Event: addAfterSave
 					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
-					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterSave', null, [$entity, $requestData]);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
@@ -1053,13 +1064,80 @@ class ControllerActionComponent extends Component {
 		$this->config['form'] = true;
 	}
 
-	public function remove() {
-		$this->autoRender = false;
+	public function remove($id=0) {
 		$request = $this->request;
 		$model = $this->model;
+		$settings = new ArrayObject([]);
+
+		// Event: deleteBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.beforeAction', null, [$settings]);
+		if ($event->isStopped()) { return $event->result; }
+		if ($settings->offsetExists('model')) {
+			if ($settings['model'] instanceof Table) {
+				$model = $settings['model'];
+			} else {
+				$model = TableRegistry::get($settings['model']);
+			}
+		}
+		if ($settings->offsetExists('deleteStrategy')) {
+			$this->deleteStrategy = $settings['deleteStrategy'];
+		}
+		// End Event
+
 		$primaryKey = $model->primaryKey();
-		
-		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
+		$idKey = $model->aliasField($primaryKey);
+
+		if ($request->is('get')) {
+			if ($model->exists([$idKey => $id])) {
+				$entity = $model->get($id);
+
+				$query = $model->find();
+				$listOptions = new ArrayObject([]);
+
+				// Event: deleteOnInitialize
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.onInitialize');
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $listOptions]);
+				if ($event->isStopped()) { return $event->result; }
+				// End Event
+
+				if ($listOptions->count() == 0) {
+					$listOptions['keyField'] = 'id';
+					$listOptions['valueField'] = 'name';
+				}
+				$query->find('list', $listOptions->getArrayCopy())->where([$idKey . ' <> ' => $id]);
+
+				$convertOptions = $query->toArray();
+				if (empty($convertOptions)) {
+					$convertOptions[''] = __('No Available Options');
+				}
+
+				$associations = [];
+				foreach ($model->associations() as $assoc) {
+					if ($assoc->type() == 'oneToMany') {
+						if (!array_key_exists($assoc->table(), $associations)) {
+							$count = $assoc->find()
+							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+							->count();
+							$title = $this->Alert->getMessage($assoc->aliasField('title'));
+							if ($title == '[Message Not Found]') {
+								$title = $assoc->name();
+							}
+							$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
+						}
+					}
+				}
+
+				$this->controller->set('data', $entity);
+				$this->controller->set('convertOptions', $convertOptions);
+				$this->controller->set('associations', $associations);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$action = $this->buttons['index']['url'];
+				return $this->controller->redirect($action);
+			}
+		} else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
+			$this->autoRender = false;
 			$id = $request->data[$primaryKey];
 			$deleteOptions = new ArrayObject([]);
 
@@ -1071,14 +1149,13 @@ class ControllerActionComponent extends Component {
 			// Event: onBeforeDelete
 			$params = [$deleteOptions, $id];
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.onBeforeDelete', null, $params);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
 			if ($event->isStopped()) { return $event->result; }
 			if (is_callable($event->result)) {
 				$process = $event->result;
 			}
 			// End Event
-
-			if ($this->removeStraightAway) {
+			if ($this->deleteStrategy == 'cascade') {
 				if ($process($model, $id, $deleteOptions)) {
 					$this->Alert->success('general.delete.success');
 				} else {
@@ -1087,7 +1164,33 @@ class ControllerActionComponent extends Component {
 				$action = $this->buttons['index']['url'];
 				return $this->controller->redirect($action);
 			} else {
-				//return $this->removeAndTransfer(array('selectedValue' => $id));
+				$transferFrom = $this->request->data('id');
+				$transferTo = $this->request->data('transfer_to');
+
+				$associations = [];
+				foreach ($model->associations() as $assoc) {
+					if ($assoc->type() == 'oneToMany') {
+						if (!array_key_exists($assoc->table(), $associations)) {
+							// $assoc->dependent(false);
+							$associations[$assoc->table()] = $assoc;
+						}
+					}
+				}
+
+				if ($process($model, $transferFrom, $deleteOptions)) {
+					foreach ($associations as $assoc) {
+						$assoc->updateAll(
+							[$assoc->foreignKey() => $transferTo],
+							[$assoc->foreignKey() => $transferFrom]
+						);
+					}
+					$this->Alert->success('general.delete.success');
+				} else {
+					$this->Alert->error('general.delete.failed');
+				}
+				
+				$action = $this->buttons['index']['url'];
+				return $this->controller->redirect($action);
 			}
 		} else {
 			$this->Alert->error('general.delete.failed');
@@ -1126,119 +1229,6 @@ class ControllerActionComponent extends Component {
 		echo $file;
 		exit();
 	}
-
-	/*
-	private function removeAndTransfer($options=[]) {
-		// 'selectedOption' => false, 'selectedValue' => 0
-		$selectedOption = isset($options['selectedOption']) ? $options['selectedOption'] : false;
-
-		$selectedValue = isset($options['selectedValue']) ? $options['selectedValue'] : 0;
-		$model = $this->model;
-		$modelName = $model->alias();
-
-		if ($selectedValue == 0) {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		// $allowDelete = (isset($model->allowDelete)) ? $model->allowDelete: false;
-		// if (!$allowDelete) {
-		// 	$this->Alert->error('general.delete.failed');
-		// 	$action = $this->buttons['view']['url'];
-		// 	return $this->controller->redirect($action);
-		// }
-		$conditions = [];
-		foreach ($model->associations()->type('BelongsTo') as $key=>$value) {
-			// pr($value->alias());
-			if ($this->Session->check($value->alias())) {
-				// pr($value->primaryKey());die;
-				$conditions[] = [$model->aliasField($value->foreignKey()) => $this->Session->read($value->aliasField($value->primaryKey()))];
-			}
-		}
-		$allFieldOptionValues = $model->find('list')->where($conditions);
-		if (is_object($allFieldOptionValues)) {
-			$allFieldOptionValues = $allFieldOptionValues->toArray();
-		} else {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-		if (array_key_exists($selectedValue, $allFieldOptionValues)) {
-			// unset only if field option exists in list
-			unset($allFieldOptionValues[$selectedValue]);
-		} else {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		$currentFieldValue = $model->get($selectedValue);
-		// if no legal records to migrate to ... they are not allowed to delete
-		if (empty($allFieldOptionValues)) {
-			$this->Alert->warning('general.delete.cannotDeleteOnlyRecord');
-			$action = $this->buttons['view']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		$modifyForeignKey = [];
-		foreach ($model->associations()->type('HasMany') as $key=>$value) {
-			$alias = $value->alias();
-			$CurrModelClass = $model->{$alias};
-			$foreignKeyId = $CurrModelClass->foreignKey();
-			$modifyForeignKey[$alias] = $CurrModelClass
-				->find()
-				->where([
-						$CurrModelClass->aliasField($foreignKeyId) => $selectedValue
-					])
-				->count()
-				;
-		}
-
-		$children = false;
-		if (isset($currentFieldValue->parent_id)) {
-			$children = $model->find('all')->where(['parent_id'=>$currentFieldValue->id]);
-		}
-
-		if ($this->request->is(array('post', 'put'))) {
-			$convertValue = $this->request->data[$modelName]['convert_to'];
-			foreach ($modifyForeignKey as $key => $value) {
-				$CurrModelClass = ClassRegistry::init($key);
-				$foreignKeyId = isset($hasManyArray[$key]['foreignKey']) ? $hasManyArray[$key]['foreignKey'] : Inflector::underscore($modelName)."_id";
-				$CurrModelClass->updateAll(
-					array($key.'.'.$foreignKeyId => $convertValue),
-					array($key.'.'.$foreignKeyId => $selectedValue)
-				);
-			}
-			if (isset($currentFieldValue[$modelName]['parent_id']) && count($children)>0) {
-				foreach ($children as $c) {
-					$model->id = $c[$modelName]['id'];
-					$c[$modelName]['parent_id'] = $convertValue;
-					unset($c[$modelName]['lft']);
-					unset($c[$modelName]['rght']);
-					$model->data = $c;
-					$model->saveAll();
-				}
-			}
-			$model->id = $selectedValue;
-			if ($model->delete()) {
-				$this->Alert->success('general.delete.successAfterTransfer');
-				$action = $this->buttons['index']['url'];
-				if (isset($action[1])) {
-					unset($action[1]);
-				}
-				return $this->controller->redirect($action);
-			}
-		}
-		
-		$this->controller->set('allOtherFieldOptionValues', $allFieldOptionValues);
-		$this->controller->set(compact('header', 'currentFieldValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete', 'model', 'children'));
-		
-		die;
-		$this->autoRender = true;
-		$this->templatePath = 'OpenEmis.Element'.$this->templatePath;
-	}
-	/**/
 
 	public function reorder() {
 		$this->autoRender = false;
