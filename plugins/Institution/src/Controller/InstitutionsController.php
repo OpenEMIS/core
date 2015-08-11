@@ -212,9 +212,9 @@ class InstitutionsController extends AppController  {
 
 			//Students By Year
 			$params = array(
-				'conditions' => array('institution_site_id' => $id)
+				'conditions' => array('institution_id' => $id)
 			);
-			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+			$InstitutionSiteStudents = TableRegistry::get('Institution.Students');
 			$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_year', $params);
 			
 			//Students By Grade for current year

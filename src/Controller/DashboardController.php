@@ -41,7 +41,7 @@ class DashboardController extends AppController {
 	public function index() {
 		$workbenchData = $this->Workbench->getList();
 
-		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+		$InstitutionSiteStudents = TableRegistry::get('Institution.Students');
 		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 		$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
 
