@@ -61,17 +61,19 @@ class InstitutionSiteFeesTable extends AppTable {
 			'education_programme', 'education_grade_id', 'total'
 		]);
 
+		// Get the localization option from localization component
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
+
 		$Fees = $this;
 		$institutionId = $this->institutionId;
-		$this->advancedSelectOptions($this->_academicPeriodOptions, $this->_selectedAcademicPeriodId, [
+		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
 			'callable' => function($id) use ($Fees, $institutionId) {
 				return $Fees->find()->where(['institution_site_id'=>$institutionId, 'academic_period_id'=>$id])->count();
 			}
 		]);
 
-		// Get the localization option from localization component
-		$academicPeriodOptions = $this->_academicPeriodOptions;
+
 		
 		$this->controller->set(compact('academicPeriodOptions'));
 
