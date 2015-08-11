@@ -10,7 +10,7 @@ class ReportsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Institutions' 		=> ['className' => 'Report.Institutions', 'actions' => ['index']]
+			'Institutions' 		=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']]
 		];
 	}
 

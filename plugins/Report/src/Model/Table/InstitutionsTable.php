@@ -56,20 +56,17 @@ class InstitutionsTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.Report.onChangeFeature'] = 'onChangeFeature';
-		$events['Model.Report.onGetName'] = 'onGetReportName';
-		return $events;
-	}
+	// public function implementedEvents() {
+	// 	$events = parent::implementedEvents();
+	// 	$events['Model.Report.onChangeFeature'] = 'onChangeFeature';
+	// 	$events['Model.Report.onGetName'] = 'onGetReportName';
+	// 	return $events;
+	// }
 
 	public function beforeAction(Event $event) {
-		if ($this->action == 'export') {
-			$this->fields = [];
-
-			$this->ControllerAction->field('feature');
-			$this->ControllerAction->field('format');
-		}
+		$this->fields = [];
+		$this->ControllerAction->field('feature');
+		$this->ControllerAction->field('format');
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -94,8 +91,9 @@ class InstitutionsTable extends AppTable  {
 	// 	return $attr;
 	// }
 
-	public function onChangeFeature(Event $event, Entity $entity, ArrayObject $data) {
+	public function addOnChangeFeature(Event $event, Entity $entity, ArrayObject $data) {
 		$feature = $this->request->data($this->aliasField('feature'));
+		// pr($feature);
 	}
 
 	public function onGetReportName(Event $event, ArrayObject $data) {
