@@ -118,7 +118,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->role > 0) {
 			$obj = [
 				'id' => Text::uuid(),
@@ -140,6 +140,32 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'security_user_id'
 		]);
+
+		$this->setupTabElements($entity);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements($entity);
+	}
+
+	private function setupTabElements($entity) {
+		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+
+		$tabElements = [
+			'Staff' => ['text' => __('Position')],
+			'StaffUser' => ['text' => __('General')]
+		];
+
+		if ($this->action == 'add') {
+			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
+			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'add']);
+		} else {
+			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
+			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'view', $entity->security_user_id, 'id' => $entity->id]);
+		}
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
@@ -202,14 +228,19 @@ class StaffTable extends AppTable {
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'index') {
-			$attr['sort'] = ['field' => 'Users.first_name'];
-		} else if ($action == 'add') {
+		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
 			$attr['noResults'] = __('No Staff found');
 			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
 			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Staff', 'ajaxUserAutocomplete'];
+			
+			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
 		return $attr;
 	}
@@ -233,6 +264,17 @@ class StaffTable extends AppTable {
 			$value = ($entity->FTE * 100) . '%';
 		}
 		return $value;
+	}
+
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$this->Session->delete('Institutions.Staff.new');
+	}
+
+	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$this->Session->write('Institutions.Staff.new', $data[$this->alias()]);
+		$event->stopPropagation();
+		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
+		return $this->controller->redirect($action);
 	}
 
 	public function afterAction(Event $event) {
