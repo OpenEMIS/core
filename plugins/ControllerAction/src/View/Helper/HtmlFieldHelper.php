@@ -8,6 +8,7 @@ use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 
 use Cake\View\Helper\IdGeneratorTrait;
 
@@ -204,6 +205,13 @@ class HtmlFieldHelper extends Helper {
 				$value = $data->$field;
 			}
 		} else if ($action == 'edit') {
+			if (array_key_exists('empty', $attr)) {
+				if ($attr['empty'] === true) {
+					$options['empty'] = '-- ' . __('Select') . ' --';
+				} else {
+					$options['empty'] = '-- ' . __($attr['empty']) . ' --';
+				}
+			}
 			if (isset($attr['options'])) {
 				if (empty($attr['options'])) {
 					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
@@ -468,7 +476,11 @@ class HtmlFieldHelper extends Helper {
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
 			if (!array_key_exists('value', $attr)) {
 				if (!is_null($value)) {
-					$attr['value'] = date('d-m-Y', strtotime($value));
+					if ($value instanceof Time) {
+						$attr['value'] = $value->format('d-m-Y');
+					} else {
+						$attr['value'] = date('d-m-Y', strtotime($value));
+					}
 				} else if ($attr['default_date']) {
 					$attr['value'] = date('d-m-Y');
 				}

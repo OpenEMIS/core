@@ -1,21 +1,9 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
-<?php if ($action == 'index') : ?>
-
-<?php 
-$grades = [];
-foreach ($entity->institution_site_grades as $grade) {
-	$grades[] = $grade->education_grade->name;
-}
-echo implode(', ', $grades);
-?>
-
-<?php elseif ($action == 'add' || $action == 'edit') : ?>
+<?php if ($action == 'add') : ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+	<label><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="table-in-view col-md-4 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable">
 			<thead>
@@ -29,21 +17,18 @@ echo implode(', ', $grades);
 			<?php if (isset($attr['data'])) : ?>
 
 			<tbody>
-				<?php foreach ($attr['data'] as $i=>$obj) : ?>
-				<?php 
-					$selected = false;
-					$institutionSiteGradeId = false;
-					if (isset($attr['selected']) && array_key_exists($obj->id, $attr['selected'])) {
-						$selected = true;
-					} 
-					if (isset($attr['recorded']) && array_key_exists($obj->id, $attr['recorded'])) {
-						$institutionSiteGradeId = $attr['recorded'][$obj->id];
-					}
-				?>
+				<?php foreach ($attr['data'] as $i => $obj) : ?>
 				<tr>
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSiteProgrammes[institution_site_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->id?>" <?php echo ($selected) ? 'checked' : '';?> />
-						<input type="hidden" name="<?php echo sprintf('InstitutionSiteProgrammes[institution_site_grades][%d][id]', $i) ?>" value="<?php echo $institutionSiteGradeId?>" />
+						<?php
+						$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
+						$checkboxOptions['value'] = $obj->id;
+						if (in_array($obj->id, $attr['exists'])) {
+							$checkboxOptions['disabled'] = 'disabled';
+							$checkboxOptions['checked'] = 'checked';
+						}
+						echo $this->Form->input("grades.$i.education_grade_id", $checkboxOptions);
+						?>
 					</td>
 					<td><?= $obj->code ?></td>
 					<td><?= $obj->name ?></td>
@@ -51,22 +36,10 @@ echo implode(', ', $grades);
 				<?php endforeach ?>
 			</tbody>
 			
-			<?php else : ?>
-				<tr>&nbsp;</tr>
-			<?php endif; ?>
+			<?php endif ?>
 
 		</table>
 	</div>
 </div>
-
-<?php else : ?>
-
-<?php 
-	$grades = [];
-	foreach ($data->institution_site_grades as $grade) {
-		$grades[] = $grade->education_grade->name;
-	}
-	echo implode(', ', $grades);
-?>
 
 <?php endif ?>

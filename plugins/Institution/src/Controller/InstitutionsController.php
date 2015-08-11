@@ -22,8 +22,8 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
 
-			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
-			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions', 'options' => ['deleteStrategy' => 'transfer']],
+			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
 			'Grades' 			=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
 			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
@@ -31,12 +31,14 @@ class InstitutionsController extends AppController  {
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
+			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 			'StaffPositions' 	=> ['className' => 'Institution.StaffPositions'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
+			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],

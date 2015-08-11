@@ -157,7 +157,7 @@ class UserBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity) {
 		if ($this->_table->hasBehavior('Staff')) {
 			// need to insert security roles here
 			$data = $this->_table->ControllerAction->request->data[$this->_table->alias()][$this->associatedModel->table()][0];
@@ -170,13 +170,13 @@ class UserBehavior extends Behavior {
 		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
 		$action = $this->_table->ControllerAction->buttons['index']['url'];
 		if (array_key_exists('new', $action)) {
-			$session = $controller->request->session();
+			$session = $this->controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
 			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
 			unset($action['new']);
 		}
 		$event->stopPropagation();
-		return $controller->redirect($action);
+		return $this->controller->redirect($action);
 	}
 
 }

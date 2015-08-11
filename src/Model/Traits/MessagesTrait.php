@@ -86,6 +86,7 @@ trait MessagesTrait {
 			'date_closed' => 'Date Closed',
 		],
 		'InstitutionSiteStaff' => [
+			'title' => 'Staff',
 			'start_date' => 'Start Date',
 			'fte' => 'FTE',
 			'total_fte' => 'Total FTE',
@@ -318,6 +319,11 @@ trait MessagesTrait {
 					'unique' => 'This Education Programme already exists in the system'
 				],
 				'noGrade' => 'There is no grade selected',
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
@@ -645,6 +651,13 @@ trait MessagesTrait {
 				],
 				'current' => [
 					'ruleValidateNeeded' => 'Academic Period needs to be set as current'
+				]
+			]
+		],
+		'Localization' => [
+			'Translations' => [
+				'en' => [
+					'ruleUnique' => 'This translation is already exists'
 				]
 			]
 		],

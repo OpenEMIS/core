@@ -206,13 +206,15 @@ class TransferApprovalsTable extends AppTable {
 			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
 			$institutionIds = $AccessControl->getInstitutionsByUser();
 
+			$where = [$this->aliasField('status') => 0];
+			if (!$AccessControl->isAdmin()) {
+				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			}
+
 			$resultSet = $this
 				->find()
 				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
-				->where([
-					$this->aliasField('status') => 0,
-					$this->aliasField('institution_id') . ' IN ' => $institutionIds
-				])
+				->where($where)
 				->order([
 					$this->aliasField('created')
 				])
