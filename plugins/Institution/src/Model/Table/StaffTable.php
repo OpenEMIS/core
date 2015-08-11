@@ -38,6 +38,15 @@ class StaffTable extends AppTable {
 		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// $this->addBehavior('AdvanceSearch');
+
+		$this->addBehavior('HighChart', [
+			'institution_staff_gender' => [
+				'_function' => 'getNumberOfStaffsByGender'
+			],
+			'institution_staff_qualification' => [
+				'_function' => 'getNumberOfStaffsByQualification'
+			],
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -282,49 +291,40 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('security_user_id');
-
+		
 		if ($this->action == 'index') {
-			// $table = TableRegistry::get('Institution.InstitutionSiteStudents');
-			// $institutionSiteArray = [];
-			// $session = $this->Session;
-			// $institutionId = $session->read('Institutions.id');
+			$institutionSiteArray = [];
 
-			// // Get number of student in institution
-			// $studentCount = $table->find()
-			// 	->where([$table->aliasField('institution_site_id') => $institutionId])
-			// 	->distinct(['security_user_id'])
-			// 	->count(['security_user_id']);
+			$session = $this->Session;
+			$institutionId = $session->read('Institutions.id');
 
-			// // Get Gender
-			// $institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
-			// 	['institution_site_id' => $institutionId, 'key'=>'Gender']);
+			// Get Number of staff in an institution
+			$staffCount = $this->find()
+				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->distinct(['security_user_id'])
+				->count(['security_user_id']);
 
-			// // Get Age
-			// $institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
-			// 	['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
+			// Get Gender
+			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_staff_gender', 
+				['institution_site_id' => $institutionId, 'key' => 'Gender']);
 
-			// // Get Grades
-			// $table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			// $institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
-			// 	['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
+			// Get Staff Licenses
+			$table = TableRegistry::get('Staff.Licenses');
+			$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
+				['institution_site_id' => $institutionId, 'key' => 'Licenses']);
 
 			$indexDashboard = 'dashboard';
-			$indexElements = $this->controller->viewVars['indexElements'];
-			
-			$indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
-			
-			// $indexElements[] = [
-	  //           'name' => $indexDashboard,
-	  //           'data' => [
-	  //           	'model' => 'students',
-	  //           	'modelCount' => $studentCount,
-	  //           	'modelArray' => $institutionSiteArray,
-	  //           ],
-	  //           'options' => [],
-	  //           'order' => 1
-	  //       ];
-	        $this->controller->set('indexElements', $indexElements);
-	    }
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $staffCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+		}
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -403,5 +403,31 @@ class StaffTable extends AppTable {
 			echo json_encode($data);
 			die;
 		}
+	}
+
+	// Logic for mini dashboard (Institution Staff and Staff)
+	public function getNumberOfStaffsByGender($params=[]) {
+			$institutionSiteRecords = $this->find();
+			$institutionSiteStaffCount = $institutionSiteRecords
+				->contain(['Users', 'Users.Genders'])
+				->select([
+					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
+					'gender' => 'Genders.name'
+				])
+				->group('gender_id');
+
+			if (!empty($params['institution_site_id'])) {
+				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
+			}	
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStaffCount->toArray() as $value) {
+	            //Compile the dataset
+				$dataSet[] = [$value['gender'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		//}
+		return $params;
 	}
 }
