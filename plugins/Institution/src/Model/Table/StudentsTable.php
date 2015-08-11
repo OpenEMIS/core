@@ -42,6 +42,12 @@ class StudentsTable extends AppTable {
 				'xAxis' => ['title' => ['text' => 'Years']],
 				'yAxis' => ['title' => ['text' => 'Total']]
 			],
+			'number_of_students_by_grade' => [
+        		'_function' => 'getNumberOfStudentsByGrade',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Education']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
 			'institution_student_gender' => [
 				'_function' => 'getNumberOfStudentsByGender'
 			],
@@ -802,6 +808,81 @@ class StudentsTable extends AppTable {
 
 		$params['dataSet'] = $dataSet;
 		
+		return $params;
+	}
+
+	public function getNumberOfStudentsByGrade($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$AcademicPeriod = $this->AcademicPeriods;
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+
+		$studentsByGradeConditions = [
+			$this->aliasField('student_status_id') => 1,
+			$this->aliasField('academic_period_id') => $currentYearId,
+			$this->aliasField('education_grade_id').' IS NOT NULL',
+			'Genders.name IS NOT NULL'
+		];
+		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
+		$query = $this->find();
+		$studentByGrades = $query
+			->select([
+				$this->aliasField('institution_id'),
+				$this->aliasField('education_grade_id'),
+				'EducationGrades.name',
+				'Users.id',
+				'Genders.name',
+				'total' => $query->func()->count($this->aliasField('id'))
+			])
+			->contain([
+				'EducationGrades',
+				'Users.Genders'
+			])
+			->where($studentsByGradeConditions)
+			->group([
+				$this->aliasField('institution_id'),
+				$this->aliasField('education_grade_id'),
+				'Genders.name'
+			])
+			->order(
+				'EducationGrades.order'
+			)
+			->toArray()
+			;
+
+		$grades = [];
+		
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => array());
+		}
+
+		foreach ($studentByGrades as $key => $studentByGrade) {
+			$gradeId = $studentByGrade->education_grade_id;
+			$gradeName = $studentByGrade->education_grade->name;
+			$gradeGender = $studentByGrade->user->gender->name;
+			$gradeTotal = $studentByGrade->total;
+
+			$grades[$gradeId] = $gradeName;
+
+			foreach ($dataSet as $dkey => $dvalue) {
+				if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
+					$dataSet[$dkey]['data'][$gradeId] = 0;
+				}
+			}
+			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($grades);
+		$params['dataSet'] = $dataSet;
+
 		return $params;
 	}
 }
