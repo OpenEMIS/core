@@ -411,7 +411,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	// Logic for mini dashboard
+	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
 			$institutionSiteRecords = $this->find();
 			$institutionSiteStaffCount = $institutionSiteRecords
@@ -437,7 +437,7 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
-	// Logic for dashboard
+	// Function used by the Dashboard (For Institution Dashboard and Home Page)
 	public function getNumberOfStaff($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
