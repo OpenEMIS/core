@@ -606,7 +606,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	// Function use by the mini dashboard (For Institution Students and Students)
+	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGender($params=[]) {
 
 		$institutionSiteRecords = $this->find();
@@ -736,6 +736,7 @@ class StudentsTable extends AppTable {
 		return $params;
 	}
 
+	// For Dashboard (Institution Dashboard and Home Page)
 	public function getNumberOfStudentsByYear($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
@@ -811,6 +812,7 @@ class StudentsTable extends AppTable {
 		return $params;
 	}
 
+	// For Dashboard (Home Page and Institution Dashboard page)
 	public function getNumberOfStudentsByGrade($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
