@@ -49,20 +49,11 @@ class StaffTable extends AppTable {
 			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
-		// $this->addBehavior('HighChart', [
-		// 	'number_of_students_by_year' => [
-		// 		'_function' => 'getNumberOfStudentsByYear',
-		// 		'chart' => ['type' => 'column', 'borderWidth' => 1],
-		// 		'xAxis' => ['title' => ['text' => 'Years']],
-		// 		'yAxis' => ['title' => ['text' => 'Total']]
-		// 	],
-		// 	'institution_site_student_gender' => [
-		// 		'_function' => 'getNumberOfStudentsByGender'
-		// 	],
-		// 	'institution_site_student_age' => [
-		// 		'_function' => 'getNumberOfStudentsByAge'
-		// 	]
-		// ]);
+		$this->addBehavior('HighChart', [
+			'institution_staff_gender' => [
+				'_function' => 'getNumberOfStaffByGender'
+			]
+		]);
 
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
@@ -121,29 +112,29 @@ class StaffTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
-			// $userTypes = TableRegistry::get('Security.SecurityUserTypes');
-			// $institutionSiteArray = [];
+			$userTypes = TableRegistry::get('Security.SecurityUserTypes');
+			$institutionSiteArray = [];
 
-			// // Get total number of students
-			// $count = $userTypes->find()
-			// 	->distinct(['security_user_id'])
-			// 	->where([$userTypes->aliasField('user_type') => UserTypes::STAFF])
-			// 	->count(['security_user_id']);
+			// Get total number of students
+			$count = $userTypes->find()
+				->distinct(['security_user_id'])
+				->where([$userTypes->aliasField('user_type') => UserTypes::STAFF])
+				->count(['security_user_id']);
 
-			// // Get the gender for all students
-			// $institutionSiteArray['Gender'] = $this->getDonutChart('institution_site_student_gender', ['key' => 'Gender']);
+			// Get the gender for all students
+			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_staff_gender', ['key' => 'Gender']);
 
-			// $indexDashboard = 'dashboard';
-			// $this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	  //           'name' => $indexDashboard,
-	  //           'data' => [
-	  //           	'model' => 'students',
-	  //           	'modelCount' => $count,
-	  //           	'modelArray' => $institutionSiteArray,
-	  //           ],
-	  //           'options' => [],
-	  //           'order' => 1
-	  //       ];
+			$indexDashboard = 'dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $count,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
 	    }
 	}
 
@@ -299,27 +290,25 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
-	// Function use by the mini dashboard (For Institution Students and Students)
-	public function getNumberOfStudentsByGender($params=[]) {
+	// Function use by the mini dashboard (For Staff)
+	public function getNumberOfStaffByGender($params=[]) {
+
 		$institutionSiteRecords = $this->find();
-		$institutionSiteStudentCount = $institutionSiteRecords
+		$institutionSiteStaffCount = $institutionSiteRecords
 			->select([
-				'count' => $institutionSiteRecords->func()->count('DISTINCT Students.id'),	
+				'count' => $institutionSiteRecords->func()->count('DISTINCT '.$this->aliasField('id')),	
 				'gender' => 'Genders.name'
 			])
 			->contain(['Genders'])
 			->innerJoin(['UserTypes' => 'security_user_types'], [
-				'UserTypes.security_user_id = Students.id',
-				'UserTypes.user_type' => UserTypes::STUDENT
+				'UserTypes.security_user_id = '.$this->aliasField('id'),
+				'UserTypes.user_type' => UserTypes::STAFF
 			])
 			->group('gender');
 
-		if (!empty($params['institution_site_id'])) {
-			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
-		}	
 		// Creating the data set		
 		$dataSet = [];
-		foreach ($institutionSiteStudentCount->toArray() as $value) {
+		foreach ($institutionSiteStaffCount->toArray() as $value) {
 			//Compile the dataset
 			$dataSet[] = [$value['gender'], $value['count']];
 		}
