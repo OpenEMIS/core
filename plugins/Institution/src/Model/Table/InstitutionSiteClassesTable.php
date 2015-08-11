@@ -380,7 +380,7 @@ class InstitutionSiteClassesTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$process = function ($model, $entity) use ($data) {
 			list($error, $classes, $data) = $model->prepareEntityObjects($model, $data);
-			pr($data);die;
+			// pr($data);die;
 			if (!$error && $classes) {
 				foreach ($classes as $class) {
 			    	$model->save($class);
