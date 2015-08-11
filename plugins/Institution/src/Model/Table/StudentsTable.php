@@ -845,15 +845,16 @@ class StudentsTable extends AppTable {
 			])
 			->where($studentsByGradeConditions)
 			->group([
-				$this->aliasField('institution_id'),
 				$this->aliasField('education_grade_id'),
 				'Genders.name'
 			])
 			->order(
-				'EducationGrades.order'
+				'EducationGrades.order',
+				$this->aliasField('institution_id')
 			)
 			->toArray()
 			;
+
 
 		$grades = [];
 		
