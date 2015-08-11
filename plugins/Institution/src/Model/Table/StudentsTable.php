@@ -36,6 +36,12 @@ class StudentsTable extends AppTable {
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// $this->addBehavior('AdvanceSearch');
 		$this->addBehavior('HighChart', [
+			'number_of_students_by_year' => [
+        		'_function' => 'getNumberOfStudentsByYear',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Years']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
 			'institution_student_gender' => [
 				'_function' => 'getNumberOfStudentsByGender'
 			],
@@ -190,8 +196,6 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_id');
 
 		if ($this->action == 'index') {
-			// chart must fetch from this table instead of InstitutionSiteStudents
-			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
 			$institutionSiteArray = [];
 			$session = $this->Session;
 			$institutionId = $session->read('Institutions.id');
@@ -723,6 +727,81 @@ class StudentsTable extends AppTable {
 		}
 		$params['dataSet'] = $dataSet;
 
+		return $params;
+	}
+
+	public function getNumberOfStudentsByYear($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$periodConditions = $_conditions;
+		$query = $this->find();
+		$periodResult = $query
+			->select([
+				'min_year' => $query->func()->min($this->aliasField('start_year')),
+				'max_year' => $query->func()->max($this->aliasField('end_year'))
+			])
+			->where($periodConditions)
+			->first();
+		$AcademicPeriod = $this->AcademicPeriods;
+		$currentPeriodId = $AcademicPeriod->getCurrent();
+		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
+		$thisYear = $currentPeriodObj->end_year;
+		$minYear = $thisYear - 2;
+		$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
+		$maxYear = $thisYear;
+
+		$years = [];
+
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = [];
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = ['name' => __($value), 'data' => []];
+		}
+
+		$studentsByYearConditions = array('Genders.name IS NOT NULL');
+		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
+
+		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
+			$years[$currentYear] = $currentYear;
+			$studentsByYearConditions['OR'] = [
+				[
+					$this->aliasField('end_year').' IS NOT NULL',
+					$this->aliasField('start_year').' <= "' . $currentYear . '"',
+					$this->aliasField('end_year').' >= "' . $currentYear . '"'
+				]
+			];
+
+			$query = $this->find();
+			$studentsByYear = $query
+				->contain(['Users.Genders'])
+				->select([
+					'Users.first_name',
+					'Genders.name',
+					'total' => $query->func()->count($this->aliasField('id'))
+				])
+				->where($studentsByYearConditions)
+				->group('Genders.name')
+				->toArray()
+				;
+ 			foreach ($dataSet as $key => $value) {
+ 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
+ 					$dataSet[$key]['data'][$currentYear] = 0;
+ 				}				
+			}
+
+			foreach ($studentsByYear as $key => $studentByYear) {
+				$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
+				$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
+				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
+			}
+		}
+
+		$params['dataSet'] = $dataSet;
+		
 		return $params;
 	}
 }
