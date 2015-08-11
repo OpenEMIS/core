@@ -23,9 +23,6 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => 'Education']],
 				'yAxis' => ['title' => ['text' => 'Total']]
-			],
-			'institution_site_section_student_grade' => [
-        		'_function' => 'getNumberOfStudentsByGradeByInstitution'
 			]
 		]);
 
@@ -169,43 +166,6 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 		return $params;
 	}
 
-	// Function use by the mini dashboard (For Institution Students)
-	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions['InstitutionSiteSections.'.$key] = $value;
-		}
 
-		$studentsByGradeConditions = [
-			'InstitutionSiteSectionStudents.status' => 1,
-			'EducationGrades.id IS NOT NULL',
-		];
-		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
-
-		$query = $this->find();
-		$studentByGrades = $query
-			->select([
-				'grade' => 'EducationGrades.name',
-				'count' => $query->func()->count('InstitutionSiteSectionStudents.id')
-			])
-			->contain([
-				'EducationGrades',
-				'InstitutionSiteSections',
-			])
-			->where($studentsByGradeConditions)
-			->group([
-				'EducationGrades.id',
-			])
-			->toArray();
-
-		$dataSet = [];
-		foreach($studentByGrades as $value){
-			$dataSet[] = [$value['grade'], $value['count']];
-		}
-		$params['dataSet'] = $dataSet;
-
-		return $params;
-	}
 
 }
