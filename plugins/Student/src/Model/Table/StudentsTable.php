@@ -103,9 +103,17 @@ class StudentsTable extends AppTable {
 
 		$value = '';
 		if ($query->count() > 0) {
-			$obj = $query->first();
-			$value = $obj->institution->name;
-			$entity->status = $obj->student_status->name;
+			$results = $query
+				->all()
+				->toArray();
+
+			$institutionArr = [];
+			foreach ($results as $key => $obj) {
+				$institutionArr[$obj->institution->id] = $obj->institution->name;
+			}
+			$value = implode('<BR>', $institutionArr);
+
+			$entity->status = $query->first()->student_status->name;
 		}
 		return $value;
 	}
