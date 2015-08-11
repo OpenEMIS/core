@@ -40,6 +40,12 @@ class StaffTable extends AppTable {
 		// $this->addBehavior('AdvanceSearch');
 
 		$this->addBehavior('HighChart', [
+	      	'number_of_staff' => [
+        		'_function' => 'getNumberOfStaff',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Position Type']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
 			'institution_staff_gender' => [
 				'_function' => 'getNumberOfStaffsByGender'
 			],
@@ -405,7 +411,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	// Logic for mini dashboard (Institution Staff and Staff)
+	// Logic for mini dashboard
 	public function getNumberOfStaffsByGender($params=[]) {
 			$institutionSiteRecords = $this->find();
 			$institutionSiteStaffCount = $institutionSiteRecords
@@ -428,6 +434,77 @@ class StaffTable extends AppTable {
 			}
 			$params['dataSet'] = $dataSet;
 		//}
+		return $params;
+	}
+
+	// Logic for dashboard
+	public function getNumberOfStaff($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+
+		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+
+		$query = $this->find('all');
+		$staffByPositions = $query
+			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
+			->contain(['Users.Genders','Positions'])
+			->select([
+				'Positions.type',
+				'Users.id',
+				'Genders.name',
+				'total' => $query->func()->count($this->aliasField('id'))
+			])
+			->where($staffsByPositionConditions)
+			->group([
+				'Positions.type', 'Genders.name'
+			])
+			->order(
+				'Positions.type'
+			)
+			->toArray();
+
+		$positionTypes = array(
+			0 => __('Non-Teaching'),
+			1 => __('Teaching')
+		);
+
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => []);
+		}
+		foreach ($dataSet as $key => $obj) {
+			foreach ($positionTypes as $id => $name) {
+				$dataSet[$key]['data'][$id] = 0;
+			}
+		}
+		foreach ($staffByPositions as $key => $staffByPosition) {
+			if ($staffByPosition->has('position')) {
+				$positionType = $staffByPosition->position->type;
+				$staffGender = $staffByPosition->user->gender->name;
+				$StaffTotal = $staffByPosition->total;
+
+				foreach ($dataSet as $dkey => $dvalue) {
+					if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+						$dataSet[$dkey]['data'][$positionType] = 0;
+					}
+				}
+				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+			}
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($positionTypes);
+		$params['dataSet'] = $dataSet;
+
 		return $params;
 	}
 }

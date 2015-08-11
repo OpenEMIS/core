@@ -219,16 +219,16 @@ class InstitutionsController extends AppController  {
 			
 			//Students By Grade for current year
 			$params = array(
-				'conditions' => array('institution_site_id' => $id)
+				'conditions' => array('institution_id' => $id)
 			);
-			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$highChartDatas[] = $InstitutionSiteSectionStudents->getHighChart('number_of_students_by_grade', $params);
+
+			$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_grade', $params);
 
 			//Staffs By Position for current year
 			$params = array(
 				'conditions' => array('institution_site_id' => $id)
 			);
-			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+			$InstitutionSiteStaff = TableRegistry::get('Institution.Staff');
 			$highChartDatas[] = $InstitutionSiteStaff->getHighChart('number_of_staff', $params);
 
 			$this->set('highChartDatas', $highChartDatas);
