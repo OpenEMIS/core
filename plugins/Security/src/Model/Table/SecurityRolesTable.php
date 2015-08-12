@@ -202,7 +202,6 @@ class SecurityRolesTable extends AppTable {
 				// this will show only roles of the user by group
 				$query = $GroupRoles
 					->find()
-					->find('visible')
 					->contain('SecurityRoles')
 					->order(['SecurityRoles.order'])
 					->where([

@@ -399,6 +399,17 @@ class UserGroupsTable extends AppTable {
 
 		$query->find('notInInstitutions');
 
+		// filter groups by users permission
+		if ($this->Auth->user('super_admin') != 1) {
+			$userId = $this->Auth->user('id');
+			$query->where([
+				'OR' => [
+					'EXISTS (SELECT `id` FROM `security_group_users` WHERE `security_group_users`.`security_group_id` = `UserGroups`.`id` AND `security_group_users`.`security_user_id` = ' . $userId . ')',
+					'UserGroups.created_user_id' => $userId
+				]
+			]);
+		}
+
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}

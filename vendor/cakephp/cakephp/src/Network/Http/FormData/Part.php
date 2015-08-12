@@ -112,7 +112,7 @@ class Part
     public function contentId($id = null)
     {
         if ($id === null) {
-            return $this->_contentId = $id;
+            return $this->_contentId;
         }
         $this->_contentId = $id;
     }
@@ -162,6 +162,26 @@ class Part
             return $this->_transferEncoding;
         }
         $this->_transferEncoding = $type;
+    }
+
+    /**
+     * Get the part name.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return $this->_name;
+    }
+
+    /**
+     * Get the value.
+     *
+     * @return string
+     */
+    public function value()
+    {
+        return $this->_value;
     }
 
     /**

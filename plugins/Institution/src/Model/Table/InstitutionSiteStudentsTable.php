@@ -25,6 +25,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$this->belongsTo('StudentStatuses',		['className' => 'Student.StudentStatuses', 	'foreignKey' => 'student_status_id']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('HighChart', [
         	'number_of_students_by_year' => [
         		'_function' => 'getNumberOfStudentsByYear',
@@ -176,7 +177,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$institutionSiteStudentCount = $institutionSiteRecords
 			->contain(['Users', 'Users.Genders'])
 			->select([
-				'count' => $institutionSiteRecords->func()->count('security_user_id'),	
+				'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
 				'gender' => 'Genders.name'
 			])
 			->group('gender');
@@ -223,8 +224,6 @@ class InstitutionSiteStudentsTable extends AppTable {
 
 		$institutionSiteStudentCount = $query->toArray();
 
-		$prev_value = ['value' => null, 'amount' => null];
-
 		$convertAge = [];
 		
 		// (Logic to be reviewed)
@@ -234,8 +233,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 		}
 		// Count and sort the age
 		$result = [];
-		$prevValue['age'] = "";
-		$prevValue['count'] = "";
+		$prevValue = ['age' => -1, 'count' => null];
 		foreach ($convertAge as $val) {
 	    	if ($prevValue['age'] != $val) {
 	        	unset($prevValue);
