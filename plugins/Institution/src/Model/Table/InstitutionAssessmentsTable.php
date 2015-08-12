@@ -133,7 +133,9 @@ class InstitutionAssessmentsTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
+		$options['auto_contain'] = false;
 		$query
+			->contain(['Assessments', 'AcademicPeriods'])
 			->where([$this->aliasField('status') => $selectedStatus])
 			->order([$this->AcademicPeriods->aliasField('order')]);
 	}
@@ -142,16 +144,14 @@ class InstitutionAssessmentsTable extends AppTable {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		if ($selectedStatus == 2) {	//Completed
-			$rejectBtn = ['reject' => $buttons['view']];
-			$rejectBtn['reject']['url']['action'] = 'Assessments';
-			$rejectBtn['reject']['url'][0] = 'reject';
-			$rejectBtn['reject']['label'] = '<i class="fa fa-trash"></i>' . __('Reject');
-
-			$buttons = array_merge($buttons, $rejectBtn);
-
-			return $buttons;
+		if ($selectedStatus == 0) {	// New
+			unset($buttons['view']);
+			unset($buttons['remove']);
+		} else if ($selectedStatus == 2) {	// Completed
+			unset($buttons['edit']);
 		}
+
+		return $buttons;
 	}
 
 	public function _buildRecords($status=0) {
