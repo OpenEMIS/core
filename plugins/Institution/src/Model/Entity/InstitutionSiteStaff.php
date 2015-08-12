@@ -9,7 +9,7 @@ class InstitutionSiteStaff extends Entity {
 	protected $_virtual = ['name', 'openemis_id', 'default_identity_type'];
 	
 	protected function _getStaffName() {
-		return $this->user->name_with_id;
+		return ($this->has('user'))? $this->user->name_with_id : '';
 	}
 
 	protected function _getOpenemisNo() {

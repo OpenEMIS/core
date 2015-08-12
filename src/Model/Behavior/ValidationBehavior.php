@@ -293,6 +293,29 @@ class ValidationBehavior extends Behavior {
 		
 	}
 
+	/**
+	 * To check whether given input is within given start and end dates
+	 * @param  mixed   	$field        			current field value
+	 * @param  mixed   	$start_date       start date field value
+	 * @param  mixed   	$end_date        end date field value
+	 */
+	public static function checkInputWithinRange($field, $field_name, $start_date, $end_date) {
+		$type = self::_getFieldType($field_name);
+		try {
+			$givenDate = new DateTime($field);
+			$startDate = new DateTime($start_date);
+			$endDate = new DateTime($end_date);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$type);
+		}
+
+		if($givenDate > $startDate && $givenDate < $endDate) {
+			return true;
+		} else {
+			return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
+		}
+	}                                                                                                                                                                 
+
 	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
 
@@ -310,7 +333,5 @@ class ValidationBehavior extends Behavior {
 			;
 		return ($existingRecords <= 0);
 	}
-
-
 
 }
