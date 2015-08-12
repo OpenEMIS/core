@@ -123,8 +123,8 @@ class NavigationComponent extends Component {
 				],
 
 				'Reports' => [
-					'collapse' => true,
-					// 'url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'index']
+					'icon' => '<i class="fa kd-reports"></i>',
+					'collapse' => true
 				],
 				
 				'Administration' => [

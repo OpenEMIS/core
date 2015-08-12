@@ -20,8 +20,15 @@ class ReportListBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
+		$events['ControllerAction.Model.afterAction'] = 'afterAction';
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
+	}
+
+	public function afterAction(Event $event, $config) {
+		if ($this->_table->action == 'index') {
+			return $this->_table->controller->render('Report.index');
+		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -149,7 +156,6 @@ class ReportListBehavior extends Behavior {
 		$id = $ReportProgress->addReport($obj);
 		if ($id !== false) {
 			$ReportProgress->generate($id);
-			die;
 		}
 	}
 }
