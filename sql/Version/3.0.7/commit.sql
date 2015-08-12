@@ -10,4 +10,6 @@ UPDATE `security_functions` SET
 `_add` = 'Staff.add|StaffUser.add'
 WHERE `id` = 1016;
 
+UPDATE `config_items` SET `option_type` = 'database:Area.AreaLevels' WHERE `code` = 'institution_area_level_id';
+
 UPDATE `config_items` SET `value` = '3.0.7' WHERE `code` = 'db_version';
