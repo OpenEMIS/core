@@ -118,24 +118,6 @@ class InstitutionSurveysTable extends AppTable {
 		}
 	}
 
-	public function reject() {
-		$this->ControllerAction->autoRender = false;
-		$request = $this->ControllerAction->request;
-
-		$id = $request->params['pass'][1];
-		$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
-
-		if ($this->save($entity)) {
-			$this->Alert->success('InstitutionSurveys.reject.success');
-		} else {
-			$this->Alert->success('InstitutionSurveys.reject.failed');
-			$this->log($entity->errors(), 'debug');
-		}
-		$action = $this->ControllerAction->buttons['index']['url'];
-		$action['status'] = 2;
-		return $this->controller->redirect($action);
-	}
-
 	public function onGetStatus(Event $event, Entity $entity) {
 		list($statusOptions) = array_values($this->_getSelectOptions());
 		return $statusOptions[$entity->status];
@@ -258,6 +240,38 @@ class InstitutionSurveysTable extends AppTable {
 			->order([$this->AcademicPeriods->aliasField('order')]);
 	}
 
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('status');
+		$this->fields['academic_period_id']['type'] = 'hidden';
+		$this->fields['survey_form_id']['type'] = 'hidden';
+	}
+
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'hidden';
+		$attr['attr']['survey-status'] = 1;
+
+		return $attr;
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$surveyRecord = $this->get($id);
+
+		if ($surveyRecord->status == 2) {
+			$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
+			if ($this->save($entity)) {
+				$this->Alert->success('InstitutionSurveys.reject.success');
+			} else {
+				$this->Alert->success('InstitutionSurveys.reject.failed');
+				$this->log($entity->errors(), 'debug');
+			}
+
+			$event->stopPropagation();
+			$action = $this->ControllerAction->buttons['index']['url'];
+			$action['status'] = 2;
+			return $this->controller->redirect($action);
+		}
+	}
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -272,34 +286,40 @@ class InstitutionSurveysTable extends AppTable {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		if ($selectedStatus == 0) {	//New
+		if ($selectedStatus == 0) {	// New
 			unset($buttons['view']);
 			unset($buttons['remove']);
-		} else if ($selectedStatus == 2) {	//Completed
-			$rejectBtn = ['reject' => $buttons['view']];
-			$rejectBtn['reject']['url']['action'] = $this->alias;
-			$rejectBtn['reject']['url'][0] = 'reject';
-			$rejectBtn['reject']['url'][1] = $entity->id;
-			$rejectBtn['reject']['label'] = '<i class="fa fa-trash"></i>' . __('Reject');
-
+		} else if ($selectedStatus == 2) {	// Completed
 			unset($buttons['edit']);
-			unset($buttons['remove']);
-			$buttons = array_merge($buttons, $rejectBtn);
 		}
 
 		return $buttons;
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$this->fields['status']['type'] = 'hidden';
-		$this->fields['academic_period_id']['type'] = 'hidden';
-		$this->fields['survey_form_id']['type'] = 'hidden';
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$cancelButton = $buttons[1];
+		$buttons[0] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(1);']
+		];
+		$buttons[1] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(2);']
+		];
+		$buttons[2] = $cancelButton;
 	}
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$status = $data[$this->alias()]['status'] == 0 ? 1 : 2;
-		$data[$this->alias()]['status'] = $status;
-    }
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($entity->status == 1) {
+			$this->Alert->success('InstitutionSurveys.save.draft');
+		} else if ($entity->status == 2) {
+			$this->Alert->success('InstitutionSurveys.save.final');
+		}
+
+		$event->stopPropagation();
+		$action = $this->ControllerAction->buttons['index']['url'];
+		return $this->controller->redirect($action);
+	}
 
 	public function _getSelectOptions() {
 		//Return all required options and their key

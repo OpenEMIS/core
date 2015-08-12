@@ -200,9 +200,9 @@ class ControllerActionComponent extends Component {
 				}
 				$onChange = '';
 				if (is_bool($attr['onChangeReload']) && $attr['onChangeReload'] == true) {
-					$onChange = "$('#reload').click()";
+					$onChange = "$('#reload').click();return false;";
 				} else {
-					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click()";
+					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click();return false;";
 				}
 				$this->model->fields[$key]['attr']['onchange'] = $onChange;
 			}
