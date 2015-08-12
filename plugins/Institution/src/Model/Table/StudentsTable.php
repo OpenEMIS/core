@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Security\Model\Table\SecurityUserTypesTable as UserTypes;
+use Cake\I18n\Time;
 
 class StudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -34,6 +35,29 @@ class StudentsTable extends AppTable {
 		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// $this->addBehavior('AdvanceSearch');
+		$this->addBehavior('HighChart', [
+			'number_of_students_by_year' => [
+        		'_function' => 'getNumberOfStudentsByYear',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Years']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'number_of_students_by_grade' => [
+        		'_function' => 'getNumberOfStudentsByGrade',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Education']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_student_gender' => [
+				'_function' => 'getNumberOfStudentsByGender'
+			],
+			'institution_student_age' => [
+				'_function' => 'getNumberOfStudentsByAge'
+			],
+			'institution_site_section_student_grade' => [
+        		'_function' => 'getNumberOfStudentsByGradeByInstitution'
+			]
+		]);
 	}
 
 	public function implementedEvents() {
@@ -178,8 +202,6 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_id');
 
 		if ($this->action == 'index') {
-			// chart must fetch from this table instead of InstitutionSiteStudents
-			$table = TableRegistry::get('Institution.InstitutionSiteStudents');
 			$institutionSiteArray = [];
 			$session = $this->Session;
 			$institutionId = $session->read('Institutions.id');
@@ -194,18 +216,17 @@ class StudentsTable extends AppTable {
 				->group(['student_id'])
 				->count();
 
-			// Get Gender
-			$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
-				['institution_site_id' => $institutionId, 'key'=>'Gender']);
-
+			//Get Gender
+			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_student_gender', 
+				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => 'Gender']);
+			
 			// Get Age
-			$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
-				['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
+			$institutionSiteArray['Age'] = $this->getDonutChart('institution_student_age', 
+				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => 'Age']);
 
 			// Get Grades
-			$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
-				['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
+			$institutionSiteArray['Grade'] = $this->getDonutChart('institution_site_section_student_grade', 
+				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key'=>'Grade']);
 
 
 			$indexDashboard = 'dashboard';
@@ -583,5 +604,288 @@ class StudentsTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	// Function use by the mini dashboard (For Institution Students)
+	public function getNumberOfStudentsByGender($params=[]) {
+
+		$institutionSiteRecords = $this->find();
+		$institutionSiteStudentCount = $institutionSiteRecords
+			->contain(['Users', 'Users.Genders'])
+			->select([
+				'count' => $institutionSiteRecords->func()->count('DISTINCT student_id'),	
+				'gender' => 'Genders.name'
+			])
+			->group('gender');
+
+		if (!empty($params['institution_id'])) {
+			$institutionSiteStudentCount->where(['institution_id' => $params['institution_id']]);
+		}
+
+		if (!empty($params['academic_period_id'])) {
+			$institutionSiteStudentCount->where(['academic_period_id' => $params['academic_period_id']]);
+		}
+			
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($institutionSiteStudentCount->toArray() as $value) {
+            //Compile the dataset
+			$dataSet[] = [$value['gender'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
+	}
+
+	// Function use by the mini dashboard (For Institution Students)
+	public function getNumberOfStudentsByAge($params=[]) {
+
+		$studentsConditions = [
+			'Users.date_of_death IS NULL',
+		];
+
+		if (!empty($params['institution_id'])) {
+			$studentsConditions = array_merge($studentsConditions, ['institution_id' => $params['institution_id']]);
+		}
+
+		if (!empty($params['academic_period_id'])) {
+			$studentsConditions = array_merge($studentsConditions, ['academic_period_id' => $params['academic_period_id']]);
+		}
+
+		$today = Time::today();
+
+		$institutionSiteRecords = $this->find();
+		$query = $institutionSiteRecords
+			->contain(['Users'])
+			->select([
+				'age' => $institutionSiteRecords->func()->dateDiff([
+					$institutionSiteRecords->func()->now(),
+					'Users.date_of_birth' => 'literal'
+				])
+			])
+			->where($studentsConditions)
+			->order('age');
+
+		$institutionSiteStudentCount = $query->toArray();
+
+		$convertAge = [];
+		
+		// (Logic to be reviewed)
+		// Calculate the age taking account to the average of leap years 
+		foreach($institutionSiteStudentCount as $val){
+			$convertAge[] = floor($val['age']/365.25);
+		}
+		// Count and sort the age
+		$result = [];
+		$prevValue = ['age' => -1, 'count' => null];
+		foreach ($convertAge as $val) {
+	    	if ($prevValue['age'] != $val) {
+	        	unset($prevValue);
+	        	$prevValue = ['age' => $val, 'count' => 0];
+	        	$result[] =& $prevValue;
+	    	}
+    		$prevValue['count']++;
+		}
+		
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($result as $value) {
+            //Compile the dataset
+			$dataSet[] = ['Age '.$value['age'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
+	}
+
+	// Function use by the mini dashboard (For Institution Students)
+	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
+		$studentsByGradeConditions = [
+			$this->aliasField('student_status_id') => 1,
+			$this->aliasField('education_grade_id').' IS NOT NULL',
+		];
+
+		if (!empty($params['institution_id'])) {
+			$studentsByGradeConditions = array_merge($studentsByGradeConditions, ['institution_id' => $params['institution_id']]);
+
+		}
+
+		if (!empty($params['academic_period_id'])) {
+			$studentsByGradeConditions = array_merge($studentsByGradeConditions, ['academic_period_id' => $params['academic_period_id']]);
+		}
+
+		$query = $this->find();
+		$studentByGrades = $query
+			->select([
+				'grade' => 'EducationGrades.name',
+				'count' => $query->func()->count($this->aliasField('student_id'))
+			])
+			->contain([
+				'EducationGrades'
+			])
+			->where($studentsByGradeConditions)
+			->group([
+				$this->aliasField('education_grade_id'),
+			])
+			->toArray();
+
+		$dataSet = [];
+		foreach($studentByGrades as $value){
+			$dataSet[] = [$value['grade'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+
+		return $params;
+	}
+
+	// For Dashboard (Institution Dashboard and Home Page)
+	public function getNumberOfStudentsByYear($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$periodConditions = $_conditions;
+		$query = $this->find();
+		$periodResult = $query
+			->select([
+				'min_year' => $query->func()->min($this->aliasField('start_year')),
+				'max_year' => $query->func()->max($this->aliasField('end_year'))
+			])
+			->where($periodConditions)
+			->first();
+		$AcademicPeriod = $this->AcademicPeriods;
+		$currentPeriodId = $AcademicPeriod->getCurrent();
+		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
+		$thisYear = $currentPeriodObj->end_year;
+		$minYear = $thisYear - 2;
+		$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
+		$maxYear = $thisYear;
+
+		$years = [];
+
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = [];
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = ['name' => __($value), 'data' => []];
+		}
+
+		$studentsByYearConditions = array('Genders.name IS NOT NULL');
+		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
+
+		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
+			$years[$currentYear] = $currentYear;
+			$studentsByYearConditions['OR'] = [
+				[
+					$this->aliasField('end_year').' IS NOT NULL',
+					$this->aliasField('start_year').' <= "' . $currentYear . '"',
+					$this->aliasField('end_year').' >= "' . $currentYear . '"'
+				]
+			];
+
+			$query = $this->find();
+			$studentsByYear = $query
+				->contain(['Users.Genders'])
+				->select([
+					'Users.first_name',
+					'Genders.name',
+					'total' => $query->func()->count($this->aliasField('id'))
+				])
+				->where($studentsByYearConditions)
+				->group('Genders.name')
+				->toArray()
+				;
+ 			foreach ($dataSet as $key => $value) {
+ 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
+ 					$dataSet[$key]['data'][$currentYear] = 0;
+ 				}				
+			}
+
+			foreach ($studentsByYear as $key => $studentByYear) {
+				$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
+				$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
+				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
+			}
+		}
+
+		$params['dataSet'] = $dataSet;
+		
+		return $params;
+	}
+
+	// For Dashboard (Home Page and Institution Dashboard page)
+	public function getNumberOfStudentsByGrade($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$AcademicPeriod = $this->AcademicPeriods;
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+
+		$studentsByGradeConditions = [
+			$this->aliasField('student_status_id') => 1,
+			$this->aliasField('academic_period_id') => $currentYearId,
+			$this->aliasField('education_grade_id').' IS NOT NULL',
+			'Genders.name IS NOT NULL'
+		];
+		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
+		$query = $this->find();
+		$studentByGrades = $query
+			->select([
+				$this->aliasField('institution_id'),
+				$this->aliasField('education_grade_id'),
+				'EducationGrades.name',
+				'Users.id',
+				'Genders.name',
+				'total' => $query->func()->count($this->aliasField('id'))
+			])
+			->contain([
+				'EducationGrades',
+				'Users.Genders'
+			])
+			->where($studentsByGradeConditions)
+			->group([
+				$this->aliasField('education_grade_id'),
+				'Genders.name'
+			])
+			->order(
+				'EducationGrades.order',
+				$this->aliasField('institution_id')
+			)
+			->toArray()
+			;
+
+
+		$grades = [];
+		
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => array());
+		}
+
+		foreach ($studentByGrades as $key => $studentByGrade) {
+			$gradeId = $studentByGrade->education_grade_id;
+			$gradeName = $studentByGrade->education_grade->name;
+			$gradeGender = $studentByGrade->user->gender->name;
+			$gradeTotal = $studentByGrade->total;
+
+			$grades[$gradeId] = $gradeName;
+
+			foreach ($dataSet as $dkey => $dvalue) {
+				if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
+					$dataSet[$dkey]['data'][$gradeId] = 0;
+				}
+			}
+			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($grades);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
 	}
 }
