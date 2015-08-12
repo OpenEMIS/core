@@ -38,14 +38,16 @@ class AdvancedNameSearchBehavior extends Behavior {
 			switch (count($searchParams)) {
 				case 1:
 					// 1 word - search by openemis id or 1st or middle or third or last
-					$query->where(['Users.openemis_no'.' LIKE' => '%' . trim($search) . '%']);
-					foreach ($searchParams as $key => $value) {
-						$searchString = '%' . $value . '%';
-						$query->orWhere(['Users.first_name'.' LIKE' => $searchString]);
-						$query->orWhere(['Users.middle_name'.' LIKE' => $searchString]);
-						$query->orWhere(['Users.third_name'.' LIKE' => $searchString]);
-						$query->orWhere(['Users.last_name'.' LIKE' => $searchString]);
-					}
+					$searchString = '%' . $search . '%';
+					$query->where([
+						'OR' => [
+							'Users.openemis_no LIKE' => $searchString,
+							'Users.first_name LIKE' => $searchString,
+							'Users.middle_name LIKE' => $searchString,
+							'Users.third_name LIKE' => $searchString,
+							'Users.last_name LIKE' => $searchString
+						]
+					]);
 					break;
 
 				case 2:
@@ -64,24 +66,32 @@ class AdvancedNameSearchBehavior extends Behavior {
 					break;
 				
 				default:
-					$query->where(['Users.openemis_no'.' LIKE' => '%' . trim($search) . '%']);
 					foreach ($searchParams as $key => $value) {
 						$searchString = '%' . $value . '%';
-						$query->orWhere(['Users.first_name'.' LIKE' => $searchString]);
-						$query->orWhere(['Users.middle_name'.' LIKE' => $searchString]);
-						$query->orWhere(['Users.third_name'.' LIKE' => $searchString]);
-						$query->orWhere(['Users.last_name'.' LIKE' => $searchString]);
+						$query->where([
+							'OR' => [
+								'Users.openemis_no LIKE' => $searchString,
+								'Users.first_name LIKE' => $searchString,
+								'Users.middle_name LIKE' => $searchString,
+								'Users.third_name LIKE' => $searchString,
+								'Users.last_name LIKE' => $searchString
+							]
+						]);
 					}
 					break;
 			}
 		} else {
-			$query->where(['Users.openemis_no'.' LIKE' => '%' . trim($search) . '%']);
 			foreach ($searchParams as $key => $value) {
 				$searchString = '%' . $value . '%';
-				$query->orWhere(['Users.first_name'.' LIKE' => $searchString]);
-				$query->orWhere(['Users.middle_name'.' LIKE' => $searchString]);
-				$query->orWhere(['Users.third_name'.' LIKE' => $searchString]);
-				$query->orWhere(['Users.last_name'.' LIKE' => $searchString]);
+				$query->where([
+					'OR' => [
+						'Users.openemis_no LIKE' => $searchString,
+						'Users.first_name LIKE' => $searchString,
+						'Users.middle_name LIKE' => $searchString,
+						'Users.third_name LIKE' => $searchString,
+						'Users.last_name LIKE' => $searchString
+					]
+				]);
 			}
 		}
 

@@ -38,6 +38,21 @@ class StaffTable extends AppTable {
 		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// $this->addBehavior('AdvanceSearch');
+
+		$this->addBehavior('HighChart', [
+	      	'number_of_staff' => [
+        		'_function' => 'getNumberOfStaff',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Position Type']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_staff_gender' => [
+				'_function' => 'getNumberOfStaffsByGender'
+			],
+			'institution_staff_qualification' => [
+				'_function' => 'getNumberOfStaffsByQualification'
+			],
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -194,8 +209,9 @@ class StaffTable extends AppTable {
 			$groupId = $institutionEntity->security_group_id;
 			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
 
+			$userId = $this->Auth->user('id');
 			$roleOptions = [0 => '-- Select Role --'];
-			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId);
+			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
 			$attr['options'] = $roleOptions;
 		}
 		return $attr;
@@ -282,49 +298,40 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('security_user_id');
-
+		
 		if ($this->action == 'index') {
-			// $table = TableRegistry::get('Institution.InstitutionSiteStudents');
-			// $institutionSiteArray = [];
-			// $session = $this->Session;
-			// $institutionId = $session->read('Institutions.id');
+			$institutionSiteArray = [];
 
-			// // Get number of student in institution
-			// $studentCount = $table->find()
-			// 	->where([$table->aliasField('institution_site_id') => $institutionId])
-			// 	->distinct(['security_user_id'])
-			// 	->count(['security_user_id']);
+			$session = $this->Session;
+			$institutionId = $session->read('Institutions.id');
 
-			// // Get Gender
-			// $institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
-			// 	['institution_site_id' => $institutionId, 'key'=>'Gender']);
+			// Get Number of staff in an institution
+			$staffCount = $this->find()
+				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->distinct(['security_user_id'])
+				->count(['security_user_id']);
 
-			// // Get Age
-			// $institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
-			// 	['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
+			// Get Gender
+			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_staff_gender', 
+				['institution_site_id' => $institutionId, 'key' => 'Gender']);
 
-			// // Get Grades
-			// $table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			// $institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
-			// 	['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
+			// Get Staff Licenses
+			$table = TableRegistry::get('Staff.Licenses');
+			$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
+				['institution_site_id' => $institutionId, 'key' => 'Licenses']);
 
 			$indexDashboard = 'dashboard';
-			$indexElements = $this->controller->viewVars['indexElements'];
-			
-			$indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
-			
-			// $indexElements[] = [
-	  //           'name' => $indexDashboard,
-	  //           'data' => [
-	  //           	'model' => 'students',
-	  //           	'modelCount' => $studentCount,
-	  //           	'modelArray' => $institutionSiteArray,
-	  //           ],
-	  //           'options' => [],
-	  //           'order' => 1
-	  //       ];
-	        $this->controller->set('indexElements', $indexElements);
-	    }
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $staffCount,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+		}
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -403,5 +410,102 @@ class StaffTable extends AppTable {
 			echo json_encode($data);
 			die;
 		}
+	}
+
+	// Function used by the Mini-Dashboard (Institution Staff)
+	public function getNumberOfStaffsByGender($params=[]) {
+			$institutionSiteRecords = $this->find();
+			$institutionSiteStaffCount = $institutionSiteRecords
+				->contain(['Users', 'Users.Genders'])
+				->select([
+					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
+					'gender' => 'Genders.name'
+				])
+				->group('gender_id');
+
+			if (!empty($params['institution_site_id'])) {
+				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
+			}	
+
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStaffCount->toArray() as $value) {
+	            //Compile the dataset
+				$dataSet[] = [$value['gender'], $value['count']];
+			}
+			$params['dataSet'] = $dataSet;
+		//}
+		return $params;
+	}
+
+	// Function used by the Dashboard (For Institution Dashboard and Home Page)
+	public function getNumberOfStaff($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+
+		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+
+		$query = $this->find('all');
+		$staffByPositions = $query
+			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
+			->contain(['Users.Genders','Positions'])
+			->select([
+				'Positions.type',
+				'Users.id',
+				'Genders.name',
+				'total' => $query->func()->count($this->aliasField('id'))
+			])
+			->where($staffsByPositionConditions)
+			->group([
+				'Positions.type', 'Genders.name'
+			])
+			->order(
+				'Positions.type'
+			)
+			->toArray();
+
+		$positionTypes = array(
+			0 => __('Non-Teaching'),
+			1 => __('Teaching')
+		);
+
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => []);
+		}
+		foreach ($dataSet as $key => $obj) {
+			foreach ($positionTypes as $id => $name) {
+				$dataSet[$key]['data'][$id] = 0;
+			}
+		}
+		foreach ($staffByPositions as $key => $staffByPosition) {
+			if ($staffByPosition->has('position')) {
+				$positionType = $staffByPosition->position->type;
+				$staffGender = $staffByPosition->user->gender->name;
+				$StaffTotal = $staffByPosition->total;
+
+				foreach ($dataSet as $dkey => $dvalue) {
+					if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+						$dataSet[$dkey]['data'][$positionType] = 0;
+					}
+				}
+				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+			}
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($positionTypes);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
 	}
 }
