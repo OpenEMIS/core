@@ -59,9 +59,6 @@ class StudentsTable extends AppTable {
 			],
 			'institution_site_student_gender' => [
 				'_function' => 'getNumberOfStudentsByGender'
-			],
-			'institution_site_student_age' => [
-				'_function' => 'getNumberOfStudentsByAge'
 			]
 		]);
 
@@ -263,7 +260,7 @@ class StudentsTable extends AppTable {
 		return $buttons;
 	}
 
-	// used by highchart
+	// Function used by Dashboard (Institution Dashboard and Home Page)
 	public function getNumberOfStudentsByYear($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
@@ -339,7 +336,7 @@ class StudentsTable extends AppTable {
 		return $params;
 	}
 
-	// Function use by the mini dashboard (For Institution Students and Students)
+	// Function use by the mini dashboard (For Student.Students)
 	public function getNumberOfStudentsByGender($params=[]) {
 		$institutionSiteRecords = $this->find();
 		$institutionSiteStudentCount = $institutionSiteRecords
