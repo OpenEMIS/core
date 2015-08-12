@@ -60,14 +60,11 @@ class EducationGradesTable extends AppTable {
 		$this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id', 'subjects'];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
-
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
 
-		$options['conditions'][] = [
-        	$this->aliasField('education_programme_id') => $selectedProgramme
-        ];
+		$query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

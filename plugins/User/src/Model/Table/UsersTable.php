@@ -22,18 +22,18 @@ class UsersTable extends AppTable {
 
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
 	private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
+	private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
 	private $defaultUserProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
 
 	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
 	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
+	private $defaultGuardianProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 	private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
 	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
-
-	private $specialFields = ['default_identity_type','student_status','staff_status','student_institution_name','staff_institution_name','programme_section'];
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -42,7 +42,7 @@ class UsersTable extends AppTable {
 		$this->table('security_users');
 		parent::initialize($config);
 
-		$this->fieldOrder1 = new ArrayObject(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
+		$this->fieldOrder1 = new ArrayObject(['photo_content', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
 		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
@@ -52,6 +52,9 @@ class UsersTable extends AppTable {
 			'contentEditable' => true,
 			'allowable_file_types' => 'image'
 		]);
+
+		$this->addBehavior('Area.Areapicker');
+		$this->addBehavior('User.AdvancedNameSearch');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -67,12 +70,15 @@ class UsersTable extends AppTable {
 		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentActivities', 		['className' => 'Student.StudentActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('GuardianActivities', 			['className' => 'Guardian.GuardianActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
-			'through' => 'Security.SecurityGroupUsers'
-		]);
-		
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);	
 	}
 
 	public function beforeAction(Event $event) {
@@ -83,6 +89,21 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active'), 'visible' => false]);
 		$this->ControllerAction->field('photo_content', ['type' => 'image']);
 		$this->ControllerAction->field('last_login', ['visible' => false]);
+		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
+
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
+
+		if ($this->action == 'add') {
+			$this->ControllerAction->field('username', ['visible' => true]);
+			$this->ControllerAction->field('password', ['visible' => true, 'type' => 'password']);
+		}
 	}
 
 	public function afterAction(Event $event) {
@@ -133,7 +154,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);
@@ -163,25 +184,23 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$options['finder'] = ['notSuperAdmin' => []];
-		$query = $request->query;
-
-		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$queryParams = $request->query;
+		
+		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+			// $query->order(['name' => 'asc']);
 		}
 
-		if(array_key_exists('sort', $query) && $query['sort'] == 'name'){
-			$options['finder'] = ['withName' => ['direction' => $query['direction']]];
-			$options['order'][$this->aliasField('name')] = $query['direction'];
+		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
+			$query->find('withName', ['direction' => $queryParams['direction']]);
+			$query->order([$this->aliasField('name') => $queryParams['direction']]);
 		}
 
-		if(array_key_exists('sort', $query) && $query['sort'] == 'default_identity_type'){
-			$options['finder'] = ['withDefaultIdentityType' => ['direction' => $query['direction']]];
-			$options['order'][$this->aliasField('default_identity_type')] = $query['direction'];
+		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'default_identity_type') {
+			$query->find('withDefaultIdentityType', ['direction' => $queryParams['direction']]);
+			$query->order([$this->aliasField('default_identity_type') => $queryParams['direction']]);
 			$request->query['sort'] = 'Users.default_identity_type';
 		}
-
 	}
 
 	public function findWithName(Query $query, array $options) {
@@ -248,15 +267,6 @@ class UsersTable extends AppTable {
 				])
 			->group(['Identities.number'])
 			->order(['Identities.number' => $options['direction']]);	   
-	}	
-
-
-	public function findNotSuperAdmin(Query $query, array $options) {
-		return $query->where([$this->aliasField('super_admin') => 0]);
-	}
-
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->find('notSuperAdmin');
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -279,6 +289,9 @@ class UsersTable extends AppTable {
 		} else {
 			$id = $this->Session->read($roleName.'.security_user_id');
 		}
+
+		$fieldOrder = array_merge($this->fieldOrder1->getArrayCopy(), $this->fieldOrder2->getArrayCopy());
+		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -299,7 +312,7 @@ class UsersTable extends AppTable {
 		
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
-				case 'Student': case 'Staff':
+				case 'Student': case 'Staff': case 'Guardian':
 					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
@@ -362,8 +375,8 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('username')
+			->allowEmpty('password')
 			->add('address', [])
-			->add('password', [])
 			->allowEmpty('photo_content')
 			;
 		return $validator;
@@ -377,12 +390,16 @@ class UsersTable extends AppTable {
 				$value = $this->defaultStudentProfileIndex;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
 				$value = $this->defaultStaffProfileIndex;
+			} else if(($this->hasBehavior('Guardian')) && ($this->action == "index")){
+				$value = $this->defaultGuardianProfileIndex;
 			} else if(($this->hasBehavior('User')) && ($this->action == "index")){
 				$value = $this->defaultUserProfileIndex;
 			} else if(($this->hasBehavior('Student')) && ($this->action == "view")){
 				$value = $this->defaultStudentProfileView;
 			} else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
 				$value = $this->defaultStaffProfileView;
+			} else if(($this->hasBehavior('Guardian')) && ($this->action == "view")){
+				$value = $this->defaultGuardianProfileView;
 			} else if(($this->hasBehavior('User')) && ($this->action == "view")){
 				$value = $this->defaultUserProfileView;
 			}
@@ -394,44 +411,40 @@ class UsersTable extends AppTable {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if(in_array($field, $this->specialFields)){
-			if($field == 'default_identity_type') {
-				$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-				$defaultIdentity = $IdentityType
-								   ->find()
-								   ->contain(['FieldOptions'])
-								   ->where(['FieldOptions.code' => 'IdentityTypes']) //, 'IdentityTypes.default' => 1
-								   ->order(['IdentityTypes.default DESC'])
-								   ->first();
-				if($defaultIdentity)
-					$value = $defaultIdentity->name;
+		if ($field == 'default_identity_type') {
+			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentity = $IdentityType
+							   ->find()
+							   ->contain(['FieldOptions'])
+							   ->where(['FieldOptions.code' => 'IdentityTypes'])
+							   ->order(['IdentityTypes.default DESC'])
+							   ->first();
+			if ($defaultIdentity)
+				$value = $defaultIdentity->name;
 
-				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-			} else if($field == 'student_status' || $field == 'staff_status') {
-				return 'Status';
-			} else if($field == 'student_institution_name' || $field == 'staff_institution_name') {
-				return 'Institution Name';
-			} else if($field == 'programme_section') {
-				return 'Programme<span class="divider"></span>Section';
-			}	
+			return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		} else if ($field == 'student_status' || $field == 'staff_status') {
+			return 'Status';
+		} else if ($field == 'programme_class') {
+			return 'Programme<span class="divider"></span>Class';
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
 
-	public function getDefaultImgMsg(){
+	public function getDefaultImgMsg() {
 		return $this->defaultImgMsg;
 	}
 
-	public function getDefaultImgIndexClass(){
+	public function getDefaultImgIndexClass() {
 		return $this->defaultImgIndexClass;
 	}
 
-	public function getDefaultImgViewClass(){
+	public function getDefaultImgViewClass() {
 		return $this->defaultImgViewClass;
 	}
 
-	public function getDefaultImgView(){
+	public function getDefaultImgView() {
 		$value = "";
 		$controllerName = $this->controller->name;	
 
@@ -439,33 +452,56 @@ class UsersTable extends AppTable {
 			$value = $this->defaultStudentProfileView;
 		} else if($this->hasBehavior('Staff')){
 			$value = $this->defaultStaffProfileView;
+		} else if($this->hasBehavior('Guardian')){
+			$value = $this->defaultGuardianProfileView;
 		} else if($this->hasBehavior('User')){
 			$value = $this->defaultUserProfileView;
 		} 
 		return $value;
 	}
 
-	/*public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
-		if(!is_null($entity->photo_content) && is_array($entity->photo_content)) {
-			$file = $entity->photo_content;
-			if(!empty($file['tmp_name'])){
-				$entity->photo_content = file_get_contents($file['tmp_name']);
-				if(!empty($file['name'])){
-					$pathInfo = pathinfo($file['name']);
-					$entity->photo_name = uniqid() . '.' . $pathInfo['extension'];
-				}
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-			} else if($file['error'] > 0) {
-				$entity->photo_content = null;
-				$entity->photo_name = null;
+		if ($this->controller->name != 'Securities') {
+			$actions = ['view', 'edit'];
+			foreach ($actions as $action) {
+				if (array_key_exists($action, $buttons)) {
+					$buttons[$action]['url'][1] = $entity->security_user_id;
+				}
+			}
+			if (array_key_exists('remove', $buttons)) {
+				$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
 			}
 		}
+		
+		return $buttons;
+	}
 
-		if(empty($entity->photo_content)){
-			$entity->photo_content = null;
-			$entity->photo_name = null;
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('openemis_no') . ' LIKE' => $search,
+					$this->aliasField('first_name') . ' LIKE' => $search,
+					$this->aliasField('middle_name') . ' LIKE' => $search,
+					$this->aliasField('third_name') . ' LIKE' => $search,
+					$this->aliasField('last_name') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('first_name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+				'value' => $obj->id
+			];
 		}
-
-		parent::beforeSave($event, $entity, $options);
-	}*/
+		return $data;
+	}
 }

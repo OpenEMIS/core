@@ -25,7 +25,6 @@
 					<th><?= $this->Label->get('Users.gender'); ?></th>
 					<th><?= $this->Label->get('Users.date_of_birth'); ?></th>
 					<th><?= $this->Label->get($attr['model'] . '.education_grade'); ?></th>
-					<th><?= $this->Label->get('Users.student_category'); ?></th>
 					<th class="cell-delete"></th>
 				</tr>
 			</thead>
@@ -36,37 +35,28 @@
 				if ($obj->status == 0) continue;
 
 				if ($action=='edit') :
-					$n = $obj->security_user_id;
+					$n = $obj->student_id;
 			?>
 
 				<tr>
 					<?php
 
 					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.id", [ 'value'=> $obj->id ]);
-					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.security_user_id", [ 'value'=> $obj->security_user_id ]);
+					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.student_id", [ 'value'=> $obj->student_id ]);
 					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.status", [ 'value' => $obj->status ]);
 					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
 
 					?>
-					<td><?php echo $obj->user->openemis_no ?></td>
-					<td><?php echo $obj->user->name ?></td>
-					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth ?></td>
+					<td><?= $obj->user->openemis_no ?></td>
+					<td><?= $obj->user->name ?></td>
+					<td><?= $obj->user->gender->name ?></td>
+					<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
 					<td>
 						<?php
 						echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.education_grade_id", array(
 							'label' => false,
 							'options' => $attr['data']['gradeOptions'],
 							'value' => $obj->education_grade_id
-						));
-						?>
-					</td>
-					<td>
-						<?php
-						echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.student_category_id", array(
-							'label' => false,
-							'options' => $attr['data']['categoryOptions'],
-							'value' => $obj->student_category_id
 						));
 						?>
 					</td>
@@ -81,12 +71,11 @@
 			<?php else:?>
 
 				<tr>
-					<td><?php echo $obj->user->openemis_no ?></td>
-					<td><?php echo $obj->user->name ?></td>
-					<td><?php echo $obj->user->gender->name ?></td>
-					<td><?php echo $obj->user->date_of_birth ?></td>
-					<td><?php echo (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
-					<td><?php echo $attr['data']['categoryOptions'][$obj->student_category_id] ?></td>
+					<td><?= $obj->user->openemis_no ?></td>
+					<td><?= $obj->user->name ?></td>
+					<td><?= $obj->user->gender->name ?></td>
+					<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
+					<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 				</tr>
 
 			<?php endif;?>

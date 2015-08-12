@@ -2,32 +2,24 @@
 namespace Infrastructure\Model\Table;
 
 use ArrayObject;
-use CustomField\Model\Table\CustomFormsTable;
+use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class InfrastructureLevelsTable extends CustomFormsTable {
-	private $_fieldOrder = ['parent_id', 'name', 'description', 'custom_fields'];
+class InfrastructureLevelsTable extends AppTable {
+	private $_fieldOrder = ['parent_id', 'name', 'description'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Infrastructure.InfrastructureLevels']);
-		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('InfrastructureTypes', ['className' => 'Infrastructure.InfrastructureTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomFormFields', ['className' => 'Infrastructure.InfrastructureLevelFields', 'foreignKey' => 'infrastructure_level_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->belongsToMany('CustomFields', [
-			'className' => 'Infrastructure.InfrastructureCustomFields',
-			'joinTable' => 'infrastructure_level_fields',
-			'foreignKey' => 'infrastructure_level_id',
-			'targetForeignKey' => 'infrastructure_custom_field_id'
-		]);
 		$this->addBehavior('Tree');
 	}
 
 	public function beforeAction(Event $event) {
-		parent::beforeAction($event);
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
@@ -37,11 +29,9 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		parent::indexBeforeAction($event);
-		$this->fields['custom_module_id']['visible'] = false;
-		$this->_fieldOrder = ['name', 'description', 'custom_fields', 'parent_id'];
+		$this->_fieldOrder = ['name', 'description', 'parent_id'];
 
-		// Hide controls filter and add breadcrumb
+		// Add breadcrumb
 		$toolbarElements = [
             ['name' => 'Infrastructure.breadcrumb', 'data' => [], 'options' => []]
         ];
@@ -57,21 +47,15 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		parent::indexBeforePaginate($event, $request, $options);
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
 
-		$options['conditions'][] = [
-        	$this->aliasField('parent_id') => $parentId
-        ];
+		$query->where([$this->aliasField('parent_id') => $parentId]);
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		parent::addEditBeforeAction($event);
 		// Setup fields
-		// Hide Custom Module
-		$this->fields['custom_module_id']['type'] = 'hidden';
-		
+
 		$parentId = $this->request->query('parent');
 		$this->fields['parent_id']['type'] = 'hidden';
 
@@ -105,17 +89,5 @@ class InfrastructureLevelsTable extends CustomFormsTable {
 	public function onGetParentId(Event $event, Entity $entity) {
 		$value = $entity->parent_id == 0 ? ' ' : $entity->parent->name;
 		return $value;
-	}
-
-	public function getSelectOptions() {
-		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::getSelectOptions());
-
-		$moduleOptions = $this->CustomModules
-			->find('list')
-			->where([$this->CustomModules->aliasField('model') => $this->InstitutionInfrastructures->registryAlias()])
-			->toArray();
-		$selectedModule = !is_null($this->request->query('module')) ? $this->request->query('module') : key($moduleOptions);
-
-		return compact('moduleOptions', 'selectedModule', 'applyToAllOptions', 'selectedApplyToAll');
 	}
 }

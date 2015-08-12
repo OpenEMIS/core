@@ -11,6 +11,12 @@ class LicensesTable extends AppTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
+
+		 $this->addBehavior('HighChart', [
+			'institution_staff_licenses' => [
+				'_function' => 'getNumberOfStaffByLicenses'
+			]
+		]);
 	}
 
 	public function beforeAction() {
@@ -26,5 +32,36 @@ class LicensesTable extends AppTable {
 			->add('expiry_date', [
 			])
 		;
+	}
+
+	// Use for Mini dashboard (Institution Staff)
+	public function getNumberOfStaffByLicenses($params=[]){
+		$institutionId = 0;
+		if(!empty ($params['institution_site_id'])){
+			$institutionId = $params['institution_site_id'];
+		}
+
+		$licenseRecord = $this->find();
+		$licenseCount = $licenseRecord
+			->contain(['Users', 'LicenseTypes'])
+			->select([
+				'license' => 'LicenseTypes.name',
+				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
+			])
+			->innerJoin(['InstitutionStaff' => 'institution_site_staff'],
+				[
+					'InstitutionStaff.security_user_id = ' . $this->aliasField('security_user_id'),
+					'InstitutionStaff.institution_site_id = ' . $institutionId
+				]
+			)
+			->group('license')
+			->toArray();
+		$dataSet = [];
+		foreach ($licenseCount as $value) {
+            //Compile the dataset
+			$dataSet[] = [$value['license'], $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		return $params;
 	}
 }

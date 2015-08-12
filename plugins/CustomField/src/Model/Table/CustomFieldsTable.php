@@ -62,7 +62,7 @@ class CustomFieldsTable extends AppTable {
 
 		$this->fields['field_type']['type'] = 'select';
 		$this->fields['field_type']['options'] = $fieldTypeOptions;
-		$this->fields['field_type']['onChangeReload'] = true;
+		$this->fields['field_type']['onChangeReload'] = 'changeType';
 		$this->fields['field_type']['labelKey'] = 'general';
 
 		$this->fields['is_mandatory']['type'] = 'select';
@@ -82,7 +82,7 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$fieldKey = Inflector::underscore(Inflector::singularize($this->alias())) . '_id';
+		$fieldKey = Inflector::singularize($this->_table) . '_id';
 		foreach ($this->_contain as $_contain) {
 			// Should put here instead of in beforeSave()
 			$this->{$_contain}->updateAll(
@@ -119,6 +119,21 @@ class CustomFieldsTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->loadBehavior($entity->field_type);
 		return $entity;
+	}
+
+	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		if (array_key_exists($this->alias(), $request->data)) {
+			if (array_key_exists('custom_field_options', $request->data[$this->alias()])) {
+				unset($data[$this->alias()]['custom_field_options']);
+			}
+			if (array_key_exists('custom_table_columns', $request->data[$this->alias()])) {
+				unset($data[$this->alias()]['custom_table_columns']);
+			}
+			if (array_key_exists('custom_table_rows', $request->data[$this->alias()])) {
+				unset($data[$this->alias()]['custom_table_rows']);
+			}
+		}
 	}
 
 	public function getSelectOptions() {

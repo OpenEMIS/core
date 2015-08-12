@@ -38,7 +38,7 @@
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-toolbar">
-			<button onclick="$('#reload').val('addDropdownOption').click();" class="btn btn-default btn-xs">
+			<button onclick="$('#reload').val('addDropdownOption').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i>
 				<span><?= __('Add');?></span>
 			</button>
@@ -75,10 +75,14 @@
 								</td>
 								<td>
 									<?php
+										$attributes = [
+											'label' => false,
+											'legend' => false,
+											'hiddenField' => false,
+											'class' => 'icheck-input icheckbox_minimal-grey'
+										];
 										if(isset($data->custom_field_options[$key]->is_default) && $data->custom_field_options[$key]->is_default == 1) {
-											$attributes = ['legend' => false, 'hiddenField' => false, 'value' => $key];
-										} else {
-											$attributes = ['legend' => false, 'hiddenField' => false];
+											$attributes['value'] = $key;
 										}
 									?>
 									<?= $this->Form->radio("$CustomFields.is_default", [$key => false], $attributes); ?>

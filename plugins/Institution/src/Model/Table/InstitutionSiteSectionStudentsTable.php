@@ -10,22 +10,12 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 
-		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->addBehavior('HighChart', [
-        	'number_of_students_by_grade' => [
-        		'_function' => 'getNumberOfStudentsByGrade',
-				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Education']],
-				'yAxis' => ['title' => ['text' => 'Total']]
-			]
-		]);
-
+		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrade']);
 	}
 
 	public function getMaleCountBySection($sectionId) {
@@ -58,10 +48,9 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	}
 
 	public function autoInsertSectionStudent($data) {
-		$securityUserId = $data['security_user_id'];
+		$securityUserId = $data['student_id'];
 		$selectedGradeId = $data['education_grade_id'];
 		$selectedSectionId = $data['institution_site_section_id'];
-		$selectedStudentCategoryId = $data['student_category_id'];
 
 		if(!empty($selectedSectionId)) {
 			$autoInsertData = $this->newEntity();
@@ -70,7 +59,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 				->find()
 				->where(
 					[
-						$this->aliasField('security_user_id') => $securityUserId,
+						$this->aliasField('student_id') => $securityUserId,
 						$this->aliasField('education_grade_id') => $selectedGradeId,
 						$this->aliasField('institution_site_section_id') => $selectedSectionId
 					]
@@ -83,89 +72,12 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 				$autoInsertData->id = $existingData['id'];	
 			}
 			
-			$autoInsertData->security_user_id = $securityUserId;
+			$autoInsertData->student_id = $securityUserId;
 			$autoInsertData->education_grade_id = $selectedGradeId;
 			$autoInsertData->institution_site_section_id = $selectedSectionId;
-			$autoInsertData->student_category_id = $selectedStudentCategoryId;
 			$autoInsertData->status = 1;
 
 			$this->save($autoInsertData);
 		}
 	}
-
-	public function getNumberOfStudentsByGrade($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions['InstitutionSiteSections.'.$key] = $value;
-		}
-
-		$AcademicPeriod = $this->InstitutionSiteSections->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
-		$currentYearId = $AcademicPeriod->getCurrent();
-		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
-
-		$studentsByGradeConditions = [
-			'InstitutionSiteSectionStudents.status' => 1,
-			'InstitutionSiteSections.academic_period_id' => $currentYearId,
-			'EducationGrades.id IS NOT NULL',
-			'Genders.name IS NOT NULL'
-		];
-		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
-		$query = $this->find();
-		$studentByGrades = $query
-			->select([
-				'InstitutionSiteSections.institution_site_id',
-				'EducationGrades.id',
-				'EducationGrades.name',
-				'Users.id',
-				'Genders.name',
-				'total' => $query->func()->count('InstitutionSiteSectionStudents.id')
-			])
-			->contain([
-				'EducationGrades',
-				'InstitutionSiteSections',
-				'Users.Genders'
-			])
-			->where($studentsByGradeConditions)
-			->group([
-				'InstitutionSiteSections.institution_site_id',
-				'EducationGrades.id',
-				'Genders.name'
-			])
-			->order(
-				'EducationGrades.order'
-			)
-			->toArray()
-			;
-		$grades = [];
-		
-		$genderOptions = $this->Users->Genders->getList();
-		$dataSet = array();
-		foreach ($genderOptions as $key => $value) {
-			$dataSet[$value] = array('name' => __($value), 'data' => array());
-		}
-
-		foreach ($studentByGrades as $key => $studentByGrade) {
-			$gradeId = $studentByGrade->education_grade->id;
-			$gradeName = $studentByGrade->education_grade->name;
-			$gradeGender = $studentByGrade->user->gender->name;
-			$gradeTotal = $studentByGrade->total;
-
-			$grades[$gradeId] = $gradeName;
-
-			foreach ($dataSet as $dkey => $dvalue) {
-				if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
-					$dataSet[$dkey]['data'][$gradeId] = 0;
-				}
-			}
-			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
-		}
-
-		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
-		$params['options']['xAxis']['categories'] = array_values($grades);
-		$params['dataSet'] = $dataSet;
-
-		return $params;
-	}
-
 }

@@ -12,31 +12,42 @@ class UsersController extends AppController {
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		//pr($this->Users->fields);die;
-		// $this->SecurityUsers->fields['password']['visible'] = false;
-		// $this->SecurityUsers->fields['status']['type'] = 'select';
-		// $this->SecurityUsers->fields['status']['options'] = ['Inactive', 'Active'];
-		// $this->SecurityUsers->fields['privileges']['type'] = 'select';
-		// $this->SecurityUsers->fields['privileges']['options'] = ['User', 'Super User'];
-		// $this->set('contentHeader', 'Users');
-		//pr($this->request->params);die;
 
-		$this->Auth->allow(['add', 'logout', 'postLogin']);
+		$this->Auth->allow(['add', 'logout', 'postLogin', 'login_remote']);
 	}
 
 	public function login() {
-		$this->layout = false;
+		$this->getView()->layout(false);
 		$username = '';
 		$password = '';
+        $session = $this->request->session();
 		
 		if ($this->request->is('post') && $this->request->data['submit'] == 'reload') {
 			//$username = $this->request->data['User']['username'];
 			//$password = $this->request->data['User']['password'];
-		}
+		} else {
+            if ($session->check('login.username')) {
+                $username = $session->read('login.username');
+            }
+            if ($session->check('login.password')) {
+                $password = $session->read('login.password');
+            }
+        }
 		
 		$this->set('username', $username);
 		$this->set('password', $password);
 	}
+
+    // this function exists so that the browser can auto populate the username and password from the website
+    public function login_remote() {
+        $this->autoRender = false;
+        $session = $this->request->session();
+        $username = $this->request->data('username');
+        $password = $this->request->data('password');
+        $session->write('login.username', $username);
+        $session->write('login.password', $password);
+        return $this->redirect(array('controller' => 'Users', 'action' => 'login'));
+    }
 
 	public function postLogin() {
 		$this->autoRender = false;

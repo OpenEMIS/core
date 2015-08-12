@@ -1,11 +1,13 @@
 <?php
 namespace ControllerAction\View\Helper;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\I18n\I18n;
 
 class ControllerActionHelper extends Helper {
 	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label'];
@@ -44,17 +46,6 @@ class ControllerActionHelper extends Helper {
 		];
 	}
 
-	public function getFormDefaults() {
-		$defaults = array(
-			'div' => 'form-group',
-			'label' => array('class' => 'col-md-3 form-label'),
-			'between' => '<div class="col-md-4">',
-			'after' => '</div>',
-			'class' => 'form-control'
-		);
-		return $defaults;
-	}
-
 	public function getFormOptions() {
 		$options = [
 			'class' => 'form-horizontal',
@@ -77,14 +68,41 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getFormButtons() {
-		// needs a better solution
-		$buttons = $this->_View->get('toolbarButtons');
-	
-		echo '<div class="form-buttons"><div class="button-label"></div>';
-		echo $this->Form->button(__('<i class="fa fa-check"></i> Save'), array('class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save'));
-		echo $this->Html->link(__('<i class="fa fa-close"></i> Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel', 'escape' => false));
-		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
-		echo '</div>';
+		$buttons = new ArrayObject([]);
+
+		// save button
+		$buttons[] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Save'),
+			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
+		];
+
+		// cancel button
+		$backBtn = $this->_View->get('backButton');
+		$buttons[] = [
+			'name' => '<i class="fa fa-close"></i> ' . __('Cancel'),
+			'attr' => ['class' => 'btn btn-outline btn-cancel', 'escape' => false],
+			'url' => !is_null($backBtn) ? $backBtn['url'] : []
+		];
+
+		$config = $this->_View->get('ControllerAction');
+		$table = $config['table'];
+
+		// attach event for updating form buttons
+		$eventKey = 'ControllerAction.Model.onGetFormButtons';
+		$event = $this->dispatchEvent($table, $eventKey, null, [$buttons]);
+		// end attach event
+
+		$html = '<div class="form-buttons"><div class="button-label"></div>';
+		foreach ($buttons as $btn) {
+			if (!array_key_exists('url', $btn)) {
+				$html .= $this->Form->button($btn['name'], $btn['attr']);
+			} else {
+				$html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
+			}
+		}
+		$html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
+		$html .= '</div>';
+		return $html;
 	}
 
 	public function highlight($needle, $haystack){
@@ -116,6 +134,14 @@ class ControllerActionHelper extends Helper {
 			}
 		}
 		return $visible;
+	}
+
+	public function locale($locale = null) {
+		if (!empty($locale)) {
+			return I18n::locale($locale);
+		} else {
+			return I18n::locale();
+		}
 	}
 
 	public function getTableHeaders($fields, $model, &$dataKeys) {
@@ -151,12 +177,21 @@ class ControllerActionHelper extends Helper {
 					// end attach event
 
 					if ($event->result) {
-						$label = $event->result;
+						$label = __($event->result);
 					}
 
 					if ($attr['sort']) {
-						$title = ($label!='') ? $label : $field;
-						$label = $this->Paginator->sort($field, $title);
+						$sortField = $field;
+						$sortTitle = ($label!='') ? $label : __($field);
+						if (is_array($attr['sort'])) {
+							if (array_key_exists('field', $attr['sort'])) {
+								$sortField = $attr['sort']['field'];
+							}
+							if (array_key_exists('title', $attr['sort'])) {
+								$sortTitle = $attr['sort']['title'];
+							}
+						}
+						$label = $this->Paginator->sort($sortField, $sortTitle);
 					}
 					
 					$method = 'onGet' . Inflector::camelize($field);
@@ -340,16 +375,17 @@ class ControllerActionHelper extends Helper {
 				if ($label !== false) {
 					if (!array_key_exists('label', $options)) {
 						$_fieldAttr['label'] = $label;
-						$options['label'] = $label;
+						$options['label'] = __($label);
 					} else {
 						$_fieldAttr['label'] = $options['label'];
 					}
+					$_fieldAttr['label'] = __($_fieldAttr['label']);
 				}
 
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
 			}
 		}
-		$this->HtmlField->includes();
+		$this->HtmlField->includes($table, 'edit');
 		return $html;
 	}
 
@@ -467,7 +503,7 @@ class ControllerActionHelper extends Helper {
 
 				if ($_fieldAttr['label']) {
 					$labelClass = implode(' ', $_labelClass);
-					$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, $label, $valueClass, $value);
+					$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, __($label), $valueClass, $value);
 				} else { // no label
 					$rowContent = sprintf($_valueCol, $valueClass, $value);
 				}
@@ -478,6 +514,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
+		$this->HtmlField->includes($table, 'view');
 		return $html;
 	}
 }

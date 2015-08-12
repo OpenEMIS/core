@@ -24,9 +24,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff']);
+		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
+		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -70,16 +70,6 @@ class InstitutionSitePositionsTable extends AppTable {
 			'visible' => true
 		]);
 	}
-
-
-/******************************************************************************************************************
-**
-** delete action methods
-**
-******************************************************************************************************************/
-	// public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id) {
-	// 	$this->ControllerAction->removeStraightAway = false;
-	// }
 
 
 /******************************************************************************************************************
@@ -143,19 +133,17 @@ class InstitutionSitePositionsTable extends AppTable {
 				$id = $session->read($this->aliasField('id'));
 			}
 		}
+
 		if (!isset($id)) {
 			die('no position id specified');
 		}
 		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->InstitutionSiteStaff;
-		$currentStaff = $Staff ->find('all')
-							->where([$Staff->aliasField('end_date').' IS NULL'])
+		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
+							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
 							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo')
-							->find('byPosition', ['InstitutionSitePositions.id'=>$id])
-							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
-							;
+							->find('withBelongsTo');
 
 		$this->fields['current_staff_list']['data'] = $currentStaff;
 		$totalCurrentFTE = '0.00';
@@ -167,14 +155,12 @@ class InstitutionSitePositionsTable extends AppTable {
 		$this->fields['current_staff_list']['totalCurrentFTE'] = $totalCurrentFTE;
 		// end Current Staff List field
 
-		// start Current Staff List field
-		$pastStaff = $Staff ->find('all')
+		// start PAST Staff List field
+		$pastStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
+							->andWhere([$Staff->aliasField('end_date').' < DATE(NOW())'])
 							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo')
-							->find('byPosition', ['InstitutionSitePositions.id'=>$id])
-							->find('byInstitution', ['Institutions.id'=>$session->read('Institutions.id')])
-							;
+							->find('withBelongsTo');
 
 		$this->fields['past_staff_list']['data'] = $pastStaff;
 		// end Current Staff List field
@@ -232,6 +218,22 @@ class InstitutionSitePositionsTable extends AppTable {
 			}
 		}
 		return $list;
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$institutionId = $this->Session->read('Institutions.id');
+		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
+	}
+
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
+	public function findWithBelongsTo(Query $query, array $options) {
+		return $query
+			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
 	}
 
 }
