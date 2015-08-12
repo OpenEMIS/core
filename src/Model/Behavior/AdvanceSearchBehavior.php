@@ -54,8 +54,9 @@ class AdvanceSearchBehavior extends Behavior {
 			$advancedSearch = false;
 			$session = $this->_table->request->session();
 			$language = $session->read('System.language');
-			
-			foreach ($this->model->fields as $key=>$value) {
+			$fields = $this->model->schema()->columns();
+
+			foreach ($fields as $key) {
 				if (!in_array($key , $this->_exclude)) {
 					if ($this->isForeignKey($key)) {
 						$label = $labels->getLabel($this->modelAlias, $key, $language);

@@ -1,6 +1,10 @@
 # User specific & automatically generated files #
 #################################################
 datasource.php
+tmp
+tmp/*
+tmp/Bake*
+tmp/debug*
 tmp/cache/*
 tmp/sessions/*
 tmp/tests/*

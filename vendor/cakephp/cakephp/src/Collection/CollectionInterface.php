@@ -213,6 +213,19 @@ interface CollectionInterface extends Iterator, JsonSerializable
      * ['Mark', 'Renan']
      * ```
      *
+     * It is also possible to extract a flattened collection out of nested properties
+     *
+     * ```
+     *  $items = [
+     *      ['comment' => ['votes' => [['value' => 1], ['value' => 2], ['value' => 3]]],
+     *      ['comment' => ['votes' => [['value' => 4]]
+     * ];
+     * $extracted = (new Collection($items))->extract('comment.votes.{*}.value');
+     *
+     * // Result will contain
+     * [1, 2, 3, 4]
+     * ```
+     *
      * @param string $matcher a dot separated string symbolizing the path to follow
      * inside the hierarchy of each value so that the column can be extracted.
      * @return \Cake\Collection\CollectionInterface
@@ -444,13 +457,17 @@ interface CollectionInterface extends Iterator, JsonSerializable
      * $total = (new Collection($items))->sumOf('invoice.total');
      *
      * // Total: 300
+     *
+     * $total = (new Colletion([1, 2, 3]))->sumOf();
+     * // Total: 6
      * ```
      *
      * @param string|callable $matcher The property name to sum or a function
+     * If no value is passed, an identity function will be used.
      * that will return the value of the property to sum.
      * @return float|int
      */
-    public function sumOf($matcher);
+    public function sumOf($matcher = null);
 
     /**
      * Returns a new collection with the elements placed in a random order,
