@@ -209,8 +209,9 @@ class StaffTable extends AppTable {
 			$groupId = $institutionEntity->security_group_id;
 			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
 
+			$userId = $this->Auth->user('id');
 			$roleOptions = [0 => '-- Select Role --'];
-			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId);
+			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
 			$attr['options'] = $roleOptions;
 		}
 		return $attr;
