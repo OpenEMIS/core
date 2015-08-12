@@ -72,7 +72,7 @@ class ControllerActionHelper extends Helper {
 		// save button
 		$buttons[] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save']
+			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
 		];
 
 		// cancel button
@@ -172,8 +172,17 @@ class ControllerActionHelper extends Helper {
 					}
 
 					if ($attr['sort']) {
-						$title = ($label!='') ? $label : __($field);
-						$label = $this->Paginator->sort($field, $title);
+						$sortField = $field;
+						$sortTitle = ($label!='') ? $label : __($field);
+						if (is_array($attr['sort'])) {
+							if (array_key_exists('field', $attr['sort'])) {
+								$sortField = $attr['sort']['field'];
+							}
+							if (array_key_exists('title', $attr['sort'])) {
+								$sortTitle = $attr['sort']['title'];
+							}
+						}
+						$label = $this->Paginator->sort($sortField, $sortTitle);
 					}
 					
 					$method = 'onGet' . Inflector::camelize($field);

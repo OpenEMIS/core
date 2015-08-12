@@ -27,14 +27,14 @@ class DashboardController extends AppController {
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	// $this->Navigation->addCrumb('Dashboard', ['plugin' => false, 'controller' => 'Dashboards', 'action' => 'index']);
+    	$this->Navigation->addCrumb('Dashboard', ['plugin' => false, 'controller' => 'Dashboards', 'action' => 'index']);
 
     	$header = __('Dashboard');
 		$this->set('contentHeader', $header);
     }
 
     public function onInitialize(Event $event, Table $model) {
-    	$header = __($model->alias);
+    	$header = $model->getHeader($model->alias);
     	$this->set('contentHeader', $header);
     }
 

@@ -22,20 +22,23 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
 
-			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
-			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions', 'options' => ['deleteStrategy' => 'transfer']],
+			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
+			'Grades' 			=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
 			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
+			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 			'StaffPositions' 	=> ['className' => 'Institution.StaffPositions'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
+			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
@@ -176,7 +179,14 @@ class InstitutionsController extends AppController  {
 		$session = $this->request->session();
 
 		if (!$this->request->is('ajax')) {
-			if ($model->hasField('institution_site_id')) {
+			if ($model->hasField('institution_id')) {
+				if (!$session->check('Institutions.id')) {
+					$this->Alert->error('general.notExists');
+					// should redirect
+				} else {
+					$query->where([$model->aliasField('institution_id') => $session->read('Institutions.id')]);
+				}
+			} else if ($model->hasField('institution_site_id')) { // will need to remove this part once we change institution_sites to institutions
 				if (!$session->check('Institutions.id')) {
 					$this->Alert->error('general.notExists');
 					// should redirect

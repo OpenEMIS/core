@@ -18,7 +18,7 @@ class GuardiansTable extends BaseTable {
 
 	public function autoCompleteUserList() {
 		if ($this->request->is('ajax')) {
-			$this->layout = 'ajax';
+			$this->getView()->layout('ajax');
 			$this->autoRender = false;
 			$this->ControllerAction->autoRender = false;
 			$term = $this->ControllerAction->request->query('term');
@@ -38,14 +38,7 @@ class GuardiansTable extends BaseTable {
 			}
 
 			if (!empty($search)) {
-				$list->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-				foreach ($searchParams as $key => $value) {
-					$searchString = '%' . $value . '%';
-					$list->orWhere(['Users.first_name LIKE' => $searchString]);
-					$list->orWhere(['Users.middle_name LIKE' => $searchString]);
-					$list->orWhere(['Users.third_name LIKE' => $searchString]);
-					$list->orWhere(['Users.last_name LIKE' => $searchString]);
-				}
+				$this->addSearchConditions($list, ['searchTerm' => $search]);
 			}
 
 			$session = $this->request->session();

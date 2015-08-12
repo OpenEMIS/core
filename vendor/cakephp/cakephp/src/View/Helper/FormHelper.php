@@ -42,7 +42,8 @@ use Traversable;
  *
  * Automatic generation of HTML FORMs from given data.
  *
- * @property      HtmlHelper $Html
+ * @property HtmlHelper $Html
+ * @property UrlHelper $Url
  * @link http://book.cakephp.org/3.0/en/views/helpers/form.html
  */
 class FormHelper extends Helper
@@ -557,6 +558,9 @@ class FormHelper extends Helper
         $unlockedFields = $this->_unlockedFields;
 
         foreach ($fields as $key => $value) {
+            if (is_numeric($value)) {
+                $value = (string)$value;
+            }
             if (!is_int($key)) {
                 $locked[$key] = $value;
                 unset($fields[$key]);
@@ -978,6 +982,9 @@ class FormHelper extends Helper
      * - `nestedInput` - Used with checkbox and radio inputs. Set to false to render inputs outside of label
      *   elements. Can be set to true on any input to force the input inside the label. If you
      *   enable this option for radio buttons you will also need to modify the default `radioWrapper` template.
+     * - `templates` - The templates you want to use for this input. Any templates will be merged on top of
+     *   the already loaded templates. This option can either be a filename in /config that contains
+     *   the templates you want to load, or an array of templates to use.
      *
      * @param string $fieldName This should be "modelname.fieldname"
      * @param array $options Each type of input takes different options.
@@ -993,6 +1000,7 @@ class FormHelper extends Helper
             'required' => null,
             'options' => null,
             'templates' => [],
+            'templateVars' => []
         ];
         $options = $this->_parseOptions($fieldName, $options);
         $options += ['id' => $this->_domId($fieldName)];
@@ -1067,7 +1075,8 @@ class FormHelper extends Helper
         return $this->templater()->format($groupTemplate, [
             'input' => $options['input'],
             'label' => $options['label'],
-            'error' => $options['error']
+            'error' => $options['error'],
+            'templateVars' => isset($options['options']['templateVars']) ? $options['options']['templateVars'] : []
         ]);
     }
 
@@ -1088,7 +1097,8 @@ class FormHelper extends Helper
             'content' => $options['content'],
             'error' => $options['error'],
             'required' => $options['options']['required'] ? ' required' : '',
-            'type' => $options['options']['type']
+            'type' => $options['options']['type'],
+            'templateVars' => isset($options['options']['templateVars']) ? $options['options']['templateVars'] : []
         ]);
     }
 
@@ -1340,7 +1350,8 @@ class FormHelper extends Helper
      */
     protected function _inputLabel($fieldName, $label, $options)
     {
-        $labelAttributes = [];
+        $options += ['id' => null, 'input' => null, 'nestedInput' => false, 'templateVars' => []];
+        $labelAttributes = ['templateVars' => $options['templateVars']];
         if (is_array($label)) {
             $labelText = null;
             if (isset($label['text'])) {
@@ -1351,7 +1362,6 @@ class FormHelper extends Helper
         } else {
             $labelText = $label;
         }
-        $options += ['id' => null, 'input' => null, 'nestedInput' => false];
 
         $labelAttributes['for'] = $options['id'];
         $groupTypes = ['radio', 'multicheckbox', 'date', 'time', 'datetime'];
@@ -1447,7 +1457,7 @@ class FormHelper extends Helper
         $radio = $this->widget('radio', $attributes);
 
         $hidden = '';
-        if ($hiddenField && (!isset($value) || $value === '')) {
+        if ($hiddenField) {
             $hidden = $this->hidden($fieldName, [
                 'value' => '',
                 'form' => isset($attributes['form']) ? $attributes['form'] : null,
