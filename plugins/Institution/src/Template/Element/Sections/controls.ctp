@@ -27,6 +27,7 @@
 					'default' => $selectedGrade,
 					'url' => $baseUrl,
 					'data-named-key' => 'education_grade_id',
+					'data-named-group' => 'academic_period_id',
 				));
 			}
 

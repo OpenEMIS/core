@@ -2,6 +2,7 @@
 namespace Assessment\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
@@ -19,7 +20,7 @@ class AssessmentGradingOptionsTable extends AppTable {
 		$this->addBehavior('Reorder', ['filter' => 'assessment_grading_type_id']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($gradingTypeOptions, $selectedGradingType) = array_values($this->_getSelectOptions());
 
 		if (!empty($gradingTypeOptions)) {
@@ -33,7 +34,7 @@ class AssessmentGradingOptionsTable extends AppTable {
 		}
 
 		$this->ControllerAction->field('assessment_grading_type_id', ['visible' => false]);
-		$options['conditions'][$this->aliasField('assessment_grading_type_id')] = $selectedGradingType;
+		$query->where([$this->aliasField('assessment_grading_type_id') => $selectedGradingType]);
 	}
 
 	public function addEditBeforeAction(Event $event) {

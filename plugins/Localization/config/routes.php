@@ -1,6 +1,7 @@
 <?php
 use Cake\Routing\Router;
 
-Router::plugin('Localization', function ($routes) {
-    $routes->fallbacks('InflectedRoute');
+Router::scope('/Translations', ['plugin' => 'Localization'], function ($routes) {
+	Router::connect('/Translations', ['plugin' => 'Localization', 'controller' => 'Translations']);
+	Router::connect('/Translations/:action/*', ['plugin' => 'Localization', 'controller' => 'Translations']);
 });

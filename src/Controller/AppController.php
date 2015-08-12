@@ -99,8 +99,23 @@ class AppController extends Controller {
 			$session->write('System.home', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		}
 
-		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard'];
+		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'];
 		$session->write('System.home', $homeUrl);
+
+		if (!is_null($this->Auth->user())) { // if user is logged in
+			if ($this->Auth->user('super_admin') == 1) {
+				$session->write('System.User.roles', __('System Administrator'));
+			} else {
+				$rolesList = $this->AccessControl->getRolesByUser();
+				$roles = [];
+				foreach ($rolesList as $obj) {
+					if (!empty($obj->security_group) && !empty($obj->security_role)) {
+						$roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
+					}
+				}
+				$session->write('System.User.roles', implode(', ', $roles));
+			}
+		}
 
 		$this->set('theme', $theme);
 		$this->set('SystemVersion', $this->getCodeVersion());

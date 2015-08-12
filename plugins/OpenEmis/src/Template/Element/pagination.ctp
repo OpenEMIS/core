@@ -1,11 +1,12 @@
 <?php
-$totalRecords = $this->Paginator->counter('{{count}}');
+$params = $this->Paginator->params();
+$totalRecords = $params['count'];
 ?>
 
 <?php if ($totalRecords > 0) : ?>
 <div class="pagination-wrapper">
 	<?php
-	$totalPages = $this->Paginator->counter('{{pages}}');
+	$totalPages = $params['pageCount'];
 
 	if ($totalPages > 1) :
 	?>
@@ -18,9 +19,19 @@ $totalRecords = $this->Paginator->counter('{{count}}');
 	</ul>
 	<?php endif ?>
 	<div class="counter">
-		<?= $this->Paginator->counter([
-			'format' => 'Showing {{start}} to {{end}} of {{count}} records'
-		]) ?>
+		<?php 
+		$defaultLocale = $this->ControllerAction->locale();
+		$this->ControllerAction->locale('en_US'); 
+		?>
+		<?php 
+			$paginateCountString = $this->Paginator->counter([
+				'format' => '{{start}} {{end}} {{count}}'
+			]); 
+
+			$paginateCountArray = explode(' ', $paginateCountString);
+			$this->ControllerAction->locale($defaultLocale); 
+			echo sprintf('Showing %s to %s of %s records', $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
+		?>
 	</div>
 	<div class="display-limit">
 		<span><?= __('Display') ?></span>

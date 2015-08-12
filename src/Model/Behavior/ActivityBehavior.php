@@ -16,8 +16,6 @@ class ActivityBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-		$this->_defaultConfig = array_merge($this->_defaultConfig, $config);
-		$this->config($this->_defaultConfig);
 		$this->_table->dateTypes = $this->_dateTypes;
 	}
 	
@@ -32,7 +30,7 @@ class ActivityBehavior extends Behavior {
 		$newEvent = [
 			'ControllerAction.Model.beforeAction' => 'beforeAction'
 		];
-		$events = array_merge($events,$newEvent);
+		$events = array_merge($events, $newEvent);
 		return $events;
 	}
 

@@ -1504,10 +1504,10 @@ ALTER TABLE `staff_activities` ADD `field_type` VARCHAR(128) NOT NULL AFTER `fie
 
 -- 7 July 2015 by jeff
 DELETE FROM `field_options` WHERE `code` IN (
-	'InstitutionSiteCustomFields', 'CensusCustomFieldOptions', 'CensusCustomFields', 'CensusGrids', 'StudentCustomFields',
-	'StaffCustomFields', 'InfrastructureBuildings', 'InfrastructureCategories', 'InfrastructureEnergies',
-	'InfrastructureFurnitures', 'InfrastructureMaterials', 'InfrastructureResources', 'InfrastructureRooms',
-	'InfrastructureSanitations', 'InfrastructureStatuses', 'InfrastructureWaters'
+  'InstitutionSiteCustomFields', 'CensusCustomFieldOptions', 'CensusCustomFields', 'CensusGrids', 'StudentCustomFields',
+  'StaffCustomFields', 'InfrastructureBuildings', 'InfrastructureCategories', 'InfrastructureEnergies',
+  'InfrastructureFurnitures', 'InfrastructureMaterials', 'InfrastructureResources', 'InfrastructureRooms',
+  'InfrastructureSanitations', 'InfrastructureStatuses', 'InfrastructureWaters'
 );
 UPDATE `field_options` SET `params` = '{"model":"FieldOption.Banks"}' WHERE `field_options`.`code` = 'Banks';
 UPDATE `field_options` SET `params` = '{"model":"FieldOption.BankBranches"}' WHERE `field_options`.`code` = 'BankBranches';
@@ -1515,3 +1515,1874 @@ UPDATE `field_options` SET `params` = '{"model":"User.ContactTypes"}' WHERE `fie
 UPDATE `field_options` SET `params` = '{"model":"FieldOption.Countries"}' WHERE `field_options`.`code` = 'Countries';
 
 
+-- 9th July 2015
+
+RENAME TABLE assessment_results TO z_1461_assessment_results;
+
+ALTER TABLE `assessment_item_results` DROP `assessment_result_id`;
+ALTER TABLE `assessment_item_results` DROP `assessment_result_type_id`;
+
+-- New table - institution_site_assessments
+DROP TABLE IF EXISTS `institution_site_assessments`;
+CREATE TABLE IF NOT EXISTS `institution_site_assessments` (
+  `id` char(36) NOT NULL,
+  `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Draft, 2 -> Completed',
+  `academic_period_id` int(11) NOT NULL,
+  `assessment_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_assessments`
+  ADD PRIMARY KEY (`id`), ADD KEY `institution_site_id` (`institution_site_id`);
+
+
+ALTER TABLE `institution_site_assessments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+
+DELETE FROM config_items where `type`='Nationality' AND `code`='country_id';
+DELETE FROM config_items where `type`='Year Book Report';
+
+UPDATE config_items 
+SET 
+  `name`='Institution Code',
+  `code`='institution_code',
+  `label`='Institution Code'
+WHERE
+  `type`='Custom Validation'
+AND `name`='Institution Site Code'
+AND `code`='institution_site_code'
+AND `label`='Institution Site Code';
+
+UPDATE config_items 
+SET 
+  `name`='Institution Telephone',
+  `code`='institution_telephone',
+  `label`='Institution Telephone'
+WHERE
+  `type`='Custom Validation'
+AND `name`='Institution Site Telephone'
+AND `code`='institution_site_telephone'
+AND `label`='Institution Site Telephone';
+
+UPDATE config_items 
+SET 
+  `name`='Institution Fax',
+  `code`='institution_fax',
+  `label`='Institution Fax'
+WHERE
+  `type`='Custom Validation'
+AND `name`='Institution Site Fax'
+AND `code`='institution_site_fax'
+AND `label`='Institution Site Fax';
+
+UPDATE config_items 
+SET 
+  `name`='Institution Postal Code',
+  `code`='institution_postal_code',
+  `label`='Institution Postal Code'
+WHERE
+  `type`='Custom Validation'
+AND `name`='Institution Site Postal Code'
+AND `code`='institution_site_postal_code'
+AND `label`='Institution Site Postal Code';
+
+
+UPDATE config_items 
+SET 
+  `type`='Institution',
+  `code`='institution_area_level_id'
+WHERE
+  `type`='Institution Site'
+AND `name`='Display Area Level'
+AND `code`='institution_site_area_level_id'
+AND `label`='Display Area Level';
+
+-- added by jeff
+UPDATE `config_item_options` SET `value` = 0 WHERE `option` = 'Sunday';
+UPDATE `config_item_options` SET `value` = 1 WHERE `option` = 'Monday';
+UPDATE `config_item_options` SET `value` = 2 WHERE `option` = 'Tuesday';
+UPDATE `config_item_options` SET `value` = 3 WHERE `option` = 'Wednesday';
+UPDATE `config_item_options` SET `value` = 4 WHERE `option` = 'Thursday';
+UPDATE `config_item_options` SET `value` = 5 WHERE `option` = 'Friday';
+UPDATE `config_item_options` SET `value` = 6 WHERE `option` = 'Saturday';
+
+UPDATE `config_items` SET `value` = 0, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'sunday';
+UPDATE `config_items` SET `value` = 1, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'monday';
+UPDATE `config_items` SET `value` = 2, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'tuesday';
+UPDATE `config_items` SET `value` = 3, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'wednesday';
+UPDATE `config_items` SET `value` = 4, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'thursday';
+UPDATE `config_items` SET `value` = 5, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'friday';
+UPDATE `config_items` SET `value` = 6, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = 'saturday';
+UPDATE `config_items` SET `value` = 1, `default_value` = 1 WHERE `name` = 'First Day of Week' AND `value` = '';
+
+-- 16th July 2015
+
+UPDATE `custom_modules` SET `filter` = 'Infrastructure.InfrastructureLevels' WHERE `code` = 'Infrastructure';
+
+--
+-- For Institutions - Infrastructure
+--
+
+-- New table - infrastructure_custom_forms
+DROP TABLE IF EXISTS `infrastructure_custom_forms`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_forms` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_forms`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_custom_forms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - infrastructure_custom_forms_fields
+DROP TABLE IF EXISTS `infrastructure_custom_forms_fields`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_forms_fields` (
+  `id` char(36) NOT NULL,
+  `infrastructure_custom_form_id` int(11) NOT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_forms_fields`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - infrastructure_custom_forms_filters
+DROP TABLE IF EXISTS `infrastructure_custom_forms_filters`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_forms_filters` (
+  `id` char(36) NOT NULL,
+  `infrastructure_custom_form_id` int(11) NOT NULL,
+  `infrastructure_custom_filter_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_forms_filters`
+  ADD PRIMARY KEY (`id`);
+
+-- Alter table - infrastructure_levels
+DROP TABLE IF EXISTS `infrastructure_levels`;
+CREATE TABLE IF NOT EXISTS `infrastructure_levels` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `parent_id` int(11) DEFAULT '0',
+  `lft` int(11) DEFAULT NULL,
+  `rght` int(11) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_levels`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_levels`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- Drop tables
+DROP TABLE IF EXISTS `infrastructure_level_fields`;
+DROP TABLE IF EXISTS `institution_site_infrastructures`;
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_field_values`;
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_table_cells`;
+
+-- New table - institution_infrastructures
+DROP TABLE IF EXISTS `institution_infrastructures`;
+CREATE TABLE IF NOT EXISTS `institution_infrastructures` (
+  `id` int(11) NOT NULL,
+  `code` varchar(100) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `year_acquired` int(4) DEFAULT NULL,
+  `year_disposed` int(4) DEFAULT NULL,
+  `comment` text,
+  `size` float DEFAULT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `infrastructure_level_id` int(11) NOT NULL,
+  `infrastructure_type_id` int(11) NOT NULL,
+  `infrastructure_ownership_id` int(11) NOT NULL,
+  `infrastructure_condition_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_infrastructures`
+  ADD PRIMARY KEY (`id`), ADD KEY `code` (`code`), ADD KEY `name` (`name`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
+
+
+ALTER TABLE `institution_infrastructures`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - infrastructure_custom_field_values
+DROP TABLE IF EXISTS `infrastructure_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `institution_infrastructure_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - infrastructure_custom_table_cells
+DROP TABLE IF EXISTS `infrastructure_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `infrastructure_custom_table_column_id` int(11) NOT NULL,
+  `infrastructure_custom_table_row_id` int(11) NOT NULL,
+  `institution_infrastructure_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+
+-- 16th July 2015
+
+--
+-- For Institutions
+--
+
+-- New table - institution_custom_fields
+DROP TABLE IF EXISTS `institution_custom_fields`;
+CREATE TABLE IF NOT EXISTS `institution_custom_fields` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `field_type` varchar(100) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_fields`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_fields`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_custom_field_options
+DROP TABLE IF EXISTS `institution_custom_field_options`;
+CREATE TABLE IF NOT EXISTS `institution_custom_field_options` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_default` int(1) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `institution_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_field_options`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_field_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_custom_table_columns
+DROP TABLE IF EXISTS `institution_custom_table_columns`;
+CREATE TABLE IF NOT EXISTS `institution_custom_table_columns` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `institution_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_table_columns`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_table_columns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_custom_table_rows
+DROP TABLE IF EXISTS `institution_custom_table_rows`;
+CREATE TABLE IF NOT EXISTS `institution_custom_table_rows` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `institution_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_table_rows`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_table_rows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_custom_forms
+DROP TABLE IF EXISTS `institution_custom_forms`;
+CREATE TABLE IF NOT EXISTS `institution_custom_forms` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_forms`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_forms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_custom_forms_fields
+DROP TABLE IF EXISTS `institution_custom_forms_fields`;
+CREATE TABLE IF NOT EXISTS `institution_custom_forms_fields` (
+  `id` char(36) NOT NULL,
+  `institution_custom_form_id` int(11) NOT NULL,
+  `institution_custom_field_id` int(11) NOT NULL,
+  `section` varchar(250) DEFAULT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_forms_fields`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - institution_custom_forms_filters
+DROP TABLE IF EXISTS `institution_custom_forms_filters`;
+CREATE TABLE IF NOT EXISTS `institution_custom_forms_filters` (
+  `id` char(36) NOT NULL,
+  `institution_custom_form_id` int(11) NOT NULL,
+  `institution_custom_filter_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_forms_filters`
+  ADD PRIMARY KEY (`id`);
+
+-- Drop table
+DROP TABLE IF EXISTS `institution_site_custom_field_values`;
+DROP TABLE IF EXISTS `institution_site_custom_table_cells`;
+
+-- Alter table - institution_custom_field_values
+DROP TABLE IF EXISTS `institution_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `institution_custom_field_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- Alter table - institution_custom_table_cells
+DROP TABLE IF EXISTS `institution_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `institution_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `institution_custom_field_id` int(11) NOT NULL,
+  `institution_custom_table_column_id` int(11) NOT NULL,
+  `institution_custom_table_row_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- For data patch
+--
+
+-- patch institution_custom_forms
+TRUNCATE TABLE `institution_custom_forms`;
+INSERT INTO `institution_custom_forms` (`id`, `name`, `description`, `custom_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'General', '', 1, 1, '2015-01-01 00:00:00', 1, '2015-01-01 00:00:00');
+
+-- patch institution_custom_fields
+TRUNCATE TABLE `institution_custom_fields`;
+INSERT INTO `institution_custom_fields` (`id`, `name`, `field_type`, `is_mandatory`, `is_unique`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`,
+  CASE
+    WHEN `type` = 2 THEN 'TEXT'
+    WHEN `type` = 3 THEN 'DROPDOWN'
+    WHEN `type` = 4 THEN 'CHECKBOX'
+    WHEN `type` = 5 THEN 'TEXTAREA'
+    ELSE '-1'
+  END,
+  0, 0, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_institution_site_custom_fields`
+WHERE `type` != 1;
+
+-- patch institution_custom_field_options
+TRUNCATE TABLE `institution_custom_field_options`;
+INSERT INTO `institution_custom_field_options` (`id`, `name`, `is_default`, `visible`, `order`, `institution_custom_field_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `value`, 0, `visible`, `order`, `institution_site_custom_field_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_institution_site_custom_field_options`;
+
+-- patch institution_custom_forms_fields
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS custom_patch
+$$
+CREATE PROCEDURE custom_patch()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE fieldId, formId INT(11);
+  DECLARE fieldOrder INT(3);
+  DECLARE fieldType INT(1);
+  DECLARE fieldName VARCHAR(250);
+  DECLARE sectionName VARCHAR(250);
+  DECLARE sfq CURSOR FOR 
+    SELECT `CustomFields`.`id`, `CustomFields`.`name`, `CustomFields`.`type`, `CustomFields`.`order`, 1
+    FROM `z_1461_institution_site_custom_fields` AS `CustomFields`
+    ORDER BY `CustomFields`.`order`;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN sfq;
+  TRUNCATE TABLE `institution_custom_forms_fields`;
+
+  read_loop: LOOP
+  FETCH sfq INTO fieldId, fieldName, fieldType, fieldOrder, formId;
+  IF done THEN
+    LEAVE read_loop;
+  END IF;
+
+    IF fieldType = 1 THEN
+      SET @sectionName = fieldName;
+    END IF;
+
+    IF fieldType <> 1 THEN
+      INSERT INTO `institution_custom_forms_fields` (`id`, `institution_custom_form_id`, `institution_custom_field_id`, `section`, `order`) VALUES (uuid(), formId, fieldId, @sectionName, fieldOrder);
+    END IF;
+
+  END LOOP read_loop;
+
+  CLOSE sfq;
+END
+$$
+
+CALL custom_patch
+$$
+
+DROP PROCEDURE IF EXISTS custom_patch
+$$
+
+DELIMITER ;
+
+-- patch institution_custom_forms_filters
+INSERT INTO `institution_custom_forms_filters` (`id`, `institution_custom_form_id`, `institution_custom_filter_id`) VALUES
+(uuid(), 1, 0);
+
+-- patch institution_custom_field_values
+TRUNCATE TABLE `institution_custom_field_values`;
+INSERT INTO `institution_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `institution_custom_field_id`, `institution_site_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT uuid(),
+  CASE
+    WHEN `CustomFields`.`type` = 2 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+  CASE
+    WHEN `CustomFields`.`type` = 3 THEN `CustomValues`.`value`
+    WHEN `CustomFields`.`type` = 4 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+  CASE
+    WHEN `CustomFields`.`type` = 5 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+`CustomValues`.`institution_site_custom_field_id`, `CustomValues`.`institution_site_id`, `CustomValues`.`modified_user_id`, `CustomValues`.`modified`, `CustomValues`.`created_user_id`, `CustomValues`.`created`
+FROM `z_1461_institution_site_custom_values` AS `CustomValues`
+INNER JOIN `z_1461_institution_site_custom_fields` AS `CustomFields` ON `CustomFields`.`id` = `CustomValues`.`institution_site_custom_field_id`;
+
+-- 16th July 2015
+
+RENAME TABLE `custom_form_fields` TO `custom_forms_fields`;
+RENAME TABLE `custom_form_filters` TO `custom_forms_filters`;
+
+-- 16th July 2015
+
+--
+-- For Staff
+--
+
+-- New table - staff_custom_fields
+DROP TABLE IF EXISTS `staff_custom_fields`;
+CREATE TABLE IF NOT EXISTS `staff_custom_fields` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `field_type` varchar(100) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_fields`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `staff_custom_fields`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - staff_custom_field_options
+DROP TABLE IF EXISTS `staff_custom_field_options`;
+CREATE TABLE IF NOT EXISTS `staff_custom_field_options` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_default` int(1) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `staff_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_field_options`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `staff_custom_field_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - staff_custom_table_columns
+DROP TABLE IF EXISTS `staff_custom_table_columns`;
+CREATE TABLE IF NOT EXISTS `staff_custom_table_columns` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `staff_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_table_columns`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `staff_custom_table_columns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - staff_custom_table_rows
+DROP TABLE IF EXISTS `staff_custom_table_rows`;
+CREATE TABLE IF NOT EXISTS `staff_custom_table_rows` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `staff_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_table_rows`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `staff_custom_table_rows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - staff_custom_forms
+DROP TABLE IF EXISTS `staff_custom_forms`;
+CREATE TABLE IF NOT EXISTS `staff_custom_forms` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_forms`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `staff_custom_forms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - staff_custom_forms_fields
+DROP TABLE IF EXISTS `staff_custom_forms_fields`;
+CREATE TABLE IF NOT EXISTS `staff_custom_forms_fields` (
+  `id` char(36) NOT NULL,
+  `staff_custom_form_id` int(11) NOT NULL,
+  `staff_custom_field_id` int(11) NOT NULL,
+  `section` varchar(250) DEFAULT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_forms_fields`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - staff_custom_field_values
+DROP TABLE IF EXISTS `staff_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `staff_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `staff_custom_field_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - staff_custom_table_cells
+DROP TABLE IF EXISTS `staff_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `staff_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `staff_custom_field_id` int(11) NOT NULL,
+  `staff_custom_table_column_id` int(11) NOT NULL,
+  `staff_custom_table_row_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `staff_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- For data patch
+--
+
+-- patch staff_custom_forms
+TRUNCATE TABLE `staff_custom_forms`;
+INSERT INTO `staff_custom_forms` (`id`, `name`, `description`, `custom_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'General', '', 3, 1, '2015-01-01 00:00:00', 1, '2015-01-01 00:00:00');
+
+-- patch staff_custom_fields
+TRUNCATE TABLE `staff_custom_fields`;
+INSERT INTO `staff_custom_fields` (`id`, `name`, `field_type`, `is_mandatory`, `is_unique`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`,
+  CASE
+    WHEN `type` = 2 THEN 'TEXT'
+    WHEN `type` = 3 THEN 'DROPDOWN'
+    WHEN `type` = 4 THEN 'CHECKBOX'
+    WHEN `type` = 5 THEN 'TEXTAREA'
+    ELSE '-1'
+  END,
+  0, 0, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_staff_custom_fields`
+WHERE `type` != 1;
+
+-- patch staff_custom_field_options
+TRUNCATE TABLE `staff_custom_field_options`;
+INSERT INTO `staff_custom_field_options` (`id`, `name`, `is_default`, `visible`, `order`, `staff_custom_field_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `value`, 0, `visible`, `order`, `staff_custom_field_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_staff_custom_field_options`;
+
+-- patch staff_custom_forms_fields
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS custom_patch
+$$
+CREATE PROCEDURE custom_patch()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE fieldId, formId INT(11);
+  DECLARE fieldOrder INT(3);
+  DECLARE fieldType INT(1);
+  DECLARE fieldName VARCHAR(250);
+  DECLARE sectionName VARCHAR(250);
+  DECLARE sfq CURSOR FOR 
+    SELECT `CustomFields`.`id`, `CustomFields`.`name`, `CustomFields`.`type`, `CustomFields`.`order`, 1
+    FROM `z_1461_staff_custom_fields` AS `CustomFields`
+    ORDER BY `CustomFields`.`order`;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN sfq;
+  TRUNCATE TABLE `staff_custom_forms_fields`;
+
+  read_loop: LOOP
+  FETCH sfq INTO fieldId, fieldName, fieldType, fieldOrder, formId;
+  IF done THEN
+    LEAVE read_loop;
+  END IF;
+
+    IF fieldType = 1 THEN
+      SET @sectionName = fieldName;
+    END IF;
+
+    IF fieldType <> 1 THEN
+      INSERT INTO `staff_custom_forms_fields` (`id`, `staff_custom_form_id`, `staff_custom_field_id`, `section`, `order`) VALUES (uuid(), formId, fieldId, @sectionName, fieldOrder);
+    END IF;
+
+  END LOOP read_loop;
+
+  CLOSE sfq;
+END
+$$
+
+CALL custom_patch
+$$
+
+DROP PROCEDURE IF EXISTS custom_patch
+$$
+
+DELIMITER ;
+
+-- patch staff_custom_field_values
+TRUNCATE TABLE `staff_custom_field_values`;
+INSERT INTO `staff_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `staff_custom_field_id`, `security_user_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT uuid(),
+  CASE
+    WHEN `CustomFields`.`type` = 2 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+  CASE
+    WHEN `CustomFields`.`type` = 3 THEN `CustomValues`.`value`
+    WHEN `CustomFields`.`type` = 4 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+  CASE
+    WHEN `CustomFields`.`type` = 5 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+`CustomValues`.`staff_custom_field_id`, `CustomValues`.`security_user_id`, `CustomValues`.`modified_user_id`, `CustomValues`.`modified`, `CustomValues`.`created_user_id`, `CustomValues`.`created`
+FROM `z_1461_staff_custom_values` AS `CustomValues`
+INNER JOIN `z_1461_staff_custom_fields` AS `CustomFields` ON `CustomFields`.`id` = `CustomValues`.`staff_custom_field_id`;
+
+
+-- 16th July 2015
+
+--
+-- For Students
+--
+
+-- New table - student_custom_fields
+DROP TABLE IF EXISTS `student_custom_fields`;
+CREATE TABLE IF NOT EXISTS `student_custom_fields` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `field_type` varchar(100) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_fields`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `student_custom_fields`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - student_custom_field_options
+DROP TABLE IF EXISTS `student_custom_field_options`;
+CREATE TABLE IF NOT EXISTS `student_custom_field_options` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_default` int(1) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `student_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_field_options`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `student_custom_field_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - student_custom_table_columns
+DROP TABLE IF EXISTS `student_custom_table_columns`;
+CREATE TABLE IF NOT EXISTS `student_custom_table_columns` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `student_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_table_columns`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `student_custom_table_columns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - student_custom_table_rows
+DROP TABLE IF EXISTS `student_custom_table_rows`;
+CREATE TABLE IF NOT EXISTS `student_custom_table_rows` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `student_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_table_rows`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `student_custom_table_rows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - student_custom_forms
+DROP TABLE IF EXISTS `student_custom_forms`;
+CREATE TABLE IF NOT EXISTS `student_custom_forms` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_forms`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `student_custom_forms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - student_custom_forms_fields
+DROP TABLE IF EXISTS `student_custom_forms_fields`;
+CREATE TABLE IF NOT EXISTS `student_custom_forms_fields` (
+  `id` char(36) NOT NULL,
+  `student_custom_form_id` int(11) NOT NULL,
+  `student_custom_field_id` int(11) NOT NULL,
+  `section` varchar(250) DEFAULT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_forms_fields`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - student_custom_field_values
+DROP TABLE IF EXISTS `student_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `student_custom_field_values` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `student_custom_field_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - student_custom_table_cells
+DROP TABLE IF EXISTS `student_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `student_custom_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `student_custom_field_id` int(11) NOT NULL,
+  `student_custom_table_column_id` int(11) NOT NULL,
+  `student_custom_table_row_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `student_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- For data patch
+--
+
+-- patch student_custom_forms
+TRUNCATE TABLE `student_custom_forms`;
+INSERT INTO `student_custom_forms` (`id`, `name`, `description`, `custom_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'General', '', 2, 1, '2015-01-01 00:00:00', 1, '2015-01-01 00:00:00');
+
+-- patch student_custom_fields
+TRUNCATE TABLE `student_custom_fields`;
+INSERT INTO `student_custom_fields` (`id`, `name`, `field_type`, `is_mandatory`, `is_unique`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`,
+  CASE
+    WHEN `type` = 2 THEN 'TEXT'
+    WHEN `type` = 3 THEN 'DROPDOWN'
+    WHEN `type` = 4 THEN 'CHECKBOX'
+    WHEN `type` = 5 THEN 'TEXTAREA'
+    ELSE '-1'
+  END,
+  0, 0, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_student_custom_fields`
+WHERE `type` != 1;
+
+-- patch student_custom_field_options
+TRUNCATE TABLE `student_custom_field_options`;
+INSERT INTO `student_custom_field_options` (`id`, `name`, `is_default`, `visible`, `order`, `student_custom_field_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `value`, 0, `visible`, `order`, `student_custom_field_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_student_custom_field_options`;
+
+-- patch student_custom_forms_fields
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS custom_patch
+$$
+CREATE PROCEDURE custom_patch()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE fieldId, formId INT(11);
+  DECLARE fieldOrder INT(3);
+  DECLARE fieldType INT(1);
+  DECLARE fieldName VARCHAR(250);
+  DECLARE sectionName VARCHAR(250);
+  DECLARE sfq CURSOR FOR 
+    SELECT `CustomFields`.`id`, `CustomFields`.`name`, `CustomFields`.`type`, `CustomFields`.`order`, 1
+    FROM `z_1461_student_custom_fields` AS `CustomFields`
+    ORDER BY `CustomFields`.`order`;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN sfq;
+  TRUNCATE TABLE `student_custom_forms_fields`;
+
+  read_loop: LOOP
+  FETCH sfq INTO fieldId, fieldName, fieldType, fieldOrder, formId;
+  IF done THEN
+    LEAVE read_loop;
+  END IF;
+
+    IF fieldType = 1 THEN
+      SET @sectionName = fieldName;
+    END IF;
+
+    IF fieldType <> 1 THEN
+      INSERT INTO `student_custom_forms_fields` (`id`, `student_custom_form_id`, `student_custom_field_id`, `section`, `order`) VALUES (uuid(), formId, fieldId, @sectionName, fieldOrder);
+    END IF;
+
+  END LOOP read_loop;
+
+  CLOSE sfq;
+END
+$$
+
+CALL custom_patch
+$$
+
+DROP PROCEDURE IF EXISTS custom_patch
+$$
+
+DELIMITER ;
+
+-- patch student_custom_field_values
+TRUNCATE TABLE `student_custom_field_values`;
+INSERT INTO `student_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `student_custom_field_id`, `security_user_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT uuid(),
+  CASE
+    WHEN `CustomFields`.`type` = 2 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+  CASE
+    WHEN `CustomFields`.`type` = 3 THEN `CustomValues`.`value`
+    WHEN `CustomFields`.`type` = 4 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+  CASE
+    WHEN `CustomFields`.`type` = 5 THEN `CustomValues`.`value`
+    ELSE NULL
+  END,
+`CustomValues`.`student_custom_field_id`, `CustomValues`.`security_user_id`, `CustomValues`.`modified_user_id`, `CustomValues`.`modified`, `CustomValues`.`created_user_id`, `CustomValues`.`created`
+FROM `z_1461_student_custom_values` AS `CustomValues`
+INNER JOIN `z_1461_student_custom_fields` AS `CustomFields` ON `CustomFields`.`id` = `CustomValues`.`student_custom_field_id`;
+
+-- 14th July 2015
+
+-- patch rubric_statuses
+TRUNCATE TABLE `rubric_statuses`;
+INSERT INTO `rubric_statuses` (`id`, `date_enabled`, `date_disabled`, `status`, `rubric_template_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `date_enabled`, `date_disabled`, `status`, `rubric_template_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_quality_statuses`;
+
+-- patch rubric_status_periods
+TRUNCATE TABLE `rubric_status_periods`;
+INSERT INTO `rubric_status_periods` (`id`, `academic_period_id`, `rubric_status_id`)
+SELECT `id`, `academic_period_id`, `quality_status_id`
+FROM `z_1461_quality_status_periods`;
+
+-- patch rubric_status_programmes
+TRUNCATE TABLE `rubric_status_programmes`;
+INSERT INTO `rubric_status_programmes` (`id`, `education_programme_id`, `rubric_status_id`)
+SELECT `id`, `education_programme_id`, `quality_status_id`
+FROM `z_1461_quality_status_programmes`;
+
+-- patch rubric_status_roles
+TRUNCATE TABLE `rubric_status_roles`;
+INSERT INTO `rubric_status_roles` (`id`, `security_role_id`, `rubric_status_id`)
+SELECT `id`, `security_role_id`, `quality_status_id`
+FROM `z_1461_quality_status_roles`;
+
+-- 27th June 2015
+UPDATE `security_functions` SET 
+  `_edit` = REPLACE(`_edit`, '_view:', ''), 
+  `_add` = REPLACE(`_add`, '_view:', ''), 
+  `_delete` = REPLACE(`_delete`, '_view:', ''),
+  `_execute` = REPLACE(`_execute`, '_view:', '');
+
+UPDATE `security_functions` SET `controller` = 'Institutions' WHERE `controller` = 'InstitutionSites';
+UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'Students.index|Students.view', `_add` = 'Students.add', `_edit` = 'Students.edit', `_delete` = 'Students.remove', `_execute` = 'Students.excel' WHERE `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Details' AND `name` = 'Student';
+
+-- Hide all 'More' functions and 'Census' functions
+UPDATE `security_functions` SET `visible` = -1 
+WHERE `controller` = 'Census';
+
+DELETE FROM `security_functions` WHERE `name` IN ('More', 'Students - Academic', 'Staff - Academic', 'Population', 'Dashboard Image');
+DELETE FROM `security_functions` WHERE `name` = 'Finance' AND `controller` = 'Finance';
+
+-- fixed names and categories
+UPDATE `security_functions` SET `name` = 'Students', `category` = 'Students' WHERE `controller` = 'Institutions' AND `name` = 'Student' AND `category` = 'Details';
+UPDATE `security_functions` SET `name` = 'Behaviour', `category` = 'Students' WHERE `controller` = 'Institutions' AND `name` = 'Students' AND `category` = 'Behaviour';
+UPDATE `security_functions` SET `name` = 'Attendance', `category` = 'Students' WHERE `controller` = 'Institutions' AND `name` = 'Students' AND `category` = 'Attendance';
+UPDATE `security_functions` SET `category` = 'Students' WHERE `controller` = 'Institutions' AND `name` = 'Results' AND `category` = 'Assessment';
+UPDATE `security_functions` SET `controller` = 'Institutions', `name` = 'Staff', `category` = 'Staff' WHERE `controller` = 'Staff' AND `name` = 'Staff' AND `category` = 'Details';
+UPDATE `security_functions` SET `name` = 'Behaviour', `category` = 'Staff' WHERE `controller` = 'Institutions' AND `name` = 'Staff' AND `category` = 'Behaviour';
+UPDATE `security_functions` SET `name` = 'Attendance', `category` = 'Staff' WHERE `controller` = 'Institutions' AND `name` = 'Staff' AND `category` = 'Attendance';
+UPDATE `security_functions` SET `name` = 'Students' WHERE `controller` = 'Students' AND `name` = 'Student' AND `category` = 'General';
+
+-- reorganise functions
+SET @funcId := 0;
+
+SET @id := 1000;
+-- Institutions Module
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Institution';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'index|view|dashboard', `_edit` = 'edit', `_add` = 'add', `_delete` = 'remove', `_execute` = 'excel'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- History
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'History';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'index', `_edit` = null, `_add` = null, `_delete` = null, `visible` = 1 
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Attachments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Attachments';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Attachments.index|Attachments.view', `_add` = 'Attachments.add', `_edit` = 'Attachments.edit', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 1. Details
+
+-- Positions
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Positions';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Positions.index|Positions.view', `_add` = 'Positions.add', `_edit` = 'Positions.edit', `_delete` = 'Positions.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Programmes
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Programmes';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Programmes.index|Programmes.view', `_add` = 'Programmes.add', `_edit` = 'Programmes.edit', `_delete` = 'Programmes.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Shifts
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Shifts';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Shifts.index|Shifts.view', `_add` = 'Shifts.add', `_edit` = 'Shifts.edit', `_delete` = 'Shifts.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Sections
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Sections';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Sections.index|Sections.view', `_add` = 'Sections.add', `_edit` = 'Sections.edit', `_delete` = 'Sections.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Classes
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Classes';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Classes.index|Classes.view', `_add` = 'Classes.add', `_edit` = 'Classes.edit', `_delete` = 'Classes.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Infrastructures
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Infrastructure';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Infrastructures.index|Infrastructures.view', `_add` = 'Infrastructures.add', `_edit` = 'Infrastructures.edit', `_delete` = 'Infrastructures.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+
+-- 2. Students
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Students' AND `category` = 'Students';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Students.index|Students.view', `_add` = 'Students.add', `_edit` = 'Students.edit', `_delete` = 'Students.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Student Behaviour
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Behaviour' AND `category` = 'Students';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'StudentBehaviours.index|StudentBehaviours.view', `_add` = 'StudentBehaviours.add', `_edit` = 'StudentBehaviours.edit', `_delete` = 'StudentBehaviours.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Student Attendance
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Attendance' AND `category` = 'Students';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'StudentAttendances.index|StudentAbsences.index|StudentAbsences.view', `_add` = 'StudentAbsences.add', `_edit` = 'StudentAttendances.edit|StudentAbsences.edit', `_delete` = 'StudentAbsences.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Student Results
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Results' AND `category` = 'Students';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Assessments.index|Results.index', `_add` = 'Results.add', `_edit` = 'Results.edit', `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+
+-- 3. Staff
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Staff' AND `category` = 'Staff';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Staff.index|Staff.view', `_add` = 'Staff.add', `_edit` = 'Staff.edit', `_delete` = 'Staff.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Staff Behaviour
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Behaviour' AND `category` = 'Staff';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'StaffBehaviours.index|StaffBehaviours.view', `_add` = 'StaffBehaviours.add', `_edit` = 'StaffBehaviours.edit', `_delete` = 'StaffBehaviours.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Staff Attendance
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Attendance' AND `category` = 'Staff';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'StaffAttendances.index|StaffAbsences.index|StaffAbsences.view', `_add` = 'StaffAbsences.add', `_edit` = 'StaffAttendances.edit|StaffAbsences.edit', `_delete` = 'StaffAbsences.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 4 . Finance
+
+-- Bank Accounts
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Bank Accounts' AND `category` = 'Finance';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'BankAccounts.index|BankAccounts.view', `_add` = 'BankAccounts.add', `_edit` = 'BankAccounts.edit', `_delete` = 'BankAccounts.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Fees
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Fees' AND `category` = 'Finance';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Fees.index|Fees.view', `_add` = 'Fees.add', `_edit` = 'Fees.edit', `_delete` = 'Fees.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Student Fees
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Students' AND `category` = 'Finance';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'StudentFees.index|StudentFees.view', `_add` = 'StudentFees.add', `_edit` = 'StudentFees.edit', `_delete` = 'StudentFees.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+
+-- 5. Surveys
+
+-- Student Module
+DELETE FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Search';
+
+SET @id := 2000;
+
+-- 1. Overview
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Students' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'index|view|Accounts.view', `_edit` = 'edit|Accounts.edit', `_add` = 'add', `_delete` = 'remove', `_execute` = 'excel'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 2. Contacts
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Contacts' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Contacts.index|Contacts.view', `_edit` = 'Contacts.edit', `_add` = 'Contacts.add', `_delete` = 'Contacts.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 3. Identities
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Identities' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Identities.index|Identities.view', `_edit` = 'Identities.edit', `_add` = 'Identities.add', `_delete` = 'Identities.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 4. Nationalities
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Nationalities' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Nationalities.index|Nationalities.view', `_edit` = 'Nationalities.edit', `_add` = 'Nationalities.add', `_delete` = 'Nationalities.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 5. Languages
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Languages' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Languages.index|Languages.view', `_edit` = 'Languages.edit', `_add` = 'Languages.add', `_delete` = 'Languages.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 6. Comments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Comments' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Comments.index|Comments.view', `_edit` = 'Comments.edit', `_add` = 'Comments.add', `_delete` = 'Comments.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 7. Special Needs
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Special Needs' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'SpecialNeeds.index|SpecialNeeds.view', `_edit` = 'SpecialNeeds.edit', `_add` = 'SpecialNeeds.add', `_delete` = 'SpecialNeeds.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 8. Awards
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Awards' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Awards.index|Awards.view', `_edit` = 'Awards.edit', `_add` = 'Awards.add', `_delete` = 'Awards.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 9. Attachments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Attachments' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Attachments.index|Attachments.view', `_edit` = 'Attachments.edit', `_add` = 'Attachments.add', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 10. History
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'History' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'History.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL, `visible` = 1
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Student Details
+-- 1. Guardians
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Guardians' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Guardians.index|Guardians.view', `_edit` = 'Guardians.edit', `_add` = 'Guardians.add', `_delete` = 'Guardians.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 2. Programmes
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Programmes' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Programmes.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 3. Sections
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Sections' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Sections.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 4. Classes
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Classes' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Classes.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 5. Absence
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Absence' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Absences.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 6. Behaviour
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Behaviour' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Behaviours.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 7. Results
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Results' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Results.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 8. Extracurricular
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Extracurricular' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Extracurriculars.index|Extracurriculars.view', `_edit` = 'Extracurriculars.edit', `_add` = 'Extracurriculars.add', `_delete` = 'Extracurriculars.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Student Finance
+
+-- 1. Bank Accounts
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Bank Accounts' AND `category` = 'Finance';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'BankAccounts.index|BankAccounts.view', `_edit` = 'BankAccounts.edit', `_add` = 'BankAccounts.add', `_delete` = 'BankAccounts.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 2. Fees
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Students' AND `name` = 'Fees' AND `category` = 'Finance';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Fees.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Removing Student Health permissions
+DELETE FROM `security_functions` WHERE `controller` = 'Students' AND `category` = 'Health';
+
+-- Update Student parent ids
+UPDATE `security_functions` SET `parent_id` = 2000 WHERE `controller` = 'Students' AND `parent_id` <> -1;
+
+-- SET @id := 2011;
+-- SET @funcId := @id - 1;
+-- UPDATE `security_functions` SET `id` = @id WHERE `id` = @funcId;
+-- UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+
+-- Staff Module
+DELETE FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Search';
+
+SET @id := 3000;
+
+-- 1. Overview
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Staff' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'index|view|Accounts.view', `_edit` = 'edit|Accounts.edit', `_add` = 'add', `_delete` = 'remove', `_execute` = 'excel'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 2. Contacts
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Contacts' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Contacts.index|Contacts.view', `_edit` = 'Contacts.edit', `_add` = 'Contacts.add', `_delete` = 'Contacts.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 3. Identities
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Identities' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Identities.index|Identities.view', `_edit` = 'Identities.edit', `_add` = 'Identities.add', `_delete` = 'Identities.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 4. Nationalities
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Nationalities' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Nationalities.index|Nationalities.view', `_edit` = 'Nationalities.edit', `_add` = 'Nationalities.add', `_delete` = 'Nationalities.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 5. Languages
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Languages' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Languages.index|Languages.view', `_edit` = 'Languages.edit', `_add` = 'Languages.add', `_delete` = 'Languages.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 6. Comments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Comments' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Comments.index|Comments.view', `_edit` = 'Comments.edit', `_add` = 'Comments.add', `_delete` = 'Comments.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 7. Special Needs
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Special Needs' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'SpecialNeeds.index|SpecialNeeds.view', `_edit` = 'SpecialNeeds.edit', `_add` = 'SpecialNeeds.add', `_delete` = 'SpecialNeeds.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 8. Awards
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Awards' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Awards.index|Awards.view', `_edit` = 'Awards.edit', `_add` = 'Awards.add', `_delete` = 'Awards.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 9. Attachments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Attachments' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Attachments.index|Attachments.view', `_edit` = 'Attachments.edit', `_add` = 'Attachments.add', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download'
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 10. History
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'History' AND `category` = 'General';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'History.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL, `visible` = 1
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Staff Details
+
+-- 1. Qualifications
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Qualifications' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Qualifications.index|Qualifications.view', `_edit` = 'Qualifications.edit', `_add` = 'Qualifications.add', `_delete` = 'Qualifications.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 2. Trainings
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Training' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Trainings.index|Trainings.view', `_edit` = 'Trainings.edit', `_add` = 'Trainings.add', `_delete` = 'Trainings.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 3. Positions
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Positions' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Positions.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 4. Sections
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Sections' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Sections.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 5. Classes
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Classes' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Classes.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 6. Absence
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Absence' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Absences.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 7. Leaves
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Leave' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Leaves.index|Leaves.view', `_edit` = 'Leaves.edit', `_add` = 'Leaves.add', `_delete` = 'Leaves.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 8. Behaviour
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Behaviour' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Behaviours.index', `_edit` = NULL, `_add` = NULL, `_delete` = NULL, `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 9. Extracurricular
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Extracurricular' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Extracurriculars.index|Extracurriculars.view', `_edit` = 'Extracurriculars.edit', `_add` = 'Extracurriculars.add', `_delete` = 'Extracurriculars.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 10. Employments
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Employment' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Employments.index|Employments.view', `_edit` = 'Employments.edit', `_add` = 'Employments.add', `_delete` = 'Employments.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 11. Salary
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Salary' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Salaries.index|Salaries.view', `_edit` = 'Salaries.edit', `_add` = 'Salaries.add', `_delete` = 'Salaries.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 12. Memberships
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Memberships' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Memberships.index|Memberships.view', `_edit` = 'Memberships.edit', `_add` = 'Memberships.add', `_delete` = 'Memberships.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- 13. Licenses
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Licenses' AND `category` = 'Details';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'Licenses.index|Licenses.view', `_edit` = 'Licenses.edit', `_add` = 'Licenses.add', `_delete` = 'Licenses.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Staff Finance
+
+-- 1. Bank Accounts
+SELECT `id` INTO @funcId FROM `security_functions` WHERE `controller` = 'Staff' AND `name` = 'Bank Accounts' AND `category` = 'Finance';
+UPDATE `security_functions` SET `id` = @id, `order` = @id,
+`_view` = 'BankAccounts.index|BankAccounts.view', `_edit` = 'BankAccounts.edit', `_add` = 'BankAccounts.add', `_delete` = 'BankAccounts.remove', `_execute` = NULL
+WHERE `id` = @funcId;
+UPDATE `security_role_functions` SET `security_function_id` = @id WHERE `security_function_id` = @funcId;
+SET @id := @id + 1;
+
+-- Removing Staff Health permissions
+DELETE FROM `security_functions` WHERE `controller` = 'Staff' AND `category` = 'Health';
+
+-- Update Student parent ids
+UPDATE `security_functions` SET `parent_id` = 3000 WHERE `controller` = 'Staff' AND `parent_id` <> -1;
+
+-- Clean up missing functions from roles
+DELETE FROM `security_role_functions` 
+WHERE NOT EXISTS (SELECT 1 FROM `security_functions` WHERE `security_functions`.`id` = `security_role_functions`.`security_function_id`);
+
+ALTER TABLE `institution_site_staff_absences` CHANGE `first_date_absent` `start_date` DATE NULL NOT NULL ;
+ALTER TABLE `institution_site_staff_absences` CHANGE `last_date_absent` `end_date` DATE NULL NOT NULL ;
+ALTER TABLE `institution_site_staff_absences` CHANGE `start_time_absent` `start_time` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `institution_site_staff_absences` CHANGE `end_time_absent` `end_time` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `institution_site_staff_absences` CHANGE `full_day_absent` `full_day` INT( 1 ) NOT NULL ;
+ALTER TABLE `institution_site_staff_absences` DROP `absence_type` ;
+
+ALTER TABLE `institution_site_student_absences` ADD `institution_site_id` INT( 11 ) NOT NULL AFTER `institution_site_section_id` ;
+
+UPDATE `institution_site_student_absences` 
+JOIN `institution_site_sections` ON `institution_site_sections`.`id` = `institution_site_student_absences`.`institution_site_section_id`
+SET `institution_site_student_absences`.`institution_site_id` = IFNULL(`institution_site_sections`.`institution_site_id`, 0);
+
+-- Absence
+ALTER TABLE `institution_site_student_absences` CHANGE `first_date_absent` `start_date` DATE NULL NOT NULL ;
+ALTER TABLE `institution_site_student_absences` CHANGE `last_date_absent` `end_date` DATE NULL NOT NULL ;
+ALTER TABLE `institution_site_student_absences` CHANGE `start_time_absent` `start_time` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `institution_site_student_absences` CHANGE `end_time_absent` `end_time` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+ALTER TABLE `institution_site_student_absences` CHANGE `full_day_absent` `full_day` INT( 1 ) NOT NULL ;
+ALTER TABLE `institution_site_student_absences` DROP `institution_site_section_id` ;
+ALTER TABLE `institution_site_student_absences` DROP `absence_type` ;
+
+-- 14th July 2015
+
+ALTER TABLE `custom_field_types` ADD `visible` INT(1) NOT NULL DEFAULT '1' AFTER `is_unique`;
+UPDATE `custom_field_types` SET `visible` = 1;
+UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('DATE', 'TIME');
+UPDATE `custom_field_types` SET `value` = 'number_value' WHERE `code` = 'CHECKBOX';
+
+RENAME TABLE `survey_form_questions` TO `survey_forms_questions`;
+ALTER TABLE `survey_forms_questions` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `survey_question_id`;
+ALTER TABLE `survey_forms_questions` CHANGE `name` `name` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+
+-- patch survey_forms
+TRUNCATE TABLE `survey_forms`;
+INSERT INTO `survey_forms` (`id`, `name`, `description`, `custom_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`, `description`, `survey_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_survey_templates`;
+
+-- patch survey_questions
+TRUNCATE TABLE `survey_questions`;
+INSERT INTO `survey_questions` (`id`, `name`, `field_type`, `is_mandatory`, `is_unique`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`,
+  CASE
+    WHEN `type` = 2 THEN 'TEXT'
+      WHEN `type` = 3 THEN 'DROPDOWN'
+      WHEN `type` = 4 THEN 'CHECKBOX'
+      WHEN `type` = 5 THEN 'TEXTAREA'
+      WHEN `type` = 6 THEN 'NUMBER'
+      WHEN `type` = 7 THEN 'TABLE'
+      ELSE '-1'
+  END,
+  `is_mandatory`, `is_unique`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_survey_questions`
+WHERE `type` != 1;
+
+-- patch survey_question_choices
+TRUNCATE TABLE `survey_question_choices`;
+INSERT INTO `survey_question_choices` (`id`, `name`, `is_default`, `visible`, `order`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `value`, `default_option`, `visible`, `order`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_survey_question_choices`;
+
+-- patch survey_table_columns
+TRUNCATE TABLE `survey_table_columns`;
+INSERT INTO `survey_table_columns` (`id`, `name`, `order`, `visible`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`, `order`, `visible`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_survey_table_columns`;
+
+-- patch survey_table_rows
+TRUNCATE TABLE `survey_table_rows`;
+INSERT INTO `survey_table_rows` (`id`, `name`, `order`, `visible`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`, `order`, `visible`, `survey_question_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_survey_table_rows`;
+
+-- patch survey_forms_questions
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS survey_patch
+$$
+CREATE PROCEDURE survey_patch()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE questionId, formId INT(11);
+  DECLARE questionOrder INT(3);
+  DECLARE questionType INT(1);
+  DECLARE questionName VARCHAR(250);
+  DECLARE sectionName VARCHAR(250);
+  DECLARE sfq CURSOR FOR 
+    SELECT `SurveyQuestions`.`id`, `SurveyQuestions`.`name`, `SurveyQuestions`.`type`, `SurveyQuestions`.`order`, `SurveyQuestions`.`survey_template_id`
+    FROM `z_1461_survey_questions` AS `SurveyQuestions`
+    ORDER BY `SurveyQuestions`.`survey_template_id`, `SurveyQuestions`.`order`;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN sfq;
+  TRUNCATE TABLE `survey_forms_questions`;
+
+  read_loop: LOOP
+  FETCH sfq INTO questionId, questionName, questionType, questionOrder, formId;
+  IF done THEN
+    LEAVE read_loop;
+  END IF;
+
+    IF questionType = 1 THEN
+      SET @sectionName = questionName;
+    END IF;
+
+    IF questionType <> 1 THEN
+      INSERT INTO `survey_forms_questions` (`id`, `survey_form_id`, `survey_question_id`, `section`, `order`) VALUES (uuid(), formId, questionId, @sectionName, questionOrder);
+    END IF;
+
+  END LOOP read_loop;
+
+  CLOSE sfq;
+END
+$$
+
+CALL survey_patch
+$$
+
+DROP PROCEDURE IF EXISTS survey_patch
+$$
+
+DELIMITER ;
+
+-- patch institution_site_surveys
+TRUNCATE TABLE `institution_site_surveys`;
+INSERT INTO `institution_site_surveys` (`id`, `status`, `academic_period_id`, `survey_form_id`, `institution_site_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `status`, `academic_period_id`, `survey_template_id`, `institution_site_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_institution_site_surveys`;
+
+-- patch institution_site_survey_answers
+TRUNCATE TABLE `institution_site_survey_answers`;
+INSERT INTO `institution_site_survey_answers` (`id`, `text_value`, `number_value`, `textarea_value`, `survey_question_id`, `institution_site_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT uuid(), `text_value`, `int_value`, `textarea_value`, `survey_question_id`, `institution_site_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_institution_site_survey_answers`;
+
+-- patch institution_site_survey_table_cells
+TRUNCATE TABLE `institution_site_survey_table_cells`;
+INSERT INTO `institution_site_survey_table_cells` (`id`, `text_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_site_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT uuid(), `value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_site_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_1461_institution_site_survey_table_cells`;
+
+ALTER TABLE `student_guardians` CHANGE `security_user_id` `student_user_id` INT(11) NOT NULL COMMENT 'is security_user.id';
+ALTER TABLE `student_guardians` CHANGE `guardian_id` `guardian_user_id` INT(11) NOT NULL COMMENT 'is security_user.id';
+ALTER TABLE `student_guardians` ADD INDEX( `student_user_id`, `guardian_user_id`);
+
+INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`) VALUES (NULL, 'Guardian Prefix', 'guardian_prefix', 'Auto Generated OpenEMIS ID', 'Guardian Prefix', ',0', ',0', '1', '1', '', '');
+
+CREATE TABLE guardian_activities LIKE student_activities;
+
+-- DB version
+UPDATE `config_items` SET `value` = '3.0.1' WHERE `code` = 'db_version';
+-- end DB version

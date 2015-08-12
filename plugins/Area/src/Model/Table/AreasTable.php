@@ -4,6 +4,7 @@ namespace Area\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -63,12 +64,9 @@ class AreasTable extends AppTable {
 		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-
-		$options['conditions'][] = [
-        	$this->aliasField('parent_id') => $parentId
-        ];
+		$query->where([$this->aliasField('parent_id') => $parentId]);
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -145,5 +143,32 @@ class AreasTable extends AppTable {
 		}
 
 		return $attr;
+	}
+
+	// autocomplete used for UserGroups
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->contain('Levels')
+			->where([
+				'OR' => [
+					$this->aliasField('name') . ' LIKE' => $search,
+					$this->aliasField('code') . ' LIKE' => $search,
+					'Levels.name LIKE' => $search
+				]
+			])
+			->order(['Levels.level', $this->aliasField('order')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s (%s)', $obj->level->name, $obj->name, $obj->code),
+				'value' => $obj->id
+			];
+		}
+		return $data;
 	}
 }

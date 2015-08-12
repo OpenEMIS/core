@@ -24,7 +24,7 @@ class StudentAttendancesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 	}
@@ -44,11 +44,10 @@ class StudentAttendancesTable extends AppTable {
 	// Event: ControllerAction.Model.beforeAction
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('openemis_no');
-		$this->ControllerAction->field('security_user_id', ['order' => 2]);
+		$this->ControllerAction->field('student_id', ['order' => 2]);
 		
 		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
-		$this->ControllerAction->field('student_category_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 
 		$tabElements = [
@@ -111,8 +110,12 @@ class StudentAttendancesTable extends AppTable {
 			$types = $this->getSelectOptions('Absence.types');
 			$type = $types['EXCUSED'];
 
-			if (empty($entity->InstitutionSiteStudentAbsence['student_absence_reason_id'])) {
-				$type = $types['UNEXCUSED'];
+			if (empty($entity->StudentAbsences['id'])) {
+				$type = '<i class="fa fa-check"></i>';
+			} else {
+				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+					$type = $types['UNEXCUSED'];
+				}
 			}
 		}
 
@@ -121,7 +124,7 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetReason
 	public function onGetReason(Event $event, Entity $entity) {
-		$reasonId = $entity->InstitutionSiteStudentAbsence['student_absence_reason_id'];
+		$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
 		$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');
 
 		if (!empty($reasonId)) {
@@ -176,9 +179,9 @@ class StudentAttendancesTable extends AppTable {
 
 				$typeOptions = $this->getSelectOptions('Absence.types');
 				if (empty($absenceResult->student_absence_reason)) {
-					$absenceType = 'EXCUSED';
-				} else {
 					$absenceType = 'UNEXCUSED';
+				} else {
+					$absenceType = 'EXCUSED';
 				}
 				if ($absenceResult->full_day == 0) {
 					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
@@ -224,16 +227,29 @@ class StudentAttendancesTable extends AppTable {
 		// End setup periods
 
 		if ($selectedPeriod != 0) {
+			$todayDate = date("Y-m-d");
 			$this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
 			// Setup week options
 			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
 			$weekStr = 'Week %d (%s - %s)';
 			$weekOptions = [];
+			$currentWeek = null;
 			foreach ($weeks as $index => $dates) {
+				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
+					$weekStr = __('Current Week') . ' %d (%s - %s)';
+					$currentWeek = $index;
+				} else {
+					$weekStr = 'Week %d (%s - %s)';
+				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedWeek = $this->queryString('week', $weekOptions);
+			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
+			if ($selectedYear == date("Y") && !is_null($currentWeek)) {
+				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+			} else {
+				$selectedWeek = $this->queryString('week', $weekOptions);
+			}
 			$this->advancedSelectOptions($weekOptions, $selectedWeek);
 			$this->controller->set(compact('weekOptions', 'selectedWeek'));
 			// end setup weeks
@@ -303,8 +319,11 @@ class StudentAttendancesTable extends AppTable {
 			// End setup days
 
 			// Setup section options
+			$userId = $this->Auth->user('id');
+			$AccessControl = $this->AccessControl;
 			$sectionOptions = $Sections
 				->find('list')
+				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 				->where([
 					$Sections->aliasField('institution_site_id') => $institutionId, 
 					$Sections->aliasField('academic_period_id') => $selectedPeriod
@@ -334,7 +353,7 @@ class StudentAttendancesTable extends AppTable {
 			//
 			$settings['pagination'] = false;
 			$query
-				->where([$this->aliasField('security_user_id') => 0]);
+				->where([$this->aliasField('student_id') => 0]);
 
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
@@ -346,17 +365,46 @@ class StudentAttendancesTable extends AppTable {
 	public function findWithAbsence(Query $query, array $options) {
 		$date = $options['date'];
 
-		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.security_user_id'];
+		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.student_id'];
 		if (is_array($date)) {
-			$conditions['StudentAbsences.start_date >= '] = $date[0]->format('Y-m-d');
-			$conditions['StudentAbsences.start_date <= '] = $date[1]->format('Y-m-d');
+			$startDate = $date[0]->format('Y-m-d');
+			$endDate = $date[1]->format('Y-m-d');
+
+			$conditions['OR'] = [
+				'OR' => [
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date >=' => $startDate,
+						'StudentAbsences.start_date <=' => $endDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date <=' => $startDate,
+						'StudentAbsences.end_date >=' => $startDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date <=' => $endDate,
+						'StudentAbsences.end_date >=' => $endDate
+					],
+					[
+						'StudentAbsences.end_date IS NOT NULL',
+						'StudentAbsences.start_date >=' => $startDate,
+						'StudentAbsences.end_date <=' => $startDate
+					]
+				],
+				[
+					'StudentAbsences.end_date IS NULL',
+					'StudentAbsences.start_date <=' => $endDate
+				]
+			];
 		} else {
 			$conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
 			$conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');
 		}
     	return $query
     		->select([
-    			$this->aliasField('security_user_id'), 
+    			$this->aliasField('student_id'), 
     			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',

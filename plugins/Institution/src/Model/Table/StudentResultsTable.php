@@ -131,14 +131,15 @@ class StudentResultsTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforePaginate
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$sectionId = $request->query('section_id');
 		$classId = $request->query('class_id');
 		
-		$options['conditions'][$this->aliasField('status')] = 1;
-		$options['conditions'][$this->aliasField('institution_site_section_id')] = $sectionId;
-		$options['conditions'][$this->aliasField('institution_site_class_id')] = $classId;
-		$options['finder'] = ['withResults' => []];
+		$query
+		->find('withResults')
+		->where([$this->aliasField('status') => 1])
+		->andWhere([$this->aliasField('institution_site_section_id') => $sectionId])
+		->andWhere([$this->aliasField('institution_site_class_id') => $classId]);
 	}
 
 	public function findWithResults(Query $query, array $options) {

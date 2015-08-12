@@ -75,9 +75,10 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $paginateOptions) {
-		$paginateOptions['contain']['InstitutionSiteClasses'] = ['EducationSubjects'];
-		$paginateOptions['conditions'][] = ['institution_site_section_id' => $this->_selectedSection];
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query
+		->contain(['InstitutionSiteClasses.EducationSubjects'])
+		->where([$this->aliasField('institution_site_section_id') => $this->_selectedSection]);
 	}
 
 }

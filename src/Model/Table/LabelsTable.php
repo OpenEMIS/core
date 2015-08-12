@@ -8,12 +8,15 @@ class LabelsTable extends AppTable {
 	public function getLabel($module, $field, $language) {
 		$label = false;
 		$data = $this->findByModuleAndField($module, $field)->first();
-
+		
 		if ($data) {
+			if (empty($data->$language)) {
+				$language = 'en';
+			}
 			$label = ucfirst($data->$language);
 			if (!empty($data->code)) {
 				$label = '(' . $data->code . ') ' . $label;
-			}
+			}		
 		}
 		return $label;
 	}

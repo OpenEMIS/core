@@ -3,6 +3,7 @@ namespace AcademicPeriod\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
 class AcademicPeriodsController extends AppController
 {
@@ -34,7 +35,7 @@ class AcademicPeriodsController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-    public function onInitialize($event, $model) {
+    public function onInitialize(Event $event, Table $model) {
 		$header = __('Academic Period');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

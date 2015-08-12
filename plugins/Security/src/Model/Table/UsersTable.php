@@ -1,13 +1,214 @@
 <?php
 namespace Security\Model\Table;
 
-use User\Model\Table\UsersTable as BaseTable;
+use ArrayObject;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
+use Cake\Utility\Inflector;
+use App\Model\Table\AppTable;
 
-class UsersTable extends BaseTable {
+class UsersTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('security_users');
 		parent::initialize($config);
 		$this->entityClass('User.User');
-		$this->addBehavior('Security.User');
+
+		$this->belongsTo('Genders', ['className' => 'User.Genders']);
+		$this->belongsToMany('SecurityRoles', [
+			'className' => 'Security.SecurityRoles',
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
+
+		$this->belongsToMany('Roles', [
+			'className' => 'Security.SecurityRoles',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_user_id',
+			'targetForeignKey' => 'security_role_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
+
+		$this->hasMany('UserTypes', ['className' => 'Security.SecurityUserTypes', 'dependent' => true]);
+
+		$this->addBehavior('User.User');
+		$this->addBehavior('User.AdvancedNameSearch');
+	}
+
+	// autocomplete used for UserGroups
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('openemis_no') . ' LIKE' => $search,
+					$this->aliasField('first_name') . ' LIKE' => $search,
+					$this->aliasField('middle_name') . ' LIKE' => $search,
+					$this->aliasField('third_name') . ' LIKE' => $search,
+					$this->aliasField('last_name') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('first_name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+				'value' => $obj->id
+			];
+		}
+		return $data;
+	}
+
+	public function beforeAction(Event $event) {
+		$this->fields['photo_content']['visible'] = false;
+		$this->fields['address']['visible'] = false;
+		$this->fields['postal_code']['visible'] = false;
+		$this->fields['address_area_id']['visible'] = false;
+		$this->fields['birthplace_area_id']['visible'] = false;
+
+		if ($this->action != 'index' && $this->action != 'view') {
+			$this->fields['password']['visible'] = true;
+			$this->fields['password']['type'] = 'password';
+			$this->fields['password']['attr']['value'] = '';
+		}
+		if ($this->action == 'edit') {
+			$this->fields['last_login']['visible'] = false;
+		}
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$this->fields['first_name']['visible'] = false;
+		$this->fields['middle_name']['visible'] = false;
+		$this->fields['third_name']['visible'] = false;
+		$this->fields['preferred_name']['visible'] = false;
+		$this->fields['last_name']['visible'] = false;
+		$this->fields['gender_id']['visible'] = false;
+		$this->fields['date_of_birth']['visible'] = false;
+		$this->fields['identity']['visible'] = false;
+
+		$this->ControllerAction->field('name');
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
+		$query->find('notSuperAdmin');
+
+		$search = $this->ControllerAction->getSearchKey();
+
+		if (!empty($search)) {
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+		}
+	}
+
+	public function findNotSuperAdmin(Query $query, array $options) {
+		return $query->where([$this->aliasField('super_admin') => 0]);
+	}
+
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('roles', [
+			'type' => 'role_table', 
+			'order' => 69,
+			'valueClass' => 'table-full-width',
+			'visible' => ['index' => false, 'view' => true, 'edit' => false]
+		]);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->find('notSuperAdmin');
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query) {
+		$options['auto_contain'] = false;
+		$query->contain(['Roles']);
+	}
+
+	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('Groups'), __('Roles')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'roles';
+
+		$Group = TableRegistry::get('Security.SecurityGroups');
+
+		if ($action == 'view') {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$groupId = $obj['_joinData']->security_group_id;
+					$groupEntity = $Group->get($groupId);
+
+					$rowData = [];
+					$rowData[] = $groupEntity->name;
+					$rowData[] = $obj->name;
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
+	}
+
+	public function addBeforeAction(Event $event) {
+		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
+		
+		// first value is for the hidden field value, the second value is for the readonly value
+		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// not saving empty passwords
+		if (empty($data[$this->alias()]['password'])) {
+			unset($data[$this->alias()]['password']);
+		}
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			->allowEmpty('address')
+			->allowEmpty('postal_code')
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->allowEmpty('photo_content')
+			;
+		return $validator;
 	}
 }

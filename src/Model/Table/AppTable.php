@@ -35,19 +35,11 @@ class AppTable extends Table {
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
-			$this->belongsTo('ModifiedUser', [
-				'className' => 'User.Users',
-				'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
-				'foreignKey' => 'modified_user_id'
-			]);
+			$this->belongsTo('ModifiedUser', ['className' => 'User.Users', 'foreignKey' => 'modified_user_id']);
 		}
 
 		if (in_array('created_user_id', $columns) && $_config['Created']) {
-			$this->belongsTo('CreatedUser', [
-				'className' => 'User.Users',
-				'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
-				'foreignKey' => 'created_user_id'
-			]);
+			$this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey' => 'created_user_id']);
 		}
 
 		if (in_array('visible', $columns)) {
@@ -77,7 +69,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
-	public function onPopulateSelectOptions(Event $event, $query) {
+	public function onPopulateSelectOptions(Event $event, Query $query) {
 		return $this->getList($query);
 	}
 
@@ -122,7 +114,11 @@ class AppTable extends Table {
 	public function formatDate(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
-		return $dateObject->format($format);
+        $value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
+        }
+		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'
@@ -138,7 +134,11 @@ class AppTable extends Table {
 	public function formatTime(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('time_format');
-		return $dateObject->format($format);
+		$value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
+        }
+		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
@@ -154,7 +154,11 @@ class AppTable extends Table {
 	public function formatDateTime(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
-		return $dateObject->format($format);
+		$value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
+        }
+		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onGetFieldLabel'
@@ -175,6 +179,7 @@ class AppTable extends Table {
 	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
 		// needs clean up
 		$controller = $event->subject()->_registry->getController();
+		$access = $controller->AccessControl;
 
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
@@ -187,8 +192,23 @@ class AppTable extends Table {
 		];
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
+		if ($action != 'index') {
+			$toolbarButtons['back'] = $buttons['back'];
+			$toolbarButtons['back']['type'] = 'button';
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr'] = $toolbarAttr;
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+
+			if ($action == 'remove' && $buttons['remove']['strategy'] == 'transfer') {
+				$toolbarButtons['list'] = $buttons['index'];
+				$toolbarButtons['list']['type'] = 'button';
+				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
+				$toolbarButtons['list']['attr'] = $toolbarAttr;
+				$toolbarButtons['list']['attr']['title'] = __('List');
+			}
+		}
 		if ($action == 'index') {
-			if ($buttons->offsetExists('add')) {
+			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
 				$toolbarButtons['add'] = $buttons['add'];
 				$toolbarButtons['add']['type'] = 'button';
 				$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
@@ -204,12 +224,6 @@ class AppTable extends Table {
 				];
 			}
 		} else if ($action == 'add' || $action == 'edit') {
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = 'button';
-			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-			$toolbarButtons['back']['attr'] = $toolbarAttr;
-			$toolbarButtons['back']['attr']['title'] = __('Back');
-
 			if ($action == 'edit' && $buttons->offsetExists('index')) {
 				$toolbarButtons['list'] = $buttons['index'];
 				$toolbarButtons['list']['type'] = 'button';
@@ -218,15 +232,8 @@ class AppTable extends Table {
 				$toolbarButtons['list']['attr']['title'] = __('List');
 			}
 		} else if ($action == 'view') {
-			// back button
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = 'button';
-			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-			$toolbarButtons['back']['attr'] = $toolbarAttr;
-			$toolbarButtons['back']['attr']['title'] = __('Back');
-
 			// edit button
-			if ($buttons->offsetExists('edit')) {
+			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
 				$toolbarButtons['edit'] = $buttons['edit'];
 				$toolbarButtons['edit']['type'] = 'button';
 				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -253,31 +260,34 @@ class AppTable extends Table {
 			// }
 		}
 
-		if ($buttons->offsetExists('view')) {
+		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'])) {
 			$indexButtons['view'] = $buttons['view'];
 			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View');
 			$indexButtons['view']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('edit')) {
+		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
 			$indexButtons['edit'] = $buttons['edit'];
 			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit');
 			$indexButtons['edit']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('remove')) {
+		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'])) {
 			$indexButtons['remove'] = $buttons['remove'];
 			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder')) {
+		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 
 		$event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
 		$this->eventManager()->dispatch($event);
 
+		if ($toolbarButtons->offsetExists('back')) {
+			$controller->set('backButton', $toolbarButtons['back']);
+		}
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 
@@ -292,12 +302,14 @@ class AppTable extends Table {
 			$buttons['edit']['url'][1] = $id;
 		}
 		if (array_key_exists('remove', $buttons)) {
-			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+			if ($buttons['remove']['strategy'] == 'cascade') {
 				$buttons['remove']['attr']['data-toggle'] = 'modal';
 				$buttons['remove']['attr']['data-target'] = '#delete-modal';
 				$buttons['remove']['attr']['field-target'] = '#recordId';
 				$buttons['remove']['attr']['field-value'] = $id;
 				$buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+			} else {
+				$buttons['remove']['url'][1] = $id;
 			}
 		}
 		return $buttons;
@@ -319,11 +331,17 @@ class AppTable extends Table {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
-		if (in_array('modified_user_id', $columns)) {
-			$entity->modified_user_id = 1;
+		$userId = null;
+		if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
+			$userId = $_SESSION['Auth']['User']['id'];
 		}
-		if (in_array('created_user_id', $columns)) {
-			$entity->created_user_id = 1;
+		if (!is_null($userId)) {
+			if (in_array('modified_user_id', $columns)) {
+				$entity->modified_user_id = $userId;
+			}
+			if (in_array('created_user_id', $columns)) {
+				$entity->created_user_id = $userId;
+			}
 		}
 	}
 
