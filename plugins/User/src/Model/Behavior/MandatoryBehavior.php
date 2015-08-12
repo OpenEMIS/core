@@ -26,6 +26,11 @@ class MandatoryBehavior extends Behavior {
 			$currModelName = $this->_userRole.$value;
 			$this->_info[$value] = $this->getOptionValue($currModelName);
 		}
+
+		$this->_table->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->_table->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->_table->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->_table->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// pr($this->_info);
 	}
 
