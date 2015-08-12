@@ -191,6 +191,14 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldContactType(Event $event, array $attr, $action, $request) {
+		if (!empty($this->_info)) {
+			if (array_key_exists('Contacts', $this->_info)) {
+				if ($this->_info['Contacts'] == 'Non-Mandatory') {
+					$attr['empty'] = 'Select';
+				}
+			}
+		}
+
 		$contactOptions = TableRegistry::get('User.ContactTypes')
 			->find('list', ['keyField' => 'id', 'valueField' => 'full_contact_type_name'])
 			->find('withContactOptions')
@@ -211,6 +219,14 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldNationality(Event $event, array $attr, $action, $request) {
+		if (!empty($this->_info)) {
+			if (array_key_exists('Nationalities', $this->_info)) {
+				if ($this->_info['Nationalities'] == 'Non-Mandatory') {
+					$attr['empty'] = 'Select';
+				}
+			}
+		}
+
 		$Countries = TableRegistry::get('FieldOption.Countries');
 		$nationalityOptions = $Countries->getList()->toArray();
 
@@ -223,6 +239,14 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldIdentityType(Event $event, array $attr, $action, $request) {
+		if (!empty($this->_info)) {
+			if (array_key_exists('Identities', $this->_info)) {
+				if ($this->_info['Identities'] == 'Non-Mandatory') {
+					$attr['empty'] = 'Select';
+				}
+			}
+		}
+
 		$identityTypeOptions = TableRegistry::get('FieldOption.IdentityTypes')->getList();
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';
@@ -238,11 +262,19 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldSpecialNeed(Event $event, array $attr, $action, $request) {
+		if (!empty($this->_info)) {
+			if (array_key_exists('SpecialNeeds', $this->_info)) {
+				if ($this->_info['SpecialNeeds'] == 'Non-Mandatory') {
+					$attr['empty'] = 'Select';
+				}
+			}
+		}
+
 		$specialNeedOptions = TableRegistry::get('FieldOption.SpecialNeedTypes')->getList();
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_type_id';
 		$attr['options'] = $specialNeedOptions->toArray();
-
+		
 		return $attr;
 	}
 
