@@ -35,26 +35,48 @@ class CheckboxBehavior extends Behavior {
 
     public function onGetCustomCheckboxElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
+		$checkboxOptions = [];
+		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
+			$checkboxOptions[$obj->id] = $obj->name;
+		}
 
-        if ($action == 'index' || $action == 'view') {
-            //$value = $data->$attr['field'];
-        } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
-            $options['type'] = 'multicheckbox';
-
-            $checkboxOptions = [];
-    		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
-				$checkboxOptions[$obj->id] = $obj->name;
+		if ($action == 'view') {
+			if (!is_null($attr['value'])) {
+				$answer = [];
+				foreach ($attr['value'] as $key => $obj) {
+					if ($obj['value'] != 0) {
+						$answer[] = $checkboxOptions[$obj['value']];
+					}
+				}
+				$value = implode(', ', $answer);
 			}
-			$options['options'] = $checkboxOptions;
+		} else if ($action == 'edit') {
+			$form = $event->subject()->Form;
 
-			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
-            $value = $form->input($fieldPrefix.".text_value", $options);
-            $value .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
+	        $html = '';
+	        $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+	        foreach ($checkboxOptions as $key => $value) {
+				$html .= '<div class="input">';
+					$option = ['label' => false, 'class' => 'icheck-input'];
+					if (!is_null($attr['value'])) {
+						foreach ($attr['value'] as $obj) {
+							if ($obj['value'] == $key) {
+								$option['checked'] = 1;
+							}
+						}
+					}
+					$html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
+					$html .= '<label class="checkbox-label">'. $value .'</label>';
+				$html .= '</div>';
+			}
+			$html .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
 			if (!is_null($attr['id'])) {
-                $value .= $form->hidden($fieldPrefix.".id", ['value' => $attr['id']]);
+                $html .= $form->hidden($fieldPrefix.".id", ['value' => $attr['id']]);
             }
-        }
+
+			$attr['output'] = $html;
+			$value = $event->subject()->renderElement('CustomField.checkbox', ['attr' => $attr]);
+		}
 
         return $value;
     }

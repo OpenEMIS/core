@@ -23,56 +23,6 @@ class InstitutionSiteStaffTable extends AppTable {
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
-        $this->addBehavior('HighChart', [
-        	'number_of_staff' => [
-        		'_function' => 'getNumberOfStaff',
-				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Position Type']],
-				'yAxis' => ['title' => ['text' => 'Total']]
-			]
-		]);
-
-	}
-
-	public function findByPosition(Query $query, array $options) {
-		if (array_key_exists('InstitutionSitePositions.id', $options)) {
-			return $query->where([$this->aliasField('institution_site_position_id') => $options['InstitutionSitePositions.id']]);
-		} else {
-			return $query;
-		}
-	}
-
-	public function findByInstitution(Query $query, array $options) {
-		if (array_key_exists('Institutions.id', $options)) {
-			return $query->where([$this->aliasField('institution_site_id') => $options['Institutions.id']]);
-		} else {
-			return $query;
-		}
-	}
-
-	public function findWithBelongsTo(Query $query, array $options) {
-		return $query
-			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
-	}
-
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$timeNow = strtotime("now");
-		$sessionVar = $this->alias().'.add.'.strtotime("now");
-		$this->Session->write($sessionVar, $this->request->data);
-
-		if (!$entity->errors()) {
-			$event->stopPropagation();
-			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
-		}
-	}
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
-		
-		if ($entity->isNew()) {
-			if (isset($entity->FTE)) {
-				$entity->FTE = $entity->FTE/100;
-			}
-		}
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -90,85 +40,120 @@ class InstitutionSiteStaffTable extends AppTable {
 		;
 	}
 
-	public function getNumberOfStaff($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions['InstitutionSiteStaff.'.$key] = $value;
-		}
-
-		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
-		$currentYearId = $AcademicPeriod->getCurrent();
-		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
-
-		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
-		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
-		$staffsByPositionConditions['OR'] = array(
-			'OR' => array(
-				array(
-					'InstitutionSiteStaff.end_year IS NOT NULL',
-					'InstitutionSiteStaff.start_year <= "' . $currentYear . '"',
-					'InstitutionSiteStaff.end_year >= "' . $currentYear . '"'
-				)
-			),
-			array(
-				'InstitutionSiteStaff.end_year IS NULL',
-				'InstitutionSiteStaff.start_year <= "' . $currentYear . '"'
-			)
-		);
-		$query = $this->find();
-		$staffByPositions = $query
-			->contain(['Users.Genders','Positions'])
-			->select([
-				'Positions.type',
-				'Users.id',
-				'Genders.name',
-				'total' => $query->func()->count($this->aliasField('id'))
-			])
-			->where($staffsByPositionConditions)
-			->group([
-				'Positions.type', 'Genders.name'
-			])
-			->order(
-				'Positions.type'
-			)
-			->toArray();
-
-		$positionTypes = array(
-			0 => __('Non-Teaching'),
-			1 => __('Teaching')
-		);
-
-		$genderOptions = $this->Users->Genders->getList();
-		$dataSet = array();
-		foreach ($genderOptions as $key => $value) {
-			$dataSet[$value] = array('name' => __($value), 'data' => []);
-		}
-		foreach ($dataSet as $key => $obj) {
-			foreach ($positionTypes as $id => $name) {
-				$dataSet[$key]['data'][$id] = 0;
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		
+		if ($entity->isNew()) {
+			if (isset($entity->FTE)) {
+				$entity->FTE = $entity->FTE/100;
 			}
 		}
-		foreach ($staffByPositions as $key => $staffByPosition) {
-			if ($staffByPosition->has('position')) {
-				$positionType = $staffByPosition->position->type;
-				$staffGender = $staffByPosition->user->gender->name;
-				$StaffTotal = $staffByPosition->total;
-
-				foreach ($dataSet as $dkey => $dvalue) {
-					if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
-						$dataSet[$dkey]['data'][$positionType] = 0;
-					}
-				}
-				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
-			}
-		}
-
-		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
-		$params['options']['xAxis']['categories'] = array_values($positionTypes);
-		$params['dataSet'] = $dataSet;
-
-		return $params;
 	}
+
+
+/******************************************************************************************************************
+**
+** add action functions
+**
+******************************************************************************************************************/
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$timeNow = strtotime("now");
+		$sessionVar = $this->alias().'.add.'.strtotime("now");
+		$this->Session->write($sessionVar, $this->request->data);
+
+		if (!$entity->errors()) {
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
+		}
+	}
+
+
+/******************************************************************************************************************
+**
+** finders functions to be used with query
+**
+******************************************************************************************************************/
+	/**
+	 * $options['type'] == 0 > non-teaching
+	 * $options['type'] == 1 > teaching
+	 * refer to OptionsTrait
+	 */
+	public function findByPositions(Query $query, array $options) {
+		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$positions = $this->Positions->find('list')
+						->find('withBelongsTo')
+				        ->where([
+				        	'Institutions.id' => $options['Institutions.id'],
+				        	$this->Positions->aliasField('type') => $options['type']
+				        ])
+				        ->toArray();
+			$positions = array_keys($positions);
+			return $query->where([$this->aliasField('institution_site_position_id IN') => $positions]);
+		} else {
+			return $query;
+		}
+	}
+
+	public function findByInstitution(Query $query, array $options) {
+		if (array_key_exists('Institutions.id', $options)) {
+			return $query->where([$this->aliasField('institution_site_id') => $options['Institutions.id']]);
+		} else {
+			return $query;
+		}
+	}
+
+	/**
+	 * currently available values:
+	 * 	Full-Time
+	 * 	Part-Time
+	 * 	Contract
+	 */
+	public function findByType(Query $query, array $options) {
+		if (array_key_exists('type', $options)) {
+			$types = $this->StaffTypes->getList()->toArray();
+			if (is_array($types) && in_array($options['type'], $types)) {
+				$typeId = array_search($options['type'], $types);
+				return $query->where([$this->aliasField('staff_type_id') => $typeId]);
+			} else {
+				return $query;
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	/**
+	 * currently available values:
+	 * 	Current
+	 * 	Transferred
+	 * 	Resigned
+	 * 	Leave
+	 * 	Terminated
+	 */
+	public function findByStatus(Query $query, array $options) {
+		if (array_key_exists('status', $options)) {
+			$statuses = $this->StaffStatuses->getList()->toArray();
+			if (is_array($statuses) && in_array($options['status'], $statuses)) {
+				$statusId = array_search($options['status'], $statuses);
+				return $query->where([$this->aliasField('staff_status_id') => $statusId]);
+			} else {
+				return $query;
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	public function findWithBelongsTo(Query $query, array $options) {
+		return $query
+			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
+	}
+
+
+/******************************************************************************************************************
+**
+** essential functions
+**
+******************************************************************************************************************/
 
 }

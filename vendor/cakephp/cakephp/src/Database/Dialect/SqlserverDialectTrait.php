@@ -99,9 +99,9 @@ trait SqlserverDialectTrait
     protected function _pagingSubquery($original, $limit, $offset)
     {
         $field = '_cake_paging_._cake_page_rownum_';
+        $order = $original->clause('order') ?: new OrderByExpression('(SELECT NULL)');
 
         $query = clone $original;
-        $order = $query->clause('order') ?: new OrderByExpression('NULL');
         $query->select([
                 '_cake_page_rownum_' => new UnaryExpression('ROW_NUMBER() OVER', $order)
             ])->limit(null)
@@ -113,10 +113,11 @@ trait SqlserverDialectTrait
             ->from(['_cake_paging_' => $query]);
 
         if ($offset) {
-            $outer->where(["$field >" => $offset]);
+            $outer->where(["$field > " . (int)$offset]);
         }
         if ($limit) {
-            $outer->where(["$field <=" => (int)$offset + (int)$limit]);
+            $value = (int)$offset + (int)$limit;
+            $outer->where(["$field <= $value"]);
         }
 
         // Decorate the original query as that is what the
@@ -235,6 +236,38 @@ trait SqlserverDialectTrait
                 break;
             case 'NOW':
                 $expression->name('GETUTCDATE');
+                break;
+            case 'EXTRACT':
+                $expression->name('DATEPART')->type(' ,');
+                break;
+            case 'DATE_ADD':
+                $params = [];
+                $visitor = function ($p, $key) use (&$params) {
+                    if ($key === 0) {
+                        $params[2] = $p;
+                    } else {
+                        $valueUnit = explode(' ', $p);
+                        $params[0] = rtrim($valueUnit[1], 's');
+                        $params[1] = $valueUnit[0];
+                    }
+                    return $p;
+                };
+                $manipulator = function ($p, $key) use (&$params) {
+                    return $params[$key];
+                };
+
+                $expression
+                    ->name('DATEADD')
+                    ->type(',')
+                    ->iterateParts($visitor)
+                    ->iterateParts($manipulator)
+                    ->add([$params[2] => 'literal']);
+                break;
+            case 'DAYOFWEEK':
+                $expression
+                    ->name('DATEPART')
+                    ->type(' ')
+                    ->add(['weekday, ' => 'literal'], [], true);
                 break;
         }
     }

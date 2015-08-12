@@ -12,11 +12,12 @@ use Cake\ORM\Query;
 class StaffBehavioursTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		//$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
+
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);

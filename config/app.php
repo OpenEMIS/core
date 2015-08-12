@@ -9,7 +9,7 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    'debug' => true,
+    'debug' => false,
 
     /**
      * Configure basic information about the application.
@@ -141,7 +141,8 @@ return [
      */
     'Error' => [
         'errorLevel' => E_ALL & ~E_DEPRECATED,
-        'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
+        'exceptionRenderer' => 'App\Error\AppExceptionRenderer',
+        //'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
         'skipLog' => [],
         'log' => true,
         'trace' => true,

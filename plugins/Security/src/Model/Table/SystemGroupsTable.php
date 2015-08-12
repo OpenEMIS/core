@@ -7,17 +7,39 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
+use App\Model\Traits\HtmlTrait;
 
 class SystemGroupsTable extends AppTable {
 	use MessagesTrait;
+	use HtmlTrait;
 
 	public function initialize(array $config) {
 		$this->table('security_groups');
 		parent::initialize($config);
 
-		$this->hasOne('Institutions', ['className' => 'Institution.Institutions']);
+		$this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
+		$this->hasOne('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'security_group_id']);
+		$this->belongsToMany('Users', [
+			'className' => 'Security.Users',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_group_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
+	}
+
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		if ($action == 'edit') {
+			$includes['autocomplete'] = [
+				'include' => true, 
+				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+			];
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -35,6 +57,16 @@ class SystemGroupsTable extends AppTable {
 		
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
+
+		$roleOptions = $this->Roles->find('list')->toArray();
+		$this->ControllerAction->field('users', [
+			'type' => 'user_table', 
+			'valueClass' => 'table-full-width',
+			'roleOptions' => $roleOptions,
+			'visible' => ['index' => false, 'view' => true, 'edit' => true]
+		]);
+
+		$this->ControllerAction->setFieldOrder(['name', 'users']);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -42,23 +74,141 @@ class SystemGroupsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['name', 'no_of_users']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, ArrayObject $options) {
-		$query = $request->query;
-		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
-			$options['order'][$this->aliasField('name')] = 'asc';
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$queryParams = $request->query;
+
+		$query->find('inInstitutions');
+
+		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+			$query->order([$this->aliasField('name') => 'asc']);
 		}
-		$options['finder'] = ['inInstitutions' => []];
+
+		// filter groups by users permission
+		if ($this->Auth->user('super_admin') != 1) {
+			$userId = $this->Auth->user('id');
+			$query->innerJoin(
+				['GroupUsers' => 'security_group_users'],
+				[
+					'GroupUsers.security_group_id = ' . $this->aliasField('id'),
+					'GroupUsers.security_user_id = ' . $userId
+				]
+			);
+			$query->group([$this->aliasField('id')]);
+		}
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Users']);
+	}
+
+	public function editBeforeAction(Event $event) {
+		$this->ControllerAction->field('name', ['type' => 'readonly']);
+	}
+
+	public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Role')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'users';
+
+		if ($action == 'index') {
+			// not showing
+		} else if ($action == 'view') {
+			$roleOptions = $attr['roleOptions'];
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$rowData = [];
+					$rowData[] = $obj->openemis_no;
+					$rowData[] = $obj->name;
+					$roleId = $obj->_joinData->security_role_id;
+
+					if (array_key_exists($roleId, $roleOptions)) {
+						$rowData[] = $roleOptions[$roleId];
+					} else {
+						$this->log(__METHOD__ . ': Orphan record found for role id: ' . $roleId, 'debug');
+						$rowData[] = '';
+					}
+					$tableCells[] = $rowData;
+				}
+			}
+		} else if ($action == 'edit') {
+			$tableHeaders[] = ''; // for delete column
+			$Form = $event->subject()->Form;
+
+			$user = $this->Auth->user();
+			$userId = $user['id'];
+			if ($user['super_admin'] == 1) { // super admin will show all roles
+				$userId = null;
+			}
+			$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId);
+
+			if ($this->request->is(['get'])) {
+				if (!array_key_exists($alias, $this->request->data)) {
+					$this->request->data[$alias] = [$key => []];
+				} else {
+					$this->request->data[$alias][$key] = [];
+				}
+
+				$associated = $entity->extractOriginal([$key]);
+				if (!empty($associated[$key])) {
+					foreach ($associated[$key] as $i => $obj) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $obj->id,
+							'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+						];
+					}
+				}
+			}
+			// refer to addEditOnAddUser for http post
+			if ($this->request->data("$alias.$key")) {
+				$associated = $this->request->data("$alias.$key");
+
+				foreach ($associated as $i => $obj) {
+					$joinData = $obj['_joinData'];
+					$rowData = [];
+					$name = $joinData['name'];
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+					$rowData[] = $joinData['openemis_no'];
+					$rowData[] = $name;
+					$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
+					$rowData[] = $this->getDeleteButton();
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
+	}
+
+	public function addEditOnAddUser(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+
+		if ($data->offsetExists('user_id')) {
+			$id = $data['user_id'];
+			try {
+				$obj = $this->Users->get($id);
+
+				if (!array_key_exists('users', $data[$alias])) {
+					$data[$alias]['users'] = [];
+				}
+				$data[$alias]['users'][] = [
+					'id' => $obj->id,
+					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+				];
+			} catch (RecordNotFoundException $ex) {
+				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
+			}
+		}
 	}
 
 	public function findInInstitutions(Query $query, array $options) {
-		$query->join([
-			[
-				'table' => 'institution_sites',
-				'alias' => 'Institutions',
-				'type' => 'INNER',
-				'conditions' => ['Institutions.security_group_id = SystemGroups.id']
-			]
-		]);
+		$query->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.security_group_id = SystemGroups.id']);
 		return $query;
 	}
 
@@ -69,5 +219,77 @@ class SystemGroupsTable extends AppTable {
 		$count = $GroupUsers->findAllBySecurityGroupId($id)->count();
 
 		return $count;
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// in case user has been added with the same role twice, we need to filter it
+		$this->filterDuplicateUserRoles($data);
+
+		// by default association will be saved automatically, we are turning it off so it will save successfully
+		$options['associated'] = false;
+	}
+
+	// same logic also in UserGroups, may consider moving it into a behavior
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// users can't save properly using associated method
+		// until we find a better solution, saving of users for groups will be done in afterSave as of now
+		$id = $entity->id;
+		$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$GroupUsers->deleteAll(['security_group_id' => $id]);
+
+		if ($entity->has('users')) {
+			$users = $entity->users;
+			if (!empty($users)) {
+				foreach ($users as $user) {
+					$query = $GroupUsers->find()->where([
+						$GroupUsers->aliasField('security_user_id') => $user['_joinData']['security_user_id'],
+						$GroupUsers->aliasField('security_role_id') => $user['_joinData']['security_role_id'],
+						$GroupUsers->aliasField('security_group_id') => $id
+					]);
+
+					if ($query->count() == 0) {
+						$newEntity = $GroupUsers->newEntity([
+							'security_user_id' => $user['_joinData']['security_user_id'],
+							'security_role_id' => $user['_joinData']['security_role_id'],
+							'security_group_id' => $id
+						]);
+
+						$GroupUsers->save($newEntity);
+					}
+				}
+			}
+		}
+	}
+
+	// also exists in UserGroups
+	private function filterDuplicateUserRoles(ArrayObject $data) {
+		if (array_key_exists('users', $data[$this->alias()])) {
+			$roles = [];
+
+			$users = $data[$this->alias()]['users'];
+			foreach ($users as $i => $user) {
+				$joinData = $user['_joinData'];
+				$userRole = $joinData['security_user_id'] . ' - ' . $joinData['security_role_id'];
+				if (in_array($userRole, $roles)) {
+					unset($data[$this->alias()]['users'][$i]);
+				} else {
+					$roles[] = $userRole;
+				}
+			}
+		} else {
+			$data[$this->alias()]['users'] = [];
+		}
+	}
+
+	public function ajaxUserAutocomplete() {
+		$this->controller->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$term = $this->request->query['term'];
+			$data = $this->Users->autocomplete($term);
+			echo json_encode($data);
+			die;
+		}
 	}
 }

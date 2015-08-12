@@ -11,11 +11,17 @@ trait OptionsTrait {
 			'Staff' => [
 				'position_types' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
 			],
+			'Position' => [
+				'types' => ['FULL_TIME' => __('Full-Time'), 'PART_TIME' => __('Part-Time')]
+			],
 			'Absence' => [
 				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
 			],
 			'Assessments' => [
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')],
+				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
+			],
+			'Surveys' => [
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			],
 			'Rubrics' => [

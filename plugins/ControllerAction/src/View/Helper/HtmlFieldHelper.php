@@ -1,12 +1,14 @@
 <?php
 namespace ControllerAction\View\Helper;
 
+use ArrayObject;
 use Cake\View\UrlHelper;
 use Cake\Event\Event;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 
 use Cake\View\Helper\IdGeneratorTrait;
 
@@ -80,16 +82,29 @@ class HtmlFieldHelper extends Helper {
 		return $html;
 	}
 
-	public function includes() {
-		foreach ($this->includes as $include) {
+	public function includes($table=null, $action) {
+		$includes = new ArrayObject($this->includes);
+
+		if (!is_null($table)) {
+			// trigger event to update inclusion of css/js files
+			$eventKey = 'ControllerAction.Model.onUpdateIncludes';
+			$event = $this->dispatchEvent($table, $eventKey, null, [$includes, $action]);
+		}
+
+		foreach ($includes as $include) {
 			if ($include['include']) {
 				if (array_key_exists('css', $include)) {
-					echo $this->Html->css($include['css'], ['block' => true]);
+					if (is_array($include['css'])) {
+						foreach ($include['css'] as $css) {
+							echo $this->Html->css($css, ['block' => true]);
+						}
+					} else {
+						echo $this->Html->css($include['css'], ['block' => true]);
+					}
 				}
 				if (array_key_exists('js', $include)) {
 					if (is_array($include['js'])) {
 						foreach ($include['js'] as $js) {
-
 							echo $this->Html->script($js, ['block' => true]);
 						}
 					} else {
@@ -190,6 +205,13 @@ class HtmlFieldHelper extends Helper {
 				$value = $data->$field;
 			}
 		} else if ($action == 'edit') {
+			if (array_key_exists('empty', $attr)) {
+				if ($attr['empty'] === true) {
+					$options['empty'] = '-- ' . __('Select') . ' --';
+				} else {
+					$options['empty'] = '-- ' . __($attr['empty']) . ' --';
+				}
+			}
 			if (isset($attr['options'])) {
 				if (empty($attr['options'])) {
 					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
@@ -269,8 +291,12 @@ class HtmlFieldHelper extends Helper {
 
 	public function readonly($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-		if ($action == 'view') {
-			$value = $attr['value'];
+		if ($action == 'view' || $action == 'index') {
+			if (array_key_exists('value', $attr)) {
+				$value = $attr['value'];
+			} else {
+				$value = $data->$attr['field'];
+			}
 		} else if ($action == 'edit') {
 			$value = $this->disabled($action, $data, $attr, $options);
 			unset($options['disabled']);
@@ -315,7 +341,7 @@ class HtmlFieldHelper extends Helper {
 			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
 			echo $jsFunc;
 
-			if(!empty($src)){
+			if (!empty($src)) {
 				$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:60px;" /></div>' : $src;
 			}	
 		} else if ($action == 'edit') {
@@ -369,9 +395,9 @@ class HtmlFieldHelper extends Helper {
 		$attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
 		
 		if ($action == 'view' || $action == 'index') {
-			$value = $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		} else if ($action == 'edit') {
-			$value = $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		}
 		return $value;
 	}
@@ -448,10 +474,18 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
-			if (!is_null($value)) {
-				$attr['value'] = date('d-m-Y', strtotime($value));
-			} else if ($attr['default_date']) {
-				$attr['value'] = date('d-m-Y');
+			if (!array_key_exists('value', $attr)) {
+				if (!is_null($value)) {
+					if ($value instanceof Time) {
+						$attr['value'] = $value->format('d-m-Y');
+					} else {
+						$attr['value'] = date('d-m-Y', strtotime($value));
+					}
+				} else if ($attr['default_date']) {
+					$attr['value'] = date('d-m-Y');
+				}
+			} else {
+				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
@@ -530,8 +564,10 @@ class HtmlFieldHelper extends Helper {
 				foreach ($value as $obj) {
 					$chosenSelectList[] = $obj->name;
 				}
+				$value = implode(', ', $chosenSelectList);
+			} else {
+				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}
-			$value = implode(', ', $chosenSelectList);
 		} else if ($action == 'edit') {
 			$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
 			$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';

@@ -96,7 +96,7 @@ class StudentBehavioursTable extends AppTable {
 			$students = $Students
 							->findAllByInstitutionSiteSectionId($selectedSection)
 							->contain(['Users'])
-							->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+							->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 							->toArray();
 		
 			$existingStudents = is_array($students) ? array_keys($students) : array();	
@@ -179,11 +179,6 @@ class StudentBehavioursTable extends AppTable {
 			}
 		]);
 
-		if ($request->is(['post', 'put'])) {
-			$selectedPeriod = $this->request->data($this->aliasField('academic_period'));
-		}
-		$request->query['period'] = $selectedPeriod;
-
 		$attr['options'] = $periodOptions;
 		$attr['onChangeReload'] = true;
 		if ($action != 'add') {
@@ -260,7 +255,7 @@ class StudentBehavioursTable extends AppTable {
 				$students = $Students
 					->findAllByInstitutionSiteSectionId($sectionId)
 					->contain(['Users'])
-					->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+					->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 					->toArray();
 			}
 			
