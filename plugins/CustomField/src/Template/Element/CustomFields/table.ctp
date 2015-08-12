@@ -61,11 +61,11 @@
 	<div class="input">
 		<label>Create Table</label>
 		<div class="table-toolbar">
-			<button onclick="$('#reload').val('addRow').click();" class="btn btn-default btn-xs">
+			<button onclick="$('#reload').val('addRow').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i> 
 				<span><?= __('Add Rows')?></span>
 			</button>
-			<button onclick="$('#reload').val('addColumn').click();" class="btn btn-default btn-xs">
+			<button onclick="$('#reload').val('addColumn').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i> 
 				<span><?= __('Add Columns')?></span>
 			</button>
