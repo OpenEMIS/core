@@ -2,11 +2,12 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 class TransferRequestsTable extends AppTable {
 	public function initialize(array $config) {
@@ -93,8 +94,18 @@ class TransferRequestsTable extends AppTable {
 		$entity->security_user_id = $student->student_id;
 		$entity->academic_period_id = $student->academic_period_id;
 		$entity->education_grade_id = $student->education_grade_id;
-		$entity->start_date = date('Y-m-d', strtotime($student->start_date));
-		$entity->end_date = date('Y-m-d', strtotime($student->end_date));
+		if ($student->start_date instanceof Time) {
+			$entity->start_date = $student->start_date->format('Y-m-d');
+		} else {
+			$entity->start_date = date('Y-m-d', strtotime($student->start_date));
+		}
+
+		if ($student->end_date instanceof Time) {
+			$entity->end_date = $student->end_date->format('Y-m-d');
+		} else {
+			$entity->end_date = date('Y-m-d', strtotime($student->end_date));
+		}
+		
 		$entity->previous_institution_id = $institutionId;
 
 		$this->request->data[$this->alias()]['security_user_id'] = $entity->security_user_id;
