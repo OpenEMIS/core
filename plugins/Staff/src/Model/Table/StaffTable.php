@@ -49,20 +49,11 @@ class StaffTable extends AppTable {
 			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
-		// $this->addBehavior('HighChart', [
-		// 	'number_of_students_by_year' => [
-		// 		'_function' => 'getNumberOfStudentsByYear',
-		// 		'chart' => ['type' => 'column', 'borderWidth' => 1],
-		// 		'xAxis' => ['title' => ['text' => 'Years']],
-		// 		'yAxis' => ['title' => ['text' => 'Total']]
-		// 	],
-		// 	'institution_site_student_gender' => [
-		// 		'_function' => 'getNumberOfStudentsByGender'
-		// 	],
-		// 	'institution_site_student_age' => [
-		// 		'_function' => 'getNumberOfStudentsByAge'
-		// 	]
-		// ]);
+		$this->addBehavior('HighChart', [
+			'institution_staff_gender' => [
+				'_function' => 'getNumberOfStaffByGender'
+			]
+		]);
 
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
@@ -134,29 +125,29 @@ class StaffTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
-			// $userTypes = TableRegistry::get('Security.SecurityUserTypes');
-			// $institutionSiteArray = [];
+			$userTypes = TableRegistry::get('Security.SecurityUserTypes');
+			$institutionSiteArray = [];
 
-			// // Get total number of students
-			// $count = $userTypes->find()
-			// 	->distinct(['security_user_id'])
-			// 	->where([$userTypes->aliasField('user_type') => UserTypes::STAFF])
-			// 	->count(['security_user_id']);
+			// Get total number of students
+			$count = $userTypes->find()
+				->distinct(['security_user_id'])
+				->where([$userTypes->aliasField('user_type') => UserTypes::STAFF])
+				->count(['security_user_id']);
 
-			// // Get the gender for all students
-			// $institutionSiteArray['Gender'] = $this->getDonutChart('institution_site_student_gender', ['key' => 'Gender']);
+			// Get the gender for all students
+			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_staff_gender', ['key' => 'Gender']);
 
-			// $indexDashboard = 'dashboard';
-			// $this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	  //           'name' => $indexDashboard,
-	  //           'data' => [
-	  //           	'model' => 'students',
-	  //           	'modelCount' => $count,
-	  //           	'modelArray' => $institutionSiteArray,
-	  //           ],
-	  //           'options' => [],
-	  //           'order' => 1
-	  //       ];
+			$indexDashboard = 'dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $count,
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
 	    }
 	}
 
@@ -236,103 +227,25 @@ class StaffTable extends AppTable {
 		return $buttons;
 	}
 
-	// used by highchart
-	public function getNumberOfStudentsByYear($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions['InstitutionSiteStudents.'.$key] = $value;
-		}
+	// Function use by the mini dashboard (For Staff.Staff)
+	public function getNumberOfStaffByGender($params=[]) {
 
-		$periodConditions = $_conditions;
-		$query = $this->find();
-		$periodResult = $query
-			->select([
-				'min_year' => $query->func()->min('InstitutionSiteStudents.start_year'),
-				'max_year' => $query->func()->max('InstitutionSiteStudents.end_year')
-			])
-			->where($periodConditions)
-			->first();
-		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
-		$currentPeriodId = $AcademicPeriod->getCurrent();
-		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
-		$thisYear = $currentPeriodObj->end_year;
-		$minYear = $thisYear - 2;
-		$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
-		$maxYear = $thisYear;
-
-		$years = [];
-
-		$genderOptions = $this->Genders->getList();
-		$dataSet = [];
-		foreach ($genderOptions as $key => $value) {
-			$dataSet[$value] = ['name' => __($value), 'data' => []];
-		}
-
-		$studentsByYearConditions = array('Genders.name IS NOT NULL');
-		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
-
-		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
-			$years[$currentYear] = $currentYear;
-			$studentsByYearConditions['OR'] = [
-				[
-					'InstitutionSiteStudents.end_year IS NOT NULL',
-					'InstitutionSiteStudents.start_year <= "' . $currentYear . '"',
-					'InstitutionSiteStudents.end_year >= "' . $currentYear . '"'
-				]
-			];
-
-			$query = $this->find();
-			$studentsByYear = $query
-				->contain(['Users.Genders'])
-				->select([
-					'Users.first_name',
-					'Genders.name',
-					'total' => $query->func()->count('InstitutionSiteStudents.id')
-				])
-				->where($studentsByYearConditions)
-				->group('Genders.name')
-				->toArray()
-				;
- 			foreach ($dataSet as $key => $value) {
- 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
- 					$dataSet[$key]['data'][$currentYear] = 0;
- 				}				
-			}
-
-			foreach ($studentsByYear as $key => $studentByYear) {
-				$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
-				$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
-				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
-			}
-		}
-
-		$params['dataSet'] = $dataSet;
-		
-		return $params;
-	}
-
-	// Function use by the mini dashboard (For Institution Students and Students)
-	public function getNumberOfStudentsByGender($params=[]) {
 		$institutionSiteRecords = $this->find();
-		$institutionSiteStudentCount = $institutionSiteRecords
+		$institutionSiteStaffCount = $institutionSiteRecords
 			->select([
-				'count' => $institutionSiteRecords->func()->count('DISTINCT Students.id'),	
+				'count' => $institutionSiteRecords->func()->count('DISTINCT '.$this->aliasField('id')),	
 				'gender' => 'Genders.name'
 			])
 			->contain(['Genders'])
 			->innerJoin(['UserTypes' => 'security_user_types'], [
-				'UserTypes.security_user_id = Students.id',
-				'UserTypes.user_type' => UserTypes::STUDENT
+				'UserTypes.security_user_id = '.$this->aliasField('id'),
+				'UserTypes.user_type' => UserTypes::STAFF
 			])
 			->group('gender');
 
-		if (!empty($params['institution_site_id'])) {
-			$institutionSiteStudentCount->where(['institution_site_id' => $params['institution_site_id']]);
-		}	
 		// Creating the data set		
 		$dataSet = [];
-		foreach ($institutionSiteStudentCount->toArray() as $value) {
+		foreach ($institutionSiteStaffCount->toArray() as $value) {
 			//Compile the dataset
 			$dataSet[] = [$value['gender'], $value['count']];
 		}
