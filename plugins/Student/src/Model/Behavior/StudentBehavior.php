@@ -40,28 +40,21 @@ class StudentBehavior extends Behavior {
 		$query->contain(['Users', 'Institutions', 'StudentStatuses']);
 
 		$search = $this->_table->ControllerAction->getSearchKey();
-		$searchParams = explode(' ', $search);
-		foreach ($searchParams as $key => $value) {
-			if (empty($searchParams[$key])) {
-				unset($searchParams[$key]);
-			}
-		}
 
 		if (!empty($search)) {
-			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-			foreach ($searchParams as $key => $value) {
-				$searchString = '%' . $value . '%';
-				$query->orWhere(['Users.first_name LIKE' => $searchString]);
-				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
-				$query->orWhere(['Users.third_name LIKE' => $searchString]);
-				$query->orWhere(['Users.last_name LIKE' => $searchString]);
-			}
+			$query = $this->_table->addSearchConditions($query, ['searchTerm' => $search]);
 			
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $request->session();
 				$institutionId = $session->read('Institutions.id');
 				$query->andWhere(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 			}
+		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
+			$query->where(['InstitutionSiteStudents.institution_site_id IN ' => $institutionIds]);
 		}
 	}
 
@@ -129,64 +122,6 @@ class StudentBehavior extends Behavior {
 			'name', 'default_identity_type', 'institution', 'student_status']);
 	}
 
-	// Logic for the mini dashboard
-	public function afterAction(Event $event) {
-		$alias = $this->_table->alias();
-		$table = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$institutionSiteArray = [];
-		switch($alias) {
-			// For Institution Students
-			case "Students":
-				$session = $this->_table->Session;
-				$institutionId = $session->read('Institutions.id');
-
-				// Get number of student in institution
-				$studentCount = $table->find()
-					->where([$table->aliasField('institution_site_id') => $institutionId])
-					->distinct(['security_user_id'])
-					->count(['security_user_id']);
-
-				// Get Gender
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', 
-					['institution_site_id' => $institutionId, 'key'=>'Gender']);
-
-				// Get Age
-				$institutionSiteArray['Age'] = $table->getDonutChart('institution_site_student_age', 
-					['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Age']);
-
-				// Get Grades
-				$table = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-				$institutionSiteArray['Grade'] = $table->getDonutChart('institution_site_section_student_grade', 
-					['conditions' => ['institution_site_id' => $institutionId], 'key'=>'Grade']);
-				break;
-
-			// For Students
-			case "Users":
-				// Get total number of students
-				$studentCount = $table->find()
-					->distinct(['security_user_id'])
-					->count(['security_user_id']);
-
-				// Get the gender for all students
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_student_gender', ['key'=>'Gender']);
-				break;
-		}
-
-		if ($this->_table->action == 'index') {
-			$indexDashboard = 'dashboard';
-			$this->_table->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'students',
-	            	'modelCount' => $studentCount,
-	            	'modelArray' => $institutionSiteArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
-	    }
-	}
-
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// this method should rightfully be in institution userbehavior - need to move this in an issue after guardian module is in prod
 		if (array_key_exists('new', $this->_table->request->query)) {
@@ -245,10 +180,9 @@ class StudentBehavior extends Behavior {
 				if ($this->_table->Session->check($sessionVar)) {
 					$institutionStudentData = $this->_table->Session->read($sessionVar);
 					$sectionData = [];
-					$sectionData['security_user_id'] = $entity->id;
+					$sectionData['student_id'] = $entity->id;
 					$sectionData['education_grade_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['education_grade'];
 					$sectionData['institution_site_section_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['section'];
-					$sectionData['student_category_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['student_status_id'];
 
 					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);	

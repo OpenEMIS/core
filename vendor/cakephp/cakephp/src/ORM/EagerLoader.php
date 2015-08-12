@@ -64,7 +64,8 @@ class EagerLoader
         'queryBuilder' => 1,
         'finder' => 1,
         'joinType' => 1,
-        'strategy' => 1
+        'strategy' => 1,
+        'negateMatch' => 1
     ];
 
     /**
@@ -171,9 +172,11 @@ class EagerLoader
      * @param string|null $assoc A single association or a dot separated path of associations.
      * @param callable|null $builder the callback function to be used for setting extra
      * options to the filtering query
+     * @param array $options Extra options for the association matching, such as 'joinType'
+     * and 'fields'
      * @return array The resulting containments array
      */
-    public function matching($assoc = null, callable $builder = null)
+    public function matching($assoc = null, callable $builder = null, $options = [])
     {
         if ($this->_matching === null) {
             $this->_matching = new self();
@@ -187,13 +190,16 @@ class EagerLoader
         $last = array_pop($assocs);
         $containments = [];
         $pointer =& $containments;
+        $options += ['joinType' => 'INNER'];
+        $opts = ['matching' => true] + $options;
+        unset($opts['negateMatch']);
 
         foreach ($assocs as $name) {
-            $pointer[$name] = ['matching' => true];
+            $pointer[$name] = $opts;
             $pointer =& $pointer[$name];
         }
 
-        $pointer[$last] = ['queryBuilder' => $builder, 'matching' => true];
+        $pointer[$last] = ['queryBuilder' => $builder, 'matching' => true] + $options;
         return $this->_matching->contain($containments);
     }
 
@@ -281,7 +287,10 @@ class EagerLoader
                 $options = isset($options['config']) ?
                     $options['config'] + $options['associations'] :
                     $options;
-                $options = $this->_reformatContain($options, []);
+                $options = $this->_reformatContain(
+                    $options,
+                    isset($pointer[$table]) ? $pointer[$table] : []
+                );
             }
 
             if ($options instanceof Closure) {
@@ -381,6 +390,13 @@ class EagerLoader
             throw new InvalidArgumentException(
                 sprintf('%s is not associated with %s', $parent->alias(), $alias)
             );
+        }
+        if ($instance->alias() !== $alias) {
+            throw new InvalidArgumentException(sprintf(
+                "You have contained '%s' but that association was bound as '%s'.",
+                $alias,
+                $instance->alias()
+            ));
         }
 
         $paths += ['aliasPath' => '', 'propertyPath' => '', 'root' => $alias];
@@ -633,7 +649,7 @@ class EagerLoader
             $source = $instance->source();
             $keys = $instance->type() === Association::MANY_TO_ONE ?
                 (array)$instance->foreignKey() :
-                (array)$source->primaryKey();
+                (array)$instance->bindingKey();
 
             $alias = $source->alias();
             $pkFields = [];

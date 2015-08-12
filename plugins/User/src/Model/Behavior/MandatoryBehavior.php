@@ -59,7 +59,6 @@ class MandatoryBehavior extends Behavior {
 		$optionType = $data->option_type;
 		$value = $data->value;
 
-
 		$ConfigItemOptions = TableRegistry::get('ConfigItemOptions');
 		$result = $ConfigItemOptions
 			->find()
@@ -85,38 +84,27 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addBeforeAction(Event $event) {
-		$orderData = $this->_table->fieldOrder1->getArrayCopy();
-
 		// mandatory associated fields
+
+		$i = 30;
 		if (array_key_exists('Contacts', $this->_info) && $this->_info['Contacts'] != 'Excluded') {
-			$this->_table->ControllerAction->field('contact_type');
-			$orderData[] = 'contact_type';
-			$this->_table->ControllerAction->field('contact_value');
-			$orderData[] = 'contact_value';
+			$this->_table->ControllerAction->field('contact_type', ['order' => $i++]);
+			$this->_table->ControllerAction->field('contact_value', ['order' => $i++]);
 		}
 
 		if (array_key_exists('Nationalities', $this->_info) && $this->_info['Nationalities'] != 'Excluded') {
-			$this->_table->ControllerAction->field('nationality');
-			$orderData[] = 'nationality';
+			$this->_table->ControllerAction->field('nationality', ['order' => $i++]);
 		}
 
 		if (array_key_exists('Identities', $this->_info) && $this->_info['Identities'] != 'Excluded') {
-			$this->_table->ControllerAction->field('identity_type');
-			$orderData[] = 'identity_type';
-			$this->_table->ControllerAction->field('identity_number');
-			$orderData[] = 'identity_number';
+			$this->_table->ControllerAction->field('identity_type', ['order' => $i++]);
+			$this->_table->ControllerAction->field('identity_number', ['order' => $i++]);
 		}
 
 		if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
-			$this->_table->ControllerAction->field('special_need');
-			$orderData[] = 'special_need';
-			$this->_table->ControllerAction->field('special_need_comment');
-			$orderData[] = 'special_need_comment';
+			$this->_table->ControllerAction->field('special_need', ['order' => $i++]);
+			$this->_table->ControllerAction->field('special_need_comment', ['order' => $i++]);
 		}
-
-		$orderData = array_merge($orderData, $this->_table->fieldOrder2->getArrayCopy());
-		
-		$this->_table->ControllerAction->setFieldOrder($orderData);
 
 		// need to set the handling for non-mandatory require = false here
 		foreach ($this->_info as $key => $value) {
