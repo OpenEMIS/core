@@ -4,6 +4,7 @@ namespace App\Shell;
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Report\Model\Table\ReportProgressTable as Process;
 
 class ReportShell extends Shell {
 	public function initialize() {
@@ -34,7 +35,6 @@ class ReportShell extends Shell {
 	}
 
 	public function doExcel($entity) {
-
 		try {
 			$params = json_decode($entity->params, true);
 			$feature = $params['feature'];
@@ -42,46 +42,14 @@ class ReportShell extends Shell {
 			$name = $entity->name;
 
 			echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
-
-			$table->generateXLXS([
-				'download' => false,
-				'process' => $entity
-			]);
-
+			$table->generateXLXS(['download' => false, 'process' => $entity]);
 			echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
 
-			pr($params);
-			return 0;
-
-			$format = 'xlsx';
-			$settings = array(
-				'download' => false,
-				'delete' => false,
-				'onStartSheet' => function($count, $pages) use ($ReportProgress) {
-					$ReportProgress->saveField('total_records', $count);
-				},
-				'onEndSheet' => function($count) use ($ReportProgress) {
-					$ReportProgress->saveField('current_records', $count);
-				},
-				'onBeforeWrite' => function($rowCount, $percentCount) use ($ReportProgress) {
-					if (($percentCount > 0 && $rowCount % $percentCount == 0) ||  $percentCount == 0)  {
-						$ReportProgress->saveField('current_records', $rowCount);
-					}
-				},
-				'onComplete' => function($path) use ($ReportProgress) {
-					$ReportProgress->saveField('status', 0);
-					$ReportProgress->saveField('file_path', $path);
-				},
-				'options' => $options
-			);
-
-			$model->excel($format, $settings);
-			echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			pr($error);
 			$this->ReportProgress->updateAll(
-				['status' => -1, 'error_message' => $error],
+				['status' => PROCESS::ERROR, 'error_message' => $error],
 				['id' => $entity->id]
 			);
 		}

@@ -26,6 +26,7 @@ $this->start('panelBody');
 	$params = $this->request->params;
 	$url = ['plugin' => $params['plugin'], 'controller' => $params['controller'], 'action' => 'ajaxGetReportProgress'];
 	$url = $this->Url->build($url);
+	$table = $ControllerAction['table'];
 ?>
 
 <style type="text/css">
@@ -39,9 +40,9 @@ $this->start('panelBody');
 			<?php foreach ($data as $obj) : ?>
 			<tr row-id="<?= $obj->id ?>">
 				<td><?= $obj->name ?></td>
-				<td><?= $obj->created ?></td>
-				<td class="modified"><?= !empty($obj->file_path) ? $obj->modified : '' ?></td>
-				<td><?= $obj->expiry_date ?></td>
+				<td><?= $table->formatDateTime($obj->created) ?></td>
+				<td class="modified"><?= !empty($obj->file_path) ? $table->formatDateTime($obj->modified) : '' ?></td>
+				<td><?= $table->formatDateTime($obj->expiry_date) ?></td>
 				<td>
 					<?php
 					$downloadClass = 'download';
