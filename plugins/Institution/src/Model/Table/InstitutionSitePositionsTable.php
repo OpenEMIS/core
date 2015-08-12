@@ -35,8 +35,6 @@ class InstitutionSitePositionsTable extends AppTable {
 
 	public function beforeAction($event) {
 		$this->ControllerAction->field('position_no', ['visible' => true]);
-		$this->ControllerAction->field('position_no', ['visible' => true]);
-		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('staff_position_title_id', [
 			'visible' => true,
 			'type' => 'select'
