@@ -60,34 +60,31 @@ class InstitutionSiteFeesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'education_programme', 'education_grade_id', 'total'
 		]);
+	}
 
-		// Get the localization option from localization component
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
 
 		$Fees = $this;
 		$institutionId = $this->institutionId;
-		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
+
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
 			'callable' => function($id) use ($Fees, $institutionId) {
 				return $Fees->find()->where(['institution_site_id'=>$institutionId, 'academic_period_id'=>$id])->count();
 			}
 		]);
-
-
 		
-		$this->controller->set(compact('academicPeriodOptions'));
-
-		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->controller->set('selectedOption', $selectedOption);
+		$this->controller->set(compact('academicPeriodOptions'));
 
 		$toolbarElements = [
 			['name' => 'Institution.Fees/controls', 'data' => [], 'options' => []]
 		];
 		$this->controller->set('toolbarElements', $toolbarElements);
-	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$academicPeriodId = $request->query('academic_period_id');
+		$academicPeriodId = $selectedOption;
 		$query
 			->find('withProgrammes')
 			->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
