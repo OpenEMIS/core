@@ -120,11 +120,24 @@ class StudentsTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->where(['SecurityUserTypes.user_type' => UserTypes::STUDENT]);
-
+		$query->group(['SecurityUserTypes.security_user_id']);
+		
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$query->innerJoin(
+				['InstitutionStudent' => 'institution_students'],
+				[
+					'InstitutionStudent.student_id = SecurityUserTypes.security_user_id',
+					'InstitutionStudent.institution_id IN ' => $institutionIds
+				]
+			);
 		}
 	}
 
