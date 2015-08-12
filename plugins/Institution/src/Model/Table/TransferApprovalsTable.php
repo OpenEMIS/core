@@ -165,9 +165,8 @@ class TransferApprovalsTable extends AppTable {
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			$endDate = $request->data[$this->alias()]['end_date'];
-
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = date('d-m-Y', strtotime($endDate));
+			$attr['attr']['value'] = $endDate->format('d-m-Y');
 		}
 
 		return $attr;
@@ -230,9 +229,10 @@ class TransferApprovalsTable extends AppTable {
 					$obj->id
 				];
 
+				$receivedDate = $this->formatDate($obj->modified);
 				$data[] = [
 					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => date('Y-m-d', strtotime($obj->modified)),
+					'receive_date' => $receivedDate,
 					'due_date' => '<i class="fa fa-minus"></i>',
 					'requester' => $obj->created_user->username,
 					'type' => __('Student Transfer')
