@@ -84,13 +84,13 @@ class ExcelBehavior extends Behavior {
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
-
+		
 		$generate($writer, $_settings);
 
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
-
 		$filepath = $_settings['path'] . $_settings['file'];
-		$writer->writeToFile($filepath);
+		$_settings['file_path'] = $filepath;
+		$this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
+		$writer->writeToFile($_settings['file_path']);
 
 		if ($_settings['download']) {
 			$this->download($filepath);
@@ -127,6 +127,7 @@ class ExcelBehavior extends Behavior {
 		}
 
 		$this->dispatchEvent($this->_table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
+		$this->onEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
 		if ($this->config('orientation') == 'landscape') {
 			$row = [];
 			foreach ($fields as $attr) {
@@ -148,9 +149,9 @@ class ExcelBehavior extends Behavior {
 						$field = $attr['field'];
 						$row[] = $this->getValue($entity, $this->_table, $field);
 					}
-					// $this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
-					$writer->writeSheetRow($sheetName, $row);
 					$rowCount++;
+					$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
+					$writer->writeSheetRow($sheetName, $row);
 				}
 			}
 		} else {
@@ -207,7 +208,12 @@ class ExcelBehavior extends Behavior {
 
 	private function getValue($entity, $table, $field) {
 		$value = '';
-		if ($entity->has($field)) {
+
+		$method = 'onExcelGet' . Inflector::camelize($field);
+		$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity]);
+		if ($event->result) {
+			$value = $event->result;
+		} else if ($entity->has($field)) {
 			if ($this->isForeignKey($table, $field)) {
 				$associatedField = $this->getAssociatedKey($table, $field);
 				if ($entity->has($associatedField)) {

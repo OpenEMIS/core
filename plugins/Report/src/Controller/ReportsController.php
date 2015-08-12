@@ -27,6 +27,18 @@ class ReportsController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
+	public function getFeatureOptions($module) {
+		$options = [];
+		if ($module == 'Institutions') {
+			$options = [
+				'Report.Institutions' => __('Overview'),
+				'Report.InstitutionPositions' => __('Positions'),
+				'Report.InstitutionProgrammes' => __('Programmes')
+			];
+		}
+		return $options;
+	}
+
 	public function index() {
 		return $this->redirect(['action' => 'Users']);
 	}
@@ -47,16 +59,37 @@ class ReportsController extends AppController {
 		$entity = $ReportProgress->find()->where(['id' => $id])->first();
 		$data = [];
 
-		if ($obj) {
-			if ($obj->total_records > 0) {
-				$data['percent'] = intval($obj->current_records / $obj->total_records * 100);
+		if ($entity) {
+			if ($entity->total_records > 0) {
+				$data['percent'] = intval($entity->current_records / $entity->total_records * 100);
 			} else {
 				$data['percent'] = 0;
 			}
-			$data['modified'] = $obj->modified;
-			$data['status'] = $obj->status;
+			$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+			$data['status'] = $entity->status;
 		}
 		echo json_encode($data);
 		die;
+	}
+
+	public function download($id) {
+		$this->controller->autoRender = false;
+		$ReportProgress = TableRegistry::get('Report.ReportProgress');
+
+		$entity = $ReportProgress->find()->where(['id' => $id])->first();
+		$path = $entity->file_path;
+		if (!empty($path)) {
+			$filename = basename($path);
+			header("Pragma: public", true);
+			header("Expires: 0"); // set expiration time
+			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+			header("Content-Type: application/force-download");
+			header("Content-Type: application/octet-stream");
+			header("Content-Type: application/download");
+			header("Content-Disposition: attachment; filename=".$filename);
+			header("Content-Transfer-Encoding: binary");
+			header("Content-Length: ".filesize($path));
+			echo file_get_contents($path);
+		}
 	}
 }
