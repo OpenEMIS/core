@@ -1,9 +1,8 @@
 <?php
 namespace Report\Model\Table;
 
-use DateTime;
-use DateInterval;
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -13,6 +12,10 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 
 class ReportProgressTable extends AppTable  {
+	const ERROR = -1;
+	const COMPLETED = 0;
+	const PENDING = 1;
+
 	public function initialize(array $config) {
 		$this->table('report_progress');
 		parent::initialize($config);
@@ -40,16 +43,17 @@ class ReportProgressTable extends AppTable  {
 		}
 		*/
 
-		$expiryDate = new DateTime();
-		$expiryDate->add(new DateInterval('P3D')); // should take from config item
+		$expiryDate = new Time();
+		$expiryDate->addDays(3);
 
 		$obj['file_path'] = NULL;
-		$obj['expiry_date'] = $expiryDate->format('Y-m-d H:i:s');
+		$obj['expiry_date'] = $expiryDate;
 		$obj['current_records'] = 0;
 		$obj['total_records'] = 0;
-		$obj['status'] = 1;
+		$obj['status'] = self::PENDING;
 
-		$result = $this->save($this->newEntity($obj));
+		$newEntity = $this->newEntity($obj);
+		$result = $this->save($newEntity);
 		return $result->id;
 	}
 
@@ -69,6 +73,7 @@ class ReportProgressTable extends AppTable  {
 		}
 	}
 
+	// needs modification to cake v3
 	public function purge($userId) {
 		$format = 'Y-m-d';
 		$data = $this->find('list', array(

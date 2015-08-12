@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Report\Model\Table\ReportProgressTable as Process;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -27,6 +28,7 @@ class ReportListBehavior extends Behavior {
 
 	public function afterAction(Event $event, $config) {
 		if ($this->_table->action == 'index') {
+			$this->_table->controller->set('ControllerAction', $config);
 			return $this->_table->controller->render('Report.index');
 		}
 	}
@@ -58,26 +60,6 @@ class ReportListBehavior extends Behavior {
 		return $query;
 	}
 
-	// public function addBeforeAction(Event $event) {
-		
-	// }
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		// if ($action == 'index') {
-		// 	$toolbarButtons['add']['url'] = ['plugin' => 'Report', 'controller' => 'Reports', 'action' => $this->_table->alias(), 'export'];
-		// 	$toolbarButtons['add']['type'] = 'button';
-		// 	$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
-		// 	$toolbarButtons['add']['attr'] = $attr;
-		// 	$toolbarButtons['add']['attr']['title'] = __('Add Report');
-		// } else {
-		// 	$toolbarButtons['back'] = $buttons['back'];
-		// 	$toolbarButtons['back']['type'] = 'button';
-		// 	$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-		// 	$toolbarButtons['back']['attr'] = $attr;
-		// 	$toolbarButtons['back']['attr']['title'] = __('Back');
-		// }
-	}
-
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = ['xlsx' => 'Excel'];
 		return $attr;
@@ -91,33 +73,6 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	// public function export() {
-	// 	$entity = $this->_table->newEntity();
-	// 	$request = $this->_table->request;
-	// 	$table = $this->_table;
-
-	// 	if ($request->is(['post', 'put'])) {
-	// 		$submit = isset($request->data['submit']) ? $request->data['submit'] : 'generate';
-	// 		$requestData = new ArrayObject($request->data);
-
-	// 		if ($submit == 'generate') {
-	// 			$this->_generate($requestData);
-	// 			$action = ['plugin' => 'Report', 'controller' => 'Reports', 'action' => $table->alias(), 'index'];
-	// 			return $table->controller->redirect($action);
-	// 		} else {
-	// 			// Start Event
-	// 			$methodKey = 'on' . ucfirst($submit);
-	// 			$eventKey = 'Model.Report.' . $methodKey;
-	// 			$event = new Event($eventKey, $this, [$entity, $requestData]);
-	// 			$event = $table->eventManager()->dispatch($event);
-	// 			// End Event
-	// 		}
-	// 	}
-
-	// 	$table->controller->set('data', $entity);
-	// 	$table->controller->render('Reports/export');
-	// }
-
 	public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {
 		$process = $settings['process'];
 		$this->ReportProgress->updateAll(
@@ -126,10 +81,28 @@ class ReportListBehavior extends Behavior {
 		);
 	}
 
+	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+		$process = $settings['process'];
+		if (($percentCount > 0 && $rowProcessed % $percentCount == 0) || $percentCount == 0)  {
+			$this->ReportProgress->updateAll(
+				['current_records' => $rowProcessed],
+				['id' => $process->id]
+			);
+		}
+	}
+
 	public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {
 		$process = $settings['process'];
 		$this->ReportProgress->updateAll(
 			['current_records' => $totalProcessed],
+			['id' => $process->id]
+		);
+	}
+
+	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
+		$process = $settings['process'];
+		$this->ReportProgress->updateAll(
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path']],
 			['id' => $process->id]
 		);
 	}
