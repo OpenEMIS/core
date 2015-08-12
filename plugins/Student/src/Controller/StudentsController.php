@@ -128,6 +128,9 @@ class StudentsController extends AppController {
 				if ($model->hasField('security_user_id')) {
 					$userId = $session->read('Students.id');
 					$query->where([$model->aliasField('security_user_id') => $userId]);
+				} else if ($model->hasField('student_id')) {
+					$userId = $session->read('Students.id');
+					$query->where([$model->aliasField('student_id') => $userId]);
 				}
 			} else {
 				$this->Alert->warning('general.noData');
