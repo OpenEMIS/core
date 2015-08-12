@@ -10,7 +10,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
@@ -61,10 +61,9 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	}
 
 	public function autoInsertSectionStudent($data) {
-		$securityUserId = $data['security_user_id'];
+		$securityUserId = $data['student_id'];
 		$selectedGradeId = $data['education_grade_id'];
 		$selectedSectionId = $data['institution_site_section_id'];
-		$selectedStudentCategoryId = $data['student_category_id'];
 
 		if(!empty($selectedSectionId)) {
 			$autoInsertData = $this->newEntity();
@@ -73,7 +72,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 				->find()
 				->where(
 					[
-						$this->aliasField('security_user_id') => $securityUserId,
+						$this->aliasField('student_id') => $securityUserId,
 						$this->aliasField('education_grade_id') => $selectedGradeId,
 						$this->aliasField('institution_site_section_id') => $selectedSectionId
 					]
@@ -86,10 +85,9 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 				$autoInsertData->id = $existingData['id'];	
 			}
 			
-			$autoInsertData->security_user_id = $securityUserId;
+			$autoInsertData->student_id = $securityUserId;
 			$autoInsertData->education_grade_id = $selectedGradeId;
 			$autoInsertData->institution_site_section_id = $selectedSectionId;
-			$autoInsertData->student_category_id = $selectedStudentCategoryId;
 			$autoInsertData->status = 1;
 
 			$this->save($autoInsertData);

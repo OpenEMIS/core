@@ -23,6 +23,7 @@ class NavigationComponent extends Component {
 			'selected' => sizeof($options)==0
 		);
 		$this->breadcrumbs[] = $item;
+		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
 	}
 
 	public function substituteCrumb($oldTitle, $title, $options=array()) {
@@ -35,14 +36,13 @@ class NavigationComponent extends Component {
 		$this->addCrumb($title, $options);
 	}
 
-	public function beforeRender(Event $event) {
+	public function beforeFilter(Event $event) {
 		$controller = $this->controller;
 		
 		$navigations = $this->buildNavigation();
 		$this->checkPermissions($navigations);
 
 		$controller->set('_navigations', $navigations);
-		$controller->set('_breadcrumbs', $this->breadcrumbs);
 	}
 
 	public function checkPermissions(&$navigations) {
@@ -100,18 +100,22 @@ class NavigationComponent extends Component {
 			'collapse' => false,
 			'items' => [
 				'Institutions' => [
+					'icon' => '<i class="fa kd-institutions"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
 				],
 				'Students' => [
+					'icon' => '<i class="fa kd-students"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']
 				],
 				'Staff' => [
+					'icon' => '<i class="fa kd-staff"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
 				'Guardians' => [
+					'icon' => '<i class="fa kd-staff"></i>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				],
@@ -120,6 +124,7 @@ class NavigationComponent extends Component {
 				// 	'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
 				// ],
 				'Administration' => [
+					'icon' => '<i class="fa fa-cogs"></i>',
 					'collapse' => true,
 					'items' => [
 						'System Setup' => [
@@ -276,9 +281,8 @@ class NavigationComponent extends Component {
 				'items' => [
 					'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions'], 'selected' => ['StaffPositions']],
 					'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Programmes']],
+					'Grades' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Grades']],
 					'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Shifts']],
-					// 'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
-					// 'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
 					'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
 					'Subjects' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
 					'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Infrastructures']]
@@ -288,18 +292,18 @@ class NavigationComponent extends Component {
 			'Students' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'Accounts']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
-					'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
+					// 'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
 				]
 			],
 
 			'Staff' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['Accounts']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['StaffUser']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences']]
 				]
@@ -338,7 +342,7 @@ class NavigationComponent extends Component {
 			'General' => [
 				'collapse' => true,
 				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id], 'selected' => ['edit', 'add', 'Accounts']],
+					'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id], 'selected' => ['edit', 'Accounts']],
 					'Contacts' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Contacts']],
 					'Identities' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Identities']],
 					'Languages' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Languages']],

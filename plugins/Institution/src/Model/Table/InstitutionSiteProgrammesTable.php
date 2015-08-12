@@ -6,8 +6,11 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+
+// this table should not be used anymore, please refer to InstitutionGradesTable.php
 
 class InstitutionSiteProgrammesTable extends AppTable {
 	public $institutionId = 0;
@@ -72,10 +75,14 @@ class InstitutionSiteProgrammesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
-		$this->fields['education_grade']['visible'] = false;
+		// $this->fields['education_grade']['visible'] = false;
 		$this->fields['education_programme_id']['type'] = 'string';
 		$this->fields['education_level']['type'] = 'string';
 		unset($this->fields['education_level']['options']);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain(['InstitutionSiteGrades.EducationGrades']);
 	}
 
 /******************************************************************************************************************
@@ -125,8 +132,9 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		if (isset($data[$this->alias()]['institution_site_grades']) && count($data[$this->alias()]['institution_site_grades']>0)) {
 			foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
 				if (isset($row['education_grade_id'])) {
-					$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
 					$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
+					$data[$this->alias()]['institution_site_grades'][$key]['start_date'] = $data[$this->alias()]['start_date'];
+					$data[$this->alias()]['institution_site_grades'][$key]['end_date'] = $data[$this->alias()]['end_date'];
 				} else {
 					if ($row['id']!='') {
 						$data[$this->alias()]['institution_site_grades'][$key]['status'] = 0;
@@ -373,63 +381,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		} else {
 			return $result;
 		}
-	}
-
-	// not fully implemented
-	// public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
-	// 	$conditions = [$this->aliasField('institution_site_id') => $institutionSiteId];
-
-	// 	if(!is_null($academicPeriodId)) {
-	// 		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
-	// 	}
-		
-	// 	$query = $this->find();
-	// 	$query->contain(['EducationProgrammes' => ['EducationCycles']]);
-
-	// 	$query->where($conditions);
-	// 	$query->order($this->aliasField($this->primaryKey()));
-
-	// 	$list = array();
-	// 	foreach ($query as $key => $value) {
-	// 		// pr($value);	
-	// 		$list[$query->education_programme->id] = $query->education_programme->education_cycle->name;
-	// 	}
-
-		
-	// 	// foreach($data as $obj) {
-	// 	// 	$list[$obj['EducationProgramme']['id']] = $obj['EducationProgramme']['cycle_programme_name'];
-	// 	// }
-
-	// 	return $list;
-	// }
-
-	public function getSiteProgrammeOptions($institutionSiteId, $academicPeriodId) {
-		$list = [];
-
-		$data = $this->getSiteProgrammes($institutionSiteId, $academicPeriodId);
-		foreach ($data as $key => $value) {
-			$list[$value->education_programme_id] = $value->education_programme->education_cycle->name . ' - ' . $value->education_programme->name;
-			// $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
-		}
-
-		return $list;
-	}
-
-	public function getSiteProgrammes($institutionSiteId, $academicPeriodId) {
-		$this->formatResult = true;
-		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionSiteId
-		);
-		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
-
-		$data = $this
-			->find()
-			->contain(['EducationProgrammes'=>['EducationCycles' => ['EducationLevels' => ['EducationSystems']]]])
-			->where($conditions)
-			->order('EducationSystems.order', 'EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order')
-		;
-
-		return $data;
 	}
 
 	/**
