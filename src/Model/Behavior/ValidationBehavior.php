@@ -311,6 +311,19 @@ class ValidationBehavior extends Behavior {
 		return ($existingRecords <= 0);
 	}
 
-
+	public static function studentGuardianId($field, array $globalData) {
+		$Guardians = TableRegistry::get('Student.Guardians');
+// pr($globalData['data']);die;
+		$existingRecords = $Guardians->find()
+			->where(
+				[
+					$Guardians->aliasField('guardian_id') => $globalData['data']['guardian_id'],
+					$Guardians->aliasField('student_id') => $globalData['data']['student_id']
+				]
+			)
+			->count()
+			;
+		return $existingRecords <= 0;
+	}
 
 }
