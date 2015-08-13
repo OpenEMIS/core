@@ -834,7 +834,7 @@ class StudentsTable extends AppTable {
 		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
 
 		$studentsByGradeConditions = [
-			$this->aliasField('student_status_id') => 1,
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('academic_period_id') => $currentYearId,
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 			'Genders.name IS NOT NULL'
