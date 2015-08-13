@@ -200,3 +200,7 @@ UPDATE `field_options` SET `plugin` = 'Institution', `code` = 'Providers' WHERE 
 -- PHPOE-1762
 INSERT INTO `db_patches` VALUES ('PHPOE-1762');
 ALTER TABLE `institution_site_sections` CHANGE `section_number` `section_number` INT(11) NULL DEFAULT NULL COMMENT 'This column is being used to determine whether this section is a multi-grade or single-grade.';
+
+-- DB version
+UPDATE `config_items` SET `value` = '3.0.6' WHERE `code` = 'db_version';
+-- end DB version

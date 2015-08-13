@@ -110,6 +110,7 @@ class StudentsTable extends AppTable {
 		$addGradesOption = ['-1' => __('All Grades')];
 		$educationGradesOptions = $addGradesOption + $educationGradesOptions;
 
+		$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
 		// Query Strings
 		$selectedStatus = $this->queryString('status_id', $statusOptions);
 		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -121,15 +122,14 @@ class StudentsTable extends AppTable {
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
 		if ($selectedEducationGrades != -1) {
-			$query->where([
-				$this->aliasField('education_grade_id') => $selectedEducationGrades,
-			]);
+			$query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
 		}
 
-		$query->where([
-			$this->aliasField('student_status_id') => $selectedStatus,
-			$this->aliasField('academic_period_id') => $selectedAcademicPeriod
-		]);
+		if ($selectedStatus != -1) {
+			$query->where([$this->aliasField('student_status_id') => $selectedStatus]);
+		}
+
+		$query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
