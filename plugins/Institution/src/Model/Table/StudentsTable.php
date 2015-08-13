@@ -797,7 +797,7 @@ class StudentsTable extends AppTable {
 				->select([
 					'Users.first_name',
 					'Genders.name',
-					'total' => $query->func()->count($this->aliasField('id'))
+					'total' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
 				])
 				->where($studentsByYearConditions)
 				->group('Genders.name')
