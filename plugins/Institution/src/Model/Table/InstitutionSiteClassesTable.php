@@ -804,7 +804,7 @@ class InstitutionSiteClassesTable extends AppTable {
 	 * Previously, the grades where populated based on a selected sectionId/classId.
 	 * Those students who matched one of the grades will be included in the list.
 	 *
-	 * Since there will be more than one section where a student will be attached to, the logic is changed to populate
+	 * Since there will be more than one section where a subject could be linked to, the logic is changed to populate
 	 * students using a longer route to obtain the grades for the current academic period.
 	 * student_status_id = 1 is also included.
 	 * @var integer
