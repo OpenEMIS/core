@@ -23,6 +23,7 @@ class HighChartBehavior extends Behavior {
 			$options = $params['options'];
 		}
 		$selectedConfig['title'] = array('text' => Inflector::humanize($chart));
+		$selectedConfig['tooltip'] = ['useHTML'=>true];
 		unset($selectedConfig['_function']);
 		$options = array_replace_recursive($selectedConfig, $options);
 
