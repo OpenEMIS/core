@@ -12,6 +12,15 @@ use ControllerAction\Model\Traits\EventTrait;
 // 3rd party xlsx writer library
 require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.php');
 
+// Events
+// public function onExcelBeforeGenerate(ArrayObject $settings) {}
+// public function onExcelGenerate($writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(ArrayObject $settings) {}
+// public function onExcelBeforeQuery(ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel($column) {}
+
 class ExcelBehavior extends Behavior {
 	use EventTrait;
 
@@ -75,13 +84,13 @@ class ExcelBehavior extends Behavior {
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
-
+		
 		$generate($writer, $_settings);
 
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
-
 		$filepath = $_settings['path'] . $_settings['file'];
-		$writer->writeToFile($filepath);
+		$_settings['file_path'] = $filepath;
+		$this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
+		$writer->writeToFile($_settings['file_path']);
 
 		if ($_settings['download']) {
 			$this->download($filepath);
@@ -94,13 +103,16 @@ class ExcelBehavior extends Behavior {
 		$footer = $this->getFooter();
 
 		$query = $this->_table->find();
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$query]);
+		$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
 		$sheetName = $this->_table->alias();
 
-		$id = $settings['id'];
-		if ($id != 0) {
-			$primaryKey = $this->_table->primaryKey();
-			$query->where([$this->_table->aliasField($primaryKey) => $id]);
+		// if the primary key of the record is given, only generate that record
+		if (array_key_exists('id', $settings)) {
+			$id = $settings['id'];
+			if ($id != 0) {
+				$primaryKey = $this->_table->primaryKey();
+				$query->where([$this->_table->aliasField($primaryKey) => $id]);
+			}
 		}
 
 		$this->contain($query, $fields);
@@ -114,6 +126,8 @@ class ExcelBehavior extends Behavior {
 			$this->config('orientation', 'portrait');
 		}
 
+		$this->dispatchEvent($this->_table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
+		$this->onEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
 		if ($this->config('orientation') == 'landscape') {
 			$row = [];
 			foreach ($fields as $attr) {
@@ -121,18 +135,22 @@ class ExcelBehavior extends Behavior {
 			}
 			$writer->writeSheetRow($sheetName, $row);
 
+			// process every page based on the limit
 			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 				$resultSet = $query
-					->limit($this->config('limit'))
-					->page($pageNo+1)
-					->all();
+				->limit($this->config('limit'))
+				->page($pageNo+1)
+				->all();
 
+				// process each row based on the result set
 				foreach ($resultSet as $entity) {
 					$row = [];
 					foreach ($fields as $attr) {
 						$field = $attr['field'];
 						$row[] = $this->getValue($entity, $this->_table, $field);
 					}
+					$rowCount++;
+					$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
 					$writer->writeSheetRow($sheetName, $row);
 				}
 			}
@@ -144,7 +162,9 @@ class ExcelBehavior extends Behavior {
 				$row[] = $this->getValue($entity, $this->_table, $field);
 				$writer->writeSheetRow($sheetName, $row);
 			}
+			$rowCount++;
 		}
+		$this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
 	}
 
 	private function getFields() {
@@ -188,7 +208,12 @@ class ExcelBehavior extends Behavior {
 
 	private function getValue($entity, $table, $field) {
 		$value = '';
-		if ($entity->has($field)) {
+
+		$method = 'onExcelGet' . Inflector::camelize($field);
+		$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity]);
+		if ($event->result) {
+			$value = $event->result;
+		} else if ($entity->has($field)) {
 			if ($this->isForeignKey($table, $field)) {
 				$associatedField = $this->getAssociatedKey($table, $field);
 				if ($entity->has($associatedField)) {

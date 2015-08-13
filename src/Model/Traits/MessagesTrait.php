@@ -161,6 +161,10 @@ trait MessagesTrait {
 			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'

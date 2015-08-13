@@ -10,7 +10,7 @@ class StudentSectionsTable extends AppTable {
 		$this->table('institution_site_section_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
