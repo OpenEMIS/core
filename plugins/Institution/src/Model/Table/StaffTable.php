@@ -210,6 +210,9 @@ class StaffTable extends AppTable {
 			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
 
 			$userId = $this->Auth->user('id');
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+			}
 			$roleOptions = [0 => '-- Select Role --'];
 			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
 			$attr['options'] = $roleOptions;
@@ -320,6 +323,7 @@ class StaffTable extends AppTable {
 			$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
 				['institution_site_id' => $institutionId, 'key' => 'Licenses']);
 
+			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
