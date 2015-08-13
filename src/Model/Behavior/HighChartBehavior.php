@@ -74,7 +74,7 @@ class HighChartBehavior extends Behavior {
 					'spacingTop' => -5,
 					'spacingBottom' => 10,
 					'spacingLeft' => 90];
-		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}'];
+		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}', 'useHTML'=>true];
 		$selectedConfig['plotOptions'] = 
 					['pie' => ['dataLabels' => [
 							'enabled' => false],
