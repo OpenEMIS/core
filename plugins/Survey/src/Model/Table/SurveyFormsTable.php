@@ -51,11 +51,23 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function afterAction(Event $event){
 		unset($this->fields['custom_fields']);
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'apply_to_all', 'custom_filters', 'name', 'description', 'survey_question']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'name', 'description', 'survey_question']);
 	}
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
 		return $entity->custom_module->code;
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		parent::viewAfterAction($event, $entity);
+		unset($this->fields['apply_to_all']);
+		unset($this->fields['custom_filters']);
+	}
+
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		parent::addEditAfterAction($event, $entity);
+		unset($this->fields['apply_to_all']);
+		unset($this->fields['custom_filters']);
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
