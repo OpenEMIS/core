@@ -234,7 +234,7 @@ class StaffTable extends AppTable {
 					$this->fields['FTE']['options'] = [
 						['value' => '0.25', 'text' => '25%'],
 						['value' => '0.50', 'text' => '50%', 'selected'],
-					['value' => '0.25', 'text' => '75%']
+						['value' => '0.75', 'text' => '75%']
 					];
 				}
 			}
