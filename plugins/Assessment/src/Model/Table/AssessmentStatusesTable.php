@@ -39,6 +39,10 @@ class AssessmentStatusesTable extends AppTable {
 		]);
 	}
 
+	public function onGetAssessmentId(Event $event, Entity $entity) {
+		return $entity->assessment->code_name;
+	}
+
 	public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request) {
 		$assessmentOptions = $this->Assessments
 			->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -83,7 +87,8 @@ class AssessmentStatusesTable extends AppTable {
 
 	// contain is necessary for chosenSelect
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain(['AcademicPeriods']);
+		$options['auto_contain'] = false;
+		$query->contain(['Assessments', 'AcademicPeriods']);
 	}
 
 	// contain is necessary for chosenSelect
