@@ -151,7 +151,7 @@ class StudentBehavioursTable extends AppTable {
 					$students = $Students
 						->findAllByInstitutionSiteSectionId($sectionId)
 						->contain(['Users'])
-						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+						->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 						->toArray();
 				}
 			}
@@ -181,7 +181,7 @@ class StudentBehavioursTable extends AppTable {
 			$students = $Students
 				->findAllByInstitutionSiteSectionId($sectionId)
 				->contain(['Users'])
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+				->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 				->toArray();
 		}
 		$this->fields['security_user_id']['options'] = $students;
@@ -194,7 +194,7 @@ class StudentBehavioursTable extends AppTable {
 		$students = $Students
 			->findAllByInstitutionSiteSectionId($sectionId)
 			->contain(['Users'])
-			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+			->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 			->toArray();
 
 		$this->fields['security_user_id']['options'] = $students;
