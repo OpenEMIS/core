@@ -250,6 +250,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'select_student_empty' => 'No Other Student Available',
 			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
