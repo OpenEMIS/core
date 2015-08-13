@@ -565,6 +565,11 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Start Date cannot be later than End Date',
 				]
 			],
+			'Guardians' => [
+				'guardian_id' => [
+					'ruleStudentGuardianId' => 'This guardian has already added.'
+				]
+			]
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',

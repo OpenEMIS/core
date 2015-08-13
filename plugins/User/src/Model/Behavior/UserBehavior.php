@@ -150,6 +150,8 @@ class UserBehavior extends Behavior {
 				$value = $this->defaultStudentProfileIndex;
 			} else if ($this->_table->alias() == 'Staff') {
 				$value = $this->defaultStaffProfileIndex;
+			} else if ($this->_table->alias() == 'Guardians') {
+				$value = $this->defaultGuardianProfileIndex;
 			}
 			// if (($this->hasBehavior('Student')) && ($this->action == "index")) {
 			// 	$value = $this->defaultStudentProfileIndex;
@@ -193,6 +195,8 @@ class UserBehavior extends Behavior {
 			$value = $this->defaultStudentProfileView;
 		} else if ($this->_table->alias() == 'Staff') {
 			$value = $this->defaultStaffProfileView;
+		} else if ($this->_table->alias() == 'Guardians') {
+			$value = $this->defaultGuardianProfileView;
 		}
 		return $value;
 	}
