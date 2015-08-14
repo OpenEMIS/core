@@ -200,9 +200,9 @@ class ControllerActionComponent extends Component {
 				}
 				$onChange = '';
 				if (is_bool($attr['onChangeReload']) && $attr['onChangeReload'] == true) {
-					$onChange = "$('#reload').click()";
+					$onChange = "$('#reload').click();return false;";
 				} else {
-					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click()";
+					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click();return false;";
 				}
 				$this->model->fields[$key]['attr']['onchange'] = $onChange;
 			}
@@ -451,7 +451,7 @@ class ControllerActionComponent extends Component {
 					$result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
 				}
 			} else if ($this->triggerFrom == 'Model') {
-				if (method_exists($this->model, $this->currentAction)) {
+				if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {
 					$result = call_user_func_array([$this->model, $this->currentAction], $this->paramsPass);
 				} else {
 					if (in_array($this->currentAction, $this->defaultActions)) {

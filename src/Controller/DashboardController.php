@@ -41,13 +41,12 @@ class DashboardController extends AppController {
 	public function index() {
 		$workbenchData = $this->Workbench->getList();
 
-		$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
-		$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$InstitutionSiteStudents = TableRegistry::get('Institution.Students');
+		$InstitutionSiteStaff = TableRegistry::get('Institution.Staff');
 
 		$highChartDatas = [];
 		$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_year');
-		$highChartDatas[] = $InstitutionSiteSectionStudents->getHighChart('number_of_students_by_grade');
+		$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_grade');
 		$highChartDatas[] = $InstitutionSiteStaff->getHighChart('number_of_staff');
 
 		$noticeData = TableRegistry::get('Notices')->find('all')->order(['Notices.created desc'])->toArray();

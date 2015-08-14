@@ -25,7 +25,7 @@ trait ControllerActionTrait {
 		// public function beforeAction(Event $event) {}
 
 		'ControllerAction.Model.afterAction'				=> 'afterAction', // called after any actions
-		// public function afterAction(Event $event) {}
+		// public function afterAction(Event $event, $config) {}
 
 		'ControllerAction.Model.onFormatDate'				=> 'onFormatDate', // called before displaying date fields
 		// public function onFormatDate(Event $event, Time $dateObject) {}
