@@ -127,14 +127,16 @@ class InstitutionSurveysTable extends AppTable {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
 		if ($selectedStatus != 2) {
-			return $event->subject()->Html->link($entity->survey_form->name, [
-				'plugin' => $this->controller->plugin,
-				'controller' => $this->controller->name,
-				'action' => $this->alias,
-				'edit',
-				$entity->id,
-				'status' => $selectedStatus
-			]);
+			if ($this->AccessControl->check([$this->controller->name, 'Surveys', 'edit'])) {
+				return $event->subject()->Html->link($entity->survey_form->name, [
+					'plugin' => $this->controller->plugin,
+					'controller' => $this->controller->name,
+					'action' => $this->alias,
+					'edit',
+					$entity->id,
+					'status' => $selectedStatus
+				]);
+			}
 		}
 	}
 
@@ -277,7 +279,9 @@ class InstitutionSurveysTable extends AppTable {
 
 		if ($selectedStatus == 2) {	//Completed
 			if ($action == 'view') {
-				unset($toolbarButtons['edit']);	
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
 			}
 		}
 	}
