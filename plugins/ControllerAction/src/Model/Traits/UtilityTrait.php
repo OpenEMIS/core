@@ -88,4 +88,36 @@ trait UtilityTrait {
 		}
 		return $selected;
 	}
+
+	public function advancedSelectOptionsForLevels(&$options, &$selected, $params=[]) {
+		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
+		$message = array_key_exists('message', $params) ? $params['message'] : '';
+
+		foreach ($options as $key => $obj) {
+			foreach ($obj as $id => $label) {
+				$label = __($label);
+				$options[$key][$id] = ['value' => $id, 'text' => $label];
+
+				if (is_callable($callable)) {
+					$count = $callable($id);
+
+					if ($count == 0) {
+						if (!empty($message)) {
+							$options[$key][$id]['text'] = str_replace('{{label}}', $label, $message);
+						}
+						$options[$key][$id][] = 'disabled';
+
+						if ($selected == $id) $selected = 0;
+					} else {
+						if ($selected == 0) $selected = $id;
+					}
+				}
+
+				if ($selected == $id) {
+					$options[$key][$id][] = 'selected';
+				}
+			}
+		}
+		return $selected;
+	}
 }

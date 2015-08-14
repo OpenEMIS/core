@@ -155,16 +155,28 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$Sections = $this;
 
-		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
-		);
-		$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		// $conditions = array(
+		// 	'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+		// );
+		//$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->AcademicPeriods->getListWithLevels();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
 		$institutionId = $this->institutionId;
-		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
+		//$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$this->_selectedAcademicPeriodId = $this->request->query('academic_period_id');
+		if (empty ($this->_selectedAcademicPeriodId )) {
+			$this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+			$this->request->query['academic_period_id'] = $this->_selectedAcademicPeriodId;
+		}
+		// $this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
+		// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+		// 	'callable' => function($id) use ($Sections, $institutionId) {
+		// 		return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
+		// 	}
+		// ]);
+		$this->advancedSelectOptionsForLevels($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();

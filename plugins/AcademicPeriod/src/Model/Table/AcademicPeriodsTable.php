@@ -224,6 +224,37 @@ class AcademicPeriodsTable extends AppTable {
 		return $data;
 	}
 
+	public function getListWithLevels($query = NULL) {
+		$where = [
+			$this->aliasField('parent_id') . ' <> ' => 0
+		];
+
+		// get the current period
+		$data = $this->find()
+			->find('visible')
+			->contain(['Levels'])
+			->select([
+					'id' => $this->aliasField('id'),
+					'name' => $this->aliasField('name'),
+					'level' => 'Levels.name'
+				])
+			->where($where)
+			->order([$this->aliasField('academic_period_level_id'), $this->aliasField('order')])
+			->toArray();
+
+		$levelName = "";
+		$list = [];
+
+		foreach ($data as $obj) {
+			if ($levelName != $obj->level) {
+				$levelName = $obj->level;
+			}
+			$list[$levelName][$obj->id] = $obj->name;
+		}
+
+		return $list;
+	}
+
 	public function getDate($dateObject) {
 		if (is_object($dateObject)) {
 			return $dateObject->toDateString();
