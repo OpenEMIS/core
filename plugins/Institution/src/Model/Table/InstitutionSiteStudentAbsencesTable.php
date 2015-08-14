@@ -358,7 +358,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		// Student
 		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 		$studentOptions = $Students
-			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+			->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 			->where([
 				$Students->aliasField('institution_site_section_id') => $selectedSection
 			])

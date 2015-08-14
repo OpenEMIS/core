@@ -423,10 +423,14 @@ trait EntityTrait
         $result = [];
         foreach ($this->visibleProperties() as $property) {
             $value = $this->get($property);
-            if (is_array($value) && isset($value[0]) && $value[0] instanceof EntityInterface) {
+            if (is_array($value)) {
                 $result[$property] = [];
                 foreach ($value as $k => $entity) {
-                    $result[$property][$k] = $entity->toArray();
+                    if ($entity instanceof EntityInterface) {
+                        $result[$property][$k] = $entity->toArray();
+                    } else {
+                        $result[$property][$k] = $entity;
+                    }
                 }
             } elseif ($value instanceof EntityInterface) {
                 $result[$property] = $value->toArray();
@@ -559,7 +563,7 @@ trait EntityTrait
         $result = [];
         foreach ($properties as $property) {
             $original = $this->getOriginal($property);
-            if ($original !== null && $original !== $this->get($property)) {
+            if ($original !== $this->get($property)) {
                 $result[$property] = $original;
             }
         }

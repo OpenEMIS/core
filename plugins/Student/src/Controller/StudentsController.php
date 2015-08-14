@@ -11,34 +11,10 @@ use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
 
 class StudentsController extends AppController {
-	public $activeObj = null;
-
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('User.Users');
-		$this->ControllerAction->model()->addBehavior('Student.Student');
-		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
-		$this->ControllerAction->model()->addBehavior('CustomField.Record', [
-			'behavior' => 'Student',
-			'fieldKey' => 'student_custom_field_id',
-			'tableColumnKey' => 'student_custom_table_column_id',
-			'tableRowKey' => 'student_custom_table_row_id',
-			'formKey' => 'student_custom_form_id',
-			'filterKey' => 'student_custom_filter_id',
-			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
-		]);
-		$this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-		$this->ControllerAction->model()->addBehavior('AdvanceSearch');
-		$this->ControllerAction->model()->addBehavior('Excel', [
-			'excludes' => ['password', 'photo_name'],
-			'filename' => 'Students'
-		]);
-
+		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
@@ -60,8 +36,6 @@ class StudentsController extends AppController {
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
-
-		$this->loadComponent('Paginator');
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -73,79 +47,61 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Students.security_user_id');
-			$session->delete('Users.id');
-		} elseif ($session->check('Students.security_user_id') || $session->check('Users.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Students.id');
+			$session->delete('Students.name');
+		} else if ($session->check('Students.id') || $action == 'view' || $action == 'edit') {
+			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Students.security_user_id')) {
-				$id = $session->read('Students.security_user_id');
-			} else if ($session->check('Users.id')) {
-				$id = $session->read('Users.id');
+			} else if ($session->check('Students.id')) {
+				$id = $session->read('Students.id');
 			}
+
 			if (!empty($id)) {
-				$this->activeObj = $this->Users->get($id);
-				$name = $this->activeObj->name;
-				$header = $name .' - Overview';
+				$entity = $this->Students->get($id);
+				$name = $entity->name;
+				$header = $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
-			} else {
-				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
 			}
 		}
-
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model) {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
 		
-		if (!is_null($this->activeObj)) {
-			$session = $this->request->session();
-			$action = false;
-			$params = $this->request->params;
-			if (isset($params['pass'][0])) {
-				$action = $params['pass'][0];
+		$session = $this->request->session();
+		if ($session->check('Students.id')) {
+			$header = '';
+			$userId = $session->read('Students.id');
+
+			if ($session->check('Students.name')) {
+				$header = $session->read('Students.name');
 			}
 
-			$persona = false;
 			$alias = $model->alias;
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
-			
-			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
-				if (strtolower($action) != 'index')	{
-					if (in_array('Guardian', $model->behaviors()->loaded())) {
-						if (isset($params['pass'][1])) {
-							$persona = $model->get($params['pass'][1]);
-							if (is_object($persona)) {
-								$this->Navigation->addCrumb($persona->name);
-							}
-						}
-					} else {
-						$this->Navigation->addCrumb(ucwords($action));
-					}
-				}
-			} else {
-				$this->Navigation->addCrumb($model->getHeader($alias));
-			}
+			$header = $header . ' - ' . $model->getHeader($alias);
 
-			$header = $this->activeObj->name . ' - ' . $model->getHeader($alias);
+			// $params = $this->request->params;
+			$this->set('contentHeader', $header);
 
-			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
+			if ($model->hasField('security_user_id')) {
 				$model->fields['security_user_id']['type'] = 'hidden';
-				$model->fields['security_user_id']['value'] = $this->activeObj->id;
+				$model->fields['security_user_id']['value'] = $userId;
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
-						$model->aliasField('security_user_id') => $this->activeObj->id
+						$model->aliasField('security_user_id') => $userId
 					]);
 					
 					/**
@@ -157,8 +113,6 @@ class StudentsController extends AppController {
 					}
 				}
 			}
-
-			$this->set('contentHeader', $header);
 		} else {
 			$this->Alert->warning('general.notExists');
 			$event->stopPropagation();
@@ -168,26 +122,26 @@ class StudentsController extends AppController {
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-
-		if ($model->alias() != 'InstitutionSiteStudents') {
-			if ($session->check('Students.security_user_id')) {
-				if ($model->hasField('security_user_id')) {
-					$userId = $session->read('Students.security_user_id');
+		
+		if ($model->alias() != 'Students') {
+			if ($session->check('Students.id')) {
+				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
+					$userId = $session->read('Students.id');
 					$query->where([$model->aliasField('security_user_id') => $userId]);
+				} else if ($model->hasField('student_id')) {
+					$userId = $session->read('Students.id');
+					$query->where([$model->aliasField('student_id') => $userId]);
 				}
 			} else {
 				$this->Alert->warning('general.noData');
 				$event->stopPropagation();
 				return $this->redirect(['action' => 'index']);
 			}
-		} else {
-			// we only show distinct records at system level
-			$query->group([$model->aliasField('security_user_id')]);
 		}
 	}
 
 	public function excel($id=0) {
-		$this->Users->excel($id);
+		$this->Students->excel($id);
 		$this->autoRender = false;
 	}
 }

@@ -28,10 +28,6 @@
 			$tokens[] = $firstToken;
 			$tokens = array_reverse($tokens);
 			$fieldName = implode('', $tokens);
-
-			if ($errorExists) {
-
-			}
 		 ?>
 		<input type="text" class="form-control <?php echo $inputErrorCSS; ?>" name="<?= $fieldName; ?>" value="<?= isset($attr['value']) ? $attr['value'] : '' ?>" 
 		<?php 

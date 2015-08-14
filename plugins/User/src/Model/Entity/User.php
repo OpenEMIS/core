@@ -32,7 +32,9 @@ class User extends Entity {
                     if($k=='preferred_name'){
                         $name .= $separator . '('. $this->$k .')';
                     } else {
-                        $name .= $this->$k . $separator;
+                        if (!empty($this->$k)) {
+                            $name .= $this->$k . $separator;
+                        }
                     }
                 } else {
                     $name .= $this->$k;

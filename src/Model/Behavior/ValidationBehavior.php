@@ -13,6 +13,8 @@ use App\Model\Traits\MessagesTrait;
 class ValidationBehavior extends Behavior {
 	use MessagesTrait;
 
+	private $validationCode = [];
+
 	public function buildValidator(Event $event, Validator $validator, $name) {
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
@@ -24,7 +26,11 @@ class ValidationBehavior extends Behavior {
 					$ruleAttr[$prop] = $rule->get($prop);
 				}
 				if (empty($ruleAttr['message'])) {
-					$ruleAttr['message'] = $this->getMessage(implode('.', [$this->_table->registryAlias(), $field, $ruleName]));
+					$code = implode('.', [$this->_table->registryAlias(), $field, $ruleName]);
+					if (array_key_exists($code, $this->validationCode)) {
+						$code = $this->validationCode[$code];
+					}
+					$ruleAttr['message'] = $this->getMessage($code);
 				}
 				if (method_exists($this, $ruleAttr['rule'])) {
 					$ruleAttr['provider'] = 'custom';
@@ -32,6 +38,11 @@ class ValidationBehavior extends Behavior {
 				$set->add($ruleName, $ruleAttr);
 			}
 		}
+	}
+
+	public function setValidationCode($key, $code) {
+		$alias = $this->_table->registryAlias() . '.' . $key;
+		$this->validationCode[$alias] = $code . '.' . $key;
 	}
 
     private static function _getFieldType($compareField) {
@@ -281,6 +292,25 @@ class ValidationBehavior extends Behavior {
 		}
 		
 	}
+
+	public static function institutionStudentId($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+
+		$existingRecords = $Students->find()
+			->where(
+				[
+					[$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id']],
+					[$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id']],
+					[$Students->aliasField('institution_id') => $globalData['data']['institution_id']],
+					[$Students->aliasField('student_id') => $globalData['data']['student_id']]
+				]
+				
+			)
+			->count();
+			;
+		return ($existingRecords <= 0);
+	}
+
 
 
 }

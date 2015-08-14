@@ -10,13 +10,36 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
+				if (!empty($academicPeriodOptions)) {
+					echo $this->Form->input('academic_period', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $academicPeriodOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'academic_period_id',
+						'data-named-group' => 'status_id,education_grade_id'
+					));
+				}
+
+				if (!empty($educationGradesOptions)) {
+					echo $this->Form->input('education_grade', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $educationGradesOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'education_grade_id',
+						'data-named-group' => 'status_id,academic_period_id'
+					));
+				}
+
 				if (!empty($statusOptions)) {
 					echo $this->Form->input('student_status', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $statusOptions,
 						'url' => $baseUrl,
-						'data-named-key' => 'status_id'
+						'data-named-key' => 'status_id',
+						'data-named-group' => 'academic_period_id,education_grade_id'
 					));
 				}
 			?>

@@ -10,6 +10,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Controller\Controller;
 
+// not in used anymore
+
 class UserBehavior extends Behavior {
 	private $associatedModel;
 	public function initialize(array $config) {
@@ -129,10 +131,9 @@ class UserBehavior extends Behavior {
 
 						// need to insert section over here because it will redirect before going to aftersave
 						if ($this->_table->hasBehavior('Student')) {
-							$sectionData['security_user_id'] = $newEntity->security_user_id;
+							$sectionData['student_id'] = $newEntity->security_user_id;
 							$sectionData['education_grade_id'] = $entity->institution_site_students[0]['education_grade'];
 							$sectionData['institution_site_section_id'] = $entity->institution_site_students[0]['section'];
-							$sectionData['student_category_id'] = $entity->institution_site_students[0]['student_status_id'];
 
 							$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 
@@ -156,7 +157,7 @@ class UserBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity) {
 		if ($this->_table->hasBehavior('Staff')) {
 			// need to insert security roles here
 			$data = $this->_table->ControllerAction->request->data[$this->_table->alias()][$this->associatedModel->table()][0];
@@ -169,13 +170,13 @@ class UserBehavior extends Behavior {
 		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
 		$action = $this->_table->ControllerAction->buttons['index']['url'];
 		if (array_key_exists('new', $action)) {
-			$session = $controller->request->session();
+			$session = $this->controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
 			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
 			unset($action['new']);
 		}
 		$event->stopPropagation();
-		return $controller->redirect($action);
+		return $this->controller->redirect($action);
 	}
 
 }

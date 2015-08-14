@@ -80,7 +80,7 @@ class EventManager
     /**
      * Adds a new listener to an event.
      *
-     * @param callback|\Cake\Event\EventListenerInterface $callable PHP valid callback type or instance of Cake\Event\EventListenerInterface to be called
+     * @param callable|\Cake\Event\EventListenerInterface $callable PHP valid callback type or instance of Cake\Event\EventListenerInterface to be called
      * when the event named with $eventKey is triggered. If a Cake\Event\EventListenerInterface instance is passed, then the `implementedEvents`
      * method will be called on the object to register the declared events individually as methods to be managed by this class.
      * It is possible to define multiple event handlers per event name.
@@ -275,6 +275,10 @@ class EventManager
         }
         if ($callable instanceof EventListenerInterface) {
             $this->_detachSubscriber($callable, $eventKey);
+            return;
+        }
+        if ($callable === null && is_string($eventKey)) {
+            unset($this->_listeners[$eventKey]);
             return;
         }
         if ($callable === null) {

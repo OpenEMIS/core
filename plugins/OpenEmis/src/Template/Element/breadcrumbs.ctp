@@ -1,12 +1,12 @@
 <?php
-	$dashboardUrl = $this->Url->build([
-		'plugin' => false,
-	    'controller' => 'Dashboard',
-	    'action' => 'index',
-	]);
+$session = $this->request->session();
+$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
+if (!isset($_breadcrumbs)) {
+	$_breadcrumbs = [];
+}
 ?>
 <ul class="breadcrumb panel-breadcrumb">
-	<li><a href="<?= $dashboardUrl ?>"><i class="fa fa-home"></i></a></li>
+	<li><a href="<?= $this->Url->build($homeUrl) ?>"><i class="fa fa-home"></i></a></li>
 	
 	<?php foreach($_breadcrumbs as $b) : ?>
 	<li>
