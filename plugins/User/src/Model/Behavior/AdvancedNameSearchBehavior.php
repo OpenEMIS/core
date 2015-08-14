@@ -52,17 +52,17 @@ class AdvancedNameSearchBehavior extends Behavior {
 
 				case 2:
 					// 2 words - search by 1st and last name
-					$query->where(['CONCAT_WS(" ",'.'Users.first_name'.' ,'.'Users.last_name'.' ) LIKE "%' . trim($search) . '%"']);
+					$query->where(['CONCAT_WS(" ",'.'trim(Users.first_name)'.' ,'.'trim(Users.last_name)'.' ) LIKE "%' . trim($search) . '%"']);
 					break;
 
 				case 3:
 					// 3 words - search by 1st middle last
-					$query->where(['CONCAT_WS(" ",'.'Users.first_name'.' ,'.'Users.middle_name'.' ,'.'Users.last_name'.' ) LIKE "%' . trim($search) . '%"']);
+					$query->where(['CONCAT_WS(" ",'.'trim(Users.first_name)'.' ,'.'trim(Users.middle_name)'.' ,'.'trim(Users.last_name)'.' ) LIKE "%' . trim($search) . '%"']);
 					break;
 
 				case 4:
 					// 4 words - search by 1st middle third last
-					$query->where(['CONCAT_WS(" ",'.'Users.first_name'.' ,'.'Users.middle_name'.' ,'.'Users.third_name'.' ,'.'Users.last_name'.' ) LIKE "%' . trim($search) . '%"']);
+					$query->where(['CONCAT_WS(" ",'.'trim(Users.first_name)'.' ,'.'trim(Users.middle_name)'.' ,'.'trim(Users.third_name)'.' ,'.'trim(Users.last_name)'.' ) LIKE "%' . trim($search) . '%"']);
 					break;
 				
 				default:
