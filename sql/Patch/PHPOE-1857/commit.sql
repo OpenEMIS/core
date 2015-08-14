@@ -1,3 +1,7 @@
+-- db_patches
+INSERT INTO `db_patches` VALUES ('PHPOE-1857');
+
+-- labels
 DELETE FROM `labels` WHERE `module` = 'StudentPromotion';
 
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentPromotion', 'openemis_no', 'OpenEMIS ID', 1, NOW());
