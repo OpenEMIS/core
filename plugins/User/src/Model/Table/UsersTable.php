@@ -477,4 +477,31 @@ class UsersTable extends AppTable {
 		
 		return $buttons;
 	}
+
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('openemis_no') . ' LIKE' => $search,
+					$this->aliasField('first_name') . ' LIKE' => $search,
+					$this->aliasField('middle_name') . ' LIKE' => $search,
+					$this->aliasField('third_name') . ' LIKE' => $search,
+					$this->aliasField('last_name') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('first_name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+				'value' => $obj->id
+			];
+		}
+		return $data;
+	}
 }

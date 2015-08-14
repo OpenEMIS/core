@@ -10,17 +10,15 @@ class StudentSectionsTable extends AppTable {
 		$this->table('institution_site_section_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 
 		$this->hasMany('InstitutionSiteSectionGrade', ['className' => 'Institution.InstitutionSiteSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$this->fields['education_grade_id']['visible'] = false;
-		$this->fields['student_category_id']['visible'] = false;
 		$this->fields['status']['visible'] = false;
 
 		$this->ControllerAction->addField('academic_period', []);

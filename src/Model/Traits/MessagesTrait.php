@@ -86,6 +86,7 @@ trait MessagesTrait {
 			'date_closed' => 'Date Closed',
 		],
 		'InstitutionSiteStaff' => [
+			'title' => 'Staff',
 			'start_date' => 'Start Date',
 			'fte' => 'FTE',
 			'total_fte' => 'Total FTE',
@@ -137,6 +138,10 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
+		'Students' => [
+			'noGrades' => 'No Grades',
+			'noStudents' => 'No Student found'
+		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
 		],
@@ -156,6 +161,10 @@ trait MessagesTrait {
 			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
@@ -221,6 +230,10 @@ trait MessagesTrait {
 		'SurveyStatuses' => [
 			'survey_template_id' => 'Survey Template'
 		],
+		'SurveyForms' => [
+			'add_question' => 'Add Question',
+			'add_to_section' => 'Add to Section'
+		],
 		'time' => [
 			'start' => 'Start Time',
 			'end' => 'End Time',
@@ -237,6 +250,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',
@@ -266,7 +280,14 @@ trait MessagesTrait {
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
-
+		'StudentPromotion' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
+			'noData' => 'There are no available Students for Promotion / Graduation.',
+			'current_period' => 'Current Academic Period',
+			'next_period' => 'Next Academic Period'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -302,6 +323,11 @@ trait MessagesTrait {
 					'unique' => 'This Education Programme already exists in the system'
 				],
 				'noGrade' => 'There is no grade selected',
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
@@ -345,6 +371,11 @@ trait MessagesTrait {
 			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'Students' => [
+				'student_id' => [
+					'ruleInstitutionStudentId' => 'Student has already been added.'
 				]
 			]
 		],
@@ -624,6 +655,13 @@ trait MessagesTrait {
 				],
 				'current' => [
 					'ruleValidateNeeded' => 'Academic Period needs to be set as current'
+				]
+			]
+		],
+		'Localization' => [
+			'Translations' => [
+				'en' => [
+					'ruleUnique' => 'This translation is already exists'
 				]
 			]
 		],

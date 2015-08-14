@@ -17,10 +17,14 @@ class UsersController extends AppController {
 	}
 
 	public function login() {
-		$this->layout = false;
+		$this->getView()->layout(false);
 		$username = '';
 		$password = '';
         $session = $this->request->session();
+
+        if ($this->Auth->user()) {
+        	return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+        }
 		
 		if ($this->request->is('post') && $this->request->data['submit'] == 'reload') {
 			//$username = $this->request->data['User']['username'];
