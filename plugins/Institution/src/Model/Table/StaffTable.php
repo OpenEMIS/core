@@ -146,7 +146,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function addAfterAction(Event $event) {
+	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_site_position_id');
 		$this->ControllerAction->field('role');
 		$this->ControllerAction->field('FTE');
@@ -192,6 +192,8 @@ class StaffTable extends AppTable {
 			->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
 			->order(['StaffPositionTitles.order'])
 			->all();
+
+			$positionOptions = [];
 
 			foreach ($positionData as $position) {
 				$positionOptions[$position->id] = $position->name;
@@ -465,7 +467,7 @@ class StaffTable extends AppTable {
 				'Positions.type',
 				'Users.id',
 				'Genders.name',
-				'total' => $query->func()->count($this->aliasField('id'))
+				'total' => $query->func()->count('DISTINCT '.$this->aliasField('security_user_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([
