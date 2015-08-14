@@ -89,7 +89,8 @@ class StudentsTable extends AppTable {
 			->toArray();
 
 		// Academic Periods
-		$academicPeriodOptions = $this->AcademicPeriods->getList();
+		//$academicPeriodOptions = $this->AcademicPeriods->getList();
+		$academicPeriodOptions = $this->AcademicPeriods->getListWithLevels();
 
 		// Education Grades
 		$institutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
@@ -113,12 +114,18 @@ class StudentsTable extends AppTable {
 		$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
 		// Query Strings
 		$selectedStatus = $this->queryString('status_id', $statusOptions);
-		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+		//$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$selectedAcademicPeriod = $request->query('academic_period_id');
+		if (empty($selectedAcademicPeriod)) {
+			$selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+			$request->query['academic_period_id'] = $selectedAcademicPeriod;
+		}
 		$selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
 
 		// Advanced Select Options
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
-		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
+		//$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
+		$this->advancedSelectOptionsForLevels($academicPeriodOptions, $selectedAcademicPeriod);
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
 		if ($selectedEducationGrades != -1) {
@@ -207,7 +214,7 @@ class StudentsTable extends AppTable {
 			$institutionId = $session->read('Institutions.id');
 
 			// Get number of student in institution
-			$periodId = $this->request->query['academic_period_id'];
+			$periodId = $this->request->query('academic_period_id');
 			$studentCount = $this->find()
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
