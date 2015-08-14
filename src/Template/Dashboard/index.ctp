@@ -17,15 +17,15 @@ $this->start('panelBody');
 				<table class="table table-striped table-hover table-bordered">
 					<thead class="table_head">
 						<tr>
-							<td class="action"></td>
-							<td class="table_cell"><?php echo __('Request Title'); ?></td>
-							<td class="table_cell"><?php echo __('Received Date'); ?></td>
-							<td class="table_cell"><?php echo __('Due Date'); ?></td>
-							<td class="table_cell"><?php echo __('Requester'); ?></td>
-							<td class="table_cell"><?php echo __('Type'); ?></td>
+							<th class="action"></th>
+							<th class="table_cell"><?php echo __('Request Title'); ?></th>
+							<th class="table_cell"><?php echo __('Received Date'); ?></th>
+							<th class="table_cell"><?php echo __('Due Date'); ?></th>
+							<th class="table_cell"><?php echo __('Requester'); ?></th>
+							<th class="table_cell"><?php echo __('Type'); ?></th>
 						</tr> 
 					</thead> 
-					<tbody class="table_body">
+					<tbody class="table_body" data-link="row">
 						<?php foreach ($workbenchData as $key => $obj) : ?>
 							<tr>
 								<td></td>
