@@ -38,7 +38,8 @@ class UserBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
+		$events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
 		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
@@ -46,6 +47,10 @@ class UserBehavior extends Behavior {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->_table->fields['is_student']['type'] = 'hidden';
+		$this->_table->fields['is_staff']['type'] = 'hidden';
+		$this->_table->fields['is_guardian']['type'] = 'hidden';
+
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->fields['photo_name']['visible'] = false;
@@ -78,6 +83,12 @@ class UserBehavior extends Behavior {
 		}
 	}
 
+	public function addBeforeAction(Event $event) {
+		$this->_table->fields['is_student']['value'] = 0;
+		$this->_table->fields['is_staff']['value'] = 0;
+		$this->_table->fields['is_guardian']['value'] = 0;
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->_table->ControllerAction->field('openemis_no', [
@@ -96,17 +107,20 @@ class UserBehavior extends Behavior {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
+		$options['auto_contain'] = false;
+
 		$alias = $query->repository()->alias();
 		if ($alias != 'Users') {
-			$options['auto_contain'] = false;
+			// $options['auto_contain'] = false;
 			
-			$query->matching('Users');
+			// $query->matching('Users');
 
-			$sortList = ['Users.openemis_no', 'Users.first_name'];
-			if (array_key_exists('sortWhitelist', $options)) {
-				$sortList = array_merge($options['sortWhitelist'], $sortList);
-			}
-			$options['sortWhitelist'] = $sortList;
+			// $sortList = ['Users.openemis_no', 'Users.first_name'];
+			// if (array_key_exists('sortWhitelist', $options)) {
+			// 	$sortList = array_merge($options['sortWhitelist'], $sortList);
+			// }
+			// $options['sortWhitelist'] = $sortList;
 		}
 	}
 
