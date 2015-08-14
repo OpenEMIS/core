@@ -150,6 +150,11 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
+			'save' => [
+				'draft' => 'Assessment record has been saved to draft successfully.',
+				'final' => 'Assessment record has been submitted successfully.',
+				'failed' => 'The record is not saved due to errors encountered.',
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
