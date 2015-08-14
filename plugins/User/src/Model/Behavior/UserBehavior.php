@@ -65,7 +65,16 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['last_name']['order'] = $i++;
 			$this->_table->fields['preferred_name']['order'] = $i++;
 			$this->_table->fields['gender_id']['order'] = $i++;
+
+			$this->_table->ControllerAction->field('date_of_birth', [
+					'date_options' => [
+						'endDate' => date('d-m-Y', strtotime("-2 year"))
+					],
+					'default_date' => false,
+				]
+			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
+			
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
 			$this->_table->fields['address_area_id']['order'] = $i++;
