@@ -184,6 +184,22 @@ class AcademicPeriodsTable extends AppTable {
 		return $attr;
 	}
 
+	public function getYearList() {
+		$level = $this->Levels
+			->find()
+			->order([$this->Levels->aliasField('level ASC')])
+			->first();
+
+		$list = $this
+			->find('list')
+			->find('visible')
+			->find('order')
+			->where([$this->aliasField('academic_period_level_id') => $level->id])
+			->toArray();
+
+		return $list;
+	}
+
 	public function getList($query = NULL) {
 		$where = [
 			$this->aliasField('current') => 1,

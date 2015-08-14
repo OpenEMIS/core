@@ -283,9 +283,9 @@ class Marshaller
         }
         $data = array_values($data);
 
-        $primaryKey = array_flip($assoc->target()->schema()->primaryKey());
-        $records = [];
-        $conditions = [];
+        $target = $assoc->target();
+        $primaryKey = array_flip($target->schema()->primaryKey());
+        $records = $conditions = [];
         $primaryCount = count($primaryKey);
 
         foreach ($data as $i => $row) {
@@ -295,7 +295,9 @@ class Marshaller
             if (array_intersect_key($primaryKey, $row) === $primaryKey) {
                 $keys = array_intersect_key($row, $primaryKey);
                 if (count($keys) === $primaryCount) {
-                    $conditions[] = $keys;
+                    foreach ($keys as $key => $value) {
+                        $conditions[][$target->aliasfield($key)] = $value;
+                    }
                 }
             } else {
                 $records[$i] = $this->one($row, $options);
@@ -303,7 +305,7 @@ class Marshaller
         }
 
         if (!empty($conditions)) {
-            $query = $assoc->target()->find();
+            $query = $target->find();
             $query->andWhere(function ($exp) use ($conditions) {
                 return $exp->or_($conditions);
             });
@@ -406,6 +408,7 @@ class Marshaller
      *   also be set to a string to use a specific validator. Defaults to true/default.
      * * fieldList: A whitelist of fields to be assigned to the entity. If not present
      *   the accessible fields list in the entity will be used.
+     * * accessibleFields: A list of fields to allow or deny in entity accessible fields.
      *
      * @param \Cake\Datasource\EntityInterface $entity the entity that will get the
      * data merged in
@@ -423,6 +426,12 @@ class Marshaller
 
         if (!$isNew) {
             $keys = $entity->extract((array)$this->_table->primaryKey());
+        }
+
+        if (isset($options['accessibleFields'])) {
+            foreach ((array)$options['accessibleFields'] as $key => $value) {
+                $entity->accessible($key, $value);
+            }
         }
 
         $errors = $this->_validate($data + $keys, $options, $isNew);
@@ -499,6 +508,7 @@ class Marshaller
      * - associated: Associations listed here will be marshalled as well.
      * - fieldList: A whitelist of fields to be assigned to the entity. If not present,
      *   the accessible fields list in the entity will be used.
+     * - accessibleFields: A list of fields to allow or deny in entity accessible fields.
      *
      * @param array|\Traversable $entities the entities that will get the
      *   data merged in
@@ -658,6 +668,7 @@ class Marshaller
             $nested = (array)$associated['_joinData'];
         }
 
+        $options['accessibleFields'] = ['_joinData' => true];
         $records = $this->mergeMany($original, $value, $options);
         foreach ($records as $record) {
             $hash = spl_object_hash($record);

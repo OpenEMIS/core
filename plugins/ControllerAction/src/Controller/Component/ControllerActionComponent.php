@@ -13,7 +13,21 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.0.3
+ControllerActionComponent - Current Version 3.1.4
+3.1.4 (Jeff) - removed $controller param from addAfterSave and replaced with $requestData
+3.1.3 (Jeff) - added new event deleteBeforeAction
+3.1.2 (Jeff) - added deleteStrategy for transferring of records, new event deleteOnInitialize
+3.1.1 (Jeff) - modified add(), edit() to allow changing of table
+3.1.0 (Jeff) - moved renderFields() to be called after the event (afterAction) is triggered
+3.0.9 (Jeff) - fixed getContains to retrieve only id, name and foreignKeys fields
+3.0.8 (Jeff) - fixed remove() not throwing errors if delete fails
+3.0.7 (Jeff) - edited ControllerAction.Controller.beforePaginate to use $this->model instead of $model
+3.0.6 (Malcolm) - $request->data = $requestData->getArrayCopy(); added after addAfterPatch dispatch event
+			 - for purpose of modifying request->data after validation (eg. unsetting a field the value can be removed from the input field after validation)
+3.0.5 (Jeff) - renamed beforeRender to afterAction, afterAction is called in processAction() now. 
+			 - this change is necessary to be compatible with CakePHP v3.1.0
+			 - optimized getContains to only fetch id and name instead of all fields which are not being used most of the time
+3.0.4 (Jeff) - added sortable types in renderFields() to be able to sort by date/time
 3.0.3 (Jeff) - added in search() to implement auto_contain|auto_search|auto_order options to be used in indexBeforePaginate
 3.0.2 (Jeff) - removed debug message on event (ControllerAction.Model.onPopulateSelectOptions)
 3.0.1 (Jeff) - add debug messages on all events triggered by this component
@@ -26,9 +40,11 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\Core\Configure;
 use Cake\Log\Log;
@@ -42,6 +58,7 @@ class ControllerActionComponent extends Component {
 	private $paramsPass;
 	private $config;
 	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
+	private $deleteStrategy = 'cascade'; // cascade | transfer
 
 	public $model = null;
 	public $models = [];
@@ -49,7 +66,6 @@ class ControllerActionComponent extends Component {
 	public $orderField = 'order';
 	public $autoRender = true;
 	public $autoProcess = true;
-	public $removeStraightAway = true;
 	public $ignoreFields = ['modified', 'created'];
 	public $templatePath = '/ControllerAction/';
 	public $pageOptions = [10, 20, 30, 40, 50];
@@ -100,8 +116,9 @@ class ControllerActionComponent extends Component {
 						}
 
 						$actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
+						$options = isset($attr['options']) ? $attr['options'] : [];
 
-						$this->model($attr['className'], $actions);
+						$this->model($attr['className'], $actions, $options);
 						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias();
@@ -129,39 +146,6 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
-	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
-	public function beforeRender(Event $event) {
-		$controller = $this->controller;
-		if (!is_null($this->model) && !empty($this->model->fields)) {
-			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
-
-			$this->renderFields();
-
-			$this->config['action'] = $this->currentAction;
-			$this->config['table'] = $this->model;
-			$this->config['fields'] = $this->model->fields;
-			$this->config['buttons'] = $this->buttons;
-			if (!array_key_exists('formButtons', $this->config)) {
-				$this->config['formButtons'] = true; // need better solution
-			}
-
-			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
-			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
-			$event = $this->model->eventManager()->dispatch($event);
-			if ($event->isStopped()) { return $event->result; }
-			$this->request->params['action'] = $action;
-
-			uasort($this->model->fields, [$this, 'sortFields']);
-			$this->config['fields'] = $this->model->fields;
-			
-			$controller->set('ControllerAction', $this->config);
-
-			// deprecated: backward compatible
-			$controller->set('action', $this->currentAction);
-			$controller->set('model', $this->model->alias());
-		}
-	}
-
 	public function renderFields() {
 		foreach ($this->model->fields as $key => $attr) {
 			if ($key == $this->orderField) {
@@ -172,7 +156,9 @@ class ControllerActionComponent extends Component {
 					$this->model->fields[$key]['type'] = 'select';
 				}
 				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
-					$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+					if (!array_key_exists('empty', $attr)) {
+						$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
+					}
 				}
 			}
 
@@ -180,7 +166,9 @@ class ControllerActionComponent extends Component {
 			if (!array_key_exists('type', $attr)) {
 				$this->log($key, 'debug');
 			}
-			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
+
+			$sortableTypes = ['string', 'date', 'time', 'datetime'];
+			if (in_array($attr['type'], $sortableTypes) && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 				$this->model->fields[$key]['sort'] = true;
 			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 				if ($this->isForeignKey($key)) {
@@ -212,16 +200,20 @@ class ControllerActionComponent extends Component {
 				}
 				$onChange = '';
 				if (is_bool($attr['onChangeReload']) && $attr['onChangeReload'] == true) {
-					$onChange = "$('#reload').click()";
+					$onChange = "$('#reload').click();return false;";
 				} else {
-					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click()";
+					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click();return false;";
 				}
 				$this->model->fields[$key]['attr']['onchange'] = $onChange;
 			}
 		}
 	}
 
-	public function model($model=null, $actions=[]) {
+	public function model($model=null, $actions=[], $options=[]) {
+		if (array_key_exists('deleteStrategy', $options)) {
+			$this->deleteStrategy = $options['deleteStrategy'];
+		}
+
 		if (is_null($model)) {
 			return $this->model;
 		} else {
@@ -413,7 +405,7 @@ class ControllerActionComponent extends Component {
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
 		if ($buttons->offsetExists('remove')) {
-			$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
+			$buttons['remove']['strategy'] = $this->deleteStrategy;
 		}
 
 		// logic for Reorder buttons
@@ -459,7 +451,7 @@ class ControllerActionComponent extends Component {
 					$result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
 				}
 			} else if ($this->triggerFrom == 'Model') {
-				if (method_exists($this->model, $this->currentAction)) {
+				if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {
 					$result = call_user_func_array([$this->model, $this->currentAction], $this->paramsPass);
 				} else {
 					if (in_array($this->currentAction, $this->defaultActions)) {
@@ -469,12 +461,50 @@ class ControllerActionComponent extends Component {
 					}
 				}
 			}
+			if ($result instanceof Response) {
+				return $result;
+			}
 		}
+		$this->debug('processAction');
+		$this->afterAction();
+		
 		if (!$result instanceof Response) {
 			$this->render();
 		}
-		$this->debug('processAction');
 		return $result;
+	}
+
+	public function afterAction() {
+		$controller = $this->controller;
+		if (!is_null($this->model) && !empty($this->model->fields)) {
+			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
+
+			$this->config['action'] = $this->currentAction;
+			$this->config['table'] = $this->model;
+			$this->config['fields'] = $this->model->fields;
+			$this->config['buttons'] = $this->buttons;
+			if (!array_key_exists('formButtons', $this->config)) {
+				$this->config['formButtons'] = true; // need better solution
+			}
+
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
+			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
+			$event = $this->model->eventManager()->dispatch($event);
+			if ($event->isStopped()) { return $event->result; }
+
+			$this->renderFields();
+
+			$this->request->params['action'] = $action;
+
+			uasort($this->model->fields, [$this, 'sortFields']);
+			$this->config['fields'] = $this->model->fields;
+			
+			$controller->set('ControllerAction', $this->config);
+
+			// deprecated: backward compatible
+			$controller->set('action', $this->currentAction);
+			$controller->set('model', $this->model->alias());
+		}
 	}
 
 	public function render() {
@@ -505,8 +535,10 @@ class ControllerActionComponent extends Component {
 			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
-			$action = $this->triggerFrom == 'Controller' ? $this->buttons['remove']['url']['action'] : $this->buttons['remove']['url']['action'].'/'.$this->buttons['remove']['url'][0];
-			$modal['formOptions'] = ['type' => 'delete', 'action' => $action];
+			// $action = $this->triggerFrom == 'Controller' ? $this->buttons['remove']['url']['action'] : $this->buttons['remove']['url']['action'].'/'.$this->buttons['remove']['url'][0];
+			// // $url = ['controller' => $this->controller->name, ]
+			// pr($this->buttons['remove']['url']);
+			$modal['formOptions'] = ['type' => 'delete', 'url' => $this->buttons['remove']['url']];
 			$modal['fields'] = [
 				'id' => array('type' => 'hidden', 'id' => 'recordId')
 			];
@@ -521,7 +553,20 @@ class ControllerActionComponent extends Component {
 		$contain = [];
 		foreach ($model->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
+				$columns = $assoc->schema()->columns();
+				if (in_array('name', $columns)) {
+					$fields = ['id', 'name'];
+					foreach ($columns as $col) {
+						if ($this->endsWith($col, '_id')) {
+							$fields[] = $col;
+						}
+					}
+					$contain[$assoc->name()] = ['fields' => $fields];
+				} else if (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
+					$contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
+				} else {
+					$contain[$assoc->name()] = [];
+				}
 			}
 		}
 		return $contain;
@@ -569,7 +614,7 @@ class ControllerActionComponent extends Component {
 		$this->config['pageOptions'] = $this->pageOptions;
 
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Controller.beforePaginate');
-		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$model, $query, $options]);
+		$event = new Event('ControllerAction.Controller.beforePaginate', $this, [$this->model, $query, $options]);
 		$event = $this->controller->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
@@ -680,14 +725,18 @@ class ControllerActionComponent extends Component {
 
 	public function view($id=0) {
 		$model = $this->model;
-		$primaryKey = $model->primaryKey();
-		$idKey = $model->aliasField($primaryKey);
-		
+
 		// Event: viewBeforeAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.beforeAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.view.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
+		if ($event->result instanceof Table) {
+			$model = $event->result;
+		}
 		// End Event
+
+		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
 
 		$contain = [];
 
@@ -708,13 +757,13 @@ class ControllerActionComponent extends Component {
 
 			// Event: viewEditBeforeQuery
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
 			// Event: viewBeforeQuery
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.beforeQuery');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.beforeQuery', null, [$query]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.view.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
@@ -728,7 +777,7 @@ class ControllerActionComponent extends Component {
 
 			// Event: viewAfterAction
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.afterAction');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.view.afterAction', null, [$entity]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.view.afterAction', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
@@ -750,22 +799,28 @@ class ControllerActionComponent extends Component {
 
 		// Event: addEditBeforeAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
+		if ($event->result instanceof Table) {
+			$model = $event->result;
+		}
 		// End Event
 
 		// Event: addBeforeAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
+		if ($event->result instanceof Table) {
+			$model = $event->result;
+		}
 		// End Event
 
 		$entity = $model->newEntity();
 
-		if ($request->is(['get'])) {
+	if ($request->is(['get'])) {
 			// Event: addOnInitialize
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 		} else if ($request->is(['post', 'put'])) {
@@ -778,25 +833,26 @@ class ControllerActionComponent extends Component {
 			if ($submit == 'save') {
 				// Event: addEditBeforePatch
 				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
-				$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 				
 				// Event: addBeforePatch
 				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforePatch');
-				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforePatch', null, $params);
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
 				$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-
+// pr($entity);die;
 				// Event: addAfterPatch
 				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
-				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterPatch', null, $params);
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterPatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
+				$request->data = $requestData->getArrayCopy();
 
 				$process = function ($model, $entity) {
 					return $model->save($entity);
@@ -804,7 +860,7 @@ class ControllerActionComponent extends Component {
 
 				// Event: onBeforeSave
 				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeSave');
-				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
 				if ($event->isStopped()) { return $event->result; }
 				if (is_callable($event->result)) {
 					$process = $event->result;
@@ -813,14 +869,13 @@ class ControllerActionComponent extends Component {
 
 				if ($process($model, $entity)) {
 					$this->Alert->success('general.add.success');
-					$action = $this->buttons['index']['url'];
-					
 					// Event: addAfterSave
 					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
-					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSave', null, [$this->controller, $entity]);
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterSave', null, [$entity, $requestData]);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
+					$action = $this->buttons['index']['url'];
 					return $this->controller->redirect($action);
 				} else {
 					$this->log($entity->errors(), 'debug');
@@ -834,7 +889,7 @@ class ControllerActionComponent extends Component {
 				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 				$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 				$method = 'addEdit' . ucfirst($methodKey);
-				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+				$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 
@@ -842,7 +897,7 @@ class ControllerActionComponent extends Component {
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
 				$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 				$method = 'add' . ucfirst($methodKey);
-				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+				$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 				
@@ -854,13 +909,13 @@ class ControllerActionComponent extends Component {
 
 		// Event: addEditAfterAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.afterAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
 
 		// Event: addAfterAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterAction', null, [$entity]);
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterAction', null, [$entity]);
 		if ($event->isStopped()) { return $event->result; }
 		// End Event
 		$this->config['form'] = true;
@@ -870,33 +925,40 @@ class ControllerActionComponent extends Component {
 	public function edit($id=0) {
 		$model = $this->model;
 		$request = $this->request;
-		$primaryKey = $model->primaryKey();
-		$idKey = $model->aliasField($primaryKey);
 
 		// Event: addEditBeforeAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
+		if ($event->result instanceof Table) {
+			$model = $event->result;
+		}
 		// End Event
 		
 		// Event: editBeforeAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeAction');
-		$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
+		if ($event->result instanceof Table) {
+			$model = $event->result;
+		}
 		// End Event
+
+		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
 
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->find()->where([$idKey => $id]);
 
 			// Event: viewEditBeforeQuery
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.viewEdit.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
 			// Event: editBeforeQuery
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeQuery');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforeQuery', null, [$query]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforeQuery', null, [$query]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
@@ -911,7 +973,7 @@ class ControllerActionComponent extends Component {
 			if ($this->request->is(['get'])) {
 				// Event: editOnInitialize
 				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.onInitialize');
-				$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.onInitialize', null, [$entity]);
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.onInitialize', null, [$entity]);
 				if ($event->isStopped()) { return $event->result; }
 				// End Event
 			} else if ($this->request->is(['post', 'put'])) {
@@ -924,13 +986,13 @@ class ControllerActionComponent extends Component {
 				if ($submit == 'save') {
 					// Event: addEditBeforePatch
 					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
-					$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 					
 					// Event: editBeforePatch
 					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforePatch');
-					$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.beforePatch', null, $params);
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforePatch', null, $params);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
@@ -945,7 +1007,7 @@ class ControllerActionComponent extends Component {
 
 						// Event: editAfterSave
 						$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterSave');
-						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSave', null, $params);
+						$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.afterSave', null, $params);
 						if ($event->isStopped()) { return $event->result; }
 						// End Event
 						
@@ -963,7 +1025,7 @@ class ControllerActionComponent extends Component {
 					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 					$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 					$method = 'addEdit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
@@ -971,7 +1033,7 @@ class ControllerActionComponent extends Component {
 					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
 					$this->debug(__METHOD__, ': Event -> ' . $eventKey);
 					$method = 'edit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
@@ -983,13 +1045,13 @@ class ControllerActionComponent extends Component {
 
 			// Event: addEditAfterAction
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.afterAction');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
 			// Event: editAfterAction
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterAction');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterAction', null, [$entity]);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.afterAction', null, [$entity]);
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
@@ -1002,13 +1064,80 @@ class ControllerActionComponent extends Component {
 		$this->config['form'] = true;
 	}
 
-	public function remove() {
-		$this->autoRender = false;
+	public function remove($id=0) {
 		$request = $this->request;
 		$model = $this->model;
+		$settings = new ArrayObject([]);
+
+		// Event: deleteBeforeAction
+		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.beforeAction');
+		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.beforeAction', null, [$settings]);
+		if ($event->isStopped()) { return $event->result; }
+		if ($settings->offsetExists('model')) {
+			if ($settings['model'] instanceof Table) {
+				$model = $settings['model'];
+			} else {
+				$model = TableRegistry::get($settings['model']);
+			}
+		}
+		if ($settings->offsetExists('deleteStrategy')) {
+			$this->deleteStrategy = $settings['deleteStrategy'];
+		}
+		// End Event
+
 		$primaryKey = $model->primaryKey();
-		
-		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
+		$idKey = $model->aliasField($primaryKey);
+
+		if ($request->is('get')) {
+			if ($model->exists([$idKey => $id])) {
+				$entity = $model->get($id);
+
+				$query = $model->find();
+				$listOptions = new ArrayObject([]);
+
+				// Event: deleteOnInitialize
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.onInitialize');
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $listOptions]);
+				if ($event->isStopped()) { return $event->result; }
+				// End Event
+
+				if ($listOptions->count() == 0) {
+					$listOptions['keyField'] = 'id';
+					$listOptions['valueField'] = 'name';
+				}
+				$query->find('list', $listOptions->getArrayCopy())->where([$idKey . ' <> ' => $id]);
+
+				$convertOptions = $query->toArray();
+				if (empty($convertOptions)) {
+					$convertOptions[''] = __('No Available Options');
+				}
+
+				$associations = [];
+				foreach ($model->associations() as $assoc) {
+					if ($assoc->type() == 'oneToMany') {
+						if (!array_key_exists($assoc->table(), $associations)) {
+							$count = $assoc->find()
+							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+							->count();
+							$title = $this->Alert->getMessage($assoc->aliasField('title'));
+							if ($title == '[Message Not Found]') {
+								$title = $assoc->name();
+							}
+							$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
+						}
+					}
+				}
+
+				$this->controller->set('data', $entity);
+				$this->controller->set('convertOptions', $convertOptions);
+				$this->controller->set('associations', $associations);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$action = $this->buttons['index']['url'];
+				return $this->controller->redirect($action);
+			}
+		} else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
+			$this->autoRender = false;
 			$id = $request->data[$primaryKey];
 			$deleteOptions = new ArrayObject([]);
 
@@ -1020,14 +1149,13 @@ class ControllerActionComponent extends Component {
 			// Event: onBeforeDelete
 			$params = [$deleteOptions, $id];
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
-			$event = $this->dispatchEvent($model, 'ControllerAction.Model.onBeforeDelete', null, $params);
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
 			if ($event->isStopped()) { return $event->result; }
 			if (is_callable($event->result)) {
 				$process = $event->result;
 			}
 			// End Event
-
-			if ($this->removeStraightAway) {
+			if ($this->deleteStrategy == 'cascade') {
 				if ($process($model, $id, $deleteOptions)) {
 					$this->Alert->success('general.delete.success');
 				} else {
@@ -1036,8 +1164,38 @@ class ControllerActionComponent extends Component {
 				$action = $this->buttons['index']['url'];
 				return $this->controller->redirect($action);
 			} else {
-				//return $this->removeAndTransfer(array('selectedValue' => $id));
+				$transferFrom = $this->request->data('id');
+				$transferTo = $this->request->data('transfer_to');
+
+				$associations = [];
+				foreach ($model->associations() as $assoc) {
+					if ($assoc->type() == 'oneToMany') {
+						if (!array_key_exists($assoc->table(), $associations)) {
+							// $assoc->dependent(false);
+							$associations[$assoc->table()] = $assoc;
+						}
+					}
+				}
+
+				if ($process($model, $transferFrom, $deleteOptions)) {
+					foreach ($associations as $assoc) {
+						$assoc->updateAll(
+							[$assoc->foreignKey() => $transferTo],
+							[$assoc->foreignKey() => $transferFrom]
+						);
+					}
+					$this->Alert->success('general.delete.success');
+				} else {
+					$this->Alert->error('general.delete.failed');
+				}
+				
+				$action = $this->buttons['index']['url'];
+				return $this->controller->redirect($action);
 			}
+		} else {
+			$this->Alert->error('general.delete.failed');
+			$action = $this->buttons['index']['url'];
+			return $this->controller->redirect($action);
 		}
 	}
 
@@ -1071,119 +1229,6 @@ class ControllerActionComponent extends Component {
 		echo $file;
 		exit();
 	}
-
-	/*
-	private function removeAndTransfer($options=[]) {
-		// 'selectedOption' => false, 'selectedValue' => 0
-		$selectedOption = isset($options['selectedOption']) ? $options['selectedOption'] : false;
-
-		$selectedValue = isset($options['selectedValue']) ? $options['selectedValue'] : 0;
-		$model = $this->model;
-		$modelName = $model->alias();
-
-		if ($selectedValue == 0) {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		// $allowDelete = (isset($model->allowDelete)) ? $model->allowDelete: false;
-		// if (!$allowDelete) {
-		// 	$this->Alert->error('general.delete.failed');
-		// 	$action = $this->buttons['view']['url'];
-		// 	return $this->controller->redirect($action);
-		// }
-		$conditions = [];
-		foreach ($model->associations()->type('BelongsTo') as $key=>$value) {
-			// pr($value->alias());
-			if ($this->Session->check($value->alias())) {
-				// pr($value->primaryKey());die;
-				$conditions[] = [$model->aliasField($value->foreignKey()) => $this->Session->read($value->aliasField($value->primaryKey()))];
-			}
-		}
-		$allFieldOptionValues = $model->find('list')->where($conditions);
-		if (is_object($allFieldOptionValues)) {
-			$allFieldOptionValues = $allFieldOptionValues->toArray();
-		} else {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-		if (array_key_exists($selectedValue, $allFieldOptionValues)) {
-			// unset only if field option exists in list
-			unset($allFieldOptionValues[$selectedValue]);
-		} else {
-			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		$currentFieldValue = $model->get($selectedValue);
-		// if no legal records to migrate to ... they are not allowed to delete
-		if (empty($allFieldOptionValues)) {
-			$this->Alert->warning('general.delete.cannotDeleteOnlyRecord');
-			$action = $this->buttons['view']['url'];
-			return $this->controller->redirect($action);
-		}
-
-		$modifyForeignKey = [];
-		foreach ($model->associations()->type('HasMany') as $key=>$value) {
-			$alias = $value->alias();
-			$CurrModelClass = $model->{$alias};
-			$foreignKeyId = $CurrModelClass->foreignKey();
-			$modifyForeignKey[$alias] = $CurrModelClass
-				->find()
-				->where([
-						$CurrModelClass->aliasField($foreignKeyId) => $selectedValue
-					])
-				->count()
-				;
-		}
-
-		$children = false;
-		if (isset($currentFieldValue->parent_id)) {
-			$children = $model->find('all')->where(['parent_id'=>$currentFieldValue->id]);
-		}
-
-		if ($this->request->is(array('post', 'put'))) {
-			$convertValue = $this->request->data[$modelName]['convert_to'];
-			foreach ($modifyForeignKey as $key => $value) {
-				$CurrModelClass = ClassRegistry::init($key);
-				$foreignKeyId = isset($hasManyArray[$key]['foreignKey']) ? $hasManyArray[$key]['foreignKey'] : Inflector::underscore($modelName)."_id";
-				$CurrModelClass->updateAll(
-					array($key.'.'.$foreignKeyId => $convertValue),
-					array($key.'.'.$foreignKeyId => $selectedValue)
-				);
-			}
-			if (isset($currentFieldValue[$modelName]['parent_id']) && count($children)>0) {
-				foreach ($children as $c) {
-					$model->id = $c[$modelName]['id'];
-					$c[$modelName]['parent_id'] = $convertValue;
-					unset($c[$modelName]['lft']);
-					unset($c[$modelName]['rght']);
-					$model->data = $c;
-					$model->saveAll();
-				}
-			}
-			$model->id = $selectedValue;
-			if ($model->delete()) {
-				$this->Alert->success('general.delete.successAfterTransfer');
-				$action = $this->buttons['index']['url'];
-				if (isset($action[1])) {
-					unset($action[1]);
-				}
-				return $this->controller->redirect($action);
-			}
-		}
-		
-		$this->controller->set('allOtherFieldOptionValues', $allFieldOptionValues);
-		$this->controller->set(compact('header', 'currentFieldValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete', 'model', 'children'));
-		
-		die;
-		$this->autoRender = true;
-		$this->templatePath = 'OpenEmis.Element'.$this->templatePath;
-	}
-	/**/
 
 	public function reorder() {
 		$this->autoRender = false;

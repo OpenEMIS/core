@@ -22,7 +22,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->table('institution_site_class_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 	}
@@ -50,7 +50,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$selectedPeriod = $this->request->query('period');
 		$selectedClass = $this->request->query('class');
 		$subjectId = $Classes->get($selectedClass)->education_subject_id;
-		$id = $entity->id;
+		$id = $entity->student_id;
 
 		$itemObj = $Items
 			->find()
@@ -87,7 +87,6 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				if (!is_null($resultObj)) {
 					$html .= $Form->hidden($fieldPrefix.".id", ['value' => $resultObj->id]);
 				}
-
 				$options = ['type' => 'number', 'label' => false, 'value' => $marks];
 				$html .= $Form->input($fieldPrefix.".marks", $options);
 				$html .= $Form->hidden($Items->alias().".id", ['value' => $itemObj->id]);
@@ -112,7 +111,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				$Items = TableRegistry::get('Assessment.AssessmentItems');
 				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 				$alias = Inflector::underscore($Results->alias());
-				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->id;
+				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->security_user_id;
 
 				$gradingOptions = $this->gradingOptions;
 				$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
@@ -138,7 +137,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('identity');
 		$this->ControllerAction->field('mark');
 		$this->ControllerAction->field('grade');
-		$this->ControllerAction->setFieldOrder(['identity', 'security_user_id', 'mark', 'grade']);
+		$this->ControllerAction->setFieldOrder(['identity', 'student_id', 'mark', 'grade']);
 
 		$institutionId = $this->Session->read('Institutions.id');
 		$selectedStatus = $this->request->query('status');
@@ -301,7 +300,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$this->Alert->warning($querySkip);
 		}
 		return $query
-				->where([$this->aliasField('security_user_id') => 0]);
+				->where([$this->aliasField('student_id') => 0]);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {

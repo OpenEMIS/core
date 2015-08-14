@@ -24,6 +24,9 @@ use Cake\View\View;
  *
  * PaginationHelper encloses all methods needed when working with pagination.
  *
+ * @property UrlHelper $Url
+ * @property NumberHelper $Number
+ * @property HtmlHelper $Html
  * @link http://book.cakephp.org/3.0/en/views/helpers/paginator.html
  */
 class PaginatorHelper extends Helper
@@ -69,7 +72,7 @@ class PaginatorHelper extends Helper
             'last' => '<li class="last"><a href="{{url}}">{{text}}</a></li>',
             'number' => '<li><a href="{{url}}">{{text}}</a></li>',
             'current' => '<li class="active"><a href="">{{text}}</a></li>',
-            'ellipsis' => '<li class="ellipsis"><a>...</a></li>',
+            'ellipsis' => '<li class="ellipsis">...</li>',
             'sort' => '<a href="{{url}}">{{text}}</a>',
             'sortAsc' => '<a class="asc" href="{{url}}">{{text}}</a>',
             'sortDesc' => '<a class="desc" href="{{url}}">{{text}}</a>',
@@ -428,10 +431,14 @@ class PaginatorHelper extends Helper
         if (!empty($this->_config['options']['url'])) {
             $url = array_merge($url, $this->_config['options']['url']);
         }
-        $url = array_merge(array_filter($url), $options);
+
+        $url = array_filter($url, function ($value) {
+            return ($value || is_numeric($value));
+        });
+        $url = array_merge($url, $options);
 
         if (!empty($url['page']) && $url['page'] == 1) {
-            $url['page'] = null;
+            $url['page'] = false;
         }
         if (isset($paging['sortDefault'], $paging['directionDefault'], $url['sort'], $url['direction']) &&
             $url['sort'] === $paging['sortDefault'] &&
