@@ -426,7 +426,7 @@ class StaffTable extends AppTable {
 			$_conditions[$this->alias().'.'.$key] = $value;
 		}
 
-		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$currentYearId = $AcademicPeriod->getCurrent();
 		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
 
