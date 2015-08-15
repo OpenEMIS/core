@@ -23,6 +23,15 @@ class StaffTable extends AppTable {
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
+		$this->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_site_staff', // will need to change to institution_staff
+			'foreignKey' => 'security_user_id', // will need to change to staff_id
+			'targetForeignKey' => 'institution_site_id', // will need to change to institution_id
+			'through' => 'Institution.Staff',
+			'dependent' => true
+		]);
+
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);

@@ -23,26 +23,24 @@ class GuardiansTable extends AppTable {
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
-		$this->addBehavior('User.User');
-		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('AdvanceSearch');
-
 		$this->belongsToMany('Students', [
 			'className' => 'Student.Students',
 			'joinTable' => 'student_guardians',
 			'foreignKey' => 'guardian_id',
 			'targetForeignKey' => 'student_id',
-			// 'through' => '',
+			'through' => 'Student.Guardians',
 			'dependent' => true
 		]);
+
+		$this->addBehavior('User.User');
+		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('AdvanceSearch');
 
 		// $this->addBehavior('Excel', [
 		// 	'excludes' => ['password', 'photo_name'],
 		// 	'filename' => 'Guardians'
 		// ]);
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-
-		// $this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
 	public function validationDefault(Validator $validator) {
