@@ -167,7 +167,7 @@ class NavigationComponent extends Component {
 			'Students' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser', 'Promotion']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
@@ -303,7 +303,7 @@ class NavigationComponent extends Component {
 					'Extracurriculars' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Extracurriculars']],
 					'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Memberships']],
 					'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Licenses']],
-					// 'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Training']],
+					'Trainings' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Trainings']]
 				]
 			],
 			'Finance' => [

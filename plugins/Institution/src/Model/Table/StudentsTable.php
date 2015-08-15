@@ -33,13 +33,13 @@ class StudentsTable extends AppTable {
 		// $this->addBehavior('AdvanceSearch');
 		$this->addBehavior('HighChart', [
 			'number_of_students_by_year' => [
-        		'_function' => 'getNumberOfStudentsByYear',
+				'_function' => 'getNumberOfStudentsByYear',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => 'Years']],
 				'yAxis' => ['title' => ['text' => 'Total']]
 			],
 			'number_of_students_by_grade' => [
-        		'_function' => 'getNumberOfStudentsByGrade',
+				'_function' => 'getNumberOfStudentsByGrade',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => 'Education']],
 				'yAxis' => ['title' => ['text' => 'Total']]
@@ -51,7 +51,7 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByAge'
 			],
 			'institution_site_section_student_grade' => [
-        		'_function' => 'getNumberOfStudentsByGradeByInstitution'
+				'_function' => 'getNumberOfStudentsByGradeByInstitution'
 			]
 		]);
 	}
@@ -76,10 +76,10 @@ class StudentsTable extends AppTable {
 	}
 
 	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
 
 	public function beforeAction(Event $event) {
 		$institutionId = $this->Session->read('Institutions.id');
@@ -249,17 +249,17 @@ class StudentsTable extends AppTable {
 			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 2];
 			
 			$indexElements[] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'students',
-	            	'modelCount' => $studentCount,
-	            	'modelArray' => $institutionSiteArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
-	        $this->controller->set('indexElements', $indexElements);
-	    }
+				'name' => $indexDashboard,
+				'data' => [
+					'model' => 'students',
+					'modelCount' => $studentCount,
+					'modelArray' => $institutionSiteArray,
+				],
+				'options' => [],
+				'order' => 1
+			];
+			$this->controller->set('indexElements', $indexElements);
+		}
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -519,21 +519,36 @@ class StudentsTable extends AppTable {
 		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'sectionOptions', 'selectedSection');
 	}
 
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'index') { // for promotion button in index page
+			if ($this->AccessControl->check(['Institutions', 'Grades', 'indexEdit'])) {
+				$graduateButton = $buttons['index'];
+				$graduateButton['url']['action'] = 'Promotion';
+				$graduateButton['url'][0] = 'index';
+				$graduateButton['url']['mode'] = 'edit';
+				$graduateButton['type'] = 'button';
+				$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
+				$graduateButton['attr'] = $attr;
+				$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$graduateButton['attr']['title'] = __('Promotion') . ' / ' . __('Graduation');
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($action == 'view') {
-    		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+				$toolbarButtons['graduate'] = $graduateButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
+		} else if ($action == 'view') { // for transfer button in view page
+			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-	    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
 				$id = $this->request->params['pass'][1];
 				$selectedStudent = $this->get($id)->student_id;
 				$selectedPeriod = $this->get($id)->academic_period_id;
 				$selectedGrade = $this->get($id)->education_grade_id;
-	    		$this->Session->write($TransferRequests->alias().'.id', $id);
+				$this->Session->write($TransferRequests->alias().'.id', $id);
 
-	    		// Show Transfer button only if the Student Status is Current
+				// Show Transfer button only if the Student Status is Current
 				$institutionId = $this->Session->read('Institutions.id');
 				$currentStatus = $StudentStatuses
 					->find()
@@ -566,13 +581,13 @@ class StudentsTable extends AppTable {
 				$transferButton['attr']['title'] = __('Transfer');
 				//End
 
-	    		if ($student->student_status_id == $currentStatus) {
-	    			$transferButton['url'] = [
-			    		'plugin' => $buttons['back']['url']['plugin'],
-			    		'controller' => $buttons['back']['url']['controller'],
-			    		'action' => 'TransferRequests',
-			    		'add'
-			    	];
+				if ($student->student_status_id == $currentStatus) {
+					$transferButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'TransferRequests',
+						'add'
+					];
 					$toolbarButtons['transfer'] = $transferButton;
 				} else if ($student->student_status_id == $pendingStatus) {
 					$transferRequest = $TransferRequests
@@ -586,12 +601,12 @@ class StudentsTable extends AppTable {
 
 					$transferButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
-			    		'controller' => $buttons['back']['url']['controller'],
-			    		'action' => 'TransferRequests',
-			    		'edit',
-			    		$transferRequest->id
-			    	];
-			    	$toolbarButtons['transfer'] = $transferButton;
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'TransferRequests',
+						'edit',
+						$transferRequest->id
+					];
+					$toolbarButtons['transfer'] = $transferButton;
 				}
 			}
 		}
@@ -620,7 +635,7 @@ class StudentsTable extends AppTable {
 		// Creating the data set		
 		$dataSet = [];
 		foreach ($institutionSiteStudentCount->toArray() as $value) {
-            //Compile the dataset
+			//Compile the dataset
 			$dataSet[] = [$value['gender'], $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
@@ -669,18 +684,18 @@ class StudentsTable extends AppTable {
 		$result = [];
 		$prevValue = ['age' => -1, 'count' => null];
 		foreach ($convertAge as $val) {
-	    	if ($prevValue['age'] != $val) {
-	        	unset($prevValue);
-	        	$prevValue = ['age' => $val, 'count' => 0];
-	        	$result[] =& $prevValue;
-	    	}
-    		$prevValue['count']++;
+			if ($prevValue['age'] != $val) {
+				unset($prevValue);
+				$prevValue = ['age' => $val, 'count' => 0];
+				$result[] =& $prevValue;
+			}
+			$prevValue['count']++;
 		}
 		
 		// Creating the data set		
 		$dataSet = [];
 		foreach ($result as $value) {
-            //Compile the dataset
+			//Compile the dataset
 			$dataSet[] = ['Age '.$value['age'], $value['count']];
 		}
 		$params['dataSet'] = $dataSet;

@@ -286,7 +286,8 @@ trait MessagesTrait {
 			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
 			'noData' => 'There are no available Students for Promotion / Graduation.',
 			'current_period' => 'Current Academic Period',
-			'next_period' => 'Next Academic Period'
+			'next_period' => 'Next Academic Period',
+			'success' => 'Students have been promoted.'
 		],
 
 		// Validation Messages
