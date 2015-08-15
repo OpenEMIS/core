@@ -14,13 +14,14 @@ use Guardian\Model\Table\GuardiansTable as UserTable;
 
 class GuardianUserTable extends UserTable {
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($this->Session->check('Students.Guardians.new')) {
-			$guardianData = $this->Session->read('Students.Guardians.new');
+		$sessionKey = 'Student.Guardians.new';
+		if ($this->Session->check($sessionKey)) {
+			$guardianData = $this->Session->read($sessionKey);
 			$guardianData['guardian_id'] = $entity->id;
 
 			$Guardians = TableRegistry::get('Student.Guardians');
 			$Guardians->save($Guardians->newEntity($guardianData));
-			$this->Session->delete('Students.Guardians.new');
+			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Guardians', 'index'];
