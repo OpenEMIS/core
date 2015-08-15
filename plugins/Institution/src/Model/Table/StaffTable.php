@@ -234,7 +234,7 @@ class StaffTable extends AppTable {
 					$this->fields['FTE']['options'] = [
 						['value' => '0.25', 'text' => '25%'],
 						['value' => '0.50', 'text' => '50%', 'selected'],
-					['value' => '0.25', 'text' => '75%']
+						['value' => '0.75', 'text' => '75%']
 					];
 				}
 			}
@@ -450,7 +450,7 @@ class StaffTable extends AppTable {
 			$_conditions[$this->alias().'.'.$key] = $value;
 		}
 
-		$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$currentYearId = $AcademicPeriod->getCurrent();
 		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
 

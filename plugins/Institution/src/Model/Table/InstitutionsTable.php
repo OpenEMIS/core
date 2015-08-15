@@ -403,6 +403,20 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
+	public function indexAfterAction(Event $event, $data) {
+		$search = $this->ControllerAction->getSearchKey();
+		if (empty($search)) {
+			// redirect to school dashboard if it is only one record and no add access
+			$addAccess = $this->AccessControl->check(['Institutions', 'add']);
+			if ($data->count() == 1 && !$addAccess) {
+				$entity = $data->first();
+				$event->stopPropagation();
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $entity->id];
+				return $this->controller->redirect($action);
+			}
+		}
+	}
+
 
 /******************************************************************************************************************
 **
