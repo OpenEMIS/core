@@ -65,8 +65,48 @@ class StudentsTable extends AppTable {
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('is_student', ['value' => 1]);
+	public function validationDefault(Validator $validator) {
+		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->allowEmpty('photo_content')
+			;
+
+		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		return $validator;
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -136,14 +176,32 @@ class StudentsTable extends AppTable {
 		}
 		return $value;
 	}
+
+	public function addBeforeAction(Event $event) {
+		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
+		$this->ControllerAction->field('openemis_no', [ 
+			'attr' => ['value' => $openemisNo],
+			'value' => $openemisNo
+		]);
+
+		$this->ControllerAction->field('username', ['order' => 70]);
+		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('is_student', ['value' => 1]);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function($model, $id, $options) {
+			$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
+			return true;
+		};
+		return $process;
+	}
 	
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
 			// Get total number of students
-			$count = $this->find()
-				->where([$this->aliasField('is_student') => 1])
-				->count();
+			$count = $this->find()->where([$this->aliasField('is_student') => 1])->count();
 
 			// Get the gender for all students
 			$data = [];
@@ -162,145 +220,6 @@ class StudentsTable extends AppTable {
 	        ];
 	    }
 	}
-
-	public function addBeforeAction(Event $event) {
-		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
-		$this->ControllerAction->field('openemis_no', [ 
-			'attr' => ['value' => $openemisNo],
-			'value' => $openemisNo
-		]);
-
-		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
-			$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
-			return true;
-		};
-		return $process;
-	}
-
-	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->allowEmpty('photo_content')
-			;
-
-		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
-		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
-		return $validator;
-	}
-
-	// Function used by Dashboard (Institution Dashboard and Home Page)
-	// public function getNumberOfStudentsByYear($params=[]) {
-	// 	$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-	// 	$_conditions = [];
-	// 	foreach ($conditions as $key => $value) {
-	// 		$_conditions['InstitutionSiteStudents.'.$key] = $value;
-	// 	}
-
-	// 	$periodConditions = $_conditions;
-	// 	$query = $this->find();
-	// 	$periodResult = $query
-	// 		->select([
-	// 			'min_year' => $query->func()->min('InstitutionSiteStudents.start_year'),
-	// 			'max_year' => $query->func()->max('InstitutionSiteStudents.end_year')
-	// 		])
-	// 		->where($periodConditions)
-	// 		->first();
-	// 	$AcademicPeriod = $this->Institutions->InstitutionSiteProgrammes->AcademicPeriods;
-	// 	$currentPeriodId = $AcademicPeriod->getCurrent();
-	// 	$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
-	// 	$thisYear = $currentPeriodObj->end_year;
-	// 	$minYear = $thisYear - 2;
-	// 	$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
-	// 	$maxYear = $thisYear;
-
-	// 	$years = [];
-
-	// 	$genderOptions = $this->Genders->getList();
-	// 	$dataSet = [];
-	// 	foreach ($genderOptions as $key => $value) {
-	// 		$dataSet[$value] = ['name' => __($value), 'data' => []];
-	// 	}
-
-	// 	$studentsByYearConditions = array('Genders.name IS NOT NULL');
-	// 	$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
-
-	// 	for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
-	// 		$years[$currentYear] = $currentYear;
-	// 		$studentsByYearConditions['OR'] = [
-	// 			[
-	// 				'InstitutionSiteStudents.end_year IS NOT NULL',
-	// 				'InstitutionSiteStudents.start_year <= "' . $currentYear . '"',
-	// 				'InstitutionSiteStudents.end_year >= "' . $currentYear . '"'
-	// 			]
-	// 		];
-
-	// 		$query = $this->find();
-	// 		$studentsByYear = $query
-	// 			->contain(['Users.Genders'])
-	// 			->select([
-	// 				'Users.first_name',
-	// 				'Genders.name',
-	// 				'total' => $query->func()->count('InstitutionSiteStudents.id')
-	// 			])
-	// 			->where($studentsByYearConditions)
-	// 			->group('Genders.name')
-	// 			->toArray()
-	// 			;
- // 			foreach ($dataSet as $key => $value) {
- // 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
- // 					$dataSet[$key]['data'][$currentYear] = 0;
- // 				}				
-	// 		}
-
-	// 		foreach ($studentsByYear as $key => $studentByYear) {
-	// 			$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
-	// 			$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
-	// 			$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
-	// 		}
-	// 	}
-
-	// 	$params['dataSet'] = $dataSet;
-		
-	// 	return $params;
-	// }
 
 	// Function use by the mini dashboard (For Student.Students)
 	public function getNumberOfStudentsByGender($params=[]) {
