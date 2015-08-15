@@ -377,6 +377,11 @@ trait MessagesTrait {
 				'student_id' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.'
 				]
+			],
+			'Staff' => [
+				'security_user_id' => [
+					'ruleInstitutionStaffId' => 'Staff has already been added.'
+				]
 			]
 		],
 		'User' => [
@@ -565,6 +570,11 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Start Date cannot be later than End Date',
 				]
 			],
+			'Guardians' => [
+				'guardian_id' => [
+					'ruleStudentGuardianId' => 'This guardian has already added.'
+				]
+			]
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',

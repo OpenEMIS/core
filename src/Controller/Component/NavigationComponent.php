@@ -161,7 +161,6 @@ class NavigationComponent extends Component {
 					'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Programmes']],
 					'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
 					'Subjects' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
-					// 'Grades' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Grades']],
 				]
 			],
 
@@ -172,7 +171,7 @@ class NavigationComponent extends Component {
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
-					'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
+					// 'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
 				]
 			],
 
@@ -218,7 +217,7 @@ class NavigationComponent extends Component {
 
 	public function getStudentNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Students.security_user_id');
+		$id = $session->read('Students.id');
 
 		$navigation = [
 			'General' => [
@@ -268,7 +267,7 @@ class NavigationComponent extends Component {
 
 	public function getStaffNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Staff.security_user_id');
+		$id = $session->read('Staff.id');
 
 		$navigation = [
 			'General' => [
@@ -460,7 +459,6 @@ class NavigationComponent extends Component {
 						'selected' => ['Sections', 'Criterias', 'Options', 'Status']
 					]
 				],
-				
 			],
 			'Communications' => [
 				'collapse' => true,
@@ -479,11 +477,6 @@ class NavigationComponent extends Component {
 					]
 				]
 			],
-			// 'Rubric' => [
-			// 	'collapse' => true,
-			// 	'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates'],
-				
-			// ],
 			'Workflow' => [
 				'collapse' => true,
 				'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'Workflows'],
