@@ -10,14 +10,8 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
 class StaffTable extends AppTable {
-	// used for type = image
-	private $defaultImgIndexClass = "profile-image-thumbnail";
-	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
-
 	public $InstitutionStaff;
 
 	public function initialize(array $config) {
@@ -32,7 +26,6 @@ class StaffTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
-		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		$this->addBehavior('AdvanceSearch');
 
 		$this->addBehavior('CustomField.Record', [
@@ -50,124 +43,12 @@ class StaffTable extends AppTable {
 		]);
 
 		$this->addBehavior('HighChart', [
-			'institution_staff_gender' => [
+			'count_by_gender' => [
 				'_function' => 'getNumberOfStaffByGender'
 			]
 		]);
 
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
-	}
-
-	// public function beforeAction(Event $event) {
-
-	// }
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		// to set the staff name in headers
-		$this->request->session()->write('Staff.name', $entity->name);
-	}
-
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$settings['model'] = 'Security.SecurityUserTypes';
-		$this->fields = []; // unset all fields first
-
-		$this->ControllerAction->field('institution', ['order' => 50]);
-	}
-
-	public function onGetInstitution(Event $event, Entity $entity) {
-		$userId = $entity->security_user_id;
-		$institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
-		->contain(['Institutions'])
-		->select(['Institutions.name'])
-		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
-		->toArray();
-		;
-
-		$value = '';
-		if (!empty($institutions)) {
-			$value = implode(', ', $institutions);
-		}
-		return $value;
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->where(['SecurityUserTypes.user_type' => UserTypes::STAFF]);
-		$query->group(['SecurityUserTypes.security_user_id']);
-
-		$search = $this->ControllerAction->getSearchKey();
-		if (!empty($search)) {
-			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
-		}
-
-		// this part filters the list by institutions/areas granted to the group
-		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
-			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$query->innerJoin(
-				['InstitutionStaff' => 'institution_site_staff'],
-				[
-					'InstitutionStaff.security_user_id = SecurityUserTypes.security_user_id',
-					'InstitutionStaff.institution_site_id IN ' => $institutionIds
-				]
-			);
-		}
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$UserTypes = TableRegistry::get('Security.SecurityUserTypes');
-
-        if ($entity->isNew()) {
-			$obj = $UserTypes->newEntity(['security_user_id' => $entity->id, 'user_type' => UserTypes::STAFF]);
-			$UserTypes = $UserTypes->save($obj);
-        }
-	}
-	
-	// Logic for the mini dashboard
-	public function afterAction(Event $event) {
-		if ($this->action == 'index') {
-			$userTypes = TableRegistry::get('Security.SecurityUserTypes');
-			$institutionSiteArray = [];
-
-			// Get total number of students
-			$count = $userTypes->find()
-				->distinct(['security_user_id'])
-				->where([$userTypes->aliasField('user_type') => UserTypes::STAFF])
-				->count(['security_user_id']);
-
-			// Get the gender for all students
-			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_staff_gender', ['key' => 'Gender']);
-
-			$indexDashboard = 'dashboard';
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'staff',
-	            	'modelCount' => $count,
-	            	'modelArray' => $institutionSiteArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
-	    }
-	}
-
-	public function addBeforeAction(Event $event) {
-		$openemisNo = $this->getUniqueOpenemisId(['model' => 'Staff']);
-		$this->ControllerAction->field('openemis_no', [ 
-			'attr' => ['value' => $openemisNo],
-			'value' => $openemisNo
-		]);
-
-		$this->ControllerAction->field('username', ['order' => 100]);
-		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
-	}
-
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$userTypes = TableRegistry::get('Security.SecurityUserTypes');
-		$affectedRows = $userTypes->deleteAll([
-			'security_user_id' => $entity->id,
-			'user_type' => UserTypes::STAFF
-		]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -214,40 +95,114 @@ class StaffTable extends AppTable {
 		return $validator;
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		foreach (['view', 'edit'] as $action) {
-			if (array_key_exists($action, $buttons)) {
-				$buttons[$action]['url'][1] = $entity->security_user_id;
-			}
+	public function viewAfterAction(Event $event, Entity $entity) {
+		// to set the staff name in headers
+		$this->request->session()->write('Staff.name', $entity->name);
+	}
+
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		// fields are set in UserBehavior
+		$this->fields = []; // unset all fields first
+
+		$this->ControllerAction->field('institution', ['order' => 50]);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('is_staff') => 1]);
+
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
 		}
-		if (array_key_exists('remove', $buttons)) {
-			$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
+
+		// this part filters the list by institutions/areas granted to the group
+		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$query->innerJoin(
+				['InstitutionStaff' => 'institution_site_staff'],
+				[
+					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+					'InstitutionStaff.institution_site_id IN ' => $institutionIds
+				]
+			);
 		}
-		return $buttons;
+	}
+
+	public function onGetInstitution(Event $event, Entity $entity) {
+		$userId = $entity->id;
+		$institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
+		->contain(['Institutions'])
+		->select(['Institutions.name'])
+		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
+		->toArray();
+		;
+
+		$value = '';
+		if (!empty($institutions)) {
+			$value = implode(', ', $institutions);
+		}
+		return $value;
+	}
+
+	public function addBeforeAction(Event $event) {
+		$openemisNo = $this->getUniqueOpenemisId(['model' => 'Staff']);
+		$this->ControllerAction->field('openemis_no', [ 
+			'attr' => ['value' => $openemisNo],
+			'value' => $openemisNo
+		]);
+
+		$this->ControllerAction->field('username', ['order' => 100]);
+		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
+		$this->ControllerAction->field('is_staff', ['value' => 1]);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function($model, $id, $options) {
+			$model->updateAll(['is_staff' => 0], [$model->primaryKey() => $id]);
+			return true;
+		};
+		return $process;
+	}
+
+	// Logic for the mini dashboard
+	public function afterAction(Event $event) {
+		if ($this->action == 'index') {
+			// Get total number of students
+			$count = $this->find()->where([$this->aliasField('is_staff') => 1])->count();
+
+			// Get the gender for all students
+			$data = [];
+			$data['Gender'] = $this->getDonutChart('count_by_gender', ['key' => 'Gender']);
+
+			$indexDashboard = 'dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $count,
+	            	'modelArray' => $data,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+	    }
 	}
 
 	// Function use by the mini dashboard (For Staff.Staff)
 	public function getNumberOfStaffByGender($params=[]) {
+		$query = $this->find();
+		$query
+		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
+		->where([$this->aliasField('is_staff') => 1])
+		->group('gender_id')
+		;
 
-		$institutionSiteRecords = $this->find();
-		$institutionSiteStaffCount = $institutionSiteRecords
-			->select([
-				'count' => $institutionSiteRecords->func()->count('DISTINCT '.$this->aliasField('id')),	
-				'gender' => 'Genders.name'
-			])
-			->contain(['Genders'])
-			->innerJoin(['UserTypes' => 'security_user_types'], [
-				'UserTypes.security_user_id = '.$this->aliasField('id'),
-				'UserTypes.user_type' => UserTypes::STAFF
-			])
-			->group('gender');
+		$genders = $this->Genders->getList()->toArray();
 
-		// Creating the data set		
-		$dataSet = [];
-		foreach ($institutionSiteStaffCount->toArray() as $value) {
-			//Compile the dataset
-			$dataSet[] = [$value['gender'], $value['count']];
+		$resultSet = $query->all();
+		foreach ($resultSet as $entity) {
+			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
