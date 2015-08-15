@@ -392,6 +392,19 @@ class StaffTable extends AppTable {
 		}
 	}
 
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->add('institution_site_position_id', [
+			])
+			->add('institution_site_id', [
+			])
+			->add('security_user_id', 'ruleInstitutionStaffId', [
+				'rule' => ['institutionStaffId'],
+				'on' => 'create'
+			])
+		;
+	}
+
 	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
 			$institutionSiteRecords = $this->find();
