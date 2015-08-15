@@ -299,10 +299,27 @@ class ValidationBehavior extends Behavior {
 		$existingRecords = $Students->find()
 			->where(
 				[
-					[$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id']],
-					[$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id']],
-					[$Students->aliasField('institution_id') => $globalData['data']['institution_id']],
-					[$Students->aliasField('student_id') => $globalData['data']['student_id']]
+					$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
+					$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+					$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
+					$Students->aliasField('student_id') => $globalData['data']['student_id']
+				]
+				
+			)
+			->count();
+			;
+		return ($existingRecords <= 0);
+	}
+
+	public static function institutionStaffId($field, array $globalData) {
+		$Staff = TableRegistry::get('Institution.Staff');
+
+		$existingRecords = $Staff->find()
+			->where(
+				[
+					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
+					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
 				]
 				
 			)
