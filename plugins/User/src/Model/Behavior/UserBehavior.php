@@ -110,17 +110,15 @@ class UserBehavior extends Behavior {
 		$options['auto_search'] = false;
 		$options['auto_contain'] = false;
 
-		$alias = $query->repository()->alias();
-		if ($alias != 'Users') {
-			// $options['auto_contain'] = false;
-			
-			// $query->matching('Users');
+		$table = $query->repository()->table();
+		if ($table != 'security_users') {
+			$query->matching('Users');
 
-			// $sortList = ['Users.openemis_no', 'Users.first_name'];
-			// if (array_key_exists('sortWhitelist', $options)) {
-			// 	$sortList = array_merge($options['sortWhitelist'], $sortList);
-			// }
-			// $options['sortWhitelist'] = $sortList;
+			$sortList = ['Users.openemis_no', 'Users.first_name'];
+			if (array_key_exists('sortWhitelist', $options)) {
+				$sortList = array_merge($options['sortWhitelist'], $sortList);
+			}
+			$options['sortWhitelist'] = $sortList;
 		}
 	}
 
@@ -159,32 +157,15 @@ class UserBehavior extends Behavior {
 		}
 		
 		$value = "";
+		$alias = $this->_table->alias();
 		if (empty($fileContent) && is_null($fileContent)) {
-			if ($this->_table->alias() == 'Students') {
+			if ($alias == 'Students' || $alias == 'StudentUser') {
 				$value = $this->defaultStudentProfileIndex;
-			} else if ($this->_table->alias() == 'Staff') {
+			} else if ($alias == 'Staff' || $alias == 'StaffUser') {
 				$value = $this->defaultStaffProfileIndex;
-			} else if ($this->_table->alias() == 'Guardians') {
+			} else if ($alias == 'Guardians' || $alias == 'GuardianUser') {
 				$value = $this->defaultGuardianProfileIndex;
 			}
-			// if (($this->hasBehavior('Student')) && ($this->action == "index")) {
-			// 	$value = $this->defaultStudentProfileIndex;
-			// }
-			//  else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
-			// 	$value = $this->defaultStaffProfileIndex;
-			// } else if(($this->hasBehavior('Guardian')) && ($this->action == "index")){
-			// 	$value = $this->defaultGuardianProfileIndex;
-			// } else if(($this->hasBehavior('User')) && ($this->action == "index")){
-			// 	$value = $this->defaultUserProfileIndex;
-			// } else if(($this->hasBehavior('Student')) && ($this->action == "view")){
-			// 	$value = $this->defaultStudentProfileView;
-			// } else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
-			// 	$value = $this->defaultStaffProfileView;
-			// } else if(($this->hasBehavior('Guardian')) && ($this->action == "view")){
-			// 	$value = $this->defaultGuardianProfileView;
-			// } else if(($this->hasBehavior('User')) && ($this->action == "view")){
-			// 	$value = $this->defaultUserProfileView;
-			// }
 		} else {
 			$value = base64_encode(stream_get_contents($fileContent));
 		}
@@ -205,11 +186,12 @@ class UserBehavior extends Behavior {
 
 	public function getDefaultImgView() {
 		$value = '';
-		if ($this->_table->alias() == 'Students') {
+		$alias = $this->_table->alias();
+		if ($alias == 'Students' || $alias == 'StudentUser') {
 			$value = $this->defaultStudentProfileView;
-		} else if ($this->_table->alias() == 'Staff') {
+		} else if ($alias == 'Staff' || $alias == 'StaffUser') {
 			$value = $this->defaultStaffProfileView;
-		} else if ($this->_table->alias() == 'Guardians') {
+		} else if ($alias == 'Guardians' || $alias == 'GuardianUser') {
 			$value = $this->defaultGuardianProfileView;
 		}
 		return $value;
