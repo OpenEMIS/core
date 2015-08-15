@@ -10,7 +10,6 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 
 class GuardiansTable extends AppTable {
 	public $InstitutionStudent;
@@ -44,66 +43,6 @@ class GuardiansTable extends AppTable {
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
 		// $this->InstitutionStudent = TableRegistry::get('Institution.Students');
-	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	// $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		// to set the student name in headers
-		$this->request->session()->write('Guardians.name', $entity->name);
-	}
-
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$settings['model'] = 'Security.SecurityUserTypes';
-		$this->fields = []; // unset all fields first
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->where(['SecurityUserTypes.user_type' => UserTypes::GUARDIAN]);
-		$query->group(['SecurityUserTypes.security_user_id']);
-		
-		$search = $this->ControllerAction->getSearchKey();
-		if (!empty($search)) {
-			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
-		}
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$UserTypes = TableRegistry::get('Security.SecurityUserTypes');
-
-        if ($entity->isNew()) {
-			$obj = $UserTypes->newEntity(['security_user_id' => $entity->id, 'user_type' => UserTypes::GUARDIAN]);
-			$UserTypes = $UserTypes->save($obj);
-        }
-	}
-	
-	// Logic for the mini dashboard
-	public function afterAction(Event $event) {
-		
-	}
-
-	public function addBeforeAction(Event $event) {
-		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Guardian')]);
-		$this->ControllerAction->field('openemis_no', [ 
-			'attr' => ['value' => $openemisNo],
-			'value' => $openemisNo
-		]);
-
-		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
-	}
-
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$userTypes = TableRegistry::get('Security.SecurityUserTypes');
-		$affectedRows = $userTypes->deleteAll([
-			'security_user_id' => $entity->id,
-			'user_type' => UserTypes::GUARDIAN
-		]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -150,16 +89,43 @@ class GuardiansTable extends AppTable {
 		return $validator;
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		foreach (['view', 'edit'] as $action) {
-			if (array_key_exists($action, $buttons)) {
-				$buttons[$action]['url'][1] = $entity->security_user_id;
-			}
+	public function viewAfterAction(Event $event, Entity $entity) {
+		// to set the guardian name in headers
+		$this->Session()->write('Guardians.name', $entity->name);
+	}
+
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		// fields are set in UserBehavior
+		$this->fields = []; // unset all fields first
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('is_guardian') => 1]);
+		
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
 		}
-		if (array_key_exists('remove', $buttons)) {
-			$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
-		}
-		return $buttons;
+	}
+
+	public function addBeforeAction(Event $event) {
+		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Guardian')]);
+		$this->ControllerAction->field('openemis_no', [ 
+			'attr' => ['value' => $openemisNo],
+			'value' => $openemisNo
+		]);
+
+		$this->ControllerAction->field('username', ['order' => 70]);
+		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('is_guardian', ['value' => 1]);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function($model, $id, $options) {
+			$model->updateAll(['is_guardian' => 0], [$model->primaryKey() => $id]);
+			return true;
+		};
+		return $process;
 	}
 }

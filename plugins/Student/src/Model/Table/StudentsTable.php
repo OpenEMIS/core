@@ -111,7 +111,7 @@ class StudentsTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
-		$this->request->session()->write('Students.name', $entity->name);
+		$this->Session()->write('Students.name', $entity->name);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
