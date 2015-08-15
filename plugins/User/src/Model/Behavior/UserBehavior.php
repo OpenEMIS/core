@@ -94,14 +94,14 @@ class UserBehavior extends Behavior {
 		$this->_table->ControllerAction->field('openemis_no', [
 			'type' => 'readonly',
 			'order' => 1,
-			'sort' => ['field' => 'Users.openemis_no']
+			'sort' => true
 		]);
 		$this->_table->ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->ControllerAction->field('name', [
 				'order' => 3, 
-				'sort' => ['field' => 'Users.first_name']
+				'sort' => ['field' => 'first_name']
 			]);
 		}
 	}
@@ -114,6 +114,7 @@ class UserBehavior extends Behavior {
 		if ($table != 'security_users') {
 			$query->matching('Users');
 
+			$this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
 			$sortList = ['Users.openemis_no', 'Users.first_name'];
 			if (array_key_exists('sortWhitelist', $options)) {
 				$sortList = array_merge($options['sortWhitelist'], $sortList);
