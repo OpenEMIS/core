@@ -2,6 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -10,8 +11,6 @@ use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Security\Model\Table\SecurityUserTypesTable as UserTypes;
-use Cake\I18n\Time;
 
 class GuardiansTable extends AppTable {
 	public function initialize(array $config) {
@@ -28,6 +27,15 @@ class GuardiansTable extends AppTable {
 		$this->addBehavior('User.AdvancedNameSearch');
 	}
 
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->add('guardian_id', 'ruleStudentGuardianId', [
+				'rule' => ['studentGuardianId'],
+				'on' => 'create'
+			])
+		;
+	}
+
 	public function onGetGuardianId(Event $event, Entity $entity) {
 		if ($entity->has('_matchingData')) {
 			return $entity->_matchingData['Users']->name;
@@ -40,15 +48,11 @@ class GuardiansTable extends AppTable {
 		$this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		
-	}
-
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 	}
 
@@ -62,9 +66,6 @@ class GuardiansTable extends AppTable {
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('id', ['value' => Text::uuid()]);
-		// $this->ControllerAction->setFieldOrder([
-			
-		// ]);
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -123,11 +124,11 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		$this->Session->delete('Students.Guardians.new');
+		$this->Session->delete('Student.Guardians.new');
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Students.Guardians.new', $data[$this->alias()]);
+		$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
 		return $this->controller->redirect($action);
@@ -139,37 +140,24 @@ class GuardiansTable extends AppTable {
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-			$UserTypes = $this->Users->UserTypes;
-			$query = $UserTypes->find()->contain(['Users']);
+			// only search for guardian
+			$query = $this->Users->find()->where([$this->Users->aliasField('is_guardian') => 1]);
 
 			$term = trim($term);
 			if (!empty($term)) {
-				$query = $this->addSearchConditions($query, ['searchTerm' => $term]);
+				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
 			
-			// only search for students
-			$query->where([$UserTypes->aliasField('user_type') => UserTypes::GUARDIAN]);
 			$list = $query->all();
 
-			$data = array();
+			$data = [];
 			foreach($list as $obj) {
-				$data[] = [
-					'label' => sprintf('%s - %s', $obj->user->openemis_no, $obj->user->name),
-					'value' => $obj->user->id
-				];
+				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+				$data[] = ['label' => $label, 'value' => $obj->id];
 			}
 
 			echo json_encode($data);
 			die;
 		}
-	}
-
-	public function validationDefault(Validator $validator) {
-		return $validator
-			->add('guardian_id', 'ruleStudentGuardianId', [
-				'rule' => ['studentGuardianId'],
-				'on' => 'create'
-			])
-		;
 	}
 }

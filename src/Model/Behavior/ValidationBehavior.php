@@ -330,7 +330,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function studentGuardianId($field, array $globalData) {
 		$Guardians = TableRegistry::get('Student.Guardians');
-// pr($globalData['data']);die;
+
 		$existingRecords = $Guardians->find()
 			->where(
 				[
@@ -342,5 +342,4 @@ class ValidationBehavior extends Behavior {
 			;
 		return $existingRecords <= 0;
 	}
-
 }
