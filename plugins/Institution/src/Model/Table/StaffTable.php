@@ -93,7 +93,7 @@ class StaffTable extends AppTable {
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 
 		$this->controller->set(compact('statusOptions', 'periodOptions', 'positionOptions'));
