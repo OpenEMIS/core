@@ -9,9 +9,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
-use Security\Model\Table\SecurityUserTypesTable as UserTypes;
 use Cake\I18n\Time;
+use App\Model\Table\AppTable;
 
 class StudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -31,9 +30,6 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 
-		// $this->addBehavior('Student.Student');
-		// $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
-		// $this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
 		// $this->addBehavior('AdvanceSearch');
 		$this->addBehavior('HighChart', [
 			'number_of_students_by_year' => [
@@ -58,6 +54,25 @@ class StudentsTable extends AppTable {
         		'_function' => 'getNumberOfStudentsByGradeByInstitution'
 			]
 		]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->add('start_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'end_date', false]
+			])
+			->add('end_date', [
+			])
+			->add('student_status_id', [
+			])
+			->add('academic_period_id', [
+			])
+			// ->allowEmpty('student_id') required for create new but disabling for now
+			->add('student_id', 'ruleInstitutionStudentId', [
+				'rule' => ['institutionStudentId'],
+				'on' => 'create'
+			])
+		;
 	}
 
 	public function implementedEvents() {
@@ -107,10 +122,10 @@ class StudentsTable extends AppTable {
 			->where(['institution_site_id' => $institutionId])
 			->group('education_grade_id')
 			->toArray();
-		$addGradesOption = ['-1' => __('All Grades')];
-		$educationGradesOptions = $addGradesOption + $educationGradesOptions;
-
+		
+		$educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
 		$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
+
 		// Query Strings
 		$selectedStatus = $this->queryString('status_id', $statusOptions);
 		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -134,11 +149,10 @@ class StudentsTable extends AppTable {
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
-		// End
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -399,11 +413,11 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		$this->Session->delete('Institutions.Students.new');
+		$this->Session->delete('Institution.Students.new');
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Institutions.Students.new', $data[$this->alias()]);
+		$this->Session->write('Institution.Students.new', $data[$this->alias()]);
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
 		return $this->controller->redirect($action);
@@ -432,48 +446,25 @@ class StudentsTable extends AppTable {
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-			$UserTypes = $this->Users->UserTypes;
-			$query = $UserTypes->find()->contain(['Users']);
+			// only search for students
+			$query = $this->Users->find()->where([$this->Users->aliasField('is_student') => 1]);
 
 			$term = trim($term);
 			if (!empty($term)) {
-				$query = $this->addSearchConditions($query, ['searchTerm' => $term]);
+				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
 			
-			// only search for students
-			$query->where([$UserTypes->aliasField('user_type') => UserTypes::STUDENT]);
 			$list = $query->all();
 
-			$data = array();
+			$data = [];
 			foreach($list as $obj) {
-				$data[] = [
-					'label' => sprintf('%s - %s', $obj->user->openemis_no, $obj->user->name),
-					'value' => $obj->user->id
-				];
+				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+				$data[] = ['label' => $label, 'value' => $obj->id];
 			}
 
 			echo json_encode($data);
 			die;
 		}
-	}
-
-	public function validationDefault(Validator $validator) {
-		return $validator
-			->add('start_date', 'ruleCompareDate', [
-				'rule' => ['compareDate', 'end_date', false]
-			])
-			->add('end_date', [
-			])
-			->add('student_status_id', [
-			])
-			->add('academic_period_id', [
-			])
-			// ->allowEmpty('student_id') required for create new but disabling for now
-			->add('student_id', 'ruleInstitutionStudentId', [
-				'rule' => ['institutionStudentId'],
-				'on' => 'create'
-			])
-		;
 	}
 
 	public function _getSelectOptions() {
