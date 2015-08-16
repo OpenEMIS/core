@@ -26,4 +26,7 @@ ALTER TABLE `staff_trainings` DROP INDEX staff_id;
 ALTER TABLE `staff_trainings` ADD INDEX(`security_user_id`);
 RENAME TABLE `staff_trainings` TO `staff_training`;
 
+DELETE FROM `labels` WHERE `module` = 'Guardians' AND `field` = 'openemis_no';
+DELETE FROM `labels` WHERE `module` = 'Guardians' AND `field` = 'photo_content';
+
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1882';
