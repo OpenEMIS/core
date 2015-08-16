@@ -70,6 +70,10 @@ class StaffTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
+		$periodId = $this->request->query['period'];
+		if ($periodId > 0) {
+			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
+		}
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
@@ -123,7 +127,7 @@ class StaffTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 
-		$this->controller->set(compact('statusOptions', 'periodOptions', 'positionOptions'));
+		$this->controller->set(compact('periodOptions', 'positionOptions'));
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -310,9 +314,11 @@ class StaffTable extends AppTable {
 
 			$session = $this->Session;
 			$institutionId = $session->read('Institutions.id');
+			$periodId = $this->request->query('period');
 
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
+				->find('academicPeriod', ['academic_period_id' => $periodId])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
 				->distinct(['security_user_id'])
 				->count(['security_user_id']);

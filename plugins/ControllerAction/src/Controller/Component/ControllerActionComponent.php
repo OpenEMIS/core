@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.4
+ControllerActionComponent - Current Version 3.1.5
+3.1.5 (Jeff) - moved initButtons to afterAction so that query params can be passed to buttons
 3.1.4 (Jeff) - removed $controller param from addAfterSave and replaced with $requestData
 3.1.3 (Jeff) - added new event deleteBeforeAction
 3.1.2 (Jeff) - added deleteStrategy for transferring of records, new event deleteOnInitialize
@@ -362,21 +363,15 @@ class ControllerActionComponent extends Component {
 			}
 
 			if ($action != 'index') {
-				/**
-				 * @link(PHPOE-1511, https://kordit.atlassian.net/browse/PHPOE-1511)
-				 */
-				// if ($action == 'view') {pr('pass is empty'.$this->currentAction);pr($pass);}
 				if ($this->currentAction != 'index') {
 					$model = $this->model;
 					$primaryKey = $model->primaryKey();
 					$idKey = $model->aliasField($primaryKey);
 					if (empty($pass)) {
-						// if ($action == 'view') {echo 'pass is empty'.$this->currentAction;pr($pass);}
 						if ($this->Session->check($idKey)) {
 							$pass = [$this->Session->read($idKey)];
 						}
-					} elseif (isset($pass[0]) && $pass[0]==$action) {				
-						// if ($action == 'view') {echo 'pass[0] is equals to action'.$this->currentAction;pr($pass);}
+					} elseif (isset($pass[0]) && $pass[0]==$action) {
 						if ($this->Session->check($idKey)) {
 							$pass[1] = $this->Session->read($idKey);
 						}		
@@ -420,11 +415,6 @@ class ControllerActionComponent extends Component {
 				unset($buttons['reorder']);
 			}
 		}
-		
-		$params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
-		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
-		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
-		if ($event->isStopped()) { return $event->result; }
 
 		$this->buttons = $buttons->getArrayCopy();
 	}
@@ -486,6 +476,12 @@ class ControllerActionComponent extends Component {
 			if (!array_key_exists('formButtons', $this->config)) {
 				$this->config['formButtons'] = true; // need better solution
 			}
+
+			$buttons = new ArrayObject($this->buttons);
+			$params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
+			if ($event->isStopped()) { return $event->result; }
 
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);

@@ -56,7 +56,7 @@ class ExcelBehavior extends Behavior {
 			// }
 		}
 		$pages = $this->config('pages');
-		if (empty($pages)) {
+		if ($pages !== false && empty($pages)) {
 			$this->config('pages', ['index', 'view']);
 		}
 	}
@@ -324,7 +324,7 @@ class ExcelBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
 		return $events;
 	}
 
