@@ -34,3 +34,4 @@ INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VAL
 ('Guardians', 'openemis_no', 'OpenEMIS ID', 1, NOW()),
 ('Guardians', 'photo_content', 'Photo', 1, NOW());
 
+UPDATE `student_statuses` SET `name` = 'Enrolled' WHERE `student_statuses`.`id` = 1;

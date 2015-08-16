@@ -51,6 +51,12 @@ class StaffTable extends AppTable {
 			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
+		$this->addBehavior('Excel', [
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'filename' => 'Staff',
+			'pages' => ['view']
+		]);
+
 		$this->addBehavior('HighChart', [
 			'count_by_gender' => [
 				'_function' => 'getNumberOfStaffByGender'
