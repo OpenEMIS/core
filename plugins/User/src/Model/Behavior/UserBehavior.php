@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use User\Model\Entity\User;
 
 class UserBehavior extends Behavior {
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
@@ -125,36 +126,48 @@ class UserBehavior extends Behavior {
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$value = '';
-		if ($entity->has('user')) {
-			$value = $entity->user->openemis_no;
+		if ($entity instanceof User) {
+			$value = $entity->openemis_no;
 		} else if ($entity->has('_matchingData')) {
 			$value = $entity->_matchingData['Users']->openemis_no;
+		} else if ($entity->has('user')) {
+			$value = $entity->user->openemis_no;
 		}
 		return $value;
 	}
 
 	public function onGetIdentity(Event $event, Entity $entity) {
-		return $entity->_matchingData['Users']->default_identity_type;
+		$value = '';
+		if ($entity instanceof User) {
+			$value = $entity->default_identity_type;
+		} else if ($entity->has('_matchingData')) {
+			$value = $entity->_matchingData['Users']->default_identity_type;
+		} else if ($entity->has('user')) {
+			$value = $entity->user->default_identity_type;
+		}
+		return $value;
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
 		$value = '';
-		if ($entity->has('_matchingData')) {
+		if ($entity instanceof User) {
+			$value = $entity->name;
+		} else if ($entity->has('_matchingData')) {
 			$value = $entity->_matchingData['Users']->name;
+		} else if ($entity->has('user')) {
+			$value = $entity->user->name;
 		}
 		return $value;
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		$fileContent = null;
-		if ($entity->has('user')) {
-			$fileContent = $entity->user->photo_content;
+		if ($entity instanceof User) {
+			$fileContent = $entity->photo_content;
 		} else if ($entity->has('_matchingData')) {
 			$fileContent = $entity->_matchingData['Users']->photo_content;
-		} else {
-			if ($this->_table->table() == 'security_users') {
-				$fileContent = $entity->photo_content;
-			}
+		} else if ($entity->has('user')) {
+			$fileContent = $entity->user->photo_content;
 		}
 		
 		$value = "";
