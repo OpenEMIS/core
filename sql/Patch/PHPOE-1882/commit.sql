@@ -29,3 +29,8 @@ RENAME TABLE `staff_training` TO `staff_trainings`;
 ALTER TABLE `staff_trainings` CHANGE `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id';
 ALTER TABLE `staff_trainings` DROP INDEX security_user_id;
 ALTER TABLE `staff_trainings` ADD INDEX(`staff_id`);
+
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES
+('Guardians', 'openemis_no', 'OpenEMIS ID', 1, NOW()),
+('Guardians', 'photo_content', 'Photo', 1, NOW());
+
