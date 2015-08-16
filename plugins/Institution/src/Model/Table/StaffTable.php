@@ -304,13 +304,13 @@ class StaffTable extends AppTable {
 				->count(['security_user_id']);
 
 			// Get Gender
-			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_staff_gender', 
-				['institution_site_id' => $institutionId, 'key' => 'Gender']);
+			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
+				['institution_site_id' => $institutionId, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
-			$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
-				['institution_site_id' => $institutionId, 'key' => 'Licenses']);
+			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
+				['institution_site_id' => $institutionId, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';

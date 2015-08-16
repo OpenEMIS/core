@@ -231,16 +231,16 @@ class StudentsTable extends AppTable {
 				->count();
 
 			//Get Gender
-			$institutionSiteArray['Gender'] = $this->getDonutChart('institution_student_gender', 
-				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => 'Gender']);
+			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_student_gender', 
+				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => __('Gender')]);
 			
 			// Get Age
-			$institutionSiteArray['Age'] = $this->getDonutChart('institution_student_age', 
-				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => 'Age']);
+			$institutionSiteArray[__('Age')] = $this->getDonutChart('institution_student_age', 
+				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => __('Age')]);
 
 			// Get Grades
-			$institutionSiteArray['Grade'] = $this->getDonutChart('institution_site_section_student_grade', 
-				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key'=>'Grade']);
+			$institutionSiteArray[__('Grade')] = $this->getDonutChart('institution_site_section_student_grade', 
+				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => __('Grade')]);
 
 
 			$indexDashboard = 'dashboard';
