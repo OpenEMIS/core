@@ -35,3 +35,9 @@ INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VAL
 ('Guardians', 'photo_content', 'Photo', 1, NOW());
 
 UPDATE `student_statuses` SET `name` = 'Enrolled' WHERE `student_statuses`.`id` = 1;
+
+DELETE FROM `security_functions` WHERE `id` >= 6000;
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(6000, 'Institution', 'Reports', 'Reports', 'Reports', -1, 'Institutions.index', NULL, 'Institutions.add', NULL, 'Institutions.download', 6000, 1, 1, NOW()),
+(6001, 'Students', 'Reports', 'Reports', 'Reports', -1, 'Students.index', NULL, 'Students.add', NULL, 'Students.download', 6001, 1, 1, NOW()),
+(6002, 'Staff', 'Reports', 'Reports', 'Reports', -1, 'Staff.index', NULL, 'Staff.add', NULL, 'Staff.download', 6002, 1, 1, NOW());

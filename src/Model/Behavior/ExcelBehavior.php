@@ -329,21 +329,23 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		$export = $buttons['view'];
-		$export['type'] = 'button';
-		$export['label'] = '<i class="fa kd-export"></i>';
-		$export['attr'] = $attr;
-		$export['attr']['title'] = __('Export');
+		if ($buttons->offsetExists('view')) {
+			$export = $buttons['view'];
+			$export['type'] = 'button';
+			$export['label'] = '<i class="fa kd-export"></i>';
+			$export['attr'] = $attr;
+			$export['attr']['title'] = __('Export');
 
-		if ($isFromModel) {
-			$export['url'][0] = 'excel';
-		} else {
-			$export['url']['action'] = 'excel';
-		}
+			if ($isFromModel) {
+				$export['url'][0] = 'excel';
+			} else {
+				$export['url']['action'] = 'excel';
+			}
 
-		$pages = $this->config('pages');
-		if (in_array($action, $pages)) {
-			$toolbarButtons['export'] = $export;
+			$pages = $this->config('pages');
+			if (in_array($action, $pages)) {
+				$toolbarButtons['export'] = $export;
+			}
 		}
 	}
 }

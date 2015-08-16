@@ -31,4 +31,6 @@ DELETE FROM `labels` WHERE `module` = 'Guardians' AND `field` = 'photo_content';
 
 UPDATE `student_statuses` SET `name` = 'Current' WHERE `student_statuses`.`id` = 1;
 
+DELETE FROM `security_functions` WHERE `id` >= 6000;
+
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1882';

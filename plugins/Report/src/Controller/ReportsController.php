@@ -87,25 +87,4 @@ class ReportsController extends AppController {
 		echo json_encode($data);
 		die;
 	}
-
-	public function download($id) {
-		$this->controller->autoRender = false;
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
-
-		$entity = $ReportProgress->find()->where(['id' => $id])->first();
-		$path = $entity->file_path;
-		if (!empty($path)) {
-			$filename = basename($path);
-			header("Pragma: public", true);
-			header("Expires: 0"); // set expiration time
-			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-			header("Content-Type: application/force-download");
-			header("Content-Type: application/octet-stream");
-			header("Content-Type: application/download");
-			header("Content-Disposition: attachment; filename=".$filename);
-			header("Content-Transfer-Encoding: binary");
-			header("Content-Length: ".filesize($path));
-			echo file_get_contents($path);
-		}
-	}
 }
