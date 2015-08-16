@@ -30,6 +30,11 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 
+		$this->addBehavior('Excel', [
+			'excludes' => ['start_year', 'end_year'], 
+			'pages' => ['index']
+		]);
+
 		// $this->addBehavior('AdvanceSearch');
 		$this->addBehavior('HighChart', [
 			'number_of_students_by_year' => [
@@ -73,6 +78,11 @@ class StudentsTable extends AppTable {
 				'on' => 'create'
 			])
 		;
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$institutionId = $this->Session->read('Institutions.id');
+		$query->where([$this->aliasField('institution_id') => $institutionId]);
 	}
 
 	public function implementedEvents() {
@@ -530,7 +540,7 @@ class StudentsTable extends AppTable {
 				$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
 				$graduateButton['attr'] = $attr;
 				$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$graduateButton['attr']['title'] = __('Promotion') . ' / ' . __('Graduation');
+				$graduateButton['attr']['title'] = __('Promotion / Graduation');
 
 				$toolbarButtons['graduate'] = $graduateButton;
 				$toolbarButtons['back'] = $buttons['back'];
