@@ -205,13 +205,13 @@ class StudentPromotionTable extends AppTable {
 				}
 
 				$promotedOptions = [
-					$this->statusMap['PROMOTED'] => $statusOptions[$this->statusMap['PROMOTED']],
-					$this->statusMap['REPEATED'] => $statusOptions[$this->statusMap['REPEATED']]
+					$this->statusMap['PROMOTED'] => __($statusOptions[$this->statusMap['PROMOTED']]),
+					$this->statusMap['REPEATED'] => __($statusOptions[$this->statusMap['REPEATED']])
 				];
 
 				$graduatedOptions = [
-					$this->statusMap['GRADUATED'] => $statusOptions[$this->statusMap['GRADUATED']],
-					$this->statusMap['REPEATED'] => $statusOptions[$this->statusMap['REPEATED']]
+					$this->statusMap['GRADUATED'] => __($statusOptions[$this->statusMap['GRADUATED']]),
+					$this->statusMap['REPEATED'] => __($statusOptions[$this->statusMap['REPEATED']])
 				];
 				// End
 
