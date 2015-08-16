@@ -83,6 +83,10 @@ class StudentsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
+		$periodId = $this->request->query['academic_period_id'];
+		if ($periodId > 0) {
+			$query->where([$this->aliasField('academic_period_id') => $periodId]);
+		}
 	}
 
 	public function implementedEvents() {
