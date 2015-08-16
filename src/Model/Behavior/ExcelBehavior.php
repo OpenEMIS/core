@@ -329,7 +329,7 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		$export = $buttons['index'];
+		$export = $buttons['view'];
 		$export['type'] = 'button';
 		$export['label'] = '<i class="fa kd-export"></i>';
 		$export['attr'] = $attr;

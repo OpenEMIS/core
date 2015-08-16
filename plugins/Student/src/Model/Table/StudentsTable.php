@@ -53,8 +53,9 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['password', 'photo_name', 'is_student', 'is_staff', 'is_guardian'],
-			'filename' => 'Students'
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'filename' => 'Students',
+			'pages' => ['view']
 		]);
 
 		$this->addBehavior('HighChart', [

@@ -29,4 +29,6 @@ RENAME TABLE `staff_trainings` TO `staff_training`;
 DELETE FROM `labels` WHERE `module` = 'Guardians' AND `field` = 'openemis_no';
 DELETE FROM `labels` WHERE `module` = 'Guardians' AND `field` = 'photo_content';
 
+UPDATE `student_statuses` SET `name` = 'Current' WHERE `student_statuses`.`id` = 1;
+
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1882';
