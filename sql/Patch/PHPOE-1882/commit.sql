@@ -41,3 +41,5 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (6000, 'Institution', 'Reports', 'Reports', 'Reports', -1, 'Institutions.index', NULL, 'Institutions.add', NULL, 'Institutions.download', 6000, 1, 1, NOW()),
 (6001, 'Students', 'Reports', 'Reports', 'Reports', -1, 'Students.index', NULL, 'Students.add', NULL, 'Students.download', 6001, 1, 1, NOW()),
 (6002, 'Staff', 'Reports', 'Reports', 'Reports', -1, 'Staff.index', NULL, 'Staff.add', NULL, 'Staff.download', 6002, 1, 1, NOW());
+
+DELETE FROM `student_statuses` WHERE `code` = 'EXPELLED';
