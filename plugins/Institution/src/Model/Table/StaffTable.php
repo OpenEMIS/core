@@ -33,6 +33,11 @@ class StaffTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 
+		$this->addBehavior('Excel', [
+			'excludes' => ['start_year', 'end_year'], 
+			'pages' => ['index']
+		]);
+
 		$this->addBehavior('HighChart', [
 	      	'number_of_staff' => [
         		'_function' => 'getNumberOfStaff',
@@ -60,6 +65,15 @@ class StaffTable extends AppTable {
 				'on' => 'create'
 			])
 		;
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$institutionId = $this->Session->read('Institutions.id');
+		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
+	}
+
+	public function onExcelGetFTE(Event $event, Entity $entity) {
+		return ($entity->FTE * 100) . '%';
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
