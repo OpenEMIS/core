@@ -182,7 +182,7 @@ class StaffTable extends AppTable {
 
 			// Get the gender for all students
 			$data = [];
-			$data['Gender'] = $this->getDonutChart('count_by_gender', ['key' => 'Gender']);
+			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
