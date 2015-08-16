@@ -288,7 +288,7 @@ class InstitutionsTable extends AppTable  {
 			$modelName = $params[0];
 			$modelId = $params[1];
 			$key = $params[2];
-			$params['key'] = $key;
+			$params['key'] = __($key);
 
 			foreach ($conditions as $key => $value) {
 				$_conditions[$modelName.'.'.$key] = $value;
@@ -309,7 +309,7 @@ class InstitutionsTable extends AppTable  {
 			$dataSet = [];
 			foreach ($institutionSiteTypesCount as $key => $value) {
 	            // Compile the dataset
-				$dataSet[] = [$value['name'], $value['count']];
+				$dataSet[] = [__($value['name']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}
