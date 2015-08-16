@@ -22,7 +22,6 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
 	}
 
@@ -34,10 +33,11 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$settings['pagination'] = false;
+		$userId = $this->_table->Auth->user('id');
+		// $this->ReportProgress->purge($userId, true);
 
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
-		$fields = $this->_table->ControllerAction->getFields($ReportProgress);
+		$settings['pagination'] = false;
+		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
 
 		$fields['current_records']['visible'] = false;
 		$fields['total_records']['visible'] = false;
@@ -53,9 +53,9 @@ class ReportListBehavior extends Behavior {
 
 		$this->_table->ControllerAction->setFieldOrder(['name', 'created', 'modified', 'expiry_date', 'status']);
 		
-		$query = $ReportProgress->find()
-		->where([$ReportProgress->aliasField('module') => $this->_table->alias()])
-		->order([$ReportProgress->aliasField('expiry_date') => 'DESC']);
+		$query = $this->ReportProgress->find()
+		->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
+		->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
 
 		return $query;
 	}
