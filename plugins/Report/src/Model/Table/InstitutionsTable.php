@@ -24,7 +24,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 	}
 
@@ -35,7 +35,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
+		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
 	}
 
