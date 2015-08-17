@@ -89,8 +89,7 @@ class StudentsTable extends AppTable {
 			->toArray();
 
 		// Academic Periods
-		//$academicPeriodOptions = $this->AcademicPeriods->getList();
-		$academicPeriodOptions = $this->AcademicPeriods->getListWithLevels();
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 
 		// Education Grades
 		$institutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
@@ -123,8 +122,14 @@ class StudentsTable extends AppTable {
 
 		// Advanced Select Options
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
-		//$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
-		$this->advancedSelectOptionsForLevels($academicPeriodOptions, $selectedAcademicPeriod);
+		$studentTable = $this;
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+			'callable' => function($id) use ($studentTable, $institutionId) {
+				return $studentTable->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+			}
+		]);
+
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
 		if ($selectedEducationGrades != -1) {

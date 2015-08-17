@@ -213,6 +213,9 @@ class StudentAttendancesTable extends AppTable {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
+		if (empty($this->request->query['period_id'])) {
+			$this->request->query['period_id'] = $AcademicPeriod->getCurrent();
+		}
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
