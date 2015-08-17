@@ -19,11 +19,13 @@ trait UtilityTrait {
 	 * @return string                  the converted string
 	 */
 	public function getHeader($camelizedString = null) {
+		$header = '';
 		if ($camelizedString) {
-		    return Inflector::humanize(Inflector::underscore($camelizedString));
+		    $header = Inflector::humanize(Inflector::underscore($camelizedString));
 		} else {
-	        return Inflector::humanize(Inflector::underscore($this->alias()));
+	        $header = Inflector::humanize(Inflector::underscore($this->alias()));
 		}
+		return __($header);
 	}
 
 	public function queryString($key, $options=[], $request=null) {

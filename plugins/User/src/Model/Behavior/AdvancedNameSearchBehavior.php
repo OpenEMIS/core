@@ -5,24 +5,16 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 
 class AdvancedNameSearchBehavior extends Behavior {
-	protected $_userRole;
-	protected $_info;
-	protected $_roleFields;
-
-	public function initialize(array $config) {
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		return $events;
-	}
-
 	// findByNames
 	// advancedNameSearch Behavior
-	// public function findAcademicPeriod(Query $query, array $options) {
 	public function addSearchConditions(Query $query, $options = []) {
 		if (array_key_exists('searchTerm', $options)) {
 			$search = $options['searchTerm'];
+		}
+
+		$alias = $this->_table->alias();
+		if (array_key_exists('alias', $options)) {
+			$alias = $options['alias'];
 		}
 		
 		$searchParams = explode(' ', $search);
@@ -41,28 +33,31 @@ class AdvancedNameSearchBehavior extends Behavior {
 					$searchString = '%' . $search . '%';
 					$query->where([
 						'OR' => [
-							'Users.openemis_no LIKE' => $searchString,
-							'Users.first_name LIKE' => $searchString,
-							'Users.middle_name LIKE' => $searchString,
-							'Users.third_name LIKE' => $searchString,
-							'Users.last_name LIKE' => $searchString
+							$alias . '.openemis_no LIKE' => $searchString,
+							$alias . '.first_name LIKE' => $searchString,
+							$alias . '.middle_name LIKE' => $searchString,
+							$alias . '.third_name LIKE' => $searchString,
+							$alias . '.last_name LIKE' => $searchString
 						]
 					]);
 					break;
 
 				case 2:
 					// 2 words - search by 1st and last name
-					$query->where(['CONCAT_WS(" ",'.'Users.first_name'.' ,'.'Users.last_name'.' ) LIKE "%' . trim($search) . '%"']);
+					$names = ["$alias.first_name", "$alias.last_name"];
+					$query->where(['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . ') ) LIKE "%' . trim($search) . '%"']);
 					break;
 
 				case 3:
 					// 3 words - search by 1st middle last
-					$query->where(['CONCAT_WS(" ",'.'Users.first_name'.' ,'.'Users.middle_name'.' ,'.'Users.last_name'.' ) LIKE "%' . trim($search) . '%"']);
+					$names = ["$alias.first_name", "$alias.middle_name", "$alias.last_name"];
+					$query->where(['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . '), trim(' . $names[2] . ') ) LIKE "%' . trim($search) . '%"']);
 					break;
 
 				case 4:
 					// 4 words - search by 1st middle third last
-					$query->where(['CONCAT_WS(" ",'.'Users.first_name'.' ,'.'Users.middle_name'.' ,'.'Users.third_name'.' ,'.'Users.last_name'.' ) LIKE "%' . trim($search) . '%"']);
+					$names = ["$alias.first_name", "$alias.middle_name", "$alias.third_name", "$alias.last_name"];
+					$query->where(['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . '), trim(' . $names[2] . '), trim(' . $names[3] . ') ) LIKE "%' . trim($search) . '%"']);
 					break;
 				
 				default:
@@ -70,11 +65,11 @@ class AdvancedNameSearchBehavior extends Behavior {
 						$searchString = '%' . $value . '%';
 						$query->where([
 							'OR' => [
-								'Users.openemis_no LIKE' => $searchString,
-								'Users.first_name LIKE' => $searchString,
-								'Users.middle_name LIKE' => $searchString,
-								'Users.third_name LIKE' => $searchString,
-								'Users.last_name LIKE' => $searchString
+								$alias . '.openemis_no LIKE' => $searchString,
+								$alias . '.first_name LIKE' => $searchString,
+								$alias . '.middle_name LIKE' => $searchString,
+								$alias . '.third_name LIKE' => $searchString,
+								$alias . '.last_name LIKE' => $searchString
 							]
 						]);
 					}
@@ -85,18 +80,16 @@ class AdvancedNameSearchBehavior extends Behavior {
 				$searchString = '%' . $value . '%';
 				$query->where([
 					'OR' => [
-						'Users.openemis_no LIKE' => $searchString,
-						'Users.first_name LIKE' => $searchString,
-						'Users.middle_name LIKE' => $searchString,
-						'Users.third_name LIKE' => $searchString,
-						'Users.last_name LIKE' => $searchString
+						$alias . '.openemis_no LIKE' => $searchString,
+						$alias . '.first_name LIKE' => $searchString,
+						$alias . '.middle_name LIKE' => $searchString,
+						$alias . '.third_name LIKE' => $searchString,
+						$alias . '.last_name LIKE' => $searchString
 					]
 				]);
 			}
 		}
 
 		return $query;
-	}
-
-	
+	}	
 }
