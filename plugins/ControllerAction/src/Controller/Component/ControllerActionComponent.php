@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.6
+ControllerActionComponent - Current Version 3.1.7
+3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
 3.1.6 (Jeff) - created function url($action) to return url with params
 3.1.5 (Jeff) - moved initButtons to afterAction so that query params can be passed to buttons
 3.1.4 (Jeff) - removed $controller param from addAfterSave and replaced with $requestData
@@ -61,6 +62,7 @@ class ControllerActionComponent extends Component {
 	private $config;
 	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
 	private $deleteStrategy = 'cascade'; // cascade | transfer
+	private $view = '';
 
 	public $model = null;
 	public $models = [];
@@ -534,9 +536,17 @@ class ControllerActionComponent extends Component {
 		}
 
 		if ($this->autoRender) {
-			$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
-			$this->controller->render($this->templatePath . $view);
+			if (empty($this->view)) {
+				$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
+				$this->controller->render($this->templatePath . $view);
+			} else {
+				$this->controller->render($this->view);
+			}
 		}
+	}
+
+	public function renderView($view) {
+		$this->view = $view;
 	}
 
 	public function getModalOptions($type) {
