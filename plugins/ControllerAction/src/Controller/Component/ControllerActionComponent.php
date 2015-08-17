@@ -488,6 +488,8 @@ class ControllerActionComponent extends Component {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
+			$this->initButtons();
+
 			$this->config['action'] = $this->currentAction;
 			$this->config['table'] = $this->model;
 			$this->config['fields'] = $this->model->fields;
@@ -495,9 +497,7 @@ class ControllerActionComponent extends Component {
 			if (!array_key_exists('formButtons', $this->config)) {
 				$this->config['formButtons'] = true; // need better solution
 			}
-
-			$this->initButtons();
-
+			
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
