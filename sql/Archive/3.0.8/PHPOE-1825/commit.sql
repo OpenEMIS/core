@@ -62,11 +62,11 @@ DROP TABLE IF EXISTS `population`;
 DROP TABLE IF EXISTS `public_expenditure`;
 DROP TABLE IF EXISTS `public_expenditure_education_level`;
 DROP TABLE IF EXISTS `1290_institution_site_class_students`;
+DROP TABLE IF EXISTS `institution_grade_students`;
 
 -- clean up orphan records
 DELETE FROM assessment_item_results				WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = assessment_item_results.security_user_id);
 DELETE FROM guardian_activities 				WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = guardian_activities.security_user_id);
-DELETE FROM institution_grade_students 			WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = institution_grade_students.security_user_id);
 DELETE FROM institution_site_class_staff 		WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = institution_site_class_staff.security_user_id);
 DELETE FROM institution_site_class_students		WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = institution_site_class_students.student_id);
 DELETE FROM institution_site_quality_rubrics	WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = institution_site_quality_rubrics.security_user_id);
