@@ -366,7 +366,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$this->controller->redirect($action);
     	}
     	if (array_key_exists('grade_type', $query)) {
-    		$this->_selectedGradeType = $this->ControllerAction->buttons['add']['url']['grade_type'];
+    		$this->_selectedGradeType = $query['grade_type'];
     	}
 
 		if ($this->_selectedAcademicPeriodId == -1) {
