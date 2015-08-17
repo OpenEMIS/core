@@ -64,8 +64,11 @@ class InstitutionSiteFeesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
-		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+		if (empty($request->query['academic_period_id'])) {
+			$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		}
 
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$Fees = $this;
 		$institutionId = $this->institutionId;
 
@@ -75,7 +78,6 @@ class InstitutionSiteFeesTable extends AppTable {
 				return $Fees->find()->where(['institution_site_id'=>$institutionId, 'academic_period_id'=>$id])->count();
 			}
 		]);
-		
 		$this->controller->set('selectedOption', $selectedOption);
 		$this->controller->set(compact('academicPeriodOptions'));
 
