@@ -13,36 +13,31 @@ class StaffController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->model('Staff.Staff');
-		
-  //       $this->ControllerAction->model()->addBehavior('TrackActivity', ['target' => 'Staff.StaffActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
-  //       $this->ControllerAction->model()->addBehavior('Excel', [
-		// 	'excludes' => ['password', 'photo_name'],
-		// 	'filename' => 'Staff'
-		// ]);
 
 		$this->ControllerAction->models = [
-			'Accounts' => ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
-			'Contacts' => ['className' => 'User.Contacts'],
-			'Identities' => ['className' => 'User.Identities'],
-			'Languages' => ['className' => 'User.UserLanguages'],
-			'Comments' => ['className' => 'User.Comments'],
-			'SpecialNeeds' => ['className' => 'User.SpecialNeeds'],
-			'Awards' => ['className' => 'User.Awards'],
-			'Attachments' => ['className' => 'User.Attachments'],
-			'Qualifications' => ['className' => 'Staff.Qualifications'],
-			'Positions' => ['className' => 'Staff.Positions', 'actions' => ['index']],
-			'Sections' => ['className' => 'Staff.StaffSections', 'actions' => ['index']],
-			'Classes' => ['className' => 'Staff.StaffClasses', 'actions' => ['index']],
-			'Absences' => ['className' => 'Staff.Absences', 'actions' => ['index']],
-			'Leaves' => ['className' => 'Staff.Leaves'],
-			'Behaviours' => ['className' => 'Staff.StaffBehaviours', 'actions' => ['index']],
-			'Extracurriculars' => ['className' => 'Staff.Extracurriculars'],
-			'Employments' => ['className' => 'Staff.Employments'],
-			'Salaries' => ['className' => 'Staff.Salaries'],
-			'Memberships' => ['className' => 'Staff.Memberships'],
-			'Licenses' => ['className' => 'Staff.Licenses'],
-			'BankAccounts' => ['className' => 'User.BankAccounts'],
-			'History' 			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
+			'Accounts'			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Contacts'			=> ['className' => 'User.Contacts'],
+			'Identities'		=> ['className' => 'User.Identities'],
+			'Languages'			=> ['className' => 'User.UserLanguages'],
+			'Comments'			=> ['className' => 'User.Comments'],
+			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
+			'Awards'			=> ['className' => 'User.Awards'],
+			'Attachments'		=> ['className' => 'User.Attachments'],
+			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
+			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index']],
+			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index']],
+			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index']],
+			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index']],
+			'Leaves'			=> ['className' => 'Staff.Leaves'],
+			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index']],
+			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
+			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
+			'Employments'		=> ['className' => 'Staff.Employments'],
+			'Salaries'			=> ['className' => 'Staff.Salaries'],
+			'Memberships'		=> ['className' => 'Staff.Memberships'],
+			'Licenses'			=> ['className' => 'Staff.Licenses'],
+			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
+			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
 		];
 
 		$this->set('contentHeader', 'Staff');
@@ -133,9 +128,11 @@ class StaffController extends AppController {
 		
 		if ($model->alias() != 'Staff') {
 			if ($session->check('Staff.id')) {
+				$userId = $session->read('Staff.id');
 				if ($model->hasField('security_user_id')) {
-					$userId = $session->read('Staff.id');
 					$query->where([$model->aliasField('security_user_id') => $userId]);
+				} else if ($model->hasField('staff_id')) {
+					$query->where([$model->aliasField('staff_id') => $userId]);
 				}
 			} else {
 				$this->Alert->warning('general.noData');
