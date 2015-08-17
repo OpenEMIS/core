@@ -124,7 +124,9 @@ class UsersTable extends AppTable {
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
 
-		$id = $this->ControllerAction->buttons['view']['url'][0];
+		// $id = $this->ControllerAction->buttons['view']['url'][0];
+		$action = $this->ControllerAction->url('view');
+		$id = $action[0];
 
 		if ($id=='view' || $id=='edit') {
 			if (isset($this->ControllerAction->buttons['view']['url'][1])) {
