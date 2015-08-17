@@ -277,6 +277,7 @@ trait MessagesTrait {
 			'request' => 'Transfer request has been submitted successfully.',
 		],
 		'TransferApprovals' => [
+			'exists' => 'Student is already exists in the new school',
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
