@@ -78,8 +78,13 @@ class StaffTable extends AppTable {
 		// 	->find('list')
 		// 	->toArray();
 
+		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// Academic Periods
-		$periodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getList();
+		$periodOptions = $AcademicPeriodTable->getList();
+
+		if (empty($request->query['period'])) {
+			$request->query['period'] = $AcademicPeriodTable->getCurrent();
+		}
 
 		// Positions
 		$session = $request->session();
@@ -106,14 +111,8 @@ class StaffTable extends AppTable {
 		}
 
 		// // Advanced Select Options
-		// $this->advancedSelectOptions($statusOptions, $selectedStatus);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
-
-		// $query->where([
-		// 	$this->aliasField('student_status_id') => $selectedStatus,
-		// 	$this->aliasField('academic_period_id') => $selectedAcademicPeriod
-		// ]);
 
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {

@@ -179,6 +179,10 @@ class StaffAttendancesTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
 
+		if (empty($this->request->query['period_id'])) {
+			$this->request->query['period_id'] = $AcademicPeriod->getCurrent();
+		}
+
 		$Staff = $this;
 		$institutionId = $this->Session->read('Institutions.id');
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);

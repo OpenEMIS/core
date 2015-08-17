@@ -86,8 +86,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		}
 		if (array_key_exists($this->alias(), $this->request->data)) {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
 		} else if ($this->action == 'edit' && isset($this->request->pass[1])) {
@@ -159,30 +161,18 @@ class InstitutionSiteSectionsTable extends AppTable {
 		// 	'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
 		// );
 		//$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
-		$academicPeriodOptions = $this->AcademicPeriods->getListWithLevels();
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
 		$institutionId = $this->institutionId;
-		//$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-		$this->_selectedAcademicPeriodId = $this->request->query('academic_period_id');
-		if (empty ($this->_selectedAcademicPeriodId )) {
-			$this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-			$this->request->query['academic_period_id'] = $this->_selectedAcademicPeriodId;
-		}
-		// $this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
-		// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
-		// 	'callable' => function($id) use ($Sections, $institutionId) {
-		// 		return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
-		// 	}
-		// ]);
-		$this->advancedSelectOptionsForLevels($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
+		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-
 		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {

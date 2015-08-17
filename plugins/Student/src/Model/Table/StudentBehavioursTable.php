@@ -43,6 +43,9 @@ class StudentBehavioursTable extends AppTable {
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
+		if (empty($this->request->query['period_id'])) {
+			$this->request->query['period_id'] = $AcademicPeriod->getCurrent();
+		}
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
