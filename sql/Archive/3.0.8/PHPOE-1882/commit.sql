@@ -43,3 +43,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (6002, 'Staff', 'Reports', 'Reports', 'Reports', -1, 'Staff.index', NULL, 'Staff.add', NULL, 'Staff.download', 6002, 1, 1, NOW());
 
 DELETE FROM `student_statuses` WHERE `code` = 'EXPELLED';
+
+UPDATE `security_functions` SET `_execute` = 'Students.excel' WHERE `id` = 1012;
+UPDATE `security_functions` SET `_execute` = 'Staff.excel' WHERE `id` = 1016;
+
