@@ -138,7 +138,10 @@ class StudentPromotionTable extends AppTable {
 				$selectedPeriod = $this->AcademicPeriods->getCurrent();
 			} else {
 				// index mode
-				$periodOptions = $this->AcademicPeriods->getYearList();
+				$periodOptions = $this->AcademicPeriods->getList();
+				if (empty($this->request->query['period'])) {
+					$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+				}
 				$selectedPeriod = $this->queryString('period', $periodOptions);
 				$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
