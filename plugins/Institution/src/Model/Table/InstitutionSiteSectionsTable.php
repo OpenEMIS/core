@@ -171,7 +171,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 		]);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {
 			$this->Alert->warning('Institutions.noGrades');
@@ -390,8 +390,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 			/**
 			 * education_grade field setup
+			 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
 			 */
-			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 			if ($this->_selectedEducationGradeId != 0) {
 				if (!array_key_exists($this->_selectedEducationGradeId, $gradeOptions)) {
 					$this->_selectedEducationGradeId = key($gradeOptions);
@@ -429,7 +430,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				 			'grade'=>$grade	]
 			]);
 
-
 			$this->fields['name']['visible'] = false;
 			$this->fields['students']['visible'] = false;
 			$this->fields['security_user_id']['visible'] = false;
@@ -439,7 +439,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
     	} else {
 
-			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId, false);
+			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId, false);
 			$this->ControllerAction->field('multi_grade_field', [
 				'type' => 'element', 
 				'element' => 'Institution.Sections/multi_grade',
@@ -991,11 +991,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	private function getAcademicPeriodOptions() {
-		
+		$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+			'InstitutionGrades.institution_site_id' => $this->institutionId
 		);
-		$list = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($this->Alert, $conditions);
+		$list = $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
 		if (!empty($list)) {
 			if ($this->_selectedAcademicPeriodId != 0) {
 				if (!array_key_exists($this->_selectedAcademicPeriodId, $list)) {
@@ -1006,7 +1006,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 		}
 		return $list;
-
 	}
 	
 	/**
