@@ -535,7 +535,7 @@ class StudentsTable extends AppTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'index') { // for promotion button in index page
-			if ($this->AccessControl->check(['Institutions', 'Grades', 'indexEdit'])) {
+			if ($this->AccessControl->check(['Institutions', 'Promotion', 'indexEdit'])) {
 				$graduateButton = $buttons['index'];
 				$graduateButton['url']['action'] = 'Promotion';
 				$graduateButton['url'][0] = 'index';
