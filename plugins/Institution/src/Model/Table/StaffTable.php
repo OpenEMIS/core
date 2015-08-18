@@ -315,7 +315,7 @@ class StaffTable extends AppTable {
 			$session = $this->Session;
 			$institutionId = $session->read('Institutions.id');
 			$periodId = $this->request->query('period');
-
+			$positionId = $this->request->query('position');
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
