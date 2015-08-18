@@ -170,6 +170,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
 		],
+		'InstitutionRubricAnswers' => [
+			'noSection' => 'There is no rubric section selected',
+		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
