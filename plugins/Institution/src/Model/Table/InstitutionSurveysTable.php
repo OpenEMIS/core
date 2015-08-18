@@ -266,7 +266,8 @@ class InstitutionSurveysTable extends AppTable {
 			}
 
 			$event->stopPropagation();
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			$action['status'] = 2;
 			return $this->controller->redirect($action);
 		}
@@ -317,7 +318,8 @@ class InstitutionSurveysTable extends AppTable {
 		}
 
 		$event->stopPropagation();
-		$action = $this->ControllerAction->buttons['index']['url'];
+		// $action = $this->ControllerAction->buttons['index']['url'];
+		$action = $this->ControllerAction->url('index');
 		return $this->controller->redirect($action);
 	}
 

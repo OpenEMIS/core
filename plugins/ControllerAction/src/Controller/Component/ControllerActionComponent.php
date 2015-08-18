@@ -13,7 +13,10 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.4
+ControllerActionComponent - Current Version 3.1.7
+3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
+3.1.6 (Jeff) - created function url($action) to return url with params
+3.1.5 (Jeff) - moved initButtons to afterAction so that query params can be passed to buttons
 3.1.4 (Jeff) - removed $controller param from addAfterSave and replaced with $requestData
 3.1.3 (Jeff) - added new event deleteBeforeAction
 3.1.2 (Jeff) - added deleteStrategy for transferring of records, new event deleteOnInitialize
@@ -59,6 +62,7 @@ class ControllerActionComponent extends Component {
 	private $config;
 	private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
 	private $deleteStrategy = 'cascade'; // cascade | transfer
+	private $view = '';
 
 	public $model = null;
 	public $models = [];
@@ -140,9 +144,6 @@ class ControllerActionComponent extends Component {
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
 			$this->buildDefaultValidation();
-		}
-		if (!is_null($this->model)) {
-			$this->initButtons();
 		}
 	}
 
@@ -273,6 +274,20 @@ class ControllerActionComponent extends Component {
 		return array_merge($params, $this->paramsQuery());
 	}
 
+	public function url($action) {
+		$controller = $this->controller;
+		$url = ['plugin' => $controller->plugin, 'controller' => $controller->name];
+
+		if ($this->triggerFrom == 'Model') {
+			$url['action'] = $this->model->alias;
+			$url[0] = $action;
+		} else {
+			$url['action'] = $action;
+		}
+		$url = array_merge($url, $this->params());
+		return $url;
+	}
+
 	public function buildDefaultValidation() {
 		$action = $this->currentAction;
 		if ($action != 'index' && $action != 'view') {
@@ -290,10 +305,12 @@ class ControllerActionComponent extends Component {
 						}
 					}
 				} else { // field not presence in validator
-					if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
-						$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
-						if ($this->isForeignKey($key)) {
-							$validator->requirePresence($key);
+					if (array_key_exists('null', $attr)) {
+						if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
+							$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
+							if ($this->isForeignKey($key)) {
+								$validator->requirePresence($key);
+							}
 						}
 					}
 				}
@@ -358,25 +375,19 @@ class ControllerActionComponent extends Component {
 
 			if ($this->triggerFrom == 'Model') {
 				$actionUrl['action'] = $this->model->alias;
-				$actionUrl[] = $action;
+				$actionUrl[0] = $action;
 			}
 
 			if ($action != 'index') {
-				/**
-				 * @link(PHPOE-1511, https://kordit.atlassian.net/browse/PHPOE-1511)
-				 */
-				// if ($action == 'view') {pr('pass is empty'.$this->currentAction);pr($pass);}
 				if ($this->currentAction != 'index') {
 					$model = $this->model;
 					$primaryKey = $model->primaryKey();
 					$idKey = $model->aliasField($primaryKey);
 					if (empty($pass)) {
-						// if ($action == 'view') {echo 'pass is empty'.$this->currentAction;pr($pass);}
 						if ($this->Session->check($idKey)) {
 							$pass = [$this->Session->read($idKey)];
 						}
-					} elseif (isset($pass[0]) && $pass[0]==$action) {				
-						// if ($action == 'view') {echo 'pass[0] is equals to action'.$this->currentAction;pr($pass);}
+					} elseif (isset($pass[0]) && $pass[0]==$action) {
 						if ($this->Session->check($idKey)) {
 							$pass[1] = $this->Session->read($idKey);
 						}		
@@ -420,7 +431,7 @@ class ControllerActionComponent extends Component {
 				unset($buttons['reorder']);
 			}
 		}
-		
+
 		$params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
 		$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
@@ -479,6 +490,8 @@ class ControllerActionComponent extends Component {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
+			$this->initButtons();
+
 			$this->config['action'] = $this->currentAction;
 			$this->config['table'] = $this->model;
 			$this->config['fields'] = $this->model->fields;
@@ -486,7 +499,7 @@ class ControllerActionComponent extends Component {
 			if (!array_key_exists('formButtons', $this->config)) {
 				$this->config['formButtons'] = true; // need better solution
 			}
-
+			
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
 			$event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
 			$event = $this->model->eventManager()->dispatch($event);
@@ -523,9 +536,17 @@ class ControllerActionComponent extends Component {
 		}
 
 		if ($this->autoRender) {
-			$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
-			$this->controller->render($this->templatePath . $view);
+			if (empty($this->view)) {
+				$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
+				$this->controller->render($this->templatePath . $view);
+			} else {
+				$this->controller->render($this->view);
+			}
 		}
+	}
+
+	public function renderView($view) {
+		$this->view = $view;
 	}
 
 	public function getModalOptions($type) {
@@ -535,10 +556,7 @@ class ControllerActionComponent extends Component {
 			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
-			// $action = $this->triggerFrom == 'Controller' ? $this->buttons['remove']['url']['action'] : $this->buttons['remove']['url']['action'].'/'.$this->buttons['remove']['url'][0];
-			// // $url = ['controller' => $this->controller->name, ]
-			// pr($this->buttons['remove']['url']);
-			$modal['formOptions'] = ['type' => 'delete', 'url' => $this->buttons['remove']['url']];
+			$modal['formOptions'] = ['type' => 'delete', 'url' => $this->url('remove')];
 			$modal['fields'] = [
 				'id' => array('type' => 'hidden', 'id' => 'recordId')
 			];
@@ -698,7 +716,7 @@ class ControllerActionComponent extends Component {
 			}
 		} catch (NotFoundException $e) {
 			$this->log($e->getMessage(), 'debug');
-			$action = $this->buttons['index']['url'];
+			$action = $this->url('index');
 			if (array_key_exists('page', $action)) {
 				unset($action['page']);
 			}
@@ -771,8 +789,7 @@ class ControllerActionComponent extends Component {
 
 			if (empty($entity)) {
 				$this->Alert->warning('general.notExists');
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return $this->controller->redirect($this->url('index'));
 			}
 
 			// Event: viewAfterAction
@@ -787,8 +804,7 @@ class ControllerActionComponent extends Component {
 			$this->controller->set('modal', $modal);
 		} else {
 			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
+			return $this->controller->redirect($this->url('index'));
 		}
 		$this->config['form'] = false;
 	}
@@ -875,8 +891,7 @@ class ControllerActionComponent extends Component {
 					if ($event->isStopped()) { return $event->result; }
 					// End Event
 
-					$action = $this->buttons['index']['url'];
-					return $this->controller->redirect($action);
+					return $this->controller->redirect($this->url('index'));
 				} else {
 					$this->log($entity->errors(), 'debug');
 					$this->Alert->error('general.add.failed');
@@ -966,8 +981,7 @@ class ControllerActionComponent extends Component {
 
 			if (empty($entity)) {
 				$this->Alert->warning('general.notExists');
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return $this->controller->redirect($this->url('index'));
 			}
 			
 			if ($this->request->is(['get'])) {
@@ -1003,7 +1017,6 @@ class ControllerActionComponent extends Component {
 					if ($model->save($entity)) {
 						// event: onSaveSuccess
 						$this->Alert->success('general.edit.success');
-						$action = $this->buttons['view']['url'];
 
 						// Event: editAfterSave
 						$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterSave');
@@ -1011,7 +1024,7 @@ class ControllerActionComponent extends Component {
 						if ($event->isStopped()) { return $event->result; }
 						// End Event
 						
-						return $this->controller->redirect($action);
+						return $this->controller->redirect($this->url('view'));
 					} else {
 						// event: onSaveFailed
 						$this->log($entity->errors(), 'debug');
@@ -1058,8 +1071,7 @@ class ControllerActionComponent extends Component {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->Alert->warning('general.notExists');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
+			return $this->controller->redirect($this->url('index'));
 		}
 		$this->config['form'] = true;
 	}
@@ -1133,8 +1145,7 @@ class ControllerActionComponent extends Component {
 				$this->controller->set('associations', $associations);
 			} else {
 				$this->Alert->warning('general.notExists');
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return $this->controller->redirect($this->url('index'));
 			}
 		} else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
 			$this->autoRender = false;
@@ -1161,8 +1172,7 @@ class ControllerActionComponent extends Component {
 				} else {
 					$this->Alert->error('general.delete.failed');
 				}
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return $this->controller->redirect($this->url('index'));
 			} else {
 				$transferFrom = $this->request->data('id');
 				$transferTo = $this->request->data('transfer_to');
@@ -1189,13 +1199,11 @@ class ControllerActionComponent extends Component {
 					$this->Alert->error('general.delete.failed');
 				}
 				
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
+				return $this->controller->redirect($this->url('index'));
 			}
 		} else {
 			$this->Alert->error('general.delete.failed');
-			$action = $this->buttons['index']['url'];
-			return $this->controller->redirect($action);
+			return $this->controller->redirect($this->url('index'));
 		}
 	}
 

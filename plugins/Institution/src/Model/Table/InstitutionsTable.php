@@ -81,7 +81,7 @@ class InstitutionsTable extends AppTable  {
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
-        $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+        $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
@@ -288,7 +288,7 @@ class InstitutionsTable extends AppTable  {
 			$modelName = $params[0];
 			$modelId = $params[1];
 			$key = $params[2];
-			$params['key'] = $key;
+			$params['key'] = __($key);
 
 			foreach ($conditions as $key => $value) {
 				$_conditions[$modelName.'.'.$key] = $value;
@@ -309,7 +309,7 @@ class InstitutionsTable extends AppTable  {
 			$dataSet = [];
 			foreach ($institutionSiteTypesCount as $key => $value) {
 	            // Compile the dataset
-				$dataSet[] = [$value['name'], $value['count']];
+				$dataSet[] = [__($value['name']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}
@@ -400,6 +400,20 @@ class InstitutionsTable extends AppTable  {
 		$queryParams = $request->query;
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
+		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$search = $this->ControllerAction->getSearchKey();
+		if (empty($search)) {
+			// redirect to school dashboard if it is only one record and no add access
+			$addAccess = $this->AccessControl->check(['Institutions', 'add']);
+			if ($data->count() == 1 && !$addAccess) {
+				$entity = $data->first();
+				$event->stopPropagation();
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $entity->id];
+				return $this->controller->redirect($action);
+			}
 		}
 	}
 

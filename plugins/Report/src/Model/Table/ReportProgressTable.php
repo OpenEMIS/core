@@ -73,23 +73,29 @@ class ReportProgressTable extends AppTable  {
 		}
 	}
 
-	// needs modification to cake v3
-	public function purge($userId) {
+	public function purge($userId=null, $now=false) {
 		$format = 'Y-m-d';
-		$data = $this->find('list', array(
-			'fields' => array('ReportProgress.id', 'ReportProgress.file_path'),
-			'conditions' => array('ReportProgress.expiry_date < ' => date($format))
-		));
+		$conditions = [$this->aliasField('expiry_date') . ' < ' => date($format)];
 
-		foreach ($data as $id => $path) {
-			if (file_exists($path)) {
-				if (unlink($path)) {
-					$this->delete($id);
-				} else {
-					$this->log('ReportProgress.purge - Unable to delete file id:' . $id, 'debug');
+		$query = $this->find();
+
+		if (!$now) {
+			$query->where($conditions);
+		}
+
+		if (!is_null($userId)) {
+			$query->where([$this->aliasField('created_user_id') => $userId]);
+		}
+
+		$resultSet = $query->toArray();
+		
+		foreach ($resultSet as $entity) {
+			if (file_exists($entity->file_path)) {
+				if (unlink($entity->file_path)) {
+					$this->delete($entity);
 				}
 			} else {
-				$this->delete($id);
+				$this->delete($entity);
 			}
 		}
 	}
