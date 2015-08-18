@@ -320,8 +320,11 @@ class StaffTable extends AppTable {
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
-				->distinct(['security_user_id'])
-				->count(['security_user_id']);
+				->distinct(['security_user_id']);
+
+			if ($positionId != 0) {
+				$staffCount->where([$this->aliasField('institution_site_position_id') => $positionId]);
+			}
 
 			// Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
@@ -338,7 +341,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount,
+	            	'modelCount' => $staffCount->count(['security_user_id']),
 	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
