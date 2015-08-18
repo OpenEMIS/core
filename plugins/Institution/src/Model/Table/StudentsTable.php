@@ -233,41 +233,47 @@ class StudentsTable extends AppTable {
 			$institutionSiteArray = [];
 			$session = $this->Session;
 			$institutionId = $session->read('Institutions.id');
-
 			// Get number of student in institution
 			$periodId = $this->request->query['academic_period_id'];
 			$statusId = $this->request->query['status_id'];
 			$educationGradeId = $this->request->query['education_grade_id'];
+			$conditions['institution_id'] = $institutionId;
+			$conditions['academic_period_id'] = $periodId;
+
 			$studentCount = $this->find()
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
 					$this->aliasField('academic_period_id') => $periodId
 				])
 				->group(['student_id']);
-				
+			
 			if ($statusId != -1) {
 				$studentCount->where([
 					$this->aliasField('student_status_id') => $statusId
 				]);
+				$conditions['student_status_id'] = $statusId;
+			}
+			
+			if ($educationGradeId != -1) {
+				$studentCount->where([
+					$this->aliasField('education_grade_id') => $educationGradeId
+				]);
+				$conditions['education_grade_id'] = $educationGradeId;
 			}
 
-			if ($educationGradeId != -1) {
-				// $studentCount->where([
-				// 	$this->aliasField('student_status_id') => $educationGradeId
-				// ]);
-			}
+
 
 			//Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_student_gender', 
-				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => __('Gender')]);
+				['conditions' => $conditions, 'key' => __('Gender')]);
 			
 			// Get Age
 			$institutionSiteArray[__('Age')] = $this->getDonutChart('institution_student_age', 
-				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => __('Age')]);
+				['conditions' => $conditions, 'key' => __('Age')]);
 
 			// Get Grades
 			$institutionSiteArray[__('Grade')] = $this->getDonutChart('institution_site_section_student_grade', 
-				['institution_id' => $institutionId, 'academic_period_id' => $periodId, 'key' => __('Grade')]);
+				['conditions' => $conditions, 'key' => __('Grade')]);
 
 
 			$indexDashboard = 'dashboard';
@@ -641,18 +647,15 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGender($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
 		$studentsConditions = [
-			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			'Users.date_of_death IS NULL',
 		];
-
-		if (!empty($params['institution_id'])) {
-			$studentsConditions = array_merge($studentsConditions, ['institution_id' => $params['institution_id']]);
-		}
-
-		if (!empty($params['academic_period_id'])) {
-			$studentsConditions = array_merge($studentsConditions, ['academic_period_id' => $params['academic_period_id']]);
-		}
+		$studentsConditions = array_merge($studentsConditions, $_conditions);
 
 		$institutionSiteRecords = $this->find();
 		$institutionSiteStudentCount = $institutionSiteRecords
@@ -678,20 +681,17 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByAge($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
 
 		$studentsConditions = [
-			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			'Users.date_of_death IS NULL',
 		];
 
-		if (!empty($params['institution_id'])) {
-			$studentsConditions = array_merge($studentsConditions, ['institution_id' => $params['institution_id']]);
-		}
-
-		if (!empty($params['academic_period_id'])) {
-			$studentsConditions = array_merge($studentsConditions, ['academic_period_id' => $params['academic_period_id']]);
-		}
-
+		$studentsConditions = array_merge($studentsConditions, $_conditions);
 		$today = Time::today();
 
 		$institutionSiteRecords = $this->find();
@@ -701,8 +701,10 @@ class StudentsTable extends AppTable {
 				'age' => $institutionSiteRecords->func()->dateDiff([
 					$institutionSiteRecords->func()->now(),
 					'Users.date_of_birth' => 'literal'
-				])
+				]),
+				'student' => $this->aliasField('student_id')
 			])
+			->distinct(['student'])
 			->where($studentsConditions)
 			->order('age');
 
@@ -739,25 +741,22 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
 		$studentsByGradeConditions = [
-			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 		];
 
-		if (!empty($params['institution_id'])) {
-			$studentsByGradeConditions = array_merge($studentsByGradeConditions, ['institution_id' => $params['institution_id']]);
-
-		}
-
-		if (!empty($params['academic_period_id'])) {
-			$studentsByGradeConditions = array_merge($studentsByGradeConditions, ['academic_period_id' => $params['academic_period_id']]);
-		}
+		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
 
 		$query = $this->find();
 		$studentByGrades = $query
 			->select([
 				'grade' => 'EducationGrades.name',
-				'count' => $query->func()->count($this->aliasField('student_id'))
+				'count' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
 			])
 			->contain([
 				'EducationGrades'
