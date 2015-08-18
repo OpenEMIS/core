@@ -236,14 +236,26 @@ class StudentsTable extends AppTable {
 
 			// Get number of student in institution
 			$periodId = $this->request->query['academic_period_id'];
+			$statusId = $this->request->query['status_id'];
+			$educationGradeId = $this->request->query['education_grade_id'];
 			$studentCount = $this->find()
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
-					$this->aliasField('academic_period_id') => $periodId,
-					'OR' => [['student_status_id' => 1], ['student_status_id' => 2]]
+					$this->aliasField('academic_period_id') => $periodId
 				])
-				->group(['student_id'])
-				->count();
+				->group(['student_id']);
+				
+			if ($statusId != -1) {
+				$studentCount->where([
+					$this->aliasField('student_status_id') => $statusId
+				]);
+			}
+
+			if ($educationGradeId != -1) {
+				// $studentCount->where([
+				// 	$this->aliasField('student_status_id') => $educationGradeId
+				// ]);
+			}
 
 			//Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_student_gender', 
@@ -267,7 +279,7 @@ class StudentsTable extends AppTable {
 				'name' => $indexDashboard,
 				'data' => [
 					'model' => 'students',
-					'modelCount' => $studentCount,
+					'modelCount' => $studentCount->count(),
 					'modelArray' => $institutionSiteArray,
 				],
 				'options' => [],
