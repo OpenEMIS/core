@@ -1,9 +1,4 @@
 <?php
-echo $this->Html->script('highchart/highcharts', ['block' => true]);
-echo $this->Html->script('highchart/modules/exporting', ['block' => true]);
-echo $this->Html->script('dashboards', ['block' => true]);
-?>
-<?php
 $this->extend('OpenEmis./Layout/Panel');
 
 $this->start('panelBody');
@@ -13,7 +8,6 @@ $this->start('panelBody');
 		<div style="padding: 0px 20px 20px 20px; border: 1px solid grey">
 			<h5><?php echo __('Notices'); ?></h5>
 			<div style='overflow:auto;max-height: 250px;'>
-			<?php 	//if (!empty($noticeData)) { ?>
 				<table class="table table-striped table-hover table-bordered">
 					<tbody class="table_body">
 					<?php 
@@ -42,12 +36,6 @@ $this->start('panelBody');
 					?>
 					</tbody>
 				</table>
-			<?php 
-
-					// } else {
-					// 	//$this->Alert->getMessage('general.select.noOptions');
-					// }
-			?>
 			</div>
 		</div>
 	</div>
