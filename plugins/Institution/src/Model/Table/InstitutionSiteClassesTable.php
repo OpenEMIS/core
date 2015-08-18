@@ -56,7 +56,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		 * In add operations, these models attributes are empty by default.
 		 */
 		$this->InstitutionSiteSections = $this->Institutions->InstitutionSiteSections;
-		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
 		$this->InstitutionSiteSectionGrades = $this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
 	}
 
@@ -676,10 +675,11 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	private function getAcademicPeriodOptions() {
+		$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+			'InstitutionGrades.institution_site_id' => $this->institutionId
 		);
-		$list = $this->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($this->Alert, $conditions);
+		$list = $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
 		if (!empty($list)) {
 			if ($this->_selectedAcademicPeriodId != 0) {
 				if (!array_key_exists($this->_selectedAcademicPeriodId, $list)) {
