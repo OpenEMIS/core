@@ -196,13 +196,15 @@ class HtmlFieldHelper extends Helper {
 				if (array_key_exists($data->$field, $attr['options'])) {
 					$value = $attr['options'][$data->$field];
 					if (is_array($value)) {
-						$value = $value['text'];
+						$value = __($value['text']);
+					} else {
+						$value = __($value);
 					}
 				}
 			}
 			
 			if (empty($value)) {
-				$value = $data->$field;
+				$value = __($data->$field);
 			}
 		} else if ($action == 'edit') {
 			if (array_key_exists('empty', $attr)) {

@@ -17,13 +17,6 @@ class UsersTable extends AppTable {
 		$this->entityClass('User.User');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsToMany('SecurityRoles', [
-			'className' => 'Security.SecurityRoles',
-			'foreignKey' => 'security_role_id',
-			'targetForeignKey' => 'security_user_id',
-			'through' => 'Security.SecurityGroupUsers',
-			'dependent' => true
-		]);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -34,10 +27,19 @@ class UsersTable extends AppTable {
 			'dependent' => true
 		]);
 
-		$this->hasMany('UserTypes', ['className' => 'Security.SecurityUserTypes', 'dependent' => true]);
+		$this->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('BankAccounts', 		['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 	}
 
 	// autocomplete used for UserGroups
