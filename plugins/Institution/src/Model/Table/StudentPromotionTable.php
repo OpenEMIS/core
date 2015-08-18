@@ -205,13 +205,13 @@ class StudentPromotionTable extends AppTable {
 				}
 
 				$promotedOptions = [
-					$this->statusMap['PROMOTED'] => $statusOptions[$this->statusMap['PROMOTED']],
-					$this->statusMap['REPEATED'] => $statusOptions[$this->statusMap['REPEATED']]
+					$this->statusMap['PROMOTED'] => __($statusOptions[$this->statusMap['PROMOTED']]),
+					$this->statusMap['REPEATED'] => __($statusOptions[$this->statusMap['REPEATED']])
 				];
 
 				$graduatedOptions = [
-					$this->statusMap['GRADUATED'] => $statusOptions[$this->statusMap['GRADUATED']],
-					$this->statusMap['REPEATED'] => $statusOptions[$this->statusMap['REPEATED']]
+					$this->statusMap['GRADUATED'] => __($statusOptions[$this->statusMap['GRADUATED']]),
+					$this->statusMap['REPEATED'] => __($statusOptions[$this->statusMap['REPEATED']])
 				];
 				// End
 
@@ -318,22 +318,7 @@ class StudentPromotionTable extends AppTable {
 			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 			$toolbarButtons['back']['attr'] = $attr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
-		} else {
-			if ($this->AccessControl->check(['Institutions', 'Grades', 'indexEdit'])) {
-				$graduateButton = $buttons['index'];
-				$graduateButton['url'][0] = 'index';
-				$graduateButton['url']['mode'] = 'edit';
-				$graduateButton['type'] = 'button';
-				$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
-				$graduateButton['attr'] = $attr;
-				$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$graduateButton['attr']['title'] = __('Promotion') . ' / ' . __('Graduation');
-				unset($graduateButton['url']['period']);
-
-				$toolbarButtons['graduate'] = $graduateButton;
-				$toolbarButtons['back'] = $buttons['back'];
-				$toolbarButtons['back']['type'] = null;
-			}
+			$toolbarButtons['back']['url']['action'] = 'Students';
 		}
 	}
 
@@ -379,7 +364,7 @@ class StudentPromotionTable extends AppTable {
 							}
 						}
 					}
-					$this->Alert->success('general.add.success');
+					$this->Alert->success($this->aliasField('success'));
 				} else {
 					$this->Alert->error('general.add.failed');
 				}
@@ -387,7 +372,7 @@ class StudentPromotionTable extends AppTable {
 				$this->Alert->error('general.add.failed');
 			}
 
-			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
+			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students'];
 			$url = array_merge($url, $this->request->query, $this->request->pass);
 			$url[0] = 'index';
 			unset($url['mode']);
