@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -32,10 +31,6 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-	}
-
-	public function validationDefault(Validator $validator) {
-		return $validator;
 	}
 
 	public function implementedEvents() {
@@ -87,6 +82,7 @@ class StudentAttendancesTable extends AppTable {
 	// Event: ControllerAction.Model.onGetType
 	public function onGetType(Event $event, Entity $entity) {
 		$html = '';
+
 		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
@@ -397,7 +393,6 @@ class StudentAttendancesTable extends AppTable {
 				$this->reasonOptions = $StudentAbsenceReasons->getList()->toArray();
 			}
 		} else {
-			//
 			$settings['pagination'] = false;
 			$query
 				->where([$this->aliasField('student_id') => 0]);
@@ -441,7 +436,7 @@ class StudentAttendancesTable extends AppTable {
 					[
 						'StudentAbsences.end_date IS NOT NULL',
 						'StudentAbsences.start_date >=' => $startDate,
-						'StudentAbsences.end_date <=' => $startDate
+						'StudentAbsences.end_date <=' => $endDate
 					]
 				],
 				[
