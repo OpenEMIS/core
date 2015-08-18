@@ -22,7 +22,6 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
 	}
 
@@ -34,10 +33,11 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$settings['pagination'] = false;
+		$userId = $this->_table->Auth->user('id');
+		// $this->ReportProgress->purge($userId, true);
 
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
-		$fields = $this->_table->ControllerAction->getFields($ReportProgress);
+		$settings['pagination'] = false;
+		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
 
 		$fields['current_records']['visible'] = false;
 		$fields['total_records']['visible'] = false;
@@ -53,9 +53,9 @@ class ReportListBehavior extends Behavior {
 
 		$this->_table->ControllerAction->setFieldOrder(['name', 'created', 'modified', 'expiry_date', 'status']);
 		
-		$query = $ReportProgress->find()
-		->where([$ReportProgress->aliasField('module') => $this->_table->alias()])
-		->order([$ReportProgress->aliasField('expiry_date') => 'DESC']);
+		$query = $this->ReportProgress->find()
+		->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
+		->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
 
 		return $query;
 	}
@@ -129,6 +129,26 @@ class ReportListBehavior extends Behavior {
 		$id = $ReportProgress->addReport($obj);
 		if ($id !== false) {
 			$ReportProgress->generate($id);
+		}
+	}
+
+	public function download($id) {
+		$this->_table->controller->autoRender = false;
+
+		$entity = $this->ReportProgress->get($id);
+		$path = $entity->file_path;
+		if (!empty($path)) {
+			$filename = basename($path);
+			header("Pragma: public", true);
+			header("Expires: 0"); // set expiration time
+			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+			header("Content-Type: application/force-download");
+			header("Content-Type: application/octet-stream");
+			header("Content-Type: application/download");
+			header("Content-Disposition: attachment; filename=".$filename);
+			header("Content-Transfer-Encoding: binary");
+			header("Content-Length: ".filesize($path));
+			echo file_get_contents($path);
 		}
 	}
 }
