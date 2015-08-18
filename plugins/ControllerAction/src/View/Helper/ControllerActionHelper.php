@@ -243,7 +243,7 @@ class ControllerActionHelper extends Helper {
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-				$value = $event->result;
+				$value = __($event->result);
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);

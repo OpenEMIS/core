@@ -11,7 +11,9 @@ class ReportsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Institutions' 		=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']]
+			'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
+			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
 		];
 	}
 
@@ -31,9 +33,23 @@ class ReportsController extends AppController {
 		$options = [];
 		if ($module == 'Institutions') {
 			$options = [
-				'Report.Institutions' => __('Overview'),
+				'Report.Institutions' => __('Institutions'),
 				'Report.InstitutionPositions' => __('Positions'),
-				'Report.InstitutionProgrammes' => __('Programmes')
+				'Report.InstitutionProgrammes' => __('Programmes'),
+				'Report.InstitutionClasses' => __('Classes'),
+				'Report.InstitutionSubjects' => __('Subjects')
+			];
+		} else if ($module == 'Students') {
+			$options = [
+				'Report.Students' => __('Students'),
+				'Report.StudentIdentities' => __('Identities'),
+				'Report.StudentContacts' => __('Contacts')
+			];
+		} else if ($module == 'Staff') {
+			$options = [
+				'Report.Staff' => __('Staff'),
+				'Report.StaffIdentities' => __('Identities'),
+				'Report.StaffContacts' => __('Contacts')
 			];
 		}
 		return $options;
@@ -70,26 +86,5 @@ class ReportsController extends AppController {
 		}
 		echo json_encode($data);
 		die;
-	}
-
-	public function download($id) {
-		$this->controller->autoRender = false;
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
-
-		$entity = $ReportProgress->find()->where(['id' => $id])->first();
-		$path = $entity->file_path;
-		if (!empty($path)) {
-			$filename = basename($path);
-			header("Pragma: public", true);
-			header("Expires: 0"); // set expiration time
-			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-			header("Content-Type: application/force-download");
-			header("Content-Type: application/octet-stream");
-			header("Content-Type: application/download");
-			header("Content-Disposition: attachment; filename=".$filename);
-			header("Content-Transfer-Encoding: binary");
-			header("Content-Length: ".filesize($path));
-			echo file_get_contents($path);
-		}
 	}
 }
