@@ -148,8 +148,8 @@ class InstitutionSiteSectionsTable extends AppTable {
     public function indexBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('grade_type', $query)) {
-    		unset($this->ControllerAction->buttons['index']['url']['grade_type']);
-			$action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');//$this->ControllerAction->buttons['index']['url'];
+			unset($action['grade_type']);
 			$this->controller->redirect($action);
     	}
 
@@ -311,13 +311,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+    		$action = $this->ControllerAction->url('view');
     		if (array_key_exists('academic_period_id', $query)) {
-	    		unset($this->ControllerAction->buttons['view']['url']['academic_period_id']);
+	    		unset($action['academic_period_id']);
     		}
     		if (array_key_exists('education_grade_id', $query)) {
-	    		unset($this->ControllerAction->buttons['view']['url']['education_grade_id']);
+	    		unset($action['education_grade_id']);
     		}
-    		$action = $this->ControllerAction->buttons['view']['url'];
+    		// $action = $this->ControllerAction->buttons['view']['url'];
 			$this->controller->redirect($action);
     	}
 
@@ -354,17 +355,18 @@ class InstitutionSiteSectionsTable extends AppTable {
     public function addBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+    		$action = $this->ControllerAction->url('add');
     		if (array_key_exists('academic_period_id', $query)) {
-	    		unset($this->ControllerAction->buttons['add']['url']['academic_period_id']);
+	    		unset($action['academic_period_id']);
     		}
     		if (array_key_exists('education_grade_id', $query)) {
-	    		unset($this->ControllerAction->buttons['add']['url']['education_grade_id']);
+	    		unset($action['education_grade_id']);
     		}
-    		$action = $this->ControllerAction->buttons['add']['url'];
+    		// $action = $this->ControllerAction->buttons['add']['url'];
 			$this->controller->redirect($action);
     	}
     	if (array_key_exists('grade_type', $query)) {
-    		$this->_selectedGradeType = $this->ControllerAction->buttons['add']['url']['grade_type'];
+    		$this->_selectedGradeType = $query['grade_type'];
     	}
 
 		if ($this->_selectedAcademicPeriodId == -1) {
