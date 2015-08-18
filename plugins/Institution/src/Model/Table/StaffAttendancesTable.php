@@ -7,15 +7,20 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
+use Cake\Utility\Inflector;
 
 class StaffAttendancesTable extends AppTable {
 	use OptionsTrait;
 	use MessagesTrait;
 	private $allDayOptions = [];
+	private $selectedDate = [];
+	private $typeOptions = [];
+	private $reasonOptions = [];
+	private $_fieldOrder = ['openemis_no', 'security_user_id'];
+	private $dataCount = null;
 
 	public function initialize(array $config) {
 		$this->table('institution_site_staff');
@@ -31,9 +36,11 @@ class StaffAttendancesTable extends AppTable {
 		$this->addBehavior('AcademicPeriod.Period');
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
-	}
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('openemis_no');
@@ -63,6 +70,18 @@ class StaffAttendancesTable extends AppTable {
 		$this->controller->set('selectedAction', 'Attendance');
 	}
 
+	// Event: ControllerAction.Model.afterAction
+	public function afterAction(Event $event, ArrayObject $config) {
+		if (!is_null($this->request->query('mode'))) {
+			if ($this->dataCount > 0) {
+				$config['formButtons'] = true;
+				$config['url'] = $config['buttons']['index']['url'];
+				$config['url'][0] = 'indexEdit';
+			}
+		}
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
 	// Event: ControllerAction.Model.onGetOpenemisNo
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		return $entity->user->openemis_no;
@@ -70,7 +89,25 @@ class StaffAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetType
 	public function onGetType(Event $event, Entity $entity) {
+		$html = '';
 		if (!is_null($this->request->query('mode'))) {
+			$Form = $event->subject()->Form;
+
+			$institutionId = $this->Session->read('Institutions.id');
+			$id = $entity->security_user_id;
+			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+			
+			$alias = Inflector::underscore($StaffAbsences->alias());
+			$fieldPrefix = $StaffAbsences->Users->alias() . '.'.$alias.'.' . $id;
+			$options = ['type' => 'select', 'label' => false, 'options' => $this->typeOptions, 'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();'];
+			$html .= $Form->input($fieldPrefix.".absence_type", $options);
+			$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
+			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
+
+			$selectedDate = $this->selectedDate->format('d-m-Y');
+			$html .= $Form->hidden($fieldPrefix.".full_day", ['value' => 1]);	//full day
+			$html .= $Form->hidden($fieldPrefix.".start_date", ['value' => $selectedDate]);
+			$html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
 		} else {
 			$types = $this->getSelectOptions('Absence.types');
 			$type = $types['EXCUSED'];
@@ -82,22 +119,58 @@ class StaffAttendancesTable extends AppTable {
 					$type = $types['UNEXCUSED'];
 				}
 			}
+			$html .= $type;
 		}
 
-		return $type;
+		return $html;
 	}
 
 	// Event: ControllerAction.Model.onGetReason
 	public function onGetReason(Event $event, Entity $entity) {
-		$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
-		$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+		$html = '';
 
-		if (!empty($reasonId)) {
-			$obj = $StaffAbsenceReasons->findById($reasonId)->first();
-			return $obj['name'];
+		if (!is_null($this->request->query('mode'))) {
+			$Form = $event->subject()->Form;
+
+			$id = $entity->security_user_id;
+			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+
+			$alias = Inflector::underscore($StaffAbsences->alias());
+			$fieldPrefix = $StaffAbsences->Users->alias() . '.'.$alias.'.' . $id;
+
+			foreach ($this->typeOptions as $key => $value) {
+				switch($key) {
+					case 'PRESENT':
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'">';
+							$html .= '<i class="fa fa-minus"></i>';
+						$html .= '</span>';
+						break;
+					case 'EXCUSED':
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="display: none;">';
+							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+							$html .= $Form->input($fieldPrefix.".staff_absence_reason_id", $options);
+						$html .= '</span>';
+						break;
+					case 'UNEXCUSED':
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="display: none;">';
+							$html .= '<i class="fa fa-minus"></i>';
+						$html .= '</span>';
+						break;
+				}
+			}
 		} else {
-			return '-';
+			$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
+			$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+
+			if (!empty($reasonId)) {
+				$obj = $StaffAbsenceReasons->findById($reasonId)->first();
+				$html .= $obj['name'];
+			} else {
+				$html .= '<i class="fa fa-minus"></i>';
+			}
 		}
+
+		return $html;
 	}
 
 	public function onGetSunday(Event $event, Entity $entity) {
@@ -276,12 +349,12 @@ class StaffAttendancesTable extends AppTable {
 			$currentDay = $week[0]->copy();
 			if ($selectedDay != -1) {
 				if ($currentDay->dayOfWeek != $selectedDay) {
-					$selectedDate = $currentDay->next($selectedDay);
+					$this->selectedDate = $currentDay->next($selectedDay);
 				} else {
-					$selectedDate = $currentDay;
+					$this->selectedDate = $currentDay;
 				}
 			} else {
-				$selectedDate = $week;
+				$this->selectedDate = $week;
 			}
 			$this->controller->set(compact('dayOptions', 'selectedDay'));
 			// End setup days
@@ -290,17 +363,29 @@ class StaffAttendancesTable extends AppTable {
 			$query
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->contain(['Users'])
-				->find('withAbsence', ['date' => $selectedDate])
+				->find('withAbsence', ['date' => $this->selectedDate])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
 				;
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
 					$this->ControllerAction->addField($key);
+					$this->_fieldOrder[] = $key;
 				}
 			} else {
 				$this->ControllerAction->field('type');
 				$this->ControllerAction->field('reason');
+				$this->_fieldOrder[] = 'type';
+				$this->_fieldOrder[] = 'reason';
+
+				$this->typeOptions = [
+					'PRESENT' => __('Present'),
+					'EXCUSED' => __('Absent - Excused'),
+					'UNEXCUSED' => __('Absent - Unexcused')
+				];
+
+				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
 			}
 		} else {
 			$settings['pagination'] = false;
@@ -312,6 +397,10 @@ class StaffAttendancesTable extends AppTable {
 
 			$this->Alert->warning('StaffAttendances.noStaff');
 		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->dataCount = $data->count();
 	}
 
 	public function findWithAbsence(Query $query, array $options) {
@@ -342,7 +431,7 @@ class StaffAttendancesTable extends AppTable {
 					[
 						'StaffAbsences.end_date IS NOT NULL',
 						'StaffAbsences.start_date >=' => $startDate,
-						'StaffAbsences.end_date <=' => $startDate
+						'StaffAbsences.end_date <=' => $endDate
 					]
 				],
 				[
@@ -374,4 +463,63 @@ class StaffAttendancesTable extends AppTable {
 			->order(['Users.openemis_no'])
 			;
     }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    	if ($this->request->query('day') != -1) {
+    		if (!is_null($this->request->query('mode'))) {
+    			$toolbarButtons['back'] = $buttons['back'];
+				if ($toolbarButtons['back']['url']['mode']) {
+					unset($toolbarButtons['back']['url']['mode']);
+				}
+				$toolbarButtons['back']['type'] = 'button';
+				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+				$toolbarButtons['back']['attr'] = $attr;
+				$toolbarButtons['back']['attr']['title'] = __('Back');
+			} else {
+				$toolbarButtons['edit'] = $buttons['index'];
+		    	$toolbarButtons['edit']['url'][0] = 'index';
+				$toolbarButtons['edit']['url']['mode'] = 'edit';
+				$toolbarButtons['edit']['type'] = 'button';
+				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+				$toolbarButtons['edit']['attr'] = $attr;
+				$toolbarButtons['edit']['attr']['title'] = __('Edit');
+
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
+		}
+    }
+
+	public function indexEdit() {
+		if ($this->request->is(['post', 'put'])) {
+			$requestData = $this->request->data;
+			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+			$alias = Inflector::underscore($StaffAbsences->alias());
+
+			if (array_key_exists($StaffAbsences->Users->alias(), $requestData)) {
+				if (array_key_exists($alias, $requestData[$StaffAbsences->Users->alias()])) {
+					foreach ($requestData[$StaffAbsences->Users->alias()][$alias] as $key => $obj) {
+						if ($obj['absence_type'] == 'UNEXCUSED') {
+							$obj['staff_absence_reason_id'] = 0;
+						}
+						if ($obj['absence_type'] == 'EXCUSED' || $obj['absence_type'] == 'UNEXCUSED') {
+							$entity = $StaffAbsences->newEntity($obj);
+							if ($StaffAbsences->save($entity)) {
+							} else {
+								$this->log($entity->errors(), 'debug');
+							}
+						}
+					}
+				}
+			}
+		}
+		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
+		$url = array_merge($url, $this->request->query, $this->request->pass);
+		$url[0] = 'index';
+		if (isset($url['mode'])) {
+			unset($url['mode']);
+		}
+
+		return $this->controller->redirect($url);
+	}
 }
