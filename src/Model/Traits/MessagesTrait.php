@@ -290,6 +290,7 @@ trait MessagesTrait {
 			'request' => 'Transfer request has been submitted successfully.',
 		],
 		'TransferApprovals' => [
+			'exists' => 'Student is already exists in the new school',
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
@@ -299,7 +300,8 @@ trait MessagesTrait {
 			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
 			'noData' => 'There are no available Students for Promotion / Graduation.',
 			'current_period' => 'Current Academic Period',
-			'next_period' => 'Next Academic Period'
+			'next_period' => 'Next Academic Period',
+			'success' => 'Students have been promoted.'
 		],
 
 		// Validation Messages
@@ -389,6 +391,11 @@ trait MessagesTrait {
 			'Students' => [
 				'student_id' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.'
+				]
+			],
+			'Staff' => [
+				'security_user_id' => [
+					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				]
 			]
 		],
@@ -578,6 +585,11 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Start Date cannot be later than End Date',
 				]
 			],
+			'Guardians' => [
+				'guardian_id' => [
+					'ruleStudentGuardianId' => 'This guardian has already added.'
+				]
+			]
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',
