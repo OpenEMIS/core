@@ -14,7 +14,7 @@ class TransferApprovalsTable extends AppTable {
 	const REJECTED = 2;
 
 	public function initialize(array $config) {
-		$this->table('institution_student_transfers');
+		$this->table('institution_student_admission');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);

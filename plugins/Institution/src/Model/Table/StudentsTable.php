@@ -310,6 +310,34 @@ class StudentsTable extends AppTable {
 			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 			$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 		}
+
+		$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+		$studentData = $data['Students'];
+		
+		if ($pendingTransferCode == $studentData['student_status_id']) {
+			$AdmissionTable = TableRegistry::get('Institution.TransferApprovals');
+
+			$entityData = [
+				'start_date' => $studentData['start_date'],
+				'end_date' => $studentData['end_date'],
+				'security_user_id' => $studentData['student_id'],
+				'status' => 0,
+				'institution_id' => $studentData['institution_id'],
+				'academic_period_id' => $studentData['academic_period_id'],
+				'education_grade_id' => $studentData['education_grade_id'],
+				'previous_institution_id' => $studentData['institution_id'],
+				'student_transfer_reason_id' => 0,
+				'type' => 'Admission',
+			];
+
+			$admissionEntity = $AdmissionTable->newEntity($entityData);
+			if( $AdmissionTable->save($admissionEntity) ){
+				$this->Alert->success('general.add.success');
+			} else {
+				$AdmissionTable->log($admissionEntity->errors(), 'debug');
+				$this->Alert->error('general.add.failed');
+			}
+		}
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -416,10 +444,10 @@ class StudentsTable extends AppTable {
 	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			// 1 - Enrolled, 9 - Pending Admission
-			$statusesToShow = [1, 9];
+			$statusesToShow = ['CURRENT', 'PENDING_ADMISSION'];
 			$StudentStatusesTable = $this->StudentStatuses;
 			$conditions = [
-				$StudentStatusesTable->aliasField('id').' IN' => $statusesToShow
+				$StudentStatusesTable->aliasField('code').' IN' => $statusesToShow
 			];
 			$options = $StudentStatusesTable
 				->find('list')
