@@ -95,10 +95,15 @@ class InstitutionRubricAnswersTable extends AppTable {
 				if ($submit == 'save') {
 					$entity = $this->InstitutionRubrics->newEntity($request->data);
 					if ($this->InstitutionRubrics->save($entity)) {
-						$this->Alert->success('general.edit.success');
+						if ($entity->status == 1) {
+							$this->Alert->success('InstitutionRubricAnswers.save.draft');
+						} else if ($entity->status == 2) {
+							$this->Alert->success('InstitutionRubricAnswers.save.final');
+						}
+
 						$url = $this->ControllerAction->url('index');
 						$url['action'] = 'Rubrics';
-						unset($url[1]);
+						$url[0] = 'view';
 						unset($url['section']);
 
 						return $this->controller->redirect($url);

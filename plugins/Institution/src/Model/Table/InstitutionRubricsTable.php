@@ -41,16 +41,6 @@ class InstitutionRubricsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	// public function onGetRubricTemplateId(Event $event, Entity $entity) {
-	// 	return $event->subject()->Html->link($entity->rubric_template->name, [
-	// 		'plugin' => $this->controller->plugin,
-	// 		'controller' => $this->controller->name,
-	// 		'action' => 'RubricAnswers',
-	// 		'index',
-	// 		'record' => $entity->id
-	// 	]);
-	// }
-
 	public function onGetCustomRubricSectionsElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
 
@@ -62,7 +52,8 @@ class InstitutionRubricsTable extends AppTable {
 			$tableCells = [];
 
 			if ($status == 1) {
-				$tableHeaders = [__('No.'), __('Name'), __('No of Criterias (Answered)')];
+				// $tableHeaders = [__('No.'), __('Name'), __('No of Criterias (Answered)')];
+				$tableHeaders = [__('No.'), __('Name'), __('No of Criterias')];
 			} else {
 				$tableHeaders = [__('No.'), __('Name'), __('No of Criterias')];
 			}
@@ -245,17 +236,24 @@ class InstitutionRubricsTable extends AppTable {
 		$this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_site_section_id', 'institution_site_class_id', 'security_user_id', 'rubric_sections'];
 	}
 
-	// public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-	// 	list(, $selectedStatus) = array_values($this->_getSelectOptions());
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$rubricRecord = $this->get($id);
 
-	// 	if ($selectedStatus == 2) {	//Completed
-	// 		if ($action == 'view') {
-	// 			if (isset($toolbarButtons['edit'])) {
-	// 				unset($toolbarButtons['edit']);
-	// 			}
-	// 		}
-	// 	}
-	// }
+		if ($rubricRecord->status == 2) {
+			$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
+			if ($this->save($entity)) {
+				$this->Alert->success('InstitutionRubricAnswers.reject.success');
+			} else {
+				$this->Alert->success('InstitutionRubricAnswers.reject.failed');
+				$this->log($entity->errors(), 'debug');
+			}
+
+			$event->stopPropagation();
+			$action = $this->ControllerAction->url('index');
+			$action['status'] = 2;
+			return $this->controller->redirect($action);
+		}
+	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
