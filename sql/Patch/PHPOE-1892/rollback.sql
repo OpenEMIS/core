@@ -1,8 +1,8 @@
-DELETE FROM `tst_demo_1`.`student_statuses` 
-WHERE `code`='PENDING_ADMISSION' AND `name`='Pending Admission';
+DELETE FROM `student_statuses` 
+WHERE `id`=9;
 
-DELETE FROM `tst_demo_1`.`student_statuses` 
-WHERE `code`='REJECTED' AND `name`='Rejected';
+DELETE FROM `student_statuses` 
+WHERE `id`=10;
 
 ALTER TABLE `institution_student_admission` 
 DROP COLUMN `type`, 
