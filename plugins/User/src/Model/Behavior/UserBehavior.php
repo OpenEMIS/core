@@ -74,7 +74,7 @@ class UserBehavior extends Behavior {
 
 			$this->_table->ControllerAction->field('date_of_birth', [
 					'date_options' => [
-						'endDate' => date('d-m-Y', strtotime("-2 year"))
+						'endDate' => date('d-m-Y')
 					],
 					'default_date' => false,
 				]
