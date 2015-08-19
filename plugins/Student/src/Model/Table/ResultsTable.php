@@ -57,6 +57,17 @@ class ResultsTable extends AppTable {
 		$query->contain([
 			'AssessmentItems.EducationSubjects',
 			'AssessmentItems.Assessments'
-		]);
+		])
+		->join(
+			[	'table'=> 'institution_site_assessments',
+				'alias' => 'InstitutionSiteAssessments',
+				'conditions' => [
+					'InstitutionSiteAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
+					'InstitutionSiteAssessments.institution_site_id = '. $this->aliasField('institution_site_id')
+				]
+			]
+		)
+		->where(['InstitutionSiteAssessments.status' => 2])
+		;
 	}
 }
