@@ -310,11 +310,13 @@ class StudentsTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		pr('asdadasdadads');die;
+		pr('sdsds');
 		$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
 		if ($pendingTransferCode == $data['Students']['student_status_id']) {
 			$process = function ($model, $entity) use ($data) {
 				$studentData = $data['Students'];
-				$AdmissionTable = TableRegistry::get('Institution.TransferApprovals');
+				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 				$entityData = [
 					'start_date' => $studentData['start_date'],
 					'end_date' => $studentData['end_date'],
