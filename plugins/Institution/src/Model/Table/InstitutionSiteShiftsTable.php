@@ -27,10 +27,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		$validator
  	        ->add('start_time', 'ruleCompareDate', [
-		            'rule' => ['compareDate', 'end_time', false]
-	    	    ])
- 	        ->add('end_time', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'start_time', false]
+		            'rule' => ['compareDate', 'end_time', true]
 	    	    ])
 	        ;
 		return $validator;
