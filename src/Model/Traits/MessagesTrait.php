@@ -273,6 +273,14 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
+		'StudentBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStudents' => 'No Students'
+		],
+		'StaffBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStaff' => 'No Staff'
+		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
 		],
