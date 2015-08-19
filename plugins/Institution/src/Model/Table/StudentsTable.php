@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use App\Model\Table\AppTable;
+use Cake\Utility\Inflector;
 
 class StudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -323,19 +324,15 @@ class StudentsTable extends AppTable {
 	}
 
 	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+		$tabElements = $this->controller->getUserTabElements(['userRole' => Inflector::singularize($this->alias())]);
 
-		$tabElements = [
-			'Students' => ['text' => __('Academic')],
-			'StudentUser' => ['text' => __('General')]
-		];
-
-		if ($this->action == 'add') {
-			$tabElements['Students']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
-			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => 'StudentUser', 'add']);
-		} else {
-			$tabElements['Students']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
-			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => 'StudentUser', 'view', $entity->student_id, 'id' => $entity->id]);
+		if ($this->action != 'add') {
+			$id = $this->request->query['id'];
+			$tabElements[$this->alias()]['url'] = array_merge($tabElements[$this->alias()]['url'], [$entity->id]);
+			foreach ($tabElements as $key => $value) {
+				if ($key == $this->alias()) continue;
+				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->student_id, 'id' => $entity->id]);
+			}
 		}
 
 		$this->controller->set('tabElements', $tabElements);
