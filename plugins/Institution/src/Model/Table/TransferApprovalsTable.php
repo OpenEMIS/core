@@ -209,7 +209,7 @@ class TransferApprovalsTable extends AppTable {
 			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
 			$institutionIds = $AccessControl->getInstitutionsByUser();
 
-			$where = [$this->aliasField('status') => 0];
+			$where = [$this->aliasField('status') => 0, $this->aliasField('type').' IS' => null];
 			if (!$AccessControl->isAdmin()) {
 				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
 			}
