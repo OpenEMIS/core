@@ -24,18 +24,18 @@ $this->start('panelBody');
 		$sectionOrder = 0;
 		$headerOrder = 0;
 		$criteriaOrder = 0;
-		// pr($data->rubric_template_options);
 	?>
 	<div class="clearfix"></div>
 		<div class="clearfix">
 			<?php
-				echo $this->Form->input($alias.".rubric_template_id", [
-					'label' => $this->Label->get('InstitutionRubricAnswers.rubric_template_id'),
+				echo $this->Form->input($alias.".rubric_template", [
+					'label' => $this->Label->get('InstitutionRubricAnswers.rubric_template'),
 					'type' => 'string',
 					'value' => $data->rubric_template->name,
 					'readonly' => 'readonly'
 				]);
 				echo $this->Form->hidden("$alias.id");
+				echo $this->Form->hidden("$alias.status", ['rubric-status' => 1]);
 			?>
 		</div>
 	</div>
@@ -51,9 +51,6 @@ $this->start('panelBody');
 			<tbody>
 				<?php foreach ($data->rubric_criterias as $criteriaObj) : ?>
 					<?php $sectionOrder = $data->rubric_section->order; ?>
-					<?php
-						// pr($criteriaObj);die;
-					?>
 					<?php if ($criteriaObj->type == 1) : ?>
 						<!-- Header -->
 						<?php $criteriaOrder = 0; ?>
@@ -81,8 +78,8 @@ $this->start('panelBody');
 						<!-- Level -->
 						<tr>
 							<td class="active"><?= __('Level'); ?></td>
-							<?php foreach ($data->rubric_template_options as $rubricTemplateOption) : ?>
-								<td><?= $rubricTemplateOption['name']; ?></td>
+							<?php foreach ($data->rubric_template_options as $optionObj) : ?>
+								<td><?= $optionObj->name; ?></td>
 							<?php endforeach ?>				
 						</tr>
 						<!-- End -->
@@ -94,24 +91,25 @@ $this->start('panelBody');
 									$rubricCriteriaId = $criteriaObj->id;
 
 									$fieldPrefix = $alias . '.institution_rubric_answers.' . $rubricCriteriaId;
-									// if(isset($this->request->data['InstitutionSiteQualityRubricAnswer'][$rubricCriteriaId])) {
-									// 	echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.id");
-									// 	$criteriaAnswerId = $this->request->data['InstitutionSiteQualityRubricAnswer'][$rubricCriteriaId]['rubric_criteria_option_id'];
-									// }
+									if(isset($data->institution_rubric_answers[$rubricCriteriaId])) {
+										$rubricAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->id;
+										$criteriaAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->rubric_criteria_option_id;
+										echo $this->Form->hidden("$fieldPrefix.id");
+									}
 									echo $criteriaObj->name;
 									echo $this->Form->hidden("$fieldPrefix.rubric_section_id", ['value' => $rubricSectionId]);
 									echo $this->Form->hidden("$fieldPrefix.rubric_criteria_id", ['value' => $rubricCriteriaId]);
 									echo $this->Form->hidden("$fieldPrefix.rubric_criteria_option_id", ['class' => 'criteriaAnswer']);
 								?>
 							</td>
-							<?php foreach ($data->rubric_template_options as $obj) : ?>
+							<?php foreach ($data->rubric_template_options as $optionObj) : ?>
 								<?php
-									$templateOptionId = $obj->id;
+									$templateOptionId = $optionObj->id;
 									$criteriaOptionId = isset($criteriaOptions[$templateOptionId]['id']) ? $criteriaOptions[$templateOptionId]['id'] : 0;
 									$criteriaOptionName = isset($criteriaOptions[$templateOptionId]['name']) ? $criteriaOptions[$templateOptionId]['name'] : __('N.A.');
 								?>
 								<?php if ($data->status == 0 || $data->status == 1) : ?>
-									<?php $bgColor = $obj->color; ?>
+									<?php $bgColor = $optionObj->color; ?>
 									<td id="criteriaOption_<?= $criteriaOptionId; ?>" class="criteriaCell" style="cursor: pointer;" onclick="$(this).parents().children('td').find('input[type=hidden].criteriaAnswer').val(<?= $criteriaOptionId; ?>);InstitutionRubricAnswer.changeBgColor(this);">
 										<?php
 											echo $criteriaOptionName;
@@ -119,7 +117,7 @@ $this->start('panelBody');
 										?>
 									</td>
 								<?php else : ?>
-									<?php $bgColor = $criteriaAnswerId == $criteriaOptionId ? $rubricTemplateOption['color'] : 'white'; ?>
+									<?php $bgColor = $criteriaAnswerId == $criteriaOptionId ? $optionObj->color : 'white'; ?>
 									<td style="background-color: <?php echo $bgColor; ?>;">
 										<?php
 											echo $criteriaOptionName;
@@ -136,17 +134,11 @@ $this->start('panelBody');
 						</tr>
 						<tr>
 							<td></td>
-							<?php foreach ($data->rubric_template_options as $obj) : ?>
-								<td><?= $obj->weighting; ?></td>
+							<?php foreach ($data->rubric_template_options as $optionObj) : ?>
+								<td><?= $optionObj->weighting; ?></td>
 							<?php endforeach ?>
 						</tr>
 						<!-- End -->
-						<?php
-							// pr($rubricTemplateOptions);
-							// pr($fieldPrefix);
-							// pr($sectionOrder);
-							// pr($criteriaOptions);
-						?>
 					<?php endif ?>
 				<?php endforeach ?>
 			</tbody>
@@ -154,8 +146,9 @@ $this->start('panelBody');
 	</div>
 
 <?php
-	// pr($data);
-	echo $this->ControllerAction->getFormButtons();
+	if ($data->status == 0 || $data->status == 1) {
+		echo $this->ControllerAction->getFormButtons();
+	}
 	echo $this->Form->end();
 $this->end();
 ?>
