@@ -21,7 +21,7 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
-		//$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 	}
 
 	// public function implementedEvents() {
