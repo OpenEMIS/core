@@ -19,7 +19,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
-		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
+		//$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
 	
 		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
@@ -44,9 +44,11 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->ControllerAction->field('name', ['type' => 'string']);
 		$this->ControllerAction->field('period', ['type' => 'string']);
 		$this->ControllerAction->field('location_institution_site_id', ['type' => 'select']);
+		
+		$this->ControllerAction->field('other_school_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'period', 'location_institution_site_id',
+			'academic_period_id', 'name', 'period', 'location_institution_site_id', 'other_school_id'
 		]);
 	}
 
@@ -92,7 +94,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 ******************************************************************************************************************/
 
 	public function addEditBeforeAction(Event $event) {
-
 		$this->fields['period']['visible'] = false;
 
 		$this->fields['start_time']['visible'] = true;
@@ -101,11 +102,18 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->fields['end_time']['type'] = 'time';
 
 		$this->fields['location_institution_site_id']['type'] = 'select';
+		$this->ControllerAction->field('other_school_id', ['visible' => true, 'type' => 'hidden']);
 
+		$this->fields['location_institution_site_id']['attr'] = ['options' => [0 => 'Default School', 1 => 'Other School']];
+		
 		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id'
 		]);
 
+	}
+
+
+	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
 	}
 
 /******************************************************************************************************************
