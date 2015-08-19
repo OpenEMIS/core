@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use User\Model\Entity\User;
 
 class UserBehavior extends Behavior {
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
@@ -38,7 +39,8 @@ class UserBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
+		$events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
 		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
@@ -46,6 +48,10 @@ class UserBehavior extends Behavior {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->_table->fields['is_student']['type'] = 'hidden';
+		$this->_table->fields['is_staff']['type'] = 'hidden';
+		$this->_table->fields['is_guardian']['type'] = 'hidden';
+
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->fields['photo_name']['visible'] = false;
@@ -78,30 +84,38 @@ class UserBehavior extends Behavior {
 		}
 	}
 
+	public function addBeforeAction(Event $event) {
+		$this->_table->fields['is_student']['value'] = 0;
+		$this->_table->fields['is_staff']['value'] = 0;
+		$this->_table->fields['is_guardian']['value'] = 0;
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->_table->ControllerAction->field('openemis_no', [
 			'type' => 'readonly',
 			'order' => 1,
-			'sort' => ['field' => 'Users.openemis_no']
+			'sort' => true
 		]);
 		$this->_table->ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->ControllerAction->field('name', [
 				'order' => 3, 
-				'sort' => ['field' => 'Users.first_name']
+				'sort' => ['field' => 'first_name']
 			]);
 		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$alias = $query->repository()->alias();
-		if ($alias != 'Users') {
-			$options['auto_contain'] = false;
-			
+		$options['auto_search'] = false;
+		$options['auto_contain'] = false;
+
+		$table = $query->repository()->table();
+		if ($table != 'security_users') {
 			$query->matching('Users');
 
+			$this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
 			$sortList = ['Users.openemis_no', 'Users.first_name'];
 			if (array_key_exists('sortWhitelist', $options)) {
 				$sortList = array_merge($options['sortWhitelist'], $sortList);
@@ -112,63 +126,60 @@ class UserBehavior extends Behavior {
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$value = '';
-		if ($entity->has('user')) {
-			$value = $entity->user->openemis_no;
+		if ($entity instanceof User) {
+			$value = $entity->openemis_no;
 		} else if ($entity->has('_matchingData')) {
 			$value = $entity->_matchingData['Users']->openemis_no;
+		} else if ($entity->has('user')) {
+			$value = $entity->user->openemis_no;
 		}
 		return $value;
 	}
 
 	public function onGetIdentity(Event $event, Entity $entity) {
-		return $entity->_matchingData['Users']->default_identity_type;
+		$value = '';
+		if ($entity instanceof User) {
+			$value = $entity->default_identity_type;
+		} else if ($entity->has('_matchingData')) {
+			$value = $entity->_matchingData['Users']->default_identity_type;
+		} else if ($entity->has('user')) {
+			$value = $entity->user->default_identity_type;
+		}
+		return $value;
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
 		$value = '';
-		if ($entity->has('_matchingData')) {
+		if ($entity instanceof User) {
+			$value = $entity->name;
+		} else if ($entity->has('_matchingData')) {
 			$value = $entity->_matchingData['Users']->name;
+		} else if ($entity->has('user')) {
+			$value = $entity->user->name;
 		}
 		return $value;
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		$fileContent = null;
-		if ($entity->has('user')) {
-			$fileContent = $entity->user->photo_content;
+		if ($entity instanceof User) {
+			$fileContent = $entity->photo_content;
 		} else if ($entity->has('_matchingData')) {
 			$fileContent = $entity->_matchingData['Users']->photo_content;
-		} else {
-			if ($this->_table->table() == 'security_users') {
-				$fileContent = $entity->photo_content;
-			}
+		} else if ($entity->has('user')) {
+			$fileContent = $entity->user->photo_content;
 		}
 		
 		$value = "";
+		$alias = $this->_table->alias();
 		if (empty($fileContent) && is_null($fileContent)) {
-			if ($this->_table->alias() == 'Students') {
+			if ($alias == 'Students' || $alias == 'StudentUser') {
 				$value = $this->defaultStudentProfileIndex;
-			} else if ($this->_table->alias() == 'Staff') {
+			} else if ($alias == 'Staff' || $alias == 'StaffUser') {
 				$value = $this->defaultStaffProfileIndex;
+			} else if ($alias == 'Guardians' || $alias == 'GuardianUser') {
+				$value = $this->defaultGuardianProfileIndex;
 			}
-			// if (($this->hasBehavior('Student')) && ($this->action == "index")) {
-			// 	$value = $this->defaultStudentProfileIndex;
-			// }
-			//  else if(($this->hasBehavior('Staff')) && ($this->action == "index")){
-			// 	$value = $this->defaultStaffProfileIndex;
-			// } else if(($this->hasBehavior('Guardian')) && ($this->action == "index")){
-			// 	$value = $this->defaultGuardianProfileIndex;
-			// } else if(($this->hasBehavior('User')) && ($this->action == "index")){
-			// 	$value = $this->defaultUserProfileIndex;
-			// } else if(($this->hasBehavior('Student')) && ($this->action == "view")){
-			// 	$value = $this->defaultStudentProfileView;
-			// } else if(($this->hasBehavior('Staff')) && ($this->action == "view")){
-			// 	$value = $this->defaultStaffProfileView;
-			// } else if(($this->hasBehavior('Guardian')) && ($this->action == "view")){
-			// 	$value = $this->defaultGuardianProfileView;
-			// } else if(($this->hasBehavior('User')) && ($this->action == "view")){
-			// 	$value = $this->defaultUserProfileView;
-			// }
 		} else {
 			$value = base64_encode(stream_get_contents($fileContent));
 		}
@@ -189,10 +200,13 @@ class UserBehavior extends Behavior {
 
 	public function getDefaultImgView() {
 		$value = '';
-		if ($this->_table->alias() == 'Students') {
+		$alias = $this->_table->alias();
+		if ($alias == 'Students' || $alias == 'StudentUser') {
 			$value = $this->defaultStudentProfileView;
-		} else if ($this->_table->alias() == 'Staff') {
+		} else if ($alias == 'Staff' || $alias == 'StaffUser') {
 			$value = $this->defaultStaffProfileView;
+		} else if ($alias == 'Guardians' || $alias == 'GuardianUser') {
+			$value = $this->defaultGuardianProfileView;
 		}
 		return $value;
 	}

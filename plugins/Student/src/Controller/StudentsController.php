@@ -25,6 +25,7 @@ class StudentsController extends AppController {
 			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
+			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
 			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
 			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
 			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
