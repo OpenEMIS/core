@@ -111,7 +111,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				$Items = TableRegistry::get('Assessment.AssessmentItems');
 				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 				$alias = Inflector::underscore($Results->alias());
-				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->security_user_id;
+				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->student_id;
 
 				$gradingOptions = $this->gradingOptions;
 				$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
