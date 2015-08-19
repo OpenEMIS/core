@@ -171,7 +171,9 @@ trait MessagesTrait {
 			],
 		],
 		'InstitutionRubricAnswers' => [
-			'noSection' => 'There is no rubric section selected',
+			'rubric_template_id' => 'Rubric Template',
+			'rubric_section_id' => 'Section',
+			'noSection' => 'There is no rubric section selected'
 		],
 		'password'=> [
 			'oldPassword' => 'Current Password',

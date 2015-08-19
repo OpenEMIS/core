@@ -15,6 +15,7 @@ class InstitutionRubricsTable extends AppTable {
 	use OptionsTrait;
 	use MessagesTrait;
 	private $_fieldOrder = [];
+	private $_contain = ['EducationGrades.EducationProgrammes'];
 
 	public function initialize(array $config) {
 		$this->table('institution_site_quality_rubrics');
@@ -27,12 +28,13 @@ class InstitutionRubricsTable extends AppTable {
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => false]]);
 		$this->ControllerAction->field('comment', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_section_id', ['visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+		$this->ControllerAction->field('institution_site_section_id', ['visible' => ['index' => false, 'view' => false, 'edit' => true]]);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
@@ -117,6 +119,24 @@ class InstitutionRubricsTable extends AppTable {
         return $value;
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'education_grade_id') {
+			return __('Programme') . '<span class="divider"></span>' . __('Grade');
+		} else if ($field == 'institution_site_class_id') {
+			return __('Class') . '<span class="divider"></span>' . __('Subject');
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
+	}
+
+	public function onGetEducationGradeId(Event $event, Entity $entity) {
+		return $entity->education_grade->education_programme->name . '<span class="divider"></span>' . $entity->education_grade->name;
+	}
+
+	public function onGetInstitutionSiteClassId(Event $event, Entity $entity) {
+		return $entity->section->name . '<span class="divider"></span>' . $entity->class->name;
+	}
+
 	public function onGetLastModified(Event $event, Entity $entity) {
 		return $entity->modified;
 	}
@@ -189,8 +209,14 @@ class InstitutionRubricsTable extends AppTable {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
 		$query
+			->contain($this->_contain)
 			->where([$this->aliasField('status') => $selectedStatus])
 			->order([$this->AcademicPeriods->aliasField('order')]);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query
+			->contain($this->_contain);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
