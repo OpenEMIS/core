@@ -286,7 +286,10 @@ class InstitutionAssessmentResultsTable extends AppTable {
 					// End
 
 					return $query
-						->where([$this->aliasField('institution_site_class_id') => $selectedClass])
+						->where([
+							$this->aliasField('institution_site_class_id') => $selectedClass,
+							$this->aliasField('status') => 1
+						])
 						->contain(['Users']);
 				}
 			} else {
@@ -309,6 +312,20 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$config['formButtons'] = true;
 			$config['url'] = $config['buttons']['index']['url'];
 			$config['url'][0] = 'indexEdit';
+
+			// Add hidden fields
+			$Items = TableRegistry::get('Assessment.AssessmentItems');
+			$indexElements = $this->controller->viewVars['indexElements'];
+			$indexElements[] = [
+				'name' => 'Institution.Assessment/hidden',
+				'data' => [
+					'alias' => $Items->alias(),
+					'status' => $selectedStatus
+				],
+				'options' => []
+			];
+			$this->controller->set(compact('indexElements'));
+			// End
 		}
 	}
 
@@ -327,6 +344,19 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$toolbarButtons['back']['attr']['title'] = __('Back');
 	}
 
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$cancelButton = $buttons[1];
+		$buttons[0] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[assessment-status=1]\').val(1);']
+		];
+		$buttons[1] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[assessment-status=1]\').val(2);']
+		];
+		$buttons[2] = $cancelButton;
+	}
+
 	public function indexEdit() {
 		$controller = $this->controller;
 
@@ -343,15 +373,16 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$entity = $Items->patchEntity($entity, $this->request->data);
 
 			if ($Items->save($entity)) {
-				if ($selectedStatus == 0) {
-					$this->Alert->success('general.add.success');
-				} else if ($selectedStatus == 1) {
-					$this->Alert->success('general.edit.success');
+				$assessmentStatus = $entity->status;
+				if ($assessmentStatus == 1) {
+					$this->Alert->success('InstitutionAssessments.save.draft');
+				} else if ($assessmentStatus == 2) {
+					$this->Alert->success('InstitutionAssessments.save.final');
 				}
 
-				$this->request->query['status'] = ++$selectedStatus;
 				$InstitutionAssessments->updateAll(
-					['status' => $selectedStatus], [
+					['status' => $assessmentStatus],
+					[
 						'institution_site_id' => $institutionId,
 						'assessment_id' => $selectedAssessment,
 						'academic_period_id' => $selectedPeriod
@@ -359,16 +390,11 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				);
 			} else {
 				$Items->log($entity->errors(), 'debug');
-				if ($selectedStatus == 0) {
-					$this->Alert->success('general.add.failed');
-				} else if ($selectedStatus == 1) {
-					$this->Alert->success('general.edit.failed');
-				}
+				$this->Alert->success('InstitutionAssessments.save.failed');
 			}
 
-			$url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias];
-			$url = array_merge($url, $this->request->query, $this->request->pass);
-			$url[0] = 'index';
+			$url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'Assessments'];
+			$url['status'] = $selectedStatus == 2 ? 2 : 1;
 
 			return $this->controller->redirect($url);
 		}
