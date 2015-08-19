@@ -57,9 +57,6 @@ class InstitutionsController extends AppController  {
 			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['!add']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits']
 		];
-
-		$this->loadComponent('Paginator');
-		
 	}
 
 	public function beforeFilter(Event $event) {
@@ -69,6 +66,13 @@ class InstitutionsController extends AppController  {
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
 		$header = __('Institutions');
+
+		// this is to cater for back links
+		$query = $this->request->query;
+		if (array_key_exists('institution_id', $query)) {
+			$session->write('Institutions.id', $query['institution_id']);
+
+		}
 
 		if ($action == 'index') {
 			$session->delete('Institutions.id');
