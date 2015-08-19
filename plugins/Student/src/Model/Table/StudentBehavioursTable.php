@@ -19,10 +19,6 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
-	}
-
 	public function editBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Users']);
 	}
