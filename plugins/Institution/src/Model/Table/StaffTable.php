@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Controller\Controller;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Utility\Inflector;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
@@ -169,19 +170,15 @@ class StaffTable extends AppTable {
 	}
 
 	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+		$tabElements = $this->controller->getUserTabElements(['userRole' => Inflector::singularize($this->alias())]);
 
-		$tabElements = [
-			'Staff' => ['text' => __('Position')],
-			'StaffUser' => ['text' => __('General')]
-		];
-
-		if ($this->action == 'add') {
-			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
-			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'add']);
-		} else {
-			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
-			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'view', $entity->security_user_id, 'id' => $entity->id]);
+		if ($this->action != 'add') {
+			$id = $this->request->query['id'];
+			$tabElements[$this->alias()]['url'] = array_merge($tabElements[$this->alias()]['url'], [$entity->id]);
+			foreach ($tabElements as $key => $value) {
+				if ($key == $this->alias()) continue;
+				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->security_user_id, 'id' => $entity->id]);
+			}
 		}
 
 		$this->controller->set('tabElements', $tabElements);
