@@ -171,6 +171,10 @@ class InstitutionRubricsTable extends AppTable {
 		return $value;
 	}
 
+	public function onGetCompletedOn(Event $event, Entity $entity) {
+		return $entity->modified;
+	}
+
 	public function indexBeforeAction(Event $event) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -270,7 +274,7 @@ class InstitutionRubricsTable extends AppTable {
 	public function _buildRecords() {
 		$institutionId = $this->Session->read('Institutions.id');
 
-		//delete all New Assessment by Institution Id and reinsert
+		//delete all New Rubric by Institution Id and reinsert
 		$this->deleteAll([
 			$this->aliasField('institution_site_id') => $institutionId,
 			$this->aliasField('status') => 0
@@ -282,7 +286,6 @@ class InstitutionRubricsTable extends AppTable {
 		$todayDate = date("Y-m-d");
 
 		$RubricStatuses = $this->RubricTemplates->RubricStatuses;
-		// $RubricStatusProgrammes = TableRegistry::get('Institution.RubricStatusProgrammes');
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
 		$SectionClasses = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
@@ -302,12 +305,10 @@ class InstitutionRubricsTable extends AppTable {
 				$statusId = $rubricStatus->id;
 				$templateId = $rubricStatus->rubric_template_id;
 				$programmeIds = [];
-				// pr(' Template: ' . $templateId);
 				foreach ($rubricStatus->programmes as $programme) {
 					$programmeId = $programme->id;
 					$programmeIds[$programmeId] = $programmeId;
 				}
-				// pr(' programmeIds: ' . $programmeIds);
 				$gradeIds = $this->EducationGrades
 					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 					->where([$this->EducationGrades->aliasField('education_programme_id IN') => $programmeIds])
@@ -315,7 +316,6 @@ class InstitutionRubricsTable extends AppTable {
 
 				foreach ($rubricStatus->academic_periods as $academicPeriod) {
 					$academicPeriodId = $academicPeriod->id;
-					// pr(' academicPeriodId: ' . $academicPeriodId);
 					$sectionResults = $Sections
 						->find()
 						->select([
@@ -364,28 +364,40 @@ class InstitutionRubricsTable extends AppTable {
 								$gradeId = $grade->education_grade_id;
 							}
 
-							// pr(' sectionId: ' . $sectionId);
 							foreach ($section->institution_site_classes as $class) {
 								$classId = $class->id;
-								// pr(' classId: ' . $classId);
 								foreach ($class->institution_site_class_staff as $staff) {
 									$staffId = $staff->security_user_id;
-									// pr(' staffId: ' . $staffId);
 
-									$data = [
-										'institution_site_id' => $institutionId,
-										'rubric_template_id' => $templateId,
-										'academic_period_id' => $academicPeriodId,
-										'education_grade_id' => $gradeId,
-										'institution_site_section_id' => $sectionId,
-										'institution_site_class_id' => $classId,
-										'security_user_id' => $staffId
-									];
-									$entity = $this->newEntity($data);
+									$results = $this
+										->find('all')
+										->where([
+											$this->aliasField('institution_site_id') => $institutionId,
+											$this->aliasField('rubric_template_id') => $templateId,
+											$this->aliasField('academic_period_id') => $academicPeriodId,
+											$this->aliasField('education_grade_id') => $gradeId,
+											$this->aliasField('institution_site_section_id') => $sectionId,
+											$this->aliasField('institution_site_class_id') => $classId,
+											$this->aliasField('security_user_id') => $staffId
+										])
+										->all();
+									
+									if ($results->isEmpty()) {
+										$data = [
+											'institution_site_id' => $institutionId,
+											'rubric_template_id' => $templateId,
+											'academic_period_id' => $academicPeriodId,
+											'education_grade_id' => $gradeId,
+											'institution_site_section_id' => $sectionId,
+											'institution_site_class_id' => $classId,
+											'security_user_id' => $staffId
+										];
+										$entity = $this->newEntity($data);
 
-									if ($this->save($entity)) {
-									} else {
-										$this->log($entity->errors(), 'debug');
+										if ($this->save($entity)) {
+										} else {
+											$this->log($entity->errors(), 'debug');
+										}
 									}
 								}
 							}
