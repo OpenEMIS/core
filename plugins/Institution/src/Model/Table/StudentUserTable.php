@@ -25,15 +25,37 @@ class StudentUserTable extends UserTable {
 			$class = $academicData['class'];
 			unset($academicData['class']);
 
-			$Student = TableRegistry::get('Institution.Students');
-			if ($Student->save($Student->newEntity($academicData))) {
-				if ($class > 0) {
-					$sectionData = [];
-					$sectionData['student_id'] = $entity->id;
-					$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-					$sectionData['institution_site_section_id'] = $class;
-					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+			$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+			if ($academicData['student_status_id'] != $pendingTransferCode) {
+				$Student = TableRegistry::get('Institution.Students');
+				if ($Student->save($Student->newEntity($academicData))) {
+					if ($class > 0) {
+						$sectionData = [];
+						$sectionData['student_id'] = $entity->id;
+						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
+						$sectionData['institution_site_section_id'] = $class;
+						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+					}
+				}
+			} else {
+				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+				$entityData = [
+					'start_date' => $academicData['start_date'],
+					'end_date' => $academicData['end_date'],
+					'security_user_id' => $academicData['student_id'],
+					'status' => 0,
+					'institution_id' => $academicData['institution_id'],
+					'academic_period_id' => $academicData['academic_period_id'],
+					'education_grade_id' => $academicData['education_grade_id'],
+					'previous_institution_id' => 0,
+					'student_transfer_reason_id' => 0,
+					'type' => 'Admission',
+				];
+				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData)) {
+					// Do something here
+				} else {
+					$AdmissionTable->log($admissionEntity->errors(), 'debug');
 				}
 			}
 			$this->Session->delete($sessionKey);
