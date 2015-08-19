@@ -371,6 +371,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				}
 			}
 		} else {
+			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInSection', 'debug');
 			$error = 'Institution.Institutions.noSubjectsInSection';
 		}
 		return [$error, $classes, $data];
@@ -539,11 +540,15 @@ class InstitutionSiteClassesTable extends AppTable {
 		unset($data[$this->alias()]['teachers']);
 	}
 
+	/**
+	 * Changed in PHPOE-1780 test fail re-work. major modification.
+	 * @var [type]
+	 */
 	public function editAfterAction(Event $event, Entity $entity) {
-		$this->selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
-		$teacherOptions = $this->getTeacherOptions();
+		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
 
-		$studentOptions = $this->getStudentsOptions();
+		$teacherOptions = $this->getTeacherOptions();
+		$studentOptions = $this->getStudentsOptions($entity);
 		$students = $entity->institution_site_class_students;
 		/**
 		 * Check if the request is a page reload
@@ -595,6 +600,13 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		}
 
+		/**
+		 * Changed in PHPOE-1780 test fail re-work. if there are no more available students, change the options in nthe select field.
+		 * @var [type]
+		 */
+		if (count($studentOptions)==2) {
+			$studentOptions = ['-1' => $this->getMessage('Users.select_student_empty')];
+		}
 		if (!empty($teacherOptions)) {
 			$this->fields['teachers']['options'] = $teacherOptions;
 		}
@@ -606,13 +618,12 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->fields['academic_period_id']['type'] = 'readonly';
 		$this->fields['academic_period_id']['attr']['value'] = $this->getAcademicPeriodOptions()[$entity->academic_period_id];
 		
-		$subjects = $this->getSubjectOptions(true);
+		/**
+		 * Changed in PHPOE-1780 test fail re-work. Get Education Subject name directly from EducationSubjects table since there is only one $entity->education_subject_id.
+		 * @var [type]
+		 */
 		$this->fields['education_subject_id']['type'] = 'readonly';
-		if (array_key_exists($entity->education_subject_id, $subjects)) {
-			$this->fields['education_subject_id']['attr']['value'] = $subjects[$entity->education_subject_id];
-		} else {
-			$this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
-		}
+		$this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
 	
 		return $entity;
 	}
@@ -711,7 +722,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				->find()
 				->contain(['EducationSubjects'])
 				->where([
-					'EducationGradesSubjects.education_grade_id IN' => array_keys($gradeData),
+					'EducationGradesSubjects.education_grade_id IN ' => array_keys($gradeData),
 					'EducationGradesSubjects.visible' => 1
 				])
 				->order('EducationSubjects.order')
@@ -727,6 +738,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			$data = $subjects;
 		}
 		if (empty($data)) {
+			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInSection', 'debug');
 			$this->Alert->warning('Institution.Institutions.noSubjectsInSection');
 		}
 		return $data;
@@ -788,41 +800,55 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	/**
-	 * [getStudentsOptions description]
-	 * @return [type]                [description]
+	 * Changed in PHPOE-1780 test fail re-work. major modification.
+	 * Previously, the grades where populated based on a selected sectionId/classId.
+	 * Those students who matched one of the grades will be included in the list.
+	 *
+	 * Since there will be more than one section where a subject could be linked to, the logic is changed to populate
+	 * students using a longer route to obtain the grades for the current academic period.
+	 * student_status_id = 1 is also included.
+	 * @var integer
+	 * @return array list of students
 	 */
-	protected function getStudentsOptions() {
-		// $Grade = $this->InstitutionSiteSectionGrades;
-		// $sectionGradeObjects = $Grade->find()
-		// 					->contain('EducationGrades')
-		// 					->where([
-		// 						$Grade->aliasField('institution_site_section_id') => $this->selectedSectionId,
-		// 						$Grade->aliasField('status') => 1
-		// 					])
-		// 					->toArray();
-		// $sectionGrades = [];
-		// foreach ($sectionGradeObjects as $key=>$value) {
-		// 	$sectionGrades[] = $value->education_grade_id;
-		// }
-
+	protected function getStudentsOptions($entity) {
+		$sectionKeys = [];
+		foreach ($entity->institution_site_section_classes as $sectionClasses) {
+			$sectionKeys[] = $sectionClasses->institution_site_section_id;
+		}
+		$sections = $this->Institutions->InstitutionSiteSections
+			->find()
+			->contain(['InstitutionSiteSectionGrades'])
+			->where([
+				$this->Institutions->InstitutionSiteSections->aliasField('id') . ' IN ' => $sectionKeys,
+				$this->Institutions->InstitutionSiteSections->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
+			])
+			->toArray();
+		$sectionGrades = [];
+		foreach ($sections as $sectionEntity) {
+			$sectionGradeObjects = $sectionEntity->institution_site_section_grades;
+			foreach ($sectionGradeObjects as $key=>$value) {
+				$sectionGrades[] = $value->education_grade_id;
+			}
+		}
 		$students = $this->Institutions->Students;
 		$query = $students
 			->find('all')
 			->find('AcademicPeriod', ['academic_period_id' => $this->_selectedAcademicPeriodId])
-			->contain(['Users', 'EducationGrades'])
+			->contain(['Users', 'EducationGrades.EducationSubjects'])
 			->where([
-				$students->aliasField('institution_id') => $this->institutionId
+				$students->aliasField('institution_id') => $this->institutionId,
+				$students->aliasField('student_status_id') => 1,
 			])
 			->toArray();
 		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];
 		foreach ($query as $student) {
-			// if (in_array($student->education_grade_id, $sectionGrades)) {
+			if (in_array($student->education_grade->id, $sectionGrades)) {
 				if (isset($student->user)) {
 					$studentOptions[$student->user->id] = $student->user->name_with_id;
 				} else {
 					$this->log('Data corrupted with no security user for student: '. $student->id, 'debug');
 				}
-			// }
+			}
 		}
 
 		return $studentOptions;
