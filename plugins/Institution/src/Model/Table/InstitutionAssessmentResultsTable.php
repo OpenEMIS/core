@@ -104,26 +104,28 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
 
-		if (isset($entity->assessment_grading_option_id)) {
-			$selectedStatus = $this->request->query('status');
-			if ($selectedStatus == 0 || $selectedStatus == 1) {
-				$Form = $event->subject()->Form;
-				$Items = TableRegistry::get('Assessment.AssessmentItems');
-				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
-				$alias = Inflector::underscore($Results->alias());
-				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->student_id;
+		$selectedStatus = $this->request->query('status');
+		if ($selectedStatus == 0 || $selectedStatus == 1) {
+			$Form = $event->subject()->Form;
+			$Items = TableRegistry::get('Assessment.AssessmentItems');
+			$Results = TableRegistry::get('Assessment.AssessmentItemResults');
+			$alias = Inflector::underscore($Results->alias());
+			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->student_id;
 
-				$gradingOptions = $this->gradingOptions;
-				$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
+			$gradingOptions = $this->gradingOptions;
+			$selectedGrading = key($gradingOptions);
+			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
+				$selectedGrading = $entity->assessment_grading_option_id;
+			}
+			$this->advancedSelectOptions($gradingOptions, $selectedGrading);
 
-				$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
-				$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
+			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
+			$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
+		} else {
+			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
+				$html = $this->gradingOptions[$entity->assessment_grading_option_id];
 			} else {
-				if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
-					$html = $this->gradingOptions[$entity->assessment_grading_option_id];
-				} else {
-					$html = '<i class="fa fa-minus"></i>';
-				}
+				$html = '<i class="fa fa-minus"></i>';
 			}
 		}
 
