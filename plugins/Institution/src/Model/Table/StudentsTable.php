@@ -140,10 +140,19 @@ class StudentsTable extends AppTable {
 		$educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
 		$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
 
+		$AdmissionTable = $this->StudentStatuses;
+		$pendingAdmissionStatus = $AdmissionTable->getIdByCode('PENDING_ADMISSION');
+		$rejectedStatus = $AdmissionTable->getIdByCode('REJECTED');
+
 		// Query Strings
 		$selectedStatus = $this->queryString('status_id', $statusOptions);
 		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
+
+		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
+			// Redirect to the appropriate page
+			// $this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
+		}
 
 		// Advanced Select Options
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
@@ -300,6 +309,36 @@ class StudentsTable extends AppTable {
 
 		$this->setupTabElements($entity);
 	}
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+		if ($pendingTransferCode == $data['Students']['student_status_id']) {
+			$process = function ($model, $entity) use ($data) {
+				$studentData = $data['Students'];
+				$AdmissionTable = TableRegistry::get('Institution.TransferApprovals');
+				$entityData = [
+					'start_date' => $studentData['start_date'],
+					'end_date' => $studentData['end_date'],
+					'security_user_id' => $studentData['student_id'],
+					'status' => 0,
+					'institution_id' => $studentData['institution_id'],
+					'academic_period_id' => $studentData['academic_period_id'],
+					'education_grade_id' => $studentData['education_grade_id'],
+					'previous_institution_id' => $studentData['institution_id'],
+					'student_transfer_reason_id' => 0,
+					'type' => 'Admission',
+				];
+
+				$admissionEntity = $AdmissionTable->newEntity($entityData);
+				if( $AdmissionTable->save($admissionEntity) ){
+					return true;
+				} else {
+					$AdmissionTable->log($admissionEntity->errors(), 'debug');
+					return false;
+				}
+			};
+			return $process;
+		}
+	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
@@ -309,34 +348,6 @@ class StudentsTable extends AppTable {
 			$sectionData['institution_site_section_id'] = $entity->class;
 			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 			$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
-		}
-
-		$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
-		$studentData = $data['Students'];
-		
-		if ($pendingTransferCode == $studentData['student_status_id']) {
-			$AdmissionTable = TableRegistry::get('Institution.TransferApprovals');
-
-			$entityData = [
-				'start_date' => $studentData['start_date'],
-				'end_date' => $studentData['end_date'],
-				'security_user_id' => $studentData['student_id'],
-				'status' => 0,
-				'institution_id' => $studentData['institution_id'],
-				'academic_period_id' => $studentData['academic_period_id'],
-				'education_grade_id' => $studentData['education_grade_id'],
-				'previous_institution_id' => $studentData['institution_id'],
-				'student_transfer_reason_id' => 0,
-				'type' => 'Admission',
-			];
-
-			$admissionEntity = $AdmissionTable->newEntity($entityData);
-			if( $AdmissionTable->save($admissionEntity) ){
-				$this->Alert->success('general.add.success');
-			} else {
-				$AdmissionTable->log($admissionEntity->errors(), 'debug');
-				$this->Alert->error('general.add.failed');
-			}
 		}
 	}
 
