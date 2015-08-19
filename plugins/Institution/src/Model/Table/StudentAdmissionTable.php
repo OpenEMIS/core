@@ -24,6 +24,18 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 	}
 
+	public function beforeAction($event) {
+    	unset($this->fields['student_transfer_reason_id']);
+    	$this->ControllerAction->field('start_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
+    	$this->ControllerAction->field('end_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
+    	$this->ControllerAction->field('previous_institution_id', ['visible' => false]);
+    	$this->ControllerAction->field('type', ['visible' => false]);
+    }
+
+	public function afterAction(Event $event) {
+		//unset($this->fields['student_transfer_reason_id']);
+	}
+
 	// public function implementedEvents() {
 	// 	$events = parent::implementedEvents();
 	// 	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
