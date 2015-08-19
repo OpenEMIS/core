@@ -76,6 +76,12 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id']);
 	}
 
+	public function editAfterAction(Event $event, Entity $entity){
+		$Students = TableRegistry::get('Users');
+		$studentName = $Students->get($entity->security_user_id);
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $studentName->name_with_id]]);
+	}
+
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}
@@ -151,7 +157,7 @@ class StudentBehavioursTable extends AppTable {
 					$students = $Students
 						->findAllByInstitutionSiteSectionId($sectionId)
 						->contain(['Users'])
-						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+						->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 						->toArray();
 				}
 			}
@@ -181,7 +187,7 @@ class StudentBehavioursTable extends AppTable {
 			$students = $Students
 				->findAllByInstitutionSiteSectionId($sectionId)
 				->contain(['Users'])
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+				->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 				->toArray();
 		}
 		$this->fields['security_user_id']['options'] = $students;
@@ -194,7 +200,7 @@ class StudentBehavioursTable extends AppTable {
 		$students = $Students
 			->findAllByInstitutionSiteSectionId($sectionId)
 			->contain(['Users'])
-			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+			->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 			->toArray();
 
 		$this->fields['security_user_id']['options'] = $students;
