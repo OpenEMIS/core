@@ -64,7 +64,7 @@ $this->start('panelBody');
 						$downloadClass = 'none';
 						$errorClass = '';
 					}
-					echo $this->Html->link(__('Download'), ['action' => 'download', $obj->id], ['class' => $downloadClass]);
+					echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), 'download', $obj->id], ['class' => $downloadClass]);
 					?>
 					<a href="#" data-toggle="tooltip" title="<?= __('Please contact the administrator for assistance.') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 				</td>

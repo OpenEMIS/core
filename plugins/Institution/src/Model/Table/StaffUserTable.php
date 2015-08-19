@@ -19,8 +19,9 @@ class StaffUserTable extends UserTable {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($this->Session->check('Institutions.Staff.new')) {
-			$positionData = $this->Session->read('Institutions.Staff.new');
+		$sessionKey = 'Institution.Staff.new';
+		if ($this->Session->check($sessionKey)) {
+			$positionData = $this->Session->read($sessionKey);
 			$positionData['security_user_id'] = $entity->id;
 			$role = $positionData['role'];
 			$institutionId = $positionData['institution_site_id'];
@@ -39,7 +40,7 @@ class StaffUserTable extends UserTable {
 					$GroupUsers->save($GroupUsers->newEntity($obj));
 				}
 			}
-			$this->Session->delete('Institutions.Staff.new');
+			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'index'];
@@ -89,5 +90,4 @@ class StaffUserTable extends UserTable {
 			}
 		}
 	}
-
 }
