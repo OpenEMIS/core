@@ -28,30 +28,48 @@ class InstitutionRubricAnswersTable extends AppTable {
 
 	public function edit($id=0) {
 		$request = $this->request;
-		$entity = $this->newEntity();
 
 		if ($this->InstitutionRubrics->exists(['id' => $id])) {
-			if ($this->request->is(['get'])) {
-				$rubric = $this->InstitutionRubrics->get($id);
-				$selectedSection = $this->request->query('section');
+			$query = $this->InstitutionRubrics
+				->find()
+				->contain(['RubricTemplates'])
+				->where([
+					$this->InstitutionRubrics->aliasField('id') => $id
+				]);
+			$entity = $query->first();
+			$alias = $this->InstitutionRubrics->alias();
 
+			if ($this->request->is(['get'])) {
+				$RubricTemplateOptions = TableRegistry::get('Rubric.RubricTemplateOptions');
+				$optionQuery = $RubricTemplateOptions
+					->find()
+					->find('order')
+					->where([
+						$RubricTemplateOptions->aliasField('rubric_template_id') => $entity->rubric_template_id
+					]);
+				$entity->count = $optionQuery->count();
+				$entity->rubric_template_options = $optionQuery->toArray();
+				
+				$selectedSection = $this->request->query('section');
 				if (!is_null($selectedSection)) {
-					$results = $this->RubricCriterias
+					$rubricCriterias = $this->RubricCriterias
 						->find()
 						->find('order')
-						->contain(['RubricSections', 'RubricCriteriaOptions'])
+						->contain(['RubricCriteriaOptions'])
 						->where([
 							$this->RubricCriterias->aliasField('rubric_section_id') => $selectedSection,
 						])
 						->all();
 
-					if (!$results->isEmpty()) {
-						$entity = $results->toArray();
+					if (!$rubricCriterias->isEmpty()) {
+						$sectionQuery = $this->RubricCriterias->RubricSections
+							->find()
+							->where([
+								$this->RubricCriterias->RubricSections->aliasField('id') => $selectedSection,
+							]);
+						$entity->rubric_section = $sectionQuery->first();
+						$entity->rubric_criterias = $rubricCriterias;
 					}
-					// pr($data);
-					// pr($rubric);
-					// pr($id);
-					// pr('for get');
 				} else {
 					$this->Alert->warning('InstitutionRubricAnswers.noSection');
 					$url = $this->ControllerAction->url('index');
@@ -62,20 +80,31 @@ class InstitutionRubricAnswersTable extends AppTable {
 					return $this->controller->redirect($url);
 				}
 			} else if ($this->request->is(['post', 'put'])) {
-				// pr('for post');die;
 				$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
 				$patchOptions = new ArrayObject([]);
 				$requestData = new ArrayObject($request->data);
 
 				if ($submit == 'save') {
-					$patchOptionsArray = $patchOptions->getArrayCopy();
-					$request->data = $requestData->getArrayCopy();
-					$entity = $this->patchEntity($entity, $request->data, $patchOptionsArray);
+					$entity = $this->InstitutionRubrics->newEntity($request->data);
+					if ($this->InstitutionRubrics->save($entity)) {
+						$this->Alert->success('general.edit.success');
+						$url = $this->ControllerAction->url('index');
+						$url['action'] = 'Rubrics';
+						unset($url[1]);
+						unset($url['section']);
+
+						return $this->controller->redirect($url);
+					} else {
+						$this->log($entity->errors(), 'debug');
+						$this->Alert->error('general.edit.failed');
+					}
 				} else {
+					//reload
 				}
 			}
 
 			$this->controller->set('data', $entity);
+			$this->controller->set('alias', $this->InstitutionRubrics->alias());
 		} else {
 			$this->Alert->warning('general.notExists');
 			$url = $this->ControllerAction->url('index');
