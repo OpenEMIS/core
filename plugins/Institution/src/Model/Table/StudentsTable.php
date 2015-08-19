@@ -413,6 +413,23 @@ class StudentsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			// 1 - Enrolled, 9 - Pending Admission
+			$statusesToShow = [1, 9];
+			$StudentStatusesTable = $this->StudentStatuses;
+			$conditions = [
+				$StudentStatusesTable->aliasField('id').' IN' => $statusesToShow
+			];
+			$options = $StudentStatusesTable
+				->find('list')
+				->where([$conditions])
+				->toArray();
+			$attr['options'] = $options;
+		}
+		return $attr;
+	}
+
 	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
 		unset($request->query['period']);
