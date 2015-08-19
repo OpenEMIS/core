@@ -19,10 +19,6 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
-	}
-
 	public function editBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Users']);
 	}
@@ -137,6 +133,9 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->field('openemis_no', ['visible' => false]);
 		$this->ControllerAction->field('security_user_id', ['type' => 'select']);
 		$this->ControllerAction->setFieldOrder(['academic_period', 'section', 'security_user_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+	}
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 	}
 
 	public function validationDefault(Validator $validator) {
