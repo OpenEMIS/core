@@ -32,7 +32,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 		if ($this->InstitutionRubrics->exists(['id' => $id])) {
 			$query = $this->InstitutionRubrics
 				->find()
-				->contain(['RubricTemplates'])
+				->contain(['RubricTemplates', 'InstitutionRubricAnswers'])
 				->where([
 					$this->InstitutionRubrics->aliasField('id') => $id
 				]);
@@ -68,7 +68,15 @@ class InstitutionRubricAnswersTable extends AppTable {
 								$this->RubricCriterias->RubricSections->aliasField('id') => $selectedSection,
 							]);
 						$entity->rubric_section = $sectionQuery->first();
-						$entity->rubric_criterias = $rubricCriterias;
+						$entity->rubric_criterias = $rubricCriterias->toArray();
+
+						// Rubric Answers
+						$rubricAnswers = [];
+						foreach ($entity->institution_rubric_answers as $key => $answerObj) {
+							$rubricAnswers[$answerObj->rubric_criteria_id] = $answerObj;
+						}
+						$entity->institution_rubric_answers = $rubricAnswers;
+						// End
 					}
 				} else {
 					$this->Alert->warning('InstitutionRubricAnswers.noSection');
@@ -126,5 +134,18 @@ class InstitutionRubricAnswersTable extends AppTable {
 		$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 		$toolbarButtons['back']['attr'] = $attr;
 		$toolbarButtons['back']['attr']['title'] = __('Back');
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$cancelButton = $buttons[1];
+		$buttons[0] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[rubric-status=1]\').val(1);']
+		];
+		$buttons[1] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[rubric-status=1]\').val(2);']
+		];
+		$buttons[2] = $cancelButton;
 	}
 }

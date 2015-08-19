@@ -171,7 +171,7 @@ trait MessagesTrait {
 			],
 		],
 		'InstitutionRubricAnswers' => [
-			'rubric_template_id' => 'Rubric Template',
+			'rubric_template' => 'Rubric Template',
 			'rubric_section_id' => 'Section',
 			'noSection' => 'There is no rubric section selected'
 		],
