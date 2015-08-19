@@ -233,7 +233,8 @@ class StudentFeesTable extends AppTable {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->ControllerAction->Alert->warning('general.notExists');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			return $this->controller->redirect($action);
 		}	   		
 	}
@@ -288,7 +289,8 @@ class StudentFeesTable extends AppTable {
 						    	$this->save($studentFee);
 							}
 							$this->ControllerAction->Alert->success('general.edit.success');
-							$action = $this->ControllerAction->buttons['view']['url'];
+							// $action = $this->ControllerAction->buttons['view']['url'];
+							$action = $this->ControllerAction->url('view');
 							return $this->controller->redirect($action);
 						} else {
 							$payments = $updatedPayments;
@@ -306,7 +308,8 @@ class StudentFeesTable extends AppTable {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->ControllerAction->Alert->warning('general.notExists');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			return $this->controller->redirect($action);
 		}
 	}

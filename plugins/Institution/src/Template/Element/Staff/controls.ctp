@@ -16,7 +16,7 @@
 					'options' => $periodOptions,
 					'url' => $baseUrl,
 					'data-named-key' => 'period',
-					'data-named-group' => 'status_id, position'
+					'data-named-group' => 'position'
 				));
 			}
 
@@ -27,20 +27,20 @@
 					'options' => $positionOptions,
 					'url' => $baseUrl,
 					'data-named-key' => 'position',
-					'data-named-group' => 'status_id, period'
+					'data-named-group' => 'period'
 				));
 			}
 
-			if (!empty($statusOptions)) {
-				echo $this->Form->input('status', array(
-					'class' => 'form-control',
-					'label' => false,
-					'options' => $statusOptions,
-					'url' => $baseUrl,
-					'data-named-key' => 'status_id',
-					'data-named-group' => 'period, position'
-				));
-			}
+			// if (!empty($statusOptions)) {
+			// 	echo $this->Form->input('status', array(
+			// 		'class' => 'form-control',
+			// 		'label' => false,
+			// 		'options' => $statusOptions,
+			// 		'url' => $baseUrl,
+			// 		'data-named-key' => 'status_id',
+			// 		'data-named-group' => 'period, position'
+			// 	));
+			// }
 		?>
 	</div>
 </div>
