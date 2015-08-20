@@ -323,6 +323,8 @@ class StudentsTable extends AppTable {
 			// Check if the student that is pass over is a pending admission student
 			if ($pendingTransferCode == $studentData['student_status_id']) {
 
+				// Check if the student is a new record or rejected record in the admission table, if the record exist as an approved record, that record should
+				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
 				$studentExist = $AdmissionTable->find()
 					->where([
 							'OR' => [[$AdmissionTable->aliasField('status') => 0], [$AdmissionTable->aliasField('status') => 2]],
