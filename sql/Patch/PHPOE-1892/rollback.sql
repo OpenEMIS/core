@@ -7,3 +7,5 @@ WHERE `code`='REJECTED';
 ALTER TABLE `institution_student_admission` 
 DROP COLUMN `type`, 
 RENAME TO  `institution_student_transfers` ;
+
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1892';
