@@ -70,6 +70,12 @@ class StudentAdmissionTable extends AppTable {
 		]);
     }
 
+   	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		// $events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+		return $events;
+	}
+
 	public function onGetStatus(Event $event, Entity $entity) {
 		$statusName = "";
 		switch ($entity->status) {
@@ -172,5 +178,100 @@ class StudentAdmissionTable extends AppTable {
 			$attr['attr']['value'] = $endDate->format('d-m-Y');
 			return $attr;
 		}
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'edit') {
+			$buttons[0] = [
+				'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
+				'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
+			];
+
+			$buttons[1] = [
+				'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
+				'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
+			];
+		}
+	}
+
+	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$Students = TableRegistry::get('Institution.Students');
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$statuses = $StudentStatuses->findCodeList();
+
+		$newSchoolId = $entity->institution_id;
+		$previousSchoolId = $entity->previous_institution_id;
+		$studentId = $entity->security_user_id;
+		$periodId = $entity->academic_period_id;
+		$gradeId = $entity->education_grade_id;
+
+		$conditions = [
+			'institution_id' => $newSchoolId,
+			'student_id' => $studentId,
+			'academic_period_id' => $periodId,
+			'education_grade_id' => $gradeId,
+			'student_status_id' => $statuses['CURRENT']
+		];
+
+		// check if the student is already in the new school
+		if (!$Students->exists($conditions)) { // if not exists
+			$startDate = $data[$this->alias()]['start_date'];
+			$startDate = date('Y-m-d', strtotime($startDate));
+
+			// add the student to the new school
+			$newData = $conditions;
+			$newData['start_date'] = $startDate;
+			$newData['end_date'] = $entity->end_date->format('Y-m-d');
+			$newEntity = $Students->newEntity($newData);
+			if ($Students->save($newEntity)) {
+				$this->Alert->success('StudentAdmission.approve');
+				// finally update the transfer request to become approved
+				$entity->start_date = $startDate;
+				$entity->status = self::APPROVED;
+				if (!$this->save($entity)) {
+					$this->log($entity->errors(), 'debug');
+				}
+			} else {
+				$this->Alert->error('general.edit.failed');
+				$this->log($newEntity->errors(), 'debug');
+			}
+		} else {
+			$this->Alert->error('StudentAdmission.exists');
+		}
+
+		$event->stopPropagation();
+		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+	}
+
+	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// Update status to Current in previous school
+		$institutionId = $entity->previous_institution_id;
+		$selectedStudent = $entity->security_user_id;
+		$selectedPeriod = $entity->academic_period_id;
+		$selectedGrade = $entity->education_grade_id;
+
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$currentStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+		$Students = TableRegistry::get('Institution.Students');
+		$Students->updateAll(
+			['student_status_id' => $currentStatus],
+			[
+				'institution_id' => $institutionId,
+				'student_id' => $selectedStudent,
+				'academic_period_id' => $selectedPeriod,
+				'education_grade_id' => $selectedGrade
+			]
+		);
+		// End
+
+		// Update status to 2 => reject
+		$this->updateAll(['status' => self::REJECTED], ['id' => $entity->id]);
+		// End
+
+		$this->Alert->success('StudentAdmission.reject');
+		$event->stopPropagation();
+
+		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 	}
 }
