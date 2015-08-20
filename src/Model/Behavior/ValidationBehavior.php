@@ -293,16 +293,39 @@ class ValidationBehavior extends Behavior {
 		
 	}
 
+	/**
+	 * To check whether given input is within given start and end dates
+	 * @param  mixed   	$field        			current field value
+	 * @param  mixed   	$start_date       start date field value
+	 * @param  mixed   	$end_date        end date field value
+	 */
+	public static function checkInputWithinRange($field, $field_name, $start_date, $end_date) {
+		$type = self::_getFieldType($field_name);
+		try {
+			$givenDate = new DateTime($field);
+			$startDate = new DateTime($start_date);
+			$endDate = new DateTime($end_date);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$type);
+		}
+
+		if($givenDate > $startDate && $givenDate < $endDate) {
+			return true;
+		} else {
+			return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
+		}
+	}                                                                                                                                                                 
+
 	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
 
 		$existingRecords = $Students->find()
 			->where(
 				[
-					[$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id']],
-					[$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id']],
-					[$Students->aliasField('institution_id') => $globalData['data']['institution_id']],
-					[$Students->aliasField('student_id') => $globalData['data']['student_id']]
+					$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
+					$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+					$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
+					$Students->aliasField('student_id') => $globalData['data']['student_id']
 				]
 				
 			)
@@ -311,6 +334,35 @@ class ValidationBehavior extends Behavior {
 		return ($existingRecords <= 0);
 	}
 
+	public static function institutionStaffId($field, array $globalData) {
+		$Staff = TableRegistry::get('Institution.Staff');
 
+		$existingRecords = $Staff->find()
+			->where(
+				[
+					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
+					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
+				]
+				
+			)
+			->count();
+			;
+		return ($existingRecords <= 0);
+	}
 
+	public static function studentGuardianId($field, array $globalData) {
+		$Guardians = TableRegistry::get('Student.Guardians');
+
+		$existingRecords = $Guardians->find()
+			->where(
+				[
+					$Guardians->aliasField('guardian_id') => $globalData['data']['guardian_id'],
+					$Guardians->aliasField('student_id') => $globalData['data']['student_id']
+				]
+			)
+			->count()
+			;
+		return $existingRecords <= 0;
+	}
 }

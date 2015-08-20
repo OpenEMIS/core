@@ -105,7 +105,7 @@ var Autocomplete = {
 }
 </script>
 <?php
-$loadingImg =  $this->Html->image('OpenEmis/loader.gif', ['plugin' => true]);
+$loadingImg =  $this->Html->image('OpenEmis.loader.gif', ['plugin' => 'false']);
 ?>
 <div class="input text">
 	<label for="<?= $attr['field'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>

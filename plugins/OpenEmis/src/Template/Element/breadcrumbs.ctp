@@ -1,9 +1,11 @@
 <?php
-$session = $this->request->session();
-$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
 if (!isset($_breadcrumbs)) {
 	$_breadcrumbs = [];
 }
+if (!empty($_breadcrumbs)) {
+$session = $this->request->session();
+$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
+
 ?>
 <ul class="breadcrumb panel-breadcrumb">
 	<li><a href="<?= $this->Url->build($homeUrl) ?>"><i class="fa fa-home"></i></a></li>
@@ -17,3 +19,6 @@ if (!isset($_breadcrumbs)) {
 	</li>
 	<?php endforeach ?>
 </ul>
+<?php
+}
+?>
