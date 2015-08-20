@@ -107,7 +107,10 @@ class InstitutionSiteFeesTable extends AppTable {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain('InstitutionSiteFeeTypes.FeeTypes');
+		$query->contain([
+			'EducationGrades',
+			'InstitutionSiteFeeTypes.FeeTypes'
+		]);
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
@@ -170,7 +173,7 @@ class InstitutionSiteFeesTable extends AppTable {
 
  		
 		$this->fields['academic_period_id']['attr']['value'] = $this->_academicPeriodOptions[$entity->academic_period_id];
-		$this->fields['education_grade_id']['attr']['value'] = $this->_gradeOptions[$entity->education_grade_id];
+		$this->fields['education_grade_id']['attr']['value'] = isset($this->_gradeOptions[$entity->education_grade_id]) ? $this->_gradeOptions[$entity->education_grade_id] : $entity->education_grade->name;
 
 	}
 
