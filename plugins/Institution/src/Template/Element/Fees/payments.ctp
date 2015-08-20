@@ -1,5 +1,5 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
-
+<?php $action = 'edit'; ?>
 <div class="input clearfix">
 	<div class="clearfix">
 	<?php
@@ -8,7 +8,7 @@
 			'type' => 'button',
 			'class' => 'btn btn-dropdown action-toggle btn-single-action',
 			'aria-expanded' => 'true',
-			'onclick' => "$('#reload').val('add').click();"
+			'onclick' => "$('#reload').val('reload').click();"
 		]);
 	?>
 	</div>
@@ -30,74 +30,54 @@
 				</tr>
 			</thead>
 
-			<?php if (isset($attr['data']) || isset($attr['paymentField'])) : ?>
+			<?php if (isset($attr['data']) || isset($attr['paymentFields'])) : ?>
 
 			<tbody>
-
-				<?php if (isset($attr['paymentField']) && !empty($attr['paymentField'])) : ?>
-
+				<?php $recordKey = 0; ?>
+				<?php foreach ($attr['paymentFields'] as $i=>$record) : ?>
+					<?php $recordKey = $i; ?>
 					<tr>
 						<?php foreach ($attr['fields'] as $key=>$field) : ?>
 
-							<?php $field['attr']['name'] = $field['model'].'[new]['.$field['field'].']';?>
-							<?php $field['fieldName'] = $field['model'].'[new]['.$field['field'].']';?>
-							<?php $field['attr']['id'] = strtolower($field['model']).'-new-'.$field['field'];?>
-							<?php $field['attr']['value'] = $attr['paymentField']->$field['field'];?>
+							<?php if (isset($field['field'])) : ?>
+								<?php $field['attr']['name'] = $field['model'].'['.$recordKey.']['.$field['field'].']';?>
+								<?php $field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';?>
+								<?php $field['attr']['id'] = strtolower($field['model']).'-'.$recordKey.'-'.$field['field'];?>
+								<?php $field['attr']['value'] = $record->$field['field'];?>
 
-							<?php if ($field['type']=='hidden') : ?>
-								<?= $this->HtmlField->{$field['type']}($action, $attr['paymentField'], $field, $field['attr']);?>
-							<?php else: ?>
-								<td><?= $this->HtmlField->{$field['type']}($action, $attr['paymentField'], $field, $field['attr']);?></td>
+								<?php
+								$tdClass = ''; 
+								if ($record->errors($field['field'])) {
+									$field['attr']['class'] = 'form-error';
+									$tdClass = 'error';
+								}
+								?>
+
+								<?php if ($field['type']=='hidden') : ?>
+									<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
+								<?php else: ?>
+
+									<td class="<?= $tdClass ?>">
+										<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
+										<div style="margin-left:10px;float:left;">
+										<?php if ($record->errors($field['field'])) : ?>
+											<ul class="error-message">
+											<?php foreach ($record->errors($field['field']) as $error) : ?>
+												<li><?= $error ?></li>
+											<?php endforeach ?>
+											</ul>
+										<?php else: ?>
+											&nbsp;
+										<?php endif; ?>
+										<div>
+									</td>
+									
+								<?php endif; ?>
+
 							<?php endif; ?>
-			
+				
 						<?php endforeach ?>
-						
-						<td> 
-							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
-								<?= __('<i class="fa fa-close"></i> Remove') ?>
-							</button>
-						</td>
-
-					</tr>
-
-				<?php endif; ?>
-		
-				<?php foreach ($attr['data'] as $i=>$record) : ?>
-
-					<tr>
-						<?php foreach ($attr['fields'] as $key=>$field) : ?>
-
-							<?php $field['attr']['name'] = $field['model'].'['.$i.']['.$field['field'].']';?>
-							<?php $field['fieldName'] = $field['model'].'['.$i.']['.$field['field'].']';?>
-							<?php $field['attr']['id'] = strtolower($field['model']).'-'.$i.'-'.$field['field'];?>
-							<?php $field['attr']['value'] = $record->$field['field'];?>
-
-							<?php
-							$tdClass = ''; 
-							if ($record->errors($field['field'])) {
-								$field['attr']['class'] = 'form-error';
-								$tdClass = 'error';
-							}
-							?>
-
-							<?php if ($field['type']=='hidden') : ?>
-								<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
-							<?php else: ?>
 							
-								<td class="<?= $tdClass ?>"><?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
-									<?php if ($record->errors($field['field'])) : ?>
-										<ul class="error-message">
-										<?php foreach ($record->errors($field['field']) as $error) : ?>
-											<li><?= $error ?></li>
-										<?php endforeach ?>
-										</ul>
-									<?php endif; ?>
-								</td>
-								
-							<?php endif; ?>
-			
-						<?php endforeach ?>
-						
 						<td> 
 							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
 								<?= __('<i class="fa fa-close"></i> Remove') ?>
@@ -121,8 +101,8 @@
 
 <?php else : ?>
 
-<div>
-	<table class="table table-striped table-hover table-bordered">
+<div class="table-in-view table-responsive" style="width:inherit">
+	<table class="table">
 		<thead>
 			<tr>
 				<th><?= $attr['fields']['payment_date']['tableHeader'] ?></th>
