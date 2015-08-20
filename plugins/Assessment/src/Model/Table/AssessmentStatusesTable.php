@@ -30,13 +30,28 @@ class AssessmentStatusesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('assessment_id', ['type' => 'select']);
+		$this->ControllerAction->field('assessment_id');
 		$this->ControllerAction->field('academic_period_level');
 		$this->ControllerAction->field('academic_periods');
 
 		$this->ControllerAction->setFieldOrder([
 			'assessment_id', 'date_enabled', 'date_disabled', 'academic_period_level', 'academic_periods'
 		]);
+	}
+
+	public function onGetAssessmentId(Event $event, Entity $entity) {
+		return $entity->assessment->code_name;
+	}
+
+	public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request) {
+		$assessmentOptions = $this->Assessments
+			->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+			->find('visible')
+			->find('order')
+			->toArray();
+		$attr['options'] = $assessmentOptions;
+
+		return $attr;
 	}
 
 	public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request) {
@@ -72,7 +87,8 @@ class AssessmentStatusesTable extends AppTable {
 
 	// contain is necessary for chosenSelect
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain(['AcademicPeriods']);
+		$options['auto_contain'] = false;
+		$query->contain(['Assessments', 'AcademicPeriods']);
 	}
 
 	// contain is necessary for chosenSelect

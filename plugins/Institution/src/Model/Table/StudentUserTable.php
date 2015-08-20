@@ -18,8 +18,9 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($this->Session->check('Institutions.Students.new')) {
-			$academicData = $this->Session->read('Institutions.Students.new');
+		$sessionKey = 'Institution.Students.new';
+		if ($this->Session->check($sessionKey)) {
+			$academicData = $this->Session->read($sessionKey);
 			$academicData['student_id'] = $entity->id;
 			$class = $academicData['class'];
 			unset($academicData['class']);
@@ -35,7 +36,7 @@ class StudentUserTable extends UserTable {
 					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 				}
 			}
-			$this->Session->delete('Institutions.Students.new');
+			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'index'];
