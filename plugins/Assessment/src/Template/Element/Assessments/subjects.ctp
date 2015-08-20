@@ -30,11 +30,11 @@
 								'label' => false
 							]);
 							echo $this->Form->hidden("$model.assessment_items.$i.id");
-							echo $this->Form->hidden("$model.assessment_items.$i.education_subject_id", ['value' => $obj->education_subject->id]);
+							echo $this->Form->hidden("$model.assessment_items.$i.education_subject_id", ['value' => $obj['education_subject']->id]);
 							?>
 						</td>
-						<td><?= $obj->education_subject->code ?></td>
-						<td><?= $obj->education_subject->name ?></td>
+						<td><?= $obj['education_subject']->code ?></td>
+						<td><?= $obj['education_subject']->name ?></td>
 						<td><?= $this->Form->input("$model.assessment_items.$i.result_type", ['options' => $markTypeOptions, 'label' => false]) ?></td>
 						<td><?= $this->Form->input("$model.assessment_items.$i.pass_mark", ['label' => false]) ?></td>
 						<td><?= $this->Form->input("$model.assessment_items.$i.max", ['label' => false]) ?></td>
