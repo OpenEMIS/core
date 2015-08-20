@@ -68,10 +68,13 @@ trait UtilityTrait {
 		foreach ($options as $id => $label) {
 			$label = __($label);
 			$options[$id] = ['value' => $id, 'text' => $label];
-
+			
 			if (is_callable($callable)) {
-				$count = $callable($id);
-
+				if (!empty($id)) {
+					$count = $callable($id);
+				} else {
+					$count = 1;
+				}
 				if ($count == 0) {
 					if (!empty($message)) {
 						$options[$id]['text'] = str_replace('{{label}}', $label, $message);
@@ -80,7 +83,7 @@ trait UtilityTrait {
 
 					if ($selected == $id) $selected = 0;
 				} else {
-					if ($selected == 0) $selected = $id;
+					// if ($selected == 0 && $id != 0) $selected = $id;
 				}
 			}
 
