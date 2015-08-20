@@ -75,7 +75,7 @@ class StudentAdmissionTable extends AppTable {
    	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		// $events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		return $events;
 	}
 
@@ -260,48 +260,47 @@ class StudentAdmissionTable extends AppTable {
 		}
 	}
 
-	// // Workbench.Model.onGetList
-	// public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-	// 	if ($AccessControl->check(['Dashboard', 'StudentAdmission', 'edit'])) {
-	// 		$institutionIds = $AccessControl->getInstitutionsByUser();
+	// Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+		if ($AccessControl->check(['Dashboard', 'StudentAdmission', 'edit'])) {
+			$institutionIds = $AccessControl->getInstitutionsByUser();
 
-	// 		pr($data);
+			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => 'Admission'];
+			if (!$AccessControl->isAdmin()) {
+				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			}
 
-	// 		$where = [$this->aliasField('status') => 0, $this->aliasField('type') => 'Admission'];
-	// 		if (!$AccessControl->isAdmin()) {
-	// 			$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
-	// 		}
+			$resultSet = $this
+				->find()
+				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([
+					$this->aliasField('created')
+				])
+				->toArray();
 
-	// 		$resultSet = $this
-	// 			->find()
-	// 			->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
-	// 			->where($where)
-	// 			->order([
-	// 				$this->aliasField('created')
-	// 			])
-	// 			->toArray();
+			foreach ($resultSet as $key => $obj) {
+				$requestTitle = sprintf('Admission of student (%s) to %s', $obj->user->name_with_id, $obj->institution->name);
+				$url = [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'StudentAdmission',
+					'edit',
+					$obj->id
+				];
 
-	// 		// foreach ($resultSet as $key => $obj) {
-	// 		// 	$requestTitle = sprintf('Transfer of student (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name);
-	// 		// 	$url = [
-	// 		// 		'plugin' => false,
-	// 		// 		'controller' => 'Dashboard',
-	// 		// 		'action' => 'TransferApprovals',
-	// 		// 		'edit',
-	// 		// 		$obj->id
-	// 		// 	];
-
-	// 		// 	$receivedDate = $this->formatDate($obj->modified);
-	// 		// 	$data[] = [
-	// 		// 		'request_title' => ['title' => $requestTitle, 'url' => $url],
-	// 		// 		'receive_date' => $receivedDate,
-	// 		// 		'due_date' => '<i class="fa fa-minus"></i>',
-	// 		// 		'requester' => $obj->created_user->username,
-	// 		// 		'type' => __('Student Transfer')
-	// 		// 	];
-	// 		// }
-	// 	}
-	// }
+				$receivedDate = $this->formatDate($obj->modified);
+				
+				$data[] = [
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
+					'receive_date' => $receivedDate,
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->created_user->username,
+					'type' => __('Student Admission')
+				];
+			}
+		}
+	}
 
 	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$entity->comment = $data['StudentAdmission']['comment'];
