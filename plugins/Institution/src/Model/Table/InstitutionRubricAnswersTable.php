@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class InstitutionRubricAnswersTable extends AppTable {
 	public function initialize(array $config) {
@@ -19,6 +20,20 @@ class InstitutionRubricAnswersTable extends AppTable {
 		$this->belongsTo('RubricCriterias', ['className' => 'Rubric.RubricCriterias']);
 		$this->belongsTo('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions']);
 	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->requirePresence('rubric_criteria_option_id')
+			->notEmpty('rubric_criteria_option_id', 'Please select a criteria option.');
+
+		return $validator;
+	}
+
+	public function validationSkipCheck(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator->remove('rubric_criteria_option_id');
+        return $validator;
+    }
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
@@ -32,23 +47,18 @@ class InstitutionRubricAnswersTable extends AppTable {
 		if ($this->InstitutionRubrics->exists(['id' => $id])) {
 			$query = $this->InstitutionRubrics
 				->find()
-				->contain(['RubricTemplates', 'InstitutionRubricAnswers'])
+				->contain(['InstitutionRubricAnswers'])
 				->where([
 					$this->InstitutionRubrics->aliasField('id') => $id
 				]);
 			$entity = $query->first();
+			$selectedStatus = $entity->status;
 			$alias = $this->InstitutionRubrics->alias();
 
 			if ($this->request->is(['get'])) {
-				$RubricTemplateOptions = TableRegistry::get('Rubric.RubricTemplateOptions');
-				$optionQuery = $RubricTemplateOptions
-					->find()
-					->find('order')
-					->where([
-						$RubricTemplateOptions->aliasField('rubric_template_id') => $entity->rubric_template_id
-					]);
-				$entity->count = $optionQuery->count();
-				$entity->rubric_template_options = $optionQuery->toArray();
+				// Rubric Templates
+				$entity->rubric_template_name = $this->InstitutionRubrics->RubricTemplates->get($entity->rubric_template_id)->name;
+				// End
 				
 				$selectedSection = $this->request->query('section');
 				if (!is_null($selectedSection)) {
@@ -62,21 +72,18 @@ class InstitutionRubricAnswersTable extends AppTable {
 						->all();
 
 					if (!$rubricCriterias->isEmpty()) {
-						$sectionQuery = $this->RubricCriterias->RubricSections
+						// Rubric Sections
+						$rubricSection = $this->RubricCriterias->RubricSections
 							->find()
 							->where([
 								$this->RubricCriterias->RubricSections->aliasField('id') => $selectedSection,
-							]);
-						$entity->rubric_section = $sectionQuery->first();
-						$entity->rubric_criterias = $rubricCriterias->toArray();
-
-						// Rubric Answers
-						$rubricAnswers = [];
-						foreach ($entity->institution_rubric_answers as $key => $answerObj) {
-							$rubricAnswers[$answerObj->rubric_criteria_id] = $answerObj;
-						}
-						$entity->institution_rubric_answers = $rubricAnswers;
+							])
+							->first();
+						$entity->rubric_section_name = $rubricSection->name;
+						$entity->rubric_section_order = $rubricSection->order;
 						// End
+
+						$entity->rubric_criterias = $rubricCriterias->toArray();
 					}
 				} else {
 					$this->Alert->warning('InstitutionRubricAnswers.noSection');
@@ -88,17 +95,75 @@ class InstitutionRubricAnswersTable extends AppTable {
 					return $this->controller->redirect($url);
 				}
 			} else if ($this->request->is(['post', 'put'])) {
-				$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
-				$patchOptions = new ArrayObject([]);
-				$requestData = new ArrayObject($request->data);
+				$entity = $this->InstitutionRubrics->newEntity();
+				$requestData = $request->data;
+				$patchOptions = [];
+
+				$submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
 				if ($submit == 'save') {
-					$entity = $this->InstitutionRubrics->newEntity($request->data);
+					// Skip validation on rubric_criteria_option_id if is draft
+					if ($requestData[$alias]['status'] == 1) {
+						$patchOptions['associated'] = [
+							'InstitutionRubricAnswers' => ['validate' => 'SkipCheck']
+						];
+					}
+
+					$entity = $this->InstitutionRubrics->patchEntity($entity, $requestData, $patchOptions);
+
+					// Rebuild rubric_criterias
+					$rubricCriterias = $entity->rubric_criterias;
+					foreach ($rubricCriterias as $criteriaKey => $criteriaArray) {
+						$criteria = $this->RubricCriterias
+							->find()
+							->contain(['RubricCriteriaOptions'])
+							->where([
+								$this->RubricCriterias->aliasField('id') => $criteriaArray['id'],
+							])
+							->first();
+
+						$entity->rubric_criterias[$criteriaKey] = $criteria;
+					}
+					// End
+
 					if ($this->InstitutionRubrics->save($entity)) {
 						if ($entity->status == 1) {
 							$this->Alert->success('InstitutionRubricAnswers.save.draft');
 						} else if ($entity->status == 2) {
-							$this->Alert->success('InstitutionRubricAnswers.save.final');
+							$templateId = $entity->rubric_template_id;
+							$RubricSections = $this->RubricCriterias->RubricSections;
+							$criterias = $this->RubricCriterias
+								->find()
+								->matching('RubricSections', function($q) use ($RubricSections, $templateId) {
+									return $q
+										->where([
+											$RubricSections->aliasField('rubric_template_id') => $templateId
+										]);
+								})
+								->where([
+									$this->RubricCriterias->aliasField('type') => 2
+								])
+								->count();
+
+							$answers = $this
+								->find()
+								->where([
+									$this->aliasField('institution_site_quality_rubric_id') => $entity->id,
+									$this->aliasField('rubric_criteria_option_id IS NOT') => 0
+								])
+								->count();
+
+							if ($answers != $criterias) {
+								$this->Alert->error('InstitutionRubricAnswers.save.failed');
+
+								$draftStatus = 1;
+								$this->InstitutionRubrics->updateAll(
+									['status' => $draftStatus],
+									['id' => $entity->id]
+								);
+							} else {
+								$this->Alert->success('InstitutionRubricAnswers.save.final');
+							}
 						}
 
 						$url = $this->ControllerAction->url('index');
@@ -108,6 +173,8 @@ class InstitutionRubricAnswersTable extends AppTable {
 
 						return $this->controller->redirect($url);
 					} else {
+						// Reset the status to the original value
+						$entity->status = $selectedStatus;
 						$this->log($entity->errors(), 'debug');
 						$this->Alert->error('general.edit.failed');
 					}
@@ -115,6 +182,26 @@ class InstitutionRubricAnswersTable extends AppTable {
 					//reload
 				}
 			}
+
+			// Rubric Template Options
+			$RubricTemplateOptions = TableRegistry::get('Rubric.RubricTemplateOptions');
+			$optionQuery = $RubricTemplateOptions
+				->find()
+				->find('order')
+				->where([
+					$RubricTemplateOptions->aliasField('rubric_template_id') => $entity->rubric_template_id
+				]);
+			$entity->count = $optionQuery->count();
+			$entity->rubric_template_options = $optionQuery->toArray();
+			// End
+
+			// Rubric Answers
+			$rubricAnswers = [];
+			foreach ($entity->institution_rubric_answers as $answerKey => $answerObj) {
+				$rubricAnswers[$answerObj->rubric_criteria_id] = $answerObj;
+			}
+			$entity->institution_rubric_answers = $rubricAnswers;
+			// End
 
 			$this->controller->set('data', $entity);
 			$this->controller->set('alias', $this->InstitutionRubrics->alias());

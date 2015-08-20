@@ -52,8 +52,7 @@ class InstitutionRubricsTable extends AppTable {
 			$tableCells = [];
 
 			if ($status == 1) {
-				// $tableHeaders = [__('No.'), __('Name'), __('No of Criterias (Answered)')];
-				$tableHeaders = [__('No.'), __('Name'), __('No of Criterias')];
+				$tableHeaders = [__('No.'), __('Name'), __('No of Criterias (Answered)')];
 			} else {
 				$tableHeaders = [__('No.'), __('Name'), __('No of Criterias')];
 			}
@@ -91,10 +90,24 @@ class InstitutionRubricsTable extends AppTable {
 							$RubricCriterias->aliasField('type !=') => 1
 						])
 						->count();
+					$noOfCriterias = $criterias;
+
+					// Rubric Answers
+					$rubricAnswers = $this->InstitutionRubricAnswers
+						->find()
+						->where([
+							$this->InstitutionRubricAnswers->aliasField('institution_site_quality_rubric_id') => $entity->id,
+							$this->InstitutionRubricAnswers->aliasField('rubric_section_id') => $sectionId,
+							$this->InstitutionRubricAnswers->aliasField('rubric_criteria_option_id IS NOT') => 0
+						]);
+					if ($status == 1) {
+						$noOfCriterias .= ' (' . $rubricAnswers->count() . ')';
+					}
+					// End
 
 					$rowData[0] = $count;
 					$rowData[1] = $sectionName;
-					$rowData[2] = $criterias;
+					$rowData[2] = $noOfCriterias;
 
 					$tableCells[$key] = $rowData;
 					$count++;
@@ -215,7 +228,6 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		// pr('viewAfterAction');
 		$this->ControllerAction->field('rubric_sections', [
 			'type' => 'custom_rubric_sections',
 			'valueClass' => 'table-full-width'
@@ -260,7 +272,6 @@ class InstitutionRubricsTable extends AppTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($selectedStatus == 0) {	// New
-			// unset($buttons['view']);
 			unset($buttons['remove']);
 		} else if ($selectedStatus == 2) {	// Completed
 			unset($buttons['edit']);
@@ -272,11 +283,11 @@ class InstitutionRubricsTable extends AppTable {
 	public function _buildRecords() {
 		$institutionId = $this->Session->read('Institutions.id');
 
-		//delete all New Rubric by Institution Id and reinsert
-		$this->deleteAll([
-			$this->aliasField('institution_site_id') => $institutionId,
-			$this->aliasField('status') => 0
-		]);
+		//delete all New Rubric by Institution Id and reinsert (maybe dont need to delete and reinsert)
+		// $this->deleteAll([
+		// 	$this->aliasField('institution_site_id') => $institutionId,
+		// 	$this->aliasField('status') => 0
+		// ]);
 
 		$rubrics = $this->RubricTemplates
 			->find('list')
