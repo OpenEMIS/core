@@ -1583,6 +1583,25 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .highlight { background-color: #FFEA57; }
 
+/* TABLE LINED */
+
+.table-lined thead,
+.table-lined thead tr {
+	border-top: 0 !important;
+}
+
+.table-lined th,
+.table-lined td {
+	border-right: 1px solid #CCC !important;
+}
+
+.table-lined td:first-child {
+	border-left: 1px solid #CCC;
+}
+
+.table-lined .error-message {
+	float: none;
+}
 
 /* SEARCH */
 .search {

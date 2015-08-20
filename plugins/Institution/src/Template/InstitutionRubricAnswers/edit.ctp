@@ -28,36 +28,45 @@ $this->start('panelBody');
 	<div class="clearfix"></div>
 		<div class="clearfix">
 			<?php
-				echo $this->Form->input($alias.".rubric_template", [
+				echo $this->Form->input($alias.".rubric_template_name", [
 					'label' => $this->Label->get('InstitutionRubricAnswers.rubric_template'),
 					'type' => 'string',
-					'value' => $data->rubric_template->name,
 					'readonly' => 'readonly'
 				]);
+				echo $this->Form->hidden("$alias.count");
+				echo $this->Form->hidden("$alias.rubric_section_name");
+				echo $this->Form->hidden("$alias.rubric_section_order");
 				echo $this->Form->hidden("$alias.id");
 				echo $this->Form->hidden("$alias.status", ['rubric-status' => 1]);
+				echo $this->Form->hidden("$alias.rubric_template_id");
 			?>
 		</div>
 	</div>
 	<div class="table-responsive">
-		<table class="table table-bordered">
+		<table class="table table-lined">
 			<thead>
 				<tr>
-					<th><?= $data->rubric_section->order; ?></th>
+					<th><?= $data->rubric_section_order; ?></th>
 					<th><?= $this->Label->get('InstitutionRubricAnswers.rubric_section_id'); ?></th>
-					<th colspan="<?= $data->count; ?>"><?= $data->rubric_section->name; ?></th>
+					<th colspan="<?= $data->count; ?>"><?= $data->rubric_section_name; ?></th>
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ($data->rubric_criterias as $criteriaObj) : ?>
-					<?php $sectionOrder = $data->rubric_section->order; ?>
+				<?php foreach ($data->rubric_criterias as $criteriaKey => $criteriaObj) : ?>
+					<?php
+						$sectionOrder = $data->rubric_section_order;
+						$criteriaPrefix = $alias . '.rubric_criterias.' . $criteriaKey;
+					?>
 					<?php if ($criteriaObj->type == 1) : ?>
 						<!-- Header -->
 						<?php $criteriaOrder = 0; ?>
 						<tr>
 							<td><?= $sectionOrder . "." . ++$headerOrder; ?></td>
 							<td><strong><?= __('Header'); ?></strong></td>
-							<td colspan="<?= $data->count; ?>"><?= $criteriaObj->name; ?></td>
+							<td colspan="<?= $data->count; ?>">
+								<?= $criteriaObj->name; ?>
+								<?= $this->Form->hidden("$criteriaPrefix.id"); ?>
+							</td>
 						</tr>
 						<!-- End -->
 					<?php elseif ($criteriaObj->type == 2) : ?>
@@ -72,7 +81,10 @@ $this->start('panelBody');
 						<tr>
 							<td class="active" rowspan="5"><?= $sectionOrder . "." . $headerOrder . "." . ++$criteriaOrder; ?></td>
 							<td class="active"><strong><?= __('Criteria'); ?></strong></td>
-							<td class="active" align="center" colspan="<?= $data->count; ?>"><?= __('Descriptors'); ?></td>
+							<td class="active" align="center" colspan="<?= $data->count; ?>">
+								<?= __('Descriptors'); ?>
+								<?= $this->Form->hidden("$criteriaPrefix.id"); ?>
+							</td>
 						</tr>
 						<!-- End -->
 						<!-- Level -->
@@ -85,22 +97,32 @@ $this->start('panelBody');
 						<!-- End -->
 						<tr class="criteriaRow">
 							<td>
-								<?php
-									$criteriaAnswerId = 0;
-									$rubricSectionId = $criteriaObj->rubric_section_id;
-									$rubricCriteriaId = $criteriaObj->id;
+								<div>
+									<?php
+										$criteriaAnswerId = 0;
+										$rubricSectionId = $criteriaObj->rubric_section_id;
+										$rubricCriteriaId = $criteriaObj->id;
 
-									$fieldPrefix = $alias . '.institution_rubric_answers.' . $rubricCriteriaId;
-									if(isset($data->institution_rubric_answers[$rubricCriteriaId])) {
-										$rubricAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->id;
-										$criteriaAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->rubric_criteria_option_id;
-										echo $this->Form->hidden("$fieldPrefix.id");
-									}
-									echo $criteriaObj->name;
-									echo $this->Form->hidden("$fieldPrefix.rubric_section_id", ['value' => $rubricSectionId]);
-									echo $this->Form->hidden("$fieldPrefix.rubric_criteria_id", ['value' => $rubricCriteriaId]);
-									echo $this->Form->hidden("$fieldPrefix.rubric_criteria_option_id", ['class' => 'criteriaAnswer']);
-								?>
+										$fieldPrefix = $alias . '.institution_rubric_answers.' . $rubricCriteriaId;
+										if(isset($data->institution_rubric_answers[$rubricCriteriaId])) {
+											$rubricAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->id;
+											$criteriaAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->rubric_criteria_option_id;
+											echo $this->Form->hidden("$fieldPrefix.id");
+										}
+										echo $criteriaObj->name;
+										echo $this->Form->hidden("$fieldPrefix.rubric_section_id", ['value' => $rubricSectionId]);
+										echo $this->Form->hidden("$fieldPrefix.rubric_criteria_id", ['value' => $rubricCriteriaId]);
+										echo $this->Form->hidden("$fieldPrefix.rubric_criteria_option_id", ['class' => 'criteriaAnswer']);
+										if (!empty($data->institution_rubric_answers)) {
+											if (array_key_exists($rubricCriteriaId, $data->institution_rubric_answers)) {
+												$errors = array_values($data->institution_rubric_answers[$rubricCriteriaId]->errors('rubric_criteria_option_id'));
+												if (!empty($errors)) {
+													echo '<span class="error-message">' . implode('<BR>', $errors) . '</span>';
+												}
+											}
+										}
+									?>
+								</div>
 							</td>
 							<?php foreach ($data->rubric_template_options as $optionObj) : ?>
 								<?php
