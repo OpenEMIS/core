@@ -225,7 +225,7 @@ class StudentAdmissionTable extends AppTable {
 			$newEntity = $Students->newEntity($newData);
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
-				// finally update the transfer request to become approved
+				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;
 				if (!$this->save($entity)) {
@@ -238,40 +238,17 @@ class StudentAdmissionTable extends AppTable {
 		} else {
 			$this->Alert->error('StudentAdmission.exists');
 		}
-
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// Update status to Current in previous school
-		$institutionId = $entity->previous_institution_id;
-		$selectedStudent = $entity->security_user_id;
-		$selectedPeriod = $entity->academic_period_id;
-		$selectedGrade = $entity->education_grade_id;
-
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$currentStatus = $StudentStatuses->getIdByCode('CURRENT');
-
-		$Students = TableRegistry::get('Institution.Students');
-		$Students->updateAll(
-			['student_status_id' => $currentStatus],
-			[
-				'institution_id' => $institutionId,
-				'student_id' => $selectedStudent,
-				'academic_period_id' => $selectedPeriod,
-				'education_grade_id' => $selectedGrade
-			]
-		);
-		// End
-
 		// Update status to 2 => reject
 		$this->updateAll(['status' => self::REJECTED], ['id' => $entity->id]);
 		// End
 
 		$this->Alert->success('StudentAdmission.reject');
 		$event->stopPropagation();
-
 		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 	}
 }
