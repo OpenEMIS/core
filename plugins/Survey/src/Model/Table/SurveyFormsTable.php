@@ -86,6 +86,29 @@ class SurveyFormsTable extends CustomFormsTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
+			if (array_key_exists('view', $buttons)) {
+				$downloadButton = $buttons['view'];
+				$downloadButton['url'] = [
+					'plugin' => 'Restful',
+					'controller' => 'Rest',
+					'action' => 'survey',
+					'download',
+					'xform',
+					$entity->id,
+					0
+				];
+				$downloadButton['label'] = '<i class="kd-download"></i>' . __('Download');
+				$buttons['download'] = $downloadButton;
+			}
+		}
+
+		return $buttons;
+	}
+
     /**
      * Gets the list survey form questions that are associated with the particular form
      * @param integer Survey form ID
@@ -296,7 +319,6 @@ class SurveyFormsTable extends CustomFormsTable {
 		}
 		return $event->subject()->renderElement('Survey.formquestions', ['attr' => $attr]);
 	}
-
 
 	public function _getSelectOptions() {
 		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::_getSelectOptions());
