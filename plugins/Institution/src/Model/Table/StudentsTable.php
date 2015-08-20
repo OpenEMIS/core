@@ -407,6 +407,7 @@ class StudentsTable extends AppTable {
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['attr']['maxlength'] = "";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
