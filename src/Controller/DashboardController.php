@@ -20,6 +20,7 @@ class DashboardController extends AppController {
 		$this->loadComponent('Workbench', [
 			'models' => [
 				'Institution.TransferApprovals',
+				'Institution.StudentAdmission',
 				'Institution.StudentDropout'
 			]
 		]);
