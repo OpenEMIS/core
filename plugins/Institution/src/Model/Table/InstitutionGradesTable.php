@@ -210,5 +210,159 @@ class InstitutionGradesTable extends AppTable {
 		return $attr;
 	}
 
+	public function getConditionsByAcademicPeriodId($academicPeriodId=0, $conditions=[]) {
+		$modelConditions = [];
+		if($academicPeriodId > 0) {
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodObj = $AcademicPeriod->get($academicPeriodId);
+			$startDate = $AcademicPeriod->getDate($academicPeriodObj->start_date);
+			$endDate = $AcademicPeriod->getDate($academicPeriodObj->end_date);
+
+			$modelConditions['OR'] = array(
+				'OR' => array(
+					array(
+						'end_date IS NOT NULL',
+						'start_date <= "' . $startDate . '"',
+						'end_date >= "' . $startDate . '"'
+					),
+					array(
+						'end_date IS NOT NULL',
+						'start_date <= "' . $endDate . '"',
+						'end_date >= "' . $endDate . '"'
+					),
+					array(
+						'end_date IS NOT NULL',
+						'start_date >= "' . $startDate . '"',
+						'end_date <= "' . $endDate . '"'
+					)
+				),
+				array(
+					'end_date IS NULL',
+					'start_date <= "' . $endDate . '"'
+				)
+			);
+		}
+
+		$conditions = array_merge($conditions, $modelConditions);
+
+		return $conditions;
+	}
+	
+	public function getGradeOptions($institutionsId, $academicPeriodId, $listOnly=true) {
+		$conditions = array(
+			'InstitutionGrades.institution_site_id = ' . $institutionsId
+		);
+		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+		$query = $this->find('all')
+					->contain(['EducationGrades'])
+					->where($conditions)
+					->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+		$data = $query->toArray();
+		if($listOnly) {
+			$list = [];
+			foreach ($data as $key => $obj) {
+				$list[$obj->education_grade->id] = $obj->education_grade->programme_grade_name;
+			}
+			return $list;
+		} else {
+			return $data;
+		}
+	}
+
+	/**
+	 * Used by InstitutionSiteSectionsTable & InstitutionSiteClassesTable.
+	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date' 
+	 * of registered Programmes in the Institution. 
+	 * @param  integer $model           		 [description]
+	 * @param  array   $conditions               [description]
+	 * @return [type]                            [description]
+	 */
+	public function getAcademicPeriodOptions($Alert, $conditions=[]) {
+		$query = $this->find('all')
+					->select(['start_date', 'end_date'])
+					->where($conditions)
+					;
+		$result = $query->toArray();
+		$startDateObject = null;
+		foreach ($result as $key=>$value) {
+			$startDateObject = $this->getLowerDate($startDateObject, $value->start_date);
+		}
+		if (is_object($startDateObject)) {
+			$startDate = $startDateObject->toDateString();
+		} else {
+			$startDate = $startDateObject;
+		}
+
+		$endDateObject = null;
+		foreach ($result as $key=>$value) {
+			$endDateObject = $this->getHigherDate($endDateObject, $value->end_date);
+		}
+		if (is_object($endDateObject)) {
+			$endDate = $endDateObject->toDateString();
+		} else {
+			$endDate = $endDateObject;
+		}
+
+		$conditions = array_merge(array('end_date IS NULL'), $conditions);
+		$query = $this->find('all')
+					->where($conditions)
+					;
+		$nullDate = $query->count();
+
+		$academicPeriodConditions = [];
+		$academicPeriodConditions['parent_id >'] = 0;
+		$academicPeriodConditions['end_date >='] = $startDate;
+		if($nullDate == 0) {
+			$academicPeriodConditions['start_date <='] = $endDate;
+		} else {
+			$academicPeriodConditions['end_date >='] = $startDate;
+		}
+
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$query = $AcademicPeriods->find('list')
+					->select(['id', 'name'])
+					->where($academicPeriodConditions)
+					->order('`order`')
+					;
+		$result = $query->toArray();
+		if (empty($result)) {
+			$Alert->warning('Institution.Institutions.noProgrammes');
+			return [];
+		} else {
+			return $result;
+		}
+	}
+
+	/**
+	 * Used by $this->getAcademicPeriodOptions()
+	 * @param  Time $a Time object
+	 * @param  Time $b Time object
+	 * @return Time    Time object
+	 */
+	private function getLowerDate($a, $b) {
+		if (is_null($a)) {
+			return $b;
+		}
+		if (is_null($b)) {
+			return $a;
+		}
+		return (($a->toUnixString() <= $b->toUnixString()) ? $a : $b);
+	}
+
+	/**
+	 * Used by $this->getAcademicPeriodOptions()
+	 * @param  Time $a Time object
+	 * @param  Time $b Time object
+	 * @return Time    Time object
+	 */
+	private function getHigherDate($a, $b) {
+		if (is_null($a)) {
+			return $b;
+		}
+		if (is_null($b)) {
+			return $a;
+		}
+		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
+	}
 
 }
