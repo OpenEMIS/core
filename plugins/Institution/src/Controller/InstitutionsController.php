@@ -54,7 +54,8 @@ class InstitutionsController extends AppController  {
 			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
 
 			// Quality
-			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['!add']],
+			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['index', 'view', 'remove']],
+			'RubricAnswers' 	=> ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits']
 		];
 
