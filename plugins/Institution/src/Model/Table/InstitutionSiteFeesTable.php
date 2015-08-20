@@ -246,7 +246,7 @@ class InstitutionSiteFeesTable extends AppTable {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $this->_academicPeriodOptions);
 		}
  		
-		$this->_gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$attr['options'] = $this->_gradeOptions;
 		return $attr;
 	}
