@@ -310,35 +310,61 @@ class StudentsTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		pr('asdadasdadads');die;
-		pr('sdsds');
-		$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
-		if ($pendingTransferCode == $data['Students']['student_status_id']) {
-			$process = function ($model, $entity) use ($data) {
-				$studentData = $data['Students'];
-				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-				$entityData = [
-					'start_date' => $studentData['start_date'],
-					'end_date' => $studentData['end_date'],
-					'security_user_id' => $studentData['student_id'],
-					'status' => 0,
-					'institution_id' => $studentData['institution_id'],
-					'academic_period_id' => $studentData['academic_period_id'],
-					'education_grade_id' => $studentData['education_grade_id'],
-					'previous_institution_id' => $studentData['institution_id'],
-					'student_transfer_reason_id' => 0,
-					'type' => 'Admission',
-				];
+		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+		$studentData = $data['Students'];
+		$studentExist = 0;
+		$studentId = $entity->student_id;
 
-				$admissionEntity = $AdmissionTable->newEntity($entityData);
-				if( $AdmissionTable->save($admissionEntity) ){
-					return true;
+		// Check if student has already been enrolled
+		if (!empty ($studentId)) {
+
+			$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+
+			// Check if the student that is pass over is a pending admission student
+			if ($pendingTransferCode == $studentData['student_status_id']) {
+
+				$studentExist = $AdmissionTable->find()
+					->where([
+							'OR' => [[$AdmissionTable->aliasField('status') => 0], [$AdmissionTable->aliasField('status') => 2]],
+							$AdmissionTable->aliasField('security_user_id') => $studentId,
+							$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
+							$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
+							$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
+						])
+					->count();
+				// Check if the student is already added to the student admission table
+				if ($studentExist == 0) {
+					$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
+						$entityData = [
+							'start_date' => $studentData['start_date'],
+							'end_date' => $studentData['end_date'],
+							'security_user_id' => $studentId,
+							'status' => 0,
+							'institution_id' => $studentData['institution_id'],
+							'academic_period_id' => $studentData['academic_period_id'],
+							'education_grade_id' => $studentData['education_grade_id'],
+							'previous_institution_id' => 0,
+							'student_transfer_reason_id' => 0,
+							'type' => 'Admission',
+						];
+
+						$admissionEntity = $AdmissionTable->newEntity($entityData);
+						if( $AdmissionTable->save($admissionEntity) ){
+							return true;
+						} else {
+							$AdmissionTable->log($admissionEntity->errors(), 'debug');
+							return false;
+						}
+					};
+					return $process;
 				} else {
-					$AdmissionTable->log($admissionEntity->errors(), 'debug');
-					return false;
-				}
-			};
-			return $process;
+					$process = function ($model, $entity){
+						return false;
+					};
+					$this->Alert->error('StudentAdmission.existsInRecord');
+					return $process;
+				}			
+			}
 		}
 	}
 

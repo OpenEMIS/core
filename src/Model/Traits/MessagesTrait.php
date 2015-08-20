@@ -303,6 +303,12 @@ trait MessagesTrait {
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.'
 		],
+		'StudentAdmission' => [
+			'exists' => 'Student exists in the school',
+			'existsInRecord' => 'Student has already been added to admission list',
+			'approve' => 'Student admission has been approved successfully.',
+			'reject' => 'Student admission has been rejected successfully.'
+		],
 
 		// Validation Messages
 		'Institution' => [
