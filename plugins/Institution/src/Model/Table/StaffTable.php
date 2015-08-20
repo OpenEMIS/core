@@ -336,7 +336,7 @@ class StaffTable extends AppTable {
 			$table = TableRegistry::get('Staff.Licenses');
 			// Revisit here in awhile
 			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['institution_site_id' => $institutionId, 'key' => __('Licenses')]);
+				['conditions' => $conditions, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
