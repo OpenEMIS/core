@@ -24,8 +24,8 @@ class StudentUserTable extends UserTable {
 			$academicData['student_id'] = $entity->id;
 			$class = $academicData['class'];
 			unset($academicData['class']);
-
-			$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$pendingTransferCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingTransferCode) {
 				$Student = TableRegistry::get('Institution.Students');
 				if ($Student->save($Student->newEntity($academicData))) {
@@ -52,10 +52,11 @@ class StudentUserTable extends UserTable {
 					'student_transfer_reason_id' => 0,
 					'type' => 'Admission',
 				];
-				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData)) {
-					// Do something here
+				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData))) {
+					$this->Alert->success('general.add.success');
 				} else {
 					$AdmissionTable->log($admissionEntity->errors(), 'debug');
+					$this->Alert->error('general.add.failed');
 				}
 			}
 			$this->Session->delete($sessionKey);
