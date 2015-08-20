@@ -40,6 +40,7 @@ class StudentAdmissionTable extends AppTable {
 		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
+		$this->request->data[$this->alias()]['comment'] = $entity->comment;
 	}
 
 	public function afterAction($event) {
@@ -54,6 +55,7 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('institution_id');
     	$this->ControllerAction->field('academic_period_id');
     	$this->ControllerAction->field('education_grade_id');
+    	$this->ControllerAction->field('comment');
 
     	// $this->ControllerAction->field('modified_user_id', ['visible' => false]);
     	// $this->ControllerAction->field('modified', ['visible' => false]);
@@ -63,15 +65,16 @@ class StudentAdmissionTable extends AppTable {
 
     public function editAfterAction($event) {
 		$this->ControllerAction->field('student');
-  			$this->ControllerAction->setFieldOrder([
+  		$this->ControllerAction->setFieldOrder([
 			'status', 'student',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'start_date', 'end_date'
+			'start_date', 'end_date', 'comment'
 		]);
     }
 
    	public function implementedEvents() {
 		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		// $events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		return $events;
 	}
@@ -180,21 +183,128 @@ class StudentAdmissionTable extends AppTable {
 		}
 	}
 
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		if ($this->action == 'edit') {
-			$buttons[0] = [
-				'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
-				'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
-			];
-
-			$buttons[1] = [
-				'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
-				'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
-			];
+	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				$startDate = $request->data[$this->alias()]['start_date'];
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $startDate->format('d-m-Y');
+			}
+			return $attr;
 		}
 	}
 
+	public function onUpdateFieldComment(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				$attr['type'] = 'readonly';
+			}
+			return $attr;
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$newItem = [];
+		if ($entity->status == 'New') {
+			$newItem['view'] = $buttons['view'];
+			$newItem['edit'] = $buttons['edit'];
+		} else {
+			$newItem['view'] = $buttons['view'];
+		}
+		$buttons = $newItem;
+
+		return $buttons;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'edit') {
+			$toolbarButtons['back']['url'][0] = 'index';
+			unset($toolbarButtons['back']['url'][1]);
+		} else if ($action == 'view') {
+			unset($toolbarButtons['edit']);
+		}
+	}
+
+	public function onGetSecurityUserId(Event $event, Entity $entity){
+		if ($entity->status == self::NEW_REQUEST) {
+			$urlParams = $this->ControllerAction->url('index');
+			return $event->subject()->Html->link($entity->user->name, [
+				'plugin' => $urlParams['plugin'],
+				'controller' => $urlParams['controller'],
+				'action' => $urlParams['action'],
+				'0' => 'edit',
+				'1' => $entity->id
+			]);
+		}
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'edit') {
+			// If the status is new application then display the approve and reject button, 
+			// if not remove the button just in case the user gets to access the edit page
+			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST) {
+				$buttons[0] = [
+					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
+					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
+				];
+
+				$buttons[1] = [
+					'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
+					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
+				];
+			} else {
+				unset($buttons[0]);
+				unset($buttons[1]);
+			}
+		}
+	}
+
+	// // Workbench.Model.onGetList
+	// public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+	// 	if ($AccessControl->check(['Dashboard', 'StudentAdmission', 'edit'])) {
+	// 		$institutionIds = $AccessControl->getInstitutionsByUser();
+
+	// 		pr($data);
+
+	// 		$where = [$this->aliasField('status') => 0, $this->aliasField('type') => 'Admission'];
+	// 		if (!$AccessControl->isAdmin()) {
+	// 			$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+	// 		}
+
+	// 		$resultSet = $this
+	// 			->find()
+	// 			->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+	// 			->where($where)
+	// 			->order([
+	// 				$this->aliasField('created')
+	// 			])
+	// 			->toArray();
+
+	// 		// foreach ($resultSet as $key => $obj) {
+	// 		// 	$requestTitle = sprintf('Transfer of student (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name);
+	// 		// 	$url = [
+	// 		// 		'plugin' => false,
+	// 		// 		'controller' => 'Dashboard',
+	// 		// 		'action' => 'TransferApprovals',
+	// 		// 		'edit',
+	// 		// 		$obj->id
+	// 		// 	];
+
+	// 		// 	$receivedDate = $this->formatDate($obj->modified);
+	// 		// 	$data[] = [
+	// 		// 		'request_title' => ['title' => $requestTitle, 'url' => $url],
+	// 		// 		'receive_date' => $receivedDate,
+	// 		// 		'due_date' => '<i class="fa fa-minus"></i>',
+	// 		// 		'requester' => $obj->created_user->username,
+	// 		// 		'type' => __('Student Transfer')
+	// 		// 	];
+	// 		// }
+	// 	}
+	// }
+
 	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$entity->comment = $data['StudentAdmission']['comment'];
 		$Students = TableRegistry::get('Institution.Students');
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$statuses = $StudentStatuses->findCodeList();
@@ -243,8 +353,11 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$entity->comment = $data['StudentAdmission']['comment'];
 		// Update status to 2 => reject
-		$this->updateAll(['status' => self::REJECTED], ['id' => $entity->id]);
+		$this->updateAll(
+			['status' => self::REJECTED, 'comment' => $entity->comment], 
+			['id' => $entity->id]);
 		// End
 
 		$this->Alert->success('StudentAdmission.reject');
