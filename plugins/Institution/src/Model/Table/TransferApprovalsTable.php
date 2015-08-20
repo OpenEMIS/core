@@ -56,6 +56,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'select']);
 		$this->ControllerAction->field('comment');
 		$this->ControllerAction->field('previous_institution_id');
+		$this->ControllerAction->field('type', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
 			'transfer_status', 'student',
@@ -172,7 +173,6 @@ class TransferApprovalsTable extends AppTable {
 			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = $endDate->format('d-m-Y');
 		}
-
 		return $attr;
 	}
 
