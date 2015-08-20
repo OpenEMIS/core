@@ -145,6 +145,11 @@ class InstitutionsController extends AppController  {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
+			if ($model->hasField('institution_id')) {
+				$model->fields['institution_id']['type'] = 'hidden';
+				$model->fields['institution_id']['value'] = $session->read('Institutions.id');
+			}
+
 			if ($model->hasField('institution_site_id') && !is_null($this->activeObj)) {
 				$model->fields['institution_site_id']['type'] = 'hidden';
 				$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
