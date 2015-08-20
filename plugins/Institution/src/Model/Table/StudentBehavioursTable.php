@@ -45,25 +45,19 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		$this->ControllerAction->field('openemis_no', ['type' => 'string']);
-		// $this->ControllerAction->field('academic_period');
-		// $this->ControllerAction->field('section');
-		// $this->ControllerAction->field('security_user_id', ['type' => 'string']);
-		// $this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
-		// $this->ControllerAction->field('date_of_behaviour');
-		// $this->ControllerAction->field('academic_period', ['visible' => true]);
-		// $this->ControllerAction->field('section', ['visible' => true]);
+		$this->ControllerAction->field('openemis_no');
+		$this->ControllerAction->field('student_id');
+		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
+		
 		if ($this->action == 'view' || $this->action = 'edit') {
 			$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
-		$this->ControllerAction->field('institution_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
@@ -130,9 +124,22 @@ class StudentBehavioursTable extends AppTable {
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('academic_period');
 		$this->ControllerAction->field('class');
-		$this->ControllerAction->field('student_id');
-		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
 		$this->ControllerAction->setFieldOrder(['academic_period', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+	}
+
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Students']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
+	}
+
+	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit' || $action == 'add') {
+			$attr['visible'] = false;
+		}
+		return $attr;
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
@@ -243,7 +250,9 @@ class StudentBehavioursTable extends AppTable {
 			}
 			
 			$attr['options'] = $studentOptions;
-		} 
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
+		}
 		return $attr;
 	}
 }
