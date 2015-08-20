@@ -151,7 +151,7 @@ class StudentsTable extends AppTable {
 
 		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
 			// Redirect to the appropriate page
-			// $this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
+			$this->controller->redirect(['controller' => 'Institutions', 'action' => 'StudentAdmission', 'plugin'=>'Institution']);
 		}
 
 		// Advanced Select Options
