@@ -30,9 +30,6 @@ class StudentFeesAbstractTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-			// ->add('start_date', 'ruleCompareDate', [
-			// 	'rule' => ['compareDate', 'end_date', false]
-			// ])
 			->requirePresence('amount')
 			->add('amount', 'notBlank', [
 				'rule' => 'notBlank'
