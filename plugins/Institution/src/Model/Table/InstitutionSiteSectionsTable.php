@@ -148,8 +148,8 @@ class InstitutionSiteSectionsTable extends AppTable {
     public function indexBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('grade_type', $query)) {
-    		unset($this->ControllerAction->buttons['index']['url']['grade_type']);
-			$action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');//$this->ControllerAction->buttons['index']['url'];
+			unset($action['grade_type']);
 			$this->controller->redirect($action);
     	}
 
@@ -171,7 +171,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 		]);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {
 			$this->Alert->warning('Institutions.noGrades');
@@ -311,13 +311,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+    		$action = $this->ControllerAction->url('view');
     		if (array_key_exists('academic_period_id', $query)) {
-	    		unset($this->ControllerAction->buttons['view']['url']['academic_period_id']);
+	    		unset($action['academic_period_id']);
     		}
     		if (array_key_exists('education_grade_id', $query)) {
-	    		unset($this->ControllerAction->buttons['view']['url']['education_grade_id']);
+	    		unset($action['education_grade_id']);
     		}
-    		$action = $this->ControllerAction->buttons['view']['url'];
+    		// $action = $this->ControllerAction->buttons['view']['url'];
 			$this->controller->redirect($action);
     	}
 
@@ -354,17 +355,18 @@ class InstitutionSiteSectionsTable extends AppTable {
     public function addBeforeAction(Event $event) {
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+    		$action = $this->ControllerAction->url('add');
     		if (array_key_exists('academic_period_id', $query)) {
-	    		unset($this->ControllerAction->buttons['add']['url']['academic_period_id']);
+	    		unset($action['academic_period_id']);
     		}
     		if (array_key_exists('education_grade_id', $query)) {
-	    		unset($this->ControllerAction->buttons['add']['url']['education_grade_id']);
+	    		unset($action['education_grade_id']);
     		}
-    		$action = $this->ControllerAction->buttons['add']['url'];
+    		// $action = $this->ControllerAction->buttons['add']['url'];
 			$this->controller->redirect($action);
     	}
     	if (array_key_exists('grade_type', $query)) {
-    		$this->_selectedGradeType = $this->ControllerAction->buttons['add']['url']['grade_type'];
+    		$this->_selectedGradeType = $query['grade_type'];
     	}
 
 		if ($this->_selectedAcademicPeriodId == -1) {
@@ -388,8 +390,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 			/**
 			 * education_grade field setup
+			 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
 			 */
-			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 			if ($this->_selectedEducationGradeId != 0) {
 				if (!array_key_exists($this->_selectedEducationGradeId, $gradeOptions)) {
 					$this->_selectedEducationGradeId = key($gradeOptions);
@@ -427,7 +430,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				 			'grade'=>$grade	]
 			]);
 
-
 			$this->fields['name']['visible'] = false;
 			$this->fields['students']['visible'] = false;
 			$this->fields['security_user_id']['visible'] = false;
@@ -437,7 +439,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
     	} else {
 
-			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId, false);
+			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId, false);
 			$this->ControllerAction->field('multi_grade_field', [
 				'type' => 'element', 
 				'element' => 'Institution.Sections/multi_grade',
@@ -469,57 +471,77 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function ($model, $entity) use ($data) {
-			$commonData = $data['InstitutionSiteSections'];
+		if ($this->_selectedGradeType == 'single') {
+			$process = function ($model, $entity) use ($data) {
+				$commonData = $data['InstitutionSiteSections'];
 
-			foreach($data['MultiSections'] as $key => $row) {
-				$data['MultiSections'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
-				$data['MultiSections'][$key]['institution_site_id'] = $commonData['institution_site_id'];
-				$data['MultiSections'][$key]['academic_period_id'] = $commonData['academic_period_id'];
-				$data['MultiSections'][$key]['institution_site_section_grades'][0] = [
-						'education_grade_id' => $commonData['education_grade'],
-						'status' => 1
-					];
-			}
-			// $data['InstitutionSiteSections'] = $data['MultiSections'];
-			// unset($data['MultiSections']);
+				foreach($data['MultiSections'] as $key => $row) {
+					$data['MultiSections'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
+					$data['MultiSections'][$key]['institution_site_id'] = $commonData['institution_site_id'];
+					$data['MultiSections'][$key]['academic_period_id'] = $commonData['academic_period_id'];
+					$data['MultiSections'][$key]['institution_site_section_grades'][0] = [
+							'education_grade_id' => $commonData['education_grade'],
+							'status' => 1
+						];
+				}
+				// $data['InstitutionSiteSections'] = $data['MultiSections'];
+				// unset($data['MultiSections']);
 
-			$sections = $model->newEntities($data['MultiSections']);
-			$error = false;
-			foreach ($sections as $key=>$section) {
-			    if ($section->errors()) {
-			    	$error = $section->errors();
-			    	$data['MultiSections'][$key]['errors'] = $error;
-			    }
-				if (!$error) {
-					list($error) = $model->addSectionClassesSubjects($model, $section, $data);
-				}
-			}
-			if (!$error) {
-				foreach ($sections as $section) {
-			    	$model->save($section);
-				}
-				return true;
-			} else {
-				$errorMessage='';
-				foreach ($error as $key=>$value) {
-					$errorMessage .= Inflector::classify($key);
-				}
-				$model->log($error, 'debug');
-				/**
-				 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
-				 */
-				foreach ($model->fields as $value) {
-					if ($value['field'] != 'name') {
-						$model->validator()->remove($value['field']);
+				$sections = $model->newEntities($data['MultiSections']);
+				$error = false;
+				foreach ($sections as $key=>$section) {
+				    if ($section->errors()) {
+				    	$error = $section->errors();
+				    	$data['MultiSections'][$key]['errors'] = $error;
+				    }
+					if (!$error) {
+						list($error) = $model->addSectionClassesSubjects($model, $section, $data);
 					}
 				}
-				$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
-				$model->fields['single_grade_field']['data']['sections'] = $sections;
-				$model->request->data['MultiSections'] = $data['MultiSections'];
-				return false;
-			}
-		};
+				if (!$error) {
+					foreach ($sections as $section) {
+				    	$model->save($section);
+					}
+					return true;
+				} else {
+					$errorMessage='';
+					foreach ($error as $key=>$value) {
+						$errorMessage .= Inflector::classify($key);
+					}
+					$model->log($error, 'debug');
+					/**
+					 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
+					 */
+					foreach ($model->fields as $value) {
+						if ($value['field'] != 'name') {
+							$model->validator()->remove($value['field']);
+						}
+					}
+					$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
+					$model->fields['single_grade_field']['data']['sections'] = $sections;
+					$model->request->data['MultiSections'] = $data['MultiSections'];
+					return false;
+				}
+			};
+		} else {
+			$process = function ($model, $entity) use ($data) {
+				if (array_key_exists('MultiClasses', $data)) {
+					$error = [$data['MultiClasses']=>0];
+				} else {
+					list($error) = $this->addSectionClassesSubjects($model, $entity, $data);
+				}
+				if (!$error) {
+					return $model->save($entity);
+				} else {
+					$errorMessage='';
+					foreach ($error as $key=>$value) {
+						$errorMessage .= Inflector::classify($key);
+					}
+					$model->log($error, 'debug');
+					return false;
+				}
+			};			
+		}
 		return $process;
 	}
 
@@ -579,7 +601,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 				 * set institution_site_id to empty to trigger validation error in ControllerActionComponent
 				 */
 				$data['InstitutionSiteSections']['institution_site_id'] = '';
-				$this->Alert->error('Institution.'.$this->alias().'.noGrade');
+				$errorMessage = 'Institution.'.$this->alias().'.noGrade';
+				$data['MultiClasses'] = $errorMessage;
+				$this->Alert->error($errorMessage);
 			}
 		}
 	}
@@ -989,11 +1013,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	private function getAcademicPeriodOptions() {
-		
+		$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+			'InstitutionGrades.institution_site_id' => $this->institutionId
 		);
-		$list = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($this->Alert, $conditions);
+		$list = $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
 		if (!empty($list)) {
 			if ($this->_selectedAcademicPeriodId != 0) {
 				if (!array_key_exists($this->_selectedAcademicPeriodId, $list)) {
@@ -1004,7 +1028,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 		}
 		return $list;
-
 	}
 	
 	/**
