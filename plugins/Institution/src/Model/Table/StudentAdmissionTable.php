@@ -53,20 +53,28 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('security_user_id');
     	$this->ControllerAction->field('status');
     	$this->ControllerAction->field('institution_id');
-    	$this->ControllerAction->field('academic_period_id');
+    	$this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
     	$this->ControllerAction->field('education_grade_id');
     	$this->ControllerAction->field('comment');
-
-    	// $this->ControllerAction->field('modified_user_id', ['visible' => false]);
-    	// $this->ControllerAction->field('modified', ['visible' => false]);
-    	// $this->ControllerAction->field('created_user_id', ['visible' => false]);
-    	// $this->ControllerAction->field('created', ['visible' => false]);
     }
 
-    public function editAfterAction($event) {
-		$this->ControllerAction->field('student');
+    public function editAfterAction($event, Entity $entity) {
+		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->security_user_id)->name_with_id]]);
+		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
+		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
   		$this->ControllerAction->setFieldOrder([
-			'status', 'student',
+			'status', 'security_user_id',
+			'institution_id', 'academic_period_id', 'education_grade_id',
+			'start_date', 'end_date', 'comment'
+		]);
+    }
+
+    public function viewAfterAction($event, Entity $entity) {
+		$this->ControllerAction->setFieldOrder([
+			'status', 'security_user_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'start_date', 'end_date', 'comment'
 		]);
@@ -98,6 +106,19 @@ class StudentAdmissionTable extends AppTable {
 		return __($statusName);
 	}
 
+	public function onGetSecurityUserId(Event $event, Entity $entity){
+		if ($entity->status == self::NEW_REQUEST) {
+			$urlParams = $this->ControllerAction->url('index');
+			return $event->subject()->Html->link($entity->user->name, [
+				'plugin' => $urlParams['plugin'],
+				'controller' => $urlParams['controller'],
+				'action' => $urlParams['action'],
+				'0' => 'edit',
+				'1' => $entity->id
+			]);
+		}
+	}
+
 	public function onUpdateFieldStatus(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			$status = $request->data[$this->alias()]['status'];
@@ -110,132 +131,6 @@ class StudentAdmissionTable extends AppTable {
 				$attr['attr']['value'] = __('Rejected');
 			}
 			return $attr;
-		}
-	}
-
-	public function onUpdateFieldStudent(Event $event, array $attr, $action, $request) {
-		if ($action=='edit') {
-			$student = $request->data[$this->alias()]['security_user_id'];
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->Users->get($student)->name_with_id;
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
-			$institution = $request->data[$this->alias()]['institution_id'];
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->Institutions->get($institution)->code_name;
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
-			$academicPeriod = $request->data[$this->alias()]['academic_period_id'];
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriod)->name;
-			return $attr;	
-		}
-	}
-
-	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
-			$educationGrade = $request->data[$this->alias()]['education_grade_id'];
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $this->EducationGrades->get($educationGrade)->programme_grade_name;
-			return $attr;	
-		}
-	}
-
-	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
-		if ($action=='edit') {
-			$student = $request->data[$this->alias()]['security_user_id'];
-			$attr['type'] = 'hidden';
-			$attr['attr']['value'] = $student;
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, $request) {
-		if ($action=='edit') {
-			$attr['type'] = 'hidden';
-			$attr['attr']['value'] = 0;
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, $request) {
-		if ($action=='edit') {
-			$attr['type'] = 'hidden';
-			$attr['attr']['value'] = 0;
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
-			$endDate = $request->data[$this->alias()]['end_date'];
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $endDate->format('d-m-Y');
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
-				$startDate = $request->data[$this->alias()]['start_date'];
-				$attr['type'] = 'readonly';
-				$attr['attr']['value'] = $startDate->format('d-m-Y');
-			}
-			return $attr;
-		}
-	}
-
-	public function onUpdateFieldComment(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
-				$attr['type'] = 'readonly';
-			}
-			return $attr;
-		}
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$newItem = [];
-		if ($entity->status == 'New') {
-			$newItem['view'] = $buttons['view'];
-			$newItem['edit'] = $buttons['edit'];
-		} else {
-			$newItem['view'] = $buttons['view'];
-		}
-		$buttons = $newItem;
-
-		return $buttons;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'edit') {
-			$toolbarButtons['back']['url'][0] = 'index';
-			unset($toolbarButtons['back']['url'][1]);
-		} else if ($action == 'view') {
-			unset($toolbarButtons['edit']);
-		}
-	}
-
-	public function onGetSecurityUserId(Event $event, Entity $entity){
-		if ($entity->status == self::NEW_REQUEST) {
-			$urlParams = $this->ControllerAction->url('index');
-			return $event->subject()->Html->link($entity->user->name, [
-				'plugin' => $urlParams['plugin'],
-				'controller' => $urlParams['controller'],
-				'action' => $urlParams['action'],
-				'0' => 'edit',
-				'1' => $entity->id
-			]);
 		}
 	}
 
@@ -290,7 +185,7 @@ class StudentAdmissionTable extends AppTable {
 				];
 
 				$receivedDate = $this->formatDate($obj->modified);
-				
+
 				$data[] = [
 					'request_title' => ['title' => $requestTitle, 'url' => $url],
 					'receive_date' => $receivedDate,
@@ -299,6 +194,58 @@ class StudentAdmissionTable extends AppTable {
 					'type' => __('Student Admission')
 				];
 			}
+		}
+	}
+
+	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			$endDate = $request->data[$this->alias()]['end_date'];
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $endDate->format('d-m-Y');
+			return $attr;
+		}
+	}
+
+	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				$startDate = $request->data[$this->alias()]['start_date'];
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $startDate->format('d-m-Y');
+			}
+			return $attr;
+		}
+	}
+
+	public function onUpdateFieldComment(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				$attr['type'] = 'readonly';
+			}
+			return $attr;
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$newItem = [];
+		if ($entity->status == 'New') {
+			$newItem['view'] = $buttons['view'];
+			$newItem['edit'] = $buttons['edit'];
+		} else {
+			$newItem['view'] = $buttons['view'];
+		}
+		$buttons = $newItem;
+
+		return $buttons;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'edit') {
+			$toolbarButtons['back']['url'][0] = 'index';
+			unset($toolbarButtons['back']['url'][1]);
+		} else if ($action == 'view') {
+			unset($toolbarButtons['edit']);
 		}
 	}
 
