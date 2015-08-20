@@ -40,6 +40,7 @@ var Security = {
 		$('[checkbox-toggle] input[type="checkbox"]:not(:disabled)').on('ifToggled', Security.toggleOperation);
 	},
 	
+	// this function allows the user to enable/disable permission for the entire module
 	toggleModule: function() {
 		var obj = $(this);
 		var checked = obj.is(':checked') ? 'check' : 'uncheck';
@@ -54,6 +55,7 @@ var Security = {
 		});
 	},
 	
+	// this function will set the module checkbox to 'check' state if any permission is enabled
 	checkModuleToggled: function(obj, checked) {
 		var parent = obj.closest('[checkbox-toggle]');
 		var module = $('[checkbox-toggle-target="' + parent.attr('checkbox-toggle') + '"]');
@@ -76,6 +78,7 @@ var Security = {
 		module.on('ifToggled', Security.toggleModule);
 	},
 	
+	// this function will enable/disable permissions based on priority
 	toggleOperation: function() {
 		var obj = $(this);
 		var operations = Security.operations.slice();
@@ -85,14 +88,21 @@ var Security = {
 		var parent = obj.closest('tr');
 		var id = obj.attr('id');
 
-		if (checked == 'uncheck') operations.reverse();
-		for(var i in operations) {
-			op = operations[i];
-			if(id !== op) {
-				selector = '#'+op+':not(:disabled)';
-				parent.find(selector).iCheck(checked);
-			} else {
-				break;
+		if (id == '_execute') {
+			if (checked == 'check') {
+				parent.find('#_view:not(:disabled)').iCheck(checked);
+			}
+		} else {
+			if (checked == 'uncheck') operations.reverse();
+			for (var i in operations) {
+				op = operations[i];
+
+				if (id !== op) {
+					selector = '#'+op+':not(:disabled)';
+					parent.find(selector).iCheck(checked);
+				} else {
+					break;
+				}
 			}
 		}
 		Security.checkModuleToggled(obj, checked);
