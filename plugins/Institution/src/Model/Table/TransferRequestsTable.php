@@ -63,7 +63,8 @@ class TransferRequestsTable extends AppTable {
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
     	$id = $this->Session->read($this->alias().'.id');
-    	$action = $this->ControllerAction->buttons['add']['url'];
+    	// $action = $this->ControllerAction->buttons['add']['url'];
+    	$action = $this->ControllerAction->url('add');
 		$action['action'] = 'Students';
 		$action[0] = 'view';
 		$action[1] = $id;
@@ -140,7 +141,8 @@ class TransferRequestsTable extends AppTable {
 			]);
 		} else {
 			$Students = TableRegistry::get('Institution.Students');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			$action['action'] = $Students->alias();
 
 			return $this->controller->redirect($action);
@@ -167,7 +169,8 @@ class TransferRequestsTable extends AppTable {
 
 		$Students = TableRegistry::get('Institution.Students');
 		$id = $this->Session->read($this->alias().'.id');
-		$action = $this->ControllerAction->buttons['edit']['url'];
+		// $action = $this->ControllerAction->buttons['edit']['url'];
+		$action = $this->ControllerAction->url('edit');
 		$action['action'] = $Students->alias();
 		$action[0] = 'view';
 		$action[1] = $id;
