@@ -445,7 +445,7 @@ class StaffTable extends AppTable {
 			$dataSet = [];
 			foreach ($institutionSiteStaffCount->toArray() as $value) {
 	            //Compile the dataset
-				$dataSet[] = [$value['gender'], $value['count']];
+				$dataSet[] = [__($value['gender']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		//}
