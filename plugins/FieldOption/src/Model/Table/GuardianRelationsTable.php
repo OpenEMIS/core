@@ -7,7 +7,8 @@ use Cake\Validation\Validator;
 class GuardianRelationsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
+		parent::initialize($config);
 
-		$this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Guardians', ['className' => 'Student.Guardians', 'dependent' => true]);
 	}
 }
