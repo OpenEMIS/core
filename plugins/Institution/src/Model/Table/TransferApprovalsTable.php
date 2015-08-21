@@ -9,6 +9,10 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class TransferApprovalsTable extends AppTable {
+	const NEW_REQUEST = 0;
+	const APPROVED = 1;
+	const REJECTED = 2;
+
 	public function initialize(array $config) {
 		$this->table('institution_student_transfers');
 		parent::initialize($config);
@@ -256,72 +260,63 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$transferEntity = $this->newEntity($data[$this->alias()]);
-		if ($this->save($transferEntity)) {
-		} else {
-			$this->log($transferEntity->errors(), 'debug');
-		}
-
-		// Update status to Transferred in previous school
-		$institutionId = $entity->previous_institution_id;
-		$selectedStudent = $entity->security_user_id;
-		$selectedPeriod = $entity->academic_period_id;
-		$selectedGrade = $entity->education_grade_id;
-
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$status = $StudentStatuses
-			->find()
-			->where([$StudentStatuses->aliasField('code') => 'TRANSFERRED'])
-			->first()
-			->id;
-
 		$Students = TableRegistry::get('Institution.Students');
-		$Students->updateAll(
-			['student_status_id' => $status],
-			[
-				'institution_id' => $institutionId,
-				'student_id' => $selectedStudent,
-				'academic_period_id' => $selectedPeriod,
-				'education_grade_id' => $selectedGrade
-			]
-		);
-		// End
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$statuses = $StudentStatuses->findCodeList();
 
-		// Update status to 1 => approve
-		$this->updateAll(
-			['status' => 1],
-			['id' => $entity->id]
-		);
-		// End
+		$newSchoolId = $entity->institution_id;
+		$previousSchoolId = $entity->previous_institution_id;
+		$studentId = $entity->security_user_id;
+		$periodId = $entity->academic_period_id;
+		$gradeId = $entity->education_grade_id;
 
-		// Add Student to new school
-		$currentStatus = $StudentStatuses
-			->find()
-			->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
-			->first()
-			->id;
-
-		$requestData = [
-			'start_date' => $transferEntity->start_date,
-			'end_date' => $transferEntity->end_date,
-			'student_status_id' => $currentStatus,
-			'institution_id' => $transferEntity->institution_id,
-			'student_id' => $transferEntity->security_user_id,
-			'academic_period_id' => $transferEntity->academic_period_id,
-			'education_grade_id' => $transferEntity->education_grade_id
+		$conditions = [
+			'institution_id' => $newSchoolId,
+			'student_id' => $studentId,
+			'academic_period_id' => $periodId,
+			'education_grade_id' => $gradeId,
+			'student_status_id' => $statuses['CURRENT']
 		];
-		
-		$studentEntity = $Students->newEntity($requestData);
 
-		if ($Students->save($studentEntity)) {
+		// check if the student is already in the new school
+		if (!$Students->exists($conditions)) { // if not exists
+			$startDate = $data[$this->alias()]['start_date'];
+			$startDate = date('Y-m-d', strtotime($startDate));
+
+			// add the student to the new school
+			$newData = $conditions;
+			$newData['start_date'] = $startDate;
+			$newData['end_date'] = $entity->end_date->format('Y-m-d');
+			$newEntity = $Students->newEntity($newData);
+			if ($Students->save($newEntity)) {
+				$this->Alert->success('TransferApprovals.approve');
+
+				// update status and end date of old school
+				$Students->updateAll(
+					['student_status_id' => $statuses['TRANSFERRED'], 'end_date' => $startDate],
+					[
+						'institution_id' => $previousSchoolId,
+						'student_id' => $studentId,
+						'academic_period_id' => $periodId,
+						'education_grade_id' => $gradeId
+					]
+				);
+
+				// finally update the transfer request to become approved
+				$entity->start_date = $startDate;
+				$entity->status = self::APPROVED;
+				if (!$this->save($entity)) {
+					$this->log($entity->errors(), 'debug');
+				}
+			} else {
+				$this->Alert->error('general.edit.failed');
+				$this->log($newEntity->errors(), 'debug');
+			}
 		} else {
-			$this->log($studentEntity->errors(), 'debug');
+			$this->Alert->error('TransferApprovals.exists');
 		}
-		// End
 
-		$this->Alert->success('TransferApprovals.approve');
 		$event->stopPropagation();
-
 		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 	}
 
@@ -333,15 +328,11 @@ class TransferApprovalsTable extends AppTable {
 		$selectedGrade = $entity->education_grade_id;
 
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$status = $StudentStatuses
-			->find()
-			->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
-			->first()
-			->id;
+		$currentStatus = $StudentStatuses->getIdByCode('CURRENT');
 
-		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-		$StudentPromotion->updateAll(
-			['student_status_id' => $status],
+		$Students = TableRegistry::get('Institution.Students');
+		$Students->updateAll(
+			['student_status_id' => $currentStatus],
 			[
 				'institution_id' => $institutionId,
 				'student_id' => $selectedStudent,
@@ -352,10 +343,7 @@ class TransferApprovalsTable extends AppTable {
 		// End
 
 		// Update status to 2 => reject
-		$this->updateAll(
-			['status' => 2],
-			['id' => $entity->id]
-		);
+		$this->updateAll(['status' => self::REJECTED], ['id' => $entity->id]);
 		// End
 
 		$this->Alert->success('TransferApprovals.reject');

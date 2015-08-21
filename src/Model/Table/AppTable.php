@@ -101,6 +101,11 @@ class AppTable extends Table {
 		return $query;
 	}
 
+	// Event: 'Model.excel.onFormatDate' ExcelBehavior
+	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
+		return $this->formatDate($entity->$field);
+	}
+
 	// Event: 'ControllerAction.Model.onFormatDate'
 	public function onFormatDate(Event $event, Time $dateObject) {
 		return $this->formatDate($dateObject);
