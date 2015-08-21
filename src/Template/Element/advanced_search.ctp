@@ -27,7 +27,7 @@
 	<?php endforeach ?>
 
 	<hr>
-	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="true" id="isSearch" />
+	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
 	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
 	<button id="reset" class="btn btn-default btn-xs" value="Reset" href=""><?= __('Reset') ?></button>
 </div>
@@ -37,6 +37,11 @@
 	var isSearch = $('#isSearch');
 	$('button#search-toggle').on('click', function () {
 		box.toggleClass('hidden');
+		if (! isSearch.val()) {
+			isSearch.val('true');
+		}else {
+			isSearch.val('');
+		}
 	});
 
 
@@ -44,6 +49,7 @@
 	$("#reset").click(function(){
 		box.find('input:text, select').val('');
 		$(".icheckbox_minimal-grey").removeClass("checked");
+		isSearch.val('true');
 	});
 
 </script>
