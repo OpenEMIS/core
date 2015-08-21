@@ -20,7 +20,7 @@ class StudentsTable extends AppTable {
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions',	['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);

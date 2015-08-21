@@ -52,7 +52,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
+		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
