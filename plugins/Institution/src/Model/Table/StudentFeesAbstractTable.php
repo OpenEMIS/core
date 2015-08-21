@@ -21,8 +21,8 @@ class StudentFeesAbstractTable extends AppTable {
 		$this->table('student_fees');
 		parent::initialize($config);
 		
-		$this->belongsTo('InstitutionSiteFees', ['className' => 'Institution.InstitutionSiteFees']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('CreatedBy', ['className' => 'User.Users', 'foreignKey' => 'created_user_id']);
 
 		$this->fields = $this->getFields();
@@ -94,4 +94,23 @@ class StudentFeesAbstractTable extends AppTable {
 		return $fields;
 	}
 	
+	public function setFieldOrder($field, $order=0) {
+		$fields = $this->fields;
+		if (is_array($field)) {
+			foreach ($field as $key) {
+				$fields[$key]['order'] = $order++;
+			}
+			uasort($fields, [$this, 'sortFields']);
+		}
+		$this->fields = $fields;
+	}
+
+	public static function sortFields($a, $b) {
+		if (isset($a['order']) && isset($b['order'])) {
+			return $a['order'] >= $b['order'];
+		} else {
+			return true;
+		}
+	}
+
 }

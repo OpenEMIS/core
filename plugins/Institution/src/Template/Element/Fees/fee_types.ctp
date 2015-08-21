@@ -31,10 +31,10 @@
 				<tr>
 					<td><?= $record['type'] ?></td>
 					<td>
-						<input type="text" name="<?php echo sprintf('InstitutionSiteFees[institution_site_fee_types][%d][amount]', $i) ?>" value="<?= $record['amount'] ?>" onblur="return utility.checkDecimal(this, 2)" 
+						<input type="text" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][amount]', $i) ?>" value="<?= $record['amount'] ?>" onblur="return utility.checkDecimal(this, 2)" 
 						onkeyup="jsTable.computeTotalForMoney('totalFee');" onkeypress="return utility.floatCheck(event)" computeType="totalFee"/>
-						<input type="hidden" name="<?php echo sprintf('InstitutionSiteFees[institution_site_fee_types][%d][fee_type_id]', $i) ?>" value="<?= $record['fee_type_id'] ?>" />
-						<input type="hidden" name="<?php echo sprintf('InstitutionSiteFees[institution_site_fee_types][%d][id]', $i) ?>" value="<?= $record['id'] ?>" />
+						<input type="hidden" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][fee_type_id]', $i) ?>" value="<?= $record['fee_type_id'] ?>" />
+						<input type="hidden" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][id]', $i) ?>" value="<?= $record['id'] ?>" />
 					</td>
 				</tr>
 				<?php endforeach ?>
@@ -48,7 +48,9 @@
 			<tfoot>
 				<tr>
 					<td class="cell-number">Total</td>
-					<td class="totalFee cell-number"><?= $totalFee ?></td>
+					<td class="cell-number">
+						<span><?= $attr['currency']?></span>
+						<span class="totalFee"><?= $totalFee ?></span>
 					<td/>
 				</tr>
 			</tfoot>
