@@ -1,38 +1,46 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 <?php $action = 'edit'; ?>
+<script type="text/javascript">
+	$(function() {
+		jsTable.computeTotalForMoney('total_payments');
+		jsForm.compute(this);
+	});
+</script>
 <div class="input clearfix">
 	<div class="clearfix">
 	<?php
-		echo $this->Form->input('Add Payment', [
+		echo $this->Form->input('<i class="fa fa-plus"></i> <span>Add New Payment</span>', [
 			'label' => __('Payments'),
 			'type' => 'button',
-			'class' => 'btn btn-dropdown action-toggle btn-single-action',
+			'class' => 'btn btn-default',
 			'aria-expanded' => 'true',
 			'onclick' => "$('#reload').val('reload').click();"
 		]);
 	?>
 	</div>
 
-	<div id="payments-table">
-		<table class="table table-striped table-hover table-bordered">
+	<div class="table-in-view col-md-4 table-responsive">
+	    <table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
 					<?php foreach ($attr['fields'] as $key=>$field) : ?>
 
-						<?php if ($field['type']!='hidden') : ?>
-							<th><?= $field['tableHeader'] ?></th>
+						<?php if (isset($field['field'])) : ?>
+							<?php if ($field['type']!='hidden') : ?>
+								<th><?= $field['tableHeader'] ?></th>
+								<th></th>
+							<?php endif; ?>
 						<?php endif; ?>
 		
 					<?php endforeach ?>
 
 					<th class="cell-delete"></th>
-
 				</tr>
 			</thead>
 
+			<tbody id='table_total_payments'>
 			<?php if (isset($attr['data']) || isset($attr['paymentFields'])) : ?>
 
-			<tbody>
 				<?php $recordKey = 0; ?>
 				<?php foreach ($attr['paymentFields'] as $i=>$record) : ?>
 					<?php $recordKey = $i; ?>
@@ -40,17 +48,16 @@
 						<?php foreach ($attr['fields'] as $key=>$field) : ?>
 
 							<?php if (isset($field['field'])) : ?>
-								<?php $field['attr']['name'] = $field['model'].'['.$recordKey.']['.$field['field'].']';?>
-								<?php $field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';?>
-								<?php $field['attr']['id'] = strtolower($field['model']).'-'.$recordKey.'-'.$field['field'];?>
-								<?php $field['attr']['value'] = $record->$field['field'];?>
-
-								<?php
-								$tdClass = ''; 
-								if ($record->errors($field['field'])) {
-									$field['attr']['class'] = 'form-error';
-									$tdClass = 'error';
-								}
+								<?php 
+									$field['attr']['name'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
+									$field['attr']['id'] = strtolower($field['model']).'-'.$recordKey.'-'.$field['field'];
+									$field['attr']['value'] = $record->$field['field'];
+									$field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
+									$tdClass = ''; 
+									if ($record->errors($field['field'])) {
+										$field['attr']['class'] = 'form-error';
+										$tdClass = 'error';
+									}
 								?>
 
 								<?php if ($field['type']=='hidden') : ?>
@@ -59,7 +66,9 @@
 
 									<td class="<?= $tdClass ?>">
 										<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
-										<div style="margin-left:10px;float:left;">
+									</td>
+									
+									<td class="<?= $tdClass ?>">
 										<?php if ($record->errors($field['field'])) : ?>
 											<ul class="error-message">
 											<?php foreach ($record->errors($field['field']) as $error) : ?>
@@ -69,7 +78,6 @@
 										<?php else: ?>
 											&nbsp;
 										<?php endif; ?>
-										<div>
 									</td>
 									
 								<?php endif; ?>
@@ -79,22 +87,69 @@
 						<?php endforeach ?>
 							
 						<td> 
-							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
-								<?= __('<i class="fa fa-close"></i> Remove') ?>
-							</button>
+							<?php
+							echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
+								'label' => false,
+								'type' => 'button',
+								'class' => 'btn btn-dropdown action-toggle btn-single-action',
+								'title' => "Delete",
+								'aria-expanded' => 'true',
+								'onclick' => "jsTable.doRemove(this); jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this); "
+							]);
+							?>
 						</td>
 					</tr>
 
 				<?php endforeach ?>
 
-			</tbody>
-			
 			<?php else : ?>
 
-				<tr>&nbsp;</tr>
+				<tr>
+					<?php foreach ($attr['fields'] as $key=>$field) : ?>
+
+						<?php if (isset($field['field'])) : ?>
+							<?php if ($field['type']!='hidden') : ?>
+								<td></td>
+								<td></td>
+							<?php endif; ?>
+						<?php endif; ?>
+		
+					<?php endforeach ?>
+					<td></td>
+				</tr>
 			
 			<?php endif; ?>
 
+			</tbody>
+			
+			<?php 
+				$tdClass = '';
+				$ulClass = 'hidden';
+				$spanClass = '';
+				$errorMessage = '';
+				if (array_key_exists($model, $this->request->data) && is_array($this->request->data[$model]['amount_paid'])) {
+					$tdClass = 'error';
+					$ulClass = '';
+					$spanClass = 'error-message';
+					$errorMessage = $this->request->data[$model]['amount_paid']['error'];
+				}
+			?>
+			<tfoot>
+				<tr>
+					<td class="cell-number"><?php echo $this->Label->get('general.total') ?></td>
+					<td></td>
+					<td class="<?= $tdClass ?>">
+						<span class="<?= $spanClass ?>"><?= $attr['currency']?></span>
+						<span class="total_payments cell-number <?= $spanClass ?>"><?= $attr['amount_paid']; ?></span>
+					</td>
+					<td class="<?= $tdClass ?>">
+						<ul class="error-message <?= $ulClass ?>">
+							<li><?= $errorMessage ?></li>
+						</ul>
+					</td>
+					<td colspan="3"></td>
+				</tr>
+			</tfoot>
 		</table>
 	</div>
 </div>
