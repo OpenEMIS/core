@@ -39,7 +39,7 @@ class StudentFeesTable extends AppTable {
 		 * Shortcuts
 		 */
 		$this->AcademicPeriods = $this->InstitutionSiteFees->AcademicPeriods;
-		$this->InstitutionSiteGrades = $this->InstitutionSiteFees->Institutions->InstitutionSiteGrades;	
+		$this->InstitutionGrades = $this->InstitutionSiteFees->Institutions->InstitutionGrades;	
 		$this->StudentPromotion = $this->InstitutionSiteFees->Institutions->StudentPromotion;
 
 	}
@@ -92,7 +92,7 @@ class StudentFeesTable extends AppTable {
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
