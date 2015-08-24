@@ -40,6 +40,7 @@ class StudentAdmissionTable extends AppTable {
 		$this->request->data[$this->alias()]['status'] = $entity->status;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
+		$this->request->data[$this->alias()]['type'] = $entity->type;
 	}
 
 	public function afterAction($event) {
@@ -47,33 +48,35 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('start_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
     	$this->ControllerAction->field('end_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
     	$this->ControllerAction->field('previous_institution_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
-    	$this->ControllerAction->field('type', ['type' => 'hidden']);
+    	$this->ControllerAction->field('type');
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
     	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
-    	$this->ControllerAction->field('institution_id');
+    	$this->ControllerAction->field('institution_id', ['visible' => false]);
     	$this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
     	$this->ControllerAction->field('education_grade_id');
     	$this->ControllerAction->field('comment');
+    	$this->ControllerAction->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
     }
 
     public function editAfterAction($event, Entity $entity) {
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+		$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
   		$this->ControllerAction->setFieldOrder([
-			'status', 'student_id',
+			'created', 'status', 'type', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'start_date', 'end_date', 'comment'
+			'start_date', 'end_date', 'comment', 
 		]);
     }
 
     public function viewAfterAction($event, Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'status', 'student_id',
+			'created', 'status', 'type', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'start_date', 'end_date', 'comment'
 		]);
@@ -103,6 +106,22 @@ class StudentAdmissionTable extends AppTable {
 				break;
 		}
 		return __($statusName);
+	}
+
+	public function onGetType(Event $event, Entity $entity) {
+		$typeName = "";
+		switch ($entity->type) {
+			case self::ADMISSION:
+				$typeName = "Admission";
+				break;
+			case self::TRANSFER:
+				$typeName = "Transfer In";
+				break;
+			default:
+				$typeName = $entity->status;
+				break;
+		}
+		return __($typeName);
 	}
 
 	public function onGetStudentId(Event $event, Entity $entity){
@@ -221,6 +240,24 @@ class StudentAdmissionTable extends AppTable {
 			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
 				$attr['type'] = 'readonly';
 			}
+			return $attr;
+		}
+	}
+
+	public function onUpdateFieldType(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			$type = $request->data[$this->alias()]['type'];
+			$attr['type'] = 'readonly';
+			$typeName = "";
+			switch ($type) {
+				case self::ADMISSION:
+					$typeName = "Admission";
+					break;
+				case self::TRANSFER:
+					$typeName = "Transfer In";
+					break;
+			}
+			$attr['attr']['value'] = $typeName;
 			return $attr;
 		}
 	}

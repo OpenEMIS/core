@@ -40,7 +40,7 @@ class StudentUserTable extends UserTable {
 				}
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-				$admissionStatus = 2;
+				$admissionStatus = 1;
 				$entityData = [
 					'start_date' => $academicData['start_date'],
 					'end_date' => $academicData['end_date'],
