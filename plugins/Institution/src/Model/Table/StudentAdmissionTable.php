@@ -277,13 +277,16 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		// if ($action == 'index') {
-		// 	$toolbarButtons['back']['url']['plugin'] = 'Institution';
-		// 	$toolbarButtons['back']['url']['controller'] = 'Institutions';
-		// 	$toolbarButtons['back']['url']['action'] = 'Student';
-		// 	$toolbarButtons['back']['url'][0] = 'index';
-		// 	pr($toolbarButtons);
-		// }
+		if ($action == 'index') {
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+			$toolbarButtons['back']['url']['plugin'] = 'Institution';
+			$toolbarButtons['back']['url']['controller'] = 'Institutions';
+			$toolbarButtons['back']['url']['action'] = 'Students';
+			$toolbarButtons['back']['url'][0] = 'index';
+			$toolbarButtons['back']['attr'] = $attr;
+		}
+
 		if ($action == 'edit') {
 			$toolbarButtons['back']['url'][0] = 'index';
 			unset($toolbarButtons['back']['url'][1]);
