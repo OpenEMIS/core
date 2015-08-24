@@ -28,6 +28,7 @@ class RestSurveyComponent extends Component {
 		foreach ($models as $key => $model) {
 			if (!is_null($model)) {
 				$this->{$key} = TableRegistry::get($model);
+				$this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
 			} else {
 				$this->{$key} = null;
 			}
@@ -48,12 +49,11 @@ class RestSurveyComponent extends Component {
 		$todayDate = date('Y-m-d');
 		$todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
 		$SurveyStatuses = TableRegistry::get('Survey.SurveyStatuses');
-		$formKey = Inflector::underscore(Inflector::singularize($this->Form->alias())) . '_id';
 
 		$query->innerJoin(
 				[$SurveyStatuses->alias() => $SurveyStatuses->table()],
 				[
-					$SurveyStatuses->aliasField($formKey . ' = ') . $this->Form->aliasField('id'),
+					$SurveyStatuses->aliasField($this->formKey . ' = ') . $this->Form->aliasField('id'),
 					$SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp
 				]
 			)
@@ -71,9 +71,8 @@ class RestSurveyComponent extends Component {
 				->toArray();
 			$selectedModule = !is_null($this->request->query('module')) ? $this->request->query('module') : key($moduleOptions);
 
-			$moduleKey = Inflector::underscore(Inflector::singularize($this->Module->alias())) . '_id';
 			$query->where([
-				$this->Form->aliasField($moduleKey) => $selectedModule
+				$this->Form->aliasField($this->moduleKey) => $selectedModule
 			]);
 		}
 
@@ -183,25 +182,160 @@ class RestSurveyComponent extends Component {
 	}
 
 	public function upload() {
+		if ($request->is(['post', 'put'])) {
+			$data = $this->request->data;
+            $this->log('Data:', 'debug');
+    		$this->log($data, 'debug');
+
+    		if (array_key_exists('response', $data)) {
+				$formAlias = $this->Form->alias();
+	    		$fieldAlias = $this->Field->alias();
+
+	    		$xmlResponse = $data['response'];
+	    		// line below is for testing
+	    		// $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:InstitutionSite>1</oe:InstitutionSite><oe:AcademicPeriod>10</oe:AcademicPeriod><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
+				$this->log('XML Response', 'debug');
+				$this->log($xmlResponse, 'debug');
+				$xmlResponse = str_replace("xf:", "", $xmlResponse);
+				$xmlResponse = str_replace("oe:", "", $xmlResponse);
+
+				$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
+	            $this->log('XML String:', 'debug');
+	            $this->log($xmlstr, 'debug');
+	    		$xml = Xml::build($xmlstr);
+
+				$formId = $xml->$formAlias->attributes()->id->__toString();
+	    		$institutionId = $xml->$formAlias->InstitutionSite->__toString();
+	    		$periodId = $xml->$formAlias->AcademicPeriod->__toString();
+	    		$status = 2; // completed
+	    		$createdUserId = 1; // System Administrator
+
+	    		$formData = [];
+	    		$formData = [
+	    			$this->formKey => $formId,
+	    			'institution_site_id' => $institutionId,
+	    			'academic_period_id' => $periodId,
+	    			'status' => $status,
+	    			'created_user_id' => $createdUserId
+	    		];
+
+				$CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+				$fieldTypes = $CustomFieldTypes
+					->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+					->toArray();
+
+	    		$fields = $xml->$formAlias->$fieldAlias;
+	    		foreach ($fields as $field) {
+	    			$fieldId = $field->attributes()->id->__toString();
+	    			$fieldType = $this->Field->get($fieldId)->field_type;
+	    			$fieldColumnName = $fieldTypes[$fieldType];
+	    			
+	    			switch($fieldType) {
+	    				case 'TEXT':
+	    				case 'NUMBER':
+						case 'TEXTAREA':
+						case 'DROPDOWN':
+							$answerValue = urldecode($field->__toString());
+							if (strlen($answerValue) != 0) {
+								$answerObj = [
+				    				$this->fieldKey => $fieldId,
+				    				$fieldColumnName => $answerValue,
+				    				'created_user_id' => $createdUserId
+				    			];
+				    			$formData['custom_field_values'][] = $answerObj;
+				    		}
+							break;
+						case 'CHECKBOX':
+							$answerValue = urldecode($field->__toString());
+							if (strlen($answerValue) != 0) {
+								$checkboxValues = explode(" ", $answerValue);
+								foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
+									$answerObj = [
+										$this->fieldKey => $fieldId,
+				    					$fieldColumnName => $checkboxValue,
+					    				'created_user_id' => $createdUserId
+					    			];
+					    			$formData['custom_field_values'][] = $answerObj;
+								}
+							}
+							break;
+						case 'TABLE':
+							foreach ($field->children() as $row => $rowObj) {
+								$rowId = $rowObj->attributes()->id->__toString();
+								foreach ($rowObj->children() as $col => $colObj) {
+									$colId = $colObj->attributes()->id->__toString();
+									if ($colId != 0) {
+										$cellValue = urldecode($colObj->__toString());
+										if (strlen($cellValue) != 0) {
+											$cellObj = array(
+												$this->fieldKey => $fieldId,
+							    				$this->tableColumnKey => $colId,
+							    				$this->tableRowKey => $rowId,
+							    				$fieldColumnName => $cellValue,
+							    				'created_user_id' => $createdUserId
+							    			);
+											$formData['custom_table_cells'][] = $cellObj;
+										}
+									}
+								}
+							}
+							break;
+	    			}
+				}
+
+				$CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
+				// Check for existing records and delete it before upload
+				$recordResults = $CustomRecords
+					->find()
+					->where([
+						$CustomRecords->aliasField($this->formKey) => $formId,
+						$CustomRecords->aliasField('institution_site_id') => $institutionId,
+						$CustomRecords->aliasField('academic_period_id') => $periodId
+					])
+					->all();
+
+				if (!$recordResults->isEmpty()) {
+					$recordId = $recordResults->first()->id;
+					// To use $this->recordKey when record table is changed to institution_surveys and foreign key will become institution_survey_id
+					$recordKey = 'institution_site_survey_id';
+					$this->Record->deleteAll([
+						$this->Record->aliasField('id') => $recordId
+					]);
+					$this->FieldValue->deleteAll([
+						$this->FieldValue->aliasField($recordKey) => $recordId
+					]);
+					$this->TableCell->deleteAll([
+						$this->TableCell->aliasField($recordKey) => $recordId
+					]);
+				}
+				// End
+
+				$entity = $CustomRecords->newEntity($formData);
+				if ($CustomRecords->save($entity)) {
+					if($entity->status == 2) {
+						$message = 'Survey record has been submitted successfully.';
+					} else {
+						$message = 'Survey record has been saved to draft successfully.';
+					}
+					$this->log('Message:', 'debug');
+	    			$this->log($message, 'debug');
+				} else {
+					$this->log($entity->errors(), 'debug');
+				}
+			}
+		}
 	}
 
 	public function getXForms($instanceId, $id) {
 		$title = $this->Form->get($id)->name;
 		$title = htmlspecialchars($title, ENT_QUOTES);
 
-		$fieldContains = [];
-		$fieldContains = isset($this->FieldOption) ? array_merge($fieldContains, [$this->FieldOption->alias()]) : $fieldContains;
-		$fieldContains = isset($this->TableColumn) ? array_merge($fieldContains, [$this->TableColumn->alias()]) : $fieldContains;
-		$fieldContains = isset($this->TableRow) ? array_merge($fieldContains, [$this->TableRow->alias()]) : $fieldContains;
-
-		$fieldKey = Inflector::underscore(Inflector::singularize($this->Field->alias())) . '_id';
-		$formKey = Inflector::underscore(Inflector::singularize($this->Form->alias())) . '_id';
 		$fields = $this->FormField
 			->find()
 			->find('order')
 			->select([
-				'form_id' => $this->FormField->aliasField($formKey),
-				'field_id' => $this->FormField->aliasField($fieldKey),
+				'form_id' => $this->FormField->aliasField($this->formKey),
+				'field_id' => $this->FormField->aliasField($this->fieldKey),
 				'section_name' => $this->FormField->aliasField('section'),
 				'name' => $this->FormField->aliasField('name'),
 				'is_mandatory' => $this->FormField->aliasField('is_mandatory'),
@@ -213,10 +347,10 @@ class RestSurveyComponent extends Component {
 			])
 			->innerJoin(
 				[$this->Field->alias() => $this->Field->table()],
-				[$this->Field->aliasField('id =') . $this->FormField->aliasField($fieldKey)]
+				[$this->Field->aliasField('id =') . $this->FormField->aliasField($this->fieldKey)]
 			)
 			->where([
-				$this->FormField->aliasField($formKey) => $id
+				$this->FormField->aliasField($this->formKey) => $id
 			])
 			->toArray();
 
@@ -240,7 +374,7 @@ class RestSurveyComponent extends Component {
 						$index = 1;
 						$sectionBreakNode = $bodyNode;
 
-						$formNode = $instanceNode->addChild($this->Field->alias(), null, NS_OE);
+						$formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
 							$formNode->addAttribute("id", $id);
 						$formNode->addChild('InstitutionSite', null, NS_OE);
 						$formNode->addChild('AcademicPeriod', null, NS_OE);
@@ -281,15 +415,6 @@ class RestSurveyComponent extends Component {
 							}
 							// End
 
-							// Table: separate xform group
-							if ($field->field_type == 'TABLE') {
-								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
-								$sectionBreakNode->addAttribute("ref", $field->field_id);
-								$sectionBreakNode->addAttribute("oe-type", "table");
-								$sectionBreakNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-							}
-							// End
-
 							$fieldNode = $formNode->addChild($this->Field->alias(), null, NS_OE);
 								$fieldNode->addAttribute("id", $field->field_id);
 
@@ -322,7 +447,7 @@ class RestSurveyComponent extends Component {
 												->find()
 												->find('order')
 												->where([
-													$this->FieldOption->aliasField($fieldKey) => $field->field_id
+													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
 												])
 												->all();
 
@@ -345,7 +470,7 @@ class RestSurveyComponent extends Component {
 												->find()
 												->find('order')
 												->where([
-													$this->FieldOption->aliasField($fieldKey) => $field->field_id
+													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
 												])
 												->all();
 
@@ -360,31 +485,26 @@ class RestSurveyComponent extends Component {
 										break;
 									case 'TABLE':
 										$fieldType = false;
-										/* Nested xform group
+										// To nested table inside xform group
 										$tableBreakNode = $sectionBreakNode->addChild("group", null, NS_XF);
 										$tableBreakNode->addAttribute("ref", $field->field_id);
 										$tableBreakNode->addAttribute("oe-type", "table");
 										$tableBreakNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-										$tableNode = $tableBreakNode->addChild("table", null, NS_XHTML);
-										*/
+										// End
 
-										$tableNode = $sectionBreakNode->addChild("table", null, NS_XHTML);
+										$tableNode = $tableBreakNode->addChild("table", null, NS_XHTML);
 										$tableNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
 											$tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
-											$tableHeader->addChild("th", null, NS_XHTML);
 											$tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
 												$xformRepeat = $tableBody->addChild("repeat", null, NS_XF);
 												$xformRepeat->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableRow->alias());
 													$tbodyRow = $xformRepeat->addChild("tr", null, NS_XHTML);
-														$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
-															$tbodyCell = $tbodyColumn->addChild("output", null, NS_XF);
-																$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias()."0");
 
 										$tableColumnResults = $this->TableColumn
 											->find()
 											->find('order')
 											->where([
-												$this->TableColumn->aliasField($fieldKey) => $field->field_id
+												$this->TableColumn->aliasField($this->fieldKey) => $field->field_id
 											])
 											->all();
 
@@ -392,7 +512,7 @@ class RestSurveyComponent extends Component {
 											->find()
 											->find('order')
 											->where([
-												$this->TableRow->aliasField($fieldKey) => $field->field_id
+												$this->TableRow->aliasField($this->fieldKey) => $field->field_id
 											])
 											->all();
 
@@ -403,26 +523,27 @@ class RestSurveyComponent extends Component {
 											foreach ($tableRows as $row => $tableRow) {
 												$rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
 												$rowNode->addAttribute("id", $tableRow->id);
-													$colIndex = 0;
 
-													$columnNode = $rowNode->addChild($this->TableColumn->alias() . $colIndex, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
-													$columnNode->addAttribute("id", $colIndex);
-
-													foreach ($tableColumns as $col => $tableColumn) {
-														$colIndex++;
-														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $colIndex, null, NS_OE);
+												foreach ($tableColumns as $col => $tableColumn) {
+													if ($col == 0) {
+														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
+														$columnNode->addAttribute("id", $col);
+													} else {
+														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
 														$columnNode->addAttribute("id", $tableColumn->id);
-														if ($row == 0) {
-															$tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
-															$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
-																$tbodyCell = $tbodyColumn->addChild("input", null, NS_XF);
-																	$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$colIndex);
-
-															$bindNode = $modelNode->addChild("bind", null, NS_XF);
-															$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$colIndex);
-															$bindNode->addAttribute("type", 'string');
-														}
 													}
+
+													if ($row == 0) {
+														$tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
+														$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
+															$tbodyCell = $tbodyColumn->addChild("input", null, NS_XF);
+																$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
+
+														$bindNode = $modelNode->addChild("bind", null, NS_XF);
+														$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
+														$bindNode->addAttribute("type", 'string');
+													}
+												}
 											}
 										}
 										break;
