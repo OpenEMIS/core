@@ -15,10 +15,14 @@ class StudentAdmissionTable extends AppTable {
 	const APPROVED = 1;
 	const REJECTED = 2;
 
+	// Type status for admission
+	const TRANSFER = 2;
+	const ADMISSION = 1;
+
 	public function initialize(array $config) {
 		$this->table('institution_student_admission');
 		parent::initialize($config);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -28,7 +32,8 @@ class StudentAdmissionTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
-		$query->where([$this->aliasField('type') => 'Admission', $this->aliasField('status').' IN' => $statusToshow]);
+		$typeToShow = [self::TRANSFER, self::ADMISSION];
+		$query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -42,9 +47,9 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('start_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
     	$this->ControllerAction->field('end_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
     	$this->ControllerAction->field('previous_institution_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
-    	$this->ControllerAction->field('type', ['visible' => false]);
+    	$this->ControllerAction->field('type', ['type' => 'hidden']);
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
-    	$this->ControllerAction->field('security_user_id');
+    	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
     	$this->ControllerAction->field('institution_id');
     	$this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
@@ -53,14 +58,14 @@ class StudentAdmissionTable extends AppTable {
     }
 
     public function editAfterAction($event, Entity $entity) {
-		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->security_user_id)->name_with_id]]);
+		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
   		$this->ControllerAction->setFieldOrder([
-			'status', 'security_user_id',
+			'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'start_date', 'end_date', 'comment'
 		]);
@@ -68,7 +73,7 @@ class StudentAdmissionTable extends AppTable {
 
     public function viewAfterAction($event, Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'status', 'security_user_id',
+			'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'start_date', 'end_date', 'comment'
 		]);
@@ -100,7 +105,7 @@ class StudentAdmissionTable extends AppTable {
 		return __($statusName);
 	}
 
-	public function onGetSecurityUserId(Event $event, Entity $entity){
+	public function onGetStudentId(Event $event, Entity $entity){
 		if ($entity->status == self::NEW_REQUEST) {
 			$urlParams = $this->ControllerAction->url('index');
 			return $event->subject()->Html->link($entity->user->name, [
@@ -154,7 +159,7 @@ class StudentAdmissionTable extends AppTable {
 		if ($AccessControl->check(['Dashboard', 'StudentAdmission', 'edit'])) {
 			$institutionIds = $AccessControl->getInstitutionsByUser();
 
-			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => 'Admission'];
+			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => self::ADMISSION];
 			if (!$AccessControl->isAdmin()) {
 				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
 			}
@@ -235,6 +240,13 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		// if ($action == 'index') {
+		// 	$toolbarButtons['back']['url']['plugin'] = 'Institution';
+		// 	$toolbarButtons['back']['url']['controller'] = 'Institutions';
+		// 	$toolbarButtons['back']['url']['action'] = 'Student';
+		// 	$toolbarButtons['back']['url'][0] = 'index';
+		// 	pr($toolbarButtons);
+		// }
 		if ($action == 'edit') {
 			$toolbarButtons['back']['url'][0] = 'index';
 			unset($toolbarButtons['back']['url'][1]);
@@ -251,7 +263,7 @@ class StudentAdmissionTable extends AppTable {
 
 		$newSchoolId = $entity->institution_id;
 		$previousSchoolId = $entity->previous_institution_id;
-		$studentId = $entity->security_user_id;
+		$studentId = $entity->student_id;
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
 
