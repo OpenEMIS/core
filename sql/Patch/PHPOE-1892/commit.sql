@@ -8,7 +8,7 @@ VALUES ('REJECTED', 'Rejected');
 
 ALTER TABLE `institution_student_transfers` 
 CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ,
-ADD COLUMN `type` INT(1) NOT NULL DEFAULT 1 COMMENT '1 -> Admission, 2 -> Transfer' AFTER `comment`, RENAME TO  `institution_student_admission` ;
+ADD COLUMN `type` INT(1) NOT NULL DEFAULT 2 COMMENT '1 -> Admission, 2 -> Transfer' AFTER `comment`, RENAME TO  `institution_student_admission` ;
 
 
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'student_id', 'Student', '1', NOW());
