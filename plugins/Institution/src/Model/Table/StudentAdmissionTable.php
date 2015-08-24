@@ -324,6 +324,25 @@ class StudentAdmissionTable extends AppTable {
 			$newEntity = $Students->newEntity($newData);
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
+
+				// For transfer in request only
+				// Start of code
+				if ($entity->type == self::TRANSFER) {
+					$Students = TableRegistry::get('Institution.Students');
+					$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+					$statuses = $StudentStatuses->findCodeList();
+					$Students->updateAll(
+						['student_status_id' => $statuses['TRANSFERRED'], 'end_date' => $startDate],
+						[
+							'institution_id' => $previousSchoolId,
+							'student_id' => $studentId,
+							'academic_period_id' => $periodId,
+							'education_grade_id' => $gradeId
+						]
+					);
+				}
+				// End of code
+
 				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;
@@ -342,6 +361,30 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+
+		// For transfer in request only
+		if ($entity->type == self::TRANSFER) {
+			// Update status to Current in previous school
+			$institutionId = $entity->previous_institution_id;
+			$selectedStudent = $entity->student_id;
+			$selectedPeriod = $entity->academic_period_id;
+			$selectedGrade = $entity->education_grade_id;
+
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$currentStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+			$Students = TableRegistry::get('Institution.Students');
+			$Students->updateAll(
+				['student_status_id' => $currentStatus],
+				[
+					'institution_id' => $institutionId,
+					'student_id' => $selectedStudent,
+					'academic_period_id' => $selectedPeriod,
+					'education_grade_id' => $selectedGrade
+				]
+			);
+		}
+
 		$entity->comment = $data['StudentAdmission']['comment'];
 		// Update status to 2 => reject
 		$this->updateAll(
@@ -351,6 +394,7 @@ class StudentAdmissionTable extends AppTable {
 
 		$this->Alert->success('StudentAdmission.reject');
 		$event->stopPropagation();
+
 		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 	}
 }
