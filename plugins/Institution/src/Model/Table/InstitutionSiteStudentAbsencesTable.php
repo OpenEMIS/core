@@ -35,7 +35,8 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 					'rule' => ['noOverlappingAbsenceDate', $this]
 				],
 				'ruleInAcademicPeriod' => [
-				    'rule' => ['inAcademicPeriod', 'academic_period']
+					'rule' => ['inAcademicPeriod', 'academic_period'],
+					'on' => 'create'
 				]
 			])
 			->add('end_date', 'ruleCompareDateReverse', [
