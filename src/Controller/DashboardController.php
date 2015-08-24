@@ -16,12 +16,15 @@ class DashboardController extends AppController {
 		$this->ControllerAction->models = [
 			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']]
 		];
+		$this->ControllerAction->models = [
+			'StudentAdmission' 	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']]
+		];
 
 		$this->loadComponent('Workbench', [
 			'models' => [
 				'Institution.TransferApprovals',
 				'Institution.StudentAdmission',
-				'Institution.StudentDropout'
+				// 'Institution.StudentDropout'
 			]
 		]);
     }

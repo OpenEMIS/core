@@ -52,7 +52,7 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
     	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
-    	$this->ControllerAction->field('institution_id', ['visible' => false]);
+    	$this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
     	$this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
     	$this->ControllerAction->field('education_grade_id');
     	$this->ControllerAction->field('comment');
@@ -61,7 +61,7 @@ class StudentAdmissionTable extends AppTable {
 
     public function editAfterAction($event, Entity $entity) {
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-		$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
@@ -195,8 +195,8 @@ class StudentAdmissionTable extends AppTable {
 			foreach ($resultSet as $key => $obj) {
 				$requestTitle = sprintf('Admission of student (%s) to %s', $obj->user->name_with_id, $obj->institution->name);
 				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
+					'plugin' => false,
+					'controller' => 'Dashboard',
 					'action' => 'StudentAdmission',
 					'edit',
 					$obj->id
@@ -289,6 +289,10 @@ class StudentAdmissionTable extends AppTable {
 
 		if ($action == 'edit') {
 			$toolbarButtons['back']['url'][0] = 'index';
+			if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
+				$toolbarButtons['back']['url']['action']= 'index';
+				unset($toolbarButtons['back']['url'][0]);
+			}
 			unset($toolbarButtons['back']['url'][1]);
 		} else if ($action == 'view') {
 			unset($toolbarButtons['edit']);
