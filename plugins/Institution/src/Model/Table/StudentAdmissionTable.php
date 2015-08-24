@@ -115,7 +115,7 @@ class StudentAdmissionTable extends AppTable {
 				$typeName = "Admission";
 				break;
 			case self::TRANSFER:
-				$typeName = "Transfer In";
+				$typeName = "Transfer";
 				break;
 			default:
 				$typeName = $entity->status;
@@ -254,7 +254,7 @@ class StudentAdmissionTable extends AppTable {
 					$typeName = "Admission";
 					break;
 				case self::TRANSFER:
-					$typeName = "Transfer In";
+					$typeName = "Transfer";
 					break;
 			}
 			$attr['attr']['value'] = $typeName;
