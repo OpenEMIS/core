@@ -48,6 +48,10 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		if ($entity->type == self::TRANSFER) {
+			$event->stopPropagation();
+			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
+		}
 		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');

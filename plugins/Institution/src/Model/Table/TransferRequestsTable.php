@@ -188,7 +188,10 @@ class TransferRequestsTable extends AppTable {
     // do the same for TransferApproval
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		// check the type = 2 else stop event and redirect
+		if ($entity->type == self::TRANSFER) {
+			$event->stopPropagation();
+			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
+		}
 		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');
@@ -201,6 +204,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'select']);
 		$this->ControllerAction->field('comment');
 		$this->ControllerAction->field('previous_institution_id');
+		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
 
 		$this->ControllerAction->setFieldOrder([
 			'transfer_status', 'student',
