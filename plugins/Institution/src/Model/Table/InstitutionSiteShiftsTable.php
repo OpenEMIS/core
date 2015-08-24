@@ -19,7 +19,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
-		//$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
+		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
 	
 		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
@@ -107,13 +107,14 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->fields['location_institution_site_id']['attr'] = ['options' => [0 => 'Default School', 1 => 'Other School']];
 		
 		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id'
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id', 'other_school_id'
 		]);
 
 	}
 
 
-	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldInstitutionSiteId(Event $event, array $attr, $action, $request) {
+		$this->ControllerAction->field('other_school_id', ['type' => 'select']);
 	}
 
 /******************************************************************************************************************
