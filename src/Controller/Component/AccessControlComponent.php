@@ -237,4 +237,31 @@ class AccessControlComponent extends Component {
 		$institutionIds = $institutionIds + $areaInstitutions;
 		return $institutionIds;
 	}
+
+	public function getAreasByUser($userId = null) {
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$groupIds = $SecurityGroupUsers
+		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
+		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+		->toArray();
+
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$areas = $SecurityGroupAreas
+		->find('all')
+		->distinct(['area_id'])
+		->select(['area_id'])
+		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
+		->innerJoin(['Areas' => 'areas'], [
+			'Areas.lft >= AreaAll.lft',
+			'Areas.rght <= AreaAll.rght'
+		])
+		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
+		->toArray();
+
+		pr($areas);
+	}
 }
