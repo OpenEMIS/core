@@ -16,13 +16,18 @@ class RestController extends AppController
 		$this->loadComponent('Paginator');
 		$this->loadComponent('Restful.RestSurvey', [
 			'models' => [
+				// Administration Table
 				'Module' => 'CustomField.CustomModules',
 				'Field' => 'Survey.SurveyQuestions',
 				'FieldOption' => 'Survey.SurveyQuestionChoices',
 				'TableColumn' => 'Survey.SurveyTableColumns',
 				'TableRow' => 'Survey.SurveyTableRows',
 				'Form' => 'Survey.SurveyForms',
-				'FormField' => 'Survey.SurveyFormsQuestions'
+				'FormField' => 'Survey.SurveyFormsQuestions',
+				// Transaction Table
+				'Record' => 'Institution.InstitutionSurveys',
+				'FieldValue' => 'Institution.InstitutionSurveyAnswers',
+				'TableCell' => 'Institution.InstitutionSurveyTableCells'
 			]
 		]);
     }
