@@ -14,12 +14,10 @@ class DashboardController extends AppController {
 		// $this->loadComponent('Paginator');
 
 		$this->ControllerAction->models = [
-			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']]
-		];
-		$this->ControllerAction->models = [
+			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']],
 			'StudentAdmission' 	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']]
 		];
-
+		
 		$this->loadComponent('Workbench', [
 			'models' => [
 				'Institution.TransferApprovals',
