@@ -151,7 +151,8 @@ class StudentsTable extends AppTable {
 
 		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
 			// Redirect to the appropriate page
-			$this->controller->redirect(['controller' => 'Institutions', 'action' => 'StudentAdmission', 'plugin'=>'Institution']);
+			$event->stopPropagation();
+			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'StudentAdmission', 'plugin'=>'Institution']);
 		}
 
 		// Advanced Select Options
@@ -318,17 +319,17 @@ class StudentsTable extends AppTable {
 		// Check if student has already been enrolled
 		if (!empty ($studentId)) {
 
-			$pendingTransferCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
 
 			// Check if the student that is pass over is a pending admission student
-			if ($pendingTransferCode == $studentData['student_status_id']) {
+			if ($pendingAdmissionCode == $studentData['student_status_id']) {
 
 				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
 				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
 				$studentExist = $AdmissionTable->find()
 					->where([
 							$AdmissionTable->aliasField('status') => 0,
-							$AdmissionTable->aliasField('security_user_id') => $studentId,
+							$AdmissionTable->aliasField('student_id') => $studentId,
 							$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
 							$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
 							$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
@@ -337,17 +338,18 @@ class StudentsTable extends AppTable {
 				// Check if the student is already added to the student admission table
 				if ($studentExist == 0) {
 					$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
+						$admissionStatus = 2;
 						$entityData = [
 							'start_date' => $studentData['start_date'],
 							'end_date' => $studentData['end_date'],
-							'security_user_id' => $studentId,
+							'student_id' => $studentId,
 							'status' => 0,
 							'institution_id' => $studentData['institution_id'],
 							'academic_period_id' => $studentData['academic_period_id'],
 							'education_grade_id' => $studentData['education_grade_id'],
 							'previous_institution_id' => 0,
 							'student_transfer_reason_id' => 0,
-							'type' => 'Admission',
+							'type' => $admissionStatus,
 						];
 
 						$admissionEntity = $AdmissionTable->newEntity($entityData);
@@ -695,7 +697,7 @@ class StudentsTable extends AppTable {
 						->find()
 						->where([
 							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
-							$TransferRequests->aliasField('security_user_id') => $selectedStudent,
+							$TransferRequests->aliasField('student_id') => $selectedStudent,
 							$TransferRequests->aliasField('status') => 0
 						])
 						->first();

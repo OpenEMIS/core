@@ -25,8 +25,8 @@ class StudentUserTable extends UserTable {
 			$class = $academicData['class'];
 			unset($academicData['class']);
 			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-			$pendingTransferCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
-			if ($academicData['student_status_id'] != $pendingTransferCode) {
+			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
+			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
 				if ($Student->save($Student->newEntity($academicData))) {
 					if ($class > 0) {
@@ -40,17 +40,18 @@ class StudentUserTable extends UserTable {
 				}
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+				$admissionStatus = 2;
 				$entityData = [
 					'start_date' => $academicData['start_date'],
 					'end_date' => $academicData['end_date'],
-					'security_user_id' => $academicData['student_id'],
+					'student_id' => $academicData['student_id'],
 					'status' => 0,
 					'institution_id' => $academicData['institution_id'],
 					'academic_period_id' => $academicData['academic_period_id'],
 					'education_grade_id' => $academicData['education_grade_id'],
 					'previous_institution_id' => 0,
 					'student_transfer_reason_id' => 0,
-					'type' => 'Admission',
+					'type' => $admissionStatus,
 				];
 				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData))) {
 					$this->Alert->success('general.add.success');
