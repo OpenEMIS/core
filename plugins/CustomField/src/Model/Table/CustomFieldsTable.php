@@ -96,6 +96,10 @@ class CustomFieldsTable extends AppTable {
 			}
 		}
 
+		foreach ($entity->custom_field_options as $colKey => $colObj) {
+			$entity->custom_field_options[$colKey]->dirty('visible', true);
+		}
+
 		foreach ($entity->custom_table_columns as $colKey => $colObj) {
 			$entity->custom_table_columns[$colKey]->dirty('visible', true);
 		}
