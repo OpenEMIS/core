@@ -46,7 +46,8 @@ trait OptionsTrait {
 		$codes = [
 			'period' => 'Period',
 			'class' => 'Class',
-			'student' => 'Student'
+			'student' => 'Student',
+			'staff' => 'Staff'
 		];
 		return '-- ' . __('Select ' . $codes[$code]) . ' --';
 	}
