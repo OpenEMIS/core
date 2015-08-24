@@ -338,7 +338,7 @@ class StudentsTable extends AppTable {
 				// Check if the student is already added to the student admission table
 				if ($studentExist == 0) {
 					$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
-						$admissionStatus = 2;
+						$admissionStatus = 1;
 						$entityData = [
 							'start_date' => $studentData['start_date'],
 							'end_date' => $studentData['end_date'],
