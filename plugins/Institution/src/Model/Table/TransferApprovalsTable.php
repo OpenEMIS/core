@@ -45,6 +45,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
+		$this->request->data[$this->alias()]['status'] = $entity->status;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -65,15 +66,47 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('comment');
 		$this->ControllerAction->field('previous_institution_id');
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
+		$this->ControllerAction->field('created', ['visible'=>true, 'type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
 
 		$this->ControllerAction->setFieldOrder([
-			'transfer_status', 'student',
+			'created', 'transfer_status', 'student',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'status', 'start_date', 'end_date',
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
 		]);
 	}
+
+	public function viewAfterAction($event, Entity $entity) {
+		$this->request->data[$this->alias()]['status'] = $entity->status;
+		$this->ControllerAction->field('type', ['visible'=>	false]);
+		$this->ControllerAction->setFieldOrder([
+			'created', 'status', 'student_id',
+			'institution_id', 'academic_period_id', 'education_grade_id',
+			'start_date', 'end_date', 'comment'
+		]);
+    }
+
+    public function onGetStatus(Event $event, Entity $entity) {
+		$statusName = "";
+		switch ($entity->status) {
+			case self::NEW_REQUEST:
+				$statusName = "New";
+				break;
+			case self::APPROVED:
+				$statusName = "Approved";
+				break;
+			case self::REJECTED:
+				$statusName = "Rejected";
+				break;
+			default:
+				$statusName = $entity->status;
+				break;
+		}
+		return __($statusName);
+	}
+
+
 
 	public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
@@ -158,6 +191,14 @@ class TransferApprovalsTable extends AppTable {
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
+			// If it is not a new request, disable this field
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				$startDate = $request->data[$this->alias()]['start_date'];
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $startDate->format('d-m-Y');
+				return $attr;
+			}
+			
 			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 			$startDate = $request->data[$this->alias()]['start_date'];
 			$endDate = $request->data[$this->alias()]['end_date'];
@@ -215,6 +256,12 @@ class TransferApprovalsTable extends AppTable {
 				unset($toolbarButtons['back']['url'][1]);
 			}
 		}
+
+		if ($action == 'view') {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				unset($toolbarButtons['edit']);
+			}
+		}
 	}
 
 	// Workbench.Model.onGetList
@@ -261,15 +308,22 @@ class TransferApprovalsTable extends AppTable {
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'edit') {
-			$buttons[0] = [
-				'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
-				'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
-			];
+			// If the status is new application then display the approve and reject button, 
+			// if not remove the button just in case the user gets to access the edit page
+			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST) {
+				$buttons[0] = [
+					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
+					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
+				];
 
-			$buttons[1] = [
-				'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
-				'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
-			];
+				$buttons[1] = [
+					'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
+					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
+				];
+			} else {
+				unset($buttons[0]);
+				unset($buttons[1]);
+			}
 		}
 	}
 

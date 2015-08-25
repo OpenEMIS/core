@@ -10,5 +10,6 @@ CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' , RENA
 
 DELETE FROM `labels` WHERE `module`='StudentAdmission' and `field`='student_id';
 DELETE FROM `labels` WHERE `module`='StudentAdmission' and `field`='created';
+DELETE FROM `labels` WHERE `module`='TransferApprovals' and `field`='created';
 
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1892';
