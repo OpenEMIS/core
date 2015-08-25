@@ -42,7 +42,14 @@ class InstitutionSurveysTable extends AppTable {
     	return $events;
     }
 
-	public function buildSurveyRecords() {
+	public function buildSurveyRecords($institutionId=null) {
+		if (is_null($institutionId)) {
+			$session = $this->controller->request->session();
+			if ($session->check('Institutions.id')) {
+				$institutionId = $session->read('Institutions.id');
+			}
+		}
+
 		$CustomModules = $this->SurveyForms->CustomModules;
 		$customModuleResults = $CustomModules
 			->find('all')
@@ -51,17 +58,12 @@ class InstitutionSurveysTable extends AppTable {
 				$CustomModules->aliasField('filter')
 			])
 			->where([
-				$CustomModules->aliasField('model') => $this->request->params['plugin'] .'.'. $this->request->params['controller']
+				$CustomModules->aliasField('model') => 'Institution.Institutions'
 			])
 			->first();
 		$customModuleId = $customModuleResults->id;
 		$todayDate = date("Y-m-d");
 
-		$institutionId = null;
-		$session = $this->controller->request->session();
-		if ($session->check('Institutions.id')) {
-			$institutionId = $session->read('Institutions.id');
-		}
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
 
@@ -70,11 +72,13 @@ class InstitutionSurveysTable extends AppTable {
 			->where([$this->SurveyForms->aliasField('custom_module_id') => $customModuleId])
 			->toArray();
 
-		//delete all New Survey by Institution Id and reinsert
-		$this->deleteAll([
-			$this->aliasField('institution_site_id') => $institutionId,
-			$this->aliasField('status') => 0
-		]);
+		// Update all New Survey to Expired by Institution Id
+		$this->updateAll(['status' => -1],
+			[
+				'institution_site_id' => $institutionId,
+				'status' => 0
+			]
+		);
 
 		foreach ($surveyForms as $surveyFormId => $surveyForm) {
 			$surveyStatuesIds = $SurveyStatuses
@@ -102,6 +106,7 @@ class InstitutionSurveysTable extends AppTable {
 						->all();
 
 					if ($results->isEmpty()) {
+						// Insert New Survey if not found
 						$InstitutionSurvey = $this->newEntity();
 						$InstitutionSurvey->status = 0;
 						$InstitutionSurvey->academic_period_id = $academicPeriodId;
@@ -112,6 +117,16 @@ class InstitutionSurveysTable extends AppTable {
 						} else {
 							$this->log($InstitutionSurvey->errors(), 'debug');
 						}
+					} else {
+						// Update Expired Survey back to New
+						$this->updateAll(['status' => 0],
+							[
+								'academic_period_id' => $academicPeriodId,
+								'survey_form_id' => $surveyFormId,
+								'institution_site_id' => $institutionId,
+								'status' => -1
+							]
+						);
 					}
 				}
 			}
