@@ -55,6 +55,14 @@ class InstitutionFeesTable extends AppTable {
     	$this->ControllerAction->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 	}
 
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		if ($action == 'edit' || $action == 'add') {
+			$includes['fees'] = [
+				'include' => true,
+				'js' => ['Institution.../js/fees']
+			];
+		}
+	}
 
 /******************************************************************************************************************
 **
@@ -209,7 +217,8 @@ class InstitutionFeesTable extends AppTable {
 		// remove the existed grades from the options
 		$gradeOptions = array_diff_key($this->_gradeOptions, $existedGrades);
 		$this->fields['education_grade_id']['options'] = $gradeOptions;
-
+		$this->fields['institution_id']['value'] = $this->institutionId;
+		// $attr['attr']['value'] = $this->institutionId;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
