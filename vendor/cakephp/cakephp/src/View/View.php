@@ -17,8 +17,9 @@ namespace Cake\View;
 use Cake\Cache\Cache;
 use Cake\Core\App;
 use Cake\Core\Plugin;
+use Cake\Event\EventDispatcherInterface;
+use Cake\Event\EventDispatcherTrait;
 use Cake\Event\EventManager;
-use Cake\Event\EventManagerTrait;
 use Cake\Log\LogTrait;
 use Cake\Network\Request;
 use Cake\Network\Response;
@@ -54,13 +55,14 @@ use RuntimeException;
  * @property      \Cake\View\Helper\SessionHelper $Session
  * @property      \Cake\View\Helper\TextHelper $Text
  * @property      \Cake\View\Helper\TimeHelper $Time
+ * @property      \Cake\View\Helper\UrlHelper $Url
  * @property      \Cake\View\ViewBlock $Blocks
  */
-class View
+class View implements EventDispatcherInterface
 {
 
     use CellTrait;
-    use EventManagerTrait;
+    use EventDispatcherTrait;
     use LogTrait;
     use RequestActionTrait;
     use ViewVarsTrait;
@@ -336,6 +338,101 @@ class View
     }
 
     /**
+     * Get/set path for view files.
+     *
+     * @param string $path Path for view files. If null returns current path.
+     * @return string|void
+     */
+    public function viewPath($path = null)
+    {
+        if ($path === null) {
+            return $this->viewPath;
+        }
+
+        $this->viewPath = $path;
+    }
+
+    /**
+     * Get/set path for layout files.
+     *
+     * @param string $path Path for layout files. If null returns current path.
+     * @return string|void
+     */
+    public function layoutPath($path = null)
+    {
+        if ($path === null) {
+            return $this->layoutPath;
+        }
+
+        $this->layoutPath = $path;
+    }
+
+    /**
+     * Turns on or off CakePHP's conventional mode of applying layout files.
+     * On by default. Setting to off means that layouts will not be
+     * automatically applied to rendered views.
+     *
+     * @param bool $autoLayout Boolean to turn on/off. If null returns current value.
+     * @return bool|void
+     */
+    public function autoLayout($autoLayout = null)
+    {
+        if ($autoLayout === null) {
+            return $this->autoLayout;
+        }
+
+        $this->autoLayout = $autoLayout;
+    }
+
+    /**
+     * The view theme to use.
+     *
+     * @param string $theme Theme name. If null returns current theme.
+     * @return string|void
+     */
+    public function theme($theme = null)
+    {
+        if ($theme === null) {
+            return $this->theme;
+        }
+
+        $this->theme = $theme;
+    }
+
+    /**
+     * Get/set the name of the view file to render. The name specified is the
+     * filename in /app/Template/<SubFolder> without the .ctp extension.
+     *
+     * @param string $name View file name to set. If null returns current name.
+     * @return string|void
+     */
+    public function view($name = null)
+    {
+        if ($name === null) {
+            return $this->view;
+        }
+
+        $this->view = $name;
+    }
+
+    /**
+     * Get/set the name of the layout file to render the view inside of.
+     * The name specified is the filename of the layout in /app/Template/Layout
+     * without the .ctp extension.
+     *
+     * @param string $name Layout file name to set. If null returns current name.
+     * @return string|void
+     */
+    public function layout($name = null)
+    {
+        if ($name === null) {
+            return $this->layout;
+        }
+
+        $this->layout = $name;
+    }
+
+    /**
      * Renders a piece of PHP with provided parameters and returns HTML, XML, or any other string.
      *
      * This realizes the concept of Elements, (or "partial layouts") and the $params array is used to send
@@ -492,11 +589,10 @@ class View
             return $this->Blocks->get('content');
         }
 
-        if (empty($content)) {
-            $content = $this->Blocks->get('content');
-        } else {
-            $this->Blocks->set('content', $content);
+        if (!empty($content)) {
+             $this->Blocks->set('content', $content);
         }
+
         $this->dispatchEvent('View.beforeLayout', [$layoutFileName]);
 
         $title = $this->Blocks->get('title');
@@ -551,6 +647,23 @@ class View
     /**
      * Start capturing output for a 'block'
      *
+     * You can use start on a block multiple times to
+     * append or prepend content in a capture mode.
+     *
+     * ```
+     * // Append content to an existing block.
+     * $this->start('content');
+     * echo $this->fetch('content');
+     * echo 'Some new content';
+     * $this->end();
+     *
+     * // Prepend content to an existing block
+     * $this->start('content');
+     * echo 'Some new content';
+     * echo $this->fetch('content');
+     * $this->end();
+     * ```
+     *
      * @param string $name The name of the block to capture for.
      * @return void
      * @see ViewBlock::start()
@@ -572,12 +685,7 @@ class View
      */
     public function append($name, $value = null)
     {
-        if ($value !== null) {
-            $this->Blocks->concat($name, $value);
-            return;
-        }
-        $this->Blocks->start($name);
-        echo $this->Blocks->get($name);
+        $this->Blocks->concat($name, $value);
     }
 
     /**
@@ -959,7 +1067,7 @@ class View
         }
         $subDir = null;
 
-        if ($this->layoutPath !== null) {
+        if ($this->layoutPath) {
             $subDir = $this->layoutPath . DS;
         }
         list($plugin, $name) = $this->pluginSplit($name);

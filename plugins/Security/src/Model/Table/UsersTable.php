@@ -2,37 +2,45 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use User\Model\Table\UsersTable as BaseTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use App\Model\Table\AppTable;
 
-class UsersTable extends BaseTable {
+class UsersTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('security_users');
 		parent::initialize($config);
 		$this->entityClass('User.User');
-		$this->addBehavior('Security.User');
 
-		$this->belongsToMany('SecurityRoles', [
+		$this->belongsTo('Genders', ['className' => 'User.Genders']);
+
+		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
-			'foreignKey' => 'security_role_id',
-			'targetForeignKey' => 'security_user_id',
+			'joinTable' => 'security_group_users',
+			'foreignKey' => 'security_user_id',
+			'targetForeignKey' => 'security_role_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
 
-		$this->addBehavior('Area.Areapicker');
-	}
+		$this->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('BankAccounts', 		['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
 
-	// public function addAfterAction(Event $event) {
-	// 	if (isset($this->fields['openemis_no'])) { // to make openemis_no editable in Security -> Users
-	// 		if (isset($this->fields['openemis_no']['attr'])) {
-	//         	unset($this->fields['openemis_no']['attr']);
-	//         }
- //        }
- //    }
+		$this->addBehavior('User.User');
+		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+	}
 
 	// autocomplete used for UserGroups
 	public function autocomplete($search) {
@@ -62,31 +70,95 @@ class UsersTable extends BaseTable {
 		return $data;
 	}
 
+	public function beforeAction(Event $event) {
+		$this->fields['photo_content']['visible'] = false;
+		$this->fields['address']['visible'] = false;
+		$this->fields['postal_code']['visible'] = false;
+		$this->fields['address_area_id']['visible'] = false;
+		$this->fields['birthplace_area_id']['visible'] = false;
+
+		if ($this->action != 'index' && $this->action != 'view') {
+			$this->fields['password']['visible'] = true;
+			$this->fields['password']['type'] = 'password';
+			$this->fields['password']['attr']['value'] = '';
+		}
+		if ($this->action == 'edit') {
+			$this->fields['last_login']['visible'] = false;
+		}
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$this->fields['first_name']['visible'] = false;
+		$this->fields['middle_name']['visible'] = false;
+		$this->fields['third_name']['visible'] = false;
+		$this->fields['preferred_name']['visible'] = false;
+		$this->fields['last_name']['visible'] = false;
+		$this->fields['gender_id']['visible'] = false;
+		$this->fields['date_of_birth']['visible'] = false;
+		$this->fields['identity']['visible'] = false;
+
+		$this->ControllerAction->field('name');
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
 		$query->find('notSuperAdmin');
-	}
 
-	public function editBeforeAction(Event $event) {
-		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
-		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
-	}
+		$search = $this->ControllerAction->getSearchKey();
 
-	public function viewBeforeAction(Event $event) {
-		parent::viewBeforeAction($event);
-		$this->hideFieldsBasedOnRole();
+		if (!empty($search)) {
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+		}
 	}
 
 	public function findNotSuperAdmin(Query $query, array $options) {
 		return $query->where([$this->aliasField('super_admin') => 0]);
 	}
 
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('roles', [
+			'type' => 'role_table', 
+			'order' => 69,
+			'valueClass' => 'table-full-width',
+			'visible' => ['index' => false, 'view' => true, 'edit' => false]
+		]);
+	}
+
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->find('notSuperAdmin');
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		parent::addEditBeforeAction($event);
-		$this->hideFieldsBasedOnRole();
+	public function viewBeforeQuery(Event $event, Query $query) {
+		$options['auto_contain'] = false;
+		$query->contain(['Roles']);
+	}
+
+	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('Groups'), __('Roles')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'roles';
+
+		$Group = TableRegistry::get('Security.SecurityGroups');
+
+		if ($action == 'view') {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$groupId = $obj['_joinData']->security_group_id;
+					$groupEntity = $Group->get($groupId);
+
+					$rowData = [];
+					$rowData[] = $groupEntity->name;
+					$rowData[] = $obj->name;
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
 
 	public function addBeforeAction(Event $event) {
@@ -96,18 +168,48 @@ class UsersTable extends BaseTable {
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
 	}
 
-	public function hideFieldsBasedOnRole(){
-		//hide Address, postal code, gender and birthdate from user account page
-		$roleName = $this->controller->name;
-		$this->ControllerAction->field('address', ['visible' => false]);
-		$this->ControllerAction->field('postal_code', ['visible' => false]);
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// not saving empty passwords
+		if (empty($data[$this->alias()]['password'])) {
+			unset($data[$this->alias()]['password']);
+		}
 	}
 
 	public function validationDefault(Validator $validator) {
-		parent::validationDefault($validator);
 		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
 			->allowEmpty('address')
 			->allowEmpty('postal_code')
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->allowEmpty('photo_content')
 			;
 		return $validator;
 	}

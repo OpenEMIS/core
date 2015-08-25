@@ -30,7 +30,7 @@
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-toolbar">
-			<button onclick="$('#reload').val('addCheckboxOption').click();" class="btn btn-default btn-xs">
+			<button onclick="$('#reload').val('addCheckboxOption').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i>
 				<span><?= __('Add');?></span>
 			</button>

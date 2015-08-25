@@ -29,28 +29,21 @@ class StaffBehavior extends Behavior {
 		$query->contain(['Users', 'Institutions', 'StaffStatuses']);
 
 		$search = $this->_table->ControllerAction->getSearchKey();
-		$searchParams = explode(' ', $search);
-		foreach ($searchParams as $key => $value) {
-			if (empty($searchParams[$key])) {
-				unset($searchParams[$key]);
-			}
-		}
 
 		if (!empty($search)) {
-			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-			foreach ($searchParams as $key => $value) {
-				$searchString = '%' . $value . '%';
-				$query->orWhere(['Users.first_name LIKE' => $searchString]);
-				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
-				$query->orWhere(['Users.third_name LIKE' => $searchString]);
-				$query->orWhere(['Users.last_name LIKE' => $searchString]);
-			}
+			$query = $this->_table->addSearchConditions($query, ['searchTerm' => $search]);
 
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $event->subject()->request->session();
 				$institutionId = $session->read('Institutions.id');
 				$query->andWhere(['InstitutionSiteStaff.institution_site_id' => $institutionId]);
 			}
+		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
+			$query->where(['InstitutionSiteStaff.institution_site_id IN ' => $institutionIds]);
 		}
 	}
 
@@ -68,7 +61,7 @@ class StaffBehavior extends Behavior {
 
 	public function onGetInstitution(Event $event, Entity $entity) {
 		// Check if the user is assigned to an institution name
-		if(!empty ($entity->institution->name)){
+		if(!empty ($entity->institution->name)) {
 			return $entity->institution->name;
 		}
 	}

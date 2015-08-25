@@ -4,7 +4,17 @@
 	<label for="<?= $attr['id'] ?>"><?= $label ?></label>
 <?php endif; ?>
 
-	<div class="input-group date" id="<?= $attr['id'] ?>">
+	<?php 
+	$errorMsg = '';
+	if (array_key_exists('fieldName', $attr)) {
+		$errorMsg = $this->Form->error($attr['fieldName']);
+	} else {
+		$errorMsg = $this->Form->error($attr['field']);
+	}
+	$divErrorCSS = (!empty($errorMsg))? 'error': '';
+	$inputErrorCSS = (!empty($errorMsg))? 'form-error': '';
+	 ?>
+	<div class="input-group date <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>">
 		<?php 
 
 			$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
@@ -19,7 +29,7 @@
 			$tokens = array_reverse($tokens);
 			$fieldName = implode('', $tokens);
 		 ?>
-		<input type="text" class="form-control" name="<?= $fieldName; ?>" value="<?= isset($attr['value']) ? $attr['value'] : '' ?>" 
+		<input type="text" class="form-control <?php echo $inputErrorCSS; ?>" name="<?= $fieldName; ?>" value="<?= isset($attr['value']) ? $attr['value'] : '' ?>" 
 		<?php 
 			if (array_key_exists('attr', $attr)) {
 				echo (array_key_exists('onchange', $attr['attr']))? 'onchange="'.$attr['attr']['onchange'].'"':'';
@@ -29,11 +39,7 @@
 		<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
 	</div>
 	<?php
-	if (array_key_exists('fieldName', $attr)) {
-		echo $this->Form->error($attr['fieldName']);
-	} else {
-		echo $this->Form->error($attr['field']);
-	}
+	echo $errorMsg;
 	?>
 	
 <?php if ($label): ?>
