@@ -2,9 +2,46 @@
 <?php $action = 'edit'; ?>
 <script type="text/javascript">
 	$(function() {
+		payments.init('total_payments');
 		jsTable.computeTotalForMoney('total_payments');
 		jsForm.compute(this);
 	});
+	var payments = {
+		init: function(className) {
+			$('.'+className).each(function(index, value){
+				$(this).trigger('onblur');
+			});
+		},
+		checkDecimal: function(obj, dec) {
+			var numbers = (obj.value).split('.');
+			if (numbers.length>dec) {
+				obj.value = numbers[0] + '.' + payments.appendDecimals(numbers[1], dec);
+			} else if (numbers.length<dec && numbers.length>0 && typeof(numbers[1])!=='undefined') {
+				obj.value = numbers[0] + '.' + payments.appendDecimals(numbers[1], dec);
+			} else if (typeof(numbers[1])==='undefined') {
+				obj.value = numbers[0] + '.' + payments.appendDecimals(false, dec);
+			} else {
+				obj.value = '0.' + payments.appendDecimals(false, dec);
+			}
+		},
+		appendDecimals: function(numberPart, dec) {
+			if (numberPart.length>dec) {
+				return numberPart.substring(0, dec);	
+			} else if (!numberPart) {
+				numberPart = 0;
+				for (var i=1; i<dec; i++) {
+					numberPart = numberPart + '0';
+				}
+				return numberPart;	
+			} else {
+				var remainder = dec - numberPart.length;
+				for (var i=0; i<remainder; i++) {
+					numberPart = numberPart + '0';
+				}
+				return numberPart;	
+			}
+		}
+	};
 </script>
 <div class="input clearfix">
 	<div class="clearfix">
@@ -163,7 +200,7 @@
 				<th><?= $attr['fields']['payment_date']['tableHeader'] ?></th>
 				<th><?= $attr['fields']['created_user_id']['tableHeader'] ?></th>
 				<th><?= $attr['fields']['comments']['tableHeader'] ?></th>
-				<th><?= $attr['fields']['amount']['tableHeader'] ?></th>
+				<th class="text-right"><?= $attr['fields']['amount']['tableHeader'] ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -176,7 +213,7 @@
 				<td><?= $this->HtmlField->{$attr['fields']['payment_date']['type']}($action, $record, $attr['fields']['payment_date'], $attr['fields']['payment_date']['attr']);?></td>
 				<td><?= $this->HtmlField->{$attr['fields']['created_user_id']['type']}($action, $record, $attr['fields']['created_user_id'], $attr['fields']['created_user_id']['attr']);?></td>
 				<td><?= $this->HtmlField->{$attr['fields']['comments']['type']}($action, $record, $attr['fields']['comments'], $attr['fields']['comments']['attr']);?></td>
-				<td><?= $this->HtmlField->{$attr['fields']['amount']['type']}($action, $record, $attr['fields']['amount'], $attr['fields']['amount']['attr']);?></td>
+				<td class="text-right"><?= $this->HtmlField->{$attr['fields']['amount']['type']}($action, $record, $attr['fields']['amount'], $attr['fields']['amount']['attr']);?></td>
 			</tr>
 		<?php
 			endforeach;
@@ -188,8 +225,8 @@
 		<tfoot>
 			<td></td>
 			<td></td>
-			<td class="cell-number bold"><?php echo $this->Label->get('general.total') ?></td>
-			<td class="cell-number bold"><?php echo $attr['total'] ?></td>
+			<td class="bold"><?php echo $this->Label->get('general.total') ?></td>
+			<td class="text-right bold"><?php echo $attr['total'] ?></td>
 		</tfoot>
 		
 		<?php endif;?>
