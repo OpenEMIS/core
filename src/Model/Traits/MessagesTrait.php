@@ -103,6 +103,16 @@ trait MessagesTrait {
 			'end_date' => 'End Date',
 			'education_grade' => 'Education Grades'
 		],
+		'InstitutionGrades' => [
+			'noEducationLevels' => 'There are no available Education Level.',
+			'noEducationProgrammes' => 'There are no available Education Programme.',
+			'noEducationGrades' => 'There are no available Education Grade.',
+			'noGradeSelected' => 'No Education Grade was selected.',
+			'failedSavingGrades' => 'Failed to save grades',
+			'start_date' => 'Start Date',
+			'end_date' => 'End Date',
+			'education_grade' => 'Education Grades'
+		],
 		'InstitutionSiteShifts' => [
 			'start_time' => 'Start Time',
 			'end_time' => 'End Time',
