@@ -93,17 +93,25 @@ class InstitutionSiteShiftsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function addBeforeAction(Event $event) {
+		//'default' => $default, 
+		$options = $this->getOptionList();
+		$this->ControllerAction->field('location_institution_site_id', ['visible' => true, 'type' => 'select', 'attr' => ['options' => $options]]);
+	}
+
+	public function getOptionList(){
 		//get institution id if it's not empty
 		$options = [];
 		$session = $this->request->session();
+		$default = 0;
 		if ($session->check('Institutions.id')) {
 			$id = $session->read('Institutions.id');
+			$default = $id;
 			$Institution = TableRegistry::get('Institution.Institutions')->findById($id)->first();
 			$institutionName = $Institution->name;
 			$options[$id] = $institutionName;
 		}
 		$options[0] = 'Other School';
-		$this->ControllerAction->field('location_institution_site_id', ['visible' => true, 'type' => 'select', 'attr' => ['options' => $options]]);
+		return $options;
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -118,9 +126,21 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	}
 
-	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
-		$this->ControllerAction->field('other_school_id', ['visible' => true, 'type' => 'select']);
-	}
+	public function addEditOnChangeLocationInstitutionSiteId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+
+	}	
+
+	// public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
+	// 	$options = $this->getOptionList();
+	// 	$selectedLocation = $this->queryString('location_institution_site_id', $options);
+	// 	if($selectedLocation == 0){
+	// 		$this->ControllerAction->field('other_school_id', ['visible' => true, 'type' => 'select']);
+	// 	}
+	// 	// $periodId = key($this->fields['location_institution_site_id']['options']);
+	// 	// 		pr($periodId);
+	// 	// $this->ControllerAction->field('other_school_id', ['visible' => true, 'type' => 'select']);
+	// }
+
 
 /******************************************************************************************************************
 **
