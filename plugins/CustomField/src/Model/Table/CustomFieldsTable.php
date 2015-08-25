@@ -62,7 +62,7 @@ class CustomFieldsTable extends AppTable {
 
 		$this->fields['field_type']['type'] = 'select';
 		$this->fields['field_type']['options'] = $fieldTypeOptions;
-		$this->fields['field_type']['onChangeReload'] = true;
+		$this->fields['field_type']['onChangeReload'] = 'changeType';
 		$this->fields['field_type']['labelKey'] = 'general';
 
 		$this->fields['is_mandatory']['type'] = 'select';
@@ -93,6 +93,25 @@ class CustomFieldsTable extends AppTable {
 			// To handle when delete all field_options
 			if (!array_key_exists(Inflector::underscore($_contain), $data[$this->alias()])) {
 				$data[$this->alias()][Inflector::underscore($_contain)] = [];
+				$entity->{Inflector::underscore($_contain)} = [];
+			}
+		}
+
+		if (isset($entity->custom_field_options)) {
+			foreach ($entity->custom_field_options as $colKey => $colObj) {
+				$entity->custom_field_options[$colKey]->dirty('visible', true);
+			}
+		}
+
+		if (isset($entity->custom_table_columns)) {
+			foreach ($entity->custom_table_columns as $colKey => $colObj) {
+				$entity->custom_table_columns[$colKey]->dirty('visible', true);
+			}
+		}
+
+		if (isset($entity->custom_table_rows)) {
+			foreach ($entity->custom_table_rows as $rowKey => $rowObj) {
+				$entity->custom_table_rows[$rowKey]->dirty('visible', true);
 			}
 		}
 
@@ -119,6 +138,21 @@ class CustomFieldsTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->loadBehavior($entity->field_type);
 		return $entity;
+	}
+
+	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		if (array_key_exists($this->alias(), $request->data)) {
+			if (array_key_exists('custom_field_options', $request->data[$this->alias()])) {
+				unset($data[$this->alias()]['custom_field_options']);
+			}
+			if (array_key_exists('custom_table_columns', $request->data[$this->alias()])) {
+				unset($data[$this->alias()]['custom_table_columns']);
+			}
+			if (array_key_exists('custom_table_rows', $request->data[$this->alias()])) {
+				unset($data[$this->alias()]['custom_table_rows']);
+			}
+		}
 	}
 
 	public function getSelectOptions() {

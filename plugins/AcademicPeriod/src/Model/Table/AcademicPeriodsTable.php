@@ -87,7 +87,7 @@ class AcademicPeriodsTable extends AppTable {
 					->first()
 					->id;
 
-				$action = $this->ControllerAction->buttons['index']['url'];
+				$action = $this->ControllerAction->url('index');
 				$action['parent'] = $parentId;
 				return $this->controller->redirect($action);
 			}
@@ -182,6 +182,22 @@ class AcademicPeriodsTable extends AppTable {
 	public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
 		return $attr;
+	}
+
+	public function getYearList() {
+		$level = $this->Levels
+			->find()
+			->order([$this->Levels->aliasField('level ASC')])
+			->first();
+
+		$list = $this
+			->find('list')
+			->find('visible')
+			->find('order')
+			->where([$this->aliasField('academic_period_level_id') => $level->id])
+			->toArray();
+
+		return $list;
 	}
 
 	public function getList($query = NULL) {

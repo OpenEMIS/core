@@ -54,6 +54,7 @@ class UsersTable extends AppTable {
 		]);
 
 		$this->addBehavior('Area.Areapicker');
+		$this->addBehavior('User.AdvancedNameSearch');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -91,6 +92,14 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
+
 		if ($this->action == 'add') {
 			$this->ControllerAction->field('username', ['visible' => true]);
 			$this->ControllerAction->field('password', ['visible' => true, 'type' => 'password']);
@@ -115,7 +124,9 @@ class UsersTable extends AppTable {
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
 
-		$id = $this->ControllerAction->buttons['view']['url'][0];
+		// $id = $this->ControllerAction->buttons['view']['url'][0];
+		$action = $this->ControllerAction->url('view');
+		$id = $action[0];
 
 		if ($id=='view' || $id=='edit') {
 			if (isset($this->ControllerAction->buttons['view']['url'][1])) {
@@ -467,5 +478,32 @@ class UsersTable extends AppTable {
 		}
 		
 		return $buttons;
+	}
+
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('openemis_no') . ' LIKE' => $search,
+					$this->aliasField('first_name') . ' LIKE' => $search,
+					$this->aliasField('middle_name') . ' LIKE' => $search,
+					$this->aliasField('third_name') . ' LIKE' => $search,
+					$this->aliasField('last_name') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('first_name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+				'value' => $obj->id
+			];
+		}
+		return $data;
 	}
 }

@@ -177,6 +177,13 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
+		$attr['onChangeReload'] = 'changePeriod';
+		if ($action != 'add') {
+			$attr['visible'] = false;
+		}
+
+		return $attr;
+		/*
 		$periodOptions = $attr['options'];
 		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
 
@@ -200,6 +207,7 @@ class StaffAbsencesTable extends AppTable {
 		}
 
 		return $attr;
+		*/
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
@@ -295,15 +303,26 @@ class StaffAbsencesTable extends AppTable {
 
 	public function _getSelectOptions() {
 		//Return all required options and their key
-		// Academic Period
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$institutionId = $this->Session->read('Institutions.id');
+
+		// Academic Period
 		$periodOptions = $AcademicPeriod->getList();
 		$selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : key($periodOptions);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->find()
+					->where([$Staff->aliasField('institution_site_id') => $institutionId])
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 		// End
 
 		// Staff
-		$institutionId = $this->Session->read('Institutions.id');
-		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
 		$staffOptions = $Staff
 			->find()
 			->where([$Staff->aliasField('institution_site_id') => $institutionId])

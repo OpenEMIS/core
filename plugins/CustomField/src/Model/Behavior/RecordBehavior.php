@@ -16,6 +16,7 @@ class RecordBehavior extends Behavior {
 			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
 			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction'
 		],
+		'model' => null,
 		'behavior' => null,
 		'moduleKey' => 'custom_module_id',
 		'fieldKey' => 'custom_field_id',
@@ -57,6 +58,11 @@ class RecordBehavior extends Behavior {
 		$this->CustomForms = $this->CustomFields->CustomForms;
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
+
+		$model = $this->config('model');
+		if (empty($model)) {
+			$this->config('model', $this->_table->registryAlias());
+		}
     }
 
     public function implementedEvents() {
@@ -181,7 +187,7 @@ class RecordBehavior extends Behavior {
 					->where([$this->CustomForms->aliasField('id') => $customFormId]);
 			}
 		} else {
-			$where = [$this->CustomModules->aliasField('model') => $this->_table->registryAlias()];
+			$where = [$this->CustomModules->aliasField('model') => $this->config('model')];
 			if ($this->config('behavior')) {
 				$where[$this->CustomModules->aliasField('behavior')] = $this->config('behavior');
 			}
@@ -233,7 +239,23 @@ class RecordBehavior extends Behavior {
 		$customFieldQuery = $this->CustomFormsFields
 			->find('all')
 			->find('order')
-			->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+			->contain([
+				'CustomFields.CustomFieldOptions' => function($q) {
+					return $q
+						->find('visible')
+						->find('order');
+				},
+				'CustomFields.CustomTableColumns' => function ($q) {
+			       return $q
+			       		->find('visible')
+			       		->find('order');
+			    },
+				'CustomFields.CustomTableRows' => function ($q) {
+			       return $q
+			       		->find('visible')
+			       		->find('order');
+			    }
+			])
 			->where([
 				$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
 			])

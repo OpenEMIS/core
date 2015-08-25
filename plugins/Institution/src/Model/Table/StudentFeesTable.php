@@ -39,8 +39,8 @@ class StudentFeesTable extends AppTable {
 		 * Shortcuts
 		 */
 		$this->AcademicPeriods = $this->InstitutionSiteFees->AcademicPeriods;
-		$this->InstitutionSiteGrades = $this->InstitutionSiteFees->Institutions->InstitutionSiteGrades;	
-		$this->InstitutionGradeStudents = $this->InstitutionSiteFees->Institutions->InstitutionGradeStudents;
+		$this->InstitutionGrades = $this->InstitutionSiteFees->Institutions->InstitutionGrades;	
+		$this->StudentPromotion = $this->InstitutionSiteFees->Institutions->StudentPromotion;
 
 	}
 
@@ -79,7 +79,7 @@ class StudentFeesTable extends AppTable {
 			'openemis_no', 'name', 'total', 'amount', 'outstanding'
 		]);
 
-		$settings['model'] = 'Institution.InstitutionGradeStudents';
+		$settings['model'] = 'Institution.StudentPromotion';
 
 		$conditions = array(
 			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
@@ -92,7 +92,7 @@ class StudentFeesTable extends AppTable {
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
@@ -148,7 +148,7 @@ class StudentFeesTable extends AppTable {
     public function viewBeforeAction(Event $event) {}
 
 	private function setupViewEdit($id) {
-		$this->ControllerAction->model('Institution.InstitutionGradeStudents');
+		$this->ControllerAction->model('Institution.StudentPromotion');
 		$this->ControllerAction->model->ControllerAction = $this->ControllerAction;
 		$idKey = $this->ControllerAction->model->aliasField('id');
 
@@ -233,7 +233,8 @@ class StudentFeesTable extends AppTable {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->ControllerAction->Alert->warning('general.notExists');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			return $this->controller->redirect($action);
 		}	   		
 	}
@@ -259,7 +260,7 @@ class StudentFeesTable extends AppTable {
 					$paymentField = $this->createVirtualPaymentEntity($entity);
 				} else {
 					$totalAmount = $this->getRecordsTotalAmount($data[$this->alias()]);
-					if ($totalAmount > $data['InstitutionGradeStudents']['outstanding']) {
+					if ($totalAmount > $data['StudentPromotion']['outstanding']) {
 						$this->ControllerAction->Alert->error('StudentFees.totalAmountExceeded');
 					} else {
 
@@ -288,7 +289,8 @@ class StudentFeesTable extends AppTable {
 						    	$this->save($studentFee);
 							}
 							$this->ControllerAction->Alert->success('general.edit.success');
-							$action = $this->ControllerAction->buttons['view']['url'];
+							// $action = $this->ControllerAction->buttons['view']['url'];
+							$action = $this->ControllerAction->url('view');
 							return $this->controller->redirect($action);
 						} else {
 							$payments = $updatedPayments;
@@ -306,7 +308,8 @@ class StudentFeesTable extends AppTable {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->ControllerAction->Alert->warning('general.notExists');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			return $this->controller->redirect($action);
 		}
 	}

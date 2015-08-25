@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
 use App\Model\Table\AppTable;
 
@@ -25,7 +26,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('InstitutionSiteOwnerships', 		['className' => 'Institution.Ownerships']);
 		$this->belongsTo('InstitutionSiteStatuses', 		['className' => 'Institution.Statuses']);
 		$this->belongsTo('InstitutionSiteSectors', 			['className' => 'Institution.Sectors']);
-		$this->belongsTo('InstitutionSiteProviders', 		['className' => 'Institution.Providers']);
+		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
 		$this->belongsTo('InstitutionSiteGenders', 			['className' => 'Institution.Genders']);
 
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
@@ -45,7 +46,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences', 'dependent' => true]);
 
-		$this->hasMany('InstitutionSiteStudents', 			['className' => 'Institution.InstitutionSiteStudents', 'dependent' => true]);
+		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'foreignKey' => 'institution_id']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
@@ -53,8 +54,9 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
+		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
 		
-		$this->hasMany('InstitutionGradeStudents', 			['className' => 'Institution.InstitutionGradeStudents', 'foreignKey' => 'institution_id', 'dependent' => true]);
+		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'foreignKey' => 'institution_id', 'dependent' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
@@ -80,10 +82,12 @@ class InstitutionsTable extends AppTable  {
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         $this->addBehavior('AdvanceSearch');
-        $this->addBehavior('Excel', ['excludes' => ['security_group_id']]);
+        $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
+
+
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
@@ -285,7 +289,7 @@ class InstitutionsTable extends AppTable  {
 			$modelName = $params[0];
 			$modelId = $params[1];
 			$key = $params[2];
-			$params['key'] = $key;
+			$params['key'] = __($key);
 
 			foreach ($conditions as $key => $value) {
 				$_conditions[$modelName.'.'.$key] = $value;
@@ -306,7 +310,7 @@ class InstitutionsTable extends AppTable  {
 			$dataSet = [];
 			foreach ($institutionSiteTypesCount as $key => $value) {
 	            // Compile the dataset
-				$dataSet[] = [$value['name'], $value['count']];
+				$dataSet[] = [__($value['name']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}
@@ -332,7 +336,46 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {
-		return $entity->Areas['name'];
+		$areaName = $entity->Areas['name'];
+
+		if($this->action == 'index'){
+			// Getting the system value for the area
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$areaLevel = $ConfigItems->value('institution_area_level_id');
+
+			// Getting the current area id
+			$areaId = $entity->area_id;
+			try {
+				if ($areaId > 0) {
+					$path = $this->Areas
+						->find('path', ['for' => $areaId])
+						->toArray();
+
+					foreach($path as $value){
+						if ($value['area_level_id'] == $areaLevel) {
+							$areaName = $value['name'];
+						}
+					}
+				}
+			} catch (InvalidPrimaryKeyException $ex) {
+				$this->log($ex->getMessage(), 'error');
+			}
+		}
+
+		return $areaName;
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'area_id' && $this->action == 'index') {
+			// Getting the system value for the area
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$areaLevel = $ConfigItems->value('institution_area_level_id');
+
+			$AreaTable = TableRegistry::get('Area.AreaLevels');
+			return $AreaTable->get($areaLevel)->name;
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -341,7 +384,7 @@ class InstitutionsTable extends AppTable  {
 			'contain' => ['InstitutionSiteTypes'],
 			'select' => [
 				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-				'Areas.name', 'InstitutionSiteTypes.name'
+				$this->aliasField('area_id'), 'Areas.name', 'InstitutionSiteTypes.name'
 			],
 			'join' => [
 				[
@@ -350,7 +393,7 @@ class InstitutionsTable extends AppTable  {
 				]
 			]
 		];
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->contain($options['query']['contain']);
 		$query->select($options['query']['select']);
 		$query->join($options['query']['join']);
@@ -358,6 +401,20 @@ class InstitutionsTable extends AppTable  {
 		$queryParams = $request->query;
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
+		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$search = $this->ControllerAction->getSearchKey();
+		if (empty($search)) {
+			// redirect to school dashboard if it is only one record and no add access
+			$addAccess = $this->AccessControl->check(['Institutions', 'add']);
+			if ($data->count() == 1 && !$addAccess) {
+				$entity = $data->first();
+				$event->stopPropagation();
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $entity->id];
+				return $this->controller->redirect($action);
+			}
 		}
 	}
 

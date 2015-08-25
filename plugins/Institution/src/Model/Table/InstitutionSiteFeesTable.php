@@ -39,7 +39,7 @@ class InstitutionSiteFeesTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-    	$this->ControllerAction->field('total', ['type' => 'float', 'visible' => ['index'=>true, 'edit'=>true]]);
+    	$this->ControllerAction->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
     	$this->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'visible' => ['edit'=>true]]);
     	$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
     	$this->ControllerAction->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
@@ -56,35 +56,38 @@ class InstitutionSiteFeesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction($event) {
+    public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->setFieldOrder([
 			'education_programme', 'education_grade_id', 'total'
 		]);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
 
 		$Fees = $this;
 		$institutionId = $this->institutionId;
-		$this->advancedSelectOptions($this->_academicPeriodOptions, $this->_selectedAcademicPeriodId, [
+
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
 			'callable' => function($id) use ($Fees, $institutionId) {
 				return $Fees->find()->where(['institution_site_id'=>$institutionId, 'academic_period_id'=>$id])->count();
 			}
 		]);
+		
+		$this->controller->set('selectedOption', $selectedOption);
+		$this->controller->set(compact('academicPeriodOptions'));
 
 		$toolbarElements = [
-            ['name' => 'Institution.Fees/controls', 
-             'data' => [
-	            	'academicPeriodOptions'=>$this->_academicPeriodOptions,
-	            ],
-	         'options' => []
-            ]
-        ];
-
+			['name' => 'Institution.Fees/controls', 'data' => [], 'options' => []]
+		];
 		$this->controller->set('toolbarElements', $toolbarElements);
-		
-	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->find('withProgrammes');
+		$academicPeriodId = $selectedOption;
+		$query
+			->find('withProgrammes')
+			->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
 	}
 
     public function findWithProgrammes(Query $query, array $options) {
@@ -243,7 +246,7 @@ class InstitutionSiteFeesTable extends AppTable {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $this->_academicPeriodOptions);
 		}
  		
-		$this->_gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$attr['options'] = $this->_gradeOptions;
 		return $attr;
 	}
