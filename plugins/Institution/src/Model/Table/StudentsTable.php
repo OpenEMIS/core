@@ -107,6 +107,16 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
+		
+		$AdmissionTable = $this->StudentStatuses;
+		$pendingAdmissionStatus = $AdmissionTable->getIdByCode('PENDING_ADMISSION');
+		$rejectedStatus = $AdmissionTable->getIdByCode('REJECTED');
+		$selectedStatus = $this->request->query('status_id');
+		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
+			// Redirect to the appropriate page
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -140,25 +150,18 @@ class StudentsTable extends AppTable {
 		$educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
 		$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
 
-		$AdmissionTable = $this->StudentStatuses;
-		$pendingAdmissionStatus = $AdmissionTable->getIdByCode('PENDING_ADMISSION');
-		$rejectedStatus = $AdmissionTable->getIdByCode('REJECTED');
-
 		// Query Strings
 		$selectedStatus = $this->queryString('status_id', $statusOptions);
 		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
 
-		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
-			// Redirect to the appropriate page
-			$event->stopPropagation();
-			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'StudentAdmission', 'plugin'=>'Institution']);
-		}
+
 
 		// Advanced Select Options
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
 		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
+
 
 		if ($selectedEducationGrades != -1) {
 			$query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
