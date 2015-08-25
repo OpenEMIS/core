@@ -421,12 +421,12 @@ trait MessagesTrait {
 				]
 			],
 			'Students' => [
-				'student_id' => [
+				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.'
 				]
 			],
 			'Staff' => [
-				'security_user_id' => [
+				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				]
 			]
