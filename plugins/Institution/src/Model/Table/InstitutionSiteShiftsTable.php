@@ -22,6 +22,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
 	
 		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('OpenEmis.Autocomplete');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -126,20 +127,31 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	}
 
-	public function addEditOnChangeLocationInstitutionSiteId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$shiftDataArray = $data[$this->alias()];
+		if($shiftDataArray['location_institution_site_id'] == 0) {
+			$attr['type'] = 'autocomplete';
+			$attr['target'] = ['key' => 'location_institution_site_id', 'name' => $this->aliasField('location_institution_site_id')];
+			$attr['noResults'] = __('No Institutions found');
+			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
+			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'ajaxInstitutionAutocomplete'];
 
+			$this->ControllerAction->field('other_school_id', ['visible' => true, 'attr' => $attr]);
+		} else {
+			$this->ControllerAction->field('other_school_id', ['visible' => false]);
+		}
 	}	
 
-	// public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
-	// 	$options = $this->getOptionList();
-	// 	$selectedLocation = $this->queryString('location_institution_site_id', $options);
-	// 	if($selectedLocation == 0){
-	// 		$this->ControllerAction->field('other_school_id', ['visible' => true, 'type' => 'select']);
-	// 	}
-	// 	// $periodId = key($this->fields['location_institution_site_id']['options']);
-	// 	// 		pr($periodId);
-	// 	// $this->ControllerAction->field('other_school_id', ['visible' => true, 'type' => 'select']);
-	// }
+	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
+		$attr['onChangeReload'] = 'changeLocation';
+		if ($action != 'add') {
+			$attr['visible'] = false;
+		}
+
+		return $attr;
+	}	
+
+	
 
 
 /******************************************************************************************************************
