@@ -34,11 +34,11 @@ class StudentAdmissionTable extends AppTable {
 		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
 		$typeToShow = [];
 
-		if ($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'view'])) {
+		if ($this->AccessControl->check(['Institutions', 'TransferApprovals', 'view'])) {
 			$typeToShow[] = self::TRANSFER;
 		}
 
-		if ($this->AccessControl->check([$this->controller->name, 'StudentAdmission', 'view'])) {
+		if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'view'])) {
 			$typeToShow[] = self::ADMISSION;
 		}
 
@@ -141,7 +141,7 @@ class StudentAdmissionTable extends AppTable {
 			$action = 'TransferApprovals';
 		}
 		if ($entity->status == self::NEW_REQUEST) {
-			if ($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit'])) {
+			if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
 				return $event->subject()->Html->link($entity->user->name, [
 					'plugin' => $urlParams['plugin'],
 					'controller' => $urlParams['controller'],
@@ -180,7 +180,7 @@ class StudentAdmissionTable extends AppTable {
 		if ($this->action == 'edit') {
 			// If the status is new application then display the approve and reject button, 
 			// if not remove the button just in case the user gets to access the edit page
-			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				$buttons[0] = [
 					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
 					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
@@ -250,7 +250,7 @@ class StudentAdmissionTable extends AppTable {
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				$startDate = $request->data[$this->alias()]['start_date'];
 				$attr['type'] = 'readonly';
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
@@ -261,7 +261,7 @@ class StudentAdmissionTable extends AppTable {
 
 	public function onUpdateFieldComment(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				$attr['type'] = 'readonly';
 			}
 			return $attr;
@@ -291,7 +291,7 @@ class StudentAdmissionTable extends AppTable {
 		$newItem = [];
 		if ($entity->status == 'New') {
 			$newItem['view'] = $buttons['view'];
-			if ($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit'])) {
+			if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
 				$newItem['edit'] = $buttons['edit'];
 			}
 		} else {
@@ -321,7 +321,7 @@ class StudentAdmissionTable extends AppTable {
 			}
 			unset($toolbarButtons['back']['url'][1]);
 		} else if ($action == 'view') {
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				unset($toolbarButtons['edit']);
 			}
 		}

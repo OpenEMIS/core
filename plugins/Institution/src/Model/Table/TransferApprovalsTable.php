@@ -192,7 +192,7 @@ class TransferApprovalsTable extends AppTable {
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			// If it is not a new request, disable this field
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
 				$startDate = $request->data[$this->alias()]['start_date'];
 				$attr['type'] = 'readonly';
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
@@ -258,7 +258,7 @@ class TransferApprovalsTable extends AppTable {
 		}
 
 		if ($action == 'view') {
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
 				unset($toolbarButtons['edit']);
 			}
 		}
@@ -310,7 +310,7 @@ class TransferApprovalsTable extends AppTable {
 		if ($this->action == 'edit') {
 			// If the status is new application then display the approve and reject button, 
 			// if not remove the button just in case the user gets to access the edit page
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
 				$buttons[0] = [
 					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
 					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
@@ -321,6 +321,7 @@ class TransferApprovalsTable extends AppTable {
 					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
 				];
 			} else {
+				pr($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST);
 				unset($buttons[0]);
 				unset($buttons[1]);
 			}
