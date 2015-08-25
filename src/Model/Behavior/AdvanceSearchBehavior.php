@@ -101,9 +101,26 @@ class AdvanceSearchBehavior extends Behavior {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
 		$conditions = '';
 		foreach ($this->data as $key=>$value) {
-			if (!empty($value) && $value>0) {
-				$conditions[$this->model->aliasField($key)] = $value;
-        	}
+			if( $key == 'area_id' || $key == 'area_administrative_id'){
+				$tableName = "";
+				switch ($key) {
+					case 'area_id':
+						$tableName = 'Area.Areas';
+						break;
+					case 'area_administrative_id':
+						$tableName = 'Area.AreaAdministratives';
+						break;
+				}
+				
+				// $children = $Table
+				// 	->find('children',['for' => $pathId, 'direct' => true])
+				// 	->find('threaded')
+				// 	->toArray();
+        	} else {
+				if (!empty($value) && $value>0) {
+					$conditions[$this->model->aliasField($key)] = $value;
+	        	}
+			}
         }
 
         if (!empty($conditions)) {
