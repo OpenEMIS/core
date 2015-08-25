@@ -188,7 +188,7 @@ class TransferRequestsTable extends AppTable {
     // do the same for TransferApproval
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		if ($entity->type == self::TRANSFER) {
+		if ($entity->type != self::TRANSFER) {
 			$event->stopPropagation();
 			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
 		}

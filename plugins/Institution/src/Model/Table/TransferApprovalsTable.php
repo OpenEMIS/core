@@ -48,7 +48,7 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		if ($entity->type == self::TRANSFER) {
+		if ($entity->type != self::TRANSFER) {
 			$event->stopPropagation();
 			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
 		}
@@ -247,7 +247,7 @@ class TransferApprovalsTable extends AppTable {
 					'receive_date' => $receivedDate,
 					'due_date' => '<i class="fa fa-minus"></i>',
 					'requester' => $obj->created_user->username,
-					'type' => __('Student Transfer')
+					'type' => __('Transfer')
 				];
 			}
 		}
