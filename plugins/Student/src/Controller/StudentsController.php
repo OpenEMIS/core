@@ -19,6 +19,7 @@ class StudentsController extends AppController {
 			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
+			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Comments' 			=> ['className' => 'User.Comments'],
 			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
