@@ -87,7 +87,7 @@ class AcademicPeriodsTable extends AppTable {
 					->first()
 					->id;
 
-				$action = $this->ControllerAction->buttons['index']['url'];
+				$action = $this->ControllerAction->url('index');
 				$action['parent'] = $parentId;
 				return $this->controller->redirect($action);
 			}

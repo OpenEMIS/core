@@ -180,4 +180,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 
 DELETE FROM `student_statuses` WHERE `code` = 'EXPELLED';
 
+UPDATE `security_functions` SET `_execute` = 'Students.excel' WHERE `id` = 1012;
+UPDATE `security_functions` SET `_execute` = 'Staff.excel' WHERE `id` = 1016;
+
 UPDATE `config_items` SET `value` = '3.0.8' WHERE `code` = 'db_version';

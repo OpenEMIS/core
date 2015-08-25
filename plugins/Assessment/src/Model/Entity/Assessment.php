@@ -2,7 +2,6 @@
 namespace Assessment\Model\Entity;
 
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 
 class Assessment extends Entity
 {
