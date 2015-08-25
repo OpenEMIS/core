@@ -84,6 +84,7 @@ class StudentAdmissionTable extends AppTable {
     }
 
     public function viewAfterAction($event, Entity $entity) {
+    	$this->request->data[$this->alias()]['status'] = $entity->status;
 		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'type', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
@@ -316,7 +317,9 @@ class StudentAdmissionTable extends AppTable {
 			}
 			unset($toolbarButtons['back']['url'][1]);
 		} else if ($action == 'view') {
-			unset($toolbarButtons['edit']);
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				unset($toolbarButtons['edit']);
+			}
 		}
 	}
 

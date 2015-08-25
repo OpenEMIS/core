@@ -13,3 +13,4 @@ ADD COLUMN `type` INT(1) NOT NULL DEFAULT 2 COMMENT '1 -> Admission, 2 -> Transf
 
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'student_id', 'Student', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'created', 'Date of Application', '1', NOW());
+INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('TransferApprovals', 'created', 'Date of Application', '1', NOW());
