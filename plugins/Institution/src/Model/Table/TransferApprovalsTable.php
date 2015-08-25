@@ -192,7 +192,7 @@ class TransferApprovalsTable extends AppTable {
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			// If it is not a new request, disable this field
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
 				$startDate = $request->data[$this->alias()]['start_date'];
 				$attr['type'] = 'readonly';
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
@@ -258,7 +258,7 @@ class TransferApprovalsTable extends AppTable {
 		}
 
 		if ($action == 'view') {
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
 				unset($toolbarButtons['edit']);
 			}
 		}
@@ -266,7 +266,7 @@ class TransferApprovalsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		if ($AccessControl->check(['Dashboard', 'TransferApprovals', 'edit'])) {
+		if ($AccessControl->check(['Institutions', 'TransferApprovals', 'edit'])) {
 			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
 			$institutionIds = $AccessControl->getInstitutionsByUser();
 
@@ -310,7 +310,7 @@ class TransferApprovalsTable extends AppTable {
 		if ($this->action == 'edit') {
 			// If the status is new application then display the approve and reject button, 
 			// if not remove the button just in case the user gets to access the edit page
-			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit']))) {
 				$buttons[0] = [
 					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
 					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
