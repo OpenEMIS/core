@@ -93,11 +93,11 @@ class StudentFeesTable extends AppTable {
 			'attr'=>[
 				'label' => false, 
 				'name'=>'',
-				'class' => "form-control total_payments",
+				'class' => "form-control inputs_total_payments",
 				'computetype' => "total_payments",
-				'onblur' => "return payments.checkDecimal(this, 4);",
+				'onblur' => "jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this); return fees.checkDecimal(this, 2);",
+				'onclick' => "fees.selectAll(this); ",
 				'onkeypress' => "return utility.floatCheck(event)",
-				'onkeyup' => "jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this); ",
 				'allownull' => "0",
 				'onfocus' => "$(this).select();",
 				'data-compute-variable' => "true",
@@ -110,6 +110,15 @@ class StudentFeesTable extends AppTable {
     	$this->StudentFeesAbstract->fields['created'] = false;
 
     	$this->StudentFeesAbstract->setFieldOrder(['payment_date', 'amount', 'comments']);
+	}
+
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		if ($action == 'edit' || $action == 'add') {
+			$includes['fees'] = [
+				'include' => true,
+				'js' => ['Institution.../js/fees']
+			];
+		}
 	}
 
 
@@ -368,18 +377,20 @@ class StudentFeesTable extends AppTable {
 					}
 				}
 				if (!$error) {
-					if ($StudentFees->deleteAll([
+					$count = $StudentFees->find('all')->where([
 						'institution_fee_id' => $institution_fee_id,
 						'student_id' => $student_id
-					])) {
-						foreach ($fees as $fee) {
-					    	$StudentFees->save($fee);
-						}
-						return true;
-					} else {
-						Log::error("failed to deleteAll\n", ['scope' => ['Institution.StudentFees']]);
+					])->count();
+					if ($count>0) {
+						$StudentFees->deleteAll([
+							'institution_fee_id' => $institution_fee_id,
+							'student_id' => $student_id
+						]);
 					}
-					
+					foreach ($fees as $fee) {
+				    	$StudentFees->save($fee);
+					}
+					return true;
 				} else {
 					$errorMessage='';
 					foreach ($error as $key=>$value) {

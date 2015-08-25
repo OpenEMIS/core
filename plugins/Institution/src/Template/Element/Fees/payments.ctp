@@ -2,46 +2,10 @@
 <?php $action = 'edit'; ?>
 <script type="text/javascript">
 	$(function() {
-		payments.init('total_payments');
+		fees.load('total_payments');
 		jsTable.computeTotalForMoney('total_payments');
 		jsForm.compute(this);
 	});
-	var payments = {
-		init: function(className) {
-			$('.'+className).each(function(index, value){
-				$(this).trigger('onblur');
-			});
-		},
-		checkDecimal: function(obj, dec) {
-			var numbers = (obj.value).split('.');
-			if (numbers.length>dec) {
-				obj.value = numbers[0] + '.' + payments.appendDecimals(numbers[1], dec);
-			} else if (numbers.length<dec && numbers.length>0 && typeof(numbers[1])!=='undefined') {
-				obj.value = numbers[0] + '.' + payments.appendDecimals(numbers[1], dec);
-			} else if (typeof(numbers[1])==='undefined') {
-				obj.value = numbers[0] + '.' + payments.appendDecimals(false, dec);
-			} else {
-				obj.value = '0.' + payments.appendDecimals(false, dec);
-			}
-		},
-		appendDecimals: function(numberPart, dec) {
-			if (numberPart.length>dec) {
-				return numberPart.substring(0, dec);	
-			} else if (!numberPart) {
-				numberPart = 0;
-				for (var i=1; i<dec; i++) {
-					numberPart = numberPart + '0';
-				}
-				return numberPart;	
-			} else {
-				var remainder = dec - numberPart.length;
-				for (var i=0; i<remainder; i++) {
-					numberPart = numberPart + '0';
-				}
-				return numberPart;	
-			}
-		}
-	};
 </script>
 <div class="input clearfix">
 	<div class="clearfix">
