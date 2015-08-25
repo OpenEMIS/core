@@ -381,11 +381,38 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// note that $this->table('institution_site_staff');
+		$id = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$securityUserId = $entity->security_user_id;
+
+		// sets the staff_id in institution_site_sections to 0 if the staff was allocated to it
+		// todobug: possible problem as it will set all the sections to 0, including previous period sections
+		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$InstitutionSiteSections->updateAll(
+				['security_user_id' => 0],
+				['security_user_id' => $securityUserId, 'institution_site_id' => $institutionId]
+			);
+
+		// delete the staff from subjects		
+		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+		$classStaffQuery = $InstitutionSiteClassStaff->find()
+			->contain('InstitutionSiteClasses')
+			->where(
+				[
+					'InstitutionSiteClasses.institution_site_id' => $institutionId, 
+					$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId
+				]
+			)
+			;
+		foreach ($classStaffQuery as $key => $value) {
+			$InstitutionSiteClassStaff->delete($value);
+		}
+
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
-		$institutionId = $entity->institution_site_id;
 		try {
 			$institutionEntity = $this->Institutions->get($institutionId);
 			$groupId = $institutionEntity->security_group_id;
