@@ -429,8 +429,10 @@ class UserGroupsTable extends AppTable {
 					]
 				]
 			)
-			->toArray()
 			;
+
+		// pr($matchingInstitutionsQuery->toArray());
+		// 	die;
 		$matchingInstitutions = [];
 		foreach ($matchingInstitutionsQuery as $key => $value) {
 			$matchingInstitutions[] = $value->id;
@@ -460,31 +462,34 @@ class UserGroupsTable extends AppTable {
 		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 		$matchingSecurityGroups = [];
 		if (!empty($matchingInstitutions)) {
-			$query = $SecurityGroupInstitutions->find()
+			$sgInstitutionQuery = $SecurityGroupInstitutions->find()
 						->select('security_group_id')
-						->where([$SecurityGroupInstitutions->aliasField('institution_site_id') => $matchingInstitutions])
+						->where([$SecurityGroupInstitutions->aliasField('institution_site_id').' IN ' => $matchingInstitutions])
 			;
-			foreach ($query as $key => $value) {
+			foreach ($sgInstitutionQuery as $key => $value) {
 				$matchingSecurityGroups[] = $value->security_group_id;
 			}
 		}
 		
 		if (!empty($matchingAreas)) {
-			$query = $SecurityGroupAreas->find()
+			$sgAreaQuery = $SecurityGroupAreas->find()
 						->select('security_group_id')
-						->where([$SecurityGroupAreas->aliasField('area_id') => $matchingAreas])
+						->where([$SecurityGroupAreas->aliasField('area_id').' IN ' => $matchingAreas])
 			;
-			foreach ($query as $key => $value) {
+			foreach ($sgAreaQuery as $key => $value) {
 				$matchingSecurityGroups[] = $value->security_group_id;
 			}
 		}
 
 		// pr($matchingSecurityGroups);
 
-		$query->where([$this->aliasField("name").' LIKE' => '%' . $search . '%']);
-		if ($matchingSecurityGroups) {
-			$query->orWhere([$this->aliasField('id') => $matchingSecurityGroups]);
-		}
+		$searchCondition = [];
+		$searchCondition['OR'] = [];
+		$searchCondition['OR'][$this->aliasField("name").' LIKE'] = '%' . $search . '%';
+		if (!empty($matchingSecurityGroups)) {
+			$searchCondition['OR'][$this->aliasField('id').' IN '] = $matchingSecurityGroups;
+		}	
+		$query->where($searchCondition);
 	}
 
 	public function findNotInInstitutions(Query $query, array $options) {
