@@ -150,14 +150,6 @@ class StudentAdmissionTable extends AppTable {
 					'1' => $entity->id
 				]);
 			}
-		} else {
-			return $event->subject()->Html->link($entity->user->name, [
-				'plugin' => $urlParams['plugin'],
-				'controller' => $urlParams['controller'],
-				'action' => $action,
-				'0' => 'view',
-				'1' => $entity->id
-			]);
 		}
 	}
 
@@ -289,13 +281,21 @@ class StudentAdmissionTable extends AppTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$newItem = [];
-		if ($entity->status == 'New') {
-			$newItem['view'] = $buttons['view'];
+
+		$status = $this->get($entity->id)->status;
+		if ($status == self::NEW_REQUEST) {
+			if (isset($buttons['view'])) {
+				$newItem['view'] = $buttons['view'];
+			}
 			if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
-				$newItem['edit'] = $buttons['edit'];
+				if (isset($buttons['edit'])) {
+					$newItem['edit'] = $buttons['edit'];
+				}
 			}
 		} else {
-			$newItem['view'] = $buttons['view'];
+			if (isset($buttons['view'])) {
+				$newItem['view'] = $buttons['view'];
+			}
 		}
 		$buttons = $newItem;
 
