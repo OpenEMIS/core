@@ -14,6 +14,5 @@ UPDATE `security_functions` SET `controller`='Institutions', `_view`='TransferAp
 INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
 VALUES ('Student Admission', 'Institutions', 'Institutions', 'Students', 1000, 'StudentAdmission.index|StudentAdmission.view', 'StudentAdmission.edit|StudentAdmission.view', 1024, 1, 1, NOW());
 
-INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'student_id', 'Student', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'created', 'Date of Application', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('TransferApprovals', 'created', 'Date of Application', '1', NOW());
