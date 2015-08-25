@@ -145,6 +145,10 @@ trait MessagesTrait {
 		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+			'payment_date' => 'Payment Date',
+			'created_user_id' => 'Created By',
+			'comments' => 'Comments',
+			'amount' => 'Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',

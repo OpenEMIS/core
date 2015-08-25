@@ -72,7 +72,7 @@
 				<thead>
 					<tr>
 						<th><?= __('Type') ?></th>
-						<th><?= __('Amount ('.$attr['currency'].')') ?></th>
+						<th class="text-right"><?= __('Amount ('.$attr['currency'].')') ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -81,7 +81,7 @@
 					foreach ($attr['data'] as $i=>$obj) : ?>
 					<tr>
 						<td><?= $obj['type'] ?></td>
-						<td class="cell-number"><?php echo $obj['amount'] ?></td>
+						<td class="text-right"><?php echo $obj['amount'] ?></td>
 					</tr>
 				<?php
 					endforeach;
@@ -92,8 +92,8 @@
 				<?php if (isset($attr['data']) && !empty($attr['data'])) : ?>
 				
 				<tfoot>
-					<td class="cell-number bold"><?php echo $this->Label->get('general.total') ?></td>
-					<td class="cell-number bold"><?php echo $attr['total'] ?></td>
+					<td class="bold"><?php echo $this->Label->get('general.total') ?></td>
+					<td class="text-right bold"><?php echo $attr['total'] ?></td>
 				</tfoot>
 				
 				<?php

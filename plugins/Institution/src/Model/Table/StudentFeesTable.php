@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
+use Cake\Log\Log;
 
 class StudentFeesTable extends AppTable {
 	public $institutionId = 0;
@@ -94,7 +95,7 @@ class StudentFeesTable extends AppTable {
 				'name'=>'',
 				'class' => "form-control total_payments",
 				'computetype' => "total_payments",
-				'onblur' => "return utility.checkDecimal(this, 2)",
+				'onblur' => "return payments.checkDecimal(this, 4);",
 				'onkeypress' => "return utility.floatCheck(event)",
 				'onkeyup' => "jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this); ",
 				'allownull' => "0",
@@ -349,8 +350,6 @@ class StudentFeesTable extends AppTable {
 				$fees = $StudentFees->newEntities($data['StudentFeesAbstract']);
 				$error = false;
 				$totalPaid = 0.00;
-				$student_id='';
-	            $institution_fee_id='';
 				foreach ($fees as $key=>$fee) {
 				    if ($fee->errors()) {
 				    	$error = $fee->errors();
@@ -369,14 +368,18 @@ class StudentFeesTable extends AppTable {
 					}
 				}
 				if (!$error) {
-					$StudentFees->deleteAll([
-						$StudentFees->aliasField('institution_fee_id') => $institution_fee_id,
-						$StudentFees->aliasField('student_id') => $student_id
-					]);
-					foreach ($fees as $fee) {
-				    	$StudentFees->save($fee);
+					if ($StudentFees->deleteAll([
+						'institution_fee_id' => $institution_fee_id,
+						'student_id' => $student_id
+					])) {
+						foreach ($fees as $fee) {
+					    	$StudentFees->save($fee);
+						}
+						return true;
+					} else {
+						Log::error("failed to deleteAll\n", ['scope' => ['Institution.StudentFees']]);
 					}
-					return true;
+					
 				} else {
 					$errorMessage='';
 					foreach ($error as $key=>$value) {
