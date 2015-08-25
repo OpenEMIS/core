@@ -10,6 +10,9 @@ ALTER TABLE `institution_student_transfers`
 CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ,
 ADD COLUMN `type` INT(1) NOT NULL DEFAULT 2 COMMENT '1 -> Admission, 2 -> Transfer' AFTER `comment`, RENAME TO  `institution_student_admission` ;
 
+UPDATE `security_functions` SET `controller`='Institutions', `_view`='TransferApprovals.view', `_execute`='TransferApprovals.edit|TransferApprovals.view' WHERE `name`='Transfer Approval';
+INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES ('Student Admission', 'Institutions', 'Institutions', 'Students', 1000, 'StudentAdmission.index|StudentAdmission.view', 'StudentAdmission.edit|StudentAdmission.view', 1024, 1, 1, NOW());
 
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'student_id', 'Student', '1', NOW());
 INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'created', 'Date of Application', '1', NOW());
