@@ -32,7 +32,16 @@ class StudentAdmissionTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
-		$typeToShow = [self::TRANSFER, self::ADMISSION];
+		$typeToShow = [];
+
+		if ($this->AccessControl->check([$this->controller->name, 'TransferApprovals', 'edit'])) {
+			$typeToShow[] = self::TRANSFER;
+		}
+
+		if ($this->AccessControl->check([$this->controller->name, 'StudentAdmission', 'edit'])) {
+			$typeToShow[] = self::ADMISSION;
+		}
+
 		$query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
 	}
 
@@ -125,13 +134,25 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function onGetStudentId(Event $event, Entity $entity){
+		$urlParams = $this->ControllerAction->url('index');
+		$action = $urlParams['action'];
+		if ($entity->type == self::TRANSFER) {
+			$action = 'TransferApprovals';
+		}
 		if ($entity->status == self::NEW_REQUEST) {
-			$urlParams = $this->ControllerAction->url('index');
 			return $event->subject()->Html->link($entity->user->name, [
 				'plugin' => $urlParams['plugin'],
 				'controller' => $urlParams['controller'],
-				'action' => $urlParams['action'],
+				'action' => $action,
 				'0' => 'edit',
+				'1' => $entity->id
+			]);
+		} else {
+			return $event->subject()->Html->link($entity->user->name, [
+				'plugin' => $urlParams['plugin'],
+				'controller' => $urlParams['controller'],
+				'action' => $action,
+				'0' => 'view',
 				'1' => $entity->id
 			]);
 		}
@@ -332,24 +353,6 @@ class StudentAdmissionTable extends AppTable {
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
 
-				// For transfer in request only
-				// Start of code
-				if ($entity->type == self::TRANSFER) {
-					$Students = TableRegistry::get('Institution.Students');
-					$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-					$statuses = $StudentStatuses->findCodeList();
-					$Students->updateAll(
-						['student_status_id' => $statuses['TRANSFERRED'], 'end_date' => $startDate],
-						[
-							'institution_id' => $previousSchoolId,
-							'student_id' => $studentId,
-							'academic_period_id' => $periodId,
-							'education_grade_id' => $gradeId
-						]
-					);
-				}
-				// End of code
-
 				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;
@@ -363,45 +366,43 @@ class StudentAdmissionTable extends AppTable {
 		} else {
 			$this->Alert->error('StudentAdmission.exists');
 		}
+
+		// To redirect back to the student admission if it is not access from the workbench
+		$urlParams = $this->ControllerAction->url('index');
+		$plugin = false;
+		$controller = 'Dashboard';
+		$action = 'index';
+		if ($urlParams['controller'] == 'Institutions') {
+			$plugin = 'Institution';
+			$controller = 'Institutions';
+			$action = 'StudentAdmission';
+		}
+
 		$event->stopPropagation();
-		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-
-		// For transfer in request only
-		if ($entity->type == self::TRANSFER) {
-			// Update status to Current in previous school
-			$institutionId = $entity->previous_institution_id;
-			$selectedStudent = $entity->student_id;
-			$selectedPeriod = $entity->academic_period_id;
-			$selectedGrade = $entity->education_grade_id;
-
-			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			$currentStatus = $StudentStatuses->getIdByCode('CURRENT');
-
-			$Students = TableRegistry::get('Institution.Students');
-			$Students->updateAll(
-				['student_status_id' => $currentStatus],
-				[
-					'institution_id' => $institutionId,
-					'student_id' => $selectedStudent,
-					'academic_period_id' => $selectedPeriod,
-					'education_grade_id' => $selectedGrade
-				]
-			);
-		}
-
+		
 		$entity->comment = $data['StudentAdmission']['comment'];
-		// Update status to 2 => reject
 		$this->updateAll(
 			['status' => self::REJECTED, 'comment' => $entity->comment], 
 			['id' => $entity->id]);
-		// End
 
 		$this->Alert->success('StudentAdmission.reject');
-		$event->stopPropagation();
 
-		return $this->controller->redirect(['plugin' => false, 'plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+		// To redirect back to the student admission if it is not access from the workbench
+		$urlParams = $this->ControllerAction->url('index');
+		$plugin = false;
+		$controller = 'Dashboard';
+		$action = 'index';
+		if ($urlParams['controller'] == 'Institutions') {
+			$plugin = 'Institution';
+			$controller = 'Institutions';
+			$action = 'StudentAdmission';
+		}
+
+		$event->stopPropagation();
+		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
 }

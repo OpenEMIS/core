@@ -204,10 +204,16 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'edit') {
-			$toolbarButtons['back']['url']['action'] = 'index';
-			unset($toolbarButtons['back']['url'][0]);
-			unset($toolbarButtons['back']['url'][1]);
+		if ($action == 'edit' || $action == 'view') {
+			if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
+				$toolbarButtons['back']['url']['action']= 'index';
+				unset($toolbarButtons['back']['url'][0]);
+				unset($toolbarButtons['back']['url'][1]);
+			} else if ($toolbarButtons['back']['url']['controller']=='Institutions') {
+				$toolbarButtons['back']['url']['action']= 'StudentAdmission';
+				unset($toolbarButtons['back']['url'][0]);
+				unset($toolbarButtons['back']['url'][1]);
+			}
 		}
 	}
 
@@ -324,8 +330,19 @@ class TransferApprovalsTable extends AppTable {
 			$this->Alert->error('TransferApprovals.exists');
 		}
 
+		// To redirect back to the student admission if it is not access from the workbench
+		$urlParams = $this->ControllerAction->url('index');
+		$plugin = false;
+		$controller = 'Dashboard';
+		$action = 'index';
+		if ($urlParams['controller'] == 'Institutions') {
+			$plugin = 'Institution';
+			$controller = 'Institutions';
+			$action = 'StudentAdmission';
+		}
+
 		$event->stopPropagation();
-		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -355,8 +372,19 @@ class TransferApprovalsTable extends AppTable {
 		// End
 
 		$this->Alert->success('TransferApprovals.reject');
-		$event->stopPropagation();
+		
+		// To redirect back to the student admission if it is not access from the workbench
+		$urlParams = $this->ControllerAction->url('index');
+		$plugin = false;
+		$controller = 'Dashboard';
+		$action = 'index';
+		if ($urlParams['controller'] == 'Institutions') {
+			$plugin = 'Institution';
+			$controller = 'Institutions';
+			$action = 'StudentAdmission';
+		}
 
-		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+		$event->stopPropagation();
+		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
 }
