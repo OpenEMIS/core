@@ -73,7 +73,7 @@ class StudentsTable extends AppTable {
 			->add('academic_period_id', [
 			])
 			// ->allowEmpty('student_id') required for create new but disabling for now
-			->add('student_id', 'ruleInstitutionStudentId', [
+			->add('student_name', 'ruleInstitutionStudentId', [
 				'rule' => ['institutionStudentId'],
 				'on' => 'create'
 			])
@@ -180,14 +180,6 @@ class StudentsTable extends AppTable {
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
 	}
 
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$errors = $entity->errors();
-		if (!empty($errors)) {
-			$entity->unsetProperty('student_id');
-			unset($data[$this->alias()]['student_id']);
-		}
-	}
-
 	public function onGetStudentId(Event $event, Entity $entity) {
 		$value = '';
 		if ($entity->has('user')) {
@@ -250,7 +242,8 @@ class StudentsTable extends AppTable {
 			$studentCount = $this->find()
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
-					$this->aliasField('academic_period_id') => $periodId
+					$this->aliasField('academic_period_id') => $periodId,
+					'OR' => [['student_status_id' => 1], ['student_status_id' => 2]]
 				])
 				->group(['student_id'])
 				->count();
@@ -288,6 +281,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('student_name');
+
 		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $sectionOptions, $selectedSection) = array_values($this->_getSelectOptions());
 
 		$this->ControllerAction->field('academic_period_id', ['options' => $periodOptions]);
@@ -305,7 +300,7 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('end_date', ['period' => $period]);
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_id'
+			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_name'
 		]);
 
 		$this->setupTabElements($entity);
@@ -406,6 +401,15 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['visible'] = false;
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldStudentName(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'student_id', 'name' => $this->aliasField('student_id')];
@@ -546,7 +550,7 @@ class StudentsTable extends AppTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'index') { // for promotion button in index page
-			if ($this->AccessControl->check(['Institutions', 'Grades', 'indexEdit'])) {
+			if ($this->AccessControl->check(['Institutions', 'Promotion', 'indexEdit'])) {
 				$graduateButton = $buttons['index'];
 				$graduateButton['url']['action'] = 'Promotion';
 				$graduateButton['url'][0] = 'index';
@@ -639,6 +643,18 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGender($params=[]) {
+		$studentsConditions = [
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
+			'Users.date_of_death IS NULL',
+		];
+
+		if (!empty($params['institution_id'])) {
+			$studentsConditions = array_merge($studentsConditions, ['institution_id' => $params['institution_id']]);
+		}
+
+		if (!empty($params['academic_period_id'])) {
+			$studentsConditions = array_merge($studentsConditions, ['academic_period_id' => $params['academic_period_id']]);
+		}
 
 		$institutionSiteRecords = $this->find();
 		$institutionSiteStudentCount = $institutionSiteRecords
@@ -647,15 +663,10 @@ class StudentsTable extends AppTable {
 				'count' => $institutionSiteRecords->func()->count('DISTINCT student_id'),	
 				'gender' => 'Genders.name'
 			])
+			->where($studentsConditions)
 			->group('gender');
 
-		if (!empty($params['institution_id'])) {
-			$institutionSiteStudentCount->where(['institution_id' => $params['institution_id']]);
-		}
 
-		if (!empty($params['academic_period_id'])) {
-			$institutionSiteStudentCount->where(['academic_period_id' => $params['academic_period_id']]);
-		}
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -671,6 +682,7 @@ class StudentsTable extends AppTable {
 	public function getNumberOfStudentsByAge($params=[]) {
 
 		$studentsConditions = [
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			'Users.date_of_death IS NULL',
 		];
 
@@ -730,7 +742,7 @@ class StudentsTable extends AppTable {
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
 		$studentsByGradeConditions = [
-			$this->aliasField('student_status_id') => 1,
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 		];
 
@@ -819,7 +831,7 @@ class StudentsTable extends AppTable {
 				->select([
 					'Users.first_name',
 					'Genders.name',
-					'total' => $query->func()->count($this->aliasField('id'))
+					'total' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
 				])
 				->where($studentsByYearConditions)
 				->group('Genders.name')
@@ -856,7 +868,7 @@ class StudentsTable extends AppTable {
 		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
 
 		$studentsByGradeConditions = [
-			$this->aliasField('student_status_id') => 1,
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('academic_period_id') => $currentYearId,
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 			'Genders.name IS NOT NULL'
