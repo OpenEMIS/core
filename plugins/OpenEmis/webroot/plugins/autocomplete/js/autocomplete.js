@@ -65,6 +65,11 @@ var Autocomplete = {
 			text.remove();
 		}
 		obj.after(Autocomplete.loader);
+
+		var beforeSearch = obj.attr('autocomplete-before-search');
+		if (beforeSearch != undefined) {
+			eval(beforeSearch);
+		}
 	},
 
 	searchComplete: function(event, ui) {
@@ -87,8 +92,16 @@ var Autocomplete = {
 			if (cls != undefined) {
 				text.addClass(cls);
 			}
-			text.html(noResultsTxt);
-			obj.after(text);
+
+			if (noResultsTxt != 'false') {
+				text.html(noResultsTxt);
+				obj.after(text);
+			}
+
+			var onNoResults = obj.attr('autocomplete-on-no-results');
+			if (onNoResults != undefined) {
+				eval(onNoResults);
+			}
 		}
 	},
 

@@ -87,6 +87,8 @@ trait MessagesTrait {
 			'date_closed' => 'Date Closed',
 		],
 		'InstitutionSiteStaff' => [
+			'title' => 'Staff',
+			'start_date' => 'Start Date',
 			'fte' => 'FTE',
 			'total_fte' => 'Total FTE',
 		],
@@ -115,9 +117,11 @@ trait MessagesTrait {
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
-			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty'
+			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
+
 		],
 		'InstitutionSiteClasses' => [
+			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
 			'classes' => 'Subjects',
@@ -131,6 +135,10 @@ trait MessagesTrait {
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
+		'Students' => [
+			'noGrades' => 'No Grades',
+			'noStudents' => 'No Student found'
+		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
 		],
@@ -139,6 +147,11 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
+			'save' => [
+				'draft' => 'Assessment record has been saved to draft successfully.',
+				'final' => 'Assessment record has been submitted successfully.',
+				'failed' => 'The record is not saved due to errors encountered.',
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
@@ -150,6 +163,10 @@ trait MessagesTrait {
 			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
@@ -195,6 +212,19 @@ trait MessagesTrait {
 		'SystemRoles' => [
 			'tabTitle' => 'System Roles'
 		],
+		'SurveyTemplates' => [
+			'survey_module_id' => 'Module'
+		],
+		'SurveyQuestions' => [
+			'survey_template_id' => 'Survey Template'
+		],
+		'SurveyStatuses' => [
+			'survey_template_id' => 'Survey Template'
+		],
+		'SurveyForms' => [
+			'add_question' => 'Add Question',
+			'add_to_section' => 'Add to Section'
+		],
 		'time' => [
 			'start' => 'Start Time',
 			'end' => 'End Time',
@@ -205,6 +235,8 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'select_student_empty' => 'No Other Student Available',
+			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',
@@ -227,19 +259,37 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
-		'StudentTransfers' => [
-			'request' => 'Transfer request has been submitted successfully.',
-			'approve' => 'Transfer request has been approved successfully.',
-			'reject' => 'Transfer request has been rejected successfully.',
-			'noProgrammes' => 'No Available Programmes'
+		'StudentBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStudents' => 'No Students'
 		],
-
+		'StaffBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStaff' => 'No Staff'
+		],
+		'TransferRequests' => [
+			'request' => 'Transfer request has been submitted successfully.',
+		],
+		'TransferApprovals' => [
+			'exists' => 'Student is already exists in the new school',
+			'approve' => 'Transfer request has been approved successfully.',
+			'reject' => 'Transfer request has been rejected successfully.'
+		],
+		'StudentPromotion' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
+			'noData' => 'There are no available Students for Promotion / Graduation.',
+			'current_period' => 'Current Academic Period',
+			'next_period' => 'Next Academic Period',
+			'success' => 'Students have been promoted.'
+		],
 
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There is no subject in the selected class',
+				'noSubjectsInSection' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
 				'noSections' => 'There is no class under the selected academic period',
@@ -269,6 +319,11 @@ trait MessagesTrait {
 					'unique' => 'This Education Programme already exists in the system'
 				],
 				'noGrade' => 'There is no grade selected',
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
@@ -309,9 +364,19 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
-			'StudentTransfers' => [
+			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'Students' => [
+				'student_id' => [
+					'ruleInstitutionStudentId' => 'Student has already been added.'
+				]
+			],
+			'Staff' => [
+				'security_user_id' => [
+					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				]
 			]
 		],
@@ -501,6 +566,11 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Start Date cannot be later than End Date',
 				]
 			],
+			'Guardians' => [
+				'guardian_id' => [
+					'ruleStudentGuardianId' => 'This guardian has already added.'
+				]
+			]
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',
@@ -591,6 +661,13 @@ trait MessagesTrait {
 				],
 				'current' => [
 					'ruleValidateNeeded' => 'Academic Period needs to be set as current'
+				]
+			]
+		],
+		'Localization' => [
+			'Translations' => [
+				'en' => [
+					'ruleUnique' => 'This translation is already exists'
 				]
 			]
 		],

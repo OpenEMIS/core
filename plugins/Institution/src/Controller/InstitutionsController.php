@@ -22,33 +22,36 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
 
-			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
-			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions', 'options' => ['deleteStrategy' => 'transfer']],
+			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
 			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
+			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 			'StaffPositions' 	=> ['className' => 'Institution.StaffPositions'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
+			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view']],
+			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'edit', 'remove']],
 			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
-			'Transfers' 		=> ['className' => 'Institution.StudentTransfers', 'actions' => ['index', 'add']],
+			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
+			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['add', 'edit', 'remove']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
 			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'edit']],
 
 			// Surveys
-			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['!add']],
+			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
 
 			// Quality
 			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['!add']],
@@ -176,7 +179,14 @@ class InstitutionsController extends AppController  {
 		$session = $this->request->session();
 
 		if (!$this->request->is('ajax')) {
-			if ($model->hasField('institution_site_id')) {
+			if ($model->hasField('institution_id')) {
+				if (!$session->check('Institutions.id')) {
+					$this->Alert->error('general.notExists');
+					// should redirect
+				} else {
+					$query->where([$model->aliasField('institution_id') => $session->read('Institutions.id')]);
+				}
+			} else if ($model->hasField('institution_site_id')) { // will need to remove this part once we change institution_sites to institutions
 				if (!$session->check('Institutions.id')) {
 					$this->Alert->error('general.notExists');
 					// should redirect
@@ -202,23 +212,23 @@ class InstitutionsController extends AppController  {
 
 			//Students By Year
 			$params = array(
-				'conditions' => array('institution_site_id' => $id)
+				'conditions' => array('institution_id' => $id)
 			);
-			$InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+			$InstitutionSiteStudents = TableRegistry::get('Institution.Students');
 			$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_year', $params);
 			
 			//Students By Grade for current year
 			$params = array(
-				'conditions' => array('institution_site_id' => $id)
+				'conditions' => array('institution_id' => $id)
 			);
-			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$highChartDatas[] = $InstitutionSiteSectionStudents->getHighChart('number_of_students_by_grade', $params);
+
+			$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_grade', $params);
 
 			//Staffs By Position for current year
 			$params = array(
 				'conditions' => array('institution_site_id' => $id)
 			);
-			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+			$InstitutionSiteStaff = TableRegistry::get('Institution.Staff');
 			$highChartDatas[] = $InstitutionSiteStaff->getHighChart('number_of_staff', $params);
 
 			$this->set('highChartDatas', $highChartDatas);

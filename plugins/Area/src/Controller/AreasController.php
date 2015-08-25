@@ -58,6 +58,7 @@ class AreasController extends AppController
 	}
 
 	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id) {
+		$this->getView()->layout('ajax');
 		$rootId = -1; // Root node
 
 		$Table = TableRegistry::get($tableName);	
@@ -119,6 +120,5 @@ class AreasController extends AppController
 		}
 
 		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName'));
-		$this->layout = false;
 	}
 }

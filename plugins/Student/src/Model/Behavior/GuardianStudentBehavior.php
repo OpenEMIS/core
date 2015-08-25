@@ -160,19 +160,19 @@ class GuardianStudentBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSave(Event $event, Controller $controller, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		// that function removes the session and makes it redirect to 
 		// index without any named params
 		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
 		$action = $this->_table->ControllerAction->buttons['index']['url'];
 		if (array_key_exists('new', $action)) {
-			$session = $controller->request->session();
+			$session = $this->controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
 			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
 			unset($action['new']);
 		}
 		$event->stopPropagation();
-		return $controller->redirect($action);
+		return $this->controller->redirect($action);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

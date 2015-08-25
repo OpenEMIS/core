@@ -5,6 +5,7 @@ use Cake\I18n\Time;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class AccessControlComponent extends Component {
 	private $controller;
@@ -138,10 +139,11 @@ class AccessControlComponent extends Component {
 
 		// we only need controller and action
 		foreach ($url as $i => $val) {
-			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val)) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val)) {
 				unset($url[$i]);
 			}
 		}
+		// Log::write('debug', $url);
 
 		if (empty($url)) {
 			$url = [$this->controller->name, $this->action];
@@ -150,16 +152,22 @@ class AccessControlComponent extends Component {
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
 		// pr($permissionKey);
-
+		
 		if ($this->Session->check($permissionKey)) {
 			if ($roleId != 0) {
 				$roles = $this->Session->read($permissionKey);
 				return in_array($roleId, $roles);
 			} else {
+				// Log::write('debug', $permissionKey);
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public function isAdmin() {
+		$superAdmin = $this->Auth->user('super_admin');
+		return $superAdmin == 1;
 	}
 
 	// determines whether the action is required for access control checking
@@ -196,10 +204,37 @@ class AccessControlComponent extends Component {
 		return $data;
 	}
 
-	// to be implemented for Student Transfer
-	public function getInstitutionsByUser($userId = null, $url = null) {
+	public function getInstitutionsByUser($userId = null) {
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
 		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$groupIds = $SecurityGroupUsers
+		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
+		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+		->toArray();
+
+		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$institutionIds = $SecurityGroupInstitutions
+		->find('list', ['keyField' => 'institution_site_id', 'valueField' => 'institution_site_id'])
+		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
+		->toArray();
+
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$areaInstitutions = $SecurityGroupAreas
+		->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
+		->select(['Institutions.id'])
+		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
+		->innerJoin(['Areas' => 'areas'], [
+			'Areas.lft >= AreaAll.lft',
+			'Areas.rght <= AreaAll.rght'
+		])
+		->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.area_id = Areas.id'])
+		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
+		->toArray();
+
+		$institutionIds = $institutionIds + $areaInstitutions;
+		return $institutionIds;
 	}
 }

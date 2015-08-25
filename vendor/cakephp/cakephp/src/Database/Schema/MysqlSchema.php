@@ -221,9 +221,12 @@ class MysqlSchema extends BaseSchema
     public function describeForeignKeySql($tableName, $config)
     {
         $sql = 'SELECT * FROM information_schema.key_column_usage AS kcu
-			INNER JOIN information_schema.referential_constraints AS rc
-			ON (kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME)
-			WHERE kcu.TABLE_SCHEMA = ? AND kcu.TABLE_NAME = ? and rc.TABLE_NAME = ?';
+            INNER JOIN information_schema.referential_constraints AS rc
+            ON (
+                kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+                AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
+            )
+            WHERE kcu.TABLE_SCHEMA = ? AND kcu.TABLE_NAME = ? AND rc.TABLE_NAME = ?';
 
         return [$sql, [$config['database'], $tableName, $tableName]];
     }
@@ -332,8 +335,12 @@ class MysqlSchema extends BaseSchema
         if (isset($data['null']) && $data['null'] === false) {
             $out .= ' NOT NULL';
         }
+        $addAutoIncrement = (
+            [$name] == (array)$table->primaryKey() &&
+            !$table->hasAutoIncrement()
+        );
         if (in_array($data['type'], ['integer', 'biginteger']) &&
-            ([$name] == (array)$table->primaryKey() || $data['autoIncrement'] === true)
+            ($data['autoIncrement'] === true || $addAutoIncrement)
         ) {
             $out .= ' AUTO_INCREMENT';
         }
@@ -418,7 +425,7 @@ class MysqlSchema extends BaseSchema
                 ' FOREIGN KEY (%s) REFERENCES %s (%s) ON UPDATE %s ON DELETE %s',
                 implode(', ', $columns),
                 $this->_driver->quoteIdentifier($data['references'][0]),
-                $this->_driver->quoteIdentifier($data['references'][1]),
+                $this->_convertConstraintColumns($data['references'][1]),
                 $this->_foreignOnClause($data['update']),
                 $this->_foreignOnClause($data['delete'])
             );
