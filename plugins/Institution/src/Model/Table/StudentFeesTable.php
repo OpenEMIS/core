@@ -39,7 +39,7 @@ class StudentFeesTable extends AppTable {
 		 * Shortcuts
 		 */
 		$this->AcademicPeriods = $this->InstitutionSiteFees->AcademicPeriods;
-		$this->InstitutionSiteGrades = $this->InstitutionSiteFees->Institutions->InstitutionSiteGrades;	
+		$this->InstitutionGrades = $this->InstitutionSiteFees->Institutions->InstitutionGrades;	
 		$this->StudentPromotion = $this->InstitutionSiteFees->Institutions->StudentPromotion;
 
 	}
@@ -95,7 +95,7 @@ class StudentFeesTable extends AppTable {
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
@@ -236,7 +236,8 @@ class StudentFeesTable extends AppTable {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->ControllerAction->Alert->warning('general.notExists');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			return $this->controller->redirect($action);
 		}	   		
 	}
@@ -291,7 +292,8 @@ class StudentFeesTable extends AppTable {
 						    	$this->save($studentFee);
 							}
 							$this->ControllerAction->Alert->success('general.edit.success');
-							$action = $this->ControllerAction->buttons['view']['url'];
+							// $action = $this->ControllerAction->buttons['view']['url'];
+							$action = $this->ControllerAction->url('view');
 							return $this->controller->redirect($action);
 						} else {
 							$payments = $updatedPayments;
@@ -309,7 +311,8 @@ class StudentFeesTable extends AppTable {
 			$this->controller->set('data', $entity);
 		} else {
 			$this->ControllerAction->Alert->warning('general.notExists');
-			$action = $this->ControllerAction->buttons['index']['url'];
+			// $action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index');
 			return $this->controller->redirect($action);
 		}
 	}

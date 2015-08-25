@@ -150,6 +150,11 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
+			'save' => [
+				'draft' => 'Assessment record has been saved to draft successfully.',
+				'final' => 'Assessment record has been submitted successfully.',
+				'failed' => 'The record is not saved due to errors encountered.',
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
@@ -250,6 +255,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'select_student_empty' => 'No Other Student Available',
 			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
@@ -273,10 +279,19 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
+		'StudentBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStudents' => 'No Students'
+		],
+		'StaffBehaviours' => [
+			'noSections' => 'No Sections',
+			'noStaff' => 'No Staff'
+		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
 		],
 		'TransferApprovals' => [
+			'exists' => 'Student is already exists in the new school',
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
@@ -375,12 +390,12 @@ trait MessagesTrait {
 				]
 			],
 			'Students' => [
-				'student_id' => [
+				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.'
 				]
 			],
 			'Staff' => [
-				'security_user_id' => [
+				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				]
 			]

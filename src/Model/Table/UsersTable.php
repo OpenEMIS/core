@@ -44,6 +44,9 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('photo_content', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
+		$this->ControllerAction->field('is_student', ['visible' => false]);
+		$this->ControllerAction->field('is_staff', ['visible' => false]);
+		$this->ControllerAction->field('is_guardian', ['visible' => false]);
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
 		$controller = $this->controller;
@@ -132,7 +135,7 @@ class UsersTable extends AppTable {
 
 		// pr($entity);
 		$this->controller->set('data', $entity);
-		$this->controller->render('/ControllerAction/edit');
+		$this->ControllerAction->renderView('/ControllerAction/edit');
 	}
 
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
