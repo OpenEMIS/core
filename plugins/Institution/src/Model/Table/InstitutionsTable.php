@@ -47,11 +47,12 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences', 'dependent' => true]);
 
 		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'foreignKey' => 'institution_id']);
+		$this->hasMany('StudentsAbstract', 					['className' => 'Institution.StudentsAbstract', 'dependent' => true, 'foreignKey' => 'institution_id']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
+		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
@@ -202,7 +203,7 @@ class InstitutionsTable extends AppTable  {
 		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
         if ($entity->isNew()) {
-			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
+			$obj = $SecurityGroup->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
 			$securityGroup = $SecurityGroup->save($obj);
 			if ($securityGroup) {
 				// add the relationship of security group and institutions
@@ -226,7 +227,7 @@ class InstitutionsTable extends AppTable  {
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);
 				if (is_object($obj)) {
-					$data = ['name' => $entity->name];
+					$data = ['name' => $entity->code . ' - ' . $entity->name];
 					$obj = $SecurityGroup->patchEntity($obj, $data);
 					$securityGroup = $SecurityGroup->save($obj);
 					if (!$securityGroup) {

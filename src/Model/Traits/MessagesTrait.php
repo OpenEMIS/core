@@ -134,9 +134,10 @@ trait MessagesTrait {
 			'students' => 'Students',
 			'teachers' => 'Teachers',
 		],
-		'InstitutionSiteFees' => [
+		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+			'fee_payments_exists' => 'Unable to delete this record due to payments by students already exists'
 		],
 		'Students' => [
 			'noGrades' => 'No Grades',
@@ -144,6 +145,10 @@ trait MessagesTrait {
 		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+			'payment_date' => 'Payment Date',
+			'created_user_id' => 'Created By',
+			'comments' => 'Comments',
+			'amount' => 'Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
@@ -338,6 +343,9 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
+				],
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
 				]
 			],
 			

@@ -1,134 +1,206 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
-
+<?php $action = 'edit'; ?>
+<script type="text/javascript">
+	$(function() {
+		payments.init('total_payments');
+		jsTable.computeTotalForMoney('total_payments');
+		jsForm.compute(this);
+	});
+	var payments = {
+		init: function(className) {
+			$('.'+className).each(function(index, value){
+				$(this).trigger('onblur');
+			});
+		},
+		checkDecimal: function(obj, dec) {
+			var numbers = (obj.value).split('.');
+			if (numbers.length>dec) {
+				obj.value = numbers[0] + '.' + payments.appendDecimals(numbers[1], dec);
+			} else if (numbers.length<dec && numbers.length>0 && typeof(numbers[1])!=='undefined') {
+				obj.value = numbers[0] + '.' + payments.appendDecimals(numbers[1], dec);
+			} else if (typeof(numbers[1])==='undefined') {
+				obj.value = numbers[0] + '.' + payments.appendDecimals(false, dec);
+			} else {
+				obj.value = '0.' + payments.appendDecimals(false, dec);
+			}
+		},
+		appendDecimals: function(numberPart, dec) {
+			if (numberPart.length>dec) {
+				return numberPart.substring(0, dec);	
+			} else if (!numberPart) {
+				numberPart = 0;
+				for (var i=1; i<dec; i++) {
+					numberPart = numberPart + '0';
+				}
+				return numberPart;	
+			} else {
+				var remainder = dec - numberPart.length;
+				for (var i=0; i<remainder; i++) {
+					numberPart = numberPart + '0';
+				}
+				return numberPart;	
+			}
+		}
+	};
+</script>
 <div class="input clearfix">
 	<div class="clearfix">
 	<?php
-		echo $this->Form->input('Add Payment', [
+		echo $this->Form->input('<i class="fa fa-plus"></i> <span>Add New Payment</span>', [
 			'label' => __('Payments'),
 			'type' => 'button',
-			'class' => 'btn btn-dropdown action-toggle btn-single-action',
+			'class' => 'btn btn-default',
 			'aria-expanded' => 'true',
-			'onclick' => "$('#reload').val('add').click();"
+			'onclick' => "$('#reload').val('reload').click();"
 		]);
 	?>
 	</div>
 
-	<div id="payments-table">
-		<table class="table table-striped table-hover table-bordered">
+	<div class="table-in-view col-md-4 table-responsive">
+	    <table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
 					<?php foreach ($attr['fields'] as $key=>$field) : ?>
 
-						<?php if ($field['type']!='hidden') : ?>
-							<th><?= $field['tableHeader'] ?></th>
+						<?php if (isset($field['field'])) : ?>
+							<?php if ($field['type']!='hidden') : ?>
+								<th><?= $field['tableHeader'] ?></th>
+								<th></th>
+							<?php endif; ?>
 						<?php endif; ?>
 		
 					<?php endforeach ?>
 
 					<th class="cell-delete"></th>
-
 				</tr>
 			</thead>
 
-			<?php if (isset($attr['data']) || isset($attr['paymentField'])) : ?>
+			<tbody id='table_total_payments'>
+			<?php if (isset($attr['data']) || isset($attr['paymentFields'])) : ?>
 
-			<tbody>
-
-				<?php if (isset($attr['paymentField']) && !empty($attr['paymentField'])) : ?>
-
+				<?php $recordKey = 0; ?>
+				<?php foreach ($attr['paymentFields'] as $i=>$record) : ?>
+					<?php $recordKey = $i; ?>
 					<tr>
 						<?php foreach ($attr['fields'] as $key=>$field) : ?>
 
-							<?php $field['attr']['name'] = $field['model'].'[new]['.$field['field'].']';?>
-							<?php $field['fieldName'] = $field['model'].'[new]['.$field['field'].']';?>
-							<?php $field['attr']['id'] = strtolower($field['model']).'-new-'.$field['field'];?>
-							<?php $field['attr']['value'] = $attr['paymentField']->$field['field'];?>
+							<?php if (isset($field['field'])) : ?>
+								<?php 
+									$field['attr']['name'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
+									$field['attr']['id'] = strtolower($field['model']).'-'.$recordKey.'-'.$field['field'];
+									$field['attr']['value'] = $record->$field['field'];
+									$field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
+									$tdClass = ''; 
+									if ($record->errors($field['field'])) {
+										$field['attr']['class'] = 'form-error';
+										$tdClass = 'error';
+									}
+								?>
 
-							<?php if ($field['type']=='hidden') : ?>
-								<?= $this->HtmlField->{$field['type']}($action, $attr['paymentField'], $field, $field['attr']);?>
-							<?php else: ?>
-								<td><?= $this->HtmlField->{$field['type']}($action, $attr['paymentField'], $field, $field['attr']);?></td>
+								<?php if ($field['type']=='hidden') : ?>
+									<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
+								<?php else: ?>
+
+									<td class="<?= $tdClass ?>">
+										<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
+									</td>
+									
+									<td class="<?= $tdClass ?>">
+										<?php if ($record->errors($field['field'])) : ?>
+											<ul class="error-message">
+											<?php foreach ($record->errors($field['field']) as $error) : ?>
+												<li><?= $error ?></li>
+											<?php endforeach ?>
+											</ul>
+										<?php else: ?>
+											&nbsp;
+										<?php endif; ?>
+									</td>
+									
+								<?php endif; ?>
+
 							<?php endif; ?>
-			
+				
 						<?php endforeach ?>
-						
-						<td> 
-							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
-								<?= __('<i class="fa fa-close"></i> Remove') ?>
-							</button>
-						</td>
-
-					</tr>
-
-				<?php endif; ?>
-		
-				<?php foreach ($attr['data'] as $i=>$record) : ?>
-
-					<tr>
-						<?php foreach ($attr['fields'] as $key=>$field) : ?>
-
-							<?php $field['attr']['name'] = $field['model'].'['.$i.']['.$field['field'].']';?>
-							<?php $field['fieldName'] = $field['model'].'['.$i.']['.$field['field'].']';?>
-							<?php $field['attr']['id'] = strtolower($field['model']).'-'.$i.'-'.$field['field'];?>
-							<?php $field['attr']['value'] = $record->$field['field'];?>
-
-							<?php
-							$tdClass = ''; 
-							if ($record->errors($field['field'])) {
-								$field['attr']['class'] = 'form-error';
-								$tdClass = 'error';
-							}
-							?>
-
-							<?php if ($field['type']=='hidden') : ?>
-								<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
-							<?php else: ?>
 							
-								<td class="<?= $tdClass ?>"><?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
-									<?php if ($record->errors($field['field'])) : ?>
-										<ul class="error-message">
-										<?php foreach ($record->errors($field['field']) as $error) : ?>
-											<li><?= $error ?></li>
-										<?php endforeach ?>
-										</ul>
-									<?php endif; ?>
-								</td>
-								
-							<?php endif; ?>
-			
-						<?php endforeach ?>
-						
 						<td> 
-							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
-								<?= __('<i class="fa fa-close"></i> Remove') ?>
-							</button>
+							<?php
+							echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
+								'label' => false,
+								'type' => 'button',
+								'class' => 'btn btn-dropdown action-toggle btn-single-action',
+								'title' => "Delete",
+								'aria-expanded' => 'true',
+								'onclick' => "jsTable.doRemove(this); jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this); "
+							]);
+							?>
 						</td>
 					</tr>
 
 				<?php endforeach ?>
 
-			</tbody>
-			
 			<?php else : ?>
 
-				<tr>&nbsp;</tr>
+				<tr>
+					<?php foreach ($attr['fields'] as $key=>$field) : ?>
+
+						<?php if (isset($field['field'])) : ?>
+							<?php if ($field['type']!='hidden') : ?>
+								<td></td>
+								<td></td>
+							<?php endif; ?>
+						<?php endif; ?>
+		
+					<?php endforeach ?>
+					<td></td>
+				</tr>
 			
 			<?php endif; ?>
 
+			</tbody>
+			
+			<?php 
+				$tdClass = '';
+				$ulClass = 'hidden';
+				$spanClass = '';
+				$errorMessage = '';
+				if (array_key_exists($model, $this->request->data) && is_array($this->request->data[$model]['amount_paid'])) {
+					$tdClass = 'error';
+					$ulClass = '';
+					$spanClass = 'error-message';
+					$errorMessage = $this->request->data[$model]['amount_paid']['error'];
+				}
+			?>
+			<tfoot>
+				<tr>
+					<td class="cell-number"><?php echo $this->Label->get('general.total') ?></td>
+					<td></td>
+					<td class="<?= $tdClass ?>">
+						<span class="<?= $spanClass ?>"><?= $attr['currency']?></span>
+						<span class="total_payments cell-number <?= $spanClass ?>"><?= $attr['amount_paid']; ?></span>
+					</td>
+					<td class="<?= $tdClass ?>">
+						<ul class="error-message <?= $ulClass ?>">
+							<li><?= $errorMessage ?></li>
+						</ul>
+					</td>
+					<td colspan="3"></td>
+				</tr>
+			</tfoot>
 		</table>
 	</div>
 </div>
 
 <?php else : ?>
 
-<div>
-	<table class="table table-striped table-hover table-bordered">
+<div class="table-in-view table-responsive" style="width:inherit">
+	<table class="table">
 		<thead>
 			<tr>
 				<th><?= $attr['fields']['payment_date']['tableHeader'] ?></th>
 				<th><?= $attr['fields']['created_user_id']['tableHeader'] ?></th>
 				<th><?= $attr['fields']['comments']['tableHeader'] ?></th>
-				<th><?= $attr['fields']['amount']['tableHeader'] ?></th>
+				<th class="text-right"><?= $attr['fields']['amount']['tableHeader'] ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -141,7 +213,7 @@
 				<td><?= $this->HtmlField->{$attr['fields']['payment_date']['type']}($action, $record, $attr['fields']['payment_date'], $attr['fields']['payment_date']['attr']);?></td>
 				<td><?= $this->HtmlField->{$attr['fields']['created_user_id']['type']}($action, $record, $attr['fields']['created_user_id'], $attr['fields']['created_user_id']['attr']);?></td>
 				<td><?= $this->HtmlField->{$attr['fields']['comments']['type']}($action, $record, $attr['fields']['comments'], $attr['fields']['comments']['attr']);?></td>
-				<td><?= $this->HtmlField->{$attr['fields']['amount']['type']}($action, $record, $attr['fields']['amount'], $attr['fields']['amount']['attr']);?></td>
+				<td class="text-right"><?= $this->HtmlField->{$attr['fields']['amount']['type']}($action, $record, $attr['fields']['amount'], $attr['fields']['amount']['attr']);?></td>
 			</tr>
 		<?php
 			endforeach;
@@ -153,8 +225,8 @@
 		<tfoot>
 			<td></td>
 			<td></td>
-			<td class="cell-number bold"><?php echo $this->Label->get('general.total') ?></td>
-			<td class="cell-number bold"><?php echo $attr['total'] ?></td>
+			<td class="bold"><?php echo $this->Label->get('general.total') ?></td>
+			<td class="text-right bold"><?php echo $attr['total'] ?></td>
 		</tfoot>
 		
 		<?php endif;?>
