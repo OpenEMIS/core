@@ -321,7 +321,7 @@ class StudentAdmissionTable extends AppTable {
 			}
 			unset($toolbarButtons['back']['url'][1]);
 		} else if ($action == 'view') {
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
 				unset($toolbarButtons['edit']);
 			}
 		}
