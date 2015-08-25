@@ -138,12 +138,36 @@ class RestSurveyComponent extends Component {
 			// End
 
 			$list = [];
+			$SurveyRecords = TableRegistry::get('Institution.InstitutionSurveys');
 			foreach ($institutions as $institutionId => $institution) {
-				$list[] = array(
-					'id' => $institutionId,
-					'name' => $institution,
-					// 'forms' => $forms
-				);
+				$SurveyRecords->buildSurveyRecords($institutionId);
+
+				$forms = [];
+				$surveyResults = $SurveyRecords
+					->find()
+					->where([
+						$SurveyRecords->aliasField('institution_site_id') => $institutionId,
+						$SurveyRecords->aliasField($this->formKey . ' IN') => $formIds,
+						$SurveyRecords->aliasField('status') => 0	// New
+					])
+					->all();
+
+				if (!$surveyResults->isEmpty()) {
+					$records = $surveyResults->toArray();
+					foreach ($records as $recordKey => $recordObj) {
+						$formId = $recordObj->{$this->formKey};
+						$forms[$formId]['id'] = $formId;
+						$forms[$formId]['periods'][] = $recordObj->academic_period_id;
+					}
+				}
+
+				if (!empty($forms)) {
+					$list[] = array(
+						'id' => $institutionId,
+						'name' => $institution,
+						'forms' => $forms
+					);
+				}
 			}
 
 			$result['list'] = $list;
@@ -182,14 +206,17 @@ class RestSurveyComponent extends Component {
 	}
 
 	public function upload() {
-		if ($request->is(['post', 'put'])) {
+		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->data;
             $this->log('Data:', 'debug');
     		$this->log($data, 'debug');
 
     		if (array_key_exists('response', $data)) {
+    			$CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
 				$formAlias = $this->Form->alias();
 	    		$fieldAlias = $this->Field->alias();
+	    		// To use $this->recordKey when record table is changed to institution_surveys and foreign key will become institution_survey_id
+				$recordKey = 'institution_site_survey_id';
 
 	    		$xmlResponse = $data['response'];
 	    		// line below is for testing
@@ -219,73 +246,9 @@ class RestSurveyComponent extends Component {
 	    			'created_user_id' => $createdUserId
 	    		];
 
-				$CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-				$fieldTypes = $CustomFieldTypes
-					->find('list', ['keyField' => 'code', 'valueField' => 'value'])
-					->toArray();
-
-	    		$fields = $xml->$formAlias->$fieldAlias;
-	    		foreach ($fields as $field) {
-	    			$fieldId = $field->attributes()->id->__toString();
-	    			$fieldType = $this->Field->get($fieldId)->field_type;
-	    			$fieldColumnName = $fieldTypes[$fieldType];
-	    			
-	    			switch($fieldType) {
-	    				case 'TEXT':
-	    				case 'NUMBER':
-						case 'TEXTAREA':
-						case 'DROPDOWN':
-							$answerValue = urldecode($field->__toString());
-							if (strlen($answerValue) != 0) {
-								$answerObj = [
-				    				$this->fieldKey => $fieldId,
-				    				$fieldColumnName => $answerValue,
-				    				'created_user_id' => $createdUserId
-				    			];
-				    			$formData['custom_field_values'][] = $answerObj;
-				    		}
-							break;
-						case 'CHECKBOX':
-							$answerValue = urldecode($field->__toString());
-							if (strlen($answerValue) != 0) {
-								$checkboxValues = explode(" ", $answerValue);
-								foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
-									$answerObj = [
-										$this->fieldKey => $fieldId,
-				    					$fieldColumnName => $checkboxValue,
-					    				'created_user_id' => $createdUserId
-					    			];
-					    			$formData['custom_field_values'][] = $answerObj;
-								}
-							}
-							break;
-						case 'TABLE':
-							foreach ($field->children() as $row => $rowObj) {
-								$rowId = $rowObj->attributes()->id->__toString();
-								foreach ($rowObj->children() as $col => $colObj) {
-									$colId = $colObj->attributes()->id->__toString();
-									if ($colId != 0) {
-										$cellValue = urldecode($colObj->__toString());
-										if (strlen($cellValue) != 0) {
-											$cellObj = array(
-												$this->fieldKey => $fieldId,
-							    				$this->tableColumnKey => $colId,
-							    				$this->tableRowKey => $rowId,
-							    				$fieldColumnName => $cellValue,
-							    				'created_user_id' => $createdUserId
-							    			);
-											$formData['custom_table_cells'][] = $cellObj;
-										}
-									}
-								}
-							}
-							break;
-	    			}
-				}
-
-				$CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
-				// Check for existing records and delete it before upload
-				$recordResults = $CustomRecords
+	    		// Find existing record
+	    		$recordId = null;
+	    		$recordResults = $CustomRecords
 					->find()
 					->where([
 						$CustomRecords->aliasField($this->formKey) => $formId,
@@ -295,21 +258,11 @@ class RestSurveyComponent extends Component {
 					->all();
 
 				if (!$recordResults->isEmpty()) {
-					$recordId = $recordResults->first()->id;
-					// To use $this->recordKey when record table is changed to institution_surveys and foreign key will become institution_survey_id
-					$recordKey = 'institution_site_survey_id';
-					$this->Record->deleteAll([
-						$this->Record->aliasField('id') => $recordId
-					]);
-					$this->FieldValue->deleteAll([
-						$this->FieldValue->aliasField($recordKey) => $recordId
-					]);
-					$this->TableCell->deleteAll([
-						$this->TableCell->aliasField($recordKey) => $recordId
-					]);
+					$formData['id'] = $recordResults->first()->id;
 				}
 				// End
 
+				// Update record table
 				$entity = $CustomRecords->newEntity($formData);
 				if ($CustomRecords->save($entity)) {
 					if($entity->status == 2) {
@@ -321,6 +274,114 @@ class RestSurveyComponent extends Component {
 	    			$this->log($message, 'debug');
 				} else {
 					$this->log($entity->errors(), 'debug');
+				}
+				// End
+
+				$recordId = $entity->id;
+				if (!is_null($recordId)) {
+					$CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+					$fieldTypes = $CustomFieldTypes
+						->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+						->toArray();
+
+		    		$fields = $xml->$formAlias->$fieldAlias;
+		    		foreach ($fields as $field) {
+		    			$fieldId = $field->attributes()->id->__toString();
+		    			$fieldType = $this->Field->get($fieldId)->field_type;
+		    			$fieldColumnName = $fieldTypes[$fieldType];
+
+		    			// Always delete the answers before reinsert
+		    			if ($fieldType == 'TABLE') {
+		    				$this->TableCell->deleteAll([
+								$this->TableCell->aliasField($recordKey) => $recordId,
+								$this->TableCell->aliasField($this->fieldKey) => $fieldId
+							]);
+		    			} else {
+		    				$this->FieldValue->deleteAll([
+								$this->FieldValue->aliasField($recordKey) => $recordId,
+								$this->FieldValue->aliasField($this->fieldKey) => $fieldId
+							]);
+		    			}
+
+		    			switch($fieldType) {
+		    				case 'TEXT':
+		    				case 'NUMBER':
+							case 'TEXTAREA':
+							case 'DROPDOWN':
+								$answerValue = urldecode($field->__toString());
+								if (strlen($answerValue) != 0) {
+									$answerData = [
+										$recordKey => $recordId,
+					    				$this->fieldKey => $fieldId,
+					    				$fieldColumnName => $answerValue,
+					    				'institution_site_id' => $institutionId,
+					    				'created_user_id' => $createdUserId
+					    			];
+
+					    			// Save answer
+					    			$answerEntity = $this->FieldValue->newEntity($answerData);
+									if ($this->FieldValue->save($answerEntity)) {
+									} else {
+										$this->log($answerEntity->errors(), 'debug');
+									}
+									// End
+					    		}
+								break;
+							case 'CHECKBOX':
+								$answerValue = urldecode($field->__toString());
+								if (strlen($answerValue) != 0) {
+									$checkboxValues = explode(" ", $answerValue);
+									foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
+										$answerData = [
+											$recordKey => $recordId,
+											$this->fieldKey => $fieldId,
+					    					$fieldColumnName => $checkboxValue,
+					    					'institution_site_id' => $institutionId,
+						    				'created_user_id' => $createdUserId
+						    			];
+
+						    			// Save answer
+						    			$answerEntity = $this->FieldValue->newEntity($answerData);
+										if ($this->FieldValue->save($answerEntity)) {
+										} else {
+											$this->log($answerEntity->errors(), 'debug');
+										}
+										// End
+									}
+								}
+								break;
+							case 'TABLE':
+								foreach ($field->children() as $row => $rowObj) {
+									$rowId = $rowObj->attributes()->id->__toString();
+									foreach ($rowObj->children() as $col => $colObj) {
+										$colId = $colObj->attributes()->id->__toString();
+										if ($colId != 0) {
+											$cellValue = urldecode($colObj->__toString());
+											if (strlen($cellValue) != 0) {
+												$cellData = array(
+													$recordKey => $recordId,
+													$this->fieldKey => $fieldId,
+								    				$this->tableColumnKey => $colId,
+								    				$this->tableRowKey => $rowId,
+								    				$fieldColumnName => $cellValue,
+								    				'institution_site_id' => $institutionId,
+								    				'created_user_id' => $createdUserId
+								    			);
+
+								    			// Save cell by cell
+								    			$cellEntity = $this->TableCell->newEntity($cellData);
+												if ($this->TableCell->save($cellEntity)) {
+												} else {
+													$this->log($cellEntity->errors(), 'debug');
+												}
+												// End
+											}
+										}
+									}
+								}
+								break;
+		    			}
+					}
 				}
 			}
 		}
