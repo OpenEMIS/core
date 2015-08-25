@@ -8,7 +8,7 @@ class LabelsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Labels');
+		$this->ControllerAction->model('Labels', ['!remove', '!add']);
 		$this->loadComponent('Paginator');
     }
 

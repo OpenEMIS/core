@@ -49,23 +49,6 @@ class LabelsTable extends AppTable {
 		}
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		unset($buttons['remove']);
-		return $buttons;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if($action == 'index')
-			unset($toolbarButtons['add']);
-	}
-
 	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->field('module_name', ['type' => 'readonly']);
 		$this->ControllerAction->field('field_name', ['type' => 'readonly']);
@@ -81,6 +64,8 @@ class LabelsTable extends AppTable {
 		$this->ControllerAction->field('module', ['visible' => false]);
 		$this->ControllerAction->field('field', ['visible' => false]);
 		$this->ControllerAction->field('visible', ['visible' => false]);
+		$this->ControllerAction->field('created', ['visible' => false]);
+		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 	}
 
 	public function concatenateLabel($entity){
