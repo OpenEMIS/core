@@ -239,7 +239,8 @@ class StudentsTable extends AppTable {
 			$studentCount = $this->find()
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
-					$this->aliasField('academic_period_id') => $periodId
+					$this->aliasField('academic_period_id') => $periodId,
+					'OR' => [['student_status_id' => 1], ['student_status_id' => 2]]
 				])
 				->group(['student_id'])
 				->count();
@@ -406,6 +407,7 @@ class StudentsTable extends AppTable {
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['attr']['maxlength'] = "";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
@@ -628,6 +630,18 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGender($params=[]) {
+		$studentsConditions = [
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
+			'Users.date_of_death IS NULL',
+		];
+
+		if (!empty($params['institution_id'])) {
+			$studentsConditions = array_merge($studentsConditions, ['institution_id' => $params['institution_id']]);
+		}
+
+		if (!empty($params['academic_period_id'])) {
+			$studentsConditions = array_merge($studentsConditions, ['academic_period_id' => $params['academic_period_id']]);
+		}
 
 		$institutionSiteRecords = $this->find();
 		$institutionSiteStudentCount = $institutionSiteRecords
@@ -636,15 +650,10 @@ class StudentsTable extends AppTable {
 				'count' => $institutionSiteRecords->func()->count('DISTINCT student_id'),	
 				'gender' => 'Genders.name'
 			])
+			->where($studentsConditions)
 			->group('gender');
 
-		if (!empty($params['institution_id'])) {
-			$institutionSiteStudentCount->where(['institution_id' => $params['institution_id']]);
-		}
 
-		if (!empty($params['academic_period_id'])) {
-			$institutionSiteStudentCount->where(['academic_period_id' => $params['academic_period_id']]);
-		}
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -660,6 +669,7 @@ class StudentsTable extends AppTable {
 	public function getNumberOfStudentsByAge($params=[]) {
 
 		$studentsConditions = [
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			'Users.date_of_death IS NULL',
 		];
 
@@ -719,7 +729,7 @@ class StudentsTable extends AppTable {
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
 		$studentsByGradeConditions = [
-			$this->aliasField('student_status_id') => 1,
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 		];
 
@@ -808,7 +818,7 @@ class StudentsTable extends AppTable {
 				->select([
 					'Users.first_name',
 					'Genders.name',
-					'total' => $query->func()->count($this->aliasField('id'))
+					'total' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
 				])
 				->where($studentsByYearConditions)
 				->group('Genders.name')
@@ -845,7 +855,7 @@ class StudentsTable extends AppTable {
 		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
 
 		$studentsByGradeConditions = [
-			$this->aliasField('student_status_id') => 1,
+			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('academic_period_id') => $currentYearId,
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 			'Genders.name IS NOT NULL'

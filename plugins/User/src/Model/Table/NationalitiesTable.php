@@ -13,6 +13,10 @@ class NationalitiesTable extends AppTable {
 		$this->belongsTo('Countries', ['className' => 'FieldOption.Countries']);
 	}
 
+	public function beforeAction($event) {
+		$this->fields['country_id']['type'] = 'select';
+	}
+
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}

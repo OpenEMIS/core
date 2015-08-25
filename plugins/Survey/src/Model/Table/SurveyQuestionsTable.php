@@ -11,7 +11,7 @@ class SurveyQuestionsTable extends CustomFieldsTable {
 		$this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'Survey.SurveyForms',
-			'joinTable' => 'survey_form_questions',
+			'joinTable' => 'survey_forms_questions',
 			'foreignKey' => 'survey_question_id',
 			'targetForeignKey' => 'survey_form_id'
 		]);
