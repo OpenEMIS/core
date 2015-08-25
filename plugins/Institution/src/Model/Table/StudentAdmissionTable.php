@@ -209,7 +209,7 @@ class StudentAdmissionTable extends AppTable {
 					'receive_date' => $receivedDate,
 					'due_date' => '<i class="fa fa-minus"></i>',
 					'requester' => $obj->created_user->username,
-					'type' => __('Student Admission')
+					'type' => __('Admission')
 				];
 			}
 		}
