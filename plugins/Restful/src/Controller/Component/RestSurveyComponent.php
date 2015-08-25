@@ -20,6 +20,8 @@ class RestSurveyComponent extends Component {
 
 	public $components = ['Paginator'];
 
+	public $allowedActions = array('listing', 'schools', 'download');
+
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
 		$this->action = $this->request->params['action'];
