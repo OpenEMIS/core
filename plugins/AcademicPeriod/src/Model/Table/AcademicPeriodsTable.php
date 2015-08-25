@@ -247,9 +247,9 @@ class AcademicPeriodsTable extends AppTable {
 
 			foreach ($data as $obj) {
 				if ($levelName != $obj->level) {
-					$levelName = $obj->level;
+					$levelName = __($obj->level);
 				}
-				$list[$levelName][$obj->id] = $obj->name;
+				$list[$levelName][$obj->id] = __($obj->name);
 			}
 
 			$data = $list;
