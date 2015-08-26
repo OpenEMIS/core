@@ -127,7 +127,7 @@ trait MessagesTrait {
 			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
-			'classes' => 'Subjects',
+			'subjects' => 'Subjects',
 			'education_subject' => 'Subject',
 			'class' => 'Subject',
 			'teacher' => 'Teacher',

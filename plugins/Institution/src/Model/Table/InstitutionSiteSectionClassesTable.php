@@ -61,7 +61,7 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		}
 
 		$toolbarElements = [
-            ['name' => 'Institution.Classes/controls', 
+            ['name' => 'Institution.Subjects/controls', 
              'data' => [
 	            	'academicPeriodOptions'=>$academicPeriodOptions, 
 	            	'selectedAcademicPeriod'=>$this->_selectedAcademicPeriod, 
