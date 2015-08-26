@@ -29,6 +29,14 @@ class EducationLevelsTable extends AppTable {
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
 	}
 
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		if (empty($this->request->data['transfer_to'])) {
+			$this->Alert->error('general.delete.failed');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('remove'));
+		}
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
