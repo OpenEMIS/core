@@ -129,17 +129,8 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$shiftDataArray = $data[$this->alias()];
-		if($shiftDataArray['location_institution_site_id'] == 0) {
-			$attr['type'] = 'autocomplete';
-			$attr['target'] = ['key' => 'location_institution_site_id', 'name' => $this->aliasField('location_institution_site_id')];
-			$attr['noResults'] = __('No Institutions found');
-			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
-			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'ajaxInstitutionAutocomplete'];
-
-			$this->ControllerAction->field('other_school_id', ['visible' => true, 'attr' => $attr]);
-		} else {
-			$this->ControllerAction->field('other_school_id', ['visible' => false]);
-		}
+		$visible = ($shiftDataArray['location_institution_site_id'] == 0) ? true : false;
+		$this->ControllerAction->field('other_school_id', ['visible' => $visible]);
 	}	
 
 	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
@@ -151,9 +142,16 @@ class InstitutionSiteShiftsTable extends AppTable {
 		return $attr;
 	}	
 
-	
-
-
+	public function onUpdateFieldOtherSchoolId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['type'] = 'autocomplete';
+			$attr['target'] = ['key' => 'location_institution_site_id', 'name' => $this->aliasField('location_institution_site_id')];
+			$attr['noResults'] = __('No Institutions found');
+			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
+			$attr['url'] = ['controller' => $this->controller->name, 'action' => 'ajaxInstitutionAutocomplete'];
+		}
+		return $attr;
+	}	
 /******************************************************************************************************************
 **
 ** field specific methods
