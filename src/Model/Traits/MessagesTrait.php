@@ -255,6 +255,7 @@ trait MessagesTrait {
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'select_student_empty' => 'No Other Student Available',
 			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
@@ -389,12 +390,12 @@ trait MessagesTrait {
 				]
 			],
 			'Students' => [
-				'student_id' => [
+				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.'
 				]
 			],
 			'Staff' => [
-				'security_user_id' => [
+				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				]
 			]
