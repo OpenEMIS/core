@@ -60,7 +60,7 @@ class StaffTable extends AppTable {
 			])
 			->add('institution_site_id', [
 			])
-			->add('security_user_id', 'ruleInstitutionStaffId', [
+			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
@@ -130,14 +130,6 @@ class StaffTable extends AppTable {
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
 	}
 
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$errors = $entity->errors();
-		if (!empty($errors)) {
-			$entity->unsetProperty('security_user_id');
-			unset($data[$this->alias()]['security_user_id']);
-		}
-	}
-
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->role > 0) {
 			$obj = [
@@ -152,13 +144,14 @@ class StaffTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event) {
+		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_site_position_id');
 		$this->ControllerAction->field('role');
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'security_user_id'
+			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 
 		$this->setupTabElements($entity);
@@ -248,6 +241,15 @@ class StaffTable extends AppTable {
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['visible'] = false;	
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldStaffName(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
