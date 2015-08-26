@@ -26,7 +26,7 @@ class StudentsTable extends AppTable {
 		$this->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
 			'joinTable' => 'institution_students',
-			'foreignKey' => 'student_id',
+			'foreignKey'	 => 'student_id',
 			'targetForeignKey' => 'institution_id',
 			'through' => 'Institution.Students',
 			'dependent' => true
@@ -122,6 +122,7 @@ class StudentsTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
 		$this->Session->write('Students.name', $entity->name);
+		$this->setupTabElements(['id' => $entity->id]);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -229,6 +230,11 @@ class StudentsTable extends AppTable {
 	            'order' => 1
 	        ];
 	    }
+	}
+	
+	private function setupTabElements($options) {
+		$this->controller->set('selectedAction', $this->alias);
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 
 	// Function use by the mini dashboard (For Student.Students)

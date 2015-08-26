@@ -16,7 +16,7 @@ class StudentsController extends AppController {
 
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
-			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -145,5 +145,25 @@ class StudentsController extends AppController {
 	public function excel($id=0) {
 		$this->Students->excel($id);
 		$this->autoRender = false;
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->alias => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
 	}
 }

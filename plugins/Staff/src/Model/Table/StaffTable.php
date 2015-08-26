@@ -113,6 +113,7 @@ class StaffTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the staff name in headers
 		$this->Session->write('Staff.name', $entity->name);
+		$this->setupTabElements(['id' => $entity->id]);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -202,6 +203,11 @@ class StaffTable extends AppTable {
 	            'order' => 1
 	        ];
 	    }
+	}
+	
+	private function setupTabElements() {
+		$this->controller->set('selectedAction', $this->alias);
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 
 	// Function use by the mini dashboard (For Staff.Staff)
