@@ -594,15 +594,17 @@ class RestSurveyComponent extends Component {
 													if ($col == 0) {
 														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
 														$columnNode->addAttribute("id", $col);
+														$cellType = 'output';
 													} else {
 														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
 														$columnNode->addAttribute("id", $tableColumn->id);
+														$cellType = 'input';
 													}
 
 													if ($row == 0) {
 														$tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
 														$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
-															$tbodyCell = $tbodyColumn->addChild("input", null, NS_XF);
+															$tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
 																$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
 
 														$bindNode = $modelNode->addChild("bind", null, NS_XF);
