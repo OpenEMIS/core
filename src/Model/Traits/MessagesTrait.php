@@ -281,7 +281,7 @@ trait MessagesTrait {
 			'noStaff' => 'No Available Staff'
 		],
 		'StudentBehaviours' => [
-			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes',
 			'noStudents' => 'No Students'
 		],
 		'TransferRequests' => [
