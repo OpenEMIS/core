@@ -14,7 +14,5 @@ UPDATE `security_functions` SET `controller`='Institutions', `_view`='TransferAp
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
 VALUES (1028, 'Student Admission', 'Institutions', 'Institutions', 'Students', 1000, 'StudentAdmission.index|StudentAdmission.view', 'StudentAdmission.edit|StudentAdmission.view', 1024, 1, 1, NOW());
 
--- INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StudentAdmission', 'created', 'Date of Application', '1', NOW());
--- INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('TransferApprovals', 'created', 'Date of Application', '1', NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StudentAdmission', 'created', 'Institutions -> StudentAdmission','Date of Application', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TransferApprovals', 'created', 'Institutions -> TransferApprovals','Date of Application', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StudentAdmission', 'created', 'Institutions -> Student Admission','Date of Application', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TransferApprovals', 'created', 'Institutions -> Transfer Approvals','Date of Application', 1, 1, NOW());
