@@ -75,7 +75,7 @@ class StudentBehavioursTable extends AppTable {
 		$periodOptions = $periodOptions + $AcademicPeriod->getList();
 
 		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -144,7 +144,7 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
@@ -191,7 +191,7 @@ class StudentBehavioursTable extends AppTable {
 
 	public function onUpdateFieldClass(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period'));

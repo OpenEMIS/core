@@ -89,7 +89,7 @@ class StaffBehavioursTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		if ($action == 'add') {
@@ -127,7 +127,7 @@ class StaffBehavioursTable extends AppTable {
 			}
 
 			if (!empty($selectedPeriod)) {
-				$institutionId = $this->Session->read('Institutions.id');
+				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$Staff = TableRegistry::get('Institution.Staff');
 				$staffOptions = $staffOptions + $Staff
 				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'name'])

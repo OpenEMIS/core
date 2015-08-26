@@ -4,6 +4,7 @@ namespace Student\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class StudentSectionsTable extends AppTable {
 	public function initialize(array $config) {

@@ -46,7 +46,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		list($levelOptions, $selectedLevel, $periodOptions, $selectedPeriod, $sectionOptions, $selectedSection, $gradeOptions, $selectedGrade, $classOptions, $selectedClass, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
 
 		// Academic Period Level Options
@@ -150,7 +150,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 
 	public function _getSelectOptions() {
 		$request = $this->controller->request;
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		//Return all required options and their key
 		$levelOptions = $this->AcademicPeriods->Levels
