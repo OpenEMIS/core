@@ -95,7 +95,7 @@ class RestController extends AppController
 					$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
 					$this->response->type('json');
 
-					return $this->response;
+					//return $this->response;
 				}
 			}
 		}
