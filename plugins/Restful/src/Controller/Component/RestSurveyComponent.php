@@ -7,6 +7,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
+use Cake\Log\LogTrait;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
@@ -15,6 +16,8 @@ define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
 define("NS_OE", "https://www.openemis.org");
 
 class RestSurveyComponent extends Component {
+    use LogTrait;
+    
 	public $controller;
 	public $action;
 
