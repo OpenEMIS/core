@@ -6,6 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class EducationProgrammesTable extends AppTable {
 	public function initialize(array $config) {
@@ -47,6 +48,10 @@ class EducationProgrammesTable extends AppTable {
 		}
 
 		return $attr;
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_cycle_id') => $entity->education_cycle_id]);
 	}
 
 	public function findWithCycle(Query $query, array $options) {
