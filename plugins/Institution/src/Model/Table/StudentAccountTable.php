@@ -16,7 +16,7 @@ class StudentAccountTable extends AppTable {
 		$this->table('security_users');
 		parent::initialize($config);
 		
-		$this->addBehavior('User.Account', ['userRole' => 'Students']);
+		$this->addBehavior('User.Account', ['userRole' => 'Students', 'isInstitution' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
