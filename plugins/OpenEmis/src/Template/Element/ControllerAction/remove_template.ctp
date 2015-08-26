@@ -18,7 +18,7 @@ $this->start('panelBody');
 	echo $this->Form->create($data, $formOptions);
 	echo $this->Form->hidden('id');
 	echo $this->Form->input('name', ['label' => __('Convert From'), 'readonly']);
-	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions]);
+	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
 
 	$tableData = [];
 	foreach ($associations as $row) {
