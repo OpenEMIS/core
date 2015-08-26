@@ -414,82 +414,56 @@ class UserGroupsTable extends AppTable {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}
 
-		// CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
-		$options['auto_search'] = false;
-		$search = $this->Session->check($this->alias().'.search.key') ? $this->Session->read($this->alias().'.search.key') : '';
-		$query->contain(['Institutions', 'Areas']);
+		$search = $this->ControllerAction->getSearchKey();
 
-		//$matchingInstitutions
-		$matchingInstitutionsQuery = $this->association('Institutions')->find()
-			->select(['id'])
+		// CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
+		$options['auto_search'] = false; // it will append an AND
+		if (!empty($search)) {
+			$query->find('byInstitutionAreaNameCode', ['search' => $search]);
+		}
+	}
+
+	public function findByInstitutionAreaNameCode(Query $query, array $options) {
+		if (array_key_exists('search', $options)) {
+			$search = $options['search'];
+			$query
+			->join([
+				[
+					'table' => 'security_group_institution_sites', 'alias' => 'SecurityGroupInstitutions', 'type' => 'INNER',
+					'conditions' => ['SecurityGroupInstitutions.security_group_id = ' . $this->aliasField('id')]
+				],
+				[
+					'table' => 'institution_sites', 'alias' => 'Institutions', 'type' => 'INNER',
+					'conditions' => [
+						'Institutions.id = ' . 'SecurityGroupInstitutions.institution_site_id',
+					]
+				],
+				[
+					'table' => 'security_group_areas', 'alias' => 'SecurityGroupAreas', 'type' => 'INNER',
+					'conditions' => ['SecurityGroupAreas.security_group_id = ' . $this->aliasField('id')]
+				],
+				[
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+					'conditions' => [
+						'Areas.id = ' . 'SecurityGroupAreas.area_id',
+					]
+				],
+			])
 			->where([
-				'OR' => [
-						[$this->association('Institutions')->aliasField('code').' LIKE' => '%' . $search . '%'],
-						[$this->association('Institutions')->aliasField('name').' LIKE' => '%' . $search . '%']
+					'OR' => [
+						['Institutions.code LIKE' => '%' . $search . '%'],
+						['Institutions.name LIKE' => '%' . $search . '%'],
+						['Areas.code LIKE' => '%' . $search . '%'],
+						['Areas.name LIKE' => '%' . $search . '%'],
+						[$this->aliasField('name').' LIKE' => '%'.$search.'%']
 					]
 				]
 			)
+			->group($this->aliasField('id'))
 			;
-
-		// pr($matchingInstitutionsQuery->toArray());
-		// 	die;
-		$matchingInstitutions = [];
-		foreach ($matchingInstitutionsQuery as $key => $value) {
-			$matchingInstitutions[] = $value->id;
-		}
-		// pr('matchingInstitutions');
-		// pr($matchingInstitutions);
-
-		//$matchingAreas
-		$matchingAreasQuery = $this->association('Areas')->find()
-			->select(['id'])
-			->where([
-				'OR' => [
-						[$this->association('Areas')->aliasField('code').' LIKE' => '%' . $search . '%'],
-						[$this->association('Areas')->aliasField('name').' LIKE' => '%' . $search . '%']
-					]
-				]
-			);
-
-		$matchingAreas = [];
-		foreach ($matchingAreasQuery as $key => $value) {
-			$matchingAreas[] = $value->id;
-		}
-		// pr('matchingAreas');
-		// pr($matchingAreas);
-
-		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$matchingSecurityGroups = [];
-		if (!empty($matchingInstitutions)) {
-			$sgInstitutionQuery = $SecurityGroupInstitutions->find()
-						->select('security_group_id')
-						->where([$SecurityGroupInstitutions->aliasField('institution_site_id').' IN ' => $matchingInstitutions])
-			;
-			foreach ($sgInstitutionQuery as $key => $value) {
-				$matchingSecurityGroups[] = $value->security_group_id;
-			}
-		}
-		
-		if (!empty($matchingAreas)) {
-			$sgAreaQuery = $SecurityGroupAreas->find()
-						->select('security_group_id')
-						->where([$SecurityGroupAreas->aliasField('area_id').' IN ' => $matchingAreas])
-			;
-			foreach ($sgAreaQuery as $key => $value) {
-				$matchingSecurityGroups[] = $value->security_group_id;
-			}
 		}
 
-		// pr($matchingSecurityGroups);
-
-		$searchCondition = [];
-		$searchCondition['OR'] = [];
-		$searchCondition['OR'][$this->aliasField("name").' LIKE'] = '%' . $search . '%';
-		if (!empty($matchingSecurityGroups)) {
-			$searchCondition['OR'][$this->aliasField('id').' IN '] = $matchingSecurityGroups;
-		}	
-		$query->where($searchCondition);
+		return $query;
 	}
 
 	public function findNotInInstitutions(Query $query, array $options) {
