@@ -79,7 +79,7 @@ class StudentBehavioursTable extends AppTable {
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Classes, $institutionId) {
 				$count = $Classes->find()
 				->where([
@@ -153,8 +153,11 @@ class StudentBehavioursTable extends AppTable {
 			$periodOptions = ['0' => $this->selectEmpty('period')];
 			$periodOptions = $periodOptions + $AcademicPeriod->getList();
 			$selectedPeriod = 0;
+			if ($request->is(['post', 'put'])) {
+				$selectedPeriod = $request->data($this->aliasField('academic_period'));
+			}
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 				'callable' => function($id) use ($Classes, $institutionId) {
 					$count = $Classes->find()
 					->where([
