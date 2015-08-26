@@ -15,4 +15,12 @@ class EducationSystemsTable extends AppTable {
 		$this->hasMany('EducationLevels', ['className' => 'Education.EducationLevels', 'cascadeCallbacks' => true]);
 
 	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		if (empty($this->request->data['transfer_to'])) {
+			$this->Alert->error('general.delete.failed');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('remove'));
+		}
+	}
 }

@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class EducationCyclesTable extends AppTable {
 	public function initialize(array $config) {
@@ -25,6 +26,18 @@ class EducationCyclesTable extends AppTable {
 	}
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		if (empty($this->request->data['transfer_to'])) {
+			$this->Alert->error('general.delete.failed');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('remove'));
+		}
+	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {

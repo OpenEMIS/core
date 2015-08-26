@@ -27,6 +27,15 @@ class EducationProgrammesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		if (empty($this->request->data['transfer_to'])) {
+			$this->Alert->error('general.delete.failed');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('remove'));
+		}
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($levelOptions, $selectedLevel, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle'));
