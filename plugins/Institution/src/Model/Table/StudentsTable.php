@@ -73,7 +73,7 @@ class StudentsTable extends AppTable {
 			->add('academic_period_id', [
 			])
 			// ->allowEmpty('student_id') required for create new but disabling for now
-			->add('student_id', 'ruleInstitutionStudentId', [
+			->add('student_name', 'ruleInstitutionStudentId', [
 				'rule' => ['institutionStudentId'],
 				'on' => 'create'
 			])
@@ -167,14 +167,6 @@ class StudentsTable extends AppTable {
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
-	}
-
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$errors = $entity->errors();
-		if (!empty($errors)) {
-			$entity->unsetProperty('student_id');
-			unset($data[$this->alias()]['student_id']);
-		}
 	}
 
 	public function onGetStudentId(Event $event, Entity $entity) {
@@ -278,6 +270,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('student_name');
+
 		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $sectionOptions, $selectedSection) = array_values($this->_getSelectOptions());
 
 		$this->ControllerAction->field('academic_period_id', ['options' => $periodOptions]);
@@ -295,7 +289,7 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('end_date', ['period' => $period]);
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_id'
+			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_name'
 		]);
 
 		$this->setupTabElements($entity);
@@ -396,6 +390,15 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['visible'] = false;
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldStudentName(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'student_id', 'name' => $this->aliasField('student_id')];

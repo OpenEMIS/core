@@ -50,4 +50,8 @@ class InstitutionSiteSection extends Entity
         return $value;
         // return '<a href="/#">'. $value .'</a>';
     }
+
+    protected function _getStaffName() {
+       return (!empty($this->staff) || (!is_null($this->staff))) ? $this->staff->name_with_id : ''; 
+    }
 }

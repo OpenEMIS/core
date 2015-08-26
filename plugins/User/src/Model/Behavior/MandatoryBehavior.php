@@ -47,7 +47,8 @@ class MandatoryBehavior extends Behavior {
 			'ControllerAction.Model.onUpdateFieldIdentityType' => 'onUpdateFieldIdentityType',
 			'ControllerAction.Model.onUpdateFieldIdentityNumber' => 'onUpdateFieldIdentityNumber',
 			'ControllerAction.Model.onUpdateFieldSpecialNeed' => 'onUpdateFieldSpecialNeed',
-			'ControllerAction.Model.onUpdateFieldSpecialNeedComment' => 'onUpdateFieldSpecialNeedComment'
+			'ControllerAction.Model.onUpdateFieldSpecialNeedComment' => 'onUpdateFieldSpecialNeedComment',
+			'ControllerAction.Model.onUpdateFieldSpecialNeedDate' => 'onUpdateFieldSpecialNeedDate'
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -109,6 +110,7 @@ class MandatoryBehavior extends Behavior {
 		if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
 			$this->_table->ControllerAction->field('special_need', ['order' => $i++]);
 			$this->_table->ControllerAction->field('special_need_comment', ['order' => $i++]);
+			$this->_table->ControllerAction->field('special_need_date', ['order' => $i++]);
 		}
 
 		// need to set the handling for non-mandatory require = false here
@@ -284,6 +286,17 @@ class MandatoryBehavior extends Behavior {
 
 		return $attr;
 	}
+
+
+	public function onUpdateFieldSpecialNeedDate(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'hidden';
+		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_date';
+
+		$attr['value'] = date('Y-m-d');
+
+		return $attr;
+	}
+	
 
     // public function getMandatoryList() {
     //     $list = [0 => __('No'), 1 => __('Yes')];

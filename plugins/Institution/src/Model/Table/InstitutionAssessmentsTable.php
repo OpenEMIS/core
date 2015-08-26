@@ -23,22 +23,20 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 	}
 
-	public function reject() {
-		$this->ControllerAction->autoRender = false;
-		$request = $this->ControllerAction->request;
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// To clear all records in assessment_item_results when delete from draft
+		$AssessmentItems = $this->Assessments->AssessmentItems;
+		$itemIds = $AssessmentItems
+			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+			->where([$AssessmentItems->aliasField('assessment_id') => $entity->assessment_id])
+			->toArray();
 
-		$id = $request->params['pass'][1];
-		$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
-
-		if ($this->save($entity)) {
-			$this->Alert->success('InstitutionAssessments.reject.success');
-		} else {
-			$this->Alert->success('InstitutionAssessments.reject.failed');
-			$this->log($entity->errors(), 'debug');
-		}
-		$action = $this->ControllerAction->url('index');
-		$action['status'] = 2;
-		return $this->controller->redirect($action);
+		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
+		$Results->deleteAll([
+			$Results->aliasField('institution_site_id') => $entity->institution_site_id,
+			$Results->aliasField('academic_period_id') => $entity->academic_period_id,
+			$Results->aliasField('assessment_item_id IN') => $itemIds
+		]);
 	}
 
 	public function onGetStatus(Event $event, Entity $entity) {
@@ -63,6 +61,8 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
+		$value = '<i class="fa fa-minus"></i>';
+
 		$AssessmentStatuses = $this->Assessments->AssessmentStatuses;
 		$AssessmentStatusPeriods = TableRegistry::get('Assessment.AssessmentStatusPeriods');
 
@@ -80,10 +80,14 @@ class InstitutionAssessmentsTable extends AppTable {
 					$AssessmentStatusPeriods->aliasField('academic_period_id') => $entity->academic_period_id
 				]
 			])
-			->first()
-			->toArray();
+			->all();
 
-		return date('d-m-Y', strtotime($results['date_disabled']));
+		if (!$results->isEmpty()) {
+			$dateDisabled = $results->first()->date_disabled;
+			$value = date('d-m-Y', strtotime($dateDisabled));
+		}
+
+		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
@@ -133,25 +137,44 @@ class InstitutionAssessmentsTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
+		$options['auto_contain'] = false;
 		$query
+			->contain(['Assessments', 'AcademicPeriods'])
 			->where([$this->aliasField('status') => $selectedStatus])
 			->order([$this->AcademicPeriods->aliasField('order')]);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$assessmentRecord = $this->get($id);
+
+		if ($assessmentRecord->status == 2) {
+			$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
+			if ($this->save($entity)) {
+				$this->Alert->success('InstitutionAssessments.reject.success');
+			} else {
+				$this->Alert->success('InstitutionAssessments.reject.failed');
+				$this->log($entity->errors(), 'debug');
+			}
+
+			$event->stopPropagation();
+			$action = $this->ControllerAction->url('index'); //$this->ControllerAction->buttons['index']['url']
+			$action['status'] = 2;
+			return $this->controller->redirect($action);
+		}
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		if ($selectedStatus == 2) {	//Completed
-			$rejectBtn = ['reject' => $buttons['view']];
-			$rejectBtn['reject']['url']['action'] = 'Assessments';
-			$rejectBtn['reject']['url'][0] = 'reject';
-			$rejectBtn['reject']['label'] = '<i class="fa fa-trash"></i>' . __('Reject');
-
-			$buttons = array_merge($buttons, $rejectBtn);
-
-			return $buttons;
+		if ($selectedStatus == 0) {	// New
+			unset($buttons['view']);
+			unset($buttons['remove']);
+		} else if ($selectedStatus == 2) {	// Completed
+			unset($buttons['edit']);
 		}
+
+		return $buttons;
 	}
 
 	public function _buildRecords($status=0) {
