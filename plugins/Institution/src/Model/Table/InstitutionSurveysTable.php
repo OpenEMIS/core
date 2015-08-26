@@ -202,9 +202,9 @@ class InstitutionSurveysTable extends AppTable {
 		}
 
 		if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
-			if (empty($tabElements)) {
-				$selectedStatus = 2;
-			}
+			// if (empty($tabElements)) {
+			// 	$selectedStatus = 2;
+			// }
 			$tabElements['Completed'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=2'],
 				'text' => __('Completed')
@@ -340,6 +340,13 @@ class InstitutionSurveysTable extends AppTable {
 		//Return all required options and their key
 		$statusOptions = $this->getSelectOptions('Surveys.status');
 		$selectedStatus = $this->queryString('status', $statusOptions);
+
+		// If do not have access to Survey - New but have access to Survey - Completed, then set selectedStatus to 2
+		if (!$this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+				$selectedStatus = 2;
+			}
+		}
 
 		return compact('statusOptions', 'selectedStatus');
 	}
