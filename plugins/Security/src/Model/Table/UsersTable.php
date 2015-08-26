@@ -140,17 +140,45 @@ class UsersTable extends AppTable {
 		$key = 'roles';
 
 		$Group = TableRegistry::get('Security.SecurityGroups');
+		$Group->hasOne('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'security_group_id']);
 
 		if ($action == 'view') {
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$groupId = $obj['_joinData']->security_group_id;
-					$groupEntity = $Group->get($groupId);
+					$groupEntity = $Group->find()
+						->where([$Group->aliasField('id') => $groupId])
+						->contain('Institutions')
+						->first()
+						;
 
 					$rowData = [];
-					$rowData[] = $groupEntity->name;
-					$rowData[] = $obj->name;
+					if ($groupEntity) {
+						if (!empty($groupEntity->institution)) {
+							$rowData[] = $event->subject()->Html->link($groupEntity->name, 
+								[
+									'plugin' => $this->controller->plugin,
+									'controller' => $this->controller->name,
+									'action' => 'SystemGroups',
+									'view',
+									$groupEntity->id
+								]
+							);
+						} else {
+							$rowData[] = $event->subject()->Html->link($groupEntity->name, 
+								[
+									'plugin' => $this->controller->plugin,
+									'controller' => $this->controller->name,
+									'action' => 'UserGroups',
+									'view',
+									$groupEntity->id
+								]
+							);
+						}
+						$rowData[] = $obj->name;
+					}
+					
 					$tableCells[] = $rowData;
 				}
 			}
