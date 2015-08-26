@@ -13,14 +13,13 @@ class AutocompleteBehavior extends Behavior {
 
 	public function onGetAutocompleteElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
-		
+		// pr($attr);
 		if ($action == 'edit') {
 			$subject = $event->subject();
 			$Form = $subject->Form;
 			$url = $subject->Url->build($attr['url']);
 			$label = isset($attr['label']) ? $attr['label'] : $attr['field'];
 			$target = $attr['target'];
-			$value = $attr['value'];
 
 			$subject->includes['autocomplete'] = [
 				'include' => true, 
@@ -32,11 +31,10 @@ class AutocompleteBehavior extends Behavior {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-
+			
 			$options['type'] = 'text';
 			$options['class'] = 'autocomplete';
 			$options['autocomplete-url'] = $url;
-			$options['value'] = $value;
 			// text to show for no results
 			if (array_key_exists('noResults', $attr)) {
 				$options['autocomplete-no-results'] = $attr['noResults'];
