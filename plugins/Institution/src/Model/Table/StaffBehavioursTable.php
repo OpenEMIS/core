@@ -19,6 +19,8 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+
+		$this->addBehavior('AcademicPeriod.Period');
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
@@ -30,7 +32,7 @@ class StaffBehavioursTable extends AppTable {
 		$this->ControllerAction->field('staff_id');
 		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
 		
-		if ($this->action == 'view' || $this->action = 'edit') {
+		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'staff_behaviour_category_id']);
 		}
 	}
@@ -57,6 +59,10 @@ class StaffBehavioursTable extends AppTable {
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
+		if ($selectedPeriod != 0) {
+			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
+		}
+		
 		$this->controller->set(compact('periodOptions'));
 
 		// will need to check for search by name: AdvancedNameSearchBehavior
@@ -64,7 +70,6 @@ class StaffBehavioursTable extends AppTable {
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('academic_period');
-		$this->ControllerAction->field('class');
 		$this->ControllerAction->setFieldOrder(['academic_period', 'staff_id', 'staff_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
@@ -90,7 +95,10 @@ class StaffBehavioursTable extends AppTable {
 		if ($action == 'add') {
 			$periodOptions = ['0' => $this->selectEmpty('period')];
 			$periodOptions = $periodOptions + $AcademicPeriod->getList();
-			// $selectedPeriod = 0;
+			$selectedPeriod = 0;
+			if ($request->is(['post', 'put'])) {
+				$selectedPeriod = $request->data($this->aliasField('academic_period'));
+			}
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
 			$attr['options'] = $periodOptions;
@@ -124,6 +132,7 @@ class StaffBehavioursTable extends AppTable {
 				$staffOptions = $staffOptions + $Staff
 				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'name'])
 				->matching('Users')
+				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->where([$Staff->aliasField('institution_site_id') => $institutionId])
 				->toArray();
 			}

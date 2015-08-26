@@ -9,9 +9,6 @@ use Cake\I18n\Time;
 class PeriodBehavior extends Behavior {
 	public function findAcademicPeriod(Query $query, array $options) {
 		$table = $this->_table;
-		if (array_key_exists('table', $options)) {
-			$table = $options['table'];
-		}
 
 		if (array_key_exists('academic_period_id', $options)) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -60,5 +57,24 @@ class PeriodBehavior extends Behavior {
 		} else {
 			return $query;
 		}
+	}
+
+	public function findInPeriod(Query $query, array $options) {
+		$table = $this->_table;
+		$field = $options['field'];
+		$academicPeriodId = $options['academic_period_id'];
+
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$periodEntity = $AcademicPeriods->get($academicPeriodId);
+
+		$startDate = $periodEntity->start_date->format('Y-m-d');
+		$endDate = $periodEntity->end_date->format('Y-m-d');
+
+		$conditions = [
+			$table->aliasField($field) . ' <=' => $endDate,
+			$table->aliasField($field) . ' >=' => $startDate
+		];
+
+		return $query->where($conditions);
 	}
 }
