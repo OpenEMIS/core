@@ -192,7 +192,10 @@ class RestSurveyComponent extends Component {
 		}
 
 		if ($output) { // true = output to screen
-			return $result->asXML();
+			$this->response->body($result->asXML());
+		    $this->response->type('xml');
+
+			return $this->response;
 		} else { // download as file
 			$fileName = $format . '_' . date('Ymdhis');
 
