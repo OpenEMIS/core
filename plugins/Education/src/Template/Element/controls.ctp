@@ -61,7 +61,6 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $setupOptions,
-						'default' => $selectedSetup,
 						'url' => $baseUrl,
 						'data-named-key' => 'setup'
 					));
