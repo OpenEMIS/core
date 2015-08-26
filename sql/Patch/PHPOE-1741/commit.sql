@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS labels (
   modified datetime,
   created_user_id int(11) NOT NULL,
   created datetime NOT NULL,
-  PRIMARY KEY (module,field)
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
