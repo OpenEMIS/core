@@ -94,10 +94,20 @@ class TranslationsTable extends AppTable {
     public function validationDefault(Validator $validator) {
 		$validator
 			->add('en', 'ruleUnique', [
-  				'rule' => 'validateUnique',
+  				'rule' => 'checkUniqueField',
   				'provider' => 'table'
   			])
-	        ;
+  			;
 		return $validator;
 	}
+
+	// To allow case sensitive entry
+	public static function checkUniqueField($check) {
+		$englishField = trim($check);
+		$Translation = TableRegistry::get('Localization.Translations');
+      	$count = $Translation->find()
+      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->count();
+        return $count==0;
+    }
 }
