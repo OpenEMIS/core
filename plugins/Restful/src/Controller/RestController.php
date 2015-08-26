@@ -1,6 +1,7 @@
 <?php
 namespace Restful\Controller;
 
+use Cake\Log\Log;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Exception\BadRequestException;
@@ -36,11 +37,11 @@ class RestController extends AppController
 		]);
 		// $this->Auth->config('authorize', 'xxxx');
 		$this->SecurityRestSessions = TableRegistry::get('SecurityRestSessions');
-    }
+	}
 
-    public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
-    	$this->Auth->allow();
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$this->Auth->allow();
 
 		if ($this->request->action == 'survey') {
 			$this->autoRender = false;
@@ -97,29 +98,30 @@ class RestController extends AppController
 				}
 			}
 		}
-    }
+	}
 
-    public function survey() {
-    	$this->autoRender = false;
-    	$pass = $this->request->params['pass'];
-    	$action = 'index';
+	public function survey() {
+		$this->autoRender = false;
+		$pass = $this->request->params['pass'];
+		$action = 'index';
 
 		if (!empty($pass)) {
 			$action = array_shift($pass);
 		}
 
-    	if (method_exists($this->RestSurvey, $action)) {
+		if (method_exists($this->RestSurvey, $action)) {
 			return call_user_func_array(array($this->RestSurvey, $action), $pass);
 		} else {
 			return false;
 		}
-    }
+	}
 
-    public function login() {
+	public function login() {
 		// $username	= $this->request->data['username'];
 		// $password	= $this->request->data['password'];
 
 		// $password	= AuthComponent::password($password);
+
 		$user = $this->Auth->identify();
 
 		// $check		= $this->SecurityUser->find('first', array(
@@ -130,7 +132,7 @@ class RestController extends AppController
 		// ));
 		if ($user) {
 			// $data = true;
-			return true;
+			return $user;
 		} else {
 			return false;
 		}
@@ -138,34 +140,35 @@ class RestController extends AppController
 
 	public function auth() {
 		$this->autoRender = false;
+		$json = [];
+
 		// We check if request came from a post form
 		if ($this->request->is(['post', 'put'])) {
 			// do the login..
-			$result = $this->login();
-		}
+			$user = $this->login();
 
-		$json = [];
-		if (isset($result) && $result == true) {
-			// get all the user details if login is successful.
-			$userID = $this->Auth->user('id');
-			$accessToken = sha1(time() . $userID);
-			$refreshToken = sha1(time());
-			$json = ['message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken];
+			if ($user) {
+				// get all the user details if login is successful.
+				$userID = $user['id'];
+				$accessToken = sha1(time() . $userID);
+				$refreshToken = sha1(time());
+				$json = ['message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken];
 
-			// set the values, and save the data
-			$startDate = time() + 3600; // current time + one hour
-			$expiryTime = date('Y-m-d H:i:s', $startDate);
-			$saveData = [
-				'access_token' => $accessToken,
-				'refresh_token' => $refreshToken,
-				'expiry_date' => $expiryTime
-			];
+				// set the values, and save the data
+				$startDate = time() + 3600; // current time + one hour
+				$expiryTime = date('Y-m-d H:i:s', $startDate);
+				$saveData = [
+					'access_token' => $accessToken,
+					'refresh_token' => $refreshToken,
+					'expiry_date' => $expiryTime
+				];
 
-			$entity = $this->SecurityRestSessions->newEntity($saveData);
-			$this->SecurityRestSessions->save($entity);
-		} else {
-			// if the login is wrong, show the error message.
-			$json = ['message' => 'failure'];
+				$entity = $this->SecurityRestSessions->newEntity($saveData);
+				$this->SecurityRestSessions->save($entity);
+			} else {
+				// if the login is wrong, show the error message.
+				$json = ['message' => 'failure'];
+			}
 		}
 
 		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
