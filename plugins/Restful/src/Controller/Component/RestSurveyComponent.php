@@ -460,7 +460,7 @@ class RestSurveyComponent extends Component {
 						$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
 						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
 						$textNode->addAttribute("oe-type", "select");
-							$textNode->addChild("label", "Institution Site", NS_XF);
+							$textNode->addChild("label", "Institution", NS_XF);
 						$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
 						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
 						$textNode->addAttribute("oe-type", "select");
