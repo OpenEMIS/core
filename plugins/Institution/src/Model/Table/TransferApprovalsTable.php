@@ -65,7 +65,10 @@ class TransferApprovalsTable extends AppTable {
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
 		]);
-		$this->controller->Navigation->addCrumb('Transfer Approvals');
+		$urlParams = $this->ControllerAction->url('edit');
+		if ($urlParams['controller'] == 'Dashboard') {
+			$this->controller->Navigation->addCrumb('Transfer Approvals', ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'TransferApprovals', '0' => $urlParams[0], '1'=> $urlParams[1]]);
+		}
 	}
 
 	public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request) {
