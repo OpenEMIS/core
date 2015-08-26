@@ -93,7 +93,7 @@ class StaffAttendancesTable extends AppTable {
 		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $entity->security_user_id;
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 			
@@ -253,7 +253,7 @@ class StaffAttendancesTable extends AppTable {
 		$periodOptions = $AcademicPeriod->getList();
 
 		$Staff = $this;
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
