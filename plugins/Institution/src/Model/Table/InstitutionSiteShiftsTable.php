@@ -37,19 +37,21 @@ class InstitutionSiteShiftsTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction() {
-		$this->ControllerAction->field('start_time', ['type' => 'string', 'visible' => false]);
-		$this->ControllerAction->field('end_time', ['type' => 'string', 'visible' => false]);
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('start_time', ['type' => 'string', 'visible' => true]);
+		$this->ControllerAction->field('end_time', ['type' => 'string', 'visible' => true]);
 
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
 		$this->ControllerAction->field('name', ['type' => 'string']);
 		$this->ControllerAction->field('period', ['type' => 'string']);
-		
-		
-		$this->ControllerAction->field('other_school_id', ['visible' => false]);
+	}
+
+	public function afterAction(Event $event) {
+		$this->ControllerAction->field('location');
+		$this->ControllerAction->field('location_institution_site_id');
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'period', 'location_institution_site_id', 'other_school_id'
+			'academic_period_id', 'name', 'period', 'location', 'location_institution_site_id'
 		]);
 	}
 
@@ -69,8 +71,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function viewBeforeAction($event) {
 		$this->ControllerAction->field('period', ['visible' => true]);
-		$this->ControllerAction->field('start_time', ['visible' => true]);
-		$this->ControllerAction->field('end_time', ['visible' => true]);
 
 		$this->ControllerAction->setFieldOrder([
 			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
@@ -95,76 +95,72 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->field('period', ['visible' => false]);
-		$this->ControllerAction->field('start_time', ['visible' => true, 'type' => 'time']);
-		$this->ControllerAction->field('end_time', ['visible' => true, 'type' => 'time']);
-		$this->ControllerAction->field('other_school_id', ['visible' => false]);
+		$this->ControllerAction->field('start_time', ['type' => 'time']);
+		$this->ControllerAction->field('end_time', ['type' => 'time']);
 
-		$this->ControllerAction->field('location_institution_site_id', ['type' => 'select']);
+		$this->ControllerAction->field('location_institution_site_id');
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id', 'other_school_id'
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id'
 		]);
 
 	}
 
 	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$shiftDataArray = $data[$this->alias()];
-		$visible = ($shiftDataArray['location_institution_site_id'] == 0) ? true : false;
-		$this->ControllerAction->field('other_school_id', ['visible' => $visible]);
-	}	
+		unset($data[$this->alias()]['location_institution_site_id']);
+		//unset($data[$this->alias()]['institution_name']);
+	}
 
-	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
-		$attr['onChangeReload'] = 'changeLocation';
+	public function onUpdateFieldLocation(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$attr['visible'] = true;
-			$attr['type'] = 'select';
-
-			$options = [];
-			$default = 0;
-			$session = $this->request->session();
-			if ($session->check('Institutions.id')) {
-				$id = $session->read('Institutions.id');
-				$default = $id;
-				$Institution = TableRegistry::get('Institution.Institutions')->findById($id)->first();
-				$institutionName = $Institution->name;
-				$options[$id] = $institutionName;
-			}
-			$options[0] = 'Other School';
-			$attr['options'] = $options;
-			$attr['default'] = $default; 
+			$attr['options'] = ['CURRENT' => __('This School'), 'OTHER' => __('Other School')];
+			$attr['onChangeReload'] = 'changeLocation';
 
 			if($action == 'edit'){
 				$params = $request->params;
 				if($params['pass'][0] == $action && !empty($params['pass'][1])){
 					$entity = $this->get($params['pass'][1]);
 					if($entity->institution_site_id != $entity->location_institution_site_id) {
-						$attr['default'] = 0;
+						$attr['default'] = 'OTHER';
 					} 
 				}
 			}
 		}
 		return $attr;
-	}	
+	}
 
-	public function onUpdateFieldOtherSchoolId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
+			$attr['fieldName'] = $this->aliasField('institution_name');
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'location_institution_site_id', 'name' => $this->aliasField('location_institution_site_id')];
 			$attr['noResults'] = __('No Institutions found');
 			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
 			$attr['url'] = ['controller' => $this->controller->name, 'action' => 'ajaxInstitutionAutocomplete'];
 
-			if($action == 'edit'){
-				$params = $request->params;
-				if($params['pass'][0] == $action && !empty($params['pass'][1])){
-					$entity = $this->findById($params['pass'][1])->contain(['LocationInstitutionSites'])->first(); 
-					if($entity->institution_site_id != $entity->location_institution_site_id) {
-						$attr['visible'] = true;
-						$attr['value'] = $entity->location_institution_site->name;
-					} 
+			if($request->data){
+				$data = $request->data[$this->alias()];
+				if($data['location'] == 'CURRENT'){
+					$attr['type'] = 'hidden';
+					$institutionId = $this->Session->read('Institutions.id');
+					$attr['value'] = $institutionId;
+				}
+			} else {
+				if($action == 'edit') {
+					$params = $request->params;
+					if($params['pass'][0] == $action && !empty($params['pass'][1])){
+						$entity = $this->findById($params['pass'][1])->contain(['LocationInstitutionSites'])->first(); 
+						if($entity->institution_site_id != $entity->location_institution_site_id) {
+							$attr['visible'] = true;
+							$attr['attr']['value'] = $entity->location_institution_site->name;
+						} 
+					}
+				} else {
+					$attr['type'] = 'hidden';
+					$institutionId = $this->Session->read('Institutions.id');
+					$attr['value'] = $institutionId;
 				}
 			}
-
 		}
 		return $attr;
 	}	
