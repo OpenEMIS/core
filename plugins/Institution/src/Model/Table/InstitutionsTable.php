@@ -475,32 +475,4 @@ class InstitutionsTable extends AppTable  {
 
 		return $attr;
 	}
-
-	// autocomplete used for InstitutionSiteShift
-	public function ajaxInstitutionAutocomplete() {
-		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
-
-		if ($this->request->is(['ajax'])) {
-			$term = $this->request->query['term'];
-			// only search for staff
-			$query = $this->Users->find()->where([$this->Users->aliasField('is_staff') => 1]);
-
-			$term = trim($term);
-			if (!empty($term)) {
-				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
-			}
-			
-			$list = $query->all();
-
-			$data = [];
-			foreach($list as $obj) {
-				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
-				$data[] = ['label' => $label, 'value' => $obj->id];
-			}
-
-			echo json_encode($data);
-			die;
-		}
-	}
 }

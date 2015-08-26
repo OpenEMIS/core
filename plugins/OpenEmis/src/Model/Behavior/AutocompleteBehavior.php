@@ -13,7 +13,7 @@ class AutocompleteBehavior extends Behavior {
 
 	public function onGetAutocompleteElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
-		// pr($attr);
+		
 		if ($action == 'edit') {
 			$subject = $event->subject();
 			$Form = $subject->Form;
