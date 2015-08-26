@@ -365,4 +365,14 @@ class ValidationBehavior extends Behavior {
 			;
 		return $existingRecords <= 0;
 	}
+
+	// To allow case sensitive entry
+	public static function checkUniqueEnglishField($check) {
+		$englishField = trim($check);
+		$Translation = TableRegistry::get('Localization.Translations');
+      	$count = $Translation->find()
+      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->count();
+        return $count==0;
+    }
 }
