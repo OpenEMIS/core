@@ -2,6 +2,7 @@
 namespace Restful\Controller;
 
 use Cake\Log\Log;
+use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Exception\BadRequestException;
@@ -156,7 +157,7 @@ class RestController extends AppController
 
 				// set the values, and save the data
 				$startDate = time() + 3600; // current time + one hour
-				$expiryTime = date('Y-m-d H:i:s', $startDate);
+                $expiryTime = new Time($startDate);
 				$saveData = [
 					'access_token' => $accessToken,
 					'refresh_token' => $refreshToken,
