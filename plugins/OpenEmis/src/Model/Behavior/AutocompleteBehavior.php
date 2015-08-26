@@ -20,6 +20,7 @@ class AutocompleteBehavior extends Behavior {
 			$url = $subject->Url->build($attr['url']);
 			$label = isset($attr['label']) ? $attr['label'] : $attr['field'];
 			$target = $attr['target'];
+			$value = $attr['value'];
 
 			$subject->includes['autocomplete'] = [
 				'include' => true, 
@@ -35,6 +36,7 @@ class AutocompleteBehavior extends Behavior {
 			$options['type'] = 'text';
 			$options['class'] = 'autocomplete';
 			$options['autocomplete-url'] = $url;
+			$options['value'] = $value;
 			// text to show for no results
 			if (array_key_exists('noResults', $attr)) {
 				$options['autocomplete-no-results'] = $attr['noResults'];
