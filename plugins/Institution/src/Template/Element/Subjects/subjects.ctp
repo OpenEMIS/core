@@ -30,10 +30,9 @@
 							$attrValue = $attr['data']['existedSubjects'][$n];
 							$disabled = 'disabled';
 						} else {
-							// if () {
-								
-								// continue;
-							// }
+							if (!$obj->visible) {
+								continue;
+							}
 			    			$attrValue = $obj->education_subject->name;
 							$disabled = false;
 						}

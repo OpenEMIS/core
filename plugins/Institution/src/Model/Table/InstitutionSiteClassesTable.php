@@ -332,40 +332,42 @@ class InstitutionSiteClassesTable extends AppTable {
 	public function prepareEntityObjects($model, ArrayObject $data) {
 		$commonData = $data['InstitutionSiteClasses'];
 		$error = false;
-		$classes = false;
+		$subjects = false;
 		if (isset($data['MultiClasses']) && count($data['MultiClasses'])>0) {
 			foreach ($data['MultiClasses'] as $key=>$row) {
 				if (isset($row['education_subject_id']) && isset($row['institution_site_class_staff'])) {
 					$subjectSelected = true;
-					$classes[$key] = [
+					$subjects[$key] = [
 						'key' => $key,
 						'name' => $row['name'],
 						'education_subject_id' => $row['education_subject_id'],
 						'academic_period_id' => $commonData['academic_period_id'],
-						'institution_site_id' => $commonData['institution_site_id'],
-						'institution_site_section_classes' => [
+						'institution_site_id' => $commonData['institution_site_id']
+					];
+					if (!array_key_exists('MultiSections', $data)) {
+						$subjects[$key]['institution_site_section_classes'] = [
 							[
 								'status' => 1,
 								'institution_site_section_id' => $commonData['class_name']
 							]
-						]
-					];
+						];
+					}
 					if ($row['institution_site_class_staff'][0]['security_user_id']!=0) {
-						$classes[$key]['institution_site_class_staff'] = $row['institution_site_class_staff'];
+						$subjects[$key]['institution_site_class_staff'] = $row['institution_site_class_staff'];
 					}
 				}
 			}
-			if (!$classes) {
+			if (!$subjects) {
 				$error = 'Institution.Institutions.noSubjectSelected';
 			} else {
-				$classes = $model->newEntities($classes);
+				$subjects = $model->newEntities($subjects);
 				/**
 				 * check individual entity for any error
 				 */
-				foreach ($classes as $class) {
-				    if ($class->errors()) {
-				    	$error = $class->errors();
-				    	$data['MultiClasses'][$class->key]['errors'] = $error;
+				foreach ($subjects as $subject) {
+				    if ($subject->errors()) {
+				    	$error = $subject->errors();
+				    	$data['MultiClasses'][$subject->key]['errors'] = $error;
 				    }
 				}
 			}
@@ -373,16 +375,16 @@ class InstitutionSiteClassesTable extends AppTable {
 			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInSection', 'debug');
 			$error = 'Institution.Institutions.noSubjectsInSection';
 		}
-		return [$error, $classes, $data];
+		return [$error, $subjects, $data];
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$process = function ($model, $entity) use ($data) {
-			list($error, $classes, $data) = $model->prepareEntityObjects($model, $data);
-			// pr($data);die;
-			if (!$error && $classes) {
-				foreach ($classes as $class) {
-			    	$model->save($class);
+			list($error, $subjects, $data) = $model->prepareEntityObjects($model, $data);
+			pr($subjects);die;
+			if (!$error && $subjects) {
+				foreach ($subjects as $subject) {
+			    	$model->save($subject);
 				}
 				return true;
 			} else {
@@ -715,20 +717,22 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($gradeOptions as $key => $value) {
 			$gradeData[$value->education_grade->id] = $value->education_grade->name;
 		}
-		// pr($gradeData);die;
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+		/**
+		 * Do not check for the visible attribute in sql query,
+		 * message the data in the view file instead so that we could counter-check for
+		 * subjects that are already created in the institution.
+		 */
 		$query = $EducationGradesSubjects
 				->find()
 				->contain(['EducationSubjects'])
 				->where([
 					'EducationGradesSubjects.education_grade_id IN ' => array_keys($gradeData),
-					'EducationGradesSubjects.visible' => 1
 				]);
 		$subjects = $query
 				->order('EducationSubjects.order')
 				->group('EducationSubjects.id')
 				->toArray();
-		// pr($subjects);die;
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
@@ -746,7 +750,6 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	private function getExistedSubjects($listOnly=false) {
-		// pr($this->selectedClassId);die;
 		$subjects = $this
 			->InstitutionSiteSectionClasses
 			->find()
@@ -761,7 +764,6 @@ class InstitutionSiteClassesTable extends AppTable {
 				'InstitutionSiteSectionClasses.status' => 1
 			])
 			->toArray();
-			// pr($subjects);die;
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
@@ -771,7 +773,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		} else {
 			$data = $subjects;
 		}
-		// pr($data);die;
 		return $data;
 	}
 
