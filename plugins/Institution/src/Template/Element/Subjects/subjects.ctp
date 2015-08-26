@@ -30,6 +30,10 @@
 							$attrValue = $attr['data']['existedSubjects'][$n];
 							$disabled = 'disabled';
 						} else {
+							// if () {
+								
+								// continue;
+							// }
 			    			$attrValue = $obj->education_subject->name;
 							$disabled = false;
 						}
@@ -102,7 +106,7 @@
 					</td>
 
 				</tr>
-				<?php endforeach ?>
+				<?php endforeach;//end $attr['data']['subjects'] ?>
 			</tbody>
 			<?php endif ?>
 		</table>

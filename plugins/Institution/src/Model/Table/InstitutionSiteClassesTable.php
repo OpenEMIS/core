@@ -14,7 +14,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionSiteClassesTable extends AppTable {
 	public $institutionId = 0;
-	public $selectedSectionId = 0;
+	public $selectedClassId = 0;
 	private $public = 0;
 	private $_academicPeriodOptions = [];
 	private $_selectedAcademicPeriodId = -1;
@@ -55,8 +55,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		 * By using initialised models set in relations, the relation's className is set at a single place.
 		 * In add operations, these models attributes are empty by default.
 		 */
-		$this->InstitutionSiteSections = $this->Institutions->InstitutionSiteSections;
-		$this->InstitutionSiteSectionGrades = $this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
+		$this->InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections'); //$this->Institutions->InstitutionSiteSections;
+		$this->InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades'); //$this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -80,7 +80,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'label' => '',
 			'override' => true,
 			'type' => 'element',
-			'element' => 'Institution.Classes/students',
+			'element' => 'Institution.Subjects/students',
 			'data' => [	
 				'students'=>[],
 				'studentOptions'=>[],
@@ -88,10 +88,10 @@ class InstitutionSiteClassesTable extends AppTable {
 			],
 			'visible' => ['view'=>true, 'edit'=>true]
 		]);
-		$this->ControllerAction->field('classes', [
+		$this->ControllerAction->field('subjects', [
 			'label' => '',
 			'type' => 'element',
-			'element' => 'Institution.Classes/classes',
+			'element' => 'Institution.Subjects/subjects',
 			'data' => [	
 				'subjects'=>[],
 				'teachers'=>[]
@@ -136,8 +136,8 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function indexBeforeAction(Event $event) {
-		$Classes = $this;
 		$Sections = $this->InstitutionSiteSections;
+		$Subjects = $this;
 
 		$academicPeriodOptions = $this->_academicPeriodOptions;
 		$institutionId = $this->institutionId;
@@ -148,55 +148,55 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		]);
 
-		$sectionOptions = $Sections->find('list')
+		$classOptions = $Sections->find('list')
 									->where([
 										'academic_period_id'=>$this->_selectedAcademicPeriodId, 
 										'institution_site_id'=>$institutionId
 									])
 									->toArray();
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
-		if (empty($sectionOptions)) {
+		if (empty($classOptions)) {
 			$this->Alert->warning('Institutions.noSections');
 		}
-		$this->selectedSectionId = $this->queryString('section_id', $sectionOptions);
-		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
+		$this->selectedClassId = $this->queryString('class_id', $classOptions);
+		$this->advancedSelectOptions($classOptions, $this->selectedClassId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-			'callable' => function($id) use ($Classes, $institutionId, $selectedAcademicPeriodId) {
-				$query = $Classes->find()
+			'callable' => function($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId) {
+				$query = $Subjects->find()
 									->join([
 										[
 											'table' => 'institution_site_section_classes',
 											'alias' => 'InstitutionSiteSectionClass',
 											'conditions' => [
-												'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClasses.id',
+												'InstitutionSiteSectionClass.institution_site_class_id = '.$Subjects->aliasField('id'),
 												'InstitutionSiteSectionClass.institution_site_section_id' => $id
 											]
 										]
 									])
 									->where([
-										$Classes->aliasField('institution_site_id') => $institutionId,
-										$Classes->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+										$Subjects->aliasField('institution_site_id') => $institutionId,
+										$Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
 									]);
+				// pr($query->toArray());die;
 				return $query->count();
 			}
 		]);
 
 		$toolbarElements = [
-            ['name' => 'Institution.Classes/controls', 
+            ['name' => 'Institution.Subjects/controls', 
              'data' => [
 	            	'academicPeriodOptions'=>$academicPeriodOptions,
-	            	'sectionOptions'=>$sectionOptions, 
-	            	'selectedSection'=>$this->selectedSectionId, 
+	            	'classOptions'=>$classOptions, 
+	            	'selectedClass'=>$this->selectedClassId, 
 	            ],
 	         'options' => []
             ]
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
-
 	}
 
-    public function findBySections(Query $query, array $options) {
+    public function findByClasses(Query $query, array $options) {
     	return $query
 			->join([
 				[
@@ -204,7 +204,7 @@ class InstitutionSiteClassesTable extends AppTable {
 					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => [
 						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClasses.id',
-						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedSectionId
+						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedClassId
 					]
 				]
 			]);
@@ -212,7 +212,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query
-		->find('bySections')
+		->find('byClasses')
 		->contain(['Teachers'])
 		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId]);
 	}
@@ -293,9 +293,9 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->fields['education_subject_id']['visible'] = false;
 
 		$this->fields['class_name']['visible'] = true;
-		$this->fields['classes']['visible'] = true;
+		$this->fields['subjects']['visible'] = true;
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'class_name', 'classes',
+			'academic_period_id', 'class_name', 'subjects',
 		]);
 
 		$Sections = $this->InstitutionSiteSections;
@@ -317,8 +317,8 @@ class InstitutionSiteClassesTable extends AppTable {
 									])
 									->toArray();
 		$SectionGrades = $this->InstitutionSiteSectionGrades;
-		$this->selectedSectionId = $this->postString('class_name', $sectionOptions);
-		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
+		$this->selectedClassId = $this->postString('class_name', $sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $this->selectedClassId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 			'callable' => function($id) use ($SectionGrades) {
 				return $SectionGrades->findByInstitutionSiteSectionId($id)->count();
@@ -327,7 +327,6 @@ class InstitutionSiteClassesTable extends AppTable {
 
 		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
 		$this->fields['class_name']['options'] = $sectionOptions;
-
 	}
 
 	public function prepareEntityObjects($model, ArrayObject $data) {
@@ -424,7 +423,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 		$subjects = $this->getSubjectOptions();
 		$existedSubjects = $this->getExistedSubjects(true);
-		$this->fields['classes']['data'] = [
+		$this->fields['subjects']['data'] = [
 			'teachers' => $teachers,
 			'subjects' => $subjects,
 			'existedSubjects' => $existedSubjects
@@ -708,7 +707,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
 							->where([
-								$Grade->aliasField('institution_site_section_id') => $this->selectedSectionId,
+								$Grade->aliasField('institution_site_section_id') => $this->selectedClassId,
 								$Grade->aliasField('status') => 1
 							])
 							->toArray();
@@ -716,18 +715,20 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($gradeOptions as $key => $value) {
 			$gradeData[$value->education_grade->id] = $value->education_grade->name;
 		}
-
+		// pr($gradeData);die;
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-		$subjects = $EducationGradesSubjects
+		$query = $EducationGradesSubjects
 				->find()
 				->contain(['EducationSubjects'])
 				->where([
 					'EducationGradesSubjects.education_grade_id IN ' => array_keys($gradeData),
 					'EducationGradesSubjects.visible' => 1
-				])
+				]);
+		$subjects = $query
 				->order('EducationSubjects.order')
 				->group('EducationSubjects.id')
 				->toArray();
+		// pr($subjects);die;
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
@@ -745,6 +746,7 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	private function getExistedSubjects($listOnly=false) {
+		// pr($this->selectedClassId);die;
 		$subjects = $this
 			->InstitutionSiteSectionClasses
 			->find()
@@ -755,10 +757,11 @@ class InstitutionSiteClassesTable extends AppTable {
 				],
 			])
 			->where([
-				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->selectedSectionId,
+				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->selectedClassId,
 				'InstitutionSiteSectionClasses.status' => 1
 			])
 			->toArray();
+			// pr($subjects);die;
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
@@ -768,6 +771,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		} else {
 			$data = $subjects;
 		}
+		// pr($data);die;
 		return $data;
 	}
 

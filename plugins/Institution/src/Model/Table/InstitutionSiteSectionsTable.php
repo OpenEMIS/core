@@ -561,25 +561,29 @@ class InstitutionSiteSectionsTable extends AppTable {
 				->find()
 				->contain(['EducationSubjects'])
 				->where([
-					'EducationGrades.id IN' => $grades
+					'EducationGrades.id IN' => $grades,
+					'EducationGrades.status' => 1,
+
 				])
 				->toArray();
 		$subjects = [];
 		$data['MultiClasses'] = [];
-		foreach ($gradeSubjects as $grade) {
-			foreach ($grade->education_subjects as $subject) {
-				if (!isset($subjects[$subject->id])) {
-					$subjects[$subject->id] = $subject->name;
-					$data['MultiClasses'][] = [
-					    'education_subject_id' => $subject->id,
-				        'name' => $subject->name,
-				        'institution_site_class_staff' => [
-				            0 => [
-				                'status' => 1,
-				                'security_user_id' => 0
-				            ]
-				        ]
-					];
+		if (count($gradeSubjects)>0) {
+			foreach ($gradeSubjects as $grade) {
+				foreach ($grade->education_subjects as $subject) {
+					if (!isset($subjects[$subject->id])) {
+						$subjects[$subject->id] = $subject->name;
+						$data['MultiClasses'][] = [
+						    'education_subject_id' => $subject->id,
+					        'name' => $subject->name,
+					        'institution_site_class_staff' => [
+					            0 => [
+					                'status' => 1,
+					                'security_user_id' => 0
+					            ]
+					        ]
+						];
+					}
 				}
 			}
 		}
