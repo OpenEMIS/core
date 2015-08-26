@@ -228,7 +228,7 @@ class RestSurveyComponent extends Component {
 
 	    		$xmlResponse = $data['response'];
 	    		// line below is for testing
-	    		// $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:InstitutionSite>1</oe:InstitutionSite><oe:AcademicPeriod>10</oe:AcademicPeriod><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
+	    		// $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
 				$this->log('XML Response', 'debug');
 				$this->log($xmlResponse, 'debug');
 				$xmlResponse = str_replace("xf:", "", $xmlResponse);
@@ -240,8 +240,8 @@ class RestSurveyComponent extends Component {
 	    		$xml = Xml::build($xmlstr);
 
 				$formId = $xml->$formAlias->attributes()->id->__toString();
-	    		$institutionId = $xml->$formAlias->InstitutionSite->__toString();
-	    		$periodId = $xml->$formAlias->AcademicPeriod->__toString();
+	    		$institutionId = $xml->$formAlias->Institutions->__toString();
+	    		$periodId = $xml->$formAlias->AcademicPeriods->__toString();
 	    		$status = 2; // completed
 	    		$createdUserId = 1; // System Administrator
 
@@ -445,26 +445,26 @@ class RestSurveyComponent extends Component {
 
 						$formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
 							$formNode->addAttribute("id", $id);
-						$formNode->addChild('InstitutionSite', null, NS_OE);
-						$formNode->addChild('AcademicPeriod', null, NS_OE);
+						$formNode->addChild('Institutions', null, NS_OE);
+						$formNode->addChild('AcademicPeriods', null, NS_OE);
 
 						$bindNode = $modelNode->addChild("bind", null, NS_XF);
-						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/InstitutionSite");
+						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
 						$bindNode->addAttribute("type", 'string');
 						$bindNode->addAttribute("required", 'true()');
 						$bindNode = $modelNode->addChild("bind", null, NS_XF);
-						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriod");
+						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
 						$bindNode->addAttribute("type", 'string');
 						$bindNode->addAttribute("required", 'true()');
 
 						$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
-						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/InstitutionSite");
+						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
 						$textNode->addAttribute("oe-type", "select");
 							$textNode->addChild("label", "Institution Site", NS_XF);
 						$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
-						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriod");
+						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
 						$textNode->addAttribute("oe-type", "select");
-						$textNode->addAttribute("oe-dependency", "instance('" . $instanceId . "')/".$this->Form->alias()."/InstitutionSite");
+						$textNode->addAttribute("oe-dependency", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
 							$textNode->addChild("label", "Academic Period", NS_XF);
 
 						$sectionName = null;
