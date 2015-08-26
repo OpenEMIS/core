@@ -52,15 +52,15 @@ class StaffController extends AppController {
 		$header = __('Staff');
 
 		if ($action == 'index') {
-			$session->delete('Staff.id');
-			$session->delete('Staff.name');
-		} else if ($session->check('Staff.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Staff.Staff.id');
+			$session->delete('Staff.Staff.name');
+		} else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Staff.id')) {
-				$id = $session->read('Staff.id');
+			} else if ($session->check('Staff.Staff.id')) {
+				$id = $session->read('Staff.Staff.id');
 			}
 
 			if (!empty($id)) {
@@ -78,12 +78,12 @@ class StaffController extends AppController {
 		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
 		$session = $this->request->session();
-		if ($session->check('Staff.id')) {
+		if ($session->check('Staff.Staff.id')) {
 			$header = '';
-			$userId = $session->read('Staff.id');
+			$userId = $session->read('Staff.Staff.id');
 
-			if ($session->check('Staff.name')) {
-				$header = $session->read('Staff.name');
+			if ($session->check('Staff.Staff.name')) {
+				$header = $session->read('Staff.Staff.name');
 			}
 
 			$alias = $model->alias;
@@ -128,8 +128,8 @@ class StaffController extends AppController {
 		$session = $this->request->session();
 		
 		if ($model->alias() != 'Staff') {
-			if ($session->check('Staff.id')) {
-				$userId = $session->read('Staff.id');
+			if ($session->check('Staff.Staff.id')) {
+				$userId = $session->read('Staff.Staff.id');
 				if ($model->hasField('security_user_id')) {
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('staff_id')) {

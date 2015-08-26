@@ -61,7 +61,7 @@ class StudentFeesTable extends AppTable {
     	$this->ControllerAction->field('outstanding', ['type' => 'string', 				'visible' => ['index'=>true]]);
 
 		$session = $this->request->session();
-		$this->institutionId = $session->read('Institutions.id');
+		$this->institutionId = $session->read('Institution.Institutions.id');
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
@@ -151,14 +151,14 @@ class StudentFeesTable extends AppTable {
 		$this->ControllerAction->model('Institution.StudentPromotion');
 		$this->ControllerAction->model->ControllerAction = $this->ControllerAction;
 		$idKey = $this->ControllerAction->model->aliasField('id');
-
+		$sessionKey = $this->ControllerAction->model->registryAlias() . '.id';
 		if ($this->ControllerAction->model->exists([$idKey => $id])) {
 
 			$entity = $this->ControllerAction->model->get($id, [
 				'contain'=> array_merge($this->ControllerAction->model->allAssociations(), [])
 			]);
 
-			$this->Session->write($idKey, $id);
+			$this->Session->write($sessionKey, $id);
 
 			$this->InstitutionSiteFeeEntity = $this->InstitutionSiteFees
 				->find()
@@ -219,7 +219,7 @@ class StudentFeesTable extends AppTable {
 
 			return $entity;
 		} else {
-			$this->Session->delete($idKey);
+			$this->Session->delete($sessionKey);
 			return false;
 		}
 	}
