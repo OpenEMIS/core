@@ -3,6 +3,7 @@ namespace Education\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
@@ -21,6 +22,9 @@ class EducationCyclesTable extends AppTable {
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
+	}
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {

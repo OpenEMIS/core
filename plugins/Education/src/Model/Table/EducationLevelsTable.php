@@ -25,6 +25,10 @@ class EducationLevelsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
