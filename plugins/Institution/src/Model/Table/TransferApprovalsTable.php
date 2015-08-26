@@ -67,7 +67,7 @@ class TransferApprovalsTable extends AppTable {
 		]);
 		$urlParams = $this->ControllerAction->url('edit');
 		if ($urlParams['controller'] == 'Dashboard') {
-			$this->controller->Navigation->addCrumb('Transfer Approvals', ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'TransferApprovals', '0' => $urlParams[0], '1'=> $urlParams[1]]);
+			$this->Navigation->addCrumb('Transfer Approvals', $urlParams);
 		}
 	}
 
