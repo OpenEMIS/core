@@ -155,30 +155,23 @@ class UsersTable extends AppTable {
 
 					$rowData = [];
 					if ($groupEntity) {
+						$url = [
+							'plugin' => $this->controller->plugin,
+							'controller' => $this->controller->name,
+							'view',
+							$groupEntity->id
+						];
 						if (!empty($groupEntity->institution)) {
-							$rowData[] = $event->subject()->Html->link($groupEntity->name, 
-								[
-									'plugin' => $this->controller->plugin,
-									'controller' => $this->controller->name,
-									'action' => 'SystemGroups',
-									'view',
-									$groupEntity->id
-								]
-							);
+							$url['action'] = 'SystemGroups';
 						} else {
-							$rowData[] = $event->subject()->Html->link($groupEntity->name, 
-								[
-									'plugin' => $this->controller->plugin,
-									'controller' => $this->controller->name,
-									'action' => 'UserGroups',
-									'view',
-									$groupEntity->id
-								]
-							);
+							$url['action'] = 'UserGroups';
 						}
-						$rowData[] = $obj->name;
+						$rowData[] = $event->subject()->Html->link($groupEntity->name, $url);
+					} else {
+						$rowData[] = '';
 					}
-					
+
+					$rowData[] = $obj->name; // role name
 					$tableCells[] = $rowData;
 				}
 			}
