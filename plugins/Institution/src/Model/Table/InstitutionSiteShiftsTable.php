@@ -39,6 +39,7 @@ class InstitutionSiteShiftsTable extends AppTable {
  	        			return true;
  	        		}
 				})
+ 	        ->notEmpty('location_institution_site_id', 'Location not chosen');
 	        ;
 		return $validator;
 	}
@@ -49,7 +50,11 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
 		$this->ControllerAction->field('name', ['type' => 'string']);
-		$this->ControllerAction->field('period', ['type' => 'string']);
+		$this->ControllerAction->field('period', ['type' => 'string']);	
+	}
+
+	public function indexBeforeAction(Event $event){
+		$this->ControllerAction->field('location', ['visible' => false]);
 	}
 
 	public function afterAction(Event $event) {
