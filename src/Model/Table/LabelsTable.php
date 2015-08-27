@@ -90,4 +90,8 @@ class LabelsTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->where(['visible' => 1]);
 	}
+
+	public function getDefaultConfig(){
+		return $this->defaultConfig;
+	}
 }
