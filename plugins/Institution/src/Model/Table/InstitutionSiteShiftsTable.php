@@ -71,6 +71,8 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function viewBeforeAction($event) {
 		$this->ControllerAction->field('period', ['visible' => true]);
+		$this->ControllerAction->field('location', ['visible' => false]);
+
 
 		$this->ControllerAction->setFieldOrder([
 			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
@@ -108,7 +110,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		unset($data[$this->alias()]['location_institution_site_id']);
-		//unset($data[$this->alias()]['institution_name']);
 	}
 
 	public function onUpdateFieldLocation(Event $event, array $attr, $action, $request) {
@@ -137,6 +138,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 			$attr['noResults'] = __('No Institutions found');
 			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
 			$attr['url'] = ['controller' => $this->controller->name, 'action' => 'ajaxInstitutionAutocomplete'];
+			$attr['attr']['value'] = '';
 
 			if($request->data){
 				$data = $request->data[$this->alias()];
