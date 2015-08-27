@@ -505,9 +505,7 @@ class StudentsTable extends AppTable {
 
 		// Academic Period
 		$periodOptions = $AcademicPeriod->getList();
-
-		$selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : key($periodOptions);
-		// $this->advancedSelectOptions($periodOptions, $selectedPeriod, []);
+		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 			'callable' => function($id) use ($Grades, $institutionId) {
@@ -522,7 +520,7 @@ class StudentsTable extends AppTable {
 
 		// Grade
 		$gradeOptions = [];
-		$sectionOptions = ['0' => __('-- Select Class -- ')];
+		$sectionOptions = ['0' => __('-- Select Class --')];
 		$selectedSection = 0;
 
 		if ($selectedPeriod != 0) {
