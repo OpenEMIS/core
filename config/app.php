@@ -83,7 +83,15 @@ return [
     'Cache' => [
         'default' => [
             'className' => 'File',
+            'path' => CACHE
+        ],
+
+        'labels' => [
+            'className' => 'File',
             'path' => CACHE,
+            'probability' => 0,
+            'duration' => '+1 month',
+            'groups' => ['labels']
         ],
 
         /**
