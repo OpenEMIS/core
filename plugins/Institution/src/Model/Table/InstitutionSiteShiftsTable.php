@@ -33,6 +33,12 @@ class InstitutionSiteShiftsTable extends AppTable {
  	        ->add('end_time', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'start_time', false]
 	    	    ])
+ 	        ->notEmpty('institution_name', 'Search for Institution for OTHER school selection', function ($context) {
+ 	        		$data = $this->request->data[$this->alias()];
+ 	        		if(!empty($data['location']) && ($data['location'] == 'OTHER')) {
+ 	        			return true;
+ 	        		}
+				})
 	        ;
 		return $validator;
 	}
@@ -132,7 +138,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function onUpdateFieldLocationInstitutionSiteId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$attr['fieldName'] = $this->aliasField('institution_name');
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'location_institution_site_id', 'name' => $this->aliasField('location_institution_site_id')];
 			$attr['noResults'] = __('No Institutions found');
@@ -146,6 +151,8 @@ class InstitutionSiteShiftsTable extends AppTable {
 					$attr['type'] = 'hidden';
 					$institutionId = $this->Session->read('Institutions.id');
 					$attr['value'] = $institutionId;
+				} else {
+					$attr['fieldName'] = $this->aliasField('institution_name');
 				}
 			} else {
 				if($action == 'edit') {
@@ -155,7 +162,11 @@ class InstitutionSiteShiftsTable extends AppTable {
 						if($entity->institution_site_id != $entity->location_institution_site_id) {
 							$attr['visible'] = true;
 							$attr['attr']['value'] = $entity->location_institution_site->name;
+							$attr['fieldName'] = $this->aliasField('institution_name');
 						} 
+						else {
+							$attr['visible'] = false;
+						}
 					}
 				} else {
 					$attr['type'] = 'hidden';
