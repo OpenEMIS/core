@@ -1126,11 +1126,20 @@ class ControllerActionComponent extends Component {
 
 				$associations = [];
 				foreach ($model->associations() as $assoc) {
-					if ($assoc->type() == 'oneToMany') {
+					if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
 						if (!array_key_exists($assoc->table(), $associations)) {
-							$count = $assoc->find()
-							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-							->count();
+							$count = 0;
+							if($assoc->type() == 'oneToMany') {
+								$count = $assoc->find()
+								->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+								->count();
+							} else {
+								$count = $model->find()
+									->contain([$assoc->name()])
+									->where([$model->aliasField($model->primaryKey()) => $id])
+									->first();
+								$count = count($count->toArray()[$assoc->table()]);
+							}
 							$title = $this->Alert->getMessage($assoc->aliasField('title'));
 							if ($title == '[Message Not Found]') {
 								$title = $assoc->name();
@@ -1179,7 +1188,7 @@ class ControllerActionComponent extends Component {
 
 				$associations = [];
 				foreach ($model->associations() as $assoc) {
-					if ($assoc->type() == 'oneToMany') {
+					if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
 						if (!array_key_exists($assoc->table(), $associations)) {
 							// $assoc->dependent(false);
 							$associations[$assoc->table()] = $assoc;
@@ -1188,11 +1197,17 @@ class ControllerActionComponent extends Component {
 				}
 
 				if ($process($model, $transferFrom, $deleteOptions)) {
-					foreach ($associations as $assoc) {
-						$assoc->updateAll(
-							[$assoc->foreignKey() => $transferTo],
-							[$assoc->foreignKey() => $transferFrom]
-						);
+					if ($assoc->type() == 'oneToMany') {
+						foreach ($associations as $assoc) {
+							$assoc->updateAll(
+								[$assoc->foreignKey() => $transferTo],
+								[$assoc->foreignKey() => $transferFrom]
+							);
+						}
+					} else if ($assoc->type() == 'manyToMany') {
+						foreach ($associations as $assoc) {
+							
+						}
 					}
 					$this->Alert->success('general.delete.success');
 				} else {
