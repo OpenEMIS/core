@@ -22,7 +22,7 @@
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
-					<th><?= $this->Label->get('Users.gender'); ?></th>
+					<th><?= $this->Label->get('Users.gender_id'); ?></th>
 					<th><?= $this->Label->get('Users.date_of_birth'); ?></th>
 					<th class="cell-delete"></th>
 				</tr>
