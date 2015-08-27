@@ -1,5 +1,5 @@
 <?php if ($action == 'view') : ?>
-	<div class="table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
@@ -39,12 +39,12 @@
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-toolbar">
-			<button onclick="$('#reload').val('addAction').click();" class="btn btn-default btn-xs">
+			<button onclick="$('#reload').val('addAction').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i>
 				<span><?= __('Add');?></span>
 			</button>
 		</div>
-		<div class="table-in-view col-md-4 table-responsive">
+		<div class="table-in-view">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
