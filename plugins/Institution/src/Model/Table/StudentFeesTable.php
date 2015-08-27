@@ -84,9 +84,12 @@ class StudentFeesTable extends AppTable {
 		$conditions = array(
 			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
 		);
-		$academicPeriodOptions = $this->InstitutionSiteFees->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
+		}
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
