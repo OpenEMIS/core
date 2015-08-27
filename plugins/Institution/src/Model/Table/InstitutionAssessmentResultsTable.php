@@ -33,7 +33,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
     	return $events;
     }
 
-	public function onGetIdentity(Event $event, Entity $entity) {
+	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		return $entity->user->openemis_no;
 	}
 
@@ -49,6 +49,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
 		$selectedClass = $this->request->query('class');
+		$selectedMode = $this->request->query('mode');
 		$subjectId = $Classes->get($selectedClass)->education_subject_id;
 		$id = $entity->student_id;
 
@@ -79,7 +80,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			}
 			$entity->assessment_grading_option_id = $gradingId;
 
-			if ($selectedStatus == 0 || $selectedStatus == 1) {
+			if ($selectedMode == 'edit') {
 				$Form = $event->subject()->Form;
 				$alias = Inflector::underscore($Results->alias());
 				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
@@ -104,8 +105,8 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
 
-		$selectedStatus = $this->request->query('status');
-		if ($selectedStatus == 0 || $selectedStatus == 1) {
+		$selectedMode = $this->request->query('mode');
+		if ($selectedMode == 'edit') {
 			$Form = $event->subject()->Form;
 			$Items = TableRegistry::get('Assessment.AssessmentItems');
 			$Results = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -136,15 +137,16 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('institution_site_class_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
-		$this->ControllerAction->field('identity');
+		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('mark');
 		$this->ControllerAction->field('grade');
-		$this->ControllerAction->setFieldOrder(['identity', 'student_id', 'mark', 'grade']);
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'mark', 'grade']);
 
 		$institutionId = $this->Session->read('Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
+		$selectedMode = $this->request->query('mode');
 
 		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$subjectIds = $AssessmentItems
@@ -211,6 +213,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				$action .= '?status=' . $selectedStatus;
 				$action .= '&assessment=' . $selectedAssessment;
 				$action .= '&period=' . $selectedPeriod;
+				$action .= '&mode=' . $selectedMode;
 				// End
 				
 				$tabElements = [];
@@ -310,12 +313,13 @@ class InstitutionAssessmentResultsTable extends AppTable {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		$selectedStatus = $this->request->query('status');
-		if ($selectedStatus == 0 || $selectedStatus == 1) {
+		$selectedMode = $this->request->query('mode');
+		if ($selectedMode == 'edit') {
 			$config['formButtons'] = true;
 			$config['url'] = $config['buttons']['index']['url'];
 			$config['url'][0] = 'indexEdit';
 
-			// Add hidden fields
+			// This hidden field (with class = "assessment-status") is important in order for Save As Draft and Submit to work
 			$Items = TableRegistry::get('Assessment.AssessmentItems');
 			$indexElements = $this->controller->viewVars['indexElements'];
 			$indexElements[] = [

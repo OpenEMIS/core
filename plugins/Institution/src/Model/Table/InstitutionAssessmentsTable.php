@@ -45,6 +45,12 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetAssessmentId(Event $event, Entity $entity) {
+		if ($entity->status == 0 || $entity->status == 1) {
+			$mode = 'edit';
+		} else {
+			$mode = 'view';
+		}
+
 		return $event->subject()->Html->link($entity->assessment->code_name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
@@ -52,7 +58,8 @@ class InstitutionAssessmentsTable extends AppTable {
 			'index',
 			'status' => $entity->status,
 			'assessment' => $entity->assessment_id,
-			'period' => $entity->academic_period_id
+			'period' => $entity->academic_period_id,
+			'mode' => $mode
 		]);
 	}
 
@@ -84,7 +91,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = date('d-m-Y', strtotime($dateDisabled));
+			$value = $dateDisabled->format('d-m-Y');
 		}
 
 		return $value;
@@ -106,11 +113,21 @@ class InstitutionAssessmentsTable extends AppTable {
 		$action = $this->alias;
 
 		$tabElements = [];
-		foreach ($statusOptions as $key => $status) {
-			$tabElements[$status] = [
-				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status='.$key],
-				'text' => $status
+		if ($this->AccessControl->check([$this->controller->name, 'Results', 'indexEdit'])) {
+			$tabElements['New'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=0'],
+				'text' => __('New')
 			];
+			$tabElements['Draft'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=1'],
+				'text' => __('Draft')
+			];
+		}
+		if ($this->AccessControl->check([$this->controller->name, 'Results', 'index'])) {
+			$tabElements['Completed'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=2'],
+				'text' => __('Completed')
+			];                           
 		}
 
 		$this->controller->set('tabElements', $tabElements);
@@ -168,7 +185,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($selectedStatus == 0) {	// New
-			unset($buttons['view']);
 			unset($buttons['remove']);
 		} else if ($selectedStatus == 2) {	// Completed
 			unset($buttons['edit']);
@@ -177,14 +193,21 @@ class InstitutionAssessmentsTable extends AppTable {
 		return $buttons;
 	}
 
-	public function _buildRecords($status=0) {
-		$institutionId = $this->Session->read('Institutions.id');
+	public function _buildRecords($institutionId=null) {
+		if (is_null($institutionId)) {
+			$session = $this->controller->request->session();
+			if ($session->check('Institutions.id')) {
+				$institutionId = $session->read('Institutions.id');
+			}
+		}
 
-		//delete all New Assessment by Institution Id and reinsert
-		$this->deleteAll([
-			$this->aliasField('institution_site_id') => $institutionId,
-			$this->aliasField('status') => $status
-		]);
+		// Update all New Assessment to Expired by Institution Id
+		$this->updateAll(['status' => -1],
+			[
+				'institution_site_id' => $institutionId,
+				'status' => 0
+			]
+		);
 
 		$assessments = $this->Assessments
 			->find('list')
@@ -210,20 +233,37 @@ class InstitutionAssessmentsTable extends AppTable {
 					$assessmentId = $assessmentStatus->assessment_id;
 
 					$results = $this
-						->findAllByInstitutionSiteIdAndAcademicPeriodIdAndAssessmentId($institutionId, $academicPeriodId, $assessmentId)
+						->find()
+						->where([
+							$this->aliasField('institution_site_id') => $institutionId,
+							$this->aliasField('academic_period_id') => $academicPeriodId,
+							$this->aliasField('assessment_id') => $assessmentId
+						])
 						->all();
 
 					if ($results->isEmpty()) {
-						$InstitutionAssessment = $this->newEntity();
-						$InstitutionAssessment->status = $status;
-						$InstitutionAssessment->institution_site_id = $institutionId;
-						$InstitutionAssessment->academic_period_id = $academicPeriodId;
-						$InstitutionAssessment->assessment_id = $assessmentId;
+						// Insert New Assessment if not found
+						$data = [
+							'institution_site_id' => $institutionId,
+							'academic_period_id' => $academicPeriodId,
+							'assessment_id' => $assessmentId
+						];
+						$entity = $this->newEntity($data);
 
-						if ($this->save($InstitutionAssessment)) {
+						if ($this->save($entity)) {
 						} else {
-							$this->log($InstitutionAssessment->errors(), 'debug');
+							$this->log($entity->errors(), 'debug');
 						}
+					} else {
+						// Update Expired Assessment back to New
+						$this->updateAll(['status' => 0],
+							[
+								'institution_site_id' => $institutionId,
+								'academic_period_id' => $academicPeriodId,
+								'assessment_id' => $assessmentId,
+								'status' => -1
+							]
+						);
 					}
 				}
 			}
@@ -234,6 +274,13 @@ class InstitutionAssessmentsTable extends AppTable {
 		//Return all required options and their key
 		$statusOptions = $this->getSelectOptions('Assessments.status');
 		$selectedStatus = $this->queryString('status', $statusOptions);
+
+		// If do not have access to Assessment - edit but have access to Assessment - view, then set selectedStatus to 2
+		if (!$this->AccessControl->check([$this->controller->name, 'Results', 'indexEdit'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'Results', 'index'])) {
+				$selectedStatus = 2;
+			}
+		}
 
 		return compact('statusOptions', 'selectedStatus');
 	}
