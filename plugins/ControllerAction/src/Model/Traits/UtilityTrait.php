@@ -65,30 +65,73 @@ trait UtilityTrait {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
 
-		foreach ($options as $id => $label) {
-			$label = __($label);
-			$options[$id] = ['value' => $id, 'text' => $label];
-			
-			if (is_callable($callable)) {
-				if (!empty($id)) {
-					$count = $callable($id);
-				} else {
-					$count = 1;
-				}
-				if ($count == 0) {
-					if (!empty($message)) {
-						$options[$id]['text'] = str_replace('{{label}}', $label, $message);
-					}
-					$options[$id][] = 'disabled';
+		$isMultilevel = false;
 
-					if ($selected == $id) $selected = 0;
-				} else {
-					// if ($selected == 0 && $id != 0) $selected = $id;
+		// Check if it is a multi level array
+		foreach ($options as $id => $value) {
+			if (is_array( $value )) {
+				$isMultilevel = true;
+				break;
+			}
+		}
+
+		if (! $isMultilevel) {
+
+			// To handle normal list
+			foreach ($options as $id => $label) {
+				$label = __($label);
+				$options[$id] = ['value' => $id, 'text' => $label];
+
+				if (is_callable($callable)) {
+					if (!empty($id)) {
+						$count = $callable($id);
+					} else {
+						$count = 1;
+					}
+
+					if ($count == 0) {
+						if (!empty($message)) {
+							$options[$id]['text'] = str_replace('{{label}}', $label, $message);
+						}
+						$options[$id][] = 'disabled';
+
+						if ($selected == $id) $selected = 0;
+					} else {
+						if ($selected == 0) $selected = $id;
+					}
+				}
+
+				if ($selected == $id) {
+					$options[$id][] = 'selected';
 				}
 			}
+		} else {
 
-			if ($selected == $id) {
-				$options[$id][] = 'selected';
+			// To handle multi level array
+			foreach ($options as $key => $obj) {
+				foreach ($obj as $id => $label) {
+					$label = __($label);
+					$options[$key][$id] = ['value' => $id, 'text' => $label];
+
+					if (is_callable($callable)) {
+						$count = $callable($id);
+
+						if ($count == 0) {
+							if (!empty($message)) {
+								$options[$key][$id]['text'] = str_replace('{{label}}', $label, $message);
+							}
+							$options[$key][$id][] = 'disabled';
+
+							if ($selected == $id) $selected = 0;
+						} else {
+							if ($selected == 0) $selected = $id;
+						}
+					}
+
+					if ($selected == $id) {
+						$options[$key][$id][] = 'selected';
+					}
+				}
 			}
 		}
 		return $selected;

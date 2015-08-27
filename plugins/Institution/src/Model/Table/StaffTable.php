@@ -94,8 +94,13 @@ class StaffTable extends AppTable {
 		}
 		$options['sortWhitelist'] = $sortList;
 
+		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// Academic Periods
-		$periodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getList();
+		$periodOptions = $AcademicPeriodTable->getList();
+
+		if (empty($request->query['period'])) {
+			$request->query['period'] = $AcademicPeriodTable->getCurrent();
+		}
 
 		// Positions
 		$session = $request->session();
