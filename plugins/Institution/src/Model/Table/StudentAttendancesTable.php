@@ -93,6 +93,17 @@ class StudentAttendancesTable extends AppTable {
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
 			$options = ['type' => 'select', 'label' => false, 'options' => $this->typeOptions, 'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();'];
+			if (empty($entity->StudentAbsences['id'])) {
+				$options['value'] = 'PRESENT';
+			} else {
+				$html .= $Form->hidden($fieldPrefix.".id", ['value' => $entity->StudentAbsences['id']]);
+				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+					$options['value'] = 'UNEXCUSED';
+				} else {
+					$options['value'] = 'EXCUSED';
+				}
+			}
+
 			$html .= $Form->input($fieldPrefix.".absence_type", $options);
 			$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
@@ -131,21 +142,38 @@ class StudentAttendancesTable extends AppTable {
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
 
+			$presentDisplay = 'display: none;';
+			$excusedDisplay = 'display: none;';
+			$unexcusedDisplay = 'display: none;';
+			$reasonId = 0;
+			if (empty($entity->StudentAbsences['id'])) {
+				$presentDisplay = '';	// PRESENT
+			} else {
+				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+					$unexcusedDisplay = '';	// UNEXCUSED
+				} else {
+					$excusedDisplay = '';	// EXCUSED
+					$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
+				}
+			}
 			foreach ($this->typeOptions as $key => $value) {
 				switch($key) {
 					case 'PRESENT':
-						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'">';
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$presentDisplay.'">';
 							$html .= '<i class="fa fa-minus"></i>';
 						$html .= '</span>';
 						break;
 					case 'EXCUSED':
-						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="display: none;">';
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$excusedDisplay.'">';
 							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+							if ($reasonId != 0) {
+								$options['value'] = $reasonId;
+							}
 							$html .= $Form->input($fieldPrefix.".student_absence_reason_id", $options);
 						$html .= '</span>';
 						break;
 					case 'UNEXCUSED':
-						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="display: none;">';
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$unexcusedDisplay.'">';
 							$html .= '<i class="fa fa-minus"></i>';
 						$html .= '</span>';
 						break;
@@ -507,7 +535,14 @@ class StudentAttendancesTable extends AppTable {
 						if ($obj['absence_type'] == 'UNEXCUSED') {
 							$obj['student_absence_reason_id'] = 0;
 						}
-						if ($obj['absence_type'] == 'EXCUSED' || $obj['absence_type'] == 'UNEXCUSED') {
+
+						if ($obj['absence_type'] == 'PRESENT') {
+							if (isset($obj['id'])) {
+								$StudentAbsences->deleteAll([
+									$StudentAbsences->aliasField('id') => $obj['id']
+								]);
+							}
+						} else if ($obj['absence_type'] == 'EXCUSED' || $obj['absence_type'] == 'UNEXCUSED') {
 							$entity = $StudentAbsences->newEntity($obj);
 							if ($StudentAbsences->save($entity)) {
 							} else {

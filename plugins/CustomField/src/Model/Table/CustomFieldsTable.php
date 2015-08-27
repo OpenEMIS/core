@@ -93,6 +93,25 @@ class CustomFieldsTable extends AppTable {
 			// To handle when delete all field_options
 			if (!array_key_exists(Inflector::underscore($_contain), $data[$this->alias()])) {
 				$data[$this->alias()][Inflector::underscore($_contain)] = [];
+				$entity->{Inflector::underscore($_contain)} = [];
+			}
+		}
+
+		if (isset($entity->custom_field_options)) {
+			foreach ($entity->custom_field_options as $colKey => $colObj) {
+				$entity->custom_field_options[$colKey]->dirty('visible', true);
+			}
+		}
+
+		if (isset($entity->custom_table_columns)) {
+			foreach ($entity->custom_table_columns as $colKey => $colObj) {
+				$entity->custom_table_columns[$colKey]->dirty('visible', true);
+			}
+		}
+
+		if (isset($entity->custom_table_rows)) {
+			foreach ($entity->custom_table_rows as $rowKey => $rowObj) {
+				$entity->custom_table_rows[$rowKey]->dirty('visible', true);
 			}
 		}
 
