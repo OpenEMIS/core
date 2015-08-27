@@ -342,16 +342,14 @@ class InstitutionSiteClassesTable extends AppTable {
 						'name' => $row['name'],
 						'education_subject_id' => $row['education_subject_id'],
 						'academic_period_id' => $commonData['academic_period_id'],
-						'institution_site_id' => $commonData['institution_site_id']
-					];
-					if (!array_key_exists('MultiSections', $data)) {
-						$subjects[$key]['institution_site_section_classes'] = [
+						'institution_site_id' => $commonData['institution_site_id'],
+						'institution_site_section_classes' => [
 							[
 								'status' => 1,
 								'institution_site_section_id' => $commonData['class_name']
 							]
-						];
-					}
+						]
+					];
 					if ($row['institution_site_class_staff'][0]['security_user_id']!=0) {
 						$subjects[$key]['institution_site_class_staff'] = $row['institution_site_class_staff'];
 					}
