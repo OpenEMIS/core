@@ -1197,42 +1197,36 @@ class ControllerActionComponent extends Component {
 
 				if ($process($model, $transferFrom, $deleteOptions)) {
 					if ($assoc->type() == 'oneToMany') {
-						foreach ($associations as $assoc) {
-							$assoc->updateAll(
-								[$assoc->foreignKey() => $transferTo],
-								[$assoc->foreignKey() => $transferFrom]
-							);
-						}
+						$assoc->updateAll(
+							[$assoc->foreignKey() => $transferTo],
+							[$assoc->foreignKey() => $transferFrom]
+						);
 					} else if ($assoc->type() == 'manyToMany') {
-						foreach ($associations as $assoc) {
-							$junctionTable = $assoc->junction();
+						$junctionTable = $assoc->junction();
 
-							// List of the target foreign keys for subqueries
-							$targetForeignKeys = $junctionTable->find()
-								->select([$junctionTable->aliasField($assoc->targetForeignKey())])
-								->where([
-									$junctionTable->aliasField($assoc->foreignKey()) => $transferTo
-								]);
+						// List of the target foreign keys for subqueries
+						$targetForeignKeys = $junctionTable->find()
+							->select([$junctionTable->aliasField($assoc->targetForeignKey())])
+							->where([
+								$junctionTable->aliasField($assoc->foreignKey()) => $transferTo
+							]);
 
-							// List of id in the junction table to be deleted
-							$idForDelete = $junctionTable->find('list',[
-									'keyField' => 'id',
-									'valueField' => 'id'
-								])
-								->where([
-									$junctionTable->aliasField($assoc->foreignKey()) => $transferFrom,
-									$junctionTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
-								])
-								->toArray();
+						// List of id in the junction table to be deleted
+						$idNotToUpdate = $junctionTable->find('list',[
+								'keyField' => 'id',
+								'valueField' => 'id'
+							])
+							->where([
+								$junctionTable->aliasField($assoc->foreignKey()) => $transferFrom,
+								$junctionTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
+							])
+							->toArray();
 
-							// Update all transfer records
-							$junctionTable->updateAll(
-								[$assoc->foreignKey() => $transferTo],
-								[$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idForDelete]
-							);
-
-							
-						}
+						// Update all transfer records
+						$junctionTable->updateAll(
+							[$assoc->foreignKey() => $transferTo],
+							[$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate]
+						);
 					}
 					$this->Alert->success('general.delete.success');
 				} else {
