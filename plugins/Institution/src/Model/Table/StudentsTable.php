@@ -73,10 +73,18 @@ class StudentsTable extends AppTable {
 			->add('academic_period_id', [
 			])
 			// ->allowEmpty('student_id') required for create new but disabling for now
-			->add('student_name', 'ruleInstitutionStudentId', [
-				'rule' => ['institutionStudentId'],
-				'on' => 'create'
-			])
+			->add('student_name', 
+				[
+					'ruleInstitutionStudentId' => [
+						'rule' => ['institutionStudentId'],
+						'on' => 'create'
+					],
+					'ruleCheckAdmissionAgeWithEducationCycle' => [
+						'rule' => ['checkAdmissionAgeWithEducationCycle'],
+						'on' => 'create'
+					]
+				]
+			)
 		;
 	}
 

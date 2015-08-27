@@ -26,7 +26,8 @@ class StudentUserTable extends UserTable {
 			unset($academicData['class']);
 
 			$Student = TableRegistry::get('Institution.Students');
-			if ($Student->save($Student->newEntity($academicData))) {
+			$newStudentEntity = $Student->newEntity($academicData);
+			if ($Student->save($newStudentEntity)) {
 				if ($class > 0) {
 					$sectionData = [];
 					$sectionData['student_id'] = $entity->id;
@@ -35,6 +36,24 @@ class StudentUserTable extends UserTable {
 					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 				}
+			} else {
+				$validationErrors = [];
+				foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
+					foreach ($nvalue as $ekey => $evalue) {
+						$validationErrors[] = $evalue;
+					}
+				}
+
+				$validationErrors = implode('; ', $validationErrors);
+				// overriding any previously created alerts
+				$session = $this->controller->request->session();
+				if ($session->check('_alert')) {
+					$session->delete('_alert');
+				}
+				$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
+				$event->stopPropagation();
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+				return $this->controller->redirect($action);
 			}
 			$this->Session->delete($sessionKey);
 		}

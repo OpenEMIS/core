@@ -391,7 +391,8 @@ trait MessagesTrait {
 			],
 			'Students' => [
 				'student_name' => [
-					'ruleInstitutionStudentId' => 'Student has already been added.'
+					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleCheckAdmissionAgeWithEducationCycle' => 'This student does not fall within the allowed age range for this grade.'
 				]
 			],
 			'Staff' => [
