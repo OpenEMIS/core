@@ -141,13 +141,24 @@ class StudentsTable extends AppTable {
 		$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
 
 		// Query Strings
+
+		if (empty($request->query['academic_period_id'])) {
+			$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		}
 		$selectedStatus = $this->queryString('status_id', $statusOptions);
-		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
+		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
 		// Advanced Select Options
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
-		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
+		$studentTable = $this;
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+			'callable' => function($id) use ($studentTable, $institutionId) {
+				return $studentTable->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+			}
+		]);
+
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
 		if ($selectedEducationGrades != -1) {
@@ -227,7 +238,7 @@ class StudentsTable extends AppTable {
 			$institutionId = $session->read('Institution.Institutions.id');
 
 			// Get number of student in institution
-			$periodId = $this->request->query['academic_period_id'];
+			$periodId = $this->request->query('academic_period_id');
 			$studentCount = $this->find()
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
