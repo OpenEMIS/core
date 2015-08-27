@@ -100,31 +100,55 @@ class AdvanceSearchBehavior extends Behavior {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
 		$conditions = '';
-		foreach ($this->data as $key=>$value) {
+		$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
+		foreach ($advancedSearch as $key=>$value) {
+			$pathId = null;
 			if( $key == 'area_id' || $key == 'area_administrative_id'){
 				$tableName = "";
 				switch ($key) {
 					case 'area_id':
 						$tableName = 'Area.Areas';
+						$pathId = $advancedSearch['area_id'];
 						break;
 					case 'area_administrative_id':
 						$tableName = 'Area.AreaAdministratives';
+						$pathId = $advancedSearch['area_administrative_id'];
 						break;
 				}
-				
-				// $children = $Table
-				// 	->find('children',['for' => $pathId, 'direct' => true])
-				// 	->find('threaded')
-				// 	->toArray();
+				$Table = TableRegistry::get($tableName);
+				if (!empty($pathId)) {
+					$children = $Table
+						->find('children',[
+							'for' => $pathId,
+							])
+						->find('list', [
+							'keyField' => 'id',
+							'valueField' => 'id'
+							])
+						->toArray();
+					// $children[$value] = $value;
+					// $conditions[$this->model->aliasField($key).' IN'] = $children;
+
+					$query
+						->innerJoin(['AllArea'=> 'areas'],['AllArea.id' => $value])
+						->innerJoin(['AreaTable' => 'areas'], [
+							'AllArea.lft <= AreaTable.lft', 
+							'AllArea.rght >= AreaTable.rght'
+						])
+						;	
+						
+					pr($query->sql());die;
+
+				}
         	} else {
 				if (!empty($value) && $value>0) {
 					$conditions[$this->model->aliasField($key)] = $value;
 	        	}
 			}
         }
-
         if (!empty($conditions)) {
         	$query->where($conditions);
+        	pr($query->sql());
         }
 	}
 
