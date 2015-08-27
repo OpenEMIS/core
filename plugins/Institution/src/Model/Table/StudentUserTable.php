@@ -45,11 +45,6 @@ class StudentUserTable extends UserTable {
 				}
 
 				$validationErrors = implode('; ', $validationErrors);
-				// overriding any previously created alerts
-				$session = $this->controller->request->session();
-				if ($session->check('_alert')) {
-					$session->delete('_alert');
-				}
 				$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
 				$event->stopPropagation();
 				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
