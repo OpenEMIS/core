@@ -89,7 +89,7 @@ class UsersTable extends AppTable {
 			$this->fields['last_login']['visible'] = false;
 		}
 
-		$this->ControllerAction->field('status', ['visible' => true, 'type' => 'select', 'options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
 	}
 
 	public function indexBeforeAction(Event $event) {
