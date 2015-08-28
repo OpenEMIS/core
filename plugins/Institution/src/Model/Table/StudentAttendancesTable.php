@@ -147,15 +147,12 @@ class StudentAttendancesTable extends AppTable {
 			$unexcusedDisplay = 'display: none;';
 			$reasonId = 0;
 			if (empty($entity->StudentAbsences['id'])) {
-				// $options['value'] = 'PRESENT';
-				$presentDisplay = '';
+				$presentDisplay = '';	// PRESENT
 			} else {
 				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
-					// $options['value'] = 'UNEXCUSED';
-					$unexcusedDisplay = '';
+					$unexcusedDisplay = '';	// UNEXCUSED
 				} else {
-					// $options['value'] = 'EXCUSED';
-					$excusedDisplay = '';
+					$excusedDisplay = '';	// EXCUSED
 					$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
 				}
 			}
