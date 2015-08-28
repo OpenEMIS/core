@@ -87,8 +87,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		if (empty($this->request->query['academic_period_id'])) {
-			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		if ($this->action == 'index') {
+			if (empty($this->request->query['academic_period_id'])) {
+				$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+			}
 		}
 		if (array_key_exists($this->alias(), $this->request->data)) {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
@@ -766,8 +768,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * academic_period_id field setup
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
+		$periodOption = ['' => '-- Select Period --'];
 		$academicPeriodOptions = $this->AcademicPeriods->getlist();
-		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
+		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
