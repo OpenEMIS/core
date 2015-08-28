@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Traits;
 use Cake\Cache\Cache;
+use Cake\ORM\TableRegistry;
 
 trait MessagesTrait {
 	public $messages = [
@@ -693,7 +694,8 @@ trait MessagesTrait {
 				$message = $message[$i];
 			} else {
 				//check whether label exists in cache
-				$message = Cache::read($code);
+				$Labels = TableRegistry::get('Labels');
+				$message = Cache::read($code, $Labels->getDefaultConfig());
 				if($message === false) {
 					$message = '[Message Not Found]';
 					break;
