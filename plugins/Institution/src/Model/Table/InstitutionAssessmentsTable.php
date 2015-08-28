@@ -157,7 +157,7 @@ class InstitutionAssessmentsTable extends AppTable {
 			}
 
 			$event->stopPropagation();
-			$action = $this->ControllerAction->buttons['index']['url'];
+			$action = $this->ControllerAction->url('index'); //$this->ControllerAction->buttons['index']['url']
 			$action['status'] = 2;
 			return $this->controller->redirect($action);
 		}
