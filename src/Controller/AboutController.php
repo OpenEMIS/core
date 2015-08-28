@@ -10,9 +10,9 @@ class AboutController extends AppController {
 	public function initialize() {
 		parent::initialize();
 		$tabElements = [
-			'contacts' => [
-				'url' => ['controller' => $this->name, 'action' => 'contacts'],
-				'text' => __('Contacts')
+			'contact' => [
+				'url' => ['controller' => $this->name, 'action' => 'contact'],
+				'text' => __('Contact')
 			],
 			// 'system' => [
 			// 	'url' => ['controller' => $this->name, 'action' => 'system'],
@@ -37,10 +37,10 @@ class AboutController extends AppController {
 	}
 
 	public function index() {
-		$this->redirect(['action' => 'contacts']);
+		$this->redirect(['action' => 'contact']);
 	}
 
-	public function contacts() {}
+	public function contact() {}
 
 	// public function system() {
 	// 	$dbo = ConnectionManager::get('default');
