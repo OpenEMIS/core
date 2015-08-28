@@ -10,8 +10,8 @@ class FieldOptionsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		// $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
-		$this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search']);
+		$this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
+		// $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search']);
 	}
 
 	public function beforeFilter(Event $event) {
