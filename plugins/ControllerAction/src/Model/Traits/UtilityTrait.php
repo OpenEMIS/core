@@ -153,7 +153,7 @@ trait UtilityTrait {
 						if (is_null($defaultValue) || is_null($selected) || $selected == $id) {
 							$defaultValue = ['group' => false, 'selected' => $id];
 							if (is_null($selected)) {
-								$selected = $key;
+								$selected = $id;
 							}
 						}
 					}
