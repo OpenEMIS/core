@@ -21,7 +21,13 @@
 							<?php endif ?>
 						</td>
 						<td><?= $obj->name; ?></td>
-						<td><?= $obj->next_workflow_step->name; ?></td>
+						<td>
+							<?php
+								if (isset($obj->next_workflow_step)) {
+									echo $obj->next_workflow_step->name;
+								}
+							?>
+						</td>
 						<td>
 							<?php if ($obj->comment_required == 1) : ?>
 								<i class="fa fa-check"></i>
@@ -82,9 +88,17 @@
 											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
 										</td>
 										<td>
-											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-											</button>
+											<?php if (is_null($obj->action)) : ?>
+												<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+													<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
+												</button>
+											<?php else : ?>
+												<?php if ($obj->action == 0) : ?>
+													<?= __('Approve'); ?>
+												<?php elseif ($obj->action == 1) : ?>
+													<?= __('Reject'); ?>
+												<?php endif ?>
+											<?php endif ?>
 										</td>
 								</tr>
 							<?php endforeach ?>
