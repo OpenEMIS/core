@@ -113,7 +113,7 @@ trait MessagesTrait {
 			// 'security_user_id' => 'Home Room Teacher',
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
-			'multi_grade_field' => 'Multi-Grades Class',
+			'multi_grade_field' => 'Class Grades',
 			
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',

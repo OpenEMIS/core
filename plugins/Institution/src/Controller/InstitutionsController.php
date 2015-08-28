@@ -117,7 +117,11 @@ class InstitutionsController extends AppController  {
 			else if ($alias == 'Classes') $alias = 'Subjects';
 
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $alias]);
+				/**
+				 * replaced 'action' => $alias to 'action' => $model->alias,
+				 * since only the name changes but not url
+				 */
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 				if (strtolower($action) != 'index')	{
 					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
