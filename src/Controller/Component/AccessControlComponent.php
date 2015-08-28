@@ -253,15 +253,15 @@ class AccessControlComponent extends Component {
 		$areas = $SecurityGroupAreas
 		->find('all')
 		->distinct(['area_id'])
-		->select(['area_id'])
 		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
 		->innerJoin(['Areas' => 'areas'], [
 			'Areas.lft >= AreaAll.lft',
 			'Areas.rght <= AreaAll.rght'
 		])
+		->select(['area_id', 'lft' => 'Areas.lft', 'rgt'=>'Areas.rght'])
 		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
-		pr($areas);
+		return $areas;
 	}
 }
