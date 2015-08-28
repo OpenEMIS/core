@@ -100,45 +100,44 @@ class AdvanceSearchBehavior extends Behavior {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
 		$conditions = '';
-		$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
+		$advancedSearch = [];
+		
+		if (isset($request->data['AdvanceSearch'])) {
+			$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
+		}
+		
 		foreach ($advancedSearch as $key=>$value) {
 			$pathId = null;
 			if( $key == 'area_id' || $key == 'area_administrative_id'){
+				$Table = "";
 				$tableName = "";
+				$tableAlias = "";
 				switch ($key) {
 					case 'area_id':
-						$tableName = 'Area.Areas';
-						$pathId = $advancedSearch['area_id'];
+						$Table = TableRegistry::get('Area.Areas');
+						$tableAlias = 'AreaAreas';
+						$tableName = 'areas';
+						$id = $advancedSearch['area_id'];
 						break;
 					case 'area_administrative_id':
-						$tableName = 'Area.AreaAdministratives';
-						$pathId = $advancedSearch['area_administrative_id'];
+						$Table = TableRegistry::get('Area.AreaAdministratives');
+						$tableAlias = 'AreaAreaAdministratives';
+						$tableName = 'area_administratives';
+						$id = $advancedSearch['area_administrative_id'];
 						break;
 				}
 				$Table = TableRegistry::get($tableName);
-				if (!empty($pathId)) {
-					$children = $Table
-						->find('children',[
-							'for' => $pathId,
-							])
-						->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'id'
-							])
-						->toArray();
-					// $children[$value] = $value;
-					// $conditions[$this->model->aliasField($key).' IN'] = $children;
+				if (!empty($id)) {
+					$area = $Table->get($id);
+					$lft = $area->lft;
+					$rght = $area->rght;
 
 					$query
-						->innerJoin(['AllArea'=> 'areas'],['AllArea.id' => $value])
-						->innerJoin(['AreaTable' => 'areas'], [
-							'AllArea.lft <= AreaTable.lft', 
-							'AllArea.rght >= AreaTable.rght'
-						])
-						;	
-						
-					pr($query->sql());die;
-
+						->innerJoin([$tableAlias => $tableName], [
+								$tableAlias.'.id = '. $this->model->aliasField($key),
+								$tableAlias.'.lft >=' => $lft,
+								$tableAlias.'.rght <=' => $rght,
+							]);
 				}
         	} else {
 				if (!empty($value) && $value>0) {
