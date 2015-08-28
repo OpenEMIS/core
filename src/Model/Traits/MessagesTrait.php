@@ -186,7 +186,8 @@ trait MessagesTrait {
 		],
 		'security' => [
 			'login' => [
-				'fail' => 'You have entered an invalid username or password.'
+				'fail' => 'You have entered an invalid username or password.',
+				'inactive' => 'Your account has been disabled.'
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],

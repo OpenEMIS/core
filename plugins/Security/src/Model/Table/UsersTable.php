@@ -10,7 +10,10 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 
+use App\Model\Traits\OptionsTrait;
+
 class UsersTable extends AppTable {
+	use OptionsTrait;
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
@@ -85,6 +88,8 @@ class UsersTable extends AppTable {
 		if ($this->action == 'edit') {
 			$this->fields['last_login']['visible'] = false;
 		}
+
+		$this->ControllerAction->field('status', ['visible' => true, 'type' => 'select', 'options' => $this->getSelectOptions('general.active')]);
 	}
 
 	public function indexBeforeAction(Event $event) {
