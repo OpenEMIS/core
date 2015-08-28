@@ -67,10 +67,12 @@
 									<?php endif ?>
 										<td>
 											<?php
-												if(isset($obj->id)) {
+												if(isset($obj->id)) {	// edit
 													echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.id");
+												} else {	// add
+													echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.visible", ['value' => 1]);
 												}
-												echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false]);
+												echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false, 'value' => $obj->name]);
 											?>
 										</td>
 										<td>
