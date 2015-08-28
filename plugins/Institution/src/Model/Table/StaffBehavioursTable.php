@@ -59,7 +59,7 @@ class StaffBehavioursTable extends AppTable {
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
-		if ($selectedPeriod != 0) {
+		if (!empty($selectedPeriod)) {
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
 		}
 		
