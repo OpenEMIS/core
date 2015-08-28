@@ -29,7 +29,7 @@ class AreaBehavior extends Behavior {
 		if (array_key_exists('area_administrative_id', $options) && array_key_exists('columnName', $options)) {
 			$Table = TableRegistry::get('Area.AreaAdministratives');
 			$lft = $Table->get($options['area_administrative_id'])->lft;
-			$rgt = $Table->get($options['area_id'])->rght;
+			$rgt = $Table->get($options['area_administrative_id'])->rght;
 			$tableAlias = $options['columnName'].'AreaAdministratives';
 			
 			return $query->innerJoin([ $tableAlias => 'area_administratives'], [
