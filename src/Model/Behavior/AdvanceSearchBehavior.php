@@ -21,7 +21,7 @@ class AdvanceSearchBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-
+		$this->_table->addBehavior('Area.Area');
 	}
 	
 
@@ -105,39 +105,37 @@ class AdvanceSearchBehavior extends Behavior {
 		if (isset($request->data['AdvanceSearch'])) {
 			$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
 		}
-		
+		$areaKeys[] = 'area_id';
+		$areaKeys[] = 'area_administrative_id';
+		$areaKeys[] = 'birthplace_area_id';
+		$areaKeys[] = 'address_area_id';
 		foreach ($advancedSearch as $key=>$value) {
-			$pathId = null;
-			if( $key == 'area_id' || $key == 'area_administrative_id'){
-				$Table = "";
-				$tableName = "";
-				$tableAlias = "";
-				switch ($key) {
-					case 'area_id':
-						$Table = TableRegistry::get('Area.Areas');
-						$tableAlias = 'AreaAreas';
-						$tableName = 'areas';
-						$id = $advancedSearch['area_id'];
-						break;
-					case 'area_administrative_id':
-						$Table = TableRegistry::get('Area.AreaAdministratives');
-						$tableAlias = 'AreaAreaAdministratives';
-						$tableName = 'area_administratives';
-						$id = $advancedSearch['area_administrative_id'];
-						break;
-				}
-				$Table = TableRegistry::get($tableName);
-				if (!empty($id)) {
-					$area = $Table->get($id);
-					$lft = $area->lft;
-					$rght = $area->rght;
+			if (!empty($value)) {
+				if(in_array($key, $areaKeys)){
+					$Table = "";
+					$tableName = "";
+					$tableAlias = "";
 
-					$query
-						->innerJoin([$tableAlias => $tableName], [
-								$tableAlias.'.id = '. $this->model->aliasField($key),
-								$tableAlias.'.lft >=' => $lft,
-								$tableAlias.'.rght <=' => $rght,
-							]);
+					switch ($key) {
+
+						case 'area_id':
+						case 'address_area_id':
+							$Table = TableRegistry::get('Area.Areas');
+							$tableAlias = $key.'Areas';
+							$tableName = 'areas';
+							$id = $advancedSearch[$key];
+							$query->find('Areas', ['area_id' => $id, 'key' => $key]);
+							break;
+
+						case 'area_administrative_id':
+						case 'birthplace_area_id':
+							$Table = TableRegistry::get('Area.AreaAdministratives');
+							$tableAlias = $key.'AreaAdministratives';
+							$tableName = 'area_administratives';
+							$id = $advancedSearch[$key];
+							$query->find('AreaAdministratives', ['area_administrative_id' => $id, 'key' => $key]);
+							break;
+					}
 				}
         	} else {
 				if (!empty($value) && $value>0) {
@@ -147,7 +145,6 @@ class AdvanceSearchBehavior extends Behavior {
         }
         if (!empty($conditions)) {
         	$query->where($conditions);
-        	pr($query->sql());
         }
 	}
 
