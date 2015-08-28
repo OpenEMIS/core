@@ -52,12 +52,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
 
 		/**
-		 * Short cuts to initialised models set in relations.
-		 * By using initialised models set in relations, the relation's className is set at a single place.
-		 * In add operations, these models attributes are empty by default.
+		 * Short cuts 
 		 */
-		$this->InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections'); //$this->Institutions->InstitutionSiteSections;
-		$this->InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades'); //$this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
+		$this->InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$this->InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -179,7 +177,6 @@ class InstitutionSiteClassesTable extends AppTable {
 										$Subjects->aliasField('institution_site_id') => $institutionId,
 										$Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
 									]);
-				// pr($query->toArray());die;
 				return $query->count();
 			}
 		]);
@@ -335,8 +332,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		$commonData = $data['InstitutionSiteClasses'];
 		$error = false;
 		$subjects = false;
-		if (isset($data['MultiClasses']) && count($data['MultiClasses'])>0) {
-			foreach ($data['MultiClasses'] as $key=>$row) {
+		if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
+			foreach ($data['MultiSubjects'] as $key=>$row) {
 				if (isset($row['education_subject_id']) && isset($row['institution_site_class_staff'])) {
 					$subjectSelected = true;
 					$subjects[$key] = [
@@ -367,7 +364,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				foreach ($subjects as $subject) {
 				    if ($subject->errors()) {
 				    	$error = $subject->errors();
-				    	$data['MultiClasses'][$subject->key]['errors'] = $error;
+				    	$data['MultiSubjects'][$subject->key]['errors'] = $error;
 				    }
 				}
 			}
@@ -381,7 +378,6 @@ class InstitutionSiteClassesTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$process = function ($model, $entity) use ($data) {
 			list($error, $subjects, $data) = $model->prepareEntityObjects($model, $data);
-			pr($subjects);die;
 			if (!$error && $subjects) {
 				foreach ($subjects as $subject) {
 			    	$model->save($subject);
@@ -546,7 +542,6 @@ class InstitutionSiteClassesTable extends AppTable {
 	 * @var [type]
 	 */
 	public function editAfterAction(Event $event, Entity $entity) {
-		// pr($this->AcademicPeriods->getCurrent());die;
 		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
 
 		$students = $entity->institution_site_class_students;
@@ -560,13 +555,9 @@ class InstitutionSiteClassesTable extends AppTable {
 		$teacherOptions = $this->getTeacherOptions();
 		$studentOptions = $this->getStudentsOptions($entity);
 
-		// pr($students);
 		/**
 		 * Check if the request is a page reload
 		 */
-		// pr($students);die;
-		// pr($collection->extract('student_id')->toArray());die;
-		// pr(count($this->request->data['InstitutionSiteClasses']['institution_site_class_students']));die;
 		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
 			/**
 			 * Populate records in the UI table & unset the record from studentOptions
@@ -604,16 +595,15 @@ class InstitutionSiteClassesTable extends AppTable {
 					unset($studentOptions[$id]);
 				}
 			}
-		}// else {
-			/**
-			 * Just unset the record from studentOptions on first page load
-			 */
-			foreach ($students as $row) {
-				if ($row->status>0 && array_key_exists($row->student_id, $studentOptions)) {
-					unset($studentOptions[$row->student_id]);
-				}
+		}
+		/**
+		 * Just unset the record from studentOptions on first page load
+		 */
+		foreach ($students as $row) {
+			if ($row->status>0 && array_key_exists($row->student_id, $studentOptions)) {
+				unset($studentOptions[$row->student_id]);
 			}
-		// }
+		}
 
 		/**
 		 * Changed in PHPOE-1780 test fail re-work. if there are no more available students, change the options in nthe select field.
@@ -782,7 +772,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
-				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->name;
+				$subjectList[$value->institution_site_class->education_subject->id] = [
+					'name' => $value->institution_site_class->name,
+					'subject_name' => $value->institution_site_class->education_subject->name
+				];
 			}
 			$data = $subjectList;
 		} else {
@@ -842,21 +835,6 @@ class InstitutionSiteClassesTable extends AppTable {
 
 			$sectionKeys[] = $sectionClasses->institution_site_section_id;
 		}
-		// $sections = $this->Institutions->InstitutionSiteSections
-		// 	->find()
-		// 	->contain(['InstitutionSiteSectionGrades'])
-		// 	->where([
-		// 		$this->Institutions->InstitutionSiteSections->aliasField('id') . ' IN ' => $sectionKeys,
-		// 		$this->Institutions->InstitutionSiteSections->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-		// 	])
-		// 	->toArray();
-		// $sectionGrades = [];
-		// foreach ($sections as $sectionEntity) {
-		// 	$sectionGradeObjects = $sectionEntity->institution_site_section_grades;
-		// 	foreach ($sectionGradeObjects as $key=>$value) {
-		// 		$sectionGrades[] = $value->education_grade_id;
-		// 	}
-		// }
 
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
 		$grades = $EducationGradesSubjects
@@ -869,10 +847,6 @@ class InstitutionSiteClassesTable extends AppTable {
 				$EducationGradesSubjects->aliasField('visible') => 1
 			])
 			->toArray();
-		// pr($sectionKeys);
-		// pr($entity->education_subject_id);
-		// pr($grades);//die;
-
 		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 		$query = $Students
 			->find('all')
@@ -882,7 +856,6 @@ class InstitutionSiteClassesTable extends AppTable {
 				$Students->aliasField('education_grade_id').' IN' => $grades
 			])
 			->toArray();
-		// pr($query);die;
 		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];
 		
 		foreach ($query as $student) {
@@ -893,7 +866,6 @@ class InstitutionSiteClassesTable extends AppTable {
 				$this->log('Data corrupted with no security user for student: '. $student->id, 'debug');
 			}
 		}
-		// pr($studentOptions);die;
 		return $studentOptions;
 	}
 
