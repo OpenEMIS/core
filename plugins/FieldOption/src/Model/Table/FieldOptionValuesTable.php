@@ -164,9 +164,8 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
-		$codes = ['Providers'];
-
 		$fieldOption = $this->fieldOption;
+		$codes[] = $fieldOption->code;
 		if (in_array($fieldOption->code, $codes)) {
 			$settings['deleteStrategy'] = 'transfer';
 			if (empty($fieldOption->params)) {
@@ -179,11 +178,12 @@ class FieldOptionValuesTable extends AppTable {
 
 			}
 		}
+
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$fieldOption = $this->fieldOption;
-		$codes = ['Providers'];
+		$codes[] = $fieldOption->code;
 		if (in_array($fieldOption->code, $codes)) {
 			if (empty($fieldOption->params)) {
 				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
@@ -268,7 +268,6 @@ class FieldOptionValuesTable extends AppTable {
 				}
 			}
 		}
-		// pr($result);
 		return $result;
 	}
 }
