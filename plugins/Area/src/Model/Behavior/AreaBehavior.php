@@ -10,33 +10,24 @@ class AreaBehavior extends Behavior {
 	}
 
 	public function findAreas(Query $query, array $options) {
-		if (array_key_exists('area_id', $options) && array_key_exists('columnName', $options)) {
-			$Table = TableRegistry::get('Area.Areas');
-			$lft = $Table->get($options['area_id'])->lft;
-			$rgt = $Table->get($options['area_id'])->rght;
-			$tableAlias = $options['columnName'].'Areas';
-			return $query->innerJoin([ $tableAlias => 'areas'], [
-							$tableAlias.'.id = '. $options['columnName'],
-							$tableAlias.'.lft >=' => $lft,
-							$tableAlias.'.rght <=' => $rgt,
-						]);
-		} else {
-			return $query;
-		}
-	}
-
-	public function findAreaAdministratives(Query $query, array $options) {
-		if (array_key_exists('area_administrative_id', $options) && array_key_exists('columnName', $options)) {
-			$Table = TableRegistry::get('Area.AreaAdministratives');
-			$lft = $Table->get($options['area_administrative_id'])->lft;
-			$rgt = $Table->get($options['area_administrative_id'])->rght;
-			$tableAlias = $options['columnName'].'AreaAdministratives';
+		if (array_key_exists('id', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
+			$Table = '';
+			if ($options['table'] == 'areas') {
+				$Table = TableRegistry::get('Area.Areas');
+			}else if ($options['table'] == 'area_administratives') {
+				$Table = TableRegistry::get('Area.AreaAdministratives');;
+			}
 			
-			return $query->innerJoin([ $tableAlias => 'area_administratives'], [
-							$tableAlias.'.id = '. $options['columnName'],
-							$tableAlias.'.lft >=' => $lft,
-							$tableAlias.'.rght <=' => $rgt,
-						]);
+			if (!empty($options['table'])) {
+				$lft = $Table->get($options['id'])->lft;
+				$rgt = $Table->get($options['id'])->rght;
+				$tableAlias = $options['columnName'].'Areas';
+				return $query->innerJoin([ $tableAlias => $options['table']], [
+								$tableAlias.'.id = '. $options['columnName'],
+								$tableAlias.'.lft >=' => $lft,
+								$tableAlias.'.rght <=' => $rgt,
+							]);
+			}
 		} else {
 			return $query;
 		}
