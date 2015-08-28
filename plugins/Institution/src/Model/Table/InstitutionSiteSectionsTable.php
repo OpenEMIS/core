@@ -766,12 +766,13 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * academic_period_id field setup
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['attr']['value'] = $academicPeriodOptions[$this->_selectedAcademicPeriodId];
+				$attr['attr']['value'] = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId)->name;
 			}
 
 		} elseif ($action == 'add') {
