@@ -124,7 +124,7 @@ class AdvanceSearchBehavior extends Behavior {
 							$tableAlias = $key.'Areas';
 							$tableName = 'areas';
 							$id = $advancedSearch[$key];
-							$query->find('Areas', ['area_id' => $id, 'key' => $key]);
+							$query->find('Areas', ['area_id' => $id, 'columnName' => $key]);
 							break;
 
 						case 'area_administrative_id':
@@ -133,7 +133,7 @@ class AdvanceSearchBehavior extends Behavior {
 							$tableAlias = $key.'AreaAdministratives';
 							$tableName = 'area_administratives';
 							$id = $advancedSearch[$key];
-							$query->find('AreaAdministratives', ['area_administrative_id' => $id, 'key' => $key]);
+							$query->find('AreaAdministratives', ['area_administrative_id' => $id, 'columnName' => $key]);
 							break;
 					}
 				}
