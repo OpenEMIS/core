@@ -308,8 +308,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		$Sections = $this->InstitutionSiteSections;
 
 		$institutionId = $this->institutionId;
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		$periodOption = ['' => '-- Select Period --'];
+		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
+		
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {

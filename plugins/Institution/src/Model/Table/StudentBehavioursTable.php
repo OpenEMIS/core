@@ -71,7 +71,7 @@ class StudentBehavioursTable extends AppTable {
 
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = ['0' => __('All Periods')];
+		$periodOptions = ['' => __('All Periods')];
 		$periodOptions = $periodOptions + $AcademicPeriod->getList();
 
 		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
@@ -150,7 +150,7 @@ class StudentBehavioursTable extends AppTable {
 		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
 
 		if ($action == 'add') {
-			$periodOptions = ['0' => $this->selectEmpty('period')];
+			$periodOptions = ['' => $this->selectEmpty('period')];
 			$periodOptions = $periodOptions + $AcademicPeriod->getList();
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
