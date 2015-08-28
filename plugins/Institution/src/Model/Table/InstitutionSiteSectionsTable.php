@@ -780,7 +780,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 			if (count($class->institution_site_class_students)>0) {
 				foreach($class->institution_site_class_students as $classStudent) {
-					if (!$students[$classStudent->student_id]) {
+					if (!isset($students[$classStudent->student_id])) {
 						$classStudent->status=0;
 						$students[$classStudent->student_id] = $classStudent;
 					}

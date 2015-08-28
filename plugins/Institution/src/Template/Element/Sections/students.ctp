@@ -22,7 +22,7 @@
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
-					<th><?= $this->Label->get('Users.gender'); ?></th>
+					<th><?= $this->Label->get('Users.gender_id'); ?></th>
 					<th><?= $this->Label->get('Users.date_of_birth'); ?></th>
 					<th><?= $this->Label->get($attr['model'] . '.education_grade'); ?></th>
 					<th class="cell-delete"></th>
@@ -62,7 +62,7 @@
 					</td>
 					<td> 
 						<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
-						<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);$('#reload').val('add').click();">
+						<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
 							<?= __('<i class="fa fa-close"></i> Remove') ?>
 						</button>
 					</td>
