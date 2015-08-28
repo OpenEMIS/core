@@ -128,7 +128,9 @@ trait UtilityTrait {
 				}
 			} else { // normal array
 				$label = __($val);
-				$options[$id] = ['value' => $id, 'text' => $label];
+				if (strlen($id) > 0) {
+					$options[$id] = ['value' => $id, 'text' => $label];
+				}
 
 				if (is_null($defaultValue)) {
 					$defaultValue = ['group' => false, 'selected' => $id];
@@ -166,7 +168,7 @@ trait UtilityTrait {
 			$group = $defaultValue['group'];
 			if ($group !== false) {
 				$options[$group][$selected][] = 'selected';
-			} else {
+			} else if (strlen($selected) > 0) {
 				$options[$selected][] = 'selected';
 			}
 			// pr($selected);
