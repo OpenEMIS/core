@@ -109,31 +109,23 @@ class AdvanceSearchBehavior extends Behavior {
 		$areaKeys[] = 'area_administrative_id';
 		$areaKeys[] = 'birthplace_area_id';
 		$areaKeys[] = 'address_area_id';
+
 		foreach ($advancedSearch as $key=>$value) {
 			if (!empty($value)) {
 				if(in_array($key, $areaKeys)){
-					$Table = "";
-					$tableName = "";
-					$tableAlias = "";
-
 					switch ($key) {
-
 						case 'area_id':
 						case 'address_area_id':
-							$Table = TableRegistry::get('Area.Areas');
-							$tableAlias = $key.'Areas';
 							$tableName = 'areas';
 							$id = $advancedSearch[$key];
-							$query->find('Areas', ['area_id' => $id, 'columnName' => $key]);
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 
 						case 'area_administrative_id':
 						case 'birthplace_area_id':
-							$Table = TableRegistry::get('Area.AreaAdministratives');
-							$tableAlias = $key.'AreaAdministratives';
 							$tableName = 'area_administratives';
 							$id = $advancedSearch[$key];
-							$query->find('AreaAdministratives', ['area_administrative_id' => $id, 'columnName' => $key]);
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 					}
 				}
