@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class WorkflowStepsTable extends AppTable {
+	private $_fieldOrder = ['workflow_id', 'name', 'security_roles'];
 	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
 
 	public function initialize(array $config) {
@@ -27,6 +28,30 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		// Auto insert default workflow_actions when add
+		if ($entity->isNew()) {
+			$data = [
+				'workflow_actions' => [
+					[
+						'name' => __('Approve'),
+						'action' => 0,
+						'visible' => 1,
+						'next_workflow_step_id' => 0,
+						'comment_required' => 0
+					],
+					[
+						'name' => __('Reject'),
+						'action' => 1,
+						'visible' => 1,
+						'next_workflow_step_id' => 0,
+						'comment_required' => 0
+					]
+				]
+			];
+			$entity = $this->patchEntity($entity, $data);
+		}
+
 		// Always mark visible to dirty to handle retain Workflow Actions when update all visible to 0
 		foreach ($entity->workflow_actions as $key => $obj) {
 			$entity->workflow_actions[$key]->dirty('visible', true);
@@ -37,7 +62,11 @@ class WorkflowStepsTable extends AppTable {
 		$workflowActions = [];
 		foreach ($entity->workflow_actions as $key => $obj) {
 			if ($obj->visible == 1) {
-				$workflowActions[$key] = $obj->name . ' - ' . $obj->next_workflow_step->name;
+				$workflowAction = $obj->name;
+				if (isset($obj->next_workflow_step)) {
+					$workflowAction .= ' - ' . $obj->next_workflow_step->name;
+				}
+				$workflowActions[$key] = $workflowAction;
 			}
 		}
 
@@ -52,15 +81,16 @@ class WorkflowStepsTable extends AppTable {
 			'placeholder' => __('Select Security Roles')
 		]);
 
-		$this->ControllerAction->field('actions', [
-			'type' => 'element',
-			'element' => 'Workflow.actions',
-			'valueClass' => 'table-full-width'
-		]);
+		if ($this->action != 'add') {
+			$this->ControllerAction->field('actions', [
+				'type' => 'element',
+				'element' => 'Workflow.actions',
+				'valueClass' => 'table-full-width'
+			]);
+			$this->_fieldOrder[] = 'actions';
+		}
 
-		$this->ControllerAction->setFieldOrder([
-			'workflow_id', 'name', 'security_roles', 'actions'
-		]);		
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
 	public function indexBeforeAction(Event $event) {
