@@ -19,6 +19,8 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentBehaviourCategories', ['className' => 'FieldOption.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+
+		$this->addBehavior('AcademicPeriod.Period');
 	}
 
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
@@ -93,14 +95,16 @@ class StudentBehavioursTable extends AppTable {
 
 		// Setup class options
 		$classOptions = ['0' => __('All Classes')];
-		if ($selectedPeriod != 0) {
+		if (!empty($selectedPeriod)) {
 			$classOptions = $classOptions + $Classes
-				->find('list')
-				->where([
-					$Classes->aliasField('institution_site_id') => $institutionId, 
-					$Classes->aliasField('academic_period_id') => $selectedPeriod
-				])
-				->toArray();
+			->find('list')
+			->where([
+				$Classes->aliasField('institution_site_id') => $institutionId, 
+				$Classes->aliasField('academic_period_id') => $selectedPeriod
+			])
+			->toArray();
+			
+			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
 		}
 
 		$selectedClass = $this->queryString('class_id', $classOptions);
