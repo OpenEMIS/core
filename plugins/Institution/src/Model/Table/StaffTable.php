@@ -117,15 +117,15 @@ class StaffTable extends AppTable {
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$selectedPosition = $this->queryString('position', $positionOptions);
 
-		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
-		if ($selectedPosition != 0) {
-			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
-		}
-
 		// Advanced Select Options
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
+		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
+		if ($selectedPosition != 0) {
+			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
+		}
+		
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
