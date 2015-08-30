@@ -258,7 +258,7 @@ class AccessControlComponent extends Component {
 			'Areas.lft >= AreaAll.lft',
 			'Areas.rght <= AreaAll.rght'
 		])
-		->select(['area_id', 'lft' => 'Areas.lft', 'rgt'=>'Areas.rght'])
+		->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
 		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
