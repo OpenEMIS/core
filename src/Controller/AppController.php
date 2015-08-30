@@ -87,18 +87,7 @@ class AppController extends Controller {
 			]
 		]);
 
-		$this->loadComponent('Workflow.Workflow', [
-			'models' => [
-				'WorkflowModels' => 'Workflow.WorkflowModels',
-				'Workflows' => 'Workflow.Workflows',
-				'WorkflowsFilters' => 'Workflow.WorkflowsFilters',
-				'WorkflowSteps' => 'Workflow.WorkflowSteps',
-				'WorkflowActions' => 'Workflow.WorkflowActions',
-				'WorkflowRecords' => 'Workflow.WorkflowRecords',
-				'WorkflowComments' => 'Workflow.WorkflowComments',
-				'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
-			]
-		]);
+		$this->loadComponent('Workflow.Workflow');
 	}
 
 	public function beforeFilter(Event $event) {
