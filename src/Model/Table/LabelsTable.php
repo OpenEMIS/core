@@ -94,4 +94,16 @@ class LabelsTable extends AppTable {
 	public function getDefaultConfig(){
 		return $this->defaultConfig;
 	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->add('code', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			;
+		return $validator;
+	}
 }
