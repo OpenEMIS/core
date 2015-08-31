@@ -49,6 +49,22 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->addBehavior('Security.InstitutionClass');
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'edit' || $action == 'view') {
+			// $academicPeriodId = $entity->academic_period_id;
+			// $isEditable = $this->AcademicPeriods->get($academicPeriodId)->available;
+			// if ($isEditable) {
+
+			// }
+		}
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator
 			->requirePresence('name')
@@ -682,6 +698,13 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$academicPeriodId = $entity->academic_period_id;
+		$isEditable = $this->AcademicPeriods->get($academicPeriodId)->available;
+		if (!$isEditable) {
+			$urlParams = $this->ControllerAction->url('view');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		}
 		$students = $entity->institution_site_section_students;
 		$studentOptions = $this->getStudentsOptions($entity);
 		/**
