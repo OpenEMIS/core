@@ -86,8 +86,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		}
 		if (array_key_exists($this->alias(), $this->request->data)) {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
 		} else if ($this->action == 'edit' && isset($this->request->pass[1])) {
@@ -155,10 +157,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$Sections = $this;
 
-		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
-		);
-		$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		// $conditions = array(
+		// 	'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+		// );
+		//$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
