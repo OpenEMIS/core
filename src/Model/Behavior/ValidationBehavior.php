@@ -62,6 +62,32 @@ class ValidationBehavior extends Behavior {
         return $isValid;
     }
 
+    public static function checkAuthorisedArea($check) {
+        $isValid = false;
+        if ($this->AccessControl->isAdmin()) {
+        	$isValid = true;
+        } else {
+        	$condition = [];
+        	$areaCondition = [];
+        	foreach($this->AccessControl->getAreasByUser() as $area) {
+        		$areaCondition[] = [
+					$Table->aliasField('lft').' >= ' => $area['lft'],
+					$Table->aliasField('rght').' <= ' => $area['rght']
+				];
+        	}
+        	$condition['OR'] = $areaCondition;
+	        $Areas = TableRegistry::get('Area.Areas');
+	        $isChild = $Area->find()
+	        	->where([$Area->aliasField('id') => $check])
+	        	->where($condition)
+	        	->count();
+	        pr($isChild);
+        }
+
+
+        return $isValid;
+    }
+
     public static function checkLatitude($check) {
 
         $isValid = false;

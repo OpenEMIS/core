@@ -305,7 +305,10 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
-				]
+				], 
+				'area_id' => [
+					'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
+				],
 			],
 			
 			'InstitutionSiteSections' => [
