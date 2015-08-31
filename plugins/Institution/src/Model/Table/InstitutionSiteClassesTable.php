@@ -85,6 +85,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			if (isset($buttons['edit'])) {
 				unset($buttons['edit']);
 			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
 		}
 		return $buttons;
 	}

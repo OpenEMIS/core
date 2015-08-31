@@ -238,7 +238,7 @@ class AcademicPeriodsTable extends AppTable {
 				->toArray();
 		} else {
 			$where = [
-			$this->aliasField('parent_id') . ' <> ' => 0
+				$this->aliasField('parent_id') . ' <> ' => 0,
 			];
 
 			// get the current period
