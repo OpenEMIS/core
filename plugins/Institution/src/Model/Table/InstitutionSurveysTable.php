@@ -141,7 +141,16 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
-		return $entity->survey_form->description;
+		// because belongsTo only gets id and name
+		if ($entity->has('survey_form')) {
+			if ($entity->survey_form->has('id')) {
+				$surveyFormQuery = $this->SurveyForms->find()->select(['description'])->where([$this->SurveyForms->aliasField($this->SurveyForms->primaryKey()) => $entity->survey_form->id])->first();
+				if ($surveyFormQuery) {
+					return $surveyFormQuery->description;
+				}
+			}
+		}
+		return '';
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
