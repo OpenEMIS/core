@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `workflow_records` (
   `id` int(11) NOT NULL,
   `model_reference` int(11) NOT NULL,
   `workflow_model_id` int(11) NOT NULL,
-  `workflow_step_id` int(11) NOT NULL,
+  `workflow_step_id` int(11) NOT NULL COMMENT 'The latest Workflow Step',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
