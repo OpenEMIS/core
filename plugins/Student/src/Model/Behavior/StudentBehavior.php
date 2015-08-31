@@ -46,7 +46,7 @@ class StudentBehavior extends Behavior {
 			
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $request->session();
-				$institutionId = $session->read('Institutions.id');
+				$institutionId = $session->read('Institution.Institutions.id');
 				$query->andWhere(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
 			}
 		}
