@@ -682,6 +682,11 @@ trait MessagesTrait {
 					'ruleUnique' => 'This username is already in use'
 				]
 			]
+		],
+		'Labels' => [
+			'code' => [
+				'ruleUnique' => 'This code already exists in the system'
+			]
 		]
 	];
 
