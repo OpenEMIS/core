@@ -427,7 +427,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 				'data' => [	'numberOfSections'=>$this->_numberOfSections,
 				 			'staffOptions'=>$staffOptions,
 				 			'startingSectionNumber'=>$startingSectionNumber,
-				 			'grade'=>$grade	]
+				 			'existedSections'=>$this->getExistedSections(),
+				 			'grade'=>$grade	
+				]
 			]);
 
 			$this->fields['name']['visible'] = false;
@@ -950,7 +952,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	private function numberOfSectionsOptions() {
 		$total = 10;
-		$options = array();
+		$options = [];
 		for($i=1; $i<=$total; $i++){
 			$options[$i] = $i;
 		}
@@ -958,20 +960,70 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $options;
 	}
 	
+	private function getExistedSections() {
+		$sectionsByGrade = $this->InstitutionSiteSectionGrades
+			->find('list', [
+				'keyField' => 'institution_site_section_id',
+			    'valueField' => 'institution_site_section_id'
+			])
+			->where([$this->InstitutionSiteSectionGrades->aliasField('education_grade_id') => $this->_selectedEducationGradeId])
+			->toArray();
+		// pr($sectionsByGrade);//die;
+
+		$multiGradeSections = $this->InstitutionSiteSectionGrades
+			->find('list', [
+				'keyField' => 'id',
+			    'valueField' => 'institution_site_section_id'
+			])
+			->where([
+				$this->InstitutionSiteSectionGrades->aliasField('education_grade_id').' !=' => $this->_selectedEducationGradeId,
+				$this->InstitutionSiteSectionGrades->aliasField('institution_site_section_id').' IN' => $sectionsByGrade
+			])
+			->toArray();
+		// pr($multiGradeSections);//die;
+		foreach ($multiGradeSections as $key=>$value) {
+			if (array_key_exists($value, $sectionsByGrade)) {
+				unset($sectionsByGrade[$value]);
+			}
+		}
+		// pr($sectionsByGrade);//die;
+
+		$data = $this->find('list', [
+				'keyField' => 'id',
+			    'valueField' => 'name'
+			])
+			->where([
+				/**
+				 * If section_number is null, it is considered as a multi-grade section
+				 */
+				// $this->aliasField('section_number').' IS NOT NULL',
+				$this->aliasField('institution_site_id') => $this->institutionId,
+				$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
+				$this->aliasField('id').' IN' => $sectionsByGrade,
+			])
+			->toArray()
+			;
+		// pr($data);die;
+		return $data;
+	}
+
 	private function getNewSectionNumber() {
 		$sectionsByGrade = $this->InstitutionSiteSectionGrades
-			->find('list')
+			->find('list', [
+				'keyField' => 'id',
+			    'valueField' => 'institution_site_section_id'
+			])
 			->where([$this->InstitutionSiteSectionGrades->aliasField('education_grade_id')=>$this->_selectedEducationGradeId])
-			->select(['institution_site_section_id'])
 			->toArray();
-		$data = $this->find('all')
+		$data = $this->find()
 			->where([
-				$this->aliasField('section_number').' IS NOT NULL',
-				[
-					$this->aliasField('institution_site_id') => $this->institutionId,
-					$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-					$this->aliasField('id').' IN' => $sectionsByGrade,
-				]
+				/**
+				 * If section_number is null, it is considered as a multi-grade section
+				 */
+				// $this->aliasField('section_number').' IS NOT NULL',
+				$this->aliasField('institution_site_id') => $this->institutionId,
+				$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
+				$this->aliasField('id').' IN' => $sectionsByGrade,
 			])
 			->count()
 			;
@@ -1038,15 +1090,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * @return [type]                    [description]
 	 */
 	public function getSectionOptions($academicPeriodId, $institutionId, $gradeId=false) {
-	// 	$singleGradeOptions = array(
-	// 		'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
-	// 		'conditions' => array(
-	// 			'InstitutionSiteSections.academic_period_id' => $academicPeriodId,
-	// 			'InstitutionSiteSections.institution_site_id' => $institutionId
-	// 		),
-	// 		'order' => array('InstitutionSiteSections.name')
-	// 	);
-
 		$multiGradeOptions = array(
 			'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
 			'conditions' => array(

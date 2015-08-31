@@ -13,10 +13,20 @@
 			
 			<tbody>
 				<?php 
-				$startingSectionNumber = $attr['data']['startingSectionNumber'];
+				// $startingSectionNumber = $attr['data']['startingSectionNumber'];
+				$startingSectionNumber = count($attr['data']['existedSections']) + 1;
 				for ($i=0; $i<$attr['data']['numberOfSections']; $i++) :
-					$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
-					$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
+					
+					$nameIsAvailable = false;
+					do {
+						$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+						$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
+						if (!in_array($defaultName, $attr['data']['existedSections'])) {
+						    $nameIsAvailable = true;
+						} else {
+							$startingSectionNumber++;
+						}
+					} while (!$nameIsAvailable);
 				?>
 				<tr>
 	    			<?php 
