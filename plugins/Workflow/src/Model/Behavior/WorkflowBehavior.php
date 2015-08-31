@@ -52,9 +52,23 @@ class WorkflowBehavior extends Behavior {
     public function viewBeforeAction(Event $event) {
         $request = $this->_table->controller->request;
         if ($request->is(['post', 'put'])) {
-            // Insert into workflow_transitions and update workflow_records.
             $requestData = $request->data;
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+            // Insert into workflow_transitions.
+            $entity = $this->WorkflowTransitions->newEntity($requestData);
+            if ($this->WorkflowTransitions->save($entity)) {
+            } else {
+                $this->log($entity->errors(), 'debug');
+            }
+            // End
+
+            // Update workflow_step_id in workflow_records.
+            $workflowStepId = $entity->workflow_step_id;
+            $workflowRecordId = $entity->workflow_record_id;
+            $this->WorkflowRecords->updateAll(
+                ['workflow_step_id' => $workflowStepId],
+                ['id' => $workflowRecordId]
+            );
+            // End
         }
     }
 
@@ -133,7 +147,40 @@ class WorkflowBehavior extends Behavior {
                     $tableHeaders[] = __('Comment') . '<i class="fa fa-comments fa-lg"></i>';
                     $tableHeaders[] = __('Last Executer') . '<i class="fa fa-user fa-lg"></i>';
                     $tableHeaders[] = __('Last Execution Date') . '<i class="fa fa-calendar fa-lg"></i>';
+
                     $tableCells = [];
+                    $transitionResults = $this->WorkflowTransitions
+                        ->find()
+                        ->contain(['PreviousWorkflowSteps', 'WorkflowSteps', 'WorkflowActions', 'ModifiedUser', 'CreatedUser'])
+                        ->where([
+                            $this->WorkflowTransitions->aliasField('workflow_record_id') => $this->workflowRecord->id
+                        ])
+                        ->order([
+                            $this->WorkflowTransitions->aliasField('created ASC')
+                        ])
+                        ->all();
+                    if (!$transitionResults->isEmpty()) {
+                        $transitions = $transitionResults->toArray();
+                        foreach ($transitions as $key => $transition) {
+                            $transitionDisplay = '<span class="status past">' . $transition->previous_workflow_step->name . '</span>';
+                            $transitionDisplay .= '<span class="transition-arrow"></span>';
+                            if (count($transitions) - 1 == $key) {
+                                $transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step->name . '</span>';
+                            } else {
+                                $transitionDisplay .= '<span class="status past">' . $transition->workflow_step->name . '</span>';
+                            }
+
+                            $rowData = [];
+                            $rowData[] = $transitionDisplay;
+                            $rowData[] = $transition->workflow_action->name;
+                            $rowData[] = nl2br($transition->comment);
+                            $rowData[] = $transition->created_user->name;
+                            $rowData[] = $transition->created->format('Y-m-d H:i:s');
+
+                            $tableCells[$key] = $rowData;
+                        }
+                    }
+
                     $this->_table->ControllerAction->field('workflow_transitions', [
                         'type' => 'element',
                         'element' => 'Workflow.transitions',
@@ -299,7 +346,7 @@ class WorkflowBehavior extends Behavior {
         $content = '';
         $content .= '<div class="input string"><label>Name</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
         $content .= '<BR><BR>';
-        $content .= '<div class="input textarea"><label>Description</label><textarea name="WorkflowTransitions[comment]" rows="5"></textarea></div>';
+        $content .= '<div class="input textarea"><label>Comment</label><textarea name="WorkflowTransitions[comment]" rows="5"></textarea></div>';
 
         $modal = [
             'id' => 'workflowTansition',
