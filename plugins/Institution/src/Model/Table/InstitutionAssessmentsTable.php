@@ -84,7 +84,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = date('d-m-Y', strtotime($dateDisabled));
+			$value = $dateDisabled->format('d-m-Y');
 		}
 
 		return $value;
