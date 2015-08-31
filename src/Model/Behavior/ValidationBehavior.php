@@ -62,29 +62,30 @@ class ValidationBehavior extends Behavior {
         return $isValid;
     }
 
-    public static function checkAuthorisedArea($check) {
+    public static function checkAuthorisedArea($check, array $globalData) {
         $isValid = false;
-        if ($this->AccessControl->isAdmin()) {
+        $AccessControl = $globalData['providers']['table']->AccessControl;
+        if ($AccessControl->isAdmin()) {
         	$isValid = true;
         } else {
         	$condition = [];
         	$areaCondition = [];
-        	foreach($this->AccessControl->getAreasByUser() as $area) {
+
+        	$Areas = TableRegistry::get('Area.Areas');
+        	foreach($AccessControl->getAreasByUser() as $area) {
         		$areaCondition[] = [
-					$Table->aliasField('lft').' >= ' => $area['lft'],
-					$Table->aliasField('rght').' <= ' => $area['rght']
+					$Areas->aliasField('lft').' >= ' => $area['lft'],
+					$Areas->aliasField('rght').' <= ' => $area['rght']
 				];
         	}
         	$condition['OR'] = $areaCondition;
-	        $Areas = TableRegistry::get('Area.Areas');
-	        $isChild = $Area->find()
-	        	->where([$Area->aliasField('id') => $check])
+
+	        $isChild = $Areas->find()
+	        	->where([$Areas->aliasField('id') => $check])
 	        	->where($condition)
 	        	->count();
-	        pr($isChild);
+	        $isValid = $isChild > 0;
         }
-
-
         return $isValid;
     }
 

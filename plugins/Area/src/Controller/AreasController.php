@@ -67,32 +67,33 @@ class AreasController extends AppController
 		$areaEntity = $Table->get($id);
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
-
+		$formError = $this->request->query('formerror');
 		if (! $AccessControl->isAdmin()) {
-			$authorisedArea = $this->AccessControl->getAreasByUser();
-			$areaCondition = [];
-			$parentIds = [];
-			foreach ($authorisedArea as $area) {
+			if ($tableName == 'Area.Areas') {
+				$authorisedArea = $this->AccessControl->getAreasByUser();
+				$areaCondition = [];
+				$parentIds = [];
+				foreach ($authorisedArea as $area) {
+					$areaCondition[] = [
+						$Table->aliasField('lft').' >= ' => $area['lft'],
+						$Table->aliasField('rght').' <= ' => $area['rght']
+					];
+
+					// Find all parent ids
+					$parentIds = array_merge($parentIds, $Table
+						->find('path', ['for' => $area['area_id']])
+						->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'id'
+							])
+						->order([$Table->aliasField('lft')])
+						->toArray());
+				}
 				$areaCondition[] = [
-					$Table->aliasField('lft').' >= ' => $area['lft'],
-					$Table->aliasField('rght').' <= ' => $area['rght']
-				];
-
-				// Find all parent ids
-				$parentIds = array_merge($parentIds, $Table
-					->find('path', ['for' => $area['area_id']])
-					->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'id'
-						])
-					->order([$Table->aliasField('lft')])
-					->toArray());
-
+						$Table->aliasField('id').' IN' => $parentIds
+					];
+				$condition['OR'] = $areaCondition;
 			}
-			$areaCondition[] = [
-					$Table->aliasField('id').' IN' => $parentIds
-				];
-			$condition['OR'] = $areaCondition;
 		}
 
 		// Get the id of any one of the children
@@ -147,7 +148,6 @@ class AreasController extends AppController
 			$obj->list = $list;
 			$count++;
 		}
-
-		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName'));
+		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName', 'formError'));
 	}
 }

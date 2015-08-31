@@ -30,15 +30,17 @@ class AreapickerBehavior extends Behavior {
 			$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
 			$options['data-source'] = $attr['source_model'];
 			$options['target-model'] = $attr['model'];
-			$options['field-name']=$fieldName;
+			$options['field-name'] = $fieldName;
 			$options['options'] = $areaOptions;
 			$options['id'] = 'areapicker';
 			$options['area-label'] = $options['label'];
+			$options['form-error'] = !empty($entity->errors($attr['field']));
 
 			$value = "<div class='areapicker'>";
 			$value .= $Form->input($fieldName, $options);
 			$value .= "</div>";
 			$value .= $Form->hidden($fieldName);
+			$value .= $Form->error($fieldName);
 		}
 		return $value;
 	}
