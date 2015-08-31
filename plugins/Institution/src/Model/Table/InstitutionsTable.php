@@ -156,6 +156,9 @@ class InstitutionsTable extends AppTable  {
 						'rule' => 'email'
 					]
 				])
+			->add('area_id', 'ruleAuthorisedArea', [
+					'rule' => 'checkAuthorisedArea'
+				])
 	        ;
 		return $validator;
 	}
@@ -202,7 +205,7 @@ class InstitutionsTable extends AppTable  {
 		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
         if ($entity->isNew()) {
-			$obj = $SecurityGroup->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
+			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
 			$securityGroup = $SecurityGroup->save($obj);
 			if ($securityGroup) {
 				// add the relationship of security group and institutions
@@ -226,7 +229,7 @@ class InstitutionsTable extends AppTable  {
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);
 				if (is_object($obj)) {
-					$data = ['name' => $entity->code . ' - ' . $entity->name];
+					$data = ['name' => $entity->name];
 					$obj = $SecurityGroup->patchEntity($obj, $data);
 					$securityGroup = $SecurityGroup->save($obj);
 					if (!$securityGroup) {
