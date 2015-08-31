@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
 
 class AcademicPeriodsTable extends AppTable {
-	private $_fieldOrder = ['visible', 'current', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
+	private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -22,7 +22,7 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$additionalParameters = ['available = 1 AND visible > 0'];
+		$additionalParameters = ['editable = 1 AND visible > 0'];
 
 		return $validator
  	        ->add('end_date', 'ruleCompareDateReverse', [
@@ -46,11 +46,11 @@ class AcademicPeriodsTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->ControllerAction->field('current');
+		$this->ControllerAction->field('editable');
 
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['school_days']['visible'] = false;
-		$this->fields['available']['visible'] = false;
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
@@ -131,9 +131,16 @@ class AcademicPeriodsTable extends AppTable {
 		}
 	}
 
+	
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
+
+	// For PHPOE-1916
+	public function onGetEditable(Event $event, Entity $entity) {
+		return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+	// End PHPOE-1916
 
 	public function onGetName(Event $event, Entity $entity) {
 		return $event->subject()->Html->link($entity->name, [
@@ -180,6 +187,11 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
+	}
+
+	public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
 		return $attr;
 	}
@@ -307,7 +319,7 @@ class AcademicPeriodsTable extends AppTable {
 			$query = $this->find();
 		}
 		$result = $query->where([
-						$this->aliasField('available') => 1,
+						$this->aliasField('editable') => 1,
 						$this->aliasField('visible') . ' >' => 0,
 						$this->aliasField('parent_id') . ' >' => 0
 					])
@@ -323,7 +335,7 @@ class AcademicPeriodsTable extends AppTable {
 		$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
-						$this->aliasField('available') => 1,
+						$this->aliasField('editable') => 1,
 						$this->aliasField('visible').' > 0',
 						$this->aliasField('current') => 1,
 						$this->aliasField('parent_id').' > 0',
@@ -337,7 +349,7 @@ class AcademicPeriodsTable extends AppTable {
 			$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
-						$this->aliasField('available') => 1,
+						$this->aliasField('editable') => 1,
 						$this->aliasField('visible').' > 0',
 						$this->aliasField('parent_id').' > 0',
 					])
