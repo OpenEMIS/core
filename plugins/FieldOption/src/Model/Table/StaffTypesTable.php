@@ -8,6 +8,6 @@ class StaffTypesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
-		$this->hasMany('Staff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_leave_type_id']);
+		$this->hasMany('Staff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_type_id']);
 	}
 }
