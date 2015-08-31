@@ -27,10 +27,10 @@ var Workflow = {
 	},
 
 	copy: function(jsonObj) {
-		$('#WorkflowTransitionWorkflowActionId').val(jsonObj.id);
-		$('#WorkflowTransitionWorkflowStepId').val(jsonObj.value);
-		$('#WorkflowTransitionActionName').val(jsonObj.text);
-		$('#WorkflowTransitionCommentRequired').val(jsonObj.comment_required);
+		$('.workflowtransition-action-id').val(jsonObj.id);
+		$('.workflowtransition-action-name').val(jsonObj.name);
+		$('.workflowtransition-step-id').val(jsonObj.next_step_id);
+		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 	},
 
 	showError: function() {

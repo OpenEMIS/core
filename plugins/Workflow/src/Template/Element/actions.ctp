@@ -59,7 +59,7 @@
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
-						<th><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
+						<th class="center"><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
 						<th></th>
 					</tr>
 					<?php if (!empty($data->workflow_actions)) : ?>
@@ -84,7 +84,7 @@
 										<td>
 											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
 										</td>
-										<td>
+										<td class="center">
 											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
 										</td>
 										<td>

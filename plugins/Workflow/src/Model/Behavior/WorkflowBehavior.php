@@ -52,6 +52,7 @@ class WorkflowBehavior extends Behavior {
     public function viewBeforeAction(Event $event) {
         $request = $this->_table->controller->request;
         if ($request->is(['post', 'put'])) {
+            // Insert into workflow_transitions and update workflow_records.
             $requestData = $request->data;
             $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
         }
@@ -144,7 +145,7 @@ class WorkflowBehavior extends Behavior {
                     ]);
                     // End
 
-                    // Reset field order
+                    // Reorder fields
                     $fields = $this->_table->fields;
                     $fieldOrder = ['workflow_status'];  // Set workflow_status to first
                     foreach ($fields as $fieldKey => $fieldAttr) {
@@ -167,7 +168,8 @@ class WorkflowBehavior extends Behavior {
             unset($toolbarButtons['edit']);
         }
 
-        $workflowStepId = $this->workflowRecord->workflow_step->id;
+        $workflowRecordId = $this->workflowRecord->id;  // Current Workflow Record
+        $workflowStepId = $this->workflowRecord->workflow_step->id; // Latest Workflow Step
         $workflowStep = $this->WorkflowSteps
             ->find()
             ->contain(['WorkflowActions' => function ($q) {
@@ -185,30 +187,35 @@ class WorkflowBehavior extends Behavior {
             $action = $actionObj->action;
             $button = [
                 'id' => $actionObj->id,
-                'text' => $actionObj->name,
-                'value' => $actionObj->next_workflow_step_id,
-                'comment_required' => $actionObj->comment_required,
-                // 'action' => $actionObj->action
+                'name' => $actionObj->name,
+                // 'action' => $actionObj->action,
+                'next_step_id' => $actionObj->next_workflow_step_id,
+                'comment_required' => $actionObj->comment_required
             ];
+            $json = json_encode($button, JSON_NUMERIC_CHECK);
+
             $buttonAttr = [
-                // ' . json_encode($button) . '
-                'onclick' => 'Workflow.init();Workflow.copy();return false;',
+                'escapeTitle' => false,
+                'escape' => true,
+                'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
                 'data-toggle' => 'modal',
-                'data-target' => '#transitionComment'
+                'data-target' => '#workflowTansition'
             ];
             $buttonAttr = array_merge($attr, $buttonAttr);
 
             if (is_null($action)) {
-                $actionButtons[] = $button;
-                // Temporary
-                // $actionButton['type'] = 'button';
-                // $actionButton['label'] = $actionObj->name;
-                // $actionButton['url'] = '#';
-                // $actionButton['attr'] = $buttonAttr;
-                // $actionButton['attr']['title'] = __($actionObj->name);
+                if (array_key_exists('class', $buttonAttr)) {
+                    unset($buttonAttr['class']);
+                }
 
-                // $toolbarButtons[$actionKey] = $actionButton;
-                // End
+                $actionButton = [];
+                $actionButton['label'] = __($actionObj->name);
+                $actionButton['url'] = '#';
+                $actionButton['attr'] = $buttonAttr;
+                $actionButton['attr']['title'] = __($actionObj->name);
+                $actionButton['attr']['role'] = 'menuitem';
+
+                $actionButtons[] = $actionButton;
             } else {
                 if ($action == 0) { // Approve
                     $approveButton = [];
@@ -233,7 +240,20 @@ class WorkflowBehavior extends Behavior {
         }
 
         // More Actions
+        $moreButtonLink = [];
         if (!empty($actionButtons)) {
+            $moreButtonLink = [
+                'title' => __('More Actions') . '<span class="caret-down"></span>',
+                'url' => '#',
+                'options' => [
+                    'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
+                    'id' => 'action-menu',
+                    'class' => 'btn btn-default action-toggle outline-btn',
+                    'data-toggle' => 'dropdown',
+                    'aria-expanded' => true
+                ]
+            ];
+
             $moreButton = [];
             $moreButton['type'] = 'element';
             $moreButton['element'] = 'Workflow.buttons';
@@ -242,8 +262,9 @@ class WorkflowBehavior extends Behavior {
             ];
             $moreButton['options'] = [];
 
-            // $toolbarButtons['more'] = $moreButton;
+            $toolbarButtons['more'] = $moreButton;
         }
+        $this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
         // End
 
         // Modal
@@ -251,30 +272,37 @@ class WorkflowBehavior extends Behavior {
         $fields = [
             $alias.'.prev_workflow_step_id' => [
                 'type' => 'hidden',
-                'value' => ''
+                'value' => $workflowStepId,
             ],
             $alias.'.workflow_step_id' => [
                 'type' => 'hidden',
-                'value' => ''
+                'value' => 0,
+                'class' => 'workflowtransition-step-id'
             ],
             $alias.'.workflow_action_id' => [
                 'type' => 'hidden',
-                'value' => ''
+                'value' => 0,
+                'class' => 'workflowtransition-action-id'
             ],
             $alias.'.workflow_record_id' => [
                 'type' => 'hidden',
-                'value' => ''
+                'value' => $workflowRecordId
             ],
             $alias.'.comment_required' => [
                 'type' => 'hidden',
-                'value' => '0'
+                'value' => 0,
+                'class' => 'workflowtransition-comment-required'
             ]
         ];
 
-        $content = 'Action Name:<BR><BR>Comment:';
+        // $Form = $event->subject()->Form;
+        $content = '';
+        $content .= '<div class="input string"><label>Name</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
+        $content .= '<BR><BR>';
+        $content .= '<div class="input textarea"><label>Description</label><textarea name="WorkflowTransitions[comment]" rows="5"></textarea></div>';
 
         $modal = [
-            'id' => 'transitionComment',
+            'id' => 'workflowTansition',
             'fields' => $fields,
             'title' => __('Add Comment'),
             'content' => $content,
