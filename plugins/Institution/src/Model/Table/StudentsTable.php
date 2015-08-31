@@ -109,6 +109,22 @@ class StudentsTable extends AppTable {
 		$this->fields['end_date']['visible'] = false;
 	}
 
+	// For PHPOE-1916
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$isEditable = $this->AcademicPeriods->get($entity->academic_period_id)->editable;
+		if (! $isEditable) {
+			if (isset($buttons['edit'])) {
+				unset($buttons['edit']);
+			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+		return $buttons;
+	}
+	// End PHPOE-1916
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades']);
 
@@ -324,6 +340,9 @@ class StudentsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		// For PHPOE-1916
+		$this->request->data[$this->alias()]['editable'] = $this->AcademicPeriods->get($entity->academic_period_id)->editable;
+		// End PHPOE-1916
 		$this->setupTabElements($entity);
 	}
 
@@ -564,6 +583,13 @@ class StudentsTable extends AppTable {
 				$toolbarButtons['back']['type'] = null;
 			}
 		} else if ($action == 'view') { // for transfer button in view page
+			$isEditable = $this->request->data[$this->alias()]['editable'];
+			if (! $isEditable) {
+				if(isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+
 			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
