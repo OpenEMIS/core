@@ -107,7 +107,7 @@ class UsersTable extends AppTable {
 		$search = $this->ControllerAction->getSearchKey();
 
 		if (!empty($search)) {
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search, 'searchByUserName' => true]);
 		}
 	}
 
