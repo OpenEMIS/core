@@ -13,7 +13,6 @@
 			
 			<tbody>
 				<?php 
-				// $startingSectionNumber = $attr['data']['startingSectionNumber'];
 				$startingSectionNumber = count($attr['data']['existedSections']) + 1;
 				for ($i=0; $i<$attr['data']['numberOfSections']; $i++) :
 					
