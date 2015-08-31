@@ -30,6 +30,7 @@ trait MessagesTrait {
 			'notEditable' => 'This record is not editable',
 			'exists' => 'The record is exists in the system.',
 			'noData' => 'There are no records.',
+			'noRecords' => 'No Record',
 			'select' => [
 				'noOptions' => 'No configured options'
 			],
@@ -207,6 +208,10 @@ trait MessagesTrait {
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
 		],
+		'StaffBehaviours' => [
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time'
+		],
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
 		],
@@ -261,12 +266,8 @@ trait MessagesTrait {
 			'noStaff' => 'No Available Staff'
 		],
 		'StudentBehaviours' => [
-			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes',
 			'noStudents' => 'No Students'
-		],
-		'StaffBehaviours' => [
-			'noSections' => 'No Sections',
-			'noStaff' => 'No Staff'
 		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',

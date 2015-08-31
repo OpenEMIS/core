@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
@@ -84,7 +85,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 		return $entity;
     }
 
-
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -106,6 +106,13 @@ class InstitutionSiteShiftsTable extends AppTable {
 			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
 		]);
 
+	}
+
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['attr']['value'] = $this->AcademicPeriods->getCurrent();
+		}
+		return $attr;
 	}
 
 /******************************************************************************************************************

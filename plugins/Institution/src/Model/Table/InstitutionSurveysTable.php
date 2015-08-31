@@ -59,8 +59,8 @@ class InstitutionSurveysTable extends AppTable {
 
 		$institutionId = null;
 		$session = $this->controller->request->session();
-		if ($session->check('Institutions.id')) {
-			$institutionId = $session->read('Institutions.id');
+		if ($session->check('Institution.Institutions.id')) {
+			$institutionId = $session->read('Institution.Institutions.id');
 		}
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
