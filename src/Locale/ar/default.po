@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenEMIS Project\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2015-07-21 11:11:49+00:00\n"
+"PO-Revision-Date: 2015-08-31 09:27:48+00:00\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -161,7 +161,7 @@ msgid "Records have been added/updated successfully."
 msgstr "تمّ تحديث/إضافة السجلات بنجاح"
 
 msgid "Records have been deleted successfully."
-msgstr "تمّ حذف السجلات بنجاح."
+msgstr "تمّ حذف الملفات بنجاح."
 
 msgid "Error occurred while deleting record."
 msgstr "حدث خطأ أثناء حذف السجلّ"
@@ -197,7 +197,7 @@ msgid "Overview"
 msgstr "مراجعة عامة"
 
 msgid "More"
-msgstr "البيانات التفصيلية"
+msgstr "المزيد"
 
 msgid "Additional Info"
 msgstr "معلومات إضافية"
@@ -401,7 +401,7 @@ msgid "Please enter a valid Address"
 msgstr "برجاء إدخال عنوان صحيح"
 
 msgid "Please enter a valid Postal Code"
-msgstr "الرجاء إدخال رمز بريدي صحيح"
+msgstr "برجاء إدخال رمز بريدي صحيح"
 
 msgid "Please select a Date of Birth"
 msgstr "برجاء تحديد تاريخ الميلاد"
@@ -557,7 +557,7 @@ msgid "Please enter a valid Code"
 msgstr "برجاء إدخال رمز صحيح"
 
 msgid "Please select a Provider"
-msgstr "رجاءً اختيار السلطة المشرفة"
+msgstr "رجاءً اختيار المقدّم"
 
 msgid "Please select a Status"
 msgstr "رجاءً تحديد الحالة"
@@ -626,16 +626,16 @@ msgid "National Education System"
 msgstr "نظام التعليم الوطنيّ"
 
 msgid "Grade"
-msgstr "الفئة"
+msgstr "الصف"
 
 msgid "Seats"
 msgstr "المقاعد"
 
 msgid "age"
-msgstr "العمر"
+msgstr "عمر"
 
 msgid "Attendance"
-msgstr "الحضور"
+msgstr "التحاق"
 
 msgid "Behaviour"
 msgstr "سلوك"
@@ -758,7 +758,7 @@ msgid "Level"
 msgstr "المستوى"
 
 msgid "Cycle"
-msgstr "المرحلة"
+msgstr "الدورة"
 
 msgid "Programme"
 msgstr "البرنامج"
@@ -917,10 +917,10 @@ msgid "Enrolment"
 msgstr "الألتحاق"
 
 msgid "Programmes"
-msgstr "المراحل الدراسية"
+msgstr "البرامج"
 
 msgid "Classes"
-msgstr "المباحث الدراسية"
+msgstr "الصفوف"
 
 msgid "Textbooks"
 msgstr "الكتب المدرسية"
@@ -968,7 +968,7 @@ msgid "Accounts and Security"
 msgstr "الحسابات والأمن"
 
 msgid "ACCOUNTS &amp; SECURITY"
-msgstr "الحسابات & الأمن"
+msgstr "حسابات & الأمن"
 
 msgid "Population"
 msgstr "السكان"
@@ -1091,7 +1091,7 @@ msgid "Back to Programmes"
 msgstr "العودة إلى البرامج"
 
 msgid "Back to Grades"
-msgstr "العودة إلى الدرجات"
+msgstr "العودة إلى الدراجات"
 
 msgid "Graduates"
 msgstr "الخريجون"
@@ -1250,7 +1250,7 @@ msgid "Back to Config"
 msgstr "العودة إلى الإعداد"
 
 msgid "Title"
-msgstr "االمسمى الوظيفي"
+msgstr "العنوان"
 
 msgid "Date Format"
 msgstr "نمط التاريخ"
@@ -1274,10 +1274,10 @@ msgid "Login"
 msgstr "الدخول"
 
 msgid "Education Management Information System"
-msgstr "نظام المعلومات التربوي "
+msgstr "نظام معلومات إدارة التعليم"
 
 msgid "Function"
-msgstr "الوظيفة"
+msgstr "الوظيف"
 
 msgid "INSTITUTION SITE"
 msgstr "موقع المؤسسة"
@@ -1301,7 +1301,7 @@ msgid "Add New User"
 msgstr "إضافة مستخدم جديد"
 
 msgid "Inactive"
-msgstr "غير فعال"
+msgstr "غير نشط"
 
 msgid "Retype Password"
 msgstr "أعد كتابة كلمة المرور"
@@ -1562,7 +1562,7 @@ msgid "Census Discrepancy"
 msgstr "تناقض التعداد "
 
 msgid "Backup files found."
-msgstr "تمّ العثور على ملفات نسخ الاحتياطية."
+msgstr "تمّ العثور على ملفات النسخ الاحتياطية."
 
 msgid "Custom"
 msgstr "مخصّص"
@@ -1751,7 +1751,7 @@ msgid "Process"
 msgstr "عملية"
 
 msgid "Abort All"
-msgstr "إيقاف الكلّ"
+msgstr "إقاف الكلّ"
 
 msgid "Clear All"
 msgstr "مسح الكل"
@@ -1805,7 +1805,7 @@ msgid "Click the Generate button to create a restore point."
 msgstr "انقر على زر إنشاء لإنشاء نقطة الاستعادة."
 
 msgid "All data will be backed up except for following tables:"
-msgstr "سيتمّ أخذ نسخة احتياطية من الكل باستثناء الجداول التالية:"
+msgstr "سيتمّ دعم كافة البيانات باستثناء الجداول التالية:"
 
 msgid "Security Users, Roles, and Functions"
 msgstr "مستخدمو الأمن، وأدواره، ووظائفه"
@@ -1841,7 +1841,7 @@ msgid "Please note that the system will not restore the following tables:"
 msgstr "برجاء ملاحظة أن النظام لن يستعيد الجداول التالية:"
 
 msgid "Below are the list of available backup dates, please choose a restore point."
-msgstr "في الأسفل قائمة من مواعيد النسخ الاحتياطية المتوفرة ، يرجى اختيار النقطة التي تريد استعادتها : "
+msgstr "برجاء ملاحظة أن النظام لن يستعيد الجداول التالية:"
 
 msgid "Files"
 msgstr "الملفات"
@@ -1859,7 +1859,7 @@ msgid "File uploaded with success."
 msgstr "تمّ تحميل الملفّ بنجاح."
 
 msgid "Image exceeds system max filesize."
-msgstr "الصورة تتجاوز الحجم الأقصى المسموح به في النظام"
+msgstr "الصورة تتجاوز الحجم الأقصى للملف في النظام"
 
 msgid "Image exceeds max file size in the HTML form."
 msgstr "صورة تتجاوز الحد الأقصى لحجم الملف في نمط HTML"
@@ -1895,7 +1895,7 @@ msgid "Please enter the code for the Area."
 msgstr "رجاءً إدخال رمز المنطقة"
 
 msgid "There are duplicate area code."
-msgstr "تكرار في الرمز المستخدم "
+msgstr "ر."
 
 msgid "Please enter the name for the Area."
 msgstr "رجاءً إدخال رمز المنطقة"
@@ -1907,7 +1907,7 @@ msgid "Please enter a name for the Field of Study."
 msgstr "برجاء إدخال اسم للمجال الدراسي."
 
 msgid "This Field of Study already exists in the system."
-msgstr " هذا المجال موجود مسبقا في النظام"
+msgstr "هذا المجال الدراسيّ موجود مسبقا في النظام"
 
 msgid "Please select the programme orientation."
 msgstr "رجاءً تحديد اتجاه البرنامج"
@@ -2105,7 +2105,7 @@ msgid "Bank Account Number"
 msgstr "رقم الحساب المصرفي"
 
 msgid "Bank Account Active"
-msgstr "حساب مصرفي فعال"
+msgstr "حساب مصرفي جاري"
 
 msgid "Bank Branch Name"
 msgstr "اسم فرع المصرف"
@@ -2117,7 +2117,7 @@ msgid "Education Grade Name"
 msgstr "اسم الصفّ التعليمي"
 
 msgid "Class"
-msgstr "الصف"
+msgstr "الشعبة"
 
 msgid "Education Subject Name"
 msgstr "اسم مادّة التعليم"
@@ -2161,8 +2161,8 @@ msgstr "متغيرات مختارة"
 msgid "Institution Provider"
 msgstr "مزوّد المؤسسة"
 
-msgid "Institution Status (حالة المدرسة)"
-msgstr "حالة المؤسسة"
+msgid "Institution Status"
+msgstr "حال المؤسسة"
 
 msgid "Institution Site Locality"
 msgstr "محلّ موقع المؤسسة"
@@ -2186,7 +2186,7 @@ msgid "Student Category"
 msgstr "تصنيف الطلاب"
 
 msgid "No backup files found."
-msgstr "لم يتمّ العثور على أي ملفات نسخ الاحتياطية"
+msgstr "لم يتمّ العثور على أي ملفات النسخ الاحتياطية"
 
 msgid "Yearbook"
 msgstr "السجلّ السنويّ"
@@ -2204,7 +2204,7 @@ msgid "Data Outliers"
 msgstr "عرض البيانات"
 
 msgid "Census Numbers that have age or total of male and female numbers beyond the specified range in settings."
-msgstr "أرقام التعداد التي لها عمر أوأعداد الذكور والإناث  الكلية خارج النطاق المحدد في الإعدادات."
+msgstr "أرقام التعداد التي لها عمر أو الكلي لأعداد الذكور والإناث خارج النطاق المحدد في الإعدادات."
 
 msgid "Page Orientation"
 msgstr "اتجاه الصفحة"
@@ -2243,10 +2243,10 @@ msgid "Data Discrepancy Reports"
 msgstr "تقارير البيانات التناقض"
 
 msgid "Rubrics"
-msgstr "سلالم التقدير"
+msgstr "أدوات التدقيق"
 
 msgid "Quality - Rubrics"
-msgstr "جودة - سلالم التقدير"
+msgstr "عناوين"
 
 msgid "Weighthings"
 msgstr "وزن"
@@ -2255,7 +2255,7 @@ msgid "Pass Mark"
 msgstr "علامة النجاح"
 
 msgid "Back"
-msgstr "عودة"
+msgstr "ظهر"
 
 msgid "Modified by"
 msgstr "تم تعديلها من قبل"
@@ -2264,13 +2264,13 @@ msgid "Modified on"
 msgstr "تعديل ل"
 
 msgid "Created by"
-msgstr "تم إنشاؤه من قبل"
+msgstr "التي أنشأتها"
 
 msgid "Created on"
-msgstr "تم إنشاؤه في"
+msgstr "تم إنشاؤها على"
 
 msgid "View Rubric"
-msgstr "عرض سلم التقدير"
+msgstr "عرض الموضوع"
 
 msgid "Descriptions"
 msgstr "الوصف"
@@ -2291,7 +2291,7 @@ msgid "Add Heading"
 msgstr "انواع الزيارات"
 
 msgid "Add Criteria Row"
-msgstr "إضافة صف المعايير"
+msgstr "إضافة صف معايير"
 
 msgid "Add Level Column"
 msgstr "إضافة عمود المستوى"
@@ -2327,7 +2327,7 @@ msgid "Visit Types"
 msgstr "زيارة أنواع"
 
 msgid "National Code"
-msgstr "الرمز الوطني "
+msgstr "كود الوطنية"
 
 msgid "International Code"
 msgstr "الرمز الدولي"
@@ -2348,7 +2348,7 @@ msgid "Quality - Edit Rubric"
 msgstr "جودة - تحرير الموضوع"
 
 msgid "Edit Rubric"
-msgstr "تحرير سلم التقدير"
+msgstr "تحرير الموضوع"
 
 msgid "Quality - Setup Rubric Criteria"
 msgstr "معايير إعداد الموضوع - جودة"
@@ -2366,7 +2366,7 @@ msgid "Quality - Edit Rubric Criteria"
 msgstr "معايير تحرير الموضوع - جودة"
 
 msgid "Edit Rubric Criteria"
-msgstr "تحرير معايير سلم النقدير "
+msgstr "معايير تحرير الموضوع"
 
 msgid "Quality - Rubric Criteria"
 msgstr "معايير الموضوع - جودة"
@@ -2405,7 +2405,7 @@ msgid "Edit Identity Details"
 msgstr "تحرير تفاصيل الهوية"
 
 msgid "Number"
-msgstr "الرقم"
+msgstr "عدد"
 
 msgid "Issued"
 msgstr "صدر"
@@ -2438,13 +2438,13 @@ msgid "Pending for Approval"
 msgstr "في انتظار الموافقة ل"
 
 msgid "Course Code"
-msgstr "رمز المادة"
+msgstr "رمز الدورة"
 
 msgid "Course Title"
-msgstr "عنوان المادة"
+msgstr "عنوان الدورة"
 
 msgid "Course Description"
-msgstr "وصف المادة"
+msgstr "وصف الدورة"
 
 msgid "Goal / Objectives"
 msgstr "الهدف / الأهداف"
@@ -2504,7 +2504,7 @@ msgid "Trainees"
 msgstr "المتدربين"
 
 msgid "Course"
-msgstr "مادة"
+msgstr "مسار"
 
 msgid "Results Details"
 msgstr "تفاصيل النتائج"
@@ -2681,10 +2681,10 @@ msgid "Pass"
 msgstr "النتيجة"
 
 msgid "Course Type"
-msgstr "نوع المادة"
+msgstr "بالطبع نوع"
 
 msgid "Course Types"
-msgstr "أنواع المواد"
+msgstr "أنواع بالطبع"
 
 msgid "Please add an area level to this area"
 msgstr "يرجى إضافة مستوى المنطقة في هذا المجال"
@@ -2701,8 +2701,8 @@ msgstr "المؤشرات المخصصة"
 msgid "Build"
 msgstr "بناء"
 
-msgid "Actions"
-msgstr "تحرير"
+msgid "Action"
+msgstr "عمل"
 
 msgid "For more information on building custom indicators"
 msgstr "لمزيد من المعلومات حول بناء مؤشرات مخصص"
@@ -2732,7 +2732,7 @@ msgid "OpenEMIS ID, First Name or Last Name"
 msgstr "OpenEMIS الهوية، والاسم الأول أو اسم العائلة"
 
 msgid "Middle Name"
-msgstr "اسم الأب"
+msgstr "الاسم الأوسط"
 
 msgid "Preferred Name"
 msgstr "اسم مفضل"
@@ -2756,7 +2756,7 @@ msgid "Max Resolution: %s pixels"
 msgstr ""
 
 msgid "Choose File"
-msgstr "اختيار ملف"
+msgstr ""
 
 msgid "File have not been updated successfully."
 msgstr ""
@@ -2801,7 +2801,7 @@ msgid "Public Expenditure as percentage of Gross National Product (GNP)"
 msgstr ""
 
 msgid "Number of teachers"
-msgstr "عدد المعلمين"
+msgstr ""
 
 msgid "Net Admission Rate / Net Intake Rate"
 msgstr ""
@@ -2858,7 +2858,7 @@ msgid "Enrolment Summary"
 msgstr ""
 
 msgid "Class List"
-msgstr "قائمة الصفوف"
+msgstr ""
 
 msgid "Report on classes"
 msgstr ""
@@ -2936,7 +2936,7 @@ msgid "Verifications"
 msgstr "التحقق"
 
 msgid "Shifts"
-msgstr "الفترات"
+msgstr "التحولات"
 
 msgid "Training Reports"
 msgstr "تقارير التدريب"
@@ -2954,19 +2954,19 @@ msgid "Summary of water and conditions from census"
 msgstr "الملخص من المياه والظروف من التعداد"
 
 msgid "Clear"
-msgstr "مسح"
+msgstr "إطلاق"
 
 msgid "Add Provider"
-msgstr "إضافة مقدم"
+msgstr "إضافة موف"
 
 msgid "Hours"
 msgstr "ساعات"
 
 msgid "Course Prerequisite"
-msgstr "المتطلبات السابقة"
+msgstr "بالطبع المتطلب"
 
 msgid "Add Course Prerequisite"
-msgstr "إضافة متطلبات الدورة "
+msgstr "إضافة دورة المتطلب"
 
 msgid "There are no assessments."
 msgstr "لا توجد تقييمات"
@@ -2987,10 +2987,10 @@ msgid "Kindergarten"
 msgstr "الروضة"
 
 msgid "Number of Shifts"
-msgstr "عدد الفترات "
+msgstr "عدد من التحولات"
 
 msgid "Auto Generated OpenEMIS ID"
-msgstr "OpenEMIS ID منشأ بشكل تلقائي"
+msgstr "OpenEMIS ID السيارات منشأ"
 
 msgid "Student Prefix"
 msgstr "طالب الاختصار"
@@ -3002,7 +3002,7 @@ msgid "Staff Prefix"
 msgstr "الموظفين بادئة"
 
 msgid "Custom Validation"
-msgstr "تأكيد التخصيص "
+msgstr "مخصص التحقق من صحة"
 
 msgid "Institution Telephone"
 msgstr "مؤسسة الهاتف"
@@ -3020,19 +3020,19 @@ msgid "Institution Site Fax"
 msgstr "فاكس مؤسسة الموقع"
 
 msgid "Institution Site Postal Code"
-msgstr "الرمز البريدي للمؤسسة "
+msgstr "مؤسسة الموقع الرمز البريدي"
 
 msgid "Student Telephone"
 msgstr "طالب الهاتف"
 
 msgid "Student Postal Code"
-msgstr "الرمز البريدي للطالب "
+msgstr "طالب الرمز البريدي"
 
 msgid "Teacher Telephone"
 msgstr "المعلم الهاتف"
 
 msgid "Teacher Postal Code"
-msgstr "الرمز البريدي للمعلم "
+msgstr "المعلم الرمز البريدي"
 
 msgid "Staff Telephone"
 msgstr "الموظفين الهاتف"
@@ -3092,10 +3092,10 @@ msgid "Nationality"
 msgstr "الجنسية"
 
 msgid "Default Country"
-msgstr "البلد الافتراضي"
+msgstr "افتراضي البل"
 
 msgid "System Defined Roles"
-msgstr "نظام محدد الأدوار"
+msgstr "نظام محدد الأدوا"
 
 msgid "User Defined Roles"
 msgstr "معرف المستخدم الأدوار"
@@ -3260,7 +3260,7 @@ msgid "Survey"
 msgstr "المسح"
 
 msgid "New Surveys"
-msgstr "مسوح جديدة"
+msgstr "مسوح جديد"
 
 msgid "Completed Surveys"
 msgstr "المسوح المنجزة"
@@ -3278,7 +3278,7 @@ msgid "Report on the number of teacher actually trained verses target groups for
 msgstr "تقرير عن عدد من المعلمين في الواقع الآيات تدريب الفئات المستهدفة لكل برنامج"
 
 msgid "New Staff"
-msgstr "موظف جديد"
+msgstr "طاقم جدي"
 
 msgid "Contacts"
 msgstr "اتصالات"
@@ -3299,7 +3299,7 @@ msgid "Licenses"
 msgstr "تراخيص"
 
 msgid "Positions"
-msgstr "المراكز الوظيفية"
+msgstr "المراكز"
 
 msgid "Leave"
 msgstr "اترك"
@@ -3380,7 +3380,7 @@ msgid "Commencement Date"
 msgstr "تاريخ البدء"
 
 msgid "Document No."
-msgstr "رقم الوثيقة"
+msgstr "وثيقة رقم"
 
 msgid "Qualification Title"
 msgstr "المؤهل العنوان"
@@ -3389,7 +3389,7 @@ msgid "Graduate Year "
 msgstr "سنة التخرج"
 
 msgid "No position found"
-msgstr "لا يوجد مركز وظيفي"
+msgstr "لم وجد موقف"
 
 msgid "Total days absent"
 msgstr "مجموع أيام غائبة"
@@ -3413,7 +3413,7 @@ msgid "List of Behaviour"
 msgstr "قائمة السلوكيات"
 
 msgid "No record available"
-msgstr "لا تتوفر أية سجلات "
+msgstr "لم تتوفر قياسيا"
 
 msgid "Net"
 msgstr "نت"
@@ -3572,7 +3572,7 @@ msgid "Edit Criteria"
 msgstr "تحرير معايير"
 
 msgid "Criteria Details"
-msgstr "تفاصيل المعايير"
+msgstr "معايير تفاصيل"
 
 msgid "Quality Assurance Reports"
 msgstr "تقارير ضمان الجودة"
@@ -3653,13 +3653,13 @@ msgid "Edit Rubric Headers"
 msgstr "تحرير رؤوس الموضوع"
 
 msgid "Edit Headers"
-msgstr "تحرير ترويسات"
+msgstr "تحرير رؤوس"
 
 msgid "There are no records."
-msgstr "لم يتم العثور على أية سجلات "
+msgstr "هناك أية سجلات."
 
 msgid "Create Rubric Table"
-msgstr "إنشاء سلم لفظي"
+msgstr "إنشاء الجدول الموضوع"
 
 msgid "Reorder Criteria"
 msgstr "إعادة ترتيب معايير"
@@ -3674,7 +3674,7 @@ msgid "Add Status"
 msgstr "حالة الإعلان"
 
 msgid "Criteria Level Description"
-msgstr "وصف مستوى المعايير"
+msgstr "معايير مستوى الوصف"
 
 msgid "View Details"
 msgstr "عرض تفاصيل"
@@ -3689,7 +3689,7 @@ msgid "Status Details"
 msgstr "تفاصيل الوضع"
 
 msgid "Rubric Name"
-msgstr "اسم سلم التقدير"
+msgstr "اسم الموضوع"
 
 msgid "Total Weighting(%)"
 msgstr "مجموع الترجيح(٪)"
@@ -3761,7 +3761,7 @@ msgid "Trainer Type"
 msgstr "نوع المدرب"
 
 msgid "Position"
-msgstr "مركز وظيفي"
+msgstr "موقف"
 
 msgid "Target Group"
 msgstr "المجموعة المستهدفة"
@@ -3788,7 +3788,7 @@ msgid "*File size should not be larger than 2MB."
 msgstr "* لا ينبغي أن يكون حجم الملف أكبر من 2MB."
 
 msgid "*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB."
-msgstr "* الحد الأقصى المسموح بتحميله هو 5 ملفات بشرط أن لا يتجاوز حجم كل ملف 5MB "
+msgstr "ويسمح * الحد الأقصى 5 ملفات على تحميل واحد. لا ينبغي أن يكون حجم كل ملف أكبر من 2MB."
 
 msgid "Result Type"
 msgstr "نتيجة نوع"
@@ -3859,8 +3859,8 @@ msgstr "الصف%s:%s"
 msgid "TrainingResult"
 msgstr "نتائجلتدريب"
 
-msgid "OpenEMIS ID"
-msgstr "رقم تعريف ال OpenEMIS"
+msgid "OpenEmis ID"
+msgstr "OpenEmis ID"
 
 msgid "(1=Pass/0=Fail)"
 msgstr "(1 = نجاح / 0 = فشل)"
@@ -3875,13 +3875,13 @@ msgid "Achievement Type"
 msgstr "نوع الإنجاز"
 
 msgid "Course Goal / Objectives"
-msgstr "أهداف المادة"
+msgstr "بالطبع الهدف / الأهداف"
 
 msgid "Add Training Needs"
 msgstr "إضافة الاحتياجات التدريبية"
 
 msgid "Course Catalogue"
-msgstr "سجل المواد"
+msgstr "بالطبع كتالوج"
 
 msgid "Need Category"
 msgstr "تحتاج الفئة"
@@ -3890,7 +3890,7 @@ msgid "Add Achievements"
 msgstr "إضافة الانجازات"
 
 msgid "Achievements Details"
-msgstr "تفاصيل الإنجازات "
+msgstr "إنجازات تفاصيل"
 
 msgid "Edit Achievements"
 msgstr "تعديل الانجازات"
@@ -3917,7 +3917,7 @@ msgid "Months"
 msgstr "أشهر"
 
 msgid "Add Experience"
-msgstr "إضافة الخبرة"
+msgstr "إضافة التجربة"
 
 msgid "Add Specialisation"
 msgstr "إضافة التخصص"
@@ -3965,7 +3965,7 @@ msgid "Download Trainees"
 msgstr "تحميل المتدربين"
 
 msgid "Download Trainee Results"
-msgstr "تحميل نتائج متدرب"
+msgstr "تحميل متدرب نتائج"
 
 msgid "Duplicate Session"
 msgstr "تكرار الدورة"
@@ -4013,10 +4013,10 @@ msgid "Period"
 msgstr "فترة"
 
 msgid "Shift"
-msgstr "الفترة "
+msgstr "التحولات"
 
 msgid "Shift Name"
-msgstr "اسم الفترة"
+msgstr "اسم التحولات"
 
 msgid "Start Time"
 msgstr "بدء التوقيت"
@@ -4025,13 +4025,13 @@ msgid "End Time"
 msgstr "نهاية الوقت"
 
 msgid "Shift Details"
-msgstr "تفاصيل الفترة "
+msgstr "تحول تفاصيل"
 
 msgid "Edit Shift"
-msgstr "تحرير الفترة"
+msgstr "تحرير التحول"
 
 msgid "Add Shift"
-msgstr "إضافة فترة"
+msgstr "إضافة شيفت"
 
 msgid "Add Attachment"
 msgstr "إضافة المرفقات"
@@ -4049,13 +4049,13 @@ msgid "Attachment Details"
 msgstr "تفاصيل المرفقات"
 
 msgid "Teaching"
-msgstr "يدرس"
+msgstr "تدريس"
 
 msgid "Position Details"
-msgstr "تفاصيل االمركز الوظيفي"
+msgstr "تفاصيل الموقف"
 
 msgid "Edit Position"
-msgstr "تحرير المركز الوظيفي"
+msgstr "تحرير الموقع"
 
 msgid "All Years"
 msgstr "جميع سنوات"
@@ -4142,10 +4142,10 @@ msgid "Visualization"
 msgstr "التصور"
 
 msgid "Visualizer"
-msgstr "نماذج تصورية"
+msgstr "ومتخيل"
 
 msgid "List of Classes"
-msgstr "قائمة المباحث الدراسية"
+msgstr "قائمة فئات"
 
 msgid "Verify"
 msgstr "تحقق"
@@ -4172,7 +4172,7 @@ msgid "There are no classes associated with this institution site for the select
 msgstr "لا توجد الطبقات المرتبطة بهذا الموقع مؤسسة للعام المحدد."
 
 msgid "There are no subjects configured in the system."
-msgstr "لا توجد مواضيع مكونة مسبقاً في النظام."
+msgstr "لا توجد مواضيع تكوينها في النظام."
 
 msgid "Overview and More"
 msgstr "نظرة عامة والمزيد"
@@ -4183,125 +4183,23 @@ msgstr "الأوصياء"
 msgid "Maps"
 msgstr "خرائط"
 
-msgid "Fees"
-msgstr "الرسوم"
+msgid "Communications"
+msgstr "الإتصالات"
 
-msgid "Fee Types"
-msgstr "أنواع الرسوم"
+msgid "Display"
+msgstr "عرض"
 
-msgid "Add existing Student"
-msgstr "إضافة طالب موجود"
+msgid "records"
+msgstr "تسجيل"
 
-msgid "Add existing Staff"
-msgstr "إضافة موظف موجود"
-
-msgid "Add Student"
-msgstr "إضافة طالب"
-
-msgid "Add Staff"
-msgstr "إضافة موظف"
-
-msgid "Custom Field"
-msgstr "حقل مخصص"
-
-msgid "Promoted"
-msgstr "ناجح"
-
-msgid "Sections"
-msgstr "الشعب"
-
-msgid "Non-Teaching"
-msgstr "لا يدرس"
-
-msgid "Repeated"
-msgstr "معيد"
-
-msgid "مرفع"
-msgstr "ناجح"
-
-msgid "متكرر"
-msgstr "معيد"
-
-msgid "Academic Periods"
-msgstr "الفترات الأكاديمية"
+msgid "Showing"
+msgstr "عرض"
 
 msgid "Surveys"
-msgstr "المسوح الالكترونية"
-
-msgid "Communications"
-msgstr "معلومات الاتصال"
-
-msgid "الاسم الثالث"
-msgstr "اسم الجد"
-
-msgid "Alternative Name"
-msgstr "الاسم المفضل"
-
-msgid "FTE"
-msgstr "نسبة مشاركة المعلم"
-
-msgid "National Number"
-msgstr "الرقم الوطني"
-
-msgid "School Name"
-msgstr "اسم المدرسة"
-
-msgid "Expired On"
-msgstr "انتهت صلاحيته"
-
-msgid "Started On"
-msgstr "بدأ من"
-
-msgid "Completed On"
-msgstr "استخرج بتاريخ"
-
-msgid "Third Name"
-msgstr "اسم الجد"
-
-msgid "Draft"
-msgstr "مسودة"
+msgstr "المسوحات"
 
 msgid "Workflows"
-msgstr "مخططات سير العمليات"
+msgstr "سير العمل"
 
-msgid "Notices"
-msgstr "الملاحظات"
-
-msgid "absent-excused"
-msgstr "غياب مشروع"
-
-msgid "Absent - Unexcused"
-msgstr "غياب غير مشروع"
-
-msgid "Present"
-msgstr "حاضر"
-
-msgid "Sunday"
-msgstr "الأحد"
-
-msgid "Sun"
-msgstr "الأحد"
-
-msgid "Mon"
-msgstr "الاثنين"
-
-msgid "Tue"
-msgstr "الثلاثاء"
-
-msgid "Wed"
-msgstr "الأربعاء"
-
-msgid "Thu"
-msgstr "الخميس"
-
-msgid "Current Week"
-msgstr "الأسبوع الحالي"
-
-msgid "excused"
-msgstr "غياب مشروع"
-
-msgid "absent - excused"
-msgstr "غياب مشروع"
-
-msgid "Bank Branches"
-msgstr "فروع البنك"
+msgid "Area Administratives"
+msgstr "منطقة اداريون"
