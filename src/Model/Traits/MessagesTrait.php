@@ -172,7 +172,21 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
+			]
+		],
+		'InstitutionRubricAnswers' => [
+			'rubric_template' => 'Rubric Template',
+			'rubric_section_id' => 'Section',
+			'noSection' => 'There is no rubric section selected',
+			'save' => [
+				'draft' => 'Rubric record has been saved to draft successfully.',
+				'final' => 'Rubric record has been submitted successfully.',
+				'failed' => 'This rubric record is not submitted due to criteria answers is not complete.'
 			],
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			]
 		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
