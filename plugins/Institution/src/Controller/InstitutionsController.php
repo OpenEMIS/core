@@ -57,9 +57,6 @@ class InstitutionsController extends AppController  {
 			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['!add']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits']
 		];
-
-		$this->loadComponent('Paginator');
-		
 	}
 
 	public function beforeFilter(Event $event) {
@@ -70,20 +67,27 @@ class InstitutionsController extends AppController  {
 		$action = $this->request->params['action'];
 		$header = __('Institutions');
 
-		if ($action == 'index') {
-			$session->delete('Institutions.id');
+		// this is to cater for back links
+		$query = $this->request->query;
+		if (array_key_exists('institution_id', $query)) {
+			$session->write('Institution.Institutions.id', $query['institution_id']);
+
 		}
 
-		if ($session->check('Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
+		if ($action == 'index') {
+			$session->delete('Institution.Institutions.id');
+		}
+
+		if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
 			$id = 0;
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Institutions.id')) {
-				$id = $session->read('Institutions.id');
+			} else if ($session->check('Institution.Institutions.id')) {
+				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
 				if ($action == 'dashboard') {
-					$session->write('Institutions.id', $id);
+					$session->write('Institution.Institutions.id', $id);
 				}
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
@@ -141,9 +145,14 @@ class InstitutionsController extends AppController  {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
+			if ($model->hasField('institution_id')) {
+				$model->fields['institution_id']['type'] = 'hidden';
+				$model->fields['institution_id']['value'] = $session->read('Institution.Institutions.id');
+			}
+
 			if ($model->hasField('institution_site_id') && !is_null($this->activeObj)) {
 				$model->fields['institution_site_id']['type'] = 'hidden';
-				$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
+				$model->fields['institution_site_id']['value'] = $session->read('Institution.Institutions.id');
 				/**
 				 * set sub model's institution id here
 				 */
@@ -180,18 +189,18 @@ class InstitutionsController extends AppController  {
 
 		if (!$this->request->is('ajax')) {
 			if ($model->hasField('institution_id')) {
-				if (!$session->check('Institutions.id')) {
+				if (!$session->check('Institution.Institutions.id')) {
 					$this->Alert->error('general.notExists');
 					// should redirect
 				} else {
-					$query->where([$model->aliasField('institution_id') => $session->read('Institutions.id')]);
+					$query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
 				}
 			} else if ($model->hasField('institution_site_id')) { // will need to remove this part once we change institution_sites to institutions
-				if (!$session->check('Institutions.id')) {
+				if (!$session->check('Institution.Institutions.id')) {
 					$this->Alert->error('general.notExists');
 					// should redirect
 				} else {
-					$query->where([$model->aliasField('institution_site_id') => $session->read('Institutions.id')]);
+					$query->where([$model->aliasField('institution_site_id') => $session->read('Institution.Institutions.id')]);
 				}
 			}
 		}
