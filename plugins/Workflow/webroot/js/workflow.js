@@ -27,6 +27,7 @@ var Workflow = {
 	},
 
 	copy: function(jsonObj) {
+		$('.workflowtransition-comment').val('');
 		$('.workflowtransition-action-id').val(jsonObj.id);
 		$('.workflowtransition-action-name').val(jsonObj.name);
 		$('.workflowtransition-step-id').val(jsonObj.next_step_id);
