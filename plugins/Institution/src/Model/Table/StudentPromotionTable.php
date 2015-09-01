@@ -360,10 +360,18 @@ class StudentPromotionTable extends AppTable {
 
 						if (isset($obj['education_grade_id'])) {
 							$entity = $this->newEntity($obj);
-
-							if ($this->save($entity)) {
-							} else {
-								$this->log($entity->errors(), 'debug');
+							$count = $this->find()
+								->where([
+									$this->aliasField('student_id') => $obj['student_id'],
+									$this->aliasField('education_grade_id') => $obj['education_grade_id'],
+									$this->aliasField('academic_period_id') => $obj['academic_period_id']
+								])
+								->count();
+							if ($count == 0) {
+								if ($this->save($entity)) {
+								} else {
+									$this->log($entity->errors(), 'debug');
+								}
 							}
 						}
 					}
