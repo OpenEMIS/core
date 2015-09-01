@@ -9,6 +9,6 @@ class CountriesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('countries');
 		parent::initialize($config);
-		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'country_id']);
 	}
 }

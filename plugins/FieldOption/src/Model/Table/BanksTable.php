@@ -9,6 +9,6 @@ class BanksTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('banks');
 		parent::initialize($config);
-		$this->hasMany('BankBranches', ['className' => 'FieldOption.BankBranches', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('BankBranches', ['className' => 'FieldOption.BankBranches', 'foreignKey' => 'bank_id']);
 	}
 }

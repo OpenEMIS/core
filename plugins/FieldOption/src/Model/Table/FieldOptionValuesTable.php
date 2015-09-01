@@ -175,7 +175,12 @@ class FieldOptionValuesTable extends AppTable {
 				}
 				$settings['model'] = $model;
 			} else {
-
+				//get model through params
+				if (is_object(json_decode($fieldOption->params))) { 
+			        $decoded = json_decode($fieldOption->params);
+			        $model = get_object_vars($decoded);
+			        $settings['model'] = (!empty($model['model'])) ? $model['model'] : '';
+			    }
 			}
 		}
 
