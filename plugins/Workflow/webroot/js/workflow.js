@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 $(document).ready(function() {
 	Workflow.init();
 
-	$("#WorkflowTransitionComment").keyup(function() {
+	$(".workflowtransition-comment").keyup(function() {
 		Workflow.hideError();
 	});
 });
@@ -34,16 +34,16 @@ var Workflow = {
 	},
 
 	showError: function() {
-		$('#WorkflowTransitionCommentError').show();
+		$('.workflowtransition-comment-error').show();
 	},
 
 	hideError: function() {
-		$('#WorkflowTransitionCommentError').hide();
+		$('.workflowtransition-comment-error').hide();
 	},
 	
 	onSubmit: function(obj) {
-		var required = $('#WorkflowTransitionCommentRequired').val();
-		var comment = $.trim($('#WorkflowTransitionComment').val());
+		var required = $('.workflowtransition-comment-required').val();
+		var comment = $.trim($('.workflowtransition-comment').val());
 
 		if (required == 1 && comment.length === 0) {
 			Workflow.showError();
