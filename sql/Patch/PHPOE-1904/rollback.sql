@@ -19,7 +19,6 @@ UPDATE field_options SET plugin = 'Staff' WHERE code = 'StaffTrainingCategories'
 UPDATE field_options SET plugin = NULL WHERE code = 'Banks';
 UPDATE field_options SET plugin = NULL WHERE code = 'BankBranches';
 
-UPDATE field_options SET plugin = 'Students' WHERE code = 'GuardianEducationLevels';
 UPDATE field_options SET plugin = 'Students' WHERE code = 'GuardianRelations';
 
 UPDATE field_options SET plugin = 'Staff' WHERE code = 'QualificationLevels';
@@ -40,6 +39,9 @@ UPDATE field_options SET plugin = NULL WHERE code = 'InfrastructureConditions';
 
 UPDATE field_options SET plugin = 'Students' WHERE code = 'StudentTransferReasons';
 
+UPDATE field_options SET visible = 1 WHERE code = 'GuardianEducationLevels';
+
+UPDATE field_options SET visible = 1 WHERE parent = 'Training';
 
 INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 ('Students', 'StudentCategories', 'Categories', 'Student', NULL, 14, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
@@ -54,7 +56,11 @@ INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `orde
 (NULL, 'HealthConsultationTypes', 'Consultation Types', 'Health', NULL, 38, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (NULL, 'HealthImmunizations', 'Immunization', 'Health', NULL, 39, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (NULL, 'HealthRelationships', 'Relationships', 'Health', NULL, 40, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(NULL, 'HealthTestTypes', 'Test Types', 'Health', NULL, 41, 0, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'HealthTestTypes', 'Test Types', 'Health', NULL, 41, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'SanitationGenders', 'Sanitation Gender', 'Infrastructure', NULL, 50, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
+('Staff', 'StaffPositionSteps', 'Steps', 'Position', NULL, 54, 0, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+
 
   
 
