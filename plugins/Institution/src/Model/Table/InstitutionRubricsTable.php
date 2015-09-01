@@ -26,6 +26,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function beforeAction(Event $event) {

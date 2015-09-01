@@ -71,7 +71,7 @@ class StaffTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
-		$periodId = $this->request->query['period'];
+		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
 		}
@@ -99,8 +99,8 @@ class StaffTable extends AppTable {
 		// Academic Periods
 		$periodOptions = $AcademicPeriodTable->getList();
 
-		if (empty($request->query['period'])) {
-			$request->query['period'] = $AcademicPeriodTable->getCurrent();
+		if (empty($request->query['academic_period_id'])) {
+			$request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
 		}
 
 		// Positions
@@ -115,7 +115,7 @@ class StaffTable extends AppTable {
 		$positionOptions = [0 => __('All Positions')] + $positionData;
 
 		// Query Strings
-		$selectedPeriod = $this->queryString('period', $periodOptions);
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 		$selectedPosition = $this->queryString('position', $positionOptions);
 
 		// Advanced Select Options
@@ -322,7 +322,7 @@ class StaffTable extends AppTable {
 
 			$session = $this->Session;
 			$institutionId = $session->read('Institution.Institutions.id');
-			$periodId = $this->request->query('period');
+			$periodId = $this->request->query('academic_period_id');
 
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
