@@ -28,7 +28,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('InstitutionSiteSectors', 			['className' => 'Institution.Sectors']);
 		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
 		$this->belongsTo('InstitutionSiteGenders', 			['className' => 'Institution.Genders']);
-		$this->belongsTo('InstitutionSiteNetworkConnectivities', 			['className' => 'Institution.NetworkConnectivities']);
+		$this->belongsTo('NetworkConnectivities', 			['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'network_connectivity_id']);
 
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
@@ -191,7 +191,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_network_connectivity_id', ['type' => 'select']);
+		$this->ControllerAction->field('network_connectivity_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 		if (strtolower($this->action) != 'index') {
@@ -429,7 +429,7 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
-			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_network_connectivity_id', 'institution_site_status_id', 'date_opened', 'date_closed',
+			'institution_site_ownership_id', 'institution_site_gender_id', 'network_connectivity_id', 'institution_site_status_id', 'date_opened', 'date_closed',
 			
 			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
 
