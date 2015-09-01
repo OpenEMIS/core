@@ -40,6 +40,7 @@ class AcademicPeriodsTable extends AppTable {
 		$entity->end_year = date("Y", strtotime($entity->end_date));
 		if ($entity->current == 1) {
 			$entity->editable = 1;
+			$entity->visible = 1;
 			$this->updateAll(['current' => 0], []);
 		}
 	}
