@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 
 class AcademicPeriodBehavior extends Behavior {
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
@@ -28,11 +29,13 @@ class AcademicPeriodBehavior extends Behavior {
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
-		if (! $isEditable) {
-			$urlParams = $this->_table->ControllerAction->url('view');
-			$event->stopPropagation();
-			return $this->_table->controller->redirect($urlParams);
+		if (isset($entity->academic_period_id)) {
+			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+			if (! $isEditable) {
+				$urlParams = $this->_table->ControllerAction->url('view');
+				$event->stopPropagation();
+				return $this->_table->controller->redirect($urlParams);
+			}
 		}
 	}
 
@@ -55,44 +58,52 @@ class AcademicPeriodBehavior extends Behavior {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
-		if (! $isEditable) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
+		if (isset($entity->academic_period_id)) {
+			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+			if (! $isEditable) {
+				if (isset($buttons['edit'])) {
+					unset($buttons['edit']);
+				}
+				if (isset($buttons['remove'])) {
+					unset($buttons['remove']);
+				}
 			}
-			if (isset($buttons['remove'])) {
-				unset($buttons['remove']);
-			}
+			// To stop calling the onUpdateActionButtons event on the table again
+			$event->stopPropagation();
+			return $buttons;
+		} else {
+			pr($entity);
 		}
-		// To stop calling the onUpdateActionButtons event on the table again
-		$event->stopPropagation();
-		return $buttons;
+
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
-		if (! $isEditable) {
-			$urlParams = $this->_table->ControllerAction->url('add');
-			$event->stopPropagation();
+		if (isset($entity->academic_period_id)) {
+			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+			if (! $isEditable) {
+				$urlParams = $this->_table->ControllerAction->url('add');
+				$event->stopPropagation();
 
-			// Error message to tell user that they cannot add into a non-editable academic period
-			$this->_table->Alert->error('general.add.failed');
-			return $this->_table->controller->redirect($urlParams);
+				// Error message to tell user that they cannot add into a non-editable academic period
+				$this->_table->Alert->error('general.add.failed');
+				return $this->_table->controller->redirect($urlParams);
+			}
 		}
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
-		if (! $isEditable) {
-			$urlParams = $this->_table->ControllerAction->url('edit');
-			$event->stopPropagation();
-			
-			// Error message to tell user that they cannot add into a non-editable academic period
-			$this->_table->Alert->error('general.edit.failed');
-			return $this->_table->controller->redirect($urlParams);
-		}
+		if (isset($entity->academic_period_id)) {
+			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+			if (! $isEditable) {
+				$urlParams = $this->_table->ControllerAction->url('edit');
+				$event->stopPropagation();
 
+				// Error message to tell user that they cannot add into a non-editable academic period
+				$this->_table->Alert->error('general.edit.failed');
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
 	}
 }

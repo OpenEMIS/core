@@ -32,6 +32,7 @@ class InstitutionSiteFeesTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteFeeTypes', ['className' => 'Institution.InstitutionSiteFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
