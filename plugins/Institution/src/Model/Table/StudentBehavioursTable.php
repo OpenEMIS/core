@@ -25,6 +25,15 @@ class StudentBehavioursTable extends AppTable {
 
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
 	// public function validationDefault(Validator $validator) {
 		// get start and end date of selected academic period 
@@ -80,7 +89,7 @@ class StudentBehavioursTable extends AppTable {
 
 		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
@@ -134,12 +143,68 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
+		$this->request->data[$this->alias()]['date_of_behaviour'] = $entity->date_of_behaviour;
+	}
+
 	public function editBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Students']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
+
+		$InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$AcademicPeriodId = $InstitutionClassStudentTable->find()
+						->where([$InstitutionClassStudentTable->aliasField('student_id') => $entity->student_id])
+						->innerJoin(['InstitutionSiteClasses' => 'institution_site_sections'],[
+								'InstitutionSiteClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_site_section_id'),
+								'InstitutionSiteClasses.institution_site_id' => $entity->institution_id
+							])
+						->innerJoin(['AcademicPeriods' => 'academic_periods'], [
+								'AcademicPeriods.id = InstitutionSiteClasses.academic_period_id',
+								'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'), 
+								'AcademicPeriods.end_date >= ' => $entity->date_of_behaviour->format('Y-m-d')
+							])
+						->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
+						->first()
+						->toArray();
+
+		if (! $AcademicPeriodId['editable']) {
+			$urlParams = $this->ControllerAction->url('view');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		}
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$studentId = $this->request->data[$this->alias()]['student_id'];
+			$dateOfBehaviour = $this->request->data[$this->alias()]['date_of_behaviour'];
+			$InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+			$AcademicPeriodId = $InstitutionClassStudentTable->find()
+					->where([$InstitutionClassStudentTable->aliasField('student_id') => $studentId])
+					->innerJoin(['InstitutionSiteClasses' => 'institution_site_sections'],[
+							'InstitutionSiteClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_site_section_id'),
+							'InstitutionSiteClasses.institution_site_id' => $institutionId
+						])
+					->innerJoin(['AcademicPeriods' => 'academic_periods'], [
+							'AcademicPeriods.id = InstitutionSiteClasses.academic_period_id',
+							'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'), 
+							'AcademicPeriods.end_date >= ' => $dateOfBehaviour->format('Y-m-d')
+						])
+					->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
+					->first()
+					->toArray();
+
+			if (! $AcademicPeriodId['editable']) {
+				if(isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+		}
 	}
 
 	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, $request) {
@@ -248,9 +313,10 @@ class StudentBehavioursTable extends AppTable {
 			$selectedClass = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedClass = $request->data($this->aliasField('class'));
+				pr($selectedClass);
 			}
 
-			if (!empty($selectedClass)) {
+			if (! $selectedClass==0	) {
 				$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 				$studentOptions = $studentOptions + $Students
 				->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])

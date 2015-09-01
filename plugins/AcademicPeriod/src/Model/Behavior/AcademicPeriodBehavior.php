@@ -62,22 +62,26 @@ class AcademicPeriodBehavior extends Behavior {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$isEditable = 1;
 		if (isset($entity->academic_period_id)) {
 			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
-			if (! $isEditable) {
-				if (isset($buttons['edit'])) {
-					unset($buttons['edit']);
-				}
-				if (isset($buttons['remove'])) {
-					unset($buttons['remove']);
-				}
+		} else if (isset($this->_table->request->query['academic_period_id'])) {
+			$academicPeriodId = $this->_table->request->query['academic_period_id'];
+			if(!empty($academicPeriodId) || $academicPeriodId > 0) {
+				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			}
+		}
+		if (! $isEditable) {
+			if (isset($buttons['edit'])) {
+				unset($buttons['edit']);
+			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
 			}
 			// To stop calling the onUpdateActionButtons event on the table again
 			$event->stopPropagation();
 			return $buttons;
-		} else {
-			// pr($this->request->query);
-		}
+		}	
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
