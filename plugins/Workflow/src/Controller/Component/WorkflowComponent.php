@@ -19,7 +19,7 @@ class WorkflowComponent extends Component {
 	public $WorkflowModels;
 	public $WorkflowsFilters;
 
-	public $components = ['Auth', 'ControllerAction'];
+	public $components = ['Auth', 'ControllerAction', 'AccessControl'];
 
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
@@ -28,6 +28,24 @@ class WorkflowComponent extends Component {
 		$this->Workflows = TableRegistry::get('Workflow.Workflows');
 		$this->WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
 		$this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+
+		// To bypass the permission
+		$session = $this->request->session();
+		if ($session->check('Workflow.Workflows.models')) {
+			$models = $session->read('Workflow.Workflows.models');
+		} else {
+			$models = $this->WorkflowModels
+				->find('list', ['keyField' => 'id', 'valueField' => 'model'])
+				->toArray();
+
+			$session->write('Workflow.Workflows.models', $models);
+		}
+
+		foreach ($models as $key => $model) {
+			$ignoreList[$model] = ['processWorkflow'];	
+		}
+        $this->AccessControl->config('ignoreList', $ignoreList);
+        // End
 	}
 
 	public function startup(Event $event) {
