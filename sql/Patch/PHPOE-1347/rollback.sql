@@ -1,0 +1,3 @@
+UPDATE security_functions SET _execute = NULL WHERE security_functions.name = 'Students' and security_functions.controller = 'Institutions' and security_functions.module = 'Institutions' and security_functions.category = 'Students';
+
+UPDATE security_functions SET _execute = NULL WHERE security_functions.name = 'Staff' and security_functions.controller = 'Institutions' and security_functions.module = 'Institutions' and security_functions.category = 'Staff';
