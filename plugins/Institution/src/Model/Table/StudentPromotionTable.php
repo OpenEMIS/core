@@ -50,7 +50,7 @@ class StudentPromotionTable extends AppTable {
 
 		$selectedPeriod = $this->request->query('period');
 		$selectedGrade = $this->request->query('grade');
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$id = $entity->user->id;
 
 		$alias = Inflector::underscore($this->alias());
@@ -120,7 +120,7 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'student_status_id', 'education_grade_id']);
 
 		$settings['pagination'] = false;
-		if ($this->Session->check('Institutions.id')) {
+		if ($this->Session->check('Institution.Institutions.id')) {
 			//Add controls filter to index page
 	        $toolbarElements = [
 				['name' => 'Institution.StudentGrades/controls', 'data' => [], 'options' => []]
@@ -128,7 +128,7 @@ class StudentPromotionTable extends AppTable {
 			$this->controller->set('toolbarElements', $toolbarElements);
 			// End
 
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
 			$GradeStudents = TableRegistry::get('Institution.StudentPromotion');
 
@@ -138,7 +138,10 @@ class StudentPromotionTable extends AppTable {
 				$selectedPeriod = $this->AcademicPeriods->getCurrent();
 			} else {
 				// index mode
-				$periodOptions = $this->AcademicPeriods->getYearList();
+				$periodOptions = $this->AcademicPeriods->getList();
+				if (empty($this->request->query['period'])) {
+					$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+				}
 				$selectedPeriod = $this->queryString('period', $periodOptions);
 				$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),

@@ -60,7 +60,7 @@ class StaffTable extends AppTable {
 			])
 			->add('institution_site_id', [
 			])
-			->add('security_user_id', 'ruleInstitutionStaffId', [
+			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
@@ -68,7 +68,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
 		$periodId = $this->request->query['period'];
 		if ($periodId > 0) {
@@ -94,12 +94,17 @@ class StaffTable extends AppTable {
 		}
 		$options['sortWhitelist'] = $sortList;
 
+		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// Academic Periods
-		$periodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getList();
+		$periodOptions = $AcademicPeriodTable->getList();
+
+		if (empty($request->query['period'])) {
+			$request->query['period'] = $AcademicPeriodTable->getCurrent();
+		}
 
 		// Positions
 		$session = $request->session();
-		$institutionId = $session->read('Institutions.id');
+		$institutionId = $session->read('Institution.Institutions.id');
 		$positionData = $this->Positions
 		->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 		->contain(['StaffPositionTitles'])
@@ -112,15 +117,15 @@ class StaffTable extends AppTable {
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$selectedPosition = $this->queryString('position', $positionOptions);
 
-		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
-		if ($selectedPosition != 0) {
-			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
-		}
-
 		// Advanced Select Options
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
+		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
+		if ($selectedPosition != 0) {
+			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
+		}
+		
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
@@ -128,14 +133,6 @@ class StaffTable extends AppTable {
 		}
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
-	}
-
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$errors = $entity->errors();
-		if (!empty($errors)) {
-			$entity->unsetProperty('security_user_id');
-			unset($data[$this->alias()]['security_user_id']);
-		}
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -152,13 +149,14 @@ class StaffTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event) {
+		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_site_position_id');
 		$this->ControllerAction->field('role');
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'security_user_id'
+			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 
 		$this->setupTabElements($entity);
@@ -190,7 +188,7 @@ class StaffTable extends AppTable {
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$positionOptions = $this->Positions
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->contain(['StaffPositionTitles'])
@@ -205,7 +203,7 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldRole(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$Roles = TableRegistry::get('Security.SecurityRoles');
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$institutionEntity = $this->Institutions->get($institutionId);
 			$groupId = $institutionEntity->security_group_id;
 			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
@@ -248,6 +246,15 @@ class StaffTable extends AppTable {
 	}
 
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['visible'] = false;	
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldStaffName(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
@@ -313,7 +320,7 @@ class StaffTable extends AppTable {
 			$institutionSiteArray = [];
 
 			$session = $this->Session;
-			$institutionId = $session->read('Institutions.id');
+			$institutionId = $session->read('Institution.Institutions.id');
 			$periodId = $this->request->query('period');
 
 			// Get Number of staff in an institution

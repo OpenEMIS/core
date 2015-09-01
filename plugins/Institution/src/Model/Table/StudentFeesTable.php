@@ -39,7 +39,7 @@ class StudentFeesTable extends AppTable {
 		 * Shortcuts
 		 */
 		$this->AcademicPeriods = $this->InstitutionSiteFees->AcademicPeriods;
-		$this->InstitutionSiteGrades = $this->InstitutionSiteFees->Institutions->InstitutionSiteGrades;	
+		$this->InstitutionGrades = $this->InstitutionSiteFees->Institutions->InstitutionGrades;	
 		$this->StudentPromotion = $this->InstitutionSiteFees->Institutions->StudentPromotion;
 
 	}
@@ -61,7 +61,7 @@ class StudentFeesTable extends AppTable {
     	$this->ControllerAction->field('outstanding', ['type' => 'string', 				'visible' => ['index'=>true]]);
 
 		$session = $this->request->session();
-		$this->institutionId = $session->read('Institutions.id');
+		$this->institutionId = $session->read('Institution.Institutions.id');
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
@@ -84,15 +84,18 @@ class StudentFeesTable extends AppTable {
 		$conditions = array(
 			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
 		);
-		$academicPeriodOptions = $this->InstitutionSiteFees->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
+		}
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
 
-		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
@@ -151,14 +154,14 @@ class StudentFeesTable extends AppTable {
 		$this->ControllerAction->model('Institution.StudentPromotion');
 		$this->ControllerAction->model->ControllerAction = $this->ControllerAction;
 		$idKey = $this->ControllerAction->model->aliasField('id');
-
+		$sessionKey = $this->ControllerAction->model->registryAlias() . '.id';
 		if ($this->ControllerAction->model->exists([$idKey => $id])) {
 
 			$entity = $this->ControllerAction->model->get($id, [
 				'contain'=> array_merge($this->ControllerAction->model->allAssociations(), [])
 			]);
 
-			$this->Session->write($idKey, $id);
+			$this->Session->write($sessionKey, $id);
 
 			$this->InstitutionSiteFeeEntity = $this->InstitutionSiteFees
 				->find()
@@ -219,7 +222,7 @@ class StudentFeesTable extends AppTable {
 
 			return $entity;
 		} else {
-			$this->Session->delete($idKey);
+			$this->Session->delete($sessionKey);
 			return false;
 		}
 	}

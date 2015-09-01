@@ -38,6 +38,12 @@ class SurveyFormsTable extends CustomFormsTable {
 		return $validator;
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	public function beforeAction(Event $event){
 		parent::beforeAction($event);
 		$this->ControllerAction->field('survey_question', ['type' => 'custom_survey_question', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
@@ -84,6 +90,51 @@ class SurveyFormsTable extends CustomFormsTable {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
+				$id = $buttons['download']['url'][1];
+				$toolbarButtons['download'] = $buttons['download'];
+				$toolbarButtons['download']['url'] = [
+					'plugin' => 'Restful',
+					'controller' => 'Rest',
+					'action' => 'survey',
+					'download',
+					'xform',
+					$id,
+					0
+				];
+				$toolbarButtons['download']['type'] = 'button';
+				$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+				$toolbarButtons['download']['attr'] = $attr;
+				$toolbarButtons['download']['attr']['title'] = __('Download');
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
+			if (array_key_exists('view', $buttons)) {
+				$downloadButton = $buttons['view'];
+				$downloadButton['url'] = [
+					'plugin' => 'Restful',
+					'controller' => 'Rest',
+					'action' => 'survey',
+					'download',
+					'xform',
+					$entity->id,
+					0
+				];
+				$downloadButton['label'] = '<i class="kd-download"></i>' . __('Download');
+				$buttons['download'] = $downloadButton;
+			}
+		}
+
+		return $buttons;
 	}
 
     /**
@@ -278,7 +329,7 @@ class SurveyFormsTable extends CustomFormsTable {
 					} 
 					$rowData = [];
 					$rowData[] = $surveyQuestionName.$cellData;
-					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					$rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 					$tableCells[] = $rowData;
 
@@ -296,7 +347,6 @@ class SurveyFormsTable extends CustomFormsTable {
 		}
 		return $event->subject()->renderElement('Survey.formquestions', ['attr' => $attr]);
 	}
-
 
 	public function _getSelectOptions() {
 		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::_getSelectOptions());

@@ -361,8 +361,6 @@ html {
 
 .rtl .search {
     margin-right: 10px;
-    display: inline;
-    float: right;
 }
 
 .rtl .toolbar .btn {
@@ -914,3 +912,9 @@ html {
     }
 }
 
+@media(max-width: 1196px) {
+    .rtl .toolbar {
+        border-right: 0;
+        padding-right: 0;
+    }
+}
