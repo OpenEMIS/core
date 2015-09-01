@@ -84,6 +84,16 @@ class StudentAttendancesTable extends AppTable {
 		$html = '';
 
 		if (!is_null($this->request->query('mode'))) {
+			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->request->query('period_id'))->editable;
+			if (!$editable) {
+				$urlParams = $this->ControllerAction->url('index');
+				if (isset($urlParams['mode'])) {
+					unset($urlParams['mode']);
+				}
+				$event->stopPropagation();
+				return $this->controller->redirect($urlParams);
+			}
+
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -287,6 +297,8 @@ class StudentAttendancesTable extends AppTable {
 			}
 		]);
 		// End setup periods
+
+		$this->request->query['period_id'] = $selectedPeriod;
 
 		if ($selectedPeriod != 0) {
 			$todayDate = date("Y-m-d");
@@ -512,14 +524,17 @@ class StudentAttendancesTable extends AppTable {
 				$toolbarButtons['back']['attr'] = $attr;
 				$toolbarButtons['back']['attr']['title'] = __('Back');
 			} else {
-				$toolbarButtons['edit'] = $buttons['index'];
-		    	$toolbarButtons['edit']['url'][0] = 'index';
-				$toolbarButtons['edit']['url']['mode'] = 'edit';
-				$toolbarButtons['edit']['type'] = 'button';
-				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-				$toolbarButtons['edit']['attr'] = $attr;
-				$toolbarButtons['edit']['attr']['title'] = __('Edit');
+				$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->request->query('period_id'))->editable;
+				if ($editable) {
+					$toolbarButtons['edit'] = $buttons['index'];
+			    	$toolbarButtons['edit']['url'][0] = 'index';
+					$toolbarButtons['edit']['url']['mode'] = 'edit';
+					$toolbarButtons['edit']['type'] = 'button';
+					$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+					$toolbarButtons['edit']['attr'] = $attr;
+					$toolbarButtons['edit']['attr']['title'] = __('Edit');
 
+				}
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}
