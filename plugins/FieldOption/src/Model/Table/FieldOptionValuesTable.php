@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Utility\Inflector;
 
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
@@ -78,9 +79,17 @@ class FieldOptionValuesTable extends AppTable {
 		$this->fieldOption = $this->FieldOptions->get($selectedOption);
 		$this->fieldOption->name = $this->fieldOption->parent . ' - ' . $this->fieldOption->name;
 
+		//try to get the list of values from selected options
+		$parentFieldOptions = $this->getParentFieldOptionList($selectedOption);
+		$this->controller->set('parentFieldOptions', $parentFieldOptions['list']);
+		$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions['list']);
+		$this->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
+		$this->controller->set('foreignKey', $parentFieldOptions['foreignKey']);
+		// pr($parentFieldOptions['foreignKey']);
+
 		if ($this->action == 'index') {
 			$toolbarElements = [
-				['name' => 'FieldOption.controls', 'data' => [], 'options' => []]
+				['name' => 'FieldOption.controls', 'data' => [], 'options' => []],
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
 		}
@@ -93,8 +102,15 @@ class FieldOptionValuesTable extends AppTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
+		$this->ControllerAction->field('parent_field_option_id', [
+			'type' => 'readonly', 
+			'options' => $parentFieldOptions,
+			'attr' => ['value' => $this->fieldOption->name],
+			'visible' => ['index' => false, 'view' => false, 'edit' => false]
+		]);
+		
 		$this->ControllerAction->setFieldOrder([
-			'field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'
+			'field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable', 'foreignKey'
 		]);
 	}
 
@@ -116,6 +132,12 @@ class FieldOptionValuesTable extends AppTable {
 		} else {
 			$query->where([$this->aliasField('field_option_id') => $selectedOption]);
 		}
+
+		$selectedParentFieldOption = $this->ControllerAction->getVar('selectedParentFieldOption');
+		$foreignKey = $this->ControllerAction->getVar('foreignKey');
+		if (!empty($selectedParentFieldOption) && !empty($foreignKey)) {	
+			$query->where([$foreignKey => $selectedParentFieldOption]);
+		}	
 
 		return $query->find('order');
 	}
@@ -178,8 +200,7 @@ class FieldOptionValuesTable extends AppTable {
 				//get model through params
 				if (is_object(json_decode($fieldOption->params))) { 
 			        $decoded = json_decode($fieldOption->params);
-			        $model = get_object_vars($decoded);
-			        $settings['model'] = (!empty($model['model'])) ? $model['model'] : '';
+			        $settings['model'] = (!empty($decoded->model)) ? $decoded->model : '';
 			    }
 			}
 		}
@@ -194,6 +215,51 @@ class FieldOptionValuesTable extends AppTable {
 				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
 			}
 		}
+	}
+
+	public function getParentFieldOptionList($field_option_id){
+		$FieldOption = TableRegistry::get('FieldOption.FieldOptions')->findById($field_option_id)->first();
+		$fieldOptionList = $this->FieldOptions->find('list', ['valueField' => 'code'])->toArray();	
+
+		if(!empty($FieldOption->params)){
+			$params = json_decode($FieldOption->params);
+			$table = TableRegistry::get($params->model);
+			foreach ($table->associations() as $assoc) {
+				$parentFieldOptionList = $this->getAssocTableList($assoc, $fieldOptionList);
+				if(!empty($parentFieldOptionList))
+					return $parentFieldOptionList;
+			}	
+		} else {
+			$fieldOptionTableName = (!empty($FieldOption->plugin)) ? $FieldOption->plugin.'.'.$FieldOption->code : $FieldOption->code;
+			$table = TableRegistry::get($fieldOptionTableName);
+			foreach ($table->associations() as $assoc) {
+				$parentFieldOptionList = $this->getAssocTableList($assoc, $fieldOptionList);
+				if(!empty($parentFieldOptionList))
+					return $parentFieldOptionList;
+			}	
+		}
+	}
+
+	public function getAssocTableList($assoc, $fieldOptionList){
+		$assoc_table_name = Inflector::camelize($assoc->table());
+		$parentFieldOptionList = [];
+		if(in_array($assoc_table_name, $fieldOptionList)){
+			//check whether parent model is specified in params
+			$parentFieldOption = TableRegistry::get('FieldOption.FieldOptions')->findByCode($assoc_table_name)->first();
+			if(!empty($parentFieldOption->params)){
+				$parentParams = json_decode($parentFieldOption->params);
+				$parentFieldOption = TableRegistry::get($parentParams->model);
+			} else {
+				$parentFieldOptionTable = (!empty($parentFieldOption->plugin)) ? $parentFieldOption->plugin.'.'.$parentFieldOption->code : $parentFieldOption->code;
+				$parentFieldOption = TableRegistry::get($parentFieldOptionTable);
+			}
+			$parentFieldOptionList = $parentFieldOption->getList()->toArray();	
+			$parentFieldOptionList['list'] = $parentFieldOptionList;
+			$parentFieldOptionList['foreignKey'] = $assoc->foreignKey();
+		
+			return $parentFieldOptionList;
+		}
+		return $parentFieldOptionList;
 	}
 
 	public function getList($customOptions=[]) {
