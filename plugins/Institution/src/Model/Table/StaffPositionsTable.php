@@ -48,7 +48,7 @@ class StaffPositionsTable extends AppTable {
 
 	public function editBeforeAction(Event $event) {
 		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institutions.id');
+		$institutionSiteId = $session->read('Institution.Institutions.id');
 		foreach ($this->fields as $key => $value) {
 			$this->fields[$key]['visible'] = false;
 		}	
