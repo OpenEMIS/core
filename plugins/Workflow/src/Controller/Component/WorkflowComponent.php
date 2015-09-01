@@ -27,7 +27,7 @@ class WorkflowComponent extends Component {
 		$this->model = $this->ControllerAction->model();
 		$this->currentAction = $this->ControllerAction->action();
 
-		if ($this->currentAction == 'view' && $this->model->alias() != 'Attachments') {
+		if (in_array($this->currentAction, ['view', 'processWorkflow'])) {
 			$alias = $this->model->alias();
 			$registryAlias = $this->model->registryAlias();
 

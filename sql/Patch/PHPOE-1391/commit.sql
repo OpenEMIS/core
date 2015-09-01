@@ -145,7 +145,7 @@ ALTER TABLE `workflow_steps`
 -- workflow_steps_roles
 DROP TABLE IF EXISTS `workflow_steps_roles`;
 CREATE TABLE IF NOT EXISTS `workflow_steps_roles` (
-  `id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `workflow_step_id` int(11) NOT NULL,
   `security_role_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -153,10 +153,6 @@ CREATE TABLE IF NOT EXISTS `workflow_steps_roles` (
 
 ALTER TABLE `workflow_steps_roles`
   ADD PRIMARY KEY (`id`);
-
-
-ALTER TABLE `workflow_steps_roles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 -- workflow_transitions
 DROP TABLE IF EXISTS `workflow_transitions`;
