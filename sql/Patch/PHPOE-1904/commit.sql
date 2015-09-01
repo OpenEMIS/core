@@ -24,7 +24,6 @@ UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'Banks';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'BankBranches';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'FeeTypes';
 
-UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'GuardianEducationLevels';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'GuardianRelations';
 
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'QualificationLevels';
@@ -44,6 +43,13 @@ UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'InfrastructureOwne
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'InfrastructureConditions';
 
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'StudentTransferReasons';
+
+UPDATE field_options SET visible = 0 WHERE code = 'GuardianEducationLevels';
+
+UPDATE field_options SET visible = 0 WHERE parent = 'Training';
+
+DELETE from field_options where code = 'SanitationGenders' and name = 'Sanitation Gender' and parent = 'Infrastructure';
+DELETE from field_options where code = 'StaffPositionSteps' and name = 'Steps' and parent = 'Position';
 
 DELETE from field_options where plugin = 'Students' and code = 'StudentCategories' and name = 'Categories' and parent = 'Student';
 DELETE from field_options where plugin = 'Students' and code = 'Genders' and name = 'Gender' and parent = 'Student';
