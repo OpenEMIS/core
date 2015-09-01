@@ -21,7 +21,7 @@ class WorkflowBehavior extends Behavior {
             'WorkflowComments' => 'Workflow.WorkflowComments',
             'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
         ],
-        'setup' => null
+        'workflowId' => null
     ];
 
     private $modelReference;
@@ -45,146 +45,99 @@ class WorkflowBehavior extends Behavior {
     	$events = parent::implementedEvents();
     	// priority has to be set at 100 so that onUpdateToolbarButtons in model will be triggered first
     	$events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 100];
-        $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 101];
+        $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
     	return $events;
     }
 
     public function viewAfterAction(Event $event, Entity $entity) {
-        $setup = $this->config('setup');
+        $workflowId = $this->config('workflowId');
+        $this->modelReference = $entity->id;
+        $this->workflow = $this->Workflows
+            ->find()
+            ->contain([
+                'WorkflowSteps.WorkflowActions'
+            ])
+            ->where([
+                $this->Workflows->aliasField('id') => $workflowId
+            ])
+            ->first();
 
-        if (!is_null($setup)) {
-            // Find all Workflow setup for the model
-            $workflowIds = $this->Workflows
-                ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                ->where([
-                    $this->Workflows->aliasField('workflow_model_id') => $setup->id
-                ])
-                ->toArray();
+        $this->workflowRecord = $this->getRecord();
 
-            // Filter key
-            $modelInfo = explode('.', $setup->filter);
-            $base = count($modelInfo) == 1 ? $modelInfo[0] : $modelInfo[1];
-            $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+        // Workflow Status - extra field
+        $status = isset($this->workflowRecord->workflow_step->name) ? $this->workflowRecord->workflow_step->name : __('Open');
+        $this->_table->ControllerAction->field('workflow_status', [
+            'type' => 'element',
+            'element' => 'Workflow.status',
+            'valueClass' => 'table-full-width',
+            'attr' => [
+                'label' => __('Status'),
+                'status' => $status
+            ]
+        ]);
+        // End
 
-            if (isset($entity->$filterKey)) {
-                $filterId = $entity->$filterKey;
+        // Workflow Transitions - extra field
+        $tableHeaders[] = __('Transition') . '<i class="fa fa-history fa-lg"></i>';
+        $tableHeaders[] = __('Action') . '<i class="fa fa-ellipsis-h fa-2x"></i>';
+        $tableHeaders[] = __('Comment') . '<i class="fa fa-comments fa-lg"></i>';
+        $tableHeaders[] = __('Last Executer') . '<i class="fa fa-user fa-lg"></i>';
+        $tableHeaders[] = __('Last Execution Date') . '<i class="fa fa-calendar fa-lg"></i>';
 
-                $workflowFilterResults = $this->WorkflowsFilters
-                    ->find()
-                    ->where([
-                        $this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds,
-                        $this->WorkflowsFilters->aliasField('filter_id') => $filterId   // By Filter
-                    ])
-                    ->all();
-
-                // Use Workflow with filter if found otherwise use Workflow that Apply To All
-                if ($workflowFilterResults->isEmpty()) {
-                    $workflowResults = $this->WorkflowsFilters
-                        ->find()
-                        ->where([
-                            $this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds,
-                            $this->WorkflowsFilters->aliasField('filter_id') => 0   // Apply To All
-                        ])
-                        ->all();
+        $tableCells = [];
+        $transitionResults = $this->WorkflowTransitions
+            ->find()
+            ->contain(['PreviousWorkflowSteps', 'WorkflowSteps', 'WorkflowActions', 'ModifiedUser', 'CreatedUser'])
+            ->where([
+                $this->WorkflowTransitions->aliasField('workflow_record_id') => $this->workflowRecord->id
+            ])
+            ->order([
+                $this->WorkflowTransitions->aliasField('created ASC')
+            ])
+            ->all();
+        if (!$transitionResults->isEmpty()) {
+            $transitions = $transitionResults->toArray();
+            foreach ($transitions as $key => $transition) {
+                $transitionDisplay = '<span class="status past">' . $transition->previous_workflow_step->name . '</span>';
+                $transitionDisplay .= '<span class="transition-arrow"></span>';
+                if (count($transitions) - 1 == $key) {
+                    $transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step->name . '</span>';
                 } else {
-                    $workflowResults = $workflowFilterResults;
+                    $transitionDisplay .= '<span class="status past">' . $transition->workflow_step->name . '</span>';
                 }
 
-                if (!$workflowResults->isEmpty()) {
-                    $workflowId = $workflowResults->first()->workflow_id;
-                    $this->modelReference = $entity->id;
-                    $this->workflow = $this->Workflows
-                        ->find()
-                        ->contain([
-                            'WorkflowSteps.WorkflowActions'
-                        ])
-                        ->where([
-                            $this->Workflows->aliasField('id') => $workflowId
-                        ])
-                        ->first();
+                $rowData = [];
+                $rowData[] = $transitionDisplay;
+                $rowData[] = $transition->workflow_action->name;
+                $rowData[] = nl2br($transition->comment);
+                $rowData[] = $transition->created_user->name;
+                $rowData[] = $transition->created->format('Y-m-d H:i:s');
 
-                    $this->workflowRecord = $this->getRecord();
-
-                    // Workflow Status - extra field
-                    $status = isset($this->workflowRecord->workflow_step->name) ? $this->workflowRecord->workflow_step->name : __('Open');
-                    $this->_table->ControllerAction->field('workflow_status', [
-                        'type' => 'element',
-                        'element' => 'Workflow.status',
-                        'valueClass' => 'table-full-width',
-                        'attr' => [
-                            'label' => __('Status'),
-                            'status' => $status
-                        ]
-                    ]);
-                    // End
-
-                    // Workflow Transitions - extra field
-                    $tableHeaders[] = __('Transition') . '<i class="fa fa-history fa-lg"></i>';
-                    $tableHeaders[] = __('Action') . '<i class="fa fa-ellipsis-h fa-2x"></i>';
-                    $tableHeaders[] = __('Comment') . '<i class="fa fa-comments fa-lg"></i>';
-                    $tableHeaders[] = __('Last Executer') . '<i class="fa fa-user fa-lg"></i>';
-                    $tableHeaders[] = __('Last Execution Date') . '<i class="fa fa-calendar fa-lg"></i>';
-
-                    $tableCells = [];
-                    $transitionResults = $this->WorkflowTransitions
-                        ->find()
-                        ->contain(['PreviousWorkflowSteps', 'WorkflowSteps', 'WorkflowActions', 'ModifiedUser', 'CreatedUser'])
-                        ->where([
-                            $this->WorkflowTransitions->aliasField('workflow_record_id') => $this->workflowRecord->id
-                        ])
-                        ->order([
-                            $this->WorkflowTransitions->aliasField('created ASC')
-                        ])
-                        ->all();
-                    if (!$transitionResults->isEmpty()) {
-                        $transitions = $transitionResults->toArray();
-                        foreach ($transitions as $key => $transition) {
-                            $transitionDisplay = '<span class="status past">' . $transition->previous_workflow_step->name . '</span>';
-                            $transitionDisplay .= '<span class="transition-arrow"></span>';
-                            if (count($transitions) - 1 == $key) {
-                                $transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step->name . '</span>';
-                            } else {
-                                $transitionDisplay .= '<span class="status past">' . $transition->workflow_step->name . '</span>';
-                            }
-
-                            $rowData = [];
-                            $rowData[] = $transitionDisplay;
-                            $rowData[] = $transition->workflow_action->name;
-                            $rowData[] = nl2br($transition->comment);
-                            $rowData[] = $transition->created_user->name;
-                            $rowData[] = $transition->created->format('Y-m-d H:i:s');
-
-                            $tableCells[$key] = $rowData;
-                        }
-                    }
-
-                    $this->_table->ControllerAction->field('workflow_transitions', [
-                        'type' => 'element',
-                        'element' => 'Workflow.transitions',
-                        'element' => 'Workflow.transitions',
-                        'override' => true,
-                        'rowClass' => 'transition-container',
-                        'tableHeaders' => $tableHeaders,
-                        'tableCells' => $tableCells
-                    ]);
-                    // End
-
-                    // Reorder fields
-                    $fields = $this->_table->fields;
-                    $fieldOrder = ['workflow_status'];  // Set workflow_status to first
-                    foreach ($fields as $fieldKey => $fieldAttr) {
-                        if (!in_array($fieldKey, ['workflow_status', 'workflow_transitions'])) {
-                            $fieldOrder[] = $fieldKey;
-                        }
-                    }
-                    $fieldOrder[] = 'workflow_transitions';  // Set workflow_transitions to last
-                    $this->_table->ControllerAction->setFieldOrder($fieldOrder);
-                    // End
-                } else {
-                    // Workflow not configured
-                }
+                $tableCells[$key] = $rowData;
             }
         }
+
+        $this->_table->ControllerAction->field('workflow_transitions', [
+            'type' => 'element',
+            'element' => 'Workflow.transitions',
+            'element' => 'Workflow.transitions',
+            'override' => true,
+            'rowClass' => 'transition-container',
+            'tableHeaders' => $tableHeaders,
+            'tableCells' => $tableCells
+        ]);
+        // End
+
+        // Reorder fields
+        $fields = $this->_table->fields;
+        $fieldOrder = ['workflow_status'];  // Set workflow_status to first
+        foreach ($fields as $fieldKey => $fieldAttr) {
+            if (!in_array($fieldKey, ['workflow_status', 'workflow_transitions'])) {
+                $fieldOrder[] = $fieldKey;
+            }
+        }
+        $fieldOrder[] = 'workflow_transitions';  // Set workflow_transitions to last
+        $this->_table->ControllerAction->setFieldOrder($fieldOrder);
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -346,7 +299,7 @@ class WorkflowBehavior extends Behavior {
                 $this->WorkflowSteps->aliasField('id') => $workflowStepId
             ]);
 
-        if ($this->_table->Auth->user('super_admin') != 1) {
+        if (!$this->_table->AccessControl->isAdmin()) {
             $roles = $this->_table->AccessControl->getRolesByUser()->toArray();
             $roleIds = [];
             foreach ($roles as $key => $role) {
@@ -399,8 +352,8 @@ class WorkflowBehavior extends Behavior {
             ]
         ];
 
-        // $Form = $event->subject()->Form;
         $content = '';
+        $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
         $content .= '<div class="input string"><label>Name</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
         $content .= '<BR><BR>';
         $content .= '<div class="input textarea"><label>Comment</label><textarea name="WorkflowTransitions[comment]" rows="5" class="workflowtransition-comment"></textarea></div>';
@@ -410,16 +363,13 @@ class WorkflowBehavior extends Behavior {
             '<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
         ];
 
-        // $content = ['type' => 'element', 'path' => '', 'data' => [], 'options' => []];
-        // $content = ['type' => 'text', 'text' => 'asdasdasgdia'];
-
         $modal = [
             'id' => 'workflowTansition',
             'fields' => $fields,
             'title' => __('Add Comment'),
             'content' => $content,
             'formOptions' => [
-                'type' => 'workflow',
+                'class' => 'form-horizontal',
                 'url' => $this->_table->ControllerAction->url('processWorkflow')
             ],
             'buttons' => $buttons
