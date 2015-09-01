@@ -147,6 +147,17 @@ class StudentBehavioursTable extends AppTable {
 		return $attr;
 	}
 
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$studentBehaviorData = $data['StudentBehaviours'];
+		$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($studentBehaviorData['academic_period'])->editable;
+		if (! $editable) {
+			$urlParams = $this->ControllerAction->url('add');
+			$event->stopPropagation();
+			$this->Alert->error('general.add.failed');
+			return $this->controller->redirect($urlParams);
+		}
+	}
+
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
