@@ -60,8 +60,6 @@ INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `orde
 (NULL, 'SanitationGenders', 'Sanitation Gender', 'Infrastructure', NULL, 50, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
 ('Staff', 'StaffPositionSteps', 'Steps', 'Position', NULL, 54, 0, NULL, NULL, 1, '0000-00-00 00:00:00');
 
-
-
-  
+DELETE from field_options where code = 'ContactOptions';
 
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1904';
