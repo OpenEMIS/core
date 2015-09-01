@@ -47,40 +47,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		// this behavior restricts current user to see All Classes or My Classes
 		$this->addBehavior('Security.InstitutionClass');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
-
-	// For PHPOE-1916
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			$isEditable = $this->request->data[$this->alias()]['editable'];
-			if (!$isEditable) {
-				if(isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
-		}
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$isEditable = $this->AcademicPeriods->get($entity->academic_period_id)->editable;
-		if (! $isEditable) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
-			}
-			if (isset($buttons['remove'])) {
-				unset($buttons['remove']);
-			}
-		}
-		return $buttons;
-	}
-	// End PHPOE-1916
 
 	public function validationDefault(Validator $validator) {
 		$validator
@@ -378,9 +346,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		// For PHPOE-1916
-		$this->request->data[$this->alias()]['editable'] = $this->AcademicPeriods->get($entity->academic_period_id)->editable;
-		// End PHPOE-1916
 		$this->fields['students']['data']['students'] = $entity->institution_site_section_students;
 		$this->fields['education_grades']['data']['grades'] = $entity->institution_site_section_grades;
 
@@ -723,14 +688,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		// For PHPOE-1916
-		$isEditable = $this->AcademicPeriods->get($entity->academic_period_id)->editable;
-		if (! $isEditable) {
-			$urlParams = $this->ControllerAction->url('view');
-			$event->stopPropagation();
-			return $this->controller->redirect($urlParams);
-		}
-		// End PHPOE-1916
 
 		$students = $entity->institution_site_section_students;
 		$studentOptions = $this->getStudentsOptions($entity);
