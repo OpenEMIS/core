@@ -295,7 +295,7 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	public function _buildRecords() {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Update all New Rubric to Expired by Institution Id
 		$this->updateAll(['status' => -1],

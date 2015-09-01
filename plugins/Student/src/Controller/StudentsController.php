@@ -19,6 +19,7 @@ class StudentsController extends AppController {
 			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
+			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Comments' 			=> ['className' => 'User.Comments'],
 			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
@@ -26,11 +27,11 @@ class StudentsController extends AppController {
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
-			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
-			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
-			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
-			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
-			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
+			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
+			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index', 'view']],
+			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
+			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
@@ -48,15 +49,15 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Students.id');
-			$session->delete('Students.name');
-		} else if ($session->check('Students.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Student.Students.id');
+			$session->delete('Student.Students.name');
+		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Students.id')) {
-				$id = $session->read('Students.id');
+			} else if ($session->check('Student.Students.id')) {
+				$id = $session->read('Student.Students.id');
 			}
 
 			if (!empty($id)) {
@@ -75,12 +76,12 @@ class StudentsController extends AppController {
 		 */
 		
 		$session = $this->request->session();
-		if ($session->check('Students.id')) {
+		if ($session->check('Student.Students.id')) {
 			$header = '';
-			$userId = $session->read('Students.id');
+			$userId = $session->read('Student.Students.id');
 
-			if ($session->check('Students.name')) {
-				$header = $session->read('Students.name');
+			if ($session->check('Student.Students.name')) {
+				$header = $session->read('Student.Students.name');
 			}
 
 			$alias = $model->alias;
@@ -125,12 +126,12 @@ class StudentsController extends AppController {
 		$session = $this->request->session();
 		
 		if ($model->alias() != 'Students') {
-			if ($session->check('Students.id')) {
+			if ($session->check('Student.Students.id')) {
 				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
-					$userId = $session->read('Students.id');
+					$userId = $session->read('Student.Students.id');
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('student_id')) {
-					$userId = $session->read('Students.id');
+					$userId = $session->read('Student.Students.id');
 					$query->where([$model->aliasField('student_id') => $userId]);
 				}
 			} else {

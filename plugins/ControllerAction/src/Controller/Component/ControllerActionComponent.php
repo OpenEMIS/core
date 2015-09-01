@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.7
+ControllerActionComponent - Current Version 3.1.8
+3.1.8 (Jeff) - session variable to store the primary key value of object includes the plugin name now
 3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
 3.1.6 (Jeff) - created function url($action) to return url with params
 3.1.5 (Jeff) - moved initButtons to afterAction so that query params can be passed to buttons
@@ -383,13 +384,14 @@ class ControllerActionComponent extends Component {
 					$model = $this->model;
 					$primaryKey = $model->primaryKey();
 					$idKey = $model->aliasField($primaryKey);
+					$sessionKey = $model->registryAlias() . '.' . $primaryKey;
 					if (empty($pass)) {
-						if ($this->Session->check($idKey)) {
-							$pass = [$this->Session->read($idKey)];
+						if ($this->Session->check($sessionKey)) {
+							$pass = [$this->Session->read($sessionKey)];
 						}
 					} elseif (isset($pass[0]) && $pass[0]==$action) {
-						if ($this->Session->check($idKey)) {
-							$pass[1] = $this->Session->read($idKey);
+						if ($this->Session->check($sessionKey)) {
+							$pass[1] = $this->Session->read($sessionKey);
 						}		
 					}
 				}
@@ -755,7 +757,7 @@ class ControllerActionComponent extends Component {
 
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
-
+		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
 		$contain = [];
 
 		foreach ($model->associations() as $assoc) {
@@ -765,8 +767,8 @@ class ControllerActionComponent extends Component {
 		}
 
 		if (empty($id)) {
-			if ($this->Session->check($idKey)) {
-				$id = $this->Session->read($idKey);
+			if ($this->Session->check($sessionKey)) {
+				$id = $this->Session->read($sessionKey);
 			}
 		}
 		
@@ -798,7 +800,7 @@ class ControllerActionComponent extends Component {
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
-			$this->Session->write($idKey, $id);
+			$this->Session->write($sessionKey, $id);
 			$modal = $this->getModalOptions('remove');
 			$this->controller->set('data', $entity);
 			$this->controller->set('modal', $modal);

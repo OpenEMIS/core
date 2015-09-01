@@ -22,6 +22,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+
 	}
 
 	public function implementedEvents() {
@@ -64,6 +65,10 @@ class TransferApprovalsTable extends AppTable {
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
 		]);
+		$urlParams = $this->ControllerAction->url('edit');
+		if ($urlParams['controller'] == 'Dashboard') {
+			$this->Navigation->addCrumb('Transfer Approvals', $urlParams);
+		}
 	}
 
 	public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request) {
