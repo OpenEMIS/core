@@ -10,5 +10,7 @@ class BankBranchesTable extends AppTable {
 		$this->table('bank_branches');
 		parent::initialize($config);
 		$this->belongsTo('Banks', ['className' => 'FieldOption.Banks']);
+		$this->hasMany('UserBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'bank_branch_id']);
+		$this->hasMany('InstitutionBankAccounts', ['className' => 'Institution.InstitutionSiteBankAccounts', 'foreignKey' => 'bank_branch_id']);
 	}
 }
