@@ -65,6 +65,8 @@ class WorkflowStepsTable extends AppTable {
 				$workflowAction = $obj->name;
 				if (isset($obj->next_workflow_step)) {
 					$workflowAction .= ' - ' . $obj->next_workflow_step->name;
+				} else {
+					$workflowAction .= ' - (' . __('Not linked') . ')';
 				}
 				$workflowActions[$key] = $workflowAction;
 			}
