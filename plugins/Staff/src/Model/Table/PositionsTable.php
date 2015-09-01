@@ -4,6 +4,7 @@ namespace Staff\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class PositionsTable extends AppTable {
 	public function initialize(array $config) {
@@ -29,5 +30,22 @@ class PositionsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('end_date', $order++);
 		$this->ControllerAction->setFieldOrder('staff_status_id', $order++);
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		parent::onUpdateActionButtons($event, $entity, $buttons);
+		
+		if (array_key_exists('view', $buttons)) {
+			$institutionId = $entity->institution_site->id;
+			$url = [
+				'plugin' => 'Institution', 
+				'controller' => 'Institutions', 
+				'action' => 'Staff',
+				'view', $entity->id,
+				'institution_id' => $institutionId,
+			];
+			$buttons['view']['url'] = $url;
+		}
+		return $buttons;
 	}
 }
