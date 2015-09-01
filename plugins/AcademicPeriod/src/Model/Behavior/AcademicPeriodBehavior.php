@@ -71,16 +71,13 @@ class AcademicPeriodBehavior extends Behavior {
 			// To stop calling the onUpdateActionButtons event on the table again
 			$event->stopPropagation();
 			return $buttons;
-		} else {
-			pr($entity);
 		}
-
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		if (isset($entity->academic_period_id)) {
-			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+		if (isset($data[$this->_table->alias()]['academic_period_id'])) {
+			$isEditable = $AcademicPeriodTable->get($data[$this->_table->alias()]['academic_period_id'])->editable;
 			if (! $isEditable) {
 				$urlParams = $this->_table->ControllerAction->url('add');
 				$event->stopPropagation();
