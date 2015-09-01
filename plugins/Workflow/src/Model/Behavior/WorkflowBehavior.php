@@ -354,10 +354,10 @@ class WorkflowBehavior extends Behavior {
 
         $content = '';
         $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
-        $content .= '<div class="input string"><label>Name</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
+        $content .= '<div class="input string"><label>Action</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
         $content .= '<BR><BR>';
         $content .= '<div class="input textarea"><label>Comment</label><textarea name="WorkflowTransitions[comment]" rows="5" class="workflowtransition-comment"></textarea></div>';
-        $content .= '<div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div>';
+        $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
 
         $buttons = [
             '<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
