@@ -336,7 +336,7 @@ class AcademicPeriodsTable extends AppTable {
 		$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
-						$this->aliasField('editable') => 1,
+						//$this->aliasField('editable') => 1,
 						$this->aliasField('visible').' > 0',
 						$this->aliasField('current') => 1,
 						$this->aliasField('parent_id').' > 0',
@@ -350,7 +350,7 @@ class AcademicPeriodsTable extends AppTable {
 			$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
-						$this->aliasField('editable') => 1,
+					//$this->aliasField('editable') => 1,
 						$this->aliasField('visible').' > 0',
 						$this->aliasField('parent_id').' > 0',
 					])
