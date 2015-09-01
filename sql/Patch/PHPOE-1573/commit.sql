@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS `db_patches` (
 INSERT INTO `db_patches` VALUES ('PHPOE-1573');
 
 -- labels
-INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('InstitutionRubrics', 'institution_site_section_id', 'Class', 1, NOW());
-INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('InstitutionRubrics', 'institution_site_class_id', 'Subject', 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `created_user_id`, `created`) VALUES (uuid(), 'InstitutionRubrics', 'institution_site_section_id', 'Institutions -> Rubrics', 'Class', 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `created_user_id`, `created`) VALUES (uuid(), 'InstitutionRubrics', 'institution_site_class_id', 'Institutions -> Rubrics', 'Subject', 1, NOW());
 
 -- institution_site_quality_rubrics
 ALTER TABLE `institution_site_quality_rubrics` CHANGE `status` `status` INT(1) NOT NULL DEFAULT '0' COMMENT '-1 -> Expired, 0 -> New, 1 -> Draft, 2 -> Completed';
