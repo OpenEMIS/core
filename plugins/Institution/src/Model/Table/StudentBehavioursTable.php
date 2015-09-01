@@ -21,6 +21,8 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+
 	}
 
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
@@ -127,9 +129,9 @@ class StudentBehavioursTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('academic_period');
+		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->field('class');
-		$this->ControllerAction->setFieldOrder(['academic_period', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+		$this->ControllerAction->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {
@@ -147,18 +149,7 @@ class StudentBehavioursTable extends AppTable {
 		return $attr;
 	}
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$studentBehaviorData = $data['StudentBehaviours'];
-		$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($studentBehaviorData['academic_period'])->editable;
-		if (! $editable) {
-			$urlParams = $this->ControllerAction->url('add');
-			$event->stopPropagation();
-			$this->Alert->error('general.add.failed');
-			return $this->controller->redirect($urlParams);
-		}
-	}
-
-	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
@@ -169,7 +160,7 @@ class StudentBehavioursTable extends AppTable {
 			$periodOptions = $periodOptions + $AcademicPeriod->getList();
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
-				$selectedPeriod = $request->data($this->aliasField('academic_period'));
+				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
 			}
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
@@ -209,7 +200,7 @@ class StudentBehavioursTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
-				$selectedPeriod = $request->data($this->aliasField('academic_period'));
+				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
 			}
 
 			$classOptions = ['0' => $this->selectEmpty('class')];

@@ -41,15 +41,19 @@ class AcademicPeriodBehavior extends Behavior {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$this->request->data[$this->_table->alias()]['editable'] = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+		if (isset($entity->academic_period_id)) {
+			$this->request->data[$this->_table->alias()]['editable'] = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+		}
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
-			$isEditable = $this->request->data[$this->_table->alias()]['editable'];
-			if (!$isEditable) {
-				if(isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
+			if (isset($this->request->data[$this->_table->alias()]['editable'])) {
+				$isEditable = $this->request->data[$this->_table->alias()]['editable'];
+				if (!$isEditable) {
+					if(isset($toolbarButtons['edit'])) {
+						unset($toolbarButtons['edit']);
+					}
 				}
 			}
 		}
@@ -71,6 +75,8 @@ class AcademicPeriodBehavior extends Behavior {
 			// To stop calling the onUpdateActionButtons event on the table again
 			$event->stopPropagation();
 			return $buttons;
+		} else {
+			// pr($this->request->query);
 		}
 	}
 
