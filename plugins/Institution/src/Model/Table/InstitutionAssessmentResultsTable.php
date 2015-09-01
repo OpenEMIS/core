@@ -44,7 +44,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$Items = TableRegistry::get('Assessment.AssessmentItems');
 		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
@@ -104,26 +104,28 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
 
-		if (isset($entity->assessment_grading_option_id)) {
-			$selectedStatus = $this->request->query('status');
-			if ($selectedStatus == 0 || $selectedStatus == 1) {
-				$Form = $event->subject()->Form;
-				$Items = TableRegistry::get('Assessment.AssessmentItems');
-				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
-				$alias = Inflector::underscore($Results->alias());
-				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->security_user_id;
+		$selectedStatus = $this->request->query('status');
+		if ($selectedStatus == 0 || $selectedStatus == 1) {
+			$Form = $event->subject()->Form;
+			$Items = TableRegistry::get('Assessment.AssessmentItems');
+			$Results = TableRegistry::get('Assessment.AssessmentItemResults');
+			$alias = Inflector::underscore($Results->alias());
+			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->student_id;
 
-				$gradingOptions = $this->gradingOptions;
-				$this->advancedSelectOptions($gradingOptions, $entity->assessment_grading_option_id);
+			$gradingOptions = $this->gradingOptions;
+			$selectedGrading = key($gradingOptions);
+			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
+				$selectedGrading = $entity->assessment_grading_option_id;
+			}
+			$this->advancedSelectOptions($gradingOptions, $selectedGrading);
 
-				$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
-				$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
+			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
+			$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
+		} else {
+			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
+				$html = $this->gradingOptions[$entity->assessment_grading_option_id];
 			} else {
-				if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
-					$html = $this->gradingOptions[$entity->assessment_grading_option_id];
-				} else {
-					$html = '<i class="fa fa-minus"></i>';
-				}
+				$html = '<i class="fa fa-minus"></i>';
 			}
 		}
 
@@ -139,7 +141,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('grade');
 		$this->ControllerAction->setFieldOrder(['identity', 'student_id', 'mark', 'grade']);
 
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
@@ -286,7 +288,10 @@ class InstitutionAssessmentResultsTable extends AppTable {
 					// End
 
 					return $query
-						->where([$this->aliasField('institution_site_class_id') => $selectedClass])
+						->where([
+							$this->aliasField('institution_site_class_id') => $selectedClass,
+							$this->aliasField('status') => 1
+						])
 						->contain(['Users']);
 				}
 			} else {
@@ -309,6 +314,20 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$config['formButtons'] = true;
 			$config['url'] = $config['buttons']['index']['url'];
 			$config['url'][0] = 'indexEdit';
+
+			// Add hidden fields
+			$Items = TableRegistry::get('Assessment.AssessmentItems');
+			$indexElements = $this->controller->viewVars['indexElements'];
+			$indexElements[] = [
+				'name' => 'Institution.Assessment/hidden',
+				'data' => [
+					'alias' => $Items->alias(),
+					'status' => $selectedStatus
+				],
+				'options' => []
+			];
+			$this->controller->set(compact('indexElements'));
+			// End
 		}
 	}
 
@@ -327,11 +346,24 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$toolbarButtons['back']['attr']['title'] = __('Back');
 	}
 
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$cancelButton = $buttons[1];
+		$buttons[0] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[assessment-status=1]\').val(1);']
+		];
+		$buttons[1] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[assessment-status=1]\').val(2);']
+		];
+		$buttons[2] = $cancelButton;
+	}
+
 	public function indexEdit() {
 		$controller = $this->controller;
 
 		if ($this->request->is(['post', 'put'])) {
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedStatus = $this->request->query('status');
 			$selectedAssessment = $this->request->query('assessment');
 			$selectedPeriod = $this->request->query('period');
@@ -343,15 +375,16 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$entity = $Items->patchEntity($entity, $this->request->data);
 
 			if ($Items->save($entity)) {
-				if ($selectedStatus == 0) {
-					$this->Alert->success('general.add.success');
-				} else if ($selectedStatus == 1) {
-					$this->Alert->success('general.edit.success');
+				$assessmentStatus = $entity->status;
+				if ($assessmentStatus == 1) {
+					$this->Alert->success('InstitutionAssessments.save.draft');
+				} else if ($assessmentStatus == 2) {
+					$this->Alert->success('InstitutionAssessments.save.final');
 				}
 
-				$this->request->query['status'] = ++$selectedStatus;
 				$InstitutionAssessments->updateAll(
-					['status' => $selectedStatus], [
+					['status' => $assessmentStatus],
+					[
 						'institution_site_id' => $institutionId,
 						'assessment_id' => $selectedAssessment,
 						'academic_period_id' => $selectedPeriod
@@ -359,16 +392,11 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				);
 			} else {
 				$Items->log($entity->errors(), 'debug');
-				if ($selectedStatus == 0) {
-					$this->Alert->success('general.add.failed');
-				} else if ($selectedStatus == 1) {
-					$this->Alert->success('general.edit.failed');
-				}
+				$this->Alert->success('InstitutionAssessments.save.failed');
 			}
 
-			$url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias];
-			$url = array_merge($url, $this->request->query, $this->request->pass);
-			$url[0] = 'index';
+			$url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'Assessments'];
+			$url['status'] = $selectedStatus == 2 ? 2 : 1;
 
 			return $this->controller->redirect($url);
 		}

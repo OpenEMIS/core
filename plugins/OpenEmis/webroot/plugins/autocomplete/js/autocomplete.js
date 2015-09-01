@@ -92,8 +92,11 @@ var Autocomplete = {
 			if (cls != undefined) {
 				text.addClass(cls);
 			}
-			text.html(noResultsTxt);
-			obj.after(text);
+
+			if (noResultsTxt != 'false') {
+				text.html(noResultsTxt);
+				obj.after(text);
+			}
 
 			var onNoResults = obj.attr('autocomplete-on-no-results');
 			if (onNoResults != undefined) {
