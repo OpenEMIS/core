@@ -40,9 +40,10 @@ class StaffClass extends Entity
 			->contain('InstitutionSiteSections')
 			->where([$InstitutionSiteSectionClasses->aliasField('institution_site_class_id') => $this->institution_site_class->id])
 			->first();
+
 			if (!empty($data)) {
-				if (array_key_exists('institution_site_section', $data)) {
-					$name = $data->institution_site_section->name;
+				if ($data->has('institution_site_section')) {
+					$name = $data->institution_site_section->name;//
 				}
 			}
 		}
