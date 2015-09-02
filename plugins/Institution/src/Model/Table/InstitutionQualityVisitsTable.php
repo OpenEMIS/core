@@ -39,7 +39,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 	// PHPOE-1916
 	// Bug fix on view page
 	public function viewAfterAction(Event $event, Entity $entity) {
-		unset($this->_fieldOrder[1]);
+		unset($this->_fieldOrder[1]); // Remove academic period level on view page
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 

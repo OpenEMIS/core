@@ -58,7 +58,7 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified->format('F d, Y - h:m a');
+		return $this->formatDate($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -85,7 +85,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = $dateDisabled->format('d-m-Y');
+			$value = $this->formatDate($dateDisabled);
 		}
 
 		return $value;
