@@ -21,7 +21,8 @@ class AcademicPeriodBehavior extends Behavior {
 			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
-			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons'
+			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
+			'ControllerAction.Model.onGetType' => 'onGetType',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -47,15 +48,39 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			if (isset($this->request->data[$this->_table->alias()]['editable'])) {
-				$isEditable = $this->request->data[$this->_table->alias()]['editable'];
-				if (!$isEditable) {
-					if(isset($toolbarButtons['edit'])) {
-						unset($toolbarButtons['edit']);
+		switch ($action) {
+			case 'view':
+				if (isset($this->request->data[$this->_table->alias()]['editable'])) {
+					$isEditable = $this->request->data[$this->_table->alias()]['editable'];
+					if (!$isEditable) {
+						if(isset($toolbarButtons['edit'])) {
+							unset($toolbarButtons['edit']);
+						}
 					}
 				}
-			}
+				break;
+			case 'index':
+				$tableAlias = $this->_table->alias();
+				if ($tableAlias == 'StudentAttendances' || $tableAlias == 'StaffAttendances') {
+					if (isset($this->_table->request->query['academic_period_id'])) {
+						$academicPeriodId = $this->_table->request->query['academic_period_id'];
+						$editable = 1;
+						if ($academicPeriodId != 0 || !empty($academicPeriodId)) {
+							$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($academicPeriodId)->editable;
+						}
+						if ($editable) {
+							$toolbarButtons['edit'] = $buttons['index'];
+					    	$toolbarButtons['edit']['url'][0] = 'index';
+							$toolbarButtons['edit']['url']['mode'] = 'edit';
+							$toolbarButtons['edit']['type'] = 'button';
+							$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+							$toolbarButtons['edit']['attr'] = $attr;
+							$toolbarButtons['edit']['attr']['title'] = __('Edit');
+
+						}
+					}
+				}
+				break;
 		}
 	}
 
@@ -109,6 +134,20 @@ class AcademicPeriodBehavior extends Behavior {
 
 				// Error message to tell user that they cannot add into a non-editable academic period
 				$this->_table->Alert->error('general.edit.failed');
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
+	}
+
+	public function onGetType(Event $event, Entity $entity) {
+		if(isset($this->_table->request->query['mode'])) {
+			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->_table->request->query['academic_period_id'])->editable;
+			if (!$editable) {
+				$urlParams = $this->_table->ControllerAction->url('index');
+				if (isset($urlParams['mode'])) {
+					unset($urlParams['mode']);
+				}
+				$event->stopPropagation();
 				return $this->_table->controller->redirect($urlParams);
 			}
 		}

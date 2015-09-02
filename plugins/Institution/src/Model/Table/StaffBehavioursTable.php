@@ -21,6 +21,7 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
@@ -53,10 +54,13 @@ class StaffBehavioursTable extends AppTable {
 
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = ['0' => __('All Periods')];
-		$periodOptions = $periodOptions + $AcademicPeriod->getList();
+		// $periodOptions = ['0' => __('All Periods')];
+		$periodOptions = $AcademicPeriod->getList();
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
+		}
 
-		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
 		if (!empty($selectedPeriod)) {
