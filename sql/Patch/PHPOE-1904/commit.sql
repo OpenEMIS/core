@@ -67,7 +67,5 @@ DELETE from field_options where code = 'HealthRelationships' and name = 'Relatio
 DELETE from field_options where code = 'HealthTestTypes' and name = 'Test Types' and parent = 'Health';
 
 
-INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-('User', 'ContactOptions', 'Contact Options', 'Others', '{"model":"User.ContactOptions"}', 96, 0, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 
