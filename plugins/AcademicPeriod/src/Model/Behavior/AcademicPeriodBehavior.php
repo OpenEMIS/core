@@ -23,6 +23,7 @@ class AcademicPeriodBehavior extends Behavior {
 			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
 			'ControllerAction.Model.onGetType' => 'onGetType',
+			'ControllerAction.Model.onGetAssessmentId' => 'onGetAssessmentId',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -149,6 +150,17 @@ class AcademicPeriodBehavior extends Behavior {
 				}
 				$event->stopPropagation();
 				return $this->_table->controller->redirect($urlParams);
+			}
+		}
+	}
+
+	public function onGetAssessmentId(Event $event, Entity $entity) {
+		$tableAlias = $this->_table->alias();
+		if ($tableAlias == 'InstitutionAssessments') {
+			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($entity->academic_period_id)->editable;
+			if (! $editable) {
+				$event->stopPropagation();
+				return $entity->assessment->code_name;
 			}
 		}
 	}
