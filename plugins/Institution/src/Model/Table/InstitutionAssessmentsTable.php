@@ -21,6 +21,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -57,7 +58,7 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $entity->modified->format('F d, Y - h:m a');
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -173,7 +174,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		} else if ($selectedStatus == 2) {	// Completed
 			unset($buttons['edit']);
 		}
-
 		return $buttons;
 	}
 
