@@ -218,6 +218,14 @@ class FieldOptionValuesTable extends AppTable {
 		if (in_array($fieldOption->code, $codes)) {
 			if (empty($fieldOption->params)) {
 				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
+				$availFieldOptions = $this->findById($fieldOption->id)->count();
+				if($availFieldOptions == 1) {
+					$this->Alert->warning('general.notTransferrable');
+					$event->stopPropagation();
+					return $this->controller->redirect($this->ControllerAction->url('index'));
+				}
+			} else{
+				
 			}
 		}
 	}
