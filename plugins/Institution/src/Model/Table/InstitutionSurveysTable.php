@@ -156,16 +156,7 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
-		// because belongsTo only gets id and name
-		if ($entity->has('survey_form')) {
-			if ($entity->survey_form->has('id')) {
-				$surveyFormQuery = $this->SurveyForms->find()->select(['description'])->where([$this->SurveyForms->aliasField($this->SurveyForms->primaryKey()) => $entity->survey_form->id])->first();
-				if ($surveyFormQuery) {
-					return $surveyFormQuery->description;
-				}
-			}
-		}
-		return '';
+		return $entity->survey_form->description;
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
@@ -260,6 +251,9 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		$options['auto_contain'] = false;
+		$query->contain(['AcademicPeriods', 'SurveyForms']);
 
 		$query
 			->where([$this->aliasField('status') => $selectedStatus])
