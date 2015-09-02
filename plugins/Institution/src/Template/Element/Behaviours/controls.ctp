@@ -10,7 +10,7 @@
 			$this->Form->templates($template);
 
 			if (!empty($periodOptions)) {
-				echo $this->Form->input('academic_period_id', array(
+				echo $this->Form->input('academic_period', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $periodOptions,

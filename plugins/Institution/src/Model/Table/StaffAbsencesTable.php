@@ -117,6 +117,12 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		
+		// Temporary fix for the non-existent academic_period field in the view page
+		unset($this->_fieldOrder[0]);
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+		// End
+		
 		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
 		$this->ControllerAction->field('absence_type', [
 			'options' => $absenceTypeOptions
