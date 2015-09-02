@@ -447,10 +447,19 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Institution.Students.new', $data[$this->alias()]);
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
-		return $this->controller->redirect($action);
+		// PHPOE-1916
+		$editable = $this->AcademicPeriods->get($data['Students']['academic_period_id'])->editable;
+		if (! $editable) {
+			$this->Alert->error('general.academicPeriod.notEditable');
+		} 
+		else {
+			$this->Session->write('Institution.Students.new', $data[$this->alias()]);
+			$event->stopPropagation();
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
+			return $this->controller->redirect($action);
+		}
+
+
 	}
 
 	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
