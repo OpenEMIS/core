@@ -149,7 +149,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function addAfterAction(Event $event) {
+	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_site_position_id');
 		$this->ControllerAction->field('role');
