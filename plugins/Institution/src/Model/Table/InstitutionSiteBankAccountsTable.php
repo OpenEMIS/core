@@ -120,6 +120,15 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onGetActive(Event $event, Entity $entity) {
+		$icons = [
+			0 => '<i class="fa kd-cross red"></i>', 
+			1 => '<i class="fa kd-check green"></i>'
+		];
+
+		return $icons[$entity->active];
+	}
+
 
 /******************************************************************************************************************
 **
