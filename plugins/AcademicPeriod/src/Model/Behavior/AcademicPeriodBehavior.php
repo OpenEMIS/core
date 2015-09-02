@@ -15,8 +15,6 @@ class AcademicPeriodBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.edit.afterAction' => 'editAfterAction',
-			// 'ControllerAction.Model.add.afterAction' => 'addAfterAction',
-			// 'ControllerAction.Model.addEdit.afterAction' => 'addEditAfterAction',
 			'ControllerAction.Model.add.beforeSave' => 'addBeforeSave',
 			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
@@ -119,7 +117,7 @@ class AcademicPeriodBehavior extends Behavior {
 				$event->stopPropagation();
 
 				// Error message to tell user that they cannot add into a non-editable academic period
-				$this->_table->Alert->error('general.add.failed');
+				$this->_table->Alert->error('general.academicPeriod.notEditable');
 				return $this->_table->controller->redirect($urlParams);
 			}
 		}
@@ -134,7 +132,7 @@ class AcademicPeriodBehavior extends Behavior {
 				$event->stopPropagation();
 
 				// Error message to tell user that they cannot add into a non-editable academic period
-				$this->_table->Alert->error('general.edit.failed');
+				$this->_table->Alert->error('general.academicPeriod.notEditable');
 				return $this->_table->controller->redirect($urlParams);
 			}
 		}
