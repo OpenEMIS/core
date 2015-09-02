@@ -514,6 +514,9 @@ class StudentsTable extends AppTable {
 
 		// Academic Period
 		$periodOptions = $AcademicPeriod->getList();
+		if (empty($this->request->query['period'])) {
+			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+		}
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
