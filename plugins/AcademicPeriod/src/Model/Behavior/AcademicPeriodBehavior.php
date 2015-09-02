@@ -39,8 +39,8 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		if (isset($entity->academic_period_id)) {
+			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
 			if (! $isEditable) {
 				$urlParams = $this->_table->ControllerAction->url('view');
@@ -51,8 +51,8 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		if (isset($entity->academic_period_id)) {
+			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$this->request->data[$this->_table->alias()]['editable'] = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
 		}
 	}

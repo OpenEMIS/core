@@ -190,9 +190,7 @@ class InstitutionSurveysTable extends AppTable {
 		$dateDisabled = null;
 		if (!is_null($results)) {
 			$data = $results->toArray();
-			// Fixed for Illegal offset type in isset or empty [ROOT/vendor/aura/intl/src/Aura/Intl/Translator.php, line 94] 
-			$dateDisabled = $data['date_disabled']->format('d-m-Y');
-			// $dateDisabled = $data['date_disabled'];
+			$dateDisabled = $this->formatDate($data['date_disabled']);
 		}
 
 		return $dateDisabled;
