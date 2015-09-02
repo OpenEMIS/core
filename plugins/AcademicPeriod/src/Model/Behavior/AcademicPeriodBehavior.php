@@ -20,9 +20,20 @@ class AcademicPeriodBehavior extends Behavior {
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
-			'ControllerAction.Model.onGetType' => 'onGetType',
-			'ControllerAction.Model.onGetAssessmentId' => 'onGetAssessmentId',
 		];
+
+		$tableAlias = $this->_table->alias();
+
+		switch ($tableAlias) {
+			case 'InstitutionAssessments':
+				$newEvent = ['ControllerAction.Model.onGetAssessmentId' => 'onGetAssessmentId'] + $newEvent;
+				break;
+
+			case 'StaffAttendances':
+			case 'StudentAttendances':
+				$newEvent = ['ControllerAction.Model.onGetType' => 'onGetType'] + $newEvent;
+				break;
+		}
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
@@ -153,13 +164,10 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function onGetAssessmentId(Event $event, Entity $entity) {
-		$tableAlias = $this->_table->alias();
-		if ($tableAlias == 'InstitutionAssessments') {
-			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($entity->academic_period_id)->editable;
-			if (! $editable) {
-				$event->stopPropagation();
-				return $entity->assessment->code_name;
-			}
+		$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($entity->academic_period_id)->editable;
+		if (! $editable) {
+			$event->stopPropagation();
+			return $entity->assessment->code_name;
 		}
 	}
 }
