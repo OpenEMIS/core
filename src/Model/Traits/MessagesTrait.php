@@ -57,6 +57,9 @@ trait MessagesTrait {
 				'success' => 'The record has been duplicated successfully.',
 				'failed' => 'The record is not duplicated due to errors encountered.',
 			],
+			'academicPeriod' => [
+				'notEditable' => 'The chosen academic period is not editable',
+			],
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
 			'notSelected' => 'No Record has been selected/saved.',
