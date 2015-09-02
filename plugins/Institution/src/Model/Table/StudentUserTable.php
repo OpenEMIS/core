@@ -66,6 +66,11 @@ class StudentUserTable extends UserTable {
 			$id = $this->request->query['id'];
 			$tabElements['Students']['url'] = array_merge($url, ['action' => 'Students', 'view', $id]);
 			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id]);
+
+			$tabElements['StudentSurveys'] = [
+				'text' => __('Survey'),
+				'url' => array_merge($url, ['action' => 'StudentSurveys', 'index', 'id' => $id, 'student_id' => $entity->id])
+			];
 		}
 
 		$this->controller->set('tabElements', $tabElements);
