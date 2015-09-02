@@ -119,7 +119,7 @@ class StaffAbsencesTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		
 		// Temporary fix for the non-existent academic_period field in the view page
-		unset($this->_fieldOrder[0]);
+		unset($this->_fieldOrder[0]);// Academic period not in use in view page
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 		// End
 		
