@@ -15,6 +15,7 @@ use Cake\Utility\Inflector;
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
 	private $fieldOption = null;
+	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['FieldOption.Banks', 'bank_id'], 'User.ContactTypes' => ['User.ContactOptions', 'contact_option_id']];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -80,12 +81,16 @@ class FieldOptionValuesTable extends AppTable {
 		$this->fieldOption->name = $this->fieldOption->parent . ' - ' . $this->fieldOption->name;
 
 		//try to get the list of values from selected options
-		$parentFieldOptions = $this->getParentFieldOptionList($selectedOption);
-		$this->controller->set('parentFieldOptions', $parentFieldOptions['list']);
-		$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions['list']);
-		$this->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
-		$this->controller->set('foreignKey', $parentFieldOptions['foreignKey']);
-		// pr($parentFieldOptions['foreignKey']);
+		$currentfieldOption = $this->FieldOptions->get($selectedOption);
+		if(array_key_exists($currentfieldOption->plugin.'.'.$currentfieldOption->code, $this->parentFieldOptionList)) {
+			$parentFieldOptionInfo = $this->parentFieldOptionList[$currentfieldOption->plugin.'.'.$currentfieldOption->code];	
+			$parentFieldOption = TableRegistry::get($parentFieldOptionInfo[0]);
+			$parentFieldOptions = $parentFieldOption->find('list')->where([$parentFieldOption->aliasField('visible') => 1])->toArray();	
+			$this->controller->set('parentFieldOptions', $parentFieldOptions);
+			$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
+			$this->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
+			$this->controller->set('foreignKey', $parentFieldOptionInfo[1]);
+		}
 
 		if ($this->action == 'index') {
 			$toolbarElements = [
@@ -215,51 +220,6 @@ class FieldOptionValuesTable extends AppTable {
 				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
 			}
 		}
-	}
-
-	public function getParentFieldOptionList($field_option_id){
-		$FieldOption = TableRegistry::get('FieldOption.FieldOptions')->findById($field_option_id)->first();
-		$fieldOptionList = $this->FieldOptions->find('list', ['valueField' => 'code'])->toArray();	
-
-		if(!empty($FieldOption->params)){
-			$params = json_decode($FieldOption->params);
-			$table = TableRegistry::get($params->model);
-			foreach ($table->associations() as $assoc) {
-				$parentFieldOptionList = $this->getAssocTableList($assoc, $fieldOptionList);
-				if(!empty($parentFieldOptionList))
-					return $parentFieldOptionList;
-			}	
-		} else {
-			$fieldOptionTableName = (!empty($FieldOption->plugin)) ? $FieldOption->plugin.'.'.$FieldOption->code : $FieldOption->code;
-			$table = TableRegistry::get($fieldOptionTableName);
-			foreach ($table->associations() as $assoc) {
-				$parentFieldOptionList = $this->getAssocTableList($assoc, $fieldOptionList);
-				if(!empty($parentFieldOptionList))
-					return $parentFieldOptionList;
-			}	
-		}
-	}
-
-	public function getAssocTableList($assoc, $fieldOptionList){
-		$assoc_table_name = Inflector::camelize($assoc->table());
-		$parentFieldOptionList = [];
-		if(in_array($assoc_table_name, $fieldOptionList)){
-			//check whether parent model is specified in params
-			$parentFieldOption = TableRegistry::get('FieldOption.FieldOptions')->findByCode($assoc_table_name)->first();
-			if(!empty($parentFieldOption->params)){
-				$parentParams = json_decode($parentFieldOption->params);
-				$parentFieldOption = TableRegistry::get($parentParams->model);
-			} else {
-				$parentFieldOptionTable = (!empty($parentFieldOption->plugin)) ? $parentFieldOption->plugin.'.'.$parentFieldOption->code : $parentFieldOption->code;
-				$parentFieldOption = TableRegistry::get($parentFieldOptionTable);
-			}
-			$parentFieldOptionList = $parentFieldOption->getList()->toArray();	
-			$parentFieldOptionList['list'] = $parentFieldOptionList;
-			$parentFieldOptionList['foreignKey'] = $assoc->foreignKey();
-		
-			return $parentFieldOptionList;
-		}
-		return $parentFieldOptionList;
 	}
 
 	public function getList($customOptions=[]) {
