@@ -341,6 +341,11 @@ class StudentsTable extends AppTable {
 		} else {
 			$tabElements['Students']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
 			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => 'StudentUser', 'view', $entity->student_id, 'id' => $entity->id]);
+
+			$tabElements['StudentSurveys'] = [
+				'text' => __('Survey'),
+				'url' => array_merge($url, ['action' => 'StudentSurveys', 'index', 'id' => $entity->id, 'student_id' => $entity->student_id])
+			];
 		}
 
 		$this->controller->set('tabElements', $tabElements);
