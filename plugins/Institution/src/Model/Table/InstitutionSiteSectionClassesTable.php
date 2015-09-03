@@ -54,7 +54,7 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 					])
 					->toArray();
 		if (empty($sectionOptions)) {
-			$this->Alert->warning('Institutions.noSections');
+			$this->Alert->warning('Institutions.noClassRecords');
 		} else {
 			$this->_selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
 			$this->_selectedSection = $this->checkIdInOptions($this->_selectedSection, $sectionOptions);

@@ -85,6 +85,7 @@ trait MessagesTrait {
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'Institutions' => [
+			'noClassRecords' => 'There are no available Classes',
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
 		],
@@ -107,7 +108,7 @@ trait MessagesTrait {
 			'education_grade' => 'Education Grades'
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Classes',
+			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
@@ -124,8 +125,8 @@ trait MessagesTrait {
 		],
 		'InstitutionSiteClasses' => [
 			'noGrades' => 'No Grades Assigned',
-			'noSections' => 'No Classes',
-			'noClasses' => 'No Subjects',
+			'noClasses' => 'No Classes',
+			'noSubjects' => 'No Subjects',
 			'classes' => 'Subjects',
 			'education_subject' => 'Subject',
 			'class' => 'Subject',
