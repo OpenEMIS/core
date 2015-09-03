@@ -129,7 +129,7 @@ class UsersTable extends AppTable {
 	}
 
 	private function setupTabElements($options) {
-		$this->controller->set('selectedAction', $this->alias);
+		$this->controller->set('selectedAction', 'Securities');
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 

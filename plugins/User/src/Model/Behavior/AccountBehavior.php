@@ -68,6 +68,11 @@ class AccountBehavior extends Behavior {
 					if ($key == $this->userRole) continue;
 					$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
 				}
+			} else {
+				foreach ($tabElements as $key => $value) {
+					end($tabElements[$key]['url']);
+					$tabElements[$key]['url'][key($tabElements[$key]['url'])] = $entity->id;
+				}
 			}
 		}
 
@@ -87,7 +92,7 @@ class AccountBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)  {
-		$this->_table->ControllerAction->field('retype_password', ['type' => 'password']);
+		$this->_table->ControllerAction->field('retype_password', ['type' => 'password', 'attr' => ['value' => '']]);
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 
 		$this->afterActionCode($event, $entity);
@@ -105,12 +110,17 @@ class AccountBehavior extends Behavior {
 		}
 
 		$this->_table->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
-		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true]]);
+		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '']]);
+
+
 
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password']);
 
 		if (strtolower($this->_table->action) != 'index') {
-			$this->_table->Navigation->addCrumb($this->_table->getHeader($this->_table->action));
+			if (!$this->isInstitution) {
+				$this->_table->Navigation->addCrumb($this->_table->getHeader($this->_table->action));
+			}
+			
 		}
 
 		$this->setupTabElements($entity);
