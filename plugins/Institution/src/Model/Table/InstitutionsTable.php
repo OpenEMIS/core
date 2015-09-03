@@ -253,32 +253,14 @@ class InstitutionsTable extends AppTable  {
 			$conditions = [];
 
 			if (! $this->AccessControl->isAdmin()) {
-				$userId = $this->Auth->user('id');
-				$options = [
-					'contain' => ['InstitutionSiteTypes'],
-					'select' => [
-						$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-						$this->aliasField('area_id'), 'Areas.name', 'InstitutionSiteTypes.name'
-					],
-					'join' => [
-						[
-							'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
-							'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
-						]
-					]
-				];
+
+				$institutionIds = $this->AccessControl->getInstitutionsByUser();
 
 				// Total Institutions: number
 				$institutionCount = $institutionCount
-					->matching($options['contain'][0])
-					->select($options['select'])
-					->join($options['join'])
-					->find('byAccess', ['userId' => $userId, 'options' => $options])
-					->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'id'
-						]);
-				$conditions['id IN'] = $institutionCount->toArray();
+					->where([$this->aliasField('id').' IN' => $institutionIds]);
+
+				$conditions['id IN'] = $institutionIds;
 			}
 
 			$models = [
