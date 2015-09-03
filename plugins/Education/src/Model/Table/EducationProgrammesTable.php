@@ -167,27 +167,27 @@ class EducationProgrammesTable extends AppTable {
 					 $requestData = $this->request->data;
 					 pr($requestData);
 					 die;
-					// if (array_key_exists('education_subjects', $requestData[$this->alias()])) {
-					// 	foreach ($requestData[$this->alias()]['education_subjects'] as $key => $obj) {
-					// 		$arraySubjects[] = $obj['_joinData'];
-					// 	}
-					// }
+					$requestData = $this->request->data;
+					if (array_key_exists('education_programme_next', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['education_programme_next'] as $key => $obj) {
+							$arraySubjects[] = $obj['_joinData'];
+						}
+					}
 
-					// if (array_key_exists('education_subject_id', $requestData[$this->alias()])) {
-					// 	$subjectId = $requestData[$this->alias()]['education_subject_id'];
-					// 	$subjectObj = $this->EducationSubjects
-					// 		->findById($subjectId)
-					// 		->first();
+					if (array_key_exists('next_programme_id', $requestData[$this->alias()])) {
+						$nextProgrammeId = $requestData[$this->alias()]['next_programme_id'];
+						pr($programmeId); die;
+						$programmeObj = $this
+										->findById($programmeId)
+										->first();
 
-					// 	$arraySubjects[] = [
-					// 		'name' => $subjectObj->name,
-					// 		'code' => $subjectObj->code,
-					// 		'hours_required' => 0,
-					// 		'education_grade_id' => $entity->id,
-					// 		'education_subject_id' => $subjectObj->id,
-					// 		'visible' => 1
-					// 	];
-					// }
+						$arrayNextProgrammes[] = [
+							'id' => $subjectObj->name,
+							'education_programm_id' => $subjectObj->code,
+							'next_programme_id' => $nextProgrammeId,
+							'name' => $entity->id,
+						];
+					}
 				}
 				
 				foreach ($arrayNextProgrammes as $key => $obj) {
