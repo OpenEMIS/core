@@ -1,0 +1,97 @@
+/* SEARCH v1.0.0 */
+
+.search {
+    display: inline-block;
+}
+
+.search .btn {
+    float: none !important;
+}
+
+.search-box {
+    padding: 8px !important;
+    color: #555 !important;
+    min-height: 105px;
+    margin: 10px 0 0;
+}
+
+.search .input-group {
+    display: block;
+    top: -3px;
+}
+
+.chrome .search .input-group {
+    top: -4px;
+}
+
+.search input {
+    width: 200px !important;
+    height: 30px;
+    padding: 2px 8px 0;
+    z-index: 0;
+    margin-right: -2px;
+    margin-left: 5px;
+    -webkit-border-radius: 3px !important;
+    border-radius: 3px !important;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.chrome .search input {
+    height: 30px;
+}
+
+.search form {
+    padding-bottom: 0;
+    display: inline-block;
+}
+
+.search i {
+    font-size: 12px !important;
+    padding: 7px 8px;
+}
+
+.search .form-control {
+    z-index: 1;
+}
+
+.btn-reset,
+.btn-reset:hover {
+    background-color: transparent !important;
+    border: 0 none !important;
+    color: #333 !important;
+    opacity: 0.3 !important;
+    margin-left: -30px !important;
+    z-index: 1;
+}
+
+.btn-reset:hover {
+    opacity: 0.6 !important;
+}
+
+.btn-reset:focus,
+.btn-reset:visited,
+.btn-reset:active {
+    outline: 0 !important;
+}
+
+.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.search-wrapper h4 {
+    margin: 4px 0 0;
+    color: #333;
+}
+
+/* RTL SEARCH */
+.rtl .search .input-group {
+    display: block;
+    top: -3px;
+}
+
+.rtl .search {
+    position: relative;
+    top: 3px;
+}
