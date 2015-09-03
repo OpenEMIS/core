@@ -1,5 +1,5 @@
 <?php if ($action == 'view') : ?>
-	<div class="table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
@@ -44,7 +44,7 @@
 				<span><?= __('Add');?></span>
 			</button>
 		</div>
-		<div class="table-in-view col-md-4 table-responsive">
+		<div class="table-in-view">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
@@ -56,39 +56,39 @@
 						<th><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
 						<th></th>
 					</tr>
-					<?php if (!empty($data->workflow_actions)) : ?>
-						<tbody>
-							<?php foreach ($data->workflow_actions as $key => $obj) : ?>
-								<tr>
-									<?php if ($action == 'edit') : ?>
-										<td class="checkbox-column">
-											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
-										</td>
-									<?php endif ?>
-										<td>
-											<?php
-												if(isset($obj->id)) {
-													echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.id");
-												}
-												echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false]);
-											?>
-										</td>
-										<td>
-											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
-										</td>
-										<td>
-											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
-										</td>
-										<td>
-											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-											</button>
-										</td>
-								</tr>
-							<?php endforeach ?>
-						</tbody>
-					<?php endif ?>
-				</thead>
+				</thead>	
+				<?php if (!empty($data->workflow_actions)) : ?>
+					<tbody>
+						<?php foreach ($data->workflow_actions as $key => $obj) : ?>
+							<tr>
+								<?php if ($action == 'edit') : ?>
+									<td class="checkbox-column">
+										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
+									</td>
+								<?php endif ?>
+									<td>
+										<?php
+											if(isset($obj->id)) {
+												echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.id");
+											}
+											echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false]);
+										?>
+									</td>
+									<td>
+										<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
+									</td>
+									<td>
+										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
+									</td>
+									<td>
+										<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+											<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
+										</button>
+									</td>
+							</tr>
+						<?php endforeach ?>
+					</tbody>
+				<?php endif ?>
 			</table>
 		</div>
 	</div>
