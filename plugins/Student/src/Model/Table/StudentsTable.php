@@ -121,7 +121,7 @@ class StudentsTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
-		$this->Session->write('Students.name', $entity->name);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
