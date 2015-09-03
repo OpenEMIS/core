@@ -30,6 +30,7 @@ trait MessagesTrait {
 			'notEditable' => 'This record is not editable',
 			'exists' => 'The record is exists in the system.',
 			'noData' => 'There are no records.',
+			'noRecords' => 'No Record',
 			'select' => [
 				'noOptions' => 'No configured options'
 			],
@@ -172,7 +173,21 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
+			]
+		],
+		'InstitutionRubricAnswers' => [
+			'rubric_template' => 'Rubric Template',
+			'rubric_section_id' => 'Section',
+			'noSection' => 'There is no rubric section selected',
+			'save' => [
+				'draft' => 'Rubric record has been saved to draft successfully.',
+				'final' => 'Rubric record has been submitted successfully.',
+				'failed' => 'This rubric record is not submitted due to criteria answers is not complete.'
 			],
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			]
 		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
@@ -184,6 +199,9 @@ trait MessagesTrait {
 		'RubricCriterias' => [
 			//'rubric_section_id' => 'Rubric Section',
 			'criterias' => 'Criterias'
+		],
+		'RubricTemplateOptions' => [
+			'weighting' => 'Weighting'
 		],
 		'security' => [
 			'login' => [
@@ -207,6 +225,10 @@ trait MessagesTrait {
 		],
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
+		],
+		'StaffBehaviours' => [
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time'
 		],
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
@@ -262,12 +284,8 @@ trait MessagesTrait {
 			'noStaff' => 'No Available Staff'
 		],
 		'StudentBehaviours' => [
-			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes',
 			'noStudents' => 'No Students'
-		],
-		'StaffBehaviours' => [
-			'noSections' => 'No Sections',
-			'noStaff' => 'No Staff'
 		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
@@ -285,6 +303,12 @@ trait MessagesTrait {
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.'
+		],
+		'StudentAdmission' => [
+			'exists' => 'Student exists in the school',
+			'existsInRecord' => 'Student has already been added to admission list',
+			'approve' => 'Student admission has been approved successfully.',
+			'reject' => 'Student admission has been rejected successfully.'
 		],
 
 		// Validation Messages
