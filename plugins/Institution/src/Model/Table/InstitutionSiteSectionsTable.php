@@ -295,7 +295,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 							'InstitutionSiteSectionGrades.institution_site_section_id = InstitutionSiteSections.id'
 						]
 					]
-				]);
+				])
+				->group(['InstitutionSiteSectionGrades.institution_site_section_id'])
+				;
 		}
     }
 
