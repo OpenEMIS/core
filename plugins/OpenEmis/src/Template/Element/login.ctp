@@ -34,7 +34,6 @@ $description = __d('open_emis', $_productName);
 
 <body onload="$('input[type=text]:first').focus()" class="login">
 	<div class="body-wrapper">
-		<?= $this->element('OpenEmis.header', ['headerSideNav' => false, 'menuToggle' => false]) ?>
 
 		<div class="login-box">
 			<div class="title">
