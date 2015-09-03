@@ -14,14 +14,13 @@ class DropoutApprovalsTable extends AppTable {
 	const REJECTED = 2;
 
 	public function initialize(array $config) {
-		$this->table('institution_student_admissionw');
+		$this->table('institution_student_dropout');
 		parent::initialize($config);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons']);
-
 	}
 }
