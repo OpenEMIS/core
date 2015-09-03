@@ -199,6 +199,9 @@ trait MessagesTrait {
 			//'rubric_section_id' => 'Rubric Section',
 			'criterias' => 'Criterias'
 		],
+		'RubricTemplateOptions' => [
+			'weighting' => 'Weighting'
+		],
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.'
