@@ -56,7 +56,6 @@ class FieldOptionValuesTable extends AppTable {
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
 		$this->ControllerAction->field('editable', ['options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
 		
-
 		$fieldOptions = [];
 		$data = $this->FieldOptions
 			->find()
@@ -84,12 +83,38 @@ class FieldOptionValuesTable extends AppTable {
 		$currentfieldOption = $this->FieldOptions->get($selectedOption);
 		if(array_key_exists($currentfieldOption->plugin.'.'.$currentfieldOption->code, $this->parentFieldOptionList)) {
 			$parentFieldOptionInfo = $this->parentFieldOptionList[$currentfieldOption->plugin.'.'.$currentfieldOption->code];	
-			$parentFieldOption = TableRegistry::get($parentFieldOptionInfo[0]);
-			$parentFieldOptions = $parentFieldOption->find('list')->where([$parentFieldOption->aliasField('visible') => 1])->toArray();	
+			$parentFieldOptionTable = TableRegistry::get($parentFieldOptionInfo[0]);
+		//	$table = TableRegistry::get($parentFieldOptionInfo[0]);
+
+			$parentFieldOptions = $parentFieldOptionTable->find('list')->where([$parentFieldOptionTable->aliasField('visible') => 1])->toArray();	
 			$this->controller->set('parentFieldOptions', $parentFieldOptions);
 			$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
 			$this->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
 			$this->controller->set('foreignKey', $parentFieldOptionInfo[1]);
+
+			$foreignKey =  $parentFieldOptionInfo[1];
+			$parentFieldOption = $parentFieldOptionTable->findById($selectedParentFieldOption)->first();
+			$parentFieldOptionValue = $parentFieldOption->name;
+			
+			$foreignKeyLabel = Inflector::humanize($foreignKey);
+			if($this->endsWith($foreignKey, '_id')){
+				$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
+			}
+
+			$this->ControllerAction->field($foreignKeyLabel, ['type' => 'readonly', 
+															  'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
+															  'model' => $parentFieldOptionTable->alias(), 
+															  'value' => $parentFieldOptionValue,
+															  'className' => $parentFieldOptionInfo[0], 
+															  'attr' => ['value' => $parentFieldOptionValue]]);
+
+			$this->ControllerAction->field($foreignKey, ['type' => 'hidden', 
+														 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => false], 
+														 'model' => $parentFieldOptionTable->alias(), 
+														 'className' => $parentFieldOptionInfo[0], 
+														 'attr' => ['value' => $selectedParentFieldOption]]);
+
+
 		}
 
 		if ($this->action == 'index') {
@@ -113,9 +138,9 @@ class FieldOptionValuesTable extends AppTable {
 			'attr' => ['value' => $this->fieldOption->name],
 			'visible' => ['index' => false, 'view' => false, 'edit' => false]
 		]);
-		
+		//$foreignKeyLabel, $foreignKey,
 		$this->ControllerAction->setFieldOrder([
-			'field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable', 'foreignKey'
+			'field_option_id',  'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable', 'foreignKey'
 		]);
 	}
 
@@ -159,6 +184,7 @@ class FieldOptionValuesTable extends AppTable {
 		}
 	}
 
+
 	public function addEditBeforeAction(Event $event) {
 		if (!empty($this->fieldOption->params)) {
 			$params = json_decode($this->fieldOption->params);
@@ -167,6 +193,21 @@ class FieldOptionValuesTable extends AppTable {
 				$this->fields[$key]['model'] = $table->alias();
 				$this->fields[$key]['className'] = $params->model;
 			}
+			// if(array_key_exists($params->model, $this->parentFieldOptionList)) {
+			// 	$foreignKey = $this->ControllerAction->getVar('foreignKey');
+			// 	$selectedParentFieldOption = $this->ControllerAction->getVar('selectedParentFieldOption');
+			// 	$parentFieldOption = TableRegistry::get($this->parentFieldOptionList[$params->model][0])->findById($selectedParentFieldOption)->first();
+			// 	$parentFieldOptionValue = $parentFieldOption->name;
+				
+			// 	$foreignKeyLabel = Inflector::humanize($foreignKey);
+			// 	if($this->endsWith($foreignKey, '_id')){
+			// 		$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
+			// 	}
+
+			// 	$this->ControllerAction->field($foreignKeyLabel, ['type' => 'readonly', 'attr' => ['value' => $parentFieldOptionValue]]);
+			// 	$this->ControllerAction->field($foreignKey, ['type' => 'hidden', 'model' => $table->alias(), 'className' => $params->model, 'attr' => ['value' => $selectedParentFieldOption]]);
+			// 	$this->ControllerAction->setFieldOrder(['field_option_id', $foreignKeyLabel, $foreignKey]);
+			// }	
 			return $table;
 		}
 	}
@@ -316,4 +357,10 @@ class FieldOptionValuesTable extends AppTable {
 		}
 		return $result;
 	}
+
+	// public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	// 	pr($entity);
+	// 	pr($data);
+	// 	die;
+	// }
 }
