@@ -7,6 +7,15 @@ html, body {
 	margin-right: 0 !important;
 }
 
+/* LOGIN */
+
+.rtl .login .text:after, 
+.rtl .login .password:after, 
+.rtl .login .select:after {
+	border-right: 1px solid #DDD;
+	border-left: 0 !important;
+}
+
 /* NAVIGATION */
 .rtl .menu-toggle {
 	right: -2px;
@@ -67,15 +76,16 @@ label, button, input, select, textarea {
 }
 
 .display-limit	{
-	width: 230px !important;
+	width: 160px !important;
 }
 
 .display-limit form {
-	width: 110px !important;
+	width: 102px !important;
 }
 
-.display-limit span, .display-limit p {
-	width: 110px;
+.display-limit span,
+.display-limit p {
+    width: auto;
 }
 
 .display-limit .input-select-wrapper {
@@ -89,6 +99,10 @@ label, button, input, select, textarea {
 .display-limit .input-select-wrapper:after {
 	right: -2px;
 	z-index: 9;
+}
+
+.rtl .display-limit {
+	width: 165px !important;
 }
 
 .rtl .display-limit select {
