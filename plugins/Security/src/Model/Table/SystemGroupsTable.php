@@ -106,7 +106,7 @@ class SystemGroupsTable extends AppTable {
 	}
 
 	public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options=[]) {
-		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Role')];
+		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Role')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'users';
