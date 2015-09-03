@@ -5,8 +5,8 @@
     background-color: #FFF;
     border-left: 1px solid #DDD;
     z-index: 9;
-    padding: 6px 10px;
-    height: 42px;
+    padding: 4px 10px;
+    height: 38px;
 }
 
 .toolbar .btn {
