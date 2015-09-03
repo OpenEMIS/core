@@ -239,7 +239,23 @@ class RecordBehavior extends Behavior {
 		$customFieldQuery = $this->CustomFormsFields
 			->find('all')
 			->find('order')
-			->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+			->contain([
+				'CustomFields.CustomFieldOptions' => function($q) {
+					return $q
+						->find('visible')
+						->find('order');
+				},
+				'CustomFields.CustomTableColumns' => function ($q) {
+			       return $q
+			       		->find('visible')
+			       		->find('order');
+			    },
+				'CustomFields.CustomTableRows' => function ($q) {
+			       return $q
+			       		->find('visible')
+			       		->find('order');
+			    }
+			])
 			->where([
 				$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
 			])

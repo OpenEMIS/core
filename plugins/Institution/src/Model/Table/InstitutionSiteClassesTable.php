@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Collection\Collection;
 
 use App\Model\Table\AppTable;
 
@@ -84,7 +85,8 @@ class InstitutionSiteClassesTable extends AppTable {
 			'data' => [	
 				'students'=>[],
 				'studentOptions'=>[],
-				'categoryOptions'=>[]
+				'categoryOptions'=>[],
+				// 'isHistoryRecord'=>false
 			],
 			'visible' => ['view'=>true, 'edit'=>true]
 		]);
@@ -126,6 +128,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		if (empty($this->_academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
+
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		}
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $this->_academicPeriodOptions);
 	}
 
@@ -139,8 +145,9 @@ class InstitutionSiteClassesTable extends AppTable {
 		$Classes = $this;
 		$Sections = $this->InstitutionSiteSections;
 
-		$academicPeriodOptions = $this->_academicPeriodOptions;
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		$institutionId = $this->institutionId;
+
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
@@ -301,8 +308,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		$Sections = $this->InstitutionSiteSections;
 
 		$institutionId = $this->institutionId;
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		$periodOption = ['' => '-- Select Period --'];
+		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
+		
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
@@ -545,16 +554,28 @@ class InstitutionSiteClassesTable extends AppTable {
 	 * @var [type]
 	 */
 	public function editAfterAction(Event $event, Entity $entity) {
+		// pr($this->AcademicPeriods->getCurrent());die;
 		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
+
+		$students = $entity->institution_site_class_students;
+		$collection = new Collection($students);
+		$studentIds = $collection->extract('student_id')->toArray();
+		// $studentIds = $collection->extract(function ($student) {
+		// 				// pr();
+		// 				return ($student->status != 0) ? $student->student_id : false;
+		// 			})->toArray();
 
 		$teacherOptions = $this->getTeacherOptions();
 		$studentOptions = $this->getStudentsOptions($entity);
-		$students = $entity->institution_site_class_students;
+
+		// pr($students);
 		/**
 		 * Check if the request is a page reload
 		 */
+		// pr($students);die;
+		// pr($collection->extract('student_id')->toArray());die;
+		// pr(count($this->request->data['InstitutionSiteClasses']['institution_site_class_students']));die;
 		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
-			$students = [];
 			/**
 			 * Populate records in the UI table & unset the record from studentOptions
 			 * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
@@ -563,8 +584,10 @@ class InstitutionSiteClassesTable extends AppTable {
 				foreach ($this->request->data[$this->alias()]['institution_site_class_students'] as $row) {
 					if ($row['status']>0 && array_key_exists($row['student_id'], $studentOptions)) {
 						$id = $row['student_id'];
-						$students[] = $this->createVirtualEntity($id, $entity, 'students');
-						unset($studentOptions[$id]);
+						if (!in_array($id, $studentIds) ) {
+							$students[] = $this->createVirtualEntity($id, $entity, 'students');
+							unset($studentOptions[$id]);
+						}
 					}
 				}
 			}
@@ -589,16 +612,16 @@ class InstitutionSiteClassesTable extends AppTable {
 					unset($studentOptions[$id]);
 				}
 			}
-		} else {
+		}// else {
 			/**
 			 * Just unset the record from studentOptions on first page load
 			 */
-			foreach ($entity->institution_site_class_students as $row) {
+			foreach ($students as $row) {
 				if ($row->status>0 && array_key_exists($row->student_id, $studentOptions)) {
 					unset($studentOptions[$row->student_id]);
 				}
 			}
-		}
+		// }
 
 		/**
 		 * Changed in PHPOE-1780 test fail re-work. if there are no more available students, change the options in nthe select field.
@@ -612,7 +635,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 		$this->fields['students']['data'] = [
 			'students' => $students,
-			'studentOptions' => $studentOptions
+			'studentOptions' => $studentOptions,
+			// 'isHistoryRecord' => ($this->AcademicPeriods->getCurrent() != $entity->academic_period_id) ? true : false
 		];
 	
 		$this->fields['academic_period_id']['type'] = 'readonly';
@@ -641,7 +665,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			$sectionId = $entity->toArray()['institution_site_sections'][0]['id'];
 		}
 		if (strtolower($persona)=='students') {
-			$userData = $this->Institutions->Students->find()->contain(['Users'=>['Genders']])->where(['student_id'=>$id])->first();
+			$userData = $this->Institutions->Students->find()->contain(['Users.Genders'])->where(['student_id'=>$id])->first();
 			$data = [
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'student_id'=>$id,
@@ -809,48 +833,71 @@ class InstitutionSiteClassesTable extends AppTable {
 	 * student_status_id = 1 is also included.
 	 * @var integer
 	 * @return array list of students
+	 *
+	 * @todo  modify the search to increase performance
 	 */
+	// protected function getStudentsOptions($entity, $studentIds) {
 	protected function getStudentsOptions($entity) {
+		// pr($entity);
+		// from $entity, you can get the subject_id which you can use it to retrieve the list of grade_id from education_grades_subjects
+		// from the list of grade_ids, you will use it to find the list of students from institution_site_section_students using grade_id and the section keys as conditions 
 		$sectionKeys = [];
 		foreach ($entity->institution_site_section_classes as $sectionClasses) {
+
 			$sectionKeys[] = $sectionClasses->institution_site_section_id;
 		}
-		$sections = $this->Institutions->InstitutionSiteSections
-			->find()
-			->contain(['InstitutionSiteSectionGrades'])
-			->where([
-				$this->Institutions->InstitutionSiteSections->aliasField('id') . ' IN ' => $sectionKeys,
-				$this->Institutions->InstitutionSiteSections->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-			])
-			->toArray();
-		$sectionGrades = [];
-		foreach ($sections as $sectionEntity) {
-			$sectionGradeObjects = $sectionEntity->institution_site_section_grades;
-			foreach ($sectionGradeObjects as $key=>$value) {
-				$sectionGrades[] = $value->education_grade_id;
-			}
-		}
-		$students = $this->Institutions->Students;
-		$query = $students
-			->find('all')
-			->find('AcademicPeriod', ['academic_period_id' => $this->_selectedAcademicPeriodId])
-			->contain(['Users', 'EducationGrades.EducationSubjects'])
-			->where([
-				$students->aliasField('institution_id') => $this->institutionId,
-				$students->aliasField('student_status_id') => 1,
-			])
-			->toArray();
-		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];
-		foreach ($query as $student) {
-			if (in_array($student->education_grade->id, $sectionGrades)) {
-				if (isset($student->user)) {
-					$studentOptions[$student->user->id] = $student->user->name_with_id;
-				} else {
-					$this->log('Data corrupted with no security user for student: '. $student->id, 'debug');
-				}
-			}
-		}
+		// $sections = $this->Institutions->InstitutionSiteSections
+		// 	->find()
+		// 	->contain(['InstitutionSiteSectionGrades'])
+		// 	->where([
+		// 		$this->Institutions->InstitutionSiteSections->aliasField('id') . ' IN ' => $sectionKeys,
+		// 		$this->Institutions->InstitutionSiteSections->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
+		// 	])
+		// 	->toArray();
+		// $sectionGrades = [];
+		// foreach ($sections as $sectionEntity) {
+		// 	$sectionGradeObjects = $sectionEntity->institution_site_section_grades;
+		// 	foreach ($sectionGradeObjects as $key=>$value) {
+		// 		$sectionGrades[] = $value->education_grade_id;
+		// 	}
+		// }
 
+		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+		$grades = $EducationGradesSubjects
+			->find('list', [
+				'keyField' => 'id',
+    			'valueField' => 'education_grade_id'
+    		])
+			->where([
+				$EducationGradesSubjects->aliasField('education_subject_id') => $entity->education_subject_id,
+				$EducationGradesSubjects->aliasField('visible') => 1
+			])
+			->toArray();
+		// pr($sectionKeys);
+		// pr($entity->education_subject_id);
+		// pr($grades);//die;
+
+		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$query = $Students
+			->find('all')
+			->matching('Users')
+			->where([
+				$Students->aliasField('institution_site_section_id').' IN' => $sectionKeys,
+				$Students->aliasField('education_grade_id').' IN' => $grades
+			])
+			->toArray();
+		// pr($query);die;
+		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];
+		
+		foreach ($query as $student) {
+			if ($student->has('_matchingData')) {
+				$user = $student->_matchingData['Users'];
+				$studentOptions[$user->id] = $user->name_with_id;
+			} else {
+				$this->log('Data corrupted with no security user for student: '. $student->id, 'debug');
+			}
+		}
+		// pr($studentOptions);die;
 		return $studentOptions;
 	}
 

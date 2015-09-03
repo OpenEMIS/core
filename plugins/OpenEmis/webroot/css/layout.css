@@ -468,8 +468,13 @@ body.large {
 
 .page-header h2 {
 	float: left;
-	padding: 8px 12px 8px 0;
+	padding: 10px 12px 10px 0;
 	margin: 0;
+}
+
+/* buttons, toolbar and page-header alignments in chrome */
+.chrome .page-header h2 {
+	padding: 10px 12px 10px 0;
 }
 
 .wrapper {
@@ -908,7 +913,7 @@ input[type="checkbox"] {
 .format-wrapper,
 .search-wrapper {
 	padding: 10px;
-	width: 250px;
+	width: 200px;
 }
 
 .format-lists {
@@ -1029,16 +1034,16 @@ input[type="checkbox"] {
 
 /* BUTTONS */
 .toolbar {
+	display: inline-block;
 	background-color: #FFF;
+	border-left: 1px solid #DDD;		
 	z-index: 9;
-	float: left;
-	padding: 5px 0 5px 10px;
-	border-left: 1px solid #DDD;	
-	height: 38px;
+	padding: 6px 10px;
+	height: 42px;
 }
 
 .toolbar .btn {
-	display: inline-block;
+	/*display: inline-block;*/
 	float: left;	
 	margin: 0 2px;
 	padding: 0;
@@ -1046,9 +1051,10 @@ input[type="checkbox"] {
 
 .toolbar .btn i {
 	display: table-cell;
-	font-size: 11px;
-	padding: 8px 9px 7px;
+	font-size: 12px;
 	vertical-align: middle;
+	width: 28px;
+	height: 28px;
 }
 
 .toolbar .search .btn {
@@ -1065,8 +1071,7 @@ input[type="checkbox"] {
 }
 
 .toolbar .icon-big i {
-	font-size: 16px;
-	padding: 4px 7px 5px;
+	font-size: 15px;
 }
 
 /* OVERRIDE FROM BOOTSTRAP HOVER STATE */
@@ -1122,11 +1127,6 @@ input[type="checkbox"] {
 
 .btn-all {
 	height: 22px;
-}
-
-/* buttons, toolbar and page-header alignments in chrome */
-.chrome .page-header h2 {
-	padding: 8px 10px 6px 0;
 }
 
 /* buttons, toolbar and page-header alignments in safari */
@@ -1583,27 +1583,39 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .highlight { background-color: #FFEA57; }
 
+/* TABLE LINED */
+
+.table-lined thead,
+.table-lined thead tr {
+	border-top: 0 !important;
+}
+
+.table-lined th,
+.table-lined td {
+	border-right: 1px solid #CCC !important;
+}
+
+.table-lined td:first-child {
+	border-left: 1px solid #CCC;
+}
+
+.table-lined .error-message {
+	float: none;
+}
 
 /* SEARCH */
 .search {
 	display: inline-block;
-	width: 250px;
-	margin-top: -1px;
+	width: 200px;
 }
 
 .search .btn {
 	float: none;
 }
 
-.chrome .search {
-	width: 276px;
-	margin-top: 0;
-	display: -webkit-box;	
-}
-
 .search input {
-	width: 220px !important;
-	height: 29px;	
+	width: 200px !important;
+	height: 30px;	
 	padding: 2px 8px 0;
 	z-index: 0;
 	margin-right: -2px;
@@ -1615,7 +1627,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .chrome .search input {
-	height: 29px;
+	height: 30px;
 }
 
 .search form {
@@ -1626,6 +1638,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .search i {
 	font-size: 12px !important;
+	padding: 7px 8px;
 }
 
 .search .form-control {
@@ -2052,6 +2065,7 @@ td.center .icheck-input input {
 }
 
 .ui-widget-content {
+	background: none !important;
 	background-color: #FFF !important;
 	border: 1px solid #CCC !important;
 	-webkit-box-shadow: 0 0 5px 0 rgba(0,0,0,0.1);
@@ -2375,8 +2389,9 @@ input[readonly] {
 
 /* WORKFLOW */
 .transition-container {
-	margin: 10px 0;
-	padding: 20px 0;
+	margin: 30px 0 !important;
+	background: none !important;
+	border: 0 !important;
 }
 
 .transition-arrow:after {
@@ -2418,37 +2433,27 @@ table .status {
 	content: "";
 }
 
-.custom-buttons {
-	display: inline-block;
-	width: 425px;
-	padding: 6px 12px;
-}
-
-.custom-buttons span {
-	display: block;
-	padding: 4px 8px;
-}
-
-.custom-buttons .btn {
-	margin: 0;
-}
-
 .past {
 	background-color: #EFEFEF !important;
 	border-color: #E9E9E9 !important;
 	border: 1px solid #DDD !important;
 }
 
-.button-responsive button {
-	float: left;
-}
-
 .button-responsive	{
 	display: inline-block;
-	margin: -6px 10px;	 
 	border-left: 1px solid #DDD;
-	-ms-overflow-y: hidden !important;
-	    overflow-y: hidden !important;		   
+	margin: -6px 8px;
+	padding: 6px 0 6px 12px;		   
+}
+
+.button-responsive .btn {
+	padding: 5px 4px 4px 9px;
+	height: 30px;
+}
+
+.button-responsive .action-dropdown {
+	left: -36px;
+	top: 72%;
 }
 
 /* WIZARD */
@@ -2642,7 +2647,7 @@ tags-input .tags {
 .btn-dropdown,
 .btn-single-action {
 	position: relative;
-	padding: 4px 22px 4px 10px;
+	padding: 4px 4px 4px 10px;
 	display: inline-block;
 	color: #333;
 	border-color: #CCC;
@@ -2679,8 +2684,6 @@ tags-input .tags {
 	content: "\f078";
 	font-size: 8px;
 	padding: 5px;
-	position: absolute;
-	top: 3px;
 }
 
 .btn-dropdown:hover {
@@ -3171,10 +3174,9 @@ footer {
 	}
 
 	.search {
-		display: block !important;
 		clear: both;
 		float: none;
-		padding: 10px 0 0;
+		width: 180px;
 	}
 
 	.search .form-control {
@@ -3182,30 +3184,26 @@ footer {
 	}
 
 	.search input {
-		width: 100% !important;
+		width: 150px !important;
 		margin: 0;
 	}	
 
+	.page-header h2 {
+		width: 100%;	
+		float: none;
+		border-bottom: 1px solid #DDD !important;
+	}
+
 	.toolbar {
-		height: auto;
-		padding-top: 10px;
+		float: none;
+		width: 100%;
+		padding-left: 0;
+		border: 0;
 	}
 
 	.btn-default .btn {
 		margin-left: 0;
 		margin-right: 5px;
-	}
-
-	.page-header,
-	.chrome .page-header {
-		padding: 0 !important;
-		border: 0;
-	}
-
-	.page-header h2 {
-		border-bottom: 1px solid #DDD;
-		width: 100%;
-		border-right: 0;
 	}
 
 	.data-section {
@@ -3340,6 +3338,10 @@ footer {
 		top: 3px !important;
 	}
 
+	.toolbar-wrapper .input {
+		width: 95% !important;
+	}
+
 	.footer-buttons .btn {
 		margin: 0 0 0 26px;
 	}
@@ -3403,24 +3405,25 @@ footer {
 	.table-in-view,
 	.table-full-width {
 		width: 100% !important;
-	}			
+	}	
+
+	.custom-buttons {
+		border-left: 0;
+		clear: both;
+		width: 100%;
+		margin-left: 0;
+		padding-left: 0;
+	}		
 }
 
 @media (max-width: 510px) {
 	.search {
-		display: block !important;
 		clear: both;
 		float: none;
-		padding: 10px 0 0;
 	}
 
 	.search .form-control {
 		margin: 0 2px;
-	}
-
-	.toolbar {
-		height: auto;
-		padding-top: 10px;
 	}
 	
 	.input-checkbox-inline,
@@ -3429,9 +3432,23 @@ footer {
 	.table-full-width {
 		width: 100%;
 	}
+
+	.toolbar {
+		height: auto;
+		border-bottom: 1px solid #DDD;
+	}
+
+	.toolbar .btn {
+		margin: 5px 5px 5px 0;
+	}
 }
 
 @media (max-width: 1198px) {
+	.page-header {
+		border-bottom: 0;
+		height: auto;
+	}
+
 	.page-header h2 {
 		width: 100%;	
 		float: none;
@@ -3439,11 +3456,35 @@ footer {
 	}
 
 	.toolbar {
-		float: none;
 		width: 100%;
 		padding-left: 0;
 		border: 0;
+		border-bottom: 1px solid #DDD;
 	}
+}
+
+@media (max-width: 515px) {
+	.button-responsive .action-dropdown {
+		left: -1px;
+		top: 30px;
+	}
+
+	.dropdown-menu .dropdown-arrow {
+		left: 85px;
+	}
+
+	.button-responsive {
+        border-right: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block;
+        clear: both;
+    }
+
+    .action-dropdown {
+        right: 4px;
+        top: 30px;
+    }
 }
 
 @media (min-width: 486px) and (max-width: 762px){
@@ -3528,6 +3569,23 @@ footer {
 		width: 100% !important;
 	}
 
+	.toolbar {
+		height: auto;
+		border-bottom: 1px solid #DDD;
+	}
+
+	.toolbar .btn {
+		margin: 5px 5px 5px 0;
+	}
+
+	.toolbar .search {
+		margin: 5px 0 0;
+	}
+
+	.toolbar .search input {
+		margin: 0;
+	}
+
 	.scroll_tabs_container {
 		height: 29px !important;
 	}
@@ -3545,6 +3603,10 @@ footer {
 		min-width: 40%;
 		margin-right: 40px;
 	}	
+
+	.custom-buttons {
+		margin-bottom: -10px;
+	}
 
 }
 
@@ -3703,7 +3765,7 @@ footer {
 	}
 
 	.search input {
-		min-width: 248px;
+		min-width: 170px;
 	}
 
 	.table-responsive {
@@ -3803,7 +3865,7 @@ footer {
 	}
 
 	.search input {
-		width: 248px;
+		width: 200px;
 	}
 
 	.data-section {
@@ -3868,25 +3930,8 @@ footer {
 	}
 }
 
-@media (max-width: 509px) {
-	.page-header {
-		border: 0;
-	}
-}
-
 @media (max-width: 360px) {
 	.wizard-buttons {
 		bottom: 40px !important;
-	}
-}
-
-@media (max-width: 1050px) {
-	.button-responsive	{
-		max-width: 74%;
-		-ms-overflow-y: scroll;
-		    overflow-y: scroll;
-		display: inline-block;
-		margin: -6px 0 0 10px !important;	 
-		border-left: 1px solid #DDD;	   
 	}
 }

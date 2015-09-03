@@ -35,21 +35,22 @@ class SetupBehavior extends Behavior {
 		// End
 
 		// Get page options and their key
-		$setupId = $controller->request->query('setup');
 		$setupOptions = [];
+		$actionOptions = [];
 		foreach ($this->setups as $setup) {
 			$setupOptions[] = __(Inflector::humanize($setup));
+			$actionOptions[] = Inflector::humanize($setup);
 		}
-		$selectedSetup = !is_null($setupId) ? $setupId : key($setupOptions);
+		$selectedSetup = $this->_table->queryString('setup', $setupOptions);
+		$this->_table->advancedSelectOptions($setupOptions, $selectedSetup);
+        $controller->set('setupOptions', $setupOptions);
+        // End
 
-        $controller->set(compact('setupOptions', 'selectedSetup'));
-		// End
-
-        $selectedAction = Inflector::camelize($setupOptions[$selectedSetup]);
-        if ($this->_table->alias != $selectedAction) {
-        	$action = $this->_table->ControllerAction->buttons['index']['url'];
+		$selectedAction = Inflector::camelize($actionOptions[$selectedSetup]);
+		if ($this->_table->alias != $selectedAction) {
+	        $action = $this->_table->ControllerAction->url('index');//$this->_table->ControllerAction->buttons['index']['url'];
 	        $action['action'] = $selectedAction;
-	        $controller->redirect($action);
-        }
+			$controller->redirect($action);
+		}
 	}
 }
