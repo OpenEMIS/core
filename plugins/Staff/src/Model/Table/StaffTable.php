@@ -111,8 +111,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		// to set the staff name in headers
-		$this->Session->write('Staff.name', $entity->name);
+		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 

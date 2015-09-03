@@ -88,8 +88,7 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		// to set the guardian name in headers
-		$this->Session->write('Guardians.name', $entity->name);
+		$this->Session->write('Guardian.Guardians.name', $entity->name);
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 

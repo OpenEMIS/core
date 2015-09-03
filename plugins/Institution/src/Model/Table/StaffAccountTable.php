@@ -13,10 +13,8 @@ use App\Model\Table\AppTable;
 
 class StaffAccountTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('security_users');
-		parent::initialize($config);
-		
 		$this->addBehavior('User.Account', ['userRole' => 'Staff', 'isInstitution' => true]);
+		parent::initialize($config);
 	}
 
 	public function validationDefault(Validator $validator) {
