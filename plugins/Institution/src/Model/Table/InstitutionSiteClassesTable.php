@@ -85,8 +85,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'data' => [	
 				'students'=>[],
 				'studentOptions'=>[],
-				'categoryOptions'=>[],
-				// 'isHistoryRecord'=>false
+				'categoryOptions'=>[]
 			],
 			'visible' => ['view'=>true, 'edit'=>true]
 		]);
@@ -554,43 +553,38 @@ class InstitutionSiteClassesTable extends AppTable {
 	 * @var [type]
 	 */
 	public function editAfterAction(Event $event, Entity $entity) {
-		// pr($this->AcademicPeriods->getCurrent());die;
 		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
 
 		$students = $entity->institution_site_class_students;
 		$collection = new Collection($students);
-		$studentIds = $collection->extract('student_id')->toArray();
-		// $studentIds = $collection->extract(function ($student) {
-		// 				// pr();
-		// 				return ($student->status != 0) ? $student->student_id : false;
-		// 			})->toArray();
-
+		$recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'status')->toArray();
 		$teacherOptions = $this->getTeacherOptions();
-		$studentOptions = $this->getStudentsOptions($entity);
 
-		// pr($students);
 		/**
 		 * Check if the request is a page reload
+		 * Populate records in the UI table & unset the record from studentOptions
+		 * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
 		 */
-		// pr($students);die;
-		// pr($collection->extract('student_id')->toArray());die;
-		// pr(count($this->request->data['InstitutionSiteClasses']['institution_site_class_students']));die;
+		$includedStudents = [];
 		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
-			/**
-			 * Populate records in the UI table & unset the record from studentOptions
-			 * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
-			 */
+			$includedStudents = [];
 			if (array_key_exists('institution_site_class_students', $this->request->data[$this->alias()])) {
 				foreach ($this->request->data[$this->alias()]['institution_site_class_students'] as $row) {
-					if ($row['status']>0 && array_key_exists($row['student_id'], $studentOptions)) {
+					if ($row['status']>0) {
+						$includedStudents[] = $row['student_id'];
 						$id = $row['student_id'];
-						if (!in_array($id, $studentIds) ) {
+						/**
+						 * Changed in PHPOE-1997 to remove duplicate records on the UI.
+						 * Attempt to improve performance by not creating an entity with User record attached [@see $this->createVirtualEntity()],
+						 * since student record with its User record attached already exists in the $students array.
+						 */
+						if (!array_key_exists($id, $recordedStudentIds)) {
 							$students[] = $this->createVirtualEntity($id, $entity, 'students');
-							unset($studentOptions[$id]);
 						}
 					}
 				}
 			}
+			$studentOptions = $this->getStudentsOptions($entity, $includedStudents);
 			/**
 			 * Insert the newly added record into the UI table & unset the record from studentOptions
 			 */
@@ -598,7 +592,6 @@ class InstitutionSiteClassesTable extends AppTable {
 				$id = $this->request->data['student_id'];
 				/**
 				 * Changed in PHPOE-1780. Includes option to add all student available in the dropdown list
-				 * @var [type]
 				 */
 				if ($id==0) {
 					foreach ($studentOptions as $key=>$value) {
@@ -608,35 +601,38 @@ class InstitutionSiteClassesTable extends AppTable {
 						}
 					}
 				} else {
+					/**
+					 * @todo modify this to improve performance by not creating an entity with User record attached [@see $this->createVirtualEntity()],
+					 * IF student record with its User record attached already exists in the $students array.
+					 * Try to change the status attribute to true instead?
+					 */
 					$students[] = $this->createVirtualEntity($id, $entity, 'students');
 					unset($studentOptions[$id]);
 				}
 			}
-		}// else {
-			/**
-			 * Just unset the record from studentOptions on first page load
-			 */
-			foreach ($students as $row) {
-				if ($row->status>0 && array_key_exists($row->student_id, $studentOptions)) {
-					unset($studentOptions[$row->student_id]);
+
+		} else {
+			foreach ($recordedStudentIds as $key => $value) {
+				if ($value>0) {
+					$includedStudents[] = $key;
 				}
 			}
-		// }
+			$studentOptions = $this->getStudentsOptions($entity, $includedStudents);
+		}
 
 		/**
-		 * Changed in PHPOE-1780 test fail re-work. if there are no more available students, change the options in nthe select field.
-		 * @var [type]
+		 * Changed in PHPOE-1780 test fail re-work. if there are no more available students, change the default options in the select field.
 		 */
 		if (count($studentOptions)==2) {
 			$studentOptions = ['-1' => $this->getMessage('Users.select_student_empty')];
 		}
+
 		if (!empty($teacherOptions)) {
 			$this->fields['teachers']['options'] = $teacherOptions;
 		}
 		$this->fields['students']['data'] = [
 			'students' => $students,
-			'studentOptions' => $studentOptions,
-			// 'isHistoryRecord' => ($this->AcademicPeriods->getCurrent() != $entity->academic_period_id) ? true : false
+			'studentOptions' => $studentOptions
 		];
 	
 		$this->fields['academic_period_id']['type'] = 'readonly';
@@ -644,7 +640,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		
 		/**
 		 * Changed in PHPOE-1780 test fail re-work. Get Education Subject name directly from EducationSubjects table since there is only one $entity->education_subject_id.
-		 * @var [type]
 		 */
 		$this->fields['education_subject_id']['type'] = 'readonly';
 		$this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
@@ -836,32 +831,13 @@ class InstitutionSiteClassesTable extends AppTable {
 	 *
 	 * @todo  modify the search to increase performance
 	 */
-	// protected function getStudentsOptions($entity, $studentIds) {
-	protected function getStudentsOptions($entity) {
-		// pr($entity);
+	protected function getStudentsOptions($entity, $includedStudents = []) {
 		// from $entity, you can get the subject_id which you can use it to retrieve the list of grade_id from education_grades_subjects
 		// from the list of grade_ids, you will use it to find the list of students from institution_site_section_students using grade_id and the section keys as conditions 
 		$sectionKeys = [];
 		foreach ($entity->institution_site_section_classes as $sectionClasses) {
-
 			$sectionKeys[] = $sectionClasses->institution_site_section_id;
 		}
-		// $sections = $this->Institutions->InstitutionSiteSections
-		// 	->find()
-		// 	->contain(['InstitutionSiteSectionGrades'])
-		// 	->where([
-		// 		$this->Institutions->InstitutionSiteSections->aliasField('id') . ' IN ' => $sectionKeys,
-		// 		$this->Institutions->InstitutionSiteSections->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-		// 	])
-		// 	->toArray();
-		// $sectionGrades = [];
-		// foreach ($sections as $sectionEntity) {
-		// 	$sectionGradeObjects = $sectionEntity->institution_site_section_grades;
-		// 	foreach ($sectionGradeObjects as $key=>$value) {
-		// 		$sectionGrades[] = $value->education_grade_id;
-		// 	}
-		// }
-
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
 		$grades = $EducationGradesSubjects
 			->find('list', [
@@ -873,22 +849,30 @@ class InstitutionSiteClassesTable extends AppTable {
 				$EducationGradesSubjects->aliasField('visible') => 1
 			])
 			->toArray();
-		// pr($sectionKeys);
-		// pr($entity->education_subject_id);
-		// pr($grades);//die;
 
 		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$conditions = [
+			$Students->aliasField('institution_site_section_id').' IN' => $sectionKeys,
+			$Students->aliasField('education_grade_id').' IN' => $grades
+		];
+
+		/**
+		 * Attempt to improve performance by filtering out includedStudents in $studentOptions through SQL query
+		 */
+		if (!empty($includedStudents)) {
+			$conditions[$Students->aliasField('student_id').' NOT IN'] = $includedStudents;
+		}
+
 		$query = $Students
 			->find('all')
 			->matching('Users')
-			->where([
-				$Students->aliasField('institution_site_section_id').' IN' => $sectionKeys,
-				$Students->aliasField('education_grade_id').' IN' => $grades
-			])
+			->where($conditions)
 			->toArray();
-		// pr($query);die;
-		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];
-		
+
+		/**
+		 * default $studentOptions options
+		 */
+		$studentOptions = ['-1' => $this->getMessage('Users.select_student'), '0' => $this->getMessage('Users.add_all_student')];		
 		foreach ($query as $student) {
 			if ($student->has('_matchingData')) {
 				$user = $student->_matchingData['Users'];
@@ -897,7 +881,6 @@ class InstitutionSiteClassesTable extends AppTable {
 				$this->log('Data corrupted with no security user for student: '. $student->id, 'debug');
 			}
 		}
-		// pr($studentOptions);die;
 		return $studentOptions;
 	}
 
