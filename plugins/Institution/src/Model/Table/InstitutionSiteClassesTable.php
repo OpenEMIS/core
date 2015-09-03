@@ -149,7 +149,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$institutionId = $this->institutionId;
 
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
@@ -163,11 +163,11 @@ class InstitutionSiteClassesTable extends AppTable {
 									->toArray();
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($sectionOptions)) {
-			$this->Alert->warning('Institutions.noSections');
+			$this->Alert->warning('Institutions.noClassRecords');
 		}
 		$this->selectedSectionId = $this->queryString('section_id', $sectionOptions);
 		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
 			'callable' => function($id) use ($Classes, $institutionId, $selectedAcademicPeriodId) {
 				$query = $Classes->find()
 									->join([
@@ -313,7 +313,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 		
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
