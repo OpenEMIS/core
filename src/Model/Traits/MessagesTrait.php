@@ -300,6 +300,10 @@ trait MessagesTrait {
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.'
 		],
+		'EducationProgrammes' => [
+			'add_next_programme' => 'Add Next Programme'
+		],
+
 
 		// Validation Messages
 		'Institution' => [
