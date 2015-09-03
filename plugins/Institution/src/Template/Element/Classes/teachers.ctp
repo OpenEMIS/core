@@ -16,11 +16,11 @@
 	</div>
 	<?php endif;?>
 
-	<div class="table-in-view col-md-5 table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?= $this->Label->get('Users.openemis_no'); ?></th>
+					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
 					<th class="cell-delete"></th>
 				</tr>
