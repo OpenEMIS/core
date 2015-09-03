@@ -1,5 +1,7 @@
 <?php
 namespace App\Model\Traits;
+use Cake\Cache\Cache;
+use Cake\ORM\TableRegistry;
 
 trait MessagesTrait {
 	public $messages = [
@@ -28,6 +30,7 @@ trait MessagesTrait {
 			'notEditable' => 'This record is not editable',
 			'exists' => 'The record is exists in the system.',
 			'noData' => 'There are no records.',
+			'noRecords' => 'No Record',
 			'select' => [
 				'noOptions' => 'No configured options'
 			],
@@ -122,7 +125,7 @@ trait MessagesTrait {
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
-			'security_user_id' => 'Home Room Teacher',
+			// 'security_user_id' => 'Home Room Teacher',
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Multi-Grades Class',
@@ -183,7 +186,21 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
+			]
+		],
+		'InstitutionRubricAnswers' => [
+			'rubric_template' => 'Rubric Template',
+			'rubric_section_id' => 'Section',
+			'noSection' => 'There is no rubric section selected',
+			'save' => [
+				'draft' => 'Rubric record has been saved to draft successfully.',
+				'final' => 'Rubric record has been submitted successfully.',
+				'failed' => 'This rubric record is not submitted due to criteria answers is not complete.'
 			],
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			]
 		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
@@ -192,15 +209,11 @@ trait MessagesTrait {
 		'EducationGrades' => [
 			'add_subject' => 'Add Subject'
 		],
-		'RubricSections' => [
-			'rubric_template_id' => 'Rubric Template'
-		],
 		'RubricCriterias' => [
-			'rubric_section_id' => 'Rubric Section',
+			//'rubric_section_id' => 'Rubric Section',
 			'criterias' => 'Criterias'
 		],
 		'RubricTemplateOptions' => [
-			'rubric_template_id' => 'Rubric Template',
 			'weighting' => 'Weighting'
 		],
 		'security' => [
@@ -228,7 +241,7 @@ trait MessagesTrait {
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
-			'time_of_behaviour' => 'Time',
+			'time_of_behaviour' => 'Time'
 		],
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
@@ -256,12 +269,6 @@ trait MessagesTrait {
 			'to' => 'To'
 		],
 		'Users' => [
-			'photo_content' => 'Photo Image',
-			'start_date' => 'Start Date',
-			'openemis_no' => 'OpenEMIS ID',
-			'name' => 'Name',
-			'gender' => 'Gender',
-			'date_of_birth' => 'Date Of Birth',
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
@@ -290,12 +297,8 @@ trait MessagesTrait {
 			'noStaff' => 'No Available Staff'
 		],
 		'StudentBehaviours' => [
-			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes',
 			'noStudents' => 'No Students'
-		],
-		'StaffBehaviours' => [
-			'noSections' => 'No Sections',
-			'noStaff' => 'No Staff'
 		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
@@ -722,8 +725,13 @@ trait MessagesTrait {
 			if (isset($message[$i])) {
 				$message = $message[$i];
 			} else {
-				$message = '[Message Not Found]';
-				break;
+				//check whether label exists in cache
+				$Labels = TableRegistry::get('Labels');
+				$message = Cache::read($code, $Labels->getDefaultConfig());
+				if($message === false) {
+					$message = '[Message Not Found]';
+					break;
+				}
 			}
 		}
 		return !is_array($message) ? __($message) : $message;

@@ -228,7 +228,7 @@ class InstitutionGradesTable extends AppTable {
 				->where(['EducationGrades.education_programme_id' => $programmeId])
 				->all();
 
-				$institutionId = $this->Session->read('Institutions.id');
+				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$exists = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
 				->toArray();
