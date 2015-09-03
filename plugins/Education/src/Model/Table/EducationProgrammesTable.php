@@ -9,6 +9,8 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class EducationProgrammesTable extends AppTable {
+	private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id', 'education_cycle_id', 'education_certification_id'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
@@ -22,7 +24,11 @@ class EducationProgrammesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width']);
-		$this->ControllerAction->setFieldOrder('next_programmes');
+		$this->_fieldOrder[] = 'next_programmes';
+	}
+
+	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -133,8 +139,6 @@ class EducationProgrammesTable extends AppTable {
 						}
 					}
 				}			
-
-				$form = $event->subject()->Form;
 
 				$tableHeaders = [__('Cycle - (Programme)')];
 				$tableCells = [];
