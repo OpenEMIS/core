@@ -732,34 +732,53 @@ class StudentsTable extends AppTable {
 				$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
 				$NEW = 0;
 				$id = $this->request->pass[1];
-				$selectedStudent = $this->find()
-					->where([$this->aliasField('id')=>$id])
-					->innerJoin(['StudentDropout' => 'institution_student_dropout'], [
-							'StudentDropout.student_id' => $this->aliasField('student_id'),
-							'StudentDropout.institution_id' => $this->aliasField('institution_id'),
-							'StudentDropout.education_grade_id' => $this->aliasField('education_grade_id'),
-							'StudentDropout.academic_period_id' => $this->aliasField('academic_period_id'),
-							'StudentDropout.status' => $NEW
-						]);
-				// Dropout button
-				$dropoutButton = $buttons['back'];
-				$dropoutButton['type'] = 'button';
-				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
-				$dropoutButton['attr'] = $attr;
-				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$dropoutButton['attr']['title'] = __('Dropout');
+				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
 
-				if ($selectedStudent->count() == 0) {
-					$dropoutButton['url'] = [
-							'plugin' => $buttons['back']['url']['plugin'],
-							'controller' => $buttons['back']['url']['controller'],
-							'action' => 'DropoutRequests',
-							'add'
-						];
-				} else {
+				if ($this->get($id)->student_status_id == $enrolledStatus) {
+					$selectedStudent = $this->find('all')
+						->select(['institution_student_dropout_id' => 'StudentDropout.id'])
+						->where([$this->aliasField('id')=>$id])
+						->innerJoin(['StudentDropout' => 'institution_student_dropout'], [
+								'StudentDropout.student_id = '.$this->aliasField('student_id'),
+								'StudentDropout.institution_id = '.$this->aliasField('institution_id'),
+								'StudentDropout.education_grade_id = '.$this->aliasField('education_grade_id'),
+								'StudentDropout.academic_period_id = '.$this->aliasField('academic_period_id'),
+								'StudentDropout.status' => $NEW
+							])
+						->innerJoin(['StudentStatuses' => 'student_statuses'],[
+								'StudentStatuses.id ='.$this->aliasField('student_status_id'),
+								'StudentStatuses.id =' => $enrolledStatus
+							])
+						->first();
+
+					// Dropout button
+					$dropoutButton = $buttons['back'];
+					$dropoutButton['type'] = 'button';
+					$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
+					$dropoutButton['attr'] = $attr;
+					$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+					$dropoutButton['attr']['title'] = __('Dropout');
+
+					if (count($selectedStudent) == 0) {
+						$dropoutButton['url'] = [
+								'plugin' => $buttons['back']['url']['plugin'],
+								'controller' => $buttons['back']['url']['controller'],
+								'action' => 'DropoutRequests',
+								'add'
+							];
+					} else {
+						$dropoutButton['url'] = [
+								'plugin' => $buttons['back']['url']['plugin'],
+								'controller' => $buttons['back']['url']['controller'],
+								'action' => 'DropoutRequests',
+								'edit',
+								$selectedStudent->institution_student_dropout_id
+							];
+					}
+
+					$toolbarButtons['dropout'] = $dropoutButton;
 				}
-
-				$toolbarButtons['dropout'] = $dropoutButton;
 			}
 		}
 
