@@ -28,8 +28,10 @@ trait UtilityTrait {
 		return __($header);
 	}
 
+	// to get the value from querystring, if exists. otherwise get a default value from the first option in the list
 	public function queryString($key, $options=[], $request=null) {
-		$value = 0;
+		$value = null;
+		$defaultValue = null;
 		if (is_null($request) && isset($this->request)) {
 			$request = $this->request;
 		}
@@ -37,23 +39,41 @@ trait UtilityTrait {
 		if (!is_null($request)) {
 			$query = $request->query;
 
-			if (is_array(current($options))) {
-				$current = current($options);
-				$value = key($current);
-				if (array_key_exists('value', $current) && array_key_exists('text', $current)) {
-					$value = key($options);
-				}
-				if (isset($query[$key])) {
-					$value = $query[$key];
-				}
-			} else {
-				if (isset($query[$key])) {
-					$value = $query[$key];
-					if (!array_key_exists($value, $options)) {
-						$value = key($options);
+			if (isset($query[$key])) {
+				$value = $query[$key];
+			}
+			$found = false;
+
+			if (!array_key_exists($value, $options)) {
+				foreach ($options as $i => $val) {
+					if (is_array($val)) {
+						if (array_key_exists('value', $val) && array_key_exists('text', $val)) { // cake format ['value', 'text']
+							if (is_null($defaultValue)) $defaultValue = $val['value'];
+
+							if ($val['value'] === $value) {
+								$found = true;
+								break;
+							}
+						} else { // option group exists
+							if (is_null($defaultValue)) $defaultValue = key($val);
+							
+							if (array_key_exists($value, $val)) {
+								$found = true;
+								break;
+							}
+						}
+					} else { // normal array
+						if (is_null($defaultValue)) $defaultValue = $i;
+
+						if ($value === $i) {
+							$found = true;
+							break;
+						}
 					}
-				} else {
-					$value = key($options);
+				}
+
+				if (!$found) {
+					$value = $defaultValue;
 				}
 			}
 			$request->query[$key] = $value;
@@ -64,30 +84,97 @@ trait UtilityTrait {
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
+		$defaultValue = null;
+		
+		foreach ($options as $id => $val) {
+			if (is_array($val)) {
+				if (array_key_exists('value', $val) && array_key_exists('text', $val)) { // cake format ['value', 'text']
 
-		foreach ($options as $id => $label) {
-			$label = __($label);
-			$options[$id] = ['value' => $id, 'text' => $label];
+					// may or may not happen so won't write logic for it yet
 
-			if (is_callable($callable)) {
-				$count = $callable($id);
+				} else { // option group exists
+					foreach ($val as $key => $label) {
+						$label = __($label);
+						$options[$id][$key] = ['value' => $key, 'text' => $label];
 
-				if ($count == 0) {
-					if (!empty($message)) {
-						$options[$id]['text'] = str_replace('{{label}}', $label, $message);
+						if (is_null($defaultValue)) {
+							$defaultValue = ['group' => $id, 'selected' => $key];
+						}
+						if (array_key_exists($selected, $options[$id])) {
+							$defaultValue['group'] = $id;
+							$defaultValue['selected'] = $selected;
+						}
+						if (is_callable($callable) && !empty($key)) {
+							$count = $callable($key);
+							if ($count == 0) {
+								if (!empty($message)) {
+									$options[$id][$key]['text'] = str_replace('{{label}}', $label, $message);
+								}
+								$options[$id][$key][] = 'disabled';
+
+								if ($selected == $key) {
+									$selected = null;
+								}
+							} else {
+								if (is_null($defaultValue) || is_null($selected) || $selected == $key) {
+									$defaultValue = ['group' => $id, 'selected' => $key];
+									if (is_null($selected)) {
+										$selected = $key;
+									}
+								}
+							}
+						}
 					}
-					$options[$id][] = 'disabled';
+				}
+			} else { // normal array
+				$label = __($val);
+				if (strlen($id) > 0) {
+					$options[$id] = ['value' => $id, 'text' => $label];
+				}
 
-					if ($selected == $id) $selected = 0;
-				} else {
-					if ($selected == 0) $selected = $id;
+				if (is_null($defaultValue)) {
+					$defaultValue = ['group' => false, 'selected' => $id];
+				}
+				if (array_key_exists($selected, $options)) {
+					$defaultValue['group'] = false;
+					$defaultValue['selected'] = $selected;
+				}
+
+				if (is_callable($callable) && !empty($id)) {
+					$count = $callable($id);
+					if ($count == 0) {
+						if (!empty($message)) {
+							$options[$id]['text'] = str_replace('{{label}}', $label, $message);
+						}
+						$options[$id][] = 'disabled';
+
+						if ($selected == $id) {
+							$selected = null;
+						}
+					} else {
+						if (is_null($defaultValue) || is_null($selected) || $selected == $id) {
+							$defaultValue = ['group' => false, 'selected' => $id];
+							if (is_null($selected)) {
+								$selected = $id;
+							}
+						}
+					}
 				}
 			}
-
-			if ($selected == $id) {
-				$options[$id][] = 'selected';
-			}
 		}
+		// pr($defaultValue);
+		if (!is_null($defaultValue)) {
+			$selected = $defaultValue['selected'];
+			$group = $defaultValue['group'];
+			if ($group !== false) {
+				$options[$group][$selected][] = 'selected';
+			} else if (strlen($selected) > 0) {
+				$options[$selected][] = 'selected';
+			}
+			// pr($selected);
+		}
+		// pr($options);
+		
 		return $selected;
 	}
 }

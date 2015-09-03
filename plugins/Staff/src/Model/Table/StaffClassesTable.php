@@ -4,6 +4,7 @@ namespace Staff\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class StaffClassesTable extends AppTable {
 	public function initialize(array $config) {
@@ -36,6 +37,20 @@ class StaffClassesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('female_students', $order++);
 	}
 
-
-
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		parent::onUpdateActionButtons($event, $entity, $buttons);
+		
+		if (array_key_exists('view', $buttons)) {
+			$institutionId = $entity->institution_site_class->institution_site->id;
+			$url = [
+				'plugin' => 'Institution', 
+				'controller' => 'Institutions', 
+				'action' => 'Classes',
+				'view', $entity->institution_site_class->id,
+				'institution_id' => $institutionId,
+			];
+			$buttons['view']['url'] = $url;
+		}
+		return $buttons;
+	}
 }

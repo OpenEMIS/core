@@ -67,7 +67,7 @@ class TransferRequestsTable extends AppTable {
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$id = $this->Session->read($this->alias().'.id');
+    	$id = $this->Session->read($this->registryAlias().'.id');
     	// $action = $this->ControllerAction->buttons['add']['url'];
     	$action = $this->ControllerAction->url('add');
 		$action['action'] = 'Students';
@@ -78,8 +78,8 @@ class TransferRequestsTable extends AppTable {
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		$institutionId = $this->Session->read('Institutions.id');
-		$id = $this->Session->read($this->alias().'.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$id = $this->Session->read($this->registryAlias().'.id');
 
 		$Students = TableRegistry::get('Institution.Students');
 		$selectedStudent = $Students->get($id)->student_id;
@@ -123,7 +123,7 @@ class TransferRequestsTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
-		if ($this->Session->check($this->alias().'.id')) {
+		if ($this->Session->check($this->registryAlias().'.id')) {
 			$this->ControllerAction->field('transfer_status');
 			$this->ControllerAction->field('student');
 			$this->ControllerAction->field('student_id');
@@ -174,7 +174,7 @@ class TransferRequestsTable extends AppTable {
 		}
 
 		$Students = TableRegistry::get('Institution.Students');
-		$id = $this->Session->read($this->alias().'.id');
+		$id = $this->Session->read($this->registryAlias().'.id');
 		// $action = $this->ControllerAction->buttons['edit']['url'];
 		$action = $this->ControllerAction->url('edit');
 		$action['action'] = $Students->alias();
@@ -270,7 +270,7 @@ class TransferRequestsTable extends AppTable {
 			$selectedGrade = $request->data[$this->alias()]['education_grade_id'];
 
 			$InstitutionSiteGrades = TableRegistry::get('Institutions.InstitutionSiteGrades');
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$institutionOptions = $this->Institutions
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->join([
@@ -346,7 +346,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 			$attr['type'] = 'hidden';
 			$attr['attr']['value'] = $institutionId;
@@ -384,7 +384,7 @@ class TransferRequestsTable extends AppTable {
 			$Students = TableRegistry::get('Institution.Students');
 			$toolbarButtons['back']['url']['action'] = $Students->alias();
 			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->Session->read($this->alias().'.id');
+			$toolbarButtons['back']['url'][1] = $this->Session->read($this->registryAlias().'.id');
 		}
 	}
 
