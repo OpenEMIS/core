@@ -133,7 +133,7 @@ class GuardiansController extends AppController {
 		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
 
 		$tabElements = [
-			$this->alias => [
+			$this->name => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
 				'text' => __('Details')
 			],
