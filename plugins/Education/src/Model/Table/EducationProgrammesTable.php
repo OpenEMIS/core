@@ -112,7 +112,7 @@ class EducationProgrammesTable extends AppTable {
 	  //   	$attr['tableCells'] = $tableCells;
 		} else if ($action == 'edit') {
 			if (isset($entity->id)) {
-				
+				$form = $event->subject()->Form;
 				$nextProgrammeOptions = [];
 
 				$currentProgrammSystem = $this->findById($entity->id)->contain(['EducationCycles.EducationLevels.EducationSystems'])->first();
@@ -140,22 +140,33 @@ class EducationProgrammesTable extends AppTable {
 					}
 				}			
 
+				//pr($nextProgrammeOptions);
+
 				$tableHeaders = [__('Cycle - (Programme)')];
 				$tableCells = [];
 				$cellCount = 0;
 
 				$arrayNextProgrammes = [];
 				if ($this->request->is(['get'])) {
-
+					$educationProgramme = TableRegistry::get('Education.EducationProgrammes');
 					$nextProgrammeslist = TableRegistry::get('Education.EducationProgrammeNext')->findByEducationProgrammeId($entity->id);
 					foreach($nextProgrammeslist as $nextProgramme){
+						$programe = $educationProgramme->findById($nextProgramme->next_programme_id)->first();
+
+
 						$arrayNextProgrammes[] = [
 							'id' => $nextProgramme->id,
-							'next_programme' => $nextProgramme->NextEducationProgrammes->name
+							'education_programm_id' => $nextProgramme->education_programm_id,
+							'next_programme_id' => $nextProgramme->next_programme_id,
+							'name' => $programe->cycle_programme_name
 						];
 					}
 				} else if ($this->request->is(['post', 'put'])) {
-					// $requestData = $this->request->data;
+
+
+					 $requestData = $this->request->data;
+					 pr($requestData);
+					 die;
 					// if (array_key_exists('education_subjects', $requestData[$this->alias()])) {
 					// 	foreach ($requestData[$this->alias()]['education_subjects'] as $key => $obj) {
 					// 		$arraySubjects[] = $obj['_joinData'];
@@ -178,17 +189,31 @@ class EducationProgrammesTable extends AppTable {
 					// 	];
 					// }
 				}
-
+				
 				foreach ($arrayNextProgrammes as $key => $obj) {
-					$nextProgrammeId = $key;
-					$nextProgrammeName = $obj;
+
+					$fieldPrefix = $attr['model'] . '.education_programme_next.' . $cellCount++;
+					$joinDataPrefix = $fieldPrefix . '._joinData';
+
+					$educationProgrammeId = $key;
+					$nextProgrammeName = $obj['name'];
+
+					$cellData = "";
+					$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $educationProgrammeId]);
+					$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $nextProgrammeName]);
+					$cellData .= $form->hidden($joinDataPrefix.".education_programme_id", ['value' => $obj['education_programme_id']]);
+					$cellData .= $form->hidden($joinDataPrefix.".next_programme_id", ['value' => $obj['next_programme_id']]);
+					if (isset($obj['id'])) {
+						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $key]);
+					}
 
 					$rowData = [];
 					$rowData[] = $nextProgrammeName;
+					$rowData[] = $cellData;
 					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 
 					$tableCells[] = $rowData;
-					//unset($nextProgrammeOptions[$obj['education_subject_id']]);
+					unset($subjectOptions[$obj['next_programme_id']]);
 				}
 
 				$attr['tableHeaders'] = $tableHeaders;
