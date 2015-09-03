@@ -73,7 +73,7 @@ select,
 .wrapper {
     display: block;
     clear: both;
-    padding: 10px 0;
+    padding: 8px 0;
 }
 
 
@@ -551,150 +551,6 @@ body.large {
 }
 
 
-/* ADVANCED SEARCH */
-
-.advanced-search-wrapper {
-    float: none;
-    clear: both;
-    min-height: 105px;
-    margin: 0 0 5px;
-    display: block;
-    background-color: #F9F9F9;
-    border: 1px solid #CCC;
-    width: 100%;
-}
-
-.advanced-search-wrapper form {
-    padding: 0;
-}
-
-.advanced-search-wrapper input,
-.advanced-search-wrapper .input-select-wrapper {
-    width: 100% !important;
-}
-
-.advanced-search-wrapper .input-select-wrapper {
-    background-color: #FFF;
-}
-
-.advanced-search-wrapper .input {
-    width: 30%;
-    display: inline-block;
-    vertical-align: top;
-    margin-right: 20px;
-}
-
-.advanced-search-wrapper .form-label {
-    margin: 0;
-    padding: 0;
-    display: block;
-    clear: both;
-    text-align: left;
-    width: 100%;
-    border: 0;
-    margin-bottom: 5px;
-}
-
-.advanced-search-wrapper .form-label:after {
-    display: none;
-}
-
-.advanced-search-wrapper .form-control {
-    height: 25px;
-    padding: 3px;
-}
-
-.advanced-search-wrapper .form-group {
-    margin-bottom: 5px;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 30px;
-}
-
-.advanced-search-wrapper .btn-default {
-    margin: 8px 0 4px;
-}
-
-.advanced-search-wrapper .input-checkbox,
-.advanced-search-wrapper .input-checkbox-inline {
-    width: 100% !important;
-}
-
-.advanced-search-wrapper .checkbox-label {
-    width: 15% !important;
-}
-
-
-/* FORM */
-
-.form-horizontal {
-    padding: 15px 0;
-}
-
-.form-horizontal label,
-.button-label {
-    margin: 0 10px 15px 0;
-    padding: 5px 20px;
-    text-align: left;
-    width: 26%;
-    float: left;
-}
-
-.form-horizontal label {
-    border-bottom: 2px solid #EEE;
-}
-
-.form-horizontal input,
-.form-horizontal textarea,
-.form-horizontal .chosen-choices {
-    float: left;
-    border: 1px solid #CCC !important;
-    padding: 5px 10px;
-    margin-bottom: 15px;
-    width: 30%;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
-}
-
-.form-label {
-    font-weight: bold;
-    text-align: left;
-    padding: 5px 10px;
-    font-size: 12px !important;
-    min-height: 30px;
-    width: 200px;
-    margin-right: 10px;
-}
-
-.form-label:after {
-    content: ":";
-    position: absolute;
-    right: 0;
-    top: 4px;
-    color: #BBB;
-    font-weight: 300;
-}
-
-.form-input {
-    min-height: 30px;
-    padding: 7px 0;
-    float: left;
-    font-size: 12px;
-}
-
-.form-horizontal label,
-.row:nth-of-type(even) {
-    background-color: #F9F9F9;
-    border-left: 2px solid #F5F5F5;
-    border-bottom: 2px solid #F5F5F5;
-}
-
-.row:nth-of-type(odd) {
-    background-color: #FFF;
-    border-left: 2px solid #FFF;
-}
-
-
 /* View with Sections and Map */
 
 .section-header {
@@ -822,6 +678,76 @@ label + select {
     color: #AAA;
     background: #EFEFEF;
 }
+
+/* FORM v.1.0.0 */
+
+.form-horizontal {
+    padding: 8px 0;
+}
+
+.form-horizontal label,
+.button-label {
+    margin: 0 10px 15px 0;
+    padding: 5px 20px;
+    text-align: left;
+    width: 26%;
+    float: left;
+}
+
+.form-horizontal label {
+    border-bottom: 2px solid #EEE;
+}
+
+.form-horizontal input,
+.form-horizontal textarea,
+.form-horizontal .chosen-choices {
+    float: left;
+    border: 1px solid #CCC !important;
+    padding: 5px 10px;
+    margin-bottom: 15px;
+    width: 30%;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.form-label {
+    font-weight: bold;
+    text-align: left;
+    padding: 5px 10px;
+    font-size: 12px !important;
+    min-height: 30px;
+    width: 200px;
+    margin-right: 10px;
+}
+
+.form-label:after {
+    content: ":";
+    position: absolute;
+    right: 0;
+    top: 4px;
+    color: #BBB;
+    font-weight: 300;
+}
+
+.form-input {
+    min-height: 30px;
+    padding: 7px 0;
+    float: left;
+    font-size: 12px;
+}
+
+.form-horizontal label,
+.row:nth-of-type(even) {
+    background-color: #F9F9F9;
+    border-left: 2px solid #F5F5F5;
+    border-bottom: 2px solid #F5F5F5;
+}
+
+.row:nth-of-type(odd) {
+    background-color: #FFF;
+    border-left: 2px solid #FFF;
+}
+
 
 
 /* Time picker */
@@ -1571,7 +1497,7 @@ footer {
     font-weight: 400;
     width: 100% !important;
     border: 1px solid #000;
-    padding: 10px 0 10px 40px;
+    padding: 8px 35px 5px 40px !important;
     font-size: 14px;
     height: 42px;
 }
@@ -1589,7 +1515,7 @@ footer {
     height: 42px;
     background: transparent;
     padding: 8px 35px 5px 40px !important;
-    line-height: 1.2em !important;    
+    line-height: 1.2em !important;
 }
 
 .login-box .select {

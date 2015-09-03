@@ -8,13 +8,6 @@
     float: none !important;
 }
 
-.search-box {
-    padding: 8px !important;
-    color: #555 !important;
-    min-height: 105px;
-    margin: 10px 0 0;
-}
-
 .search .input-group {
     display: block;
     top: -3px;
@@ -85,7 +78,9 @@
     color: #333;
 }
 
+
 /* RTL SEARCH */
+
 .rtl .search .input-group {
     display: block;
     top: -3px;
