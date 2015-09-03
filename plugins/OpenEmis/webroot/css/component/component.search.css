@@ -9,7 +9,7 @@
 }
 
 .search .input-group {
-    display: block;
+    display: inline-block;
     top: -3px;
 }
 
