@@ -1,0 +1,1 @@
+INSERT INTO `db_patches` VALUES ('PHPOE-1902');
