@@ -35,7 +35,7 @@
 				<span><?= __('Add');?></span>
 			</button>
 		</div>
-		<div class="table-in-view col-md-4 table-responsive">
+		<div class="table-in-view">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
