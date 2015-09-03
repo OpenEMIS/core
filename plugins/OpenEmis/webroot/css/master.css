@@ -2,6 +2,7 @@
 @import url('layout/layout.navigation.css');
 @import url('layout/layout.rtl.css');
 @import url('component/component.accordion.css');
+@import url('component/component.advancedsearch.css');
 @import url('component/component.alerts.css');
 @import url('component/component.autocomplete.css');
 @import url('component/component.breadcrumb.css');

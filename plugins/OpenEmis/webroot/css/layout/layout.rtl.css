@@ -54,6 +54,7 @@
     right: 0;
     left: auto;
     border-left: 1px solid #DDD;
+    border-right-color: #FFF;
     display: block;
 }
 
