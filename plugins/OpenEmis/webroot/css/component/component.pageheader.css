@@ -10,12 +10,12 @@
     border-bottom: 1px solid #DDD;
     background-color: #FFF;
     z-index: 10;
-    height: 43px;
+    height: 39px;
 }
 
 .page-header h2 {
     float: left;
-    padding: 10px 12px 10px 0;
+    padding: 8px 12px 8px 0;
     margin: 0;
 }
 
