@@ -30,6 +30,9 @@ class InstitutionGradesTable extends AppTable {
  			->add('end_date', 'ruleCompareDateReverse', [
 					'rule' => ['compareDateReverse', 'start_date', true]
 				])
+ 			->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
+					'rule' => ['compareWithInstitutionDateOpened']
+				])
  			;
 		return $validator;
 	}
@@ -155,6 +158,11 @@ class InstitutionGradesTable extends AppTable {
 		$this->fields['level']['attr']['value'] = $level;
 		$this->fields['programme']['attr']['value'] = $programme;
 		$this->fields['education_grade_id']['attr']['value'] = $entity->education_grade->name;
+
+		$Institution = TableRegistry::get('Institution.Institutions');
+		$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
+		$this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
+		$this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
 	}
 
 

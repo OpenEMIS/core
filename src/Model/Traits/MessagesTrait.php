@@ -57,6 +57,7 @@ trait MessagesTrait {
 				'success' => 'The record has been duplicated successfully.',
 				'failed' => 'The record is not duplicated due to errors encountered.',
 			],
+			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
 			'notSelected' => 'No Record has been selected/saved.',
@@ -359,6 +360,9 @@ trait MessagesTrait {
 			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'start_date' => [
+					'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
 				]
 			],
 			'InstitutionSiteShifts' => [
