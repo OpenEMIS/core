@@ -18,7 +18,7 @@ class StaffTrainingsTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		$userId = $this->Session->read('Staff.id');
+		$userId = $this->Session->read('Staff.Staff.id');
 		$this->ControllerAction->field('staff_id', ['type' => 'hidden', 'value' => $userId]);
 		$this->ControllerAction->field('staff_training_category_id', ['type' => 'select']);
 		$this->ControllerAction->field('completed_date', ['default_date' => true]);

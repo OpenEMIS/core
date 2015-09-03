@@ -1034,16 +1034,16 @@ input[type="checkbox"] {
 
 /* BUTTONS */
 .toolbar {
+	display: inline-block;
 	background-color: #FFF;
-	border-left: 1px solid #DDD;	
+	border-left: 1px solid #DDD;		
 	z-index: 9;
-	float: left;	
 	padding: 6px 10px;
 	height: 42px;
 }
 
 .toolbar .btn {
-	display: inline-block;
+	/*display: inline-block;*/
 	float: left;	
 	margin: 0 2px;
 	padding: 0;
@@ -1071,7 +1071,7 @@ input[type="checkbox"] {
 }
 
 .toolbar .icon-big i {
-	font-size: 15px;	
+	font-size: 15px;
 }
 
 /* OVERRIDE FROM BOOTSTRAP HOVER STATE */
@@ -1582,6 +1582,26 @@ table tr.sorting-row td {background-color: #8b8;}
 .rtl .table-sortable th > a:after { float: left; }
 
 .highlight { background-color: #FFEA57; }
+
+/* TABLE LINED */
+
+.table-lined thead,
+.table-lined thead tr {
+	border-top: 0 !important;
+}
+
+.table-lined th,
+.table-lined td {
+	border-right: 1px solid #CCC !important;
+}
+
+.table-lined td:first-child {
+	border-left: 1px solid #CCC;
+}
+
+.table-lined .error-message {
+	float: none;
+}
 
 /* SEARCH */
 .search {
@@ -2369,8 +2389,9 @@ input[readonly] {
 
 /* WORKFLOW */
 .transition-container {
-	margin: 10px 0;
-	padding: 20px 0;
+	margin: 30px 0 !important;
+	background: none !important;
+	border: 0 !important;
 }
 
 .transition-arrow:after {
@@ -2412,37 +2433,27 @@ table .status {
 	content: "";
 }
 
-.custom-buttons {
-	display: inline-block;
-	width: 425px;
-	padding: 6px 12px;
-}
-
-.custom-buttons span {
-	display: block;
-	padding: 4px 8px;
-}
-
-.custom-buttons .btn {
-	margin: 0;
-}
-
 .past {
 	background-color: #EFEFEF !important;
 	border-color: #E9E9E9 !important;
 	border: 1px solid #DDD !important;
 }
 
-.button-responsive button {
-	float: left;
-}
-
 .button-responsive	{
 	display: inline-block;
-	margin: -6px 10px;	 
 	border-left: 1px solid #DDD;
-	-ms-overflow-y: hidden !important;
-	    overflow-y: hidden !important;		   
+	margin: -6px 8px;
+	padding: 6px 0 6px 12px;		   
+}
+
+.button-responsive .btn {
+	padding: 5px 4px 4px 9px;
+	height: 30px;
+}
+
+.button-responsive .action-dropdown {
+	left: -36px;
+	top: 72%;
 }
 
 /* WIZARD */
@@ -2636,7 +2647,7 @@ tags-input .tags {
 .btn-dropdown,
 .btn-single-action {
 	position: relative;
-	padding: 4px 22px 4px 10px;
+	padding: 4px 4px 4px 10px;
 	display: inline-block;
 	color: #333;
 	border-color: #CCC;
@@ -2673,8 +2684,6 @@ tags-input .tags {
 	content: "\f078";
 	font-size: 8px;
 	padding: 5px;
-	position: absolute;
-	top: 3px;
 }
 
 .btn-dropdown:hover {
@@ -3396,7 +3405,15 @@ footer {
 	.table-in-view,
 	.table-full-width {
 		width: 100% !important;
-	}			
+	}	
+
+	.custom-buttons {
+		border-left: 0;
+		clear: both;
+		width: 100%;
+		margin-left: 0;
+		padding-left: 0;
+	}		
 }
 
 @media (max-width: 510px) {
@@ -3415,9 +3432,23 @@ footer {
 	.table-full-width {
 		width: 100%;
 	}
+
+	.toolbar {
+		height: auto;
+		border-bottom: 1px solid #DDD;
+	}
+
+	.toolbar .btn {
+		margin: 5px 5px 5px 0;
+	}
 }
 
 @media (max-width: 1198px) {
+	.page-header {
+		border-bottom: 0;
+		height: auto;
+	}
+
 	.page-header h2 {
 		width: 100%;	
 		float: none;
@@ -3425,11 +3456,35 @@ footer {
 	}
 
 	.toolbar {
-		float: none;
 		width: 100%;
 		padding-left: 0;
 		border: 0;
+		border-bottom: 1px solid #DDD;
 	}
+}
+
+@media (max-width: 515px) {
+	.button-responsive .action-dropdown {
+		left: -1px;
+		top: 30px;
+	}
+
+	.dropdown-menu .dropdown-arrow {
+		left: 85px;
+	}
+
+	.button-responsive {
+        border-right: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block;
+        clear: both;
+    }
+
+    .action-dropdown {
+        right: 4px;
+        top: 30px;
+    }
 }
 
 @media (min-width: 486px) and (max-width: 762px){
@@ -3514,6 +3569,23 @@ footer {
 		width: 100% !important;
 	}
 
+	.toolbar {
+		height: auto;
+		border-bottom: 1px solid #DDD;
+	}
+
+	.toolbar .btn {
+		margin: 5px 5px 5px 0;
+	}
+
+	.toolbar .search {
+		margin: 5px 0 0;
+	}
+
+	.toolbar .search input {
+		margin: 0;
+	}
+
 	.scroll_tabs_container {
 		height: 29px !important;
 	}
@@ -3531,6 +3603,10 @@ footer {
 		min-width: 40%;
 		margin-right: 40px;
 	}	
+
+	.custom-buttons {
+		margin-bottom: -10px;
+	}
 
 }
 
@@ -3857,16 +3933,5 @@ footer {
 @media (max-width: 360px) {
 	.wizard-buttons {
 		bottom: 40px !important;
-	}
-}
-
-@media (max-width: 1050px) {
-	.button-responsive	{
-		max-width: 74%;
-		-ms-overflow-y: scroll;
-		    overflow-y: scroll;
-		display: inline-block;
-		margin: -6px 0 0 10px !important;	 
-		border-left: 1px solid #DDD;	   
 	}
 }
