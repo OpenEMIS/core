@@ -170,7 +170,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
@@ -195,7 +195,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		// pr($this->_selectedEducationGradeId);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId, $selectedAcademicPeriodId) {
 				/**
 				 * If statement added on PHPOE-1762 for PHPOE-1766
