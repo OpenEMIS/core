@@ -4,14 +4,12 @@ INSERT INTO `db_patches` VALUES ('PHPOE-2019');
 -- Institution Student dropout table
 CREATE TABLE `institution_student_dropout` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
+  `effective_date` date NOT NULL,
   `student_id` int(11) NOT NULL,
   `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Approve, 2 -> Reject',
   `institution_id` int(11) NOT NULL,
   `academic_period_id` int(11) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
-  `previous_institution_id` int(11) NOT NULL,
   `student_dropout_reason_id` int(11) NOT NULL,
   `comment` text,
   `modified_user_id` int(11) DEFAULT NULL,
