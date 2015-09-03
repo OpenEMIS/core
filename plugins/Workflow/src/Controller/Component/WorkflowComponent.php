@@ -8,8 +8,8 @@ use Cake\Utility\Inflector;
 use Cake\Log\LogTrait;
 
 class WorkflowComponent extends Component {
-    use LogTrait;
-    
+	use LogTrait;
+	
 	private $controller;
 	private $action;
 	private $model = null;
@@ -44,8 +44,8 @@ class WorkflowComponent extends Component {
 		foreach ($models as $key => $model) {
 			$ignoreList[$model] = ['processWorkflow'];	
 		}
-        $this->AccessControl->config('ignoreList', $ignoreList);
-        // End
+		$this->AccessControl->config('ignoreList', $ignoreList);
+		// End
 	}
 
 	public function startup(Event $event) {
@@ -79,17 +79,16 @@ class WorkflowComponent extends Component {
 
 	public function getWorkflow($workflowModel) {
 		// Find all Workflow setup for the model
-        $workflowIds = $this->Workflows
-            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-            ->where([
-                $this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
-            ])
-            ->toArray();
+		$workflowIds = $this->Workflows
+			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+			->where([
+				$this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
+			])
+			->toArray();
 
-        // Filter key
-        $modelInfo = explode('.', $workflowModel->filter);
-        $base = count($modelInfo) == 1 ? $modelInfo[0] : $modelInfo[1];
-        $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+		// Filter key
+		list(, $base) = pluginSplit($workflowModel->filter);
+		$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
 
 		$paramsPass = $this->ControllerAction->paramsPass();
 		$modelReference = current($paramsPass);
@@ -97,7 +96,7 @@ class WorkflowComponent extends Component {
 
 		$workflowId = 0;
 
-        if (isset($entity->$filterKey)) {
+		if (isset($entity->$filterKey)) {
 			$filterId = $entity->$filterKey;
 			$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
 
@@ -107,22 +106,22 @@ class WorkflowComponent extends Component {
 				->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
 
 			$workflowFilterResults = $filterQuery->all();
-            	
-            // Use Workflow with filter if found otherwise use Workflow that Apply To All
-            if ($workflowFilterResults->isEmpty()) {
-            	$filterQuery
-            	->where($conditions, [], true)
-            	->where([$this->WorkflowsFilters->aliasField('filter_id') => 0]);
+				
+			// Use Workflow with filter if found otherwise use Workflow that Apply To All
+			if ($workflowFilterResults->isEmpty()) {
+				$filterQuery
+				->where($conditions, [], true)
+				->where([$this->WorkflowsFilters->aliasField('filter_id') => 0]);
 
-            	$workflowResults = $filterQuery->all();
-            } else {
-                $workflowResults = $workflowFilterResults;
-            }
+				$workflowResults = $filterQuery->all();
+			} else {
+				$workflowResults = $workflowFilterResults;
+			}
 
-            if (!$workflowResults->isEmpty()) {
-            	$workflowId = $workflowResults->first()->workflow_id;
-            }
-        }
-        return $workflowId;
+			if (!$workflowResults->isEmpty()) {
+				$workflowId = $workflowResults->first()->workflow_id;
+			}
+		}
+		return $workflowId;
 	}
 }
