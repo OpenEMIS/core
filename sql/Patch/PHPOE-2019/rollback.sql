@@ -1,3 +1,6 @@
+-- institution student dropout
+DROP TABLE IF EXISTS `institution_student_dropout`;
+
 -- dummy data for the student dropout reasons
 DELETE FROM `field_option_values`
 WHERE `field_option_values`.`id` = (SELECT `field_options`.`id` FROM `field_options` WHERE `code` = 'StudentDropoutReasons') AND `field_option_values`.`name`='Relocation';
