@@ -10,7 +10,7 @@
     margin-top: -1px;
 }
 
-.ng-scope table > thead:first-child > tr:first-child > th {
+.ng-scope .table > thead:first-child > tr:first-child > th {
     background: -moz-linear-gradient(top, rgba(238, 238, 238, 0) 0%, rgba(238, 238, 238, 0.93) 93%, rgba(249, 249, 249, 1) 100%);
     /* FF3.6+ */
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(238, 238, 238, 0)), color-stop(93%, rgba(238, 238, 238, 0.93)), color-stop(100%, rgba(249, 249, 249, 1)));
