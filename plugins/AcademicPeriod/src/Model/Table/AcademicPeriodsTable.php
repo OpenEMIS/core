@@ -200,27 +200,60 @@ class AcademicPeriodsTable extends AppTable {
 		return $list;
 	}
 
-	public function getList($query = NULL) {
-		$where = [
-			$this->aliasField('current') => 1,
-			$this->aliasField('parent_id') . ' <> ' => 0
-		];
+	public function getList($params=[]) {
 
-		// get the current period
-		$data = $this->find('list')
-			->find('visible')
-			->find('order')
-			->where($where)
-			->toArray();
-		
-		// get all other periods
-		$where[$this->aliasField('current')] = 0;
-		$data += $this->find('list')
-			->find('visible')
-			->find('order')
-			->where($where)
-			->toArray();
-		
+		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
+
+		if ( !$withLevels ) {
+			$where = [
+				$this->aliasField('current') => 1,
+				$this->aliasField('parent_id') . ' <> ' => 0
+			];
+
+			// get the current period
+			$data = $this->find('list')
+				->find('visible')
+				->find('order')
+				->where($where)
+				->toArray();
+			
+			// get all other periods
+			$where[$this->aliasField('current')] = 0;
+			$data += $this->find('list')
+				->find('visible')
+				->find('order')
+				->where($where)
+				->toArray();
+		} else {
+			$where = [
+			$this->aliasField('parent_id') . ' <> ' => 0
+			];
+
+			// get the current period
+			$data = $this->find()
+				->find('visible')
+				->contain(['Levels'])
+				->select([
+						'id' => $this->aliasField('id'),
+						'name' => $this->aliasField('name'),
+						'level' => 'Levels.name'
+					])
+				->where($where)
+				->order([$this->aliasField('academic_period_level_id'), $this->aliasField('order')])
+				->toArray();
+
+			$levelName = "";
+			$list = [];
+
+			foreach ($data as $obj) {
+				if ($levelName != $obj->level) {
+					$levelName = __($obj->level);
+				}
+				$list[$levelName][$obj->id] = __($obj->name);
+			}
+
+			$data = $list;
+		}
 		return $data;
 	}
 
