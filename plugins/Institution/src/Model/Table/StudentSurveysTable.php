@@ -26,19 +26,19 @@ class StudentSurveysTable extends AppTable {
 		$this->addBehavior('Survey.Survey', [
 			'module' => 'Student.Students'
 		]);
-		// $this->addBehavior('CustomField.Record', [
-		// 	'moduleKey' => null,
-		// 	'fieldKey' => 'survey_question_id',
-		// 	'tableColumnKey' => 'survey_table_column_id',
-		// 	'tableRowKey' => 'survey_table_row_id',
-		// 	'formKey' => 'survey_form_id',
-		// 	// 'filterKey' => 'custom_filter_id',
-		// 	'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
-		// 	// 'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-		// 	'recordKey' => 'institution_site_survey_id',
-		// 	'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-		// 	'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
-		// ]);
+		$this->addBehavior('CustomField.Record', [
+			'moduleKey' => null,
+			'fieldKey' => 'survey_question_id',
+			'tableColumnKey' => 'survey_table_column_id',
+			'tableRowKey' => 'survey_table_row_id',
+			'formKey' => 'survey_form_id',
+			// 'filterKey' => 'custom_filter_id',
+			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
+			// 'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+			'recordKey' => 'institution_student_survey_id',
+			'fieldValueClass' => ['className' => 'Institution.StudentSurveyAnswers', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Institution.StudentSurveyTableCells', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -73,6 +73,35 @@ class StudentSurveysTable extends AppTable {
 	public function afterAction(Event $event) {
 		$indexElements = [];
 		$this->controller->set('indexElements', $indexElements);
+		$periodId = !is_null($this->request->query('period')) ? $this->request->query('period') : 0;
+		$formId = !is_null($this->request->query('form')) ? $this->request->query('form') : 0;
+
+		$results = $this
+			->find()
+			->where([
+				$this->aliasField('institution_id') => $this->institutionId,
+				$this->aliasField('student_id') => $this->studentId,
+				$this->aliasField('academic_period_id') => $periodId,
+				$this->aliasField('survey_form_id') => $formId,
+				$this->aliasField('status IN') => [0, 1]	// New & Draft
+			])
+			->first();
+
+		$currentAction = $this->ControllerAction->action();
+		if (!empty($results)) {
+			$url = $this->ControllerAction->url('view');
+			$url[1] = $results->id;
+
+			if ($currentAction == 'index') {
+				return $this->controller->redirect($url);
+			}
+		} else {
+			$url = $this->ControllerAction->url('index');
+
+			if ($currentAction == 'view') {
+				return $this->controller->redirect($url);
+			}
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
