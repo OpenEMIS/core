@@ -139,7 +139,7 @@ class RestSurveyComponent extends Component {
 
 			// Academic Periods
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$periods = $AcademicPeriods->getList();
+			$periods = $AcademicPeriods->getList(['withLevels' => false]);
 			// End
 
 			$list = [];
