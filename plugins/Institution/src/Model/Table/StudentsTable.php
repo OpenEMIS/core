@@ -727,7 +727,35 @@ class StudentsTable extends AppTable {
 					$toolbarButtons['transfer'] = $transferButton;
 				}
 			}
+			if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
+				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
+				$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
+				$id = $this->request->pass[1];
+				$selectedStudent = $this->find()
+					->where([$this->aliasField('id')=>$id])
+					->innerJoin(['StudentStatuses' => 'student_statuses'],[
+							'StudentStatuses.id ='.$this->aliasField('student_status_id'),
+							'StudentStatuses.code IS NOT' => 'DROPOUT',
+						]);
+				if ($selectedStudent->count() > 0) {
+					// Dropout button
+					$dropoutButton = $buttons['back'];
+					$dropoutButton['type'] = 'button';
+					$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
+					$dropoutButton['attr'] = $attr;
+					$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+					$dropoutButton['attr']['title'] = __('Dropout');
+					$dropoutButton['url'] = [
+							'plugin' => $buttons['back']['url']['plugin'],
+							'controller' => $buttons['back']['url']['controller'],
+							'action' => 'DropoutRequests',
+							'add'
+						];
+					$toolbarButtons['dropout'] = $dropoutButton;
+				}
+			}
 		}
+
 	}
 
 	// Function use by the mini dashboard (For Institution Students)
