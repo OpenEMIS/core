@@ -46,12 +46,12 @@ $this->start('panelBody');
 			<table class="table table-striped table-hover table-bordered">
 				<thead class="table_head">
 					<tr>
-						<td class="action"></td>
-						<td class="table_cell"><?php echo __('Request Title'); ?></td>
-						<td class="table_cell"><?php echo __('Received Date'); ?></td>
-						<td class="table_cell"><?php echo __('Due Date'); ?></td>
-						<td class="table_cell"><?php echo __('Requester'); ?></td>
-						<td class="table_cell"><?php echo __('Type'); ?></td>
+						<th class="action"></td>
+						<th class="table_cell"><?php echo __('Request Title'); ?></td>
+						<th class="table_cell"><?php echo __('Received Date'); ?></td>
+						<th class="table_cell"><?php echo __('Due Date'); ?></td>
+						<th class="table_cell"><?php echo __('Requester'); ?></td>
+						<th class="table_cell"><?php echo __('Type'); ?></td>
 					</tr> 
 				</thead> 
 				<tbody class="table_body">

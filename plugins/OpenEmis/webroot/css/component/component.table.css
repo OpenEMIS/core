@@ -69,6 +69,7 @@
     /* IE6-9 */
     color: #333;
     vertical-align: middle !important;
+    font-weight: bold;
 }
 
 .table-bordered > tbody > tr > td,
