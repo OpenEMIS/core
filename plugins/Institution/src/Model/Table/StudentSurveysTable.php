@@ -1,13 +1,8 @@
 <?php
 namespace Institution\Model\Table;
 
-// use ArrayObject;
+use ArrayObject;
 use Cake\ORM\Entity;
-// use Cake\ORM\Query;
-// use Cake\ORM\TableRegistry;
-// use Cake\Network\Request;
-// use Cake\Utility\Inflector;
-// use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
@@ -41,6 +36,12 @@ class StudentSurveysTable extends AppTable {
 		]);
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	public function beforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
@@ -51,62 +52,81 @@ class StudentSurveysTable extends AppTable {
 
 		$session = $this->controller->request->session();
 		if ($session->check('Institution.Institutions.id')) {
-			$this->institutionId = $session->read('Institution.Institutions.id');
+			$institutionId = $session->read('Institution.Institutions.id');
 		}
-		$this->studentId = $this->request->query['student_id'];
+		$studentId = !is_null($this->request->query('student_id')) ? $this->request->query('student_id') : 0;
+
+		// Build Survey Records
+		$currentAction = $this->ControllerAction->action();
+		if ($currentAction == 'index') {
+			$this->_buildSurveyRecords($studentId);
+		}
+		// End
 
 		// Academic Periods
 		$periodOptions = $this->AcademicPeriods->getList();
 		$selectedPeriod = $this->queryString('period', $periodOptions);
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
+			'callable' => function($id) use ($institutionId, $studentId) {
+				return $this
+					->find()
+					->where([
+						$this->aliasField('institution_id') => $institutionId,
+						$this->aliasField('student_id') => $studentId,
+						$this->aliasField('academic_period_id') => $id,
+						$this->aliasField('status !=') => -1	// Not expired
+					])
+					->count();
+			}
+		]);
 		$this->controller->set('periodOptions', $periodOptions);
 		// End
 
 		// Survey Forms
-		$formOptions = $this->getForms();
+		$surveyForms = $this->getForms();
+
+		$formOptions = [];
+		foreach ($surveyForms as $surveyFormId => $surveyForm) {
+			$count = $this
+				->find()
+				->where([
+					$this->aliasField('institution_id') => $institutionId,
+					$this->aliasField('student_id') => $studentId,
+					$this->aliasField('academic_period_id') => $selectedPeriod,
+					$this->aliasField('survey_form_id') => $surveyFormId,
+					$this->aliasField('status !=') => -1	// Not expired
+				])
+				->count();
+			if ($count) {
+				$formOptions[$surveyFormId] = $surveyForm;
+			}
+		}
 		$selectedForm = $this->queryString('form', $formOptions);
 		$this->advancedSelectOptions($formOptions, $selectedForm);
 		$this->controller->set('formOptions', $formOptions);
 		// End
+
+		$this->ControllerAction->field('student_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('status', ['type' => 'hidden', 'attr' => ['survey-status' => 1]]);
+
+		$this->institutionId = $institutionId;
+		$this->studentId = $studentId;
+		$this->request->query['period'] = $selectedPeriod;
+		$this->request->query['form'] = $selectedForm;
+
+		$this->_redirect($institutionId, $studentId, $selectedPeriod, $selectedForm);
 	}
 
 	public function afterAction(Event $event) {
 		$indexElements = [];
 		$this->controller->set('indexElements', $indexElements);
-		$periodId = !is_null($this->request->query('period')) ? $this->request->query('period') : 0;
-		$formId = !is_null($this->request->query('form')) ? $this->request->query('form') : 0;
-
-		$results = $this
-			->find()
-			->where([
-				$this->aliasField('institution_id') => $this->institutionId,
-				$this->aliasField('student_id') => $this->studentId,
-				$this->aliasField('academic_period_id') => $periodId,
-				$this->aliasField('survey_form_id') => $formId,
-				$this->aliasField('status IN') => [0, 1]	// New & Draft
-			])
-			->first();
-
-		$currentAction = $this->ControllerAction->action();
-		if (!empty($results)) {
-			$url = $this->ControllerAction->url('view');
-			$url[1] = $results->id;
-
-			if ($currentAction == 'index') {
-				return $this->controller->redirect($url);
-			}
-		} else {
-			$url = $this->ControllerAction->url('index');
-
-			if ($currentAction == 'view') {
-				return $this->controller->redirect($url);
-			}
-		}
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$this->setupTabElements();
-		$this->_buildSurveyRecords($this->studentId);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -117,10 +137,42 @@ class StudentSurveysTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		$selectedStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : 0;
+
+		if (isset($toolbarButtons['list'])) {
+			unset($toolbarButtons['list']);
+		}
+
+		if ($action == 'view') {
+			if (isset($toolbarButtons['back'])) {
+				unset($toolbarButtons['back']);
+			}
+			if ($selectedStatus == 2) {	//Completed
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+		}
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$cancelButton = $buttons[1];
+		$buttons[0] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(1);']
+		];
+		$buttons[1] = [
+			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(2);']
+		];
+		$buttons[2] = $cancelButton;
+	}
+
 	private function setupTabElements($entity=null) {
 		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-		$id = $this->request->query['id'];
-		$studentId = $this->studentId;
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+		$studentId = !is_null($this->request->query('student_id')) ? $this->request->query('student_id') : 0;
 		
 		$tabElements = [
 			'Students' => [
@@ -216,6 +268,43 @@ class StudentSurveysTable extends AppTable {
 						);
 					}
 				}
+			}
+		}
+	}
+
+	public function _redirect($institutionId=null, $studentId=null, $periodId=0, $formId=0) {
+		$currentAction = $this->ControllerAction->action();
+		$paramsPass = $this->ControllerAction->paramsPass();
+
+		$results = $this
+			->find()
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('academic_period_id') => $periodId,
+				$this->aliasField('survey_form_id') => $formId,
+				$this->aliasField('status !=') => -1	// Not Expired
+			])
+			->first();
+
+		if (!empty($results)) {
+			$this->request->query['status'] = $results->status;
+
+			$url = $this->ControllerAction->url('view');
+			$url[1] = $results->id;
+
+			if ($currentAction == 'index') {
+				return $this->controller->redirect($url);
+			} else {
+				if ($results->id != current($paramsPass)) {
+					return $this->controller->redirect($url);
+				}
+			}
+		} else {
+			$url = $this->ControllerAction->url('index');
+
+			if ($currentAction == 'view' || $currentAction == 'edit') {
+				return $this->controller->redirect($url);
 			}
 		}
 	}
