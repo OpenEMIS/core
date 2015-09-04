@@ -20,7 +20,6 @@ class DropoutRequestsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons']);
 	}
 
@@ -36,8 +35,8 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$id = $this->Session->read($this->registryAlias().'.id');
-    	$action = $this->ControllerAction->url('add');
+		$id = $this->Session->read($this->registryAlias().'.id');
+    	$action = $this->ControllerAction->url('edit');
 		$action['action'] = 'Students';
 		$action[0] = 'view';
 		$action[1] = $id;

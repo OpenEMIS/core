@@ -309,6 +309,14 @@ trait MessagesTrait {
 			'approve' => 'Student admission has been approved successfully.',
 			'reject' => 'Student admission has been rejected successfully.'
 		],
+		'DropoutRequests' => [
+			'request' => 'Dropout request hsa been submitted successfully.',
+		],
+		'DropoutApprovals' => [
+			'exists' => 'Student has already dropped out from the school.',
+			'approve' => 'Dropout request has been approved successfully.',
+			'reject' => 'Dropout request has been rejected successfully.'
+		],
 
 		// Validation Messages
 		'Institution' => [
