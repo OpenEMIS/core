@@ -728,15 +728,21 @@ class StudentsTable extends AppTable {
 				}
 			}
 			if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
-				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
-				$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
-				$NEW = 0;
+
+				// Institution student id
 				$id = $this->request->pass[1];
 				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 				$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
 
+				// Check if the student is enrolled
 				if ($this->get($id)->student_status_id == $enrolledStatus) {
-					$selectedStudent = $this->find('all')
+
+					$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
+					$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
+					$NEW = 0;
+
+					// Check if the student exist in the dropdown table
+					$selectedStudent = $this->find()
 						->select(['institution_student_dropout_id' => 'StudentDropout.id'])
 						->where([$this->aliasField('id')=>$id])
 						->innerJoin(['StudentDropout' => 'institution_student_dropout'], [
@@ -760,6 +766,7 @@ class StudentsTable extends AppTable {
 					$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 					$dropoutButton['attr']['title'] = __('Dropout');
 
+					// If this is a new application
 					if (count($selectedStudent) == 0) {
 						$dropoutButton['url'] = [
 								'plugin' => $buttons['back']['url']['plugin'],
@@ -767,7 +774,9 @@ class StudentsTable extends AppTable {
 								'action' => 'DropoutRequests',
 								'add'
 							];
-					} else {
+					} 
+					// If the application is not new
+					else {
 						$dropoutButton['url'] = [
 								'plugin' => $buttons['back']['url']['plugin'],
 								'controller' => $buttons['back']['url']['controller'],
@@ -776,7 +785,6 @@ class StudentsTable extends AppTable {
 								$selectedStudent->institution_student_dropout_id
 							];
 					}
-
 					$toolbarButtons['dropout'] = $dropoutButton;
 				}
 			}
