@@ -35,4 +35,7 @@ VALUES ('Relocation', 1, 1, 1, (SELECT `field_options`.`id` FROM `field_options`
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
 VALUES (1030, 'Dropout Request', 'Institutions', 'Institutions', 'Students', 1000,  'DropoutRequests.add|DropoutRequests.edit', 1030, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
-VALUES (1031, 'Dropout Approval', 'Institutions', 'Institutions', 'Students', 1000, 'DropoutApprovals.index|DropoutApprovals.view', 'DropoutApprovals.edit|DropoutApprovals.view', 1031, 1, 1, NOW());
+VALUES (1031, 'Student Dropout', 'Institutions', 'Institutions', 'Students', 1000, 'StudentDropout.index|StudentDropout.view', 'StudentDropout.edit|StudentDropout.view', 1031, 1, 1, NOW());
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StudentDropout', 'created', 'Institutions -> Student Dropout','Date of Application', 1, 1, NOW());

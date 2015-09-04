@@ -318,8 +318,6 @@ class ValidationBehavior extends Behavior {
 
 	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$statuses = $StudentStatuses->findCodeList();
 
 		$existingRecords = $Students->find()
 			->where(
@@ -328,7 +326,6 @@ class ValidationBehavior extends Behavior {
 					$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
 					$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
 					$Students->aliasField('student_id') => $globalData['data']['student_id'],
-					$Students->aliasField('student_status_id').' IS NOT' => $statuses['DROPOUT'],
 				]
 				
 			)

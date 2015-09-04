@@ -15,5 +15,8 @@ DELETE FROM `student_statuses` WHERE `code` = 'PENDING_DROPOUT';
 DELETE FROM `security_functions` WHERE `id`=1030;
 DELETE FROM `security_functions` WHERE `id`=1031;
 
+-- label
+DELETE FROM `labels` WHERE `module`='StudentDropout' and `field`='created';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2019';

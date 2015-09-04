@@ -312,7 +312,7 @@ trait MessagesTrait {
 		'DropoutRequests' => [
 			'request' => 'Dropout request hsa been submitted successfully.',
 		],
-		'DropoutApprovals' => [
+		'StudentDropout' => [
 			'exists' => 'Student has already dropped out from the school.',
 			'approve' => 'Dropout request has been approved successfully.',
 			'reject' => 'Dropout request has been rejected successfully.'

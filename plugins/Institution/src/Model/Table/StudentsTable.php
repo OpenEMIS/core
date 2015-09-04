@@ -108,14 +108,20 @@ class StudentsTable extends AppTable {
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
 		
-		$AdmissionTable = $this->StudentStatuses;
-		$pendingAdmissionStatus = $AdmissionTable->getIdByCode('PENDING_ADMISSION');
-		$rejectedStatus = $AdmissionTable->getIdByCode('REJECTED');
+		$StudentStatusesTable = $this->StudentStatuses;
+		$statuses = $StudentStatusesTable->findCodeList();
 		$selectedStatus = $this->request->query('status_id');
-		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
-			// Redirect to the appropriate page
-			$event->stopPropagation();
-			return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+		switch ($selectedStatus) {
+			case $statuses['PENDING_ADMISSION']:
+			case $statuses['REJECTED']:
+				// Redirect to the appropriate page
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+				break;
+			case $statuses['PENDING_DROPOUT']:
+				// Redirect to the appropriate page
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentDropout']);
 		}
 	}
 
