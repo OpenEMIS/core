@@ -31,13 +31,25 @@ class DropoutRequestsTable extends AppTable {
 		$action[0] = 'view';
 		$action[1] = $id;
     	$event->stopPropagation();
+    	$this->Session->delete($this->registryAlias().'.id');
+    	return $this->controller->redirect($action);
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+    	$id = $this->Session->read($this->registryAlias().'.id');
+    	$action = $this->ControllerAction->url('add');
+		$action['action'] = 'Students';
+		$action[0] = 'view';
+		$action[1] = $id;
+    	$event->stopPropagation();
+    	$this->Session->delete($this->registryAlias().'.id');
     	return $this->controller->redirect($action);
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		if ($this->Session->check($this->registryAlias().'.id')) {
 			$this->ControllerAction->field('application_status');
-			$this->ControllerAction->field('status');
+			$this->ControllerAction->field('status', ['type' => 'hidden', 'attr' => ['value' => self::NEW_REQUEST]]);
 			$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 			$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 			$this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
@@ -47,7 +59,7 @@ class DropoutRequestsTable extends AppTable {
 			$this->ControllerAction->field('comment');
 
 			$this->ControllerAction->setFieldOrder([
-				'status', 'student_id','institution_id', 'academic_period_id', 'education_grade_id',
+				'application_status','student_id','institution_id', 'academic_period_id', 'education_grade_id',
 				'effective_date',
 				'student_dropout_reason_id', 'comment',
 			]);
@@ -58,6 +70,24 @@ class DropoutRequestsTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect($action);
 		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('application_status');
+		$this->ControllerAction->field('status', ['type' => 'hidden']);
+		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
+		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
+		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+		$this->ControllerAction->field('effective_date');
+		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'select', 'attr' => ['value' => $entity->student_dropout_reason_id]]);
+		$this->ControllerAction->field('comment');
+
+		$this->ControllerAction->setFieldOrder([
+			'status', 'student_id','institution_id', 'academic_period_id', 'education_grade_id',
+			'effective_date',
+			'student_dropout_reason_id', 'comment',
+		]);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -100,18 +130,6 @@ class DropoutRequestsTable extends AppTable {
 						$attr['attr']['value'] = __('Reject');
 						break;
 				}
-				break;
-		}
-		return $attr;		
-	}
-
-	public function onUpdateFieldStatus(Event $event, array $attr, $action, $request) {
-		switch ($action) {
-			case 'add':
-				$attr['type'] = 'hidden';
-				$attr['attr']['value'] = self::NEW_REQUEST;
-				break;
-			case 'edit':
 				break;
 		}
 		return $attr;		
