@@ -1,1 +1,7 @@
 INSERT INTO `db_patches` VALUES ('PHPOE-1902');
+
+CREATE TABLE `education_programmes_next_programmes` (
+  `id` char(36) NOT NULL,
+  `education_programme_id` int(11) NOT NULL,
+  `next_programme_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
