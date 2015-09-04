@@ -10,7 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\ORM\Query;
 
-class DropoutApprovalsTable extends AppTable {
+class StudentDropoutTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
@@ -56,7 +56,7 @@ class DropoutApprovalsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
+		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
@@ -101,7 +101,7 @@ class DropoutApprovalsTable extends AppTable {
 		if ($this->action == 'edit') {
 			// If the status is new application then display the approve and reject button, 
 			// if not remove the button just in case the user gets to access the edit page
-			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', 'DropoutApprovals', 'edit']))) {
+			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$buttons[0] = [
 					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
 					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
@@ -121,7 +121,7 @@ class DropoutApprovalsTable extends AppTable {
 	public function onGetStudentId(Event $event, Entity $entity){
 		$urlParams = $this->ControllerAction->url('index');
 		if ($entity->status == self::NEW_REQUEST) {
-			if ($this->AccessControl->check(['Institutions', 'DropoutApprovals', 'edit'])) {
+			if ($this->AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
 				return $event->subject()->Html->link($entity->user->name, [
 					'plugin' => $urlParams['plugin'],
 					'controller' => $urlParams['controller'],
@@ -135,7 +135,7 @@ class DropoutApprovalsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		if ($AccessControl->check(['Institutions', 'DropoutApprovals', 'edit'])) {
+		if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
 			$institutionIds = $AccessControl->getInstitutionsByUser();
 
 			$where = [$this->aliasField('status') => 0];
@@ -192,7 +192,7 @@ class DropoutApprovalsTable extends AppTable {
 
 	public function onUpdateFieldComment(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'DropoutApprovals', 'edit']))) {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$attr['type'] = 'readonly';
 			}
 			return $attr;
@@ -201,7 +201,7 @@ class DropoutApprovalsTable extends AppTable {
 
 	public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'DropoutApprovals', 'edit']))) {
+			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$attr['type'] = 'readonly';
 			}
 			return $attr;
@@ -240,7 +240,7 @@ class DropoutApprovalsTable extends AppTable {
 			if (isset($buttons['view'])) {
 				$newItem['view'] = $buttons['view'];
 			}
-			if ($this->AccessControl->check(['Institutions', 'DropoutApprovals', 'edit'])) {
+			if ($this->AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
 				if (isset($buttons['edit'])) {
 					$newItem['edit'] = $buttons['edit'];
 				}
@@ -288,7 +288,7 @@ class DropoutApprovalsTable extends AppTable {
 					'education_grade_id' => $gradeId
 				]
 			);
-			$this->Alert->success('DropoutApprovals.approve');
+			$this->Alert->success('StudentDropout.approve');
 
 			$entity->status = self::APPROVED;
 			$entity->effective_date = date('Y-m-d', $effectiveDate);
@@ -296,7 +296,7 @@ class DropoutApprovalsTable extends AppTable {
 				$this->log($entity->errors(), 'debug');
 			}
 		} else {
-			$this->Alert->error('DropoutApprovals.exists');
+			$this->Alert->error('StudentDropout.exists');
 		}
 
 		// To redirect back to the student admission if it is not access from the workbench
@@ -307,7 +307,7 @@ class DropoutApprovalsTable extends AppTable {
 		if ($urlParams['controller'] == 'Institutions') {
 			$plugin = 'Institution';
 			$controller = 'Institutions';
-			$action = 'DropoutApprovals';
+			$action = 'StudentDropout';
 		}
 
 		$event->stopPropagation();
@@ -319,7 +319,7 @@ class DropoutApprovalsTable extends AppTable {
 			['status' => self::REJECTED, 'comment' => $data[$this->alias()]['comment'], 'effective_date' => strtotime($data[$this->alias()]['effective_date'])], 
 			['id' => $entity->id]);
 
-		$this->Alert->success('DropoutApprovals.reject');
+		$this->Alert->success('StudentDropout.reject');
 
 		// To redirect back to the student admission if it is not access from the workbench
 		$urlParams = $this->ControllerAction->url('index');
