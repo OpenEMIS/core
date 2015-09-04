@@ -46,7 +46,7 @@ $this->start('panelBody');
 			<table class="table table-striped table-hover table-bordered">
 				<thead class="table_head">
 					<tr>
-						<th class="action"></td>
+						<th class="action"></th>
 						<th class="table_cell"><?php echo __('Request Title'); ?></th>
 						<th class="table_cell"><?php echo __('Received Date'); ?></th>
 						<th class="table_cell"><?php echo __('Due Date'); ?></th>
