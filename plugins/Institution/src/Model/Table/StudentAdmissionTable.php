@@ -81,6 +81,11 @@ class StudentAdmissionTable extends AppTable {
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'start_date', 'end_date', 'comment', 
 		]);
+
+		$urlParams = $this->ControllerAction->url('edit');
+		if ($urlParams['controller'] == 'Dashboard') {
+			$this->Navigation->addCrumb('Student Admission', $urlParams);
+		}
     }
 
     public function viewAfterAction($event, Entity $entity) {
@@ -201,7 +206,7 @@ class StudentAdmissionTable extends AppTable {
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->contain(['Users', 'Institutions', 'EducationGrades', 'ModifiedUser', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created')
