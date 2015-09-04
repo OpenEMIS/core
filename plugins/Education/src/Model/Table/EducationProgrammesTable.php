@@ -19,7 +19,25 @@ class EducationProgrammesTable extends AppTable {
 		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
 	
+		$this->belongsToMany('EducationNextProgrammes', [
+			'className' => 'Education.EducationNextProgrammes',
+			'joinTable' => 'education_programmes_next_programmes',
+			'foreignKey' => 'education_programme_id',
+			'targetForeignKey' => 'next_programme_id',
+			'through' => 'Education.EducationProgrammesNextProgrammes',
+			'dependent' => true,
+			// 'saveStrategy' => 'append'
+		]);
 
+		// $this->belongsToMany('EducationProgrammeNextProgrammes', [
+		// 	'className' => 'Education.EducationProgrammeNextProgrammes',
+		// 	'joinTable' => 'education_programme_next',
+		// 	'foreignKey' => 'education_programme_id',
+		// 	'targetForeignKey' => 'next_programme_id',
+		// 	'through' => 'Education.EducationProgrammeNext',
+		// 	'dependent' => true,
+		// 	// 'saveStrategy' => 'append'
+		// ]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -112,6 +130,13 @@ class EducationProgrammesTable extends AppTable {
 	  //   	$attr['tableCells'] = $tableCells;
 		} else if ($action == 'edit') {
 			if (isset($entity->id)) {
+				$nextProgrammeslist = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->findByEducationProgrammeId($entity->id);
+				$nextProgrammesArray = [];
+
+				foreach($nextProgrammeslist as $nextProgramme){
+					$nextProgrammesArray[] = $nextProgramme->next_programme_id;
+				}
+
 				$form = $event->subject()->Form;
 				$nextProgrammeOptions = [];
 
@@ -130,7 +155,7 @@ class EducationProgrammesTable extends AppTable {
 							foreach($level->education_cycles as $cycle){
 								if($cycle->order >= $currentCycleOrder) {
 									foreach($cycle->education_programmes as $programme) {
-										if($programme->id != $entity->id){
+										if(($programme->id != $entity->id) && !in_array($programme->id, $nextProgrammesArray)){
 											$nextProgrammeOptions[$programme->id] = $cycle->name.' - ('.$programme->name.')';
 										}
 									}
@@ -140,8 +165,6 @@ class EducationProgrammesTable extends AppTable {
 					}
 				}			
 
-				//pr($nextProgrammeOptions);
-
 				$tableHeaders = [__('Cycle - (Programme)')];
 				$tableCells = [];
 				$cellCount = 0;
@@ -149,53 +172,43 @@ class EducationProgrammesTable extends AppTable {
 				$arrayNextProgrammes = [];
 				if ($this->request->is(['get'])) {
 					$educationProgramme = TableRegistry::get('Education.EducationProgrammes');
-					$nextProgrammeslist = TableRegistry::get('Education.EducationProgrammeNext')->findByEducationProgrammeId($entity->id);
 					foreach($nextProgrammeslist as $nextProgramme){
 						$programe = $educationProgramme->findById($nextProgramme->next_programme_id)->first();
 
-
 						$arrayNextProgrammes[] = [
 							'id' => $nextProgramme->id,
-							'education_programm_id' => $nextProgramme->education_programm_id,
+							'education_programme_id' => $nextProgramme->education_programme_id,
 							'next_programme_id' => $nextProgramme->next_programme_id,
 							'name' => $programe->cycle_programme_name
 						];
 					}
 				} else if ($this->request->is(['post', 'put'])) {
-
-
-					 $requestData = $this->request->data;
-					 pr($requestData);
-					 die;
 					$requestData = $this->request->data;
 					if (array_key_exists('education_programme_next', $requestData[$this->alias()])) {
 						foreach ($requestData[$this->alias()]['education_programme_next'] as $key => $obj) {
-							$arraySubjects[] = $obj['_joinData'];
+							$arrayNextProgrammes[] = $obj['_joinData'];
 						}
 					}
-
 					if (array_key_exists('next_programme_id', $requestData[$this->alias()])) {
 						$nextProgrammeId = $requestData[$this->alias()]['next_programme_id'];
-						pr($programmeId); die;
 						$programmeObj = $this
-										->findById($programmeId)
+										->findById($nextProgrammeId)
 										->first();
 
 						$arrayNextProgrammes[] = [
-							'id' => $subjectObj->name,
-							'education_programm_id' => $subjectObj->code,
-							'next_programme_id' => $nextProgrammeId,
-							'name' => $entity->id,
+							'id' => '',
+							'education_programme_id' => $entity->id,
+							'next_programme_id' => $programmeObj->id,
+							'name' => $programmeObj->cycle_programme_name,
 						];
 					}
 				}
 				
 				foreach ($arrayNextProgrammes as $key => $obj) {
-
 					$fieldPrefix = $attr['model'] . '.education_programme_next.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';
 
-					$educationProgrammeId = $key;
+					$educationProgrammeId = $obj['id'];
 					$nextProgrammeName = $obj['name'];
 
 					$cellData = "";
@@ -204,7 +217,7 @@ class EducationProgrammesTable extends AppTable {
 					$cellData .= $form->hidden($joinDataPrefix.".education_programme_id", ['value' => $obj['education_programme_id']]);
 					$cellData .= $form->hidden($joinDataPrefix.".next_programme_id", ['value' => $obj['next_programme_id']]);
 					if (isset($obj['id'])) {
-						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $key]);
+						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
 					}
 
 					$rowData = [];
@@ -213,7 +226,7 @@ class EducationProgrammesTable extends AppTable {
 					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 
 					$tableCells[] = $rowData;
-					unset($subjectOptions[$obj['next_programme_id']]);
+					unset($nextProgrammeOptions[$obj['next_programme_id']]);
 				}
 
 				$attr['tableHeaders'] = $tableHeaders;
@@ -226,6 +239,12 @@ class EducationProgrammesTable extends AppTable {
 		}
 
 		return $event->subject()->renderElement('Education.next_programmes', ['attr' => $attr]);
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		pr($options);
+		pr($entity);
+		die;
 	}
 
 }
