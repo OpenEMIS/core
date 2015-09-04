@@ -47,11 +47,11 @@ $this->start('panelBody');
 				<thead class="table_head">
 					<tr>
 						<th class="action"></td>
-						<th class="table_cell"><?php echo __('Request Title'); ?></td>
-						<th class="table_cell"><?php echo __('Received Date'); ?></td>
-						<th class="table_cell"><?php echo __('Due Date'); ?></td>
-						<th class="table_cell"><?php echo __('Requester'); ?></td>
-						<th class="table_cell"><?php echo __('Type'); ?></td>
+						<th class="table_cell"><?php echo __('Request Title'); ?></th>
+						<th class="table_cell"><?php echo __('Received Date'); ?></th>
+						<th class="table_cell"><?php echo __('Due Date'); ?></th>
+						<th class="table_cell"><?php echo __('Requester'); ?></th>
+						<th class="table_cell"><?php echo __('Type'); ?></th>
 					</tr> 
 				</thead> 
 				<tbody class="table_body">
