@@ -5,7 +5,7 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	<div class="input table">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= __($attr['label']); ?></label>
-		<div class="table-in-view col-md-4 table-responsive">
+		<div class="table-in-view">
 			<table class="table table-striped table-hover table-bordered table-checkable">
 				<thead>
 					<tr>
@@ -46,7 +46,7 @@
 		</div>
 	</div>
 <?php else : ?>
-	<div class="table-in-view col-md-4 table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>

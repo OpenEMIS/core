@@ -107,6 +107,16 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
+		
+		$AdmissionTable = $this->StudentStatuses;
+		$pendingAdmissionStatus = $AdmissionTable->getIdByCode('PENDING_ADMISSION');
+		$rejectedStatus = $AdmissionTable->getIdByCode('REJECTED');
+		$selectedStatus = $this->request->query('status_id');
+		if( $selectedStatus == $pendingAdmissionStatus || $selectedStatus == $rejectedStatus ){
+			// Redirect to the appropriate page
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -149,6 +159,8 @@ class StudentsTable extends AppTable {
 		$selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
 		$selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
+
+
 		// Advanced Select Options
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
 		$studentTable = $this;
@@ -160,6 +172,7 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
+
 
 		if ($selectedEducationGrades != -1) {
 			$query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
@@ -305,6 +318,67 @@ class StudentsTable extends AppTable {
 
 		$this->setupTabElements($entity);
 	}
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+		$studentData = $data['Students'];
+		$studentExist = 0;
+		$studentId = $entity->student_id;
+
+		// Check if student has already been enrolled
+		if (!empty ($studentId)) {
+
+			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+
+			// Check if the student that is pass over is a pending admission student
+			if ($pendingAdmissionCode == $studentData['student_status_id']) {
+
+				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
+				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
+				$studentExist = $AdmissionTable->find()
+					->where([
+							$AdmissionTable->aliasField('status') => 0,
+							$AdmissionTable->aliasField('student_id') => $studentId,
+							$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
+							$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
+							$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
+						])
+					->count();
+				// Check if the student is already added to the student admission table
+				if ($studentExist == 0) {
+					$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
+						$admissionStatus = 1;
+						$entityData = [
+							'start_date' => $studentData['start_date'],
+							'end_date' => $studentData['end_date'],
+							'student_id' => $studentId,
+							'status' => 0,
+							'institution_id' => $studentData['institution_id'],
+							'academic_period_id' => $studentData['academic_period_id'],
+							'education_grade_id' => $studentData['education_grade_id'],
+							'previous_institution_id' => 0,
+							'student_transfer_reason_id' => 0,
+							'type' => $admissionStatus,
+						];
+
+						$admissionEntity = $AdmissionTable->newEntity($entityData);
+						if( $AdmissionTable->save($admissionEntity) ){
+							return true;
+						} else {
+							$AdmissionTable->log($admissionEntity->errors(), 'debug');
+							return false;
+						}
+					};
+					return $process;
+				} else {
+					$process = function ($model, $entity){
+						return false;
+					};
+					$this->Alert->error('StudentAdmission.existsInRecord');
+					return $process;
+				}			
+			}
+		}
+	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
@@ -423,6 +497,23 @@ class StudentsTable extends AppTable {
 			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			// 1 - Enrolled, 9 - Pending Admission
+			$statusesToShow = ['CURRENT', 'PENDING_ADMISSION'];
+			$StudentStatusesTable = $this->StudentStatuses;
+			$conditions = [
+				$StudentStatusesTable->aliasField('code').' IN' => $statusesToShow
+			];
+			$options = $StudentStatusesTable
+				->find('list')
+				->where([$conditions])
+				->toArray();
+			$attr['options'] = $options;
 		}
 		return $attr;
 	}
@@ -621,7 +712,7 @@ class StudentsTable extends AppTable {
 						->find()
 						->where([
 							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
-							$TransferRequests->aliasField('security_user_id') => $selectedStudent,
+							$TransferRequests->aliasField('student_id') => $selectedStudent,
 							$TransferRequests->aliasField('status') => 0
 						])
 						->first();
