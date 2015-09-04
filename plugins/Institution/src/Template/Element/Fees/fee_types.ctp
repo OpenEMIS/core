@@ -2,7 +2,7 @@
 
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
-	<div class="table-in-view col-md-4 table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
@@ -64,7 +64,7 @@
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
 	<div class="table-in-view">
 <?php else : ?>
-	<div class="table-in-view col-md-4 table-responsive" style="width:inherit">
+	<div class="table-in-view" style="width:inherit">
 <?php endif; ?>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>

@@ -86,6 +86,8 @@ class AppController extends Controller {
 				'About' => []
 			]
 		]);
+
+		$this->loadComponent('Workflow.Workflow');
 	}
 
 	public function beforeFilter(Event $event) {
