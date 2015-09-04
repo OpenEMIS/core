@@ -8,6 +8,9 @@ WHERE `field_option_values`.`id` = (SELECT `field_options`.`id` FROM `field_opti
 -- field_options
 DELETE FROM `field_options` WHERE `plugin`='Students' AND `code`='StudentDropoutReasons';
 
+-- student_statuses
+DELETE FROM `student_statuses` WHERE `code` = 'PENDING_DROPOUT';
+
 -- security_functions
 DELETE FROM `security_functions` WHERE `id`=1030;
 DELETE FROM `security_functions` WHERE `id`=1031;
