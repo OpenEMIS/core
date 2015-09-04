@@ -13,9 +13,7 @@ class SurveyFormsTable extends CustomFormsTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true]);
-		$this->hasMany('StudentSurveys', ['className' => 'Institution.StudentSurveys', 'dependent' => true]);
-
+		// The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
 		$this->belongsToMany('CustomFields', [
 			'className' => 'Survey.SurveyQuestions',
 			'joinTable' => 'survey_forms_questions',
@@ -24,8 +22,6 @@ class SurveyFormsTable extends CustomFormsTable {
 			'through' => 'Survey.SurveyFormsQuestions',
 			'dependent' => true,
 		]);
-
-		//$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -93,6 +89,23 @@ class SurveyFormsTable extends CustomFormsTable {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$surveyForm = $this->get($id);
+		$customModule = $this->CustomModules
+			->find()
+			->where([
+				$this->CustomModules->aliasField('id') => $surveyForm->custom_module_id
+			])
+			->first();
+
+		$model = $customModule->model;
+		if ($model == 'Institution.Institutions') {
+			$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+		} else if ($model == 'Student.Students') {
+			$this->hasMany('StudentSurveys', ['className' => 'Institution.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+		}
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
