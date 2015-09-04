@@ -188,6 +188,13 @@ trait MessagesTrait {
 				'failed' => 'The record is not rejected due to errors encountered.'
 			]
 		],
+		'StudentSurveys' => [
+			'noSurveys' => 'No Surveys',
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
+			]
+		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
