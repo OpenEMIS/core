@@ -318,19 +318,24 @@ class ValidationBehavior extends Behavior {
 
 	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
+		$existingRecords = 0;
 
-		$existingRecords = $Students->find()
-			->where(
-				[
-					$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
-					$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
-					$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
-					$Students->aliasField('student_id') => $globalData['data']['student_id']
-				]
-				
-			)
-			->count();
-			;
+		// Added the check for academic_period_id as the academic period id is possible to be all disabled 
+		// due to no programme found
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$existingRecords = $Students->find()
+				->where(
+					[
+						$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
+						$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+						$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
+						$Students->aliasField('student_id') => $globalData['data']['student_id']
+					]
+					
+				)
+				->count();
+				;
+		}
 		return ($existingRecords <= 0);
 	}
 
