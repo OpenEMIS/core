@@ -25,7 +25,7 @@ require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.
 class ExcelBehavior extends Behavior {
 	use EventTrait;
 
-	private $events;
+	private $events = [];
 
 	protected $_defaultConfig = [
 		'folder' => 'export',
@@ -331,6 +331,23 @@ class ExcelBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($buttons->offsetExists('view')) {
 			$export = $buttons['view'];
+			$export['type'] = 'button';
+			$export['label'] = '<i class="fa kd-export"></i>';
+			$export['attr'] = $attr;
+			$export['attr']['title'] = __('Export');
+
+			if ($isFromModel) {
+				$export['url'][0] = 'excel';
+			} else {
+				$export['url']['action'] = 'excel';
+			}
+
+			$pages = $this->config('pages');
+			if (in_array($action, $pages)) {
+				$toolbarButtons['export'] = $export;
+			}
+		} else if ($buttons->offsetExists('back')) {
+			$export = $buttons['back'];
 			$export['type'] = 'button';
 			$export['label'] = '<i class="fa kd-export"></i>';
 			$export['attr'] = $attr;

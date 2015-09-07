@@ -31,6 +31,18 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+		$this->addBehavior('Excel', [
+			// 'excludes' => ['start_year', 'end_year'], 
+			'pages' => ['index']
+		]);
+	}
+
+	// Overwrite the default generate
+	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
+		$generate = function($writer, $settings) {
+			
+		};
 	}
 
 	public function implementedEvents() {
