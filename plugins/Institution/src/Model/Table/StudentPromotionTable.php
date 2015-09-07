@@ -348,8 +348,8 @@ class StudentPromotionTable extends AppTable {
 						}
 						$obj['student_status_id'] = $currentStatusId;
 						$obj['academic_period_id'] = $nextPeriod->id;
-						$obj['start_date'] = date('Y-m-d', strtotime($nextPeriod->start_date));
-						$obj['end_date'] = date('Y-m-d', strtotime($nextPeriod->end_date));
+						$obj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
+						$obj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
 
 						$this->updateAll(['student_status_id' => $status], [
 							'institution_id' => $obj['institution_id'],
