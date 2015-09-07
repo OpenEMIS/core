@@ -87,6 +87,7 @@ trait MessagesTrait {
 		'Institutions' => [
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
+			'noSections' => 'No Available Classes'
 		],
 		'InstitutionSiteStaff' => [
 			'title' => 'Staff',
