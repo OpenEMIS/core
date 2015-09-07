@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class EducationProgrammesTable extends AppTable {
+	private $_contain = ['EducationNextProgrammes._joinData'];
 	private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id', 'education_cycle_id', 'education_certification_id'];
 
 	public function initialize(array $config) {
@@ -105,29 +106,28 @@ class EducationProgrammesTable extends AppTable {
 
 	public function onGetCustomNextProgrammeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		if ($action == 'index') {
-			// $EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
-			// $value = $EducationGradesSubjects
-			// 	->findByEducationGradeId($entity->id)
-			// 	->where([$EducationGradesSubjects->aliasField('visible') => 1])
-			// 	->count();
-			// $attr['value'] = $value;
+			$EducationProgrammesNextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+			$value = $EducationProgrammesNextProgrammes
+				->findByEducationProgrammeId($entity->id)
+				// ->where([$EducationProgrammesNextProgrammes->aliasField('visible') => 1])
+				->count();
+			$attr['value'] = $value;
 		} else if ($action == 'view') {
-			// $tableHeaders = [__('Cycle'), __('Next Programme')];
-			// $tableCells = [];
+			$tableHeaders = [__('Cycle - (Programme)')];
+			$tableCells = [];
 
-			// $educationSubjects = $entity->extractOriginal(['education_subjects']);
-			// foreach ($educationSubjects['education_subjects'] as $key => $obj) {
-			// 	if ($obj->_joinData->visible == 1) {
-			// 		$rowData = [];
-			// 		$rowData[] = $obj->name;
-			// 		$rowData[] = $obj->code;
-			// 		$rowData[] = $obj->_joinData->hours_required;
-			// 		$tableCells[] = $rowData;
-			// 	}
-			// }
+			$educationNextProgrammes = $entity->extractOriginal(['education_next_programmes']);
+			foreach ($educationNextProgrammes['education_next_programmes'] as $key => $obj) {
+				// if ($obj->_joinData->visible == 1) {
+					$programe = $this->findById($nextProgramme->next_programme_id)->first();
+					$rowData = [];
+					$rowData[] = $programe->cycle_programme_name;
+					$tableCells[] = $rowData;
+				// }
+			}
 
-			// $attr['tableHeaders'] = $tableHeaders;
-	  //   	$attr['tableCells'] = $tableCells;
+			$attr['tableHeaders'] = $tableHeaders;
+	  		  	$attr['tableCells'] = $tableCells;
 		} else if ($action == 'edit') {
 			if (isset($entity->id)) {
 				$nextProgrammeslist = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->findByEducationProgrammeId($entity->id);
@@ -184,8 +184,8 @@ class EducationProgrammesTable extends AppTable {
 					}
 				} else if ($this->request->is(['post', 'put'])) {
 					$requestData = $this->request->data;
-					if (array_key_exists('education_programme_next', $requestData[$this->alias()])) {
-						foreach ($requestData[$this->alias()]['education_programme_next'] as $key => $obj) {
+					if (array_key_exists('education_programmes_next_programmes', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['education_programmes_next_programmes'] as $key => $obj) {
 							$arrayNextProgrammes[] = $obj['_joinData'];
 						}
 					}
@@ -205,14 +205,14 @@ class EducationProgrammesTable extends AppTable {
 				}
 				
 				foreach ($arrayNextProgrammes as $key => $obj) {
-					$fieldPrefix = $attr['model'] . '.education_programme_next.' . $cellCount++;
+					$fieldPrefix = $attr['model'] . '.education_programmes_next_programmes.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';
 
 					$educationProgrammeId = $obj['id'];
 					$nextProgrammeName = $obj['name'];
 
 					$cellData = "";
-					$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $educationProgrammeId]);
+					// $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $educationProgrammeId]);
 					$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $nextProgrammeName]);
 					$cellData .= $form->hidden($joinDataPrefix.".education_programme_id", ['value' => $obj['education_programme_id']]);
 					$cellData .= $form->hidden($joinDataPrefix.".next_programme_id", ['value' => $obj['next_programme_id']]);
@@ -245,6 +245,30 @@ class EducationProgrammesTable extends AppTable {
 		pr($options);
 		pr($entity);
 		die;
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// to be revisit
+		// $data[$this->alias()]['setVisible'] = true;
+
+		// pr($data); die;
+
+		// To handle when delete all subjects
+		if (!array_key_exists('education_next_programmes', $data[$this->alias()])) {
+			$data[$this->alias()]['education_next_programmes'] = [];
+		}
+
+		// Required by patchEntity for associated data
+		$newOptions = [];
+		$newOptions['associated'] = $this->_contain;
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain(['EducationNextProgrammes']);
 	}
 
 }
