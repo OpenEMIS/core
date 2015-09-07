@@ -63,3 +63,7 @@ CREATE TABLE IF NOT EXISTS `institution_student_survey_table_cells` (
 
 ALTER TABLE `institution_student_survey_table_cells`
   ADD PRIMARY KEY (`id`), ADD KEY `survey_question_id` (`survey_question_id`), ADD KEY `survey_table_column_id` (`survey_table_column_id`), ADD KEY `survey_table_row_id` (`survey_table_row_id`), ADD KEY `institution_student_survey_id` (`institution_student_survey_id`);
+
+-- custom_field_types
+INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
+('STUDENT_LIST', 'Student List', 'text_value', '', 'OpenEMIS_Institution', 0, 0, 1);
