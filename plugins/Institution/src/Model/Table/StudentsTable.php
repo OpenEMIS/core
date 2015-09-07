@@ -121,10 +121,10 @@ class StudentsTable extends AppTable {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 
 		// Education Grades
-		$institutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
 		$session = $this->Session;
 		$institutionId = $session->read('Institution.Institutions.id');
-		$educationGradesOptions = $institutionEducationGrades
+		$educationGradesOptions = $InstitutionEducationGrades
 			->find('list', [
 					'keyField' => 'EducationGrades.id',
 					'valueField' => 'EducationGrades.name'
@@ -588,6 +588,13 @@ class StudentsTable extends AppTable {
 					->first()
 					->id;
 
+				$allStudentStatus =$StudentStatuses
+					->find()->hydrate(false)->toArray();
+				$allStudentStatusProcessed = [];
+				foreach ($allStudentStatus as $key => $value) {
+					$allStudentStatusProcessed[$value['id']] = $value;
+				}
+
 				$student = $StudentPromotion
 					->find()
 					->where([
@@ -608,7 +615,41 @@ class StudentsTable extends AppTable {
 				$transferButton['attr']['title'] = __('Transfer');
 				//End
 
-				if ($student->student_status_id == $currentStatus) {
+				$checkIfCanTransfer = (array_key_exists($student->student_status_id, $allStudentStatusProcessed)) 
+					&&
+					(in_array($allStudentStatusProcessed[$student->student_status_id]['code'], ['CURRENT', 'PROMOTED', 'GRADUATED']));
+				if ($checkIfCanTransfer && $allStudentStatusProcessed[$student->student_status_id]['code'] == 'PROMOTED') {
+					//'Promoted' status - this feature will be available if the student is at the last grade that the school offers
+					// Education Grades
+					$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
+
+					$EducationGrades = TableRegistry::get('Education.EducationGrades');
+					$studentEducationGradeOrder = $EducationGrades->find()->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $student->education_grade_id])->first();
+					if (!empty($studentEducationGradeOrder)) {
+						$studentEducationGradeOrder = $studentEducationGradeOrder->order;
+					}					
+
+					$advancedGradeOptionsLeft = $InstitutionEducationGrades
+						->find('list', [
+								'keyField' => 'EducationGrades.order',
+								'valueField' => 'EducationGrades.name'
+							])
+						->select([
+								'EducationGrades.id', 'EducationGrades.name', 'EducationGrades.order'
+							])
+						->contain(['EducationGrades'])
+						->where(['EducationGrades.order > ' => $studentEducationGradeOrder])
+						->where(['institution_site_id' => $institutionId])
+						->group('education_grade_id')
+						->count()
+						;
+						
+					if ($advancedGradeOptionsLeft>0) {
+						$checkIfCanTransfer = false;
+					}
+				}
+
+				if ($checkIfCanTransfer) {
 					$transferButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
 						'controller' => $buttons['back']['url']['controller'],
