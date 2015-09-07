@@ -1,5 +1,5 @@
 <?php if ($action == 'view') : ?>
-	<div class="table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
@@ -21,7 +21,13 @@
 							<?php endif ?>
 						</td>
 						<td><?= $obj->name; ?></td>
-						<td><?= $obj->next_workflow_step->name; ?></td>
+						<td>
+							<?php
+								if (isset($obj->next_workflow_step)) {
+									echo $obj->next_workflow_step->name;
+								}
+							?>
+						</td>
 						<td>
 							<?php if ($obj->comment_required == 1) : ?>
 								<i class="fa fa-check"></i>
@@ -39,12 +45,12 @@
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-toolbar">
-			<button onclick="$('#reload').val('addAction').click();" class="btn btn-default btn-xs">
+			<button onclick="$('#reload').val('addAction').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i>
 				<span><?= __('Add');?></span>
 			</button>
 		</div>
-		<div class="table-in-view col-md-4 table-responsive">
+		<div class="table-in-view">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
@@ -53,7 +59,7 @@
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
-						<th><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
+						<th class="center"><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
 						<th></th>
 					</tr>
 					<?php if (!empty($data->workflow_actions)) : ?>
@@ -67,22 +73,32 @@
 									<?php endif ?>
 										<td>
 											<?php
-												if(isset($obj->id)) {
+												if(isset($obj->id)) {	// edit
 													echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.id");
+												} else {	// add
+													echo $this->Form->hidden("WorkflowSteps.workflow_actions.$key.visible", ['value' => 1]);
 												}
-												echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false]);
+												echo $this->Form->input("WorkflowSteps.workflow_actions.$key.name", ['label' => false, 'value' => $obj->name]);
 											?>
 										</td>
 										<td>
 											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
 										</td>
-										<td>
+										<td class="center">
 											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
 										</td>
 										<td>
-											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-											</button>
+											<?php if (is_null($obj->action)) : ?>
+												<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+													<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
+												</button>
+											<?php else : ?>
+												<?php if ($obj->action == 0) : ?>
+													<?= __('Approve'); ?>
+												<?php elseif ($obj->action == 1) : ?>
+													<?= __('Reject'); ?>
+												<?php endif ?>
+											<?php endif ?>
 										</td>
 								</tr>
 							<?php endforeach ?>

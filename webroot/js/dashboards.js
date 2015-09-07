@@ -21,7 +21,6 @@ var dashboards = {
 	init: function() {
 		$.each($('.highchart'), function(key, group) {
 			json = $(group).html();
-			console.log(json);
 			obj = JSON.parse(json);
 			$(group).highcharts(obj);
 			$(group).css({"visibility":"visible"});

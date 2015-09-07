@@ -44,7 +44,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$Items = TableRegistry::get('Assessment.AssessmentItems');
 		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
@@ -142,7 +142,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('grade');
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'mark', 'grade']);
 
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
@@ -367,7 +367,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$controller = $this->controller;
 
 		if ($this->request->is(['post', 'put'])) {
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedStatus = $this->request->query('status');
 			$selectedAssessment = $this->request->query('assessment');
 			$selectedPeriod = $this->request->query('period');
