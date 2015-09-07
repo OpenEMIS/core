@@ -357,11 +357,20 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
-			'InstitutionSiteStudentAbsences' => [
+			'Absences' => [
+				'start_date' => [
+					'ruleNoOverlappingAbsenceDate' => 'Absence is already added for this date and time.',
+					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
-				]
+				],
 			],
+			// 'InstitutionSiteStudentAbsences' => [
+			// 	'end_date' => [
+			// 		'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+			// 	]
+			// ],
 			'InstitutionSiteStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
