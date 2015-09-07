@@ -35,7 +35,7 @@
 
 </head>
 
-<body class='default fuelux' ng-controller="WizardController">
+<body class='default'>
 
 	<?=  $this->element('OpenEmis.header'); ?>
 	  
