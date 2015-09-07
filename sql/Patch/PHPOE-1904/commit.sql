@@ -41,7 +41,7 @@ UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'LicenseTypes';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'SpecialNeedTypes';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'InfrastructureOwnerships';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'InfrastructureConditions';
-
+UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'Countries';
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'StudentTransferReasons';
 
 UPDATE field_options SET visible = 0 WHERE code = 'GuardianEducationLevels';
