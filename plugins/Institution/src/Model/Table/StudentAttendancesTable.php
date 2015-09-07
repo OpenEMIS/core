@@ -40,9 +40,12 @@ class StudentAttendancesTable extends AppTable {
 
 	// Overwrite the default generate
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
-		$generate = function($writer, $settings) {
-			
-		};
+
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+		$query = $StudentAbsences->find();
 	}
 
 	public function implementedEvents() {
