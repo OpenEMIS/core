@@ -36,7 +36,7 @@ UPDATE field_options SET plugin = NULL WHERE code = 'LicenseTypes';
 UPDATE field_options SET plugin = NULL WHERE code = 'SpecialNeedTypes';
 UPDATE field_options SET plugin = NULL WHERE code = 'InfrastructureOwnerships';
 UPDATE field_options SET plugin = NULL WHERE code = 'InfrastructureConditions';
-
+UPDATE field_options SET plugin = NULL WHERE code = 'Countries';
 UPDATE field_options SET plugin = 'Students' WHERE code = 'StudentTransferReasons';
 
 UPDATE field_options SET visible = 1 WHERE code = 'GuardianEducationLevels';
