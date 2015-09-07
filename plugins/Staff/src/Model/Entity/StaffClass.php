@@ -43,7 +43,7 @@ class StaffClass extends Entity
 
 			if (!empty($data)) {
 				if ($data->has('institution_site_section')) {
-					$name = $data->institution_site_section->name;//
+					$name = $data->institution_site_section->name;
 				}
 			}
 		}
