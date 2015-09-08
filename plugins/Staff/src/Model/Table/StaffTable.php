@@ -10,7 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use App\Model\Table\UsersTable AS BaseUsers;
+use User\Model\Table\UsersTable AS BaseUsers;
 
 class StaffTable extends AppTable {
 	public $InstitutionStaff;
