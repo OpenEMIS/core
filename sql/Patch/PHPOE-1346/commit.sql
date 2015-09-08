@@ -68,6 +68,23 @@ ALTER TABLE `institution_student_survey_table_cells`
 INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
 ('STUDENT_LIST', 'Student List', 'text_value', '', 'OpenEMIS_Institution', 0, 0, 1);
 
+-- New table - custom_field_params
+DROP TABLE IF EXISTS `custom_field_params`;
+CREATE TABLE IF NOT EXISTS `custom_field_params` (
+  `id` char(36) NOT NULL,
+  `param_key` varchar(100) NOT NULL,
+  `param_value` varchar(100) DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_field_params`
+  ADD PRIMARY KEY (`id`), ADD KEY `custom_field_id` (`custom_field_id`);
+
 -- New table - survey_question_params
 DROP TABLE IF EXISTS `survey_question_params`;
 CREATE TABLE IF NOT EXISTS `survey_question_params` (
