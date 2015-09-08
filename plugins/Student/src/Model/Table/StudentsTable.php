@@ -150,7 +150,9 @@ class StudentsTable extends AppTable {
 					'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
 					'InstitutionStudent.institution_id IN ' => $institutionIds
 				]
-			);
+			)
+			->group([$this->aliasField('id')]);
+			;
 		}
 	}
 
