@@ -204,7 +204,7 @@ class StaffTable extends AppTable {
 	    }
 	}
 	
-	private function setupTabElements() {
+	private function setupTabElements($options) {
 		$this->controller->set('selectedAction', $this->alias);
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
