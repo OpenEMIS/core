@@ -129,6 +129,15 @@ class UsersTable extends AppTable {
 		]);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements(['id' => $entity->id]);
+	}
+
+	private function setupTabElements($options) {
+		$this->controller->set('selectedAction', 'Securities');
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
+	}
+
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->find('notSuperAdmin');
 	}
