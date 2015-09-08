@@ -315,26 +315,32 @@ class StaffTable extends AppTable {
 		
 		if ($this->action == 'index') {
 			$institutionSiteArray = [];
+			
 
 			$session = $this->Session;
 			$institutionId = $session->read('Institution.Institutions.id');
+			$conditions = ['institution_site_id' => $institutionId];
 			$periodId = $this->request->query('period');
-
+			$positionId = $this->request->query('position');
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
-				->distinct(['security_user_id'])
-				->count(['security_user_id']);
+				->distinct(['security_user_id']);
 
+			if ($positionId != 0) {
+				$staffCount->where([$this->aliasField('institution_site_position_id') => $positionId]);
+				$conditions = array_merge($conditions, ['institution_site_position_id' => $positionId])	;
+			}
 			// Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['institution_site_id' => $institutionId, 'key' => __('Gender')]);
+				['conditions' => $conditions, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
+			// Revisit here in awhile
 			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['institution_site_id' => $institutionId, 'key' => __('Licenses')]);
+				['conditions' => $conditions, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
@@ -342,7 +348,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount,
+	            	'modelCount' => $staffCount->count(['security_user_id']),
 	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
@@ -431,6 +437,12 @@ class StaffTable extends AppTable {
 
 	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+			foreach ($conditions as $key => $value) {
+				$_conditions[$this->alias().'.'.$key] = $value;
+			}
+
 			$institutionSiteRecords = $this->find();
 			$institutionSiteStaffCount = $institutionSiteRecords
 				->contain(['Users', 'Users.Genders'])
@@ -438,11 +450,8 @@ class StaffTable extends AppTable {
 					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
 					'gender' => 'Genders.name'
 				])
+				->where($_conditions)
 				->group('gender_id');
-
-			if (!empty($params['institution_site_id'])) {
-				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
-			}	
 
 			// Creating the data set		
 			$dataSet = [];
