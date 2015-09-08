@@ -26,7 +26,19 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
+		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
+		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
 		$validator
+			->add('start_date', [
+				'ruleNoOverlappingAbsenceDate' => [
+					'rule' => ['noOverlappingAbsenceDate', $this]
+				],
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period'],
+					'on' => 'create'
+				]
+			])
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
 			]);
@@ -146,25 +158,26 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
-			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+			// Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
+			// $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			// $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
+			// $endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
 
-			$this->ControllerAction->field('start_date', [
-				'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
-			]);
-			$this->ControllerAction->field('end_date', [
-				'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
-			]);
+			// $this->ControllerAction->field('start_date', [
+			// 	'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+			// ]);
+			// $this->ControllerAction->field('end_date', [
+			// 	'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
+			// ]);
 
-			$todayDate = date("Y-m-d");
-			if ($todayDate >= $startDate->format('Y-m-d') && $todayDate <= $endDate->format('Y-m-d')) {
-				$entity->start_date = $todayDate;
-				$entity->end_date = $todayDate;
-			} else {
-				$entity->start_date = $startDate->format('Y-m-d');
-				$entity->end_date = $startDate->format('Y-m-d');
-			}
+			// $todayDate = date("Y-m-d");
+			// if ($todayDate >= $startDate->format('Y-m-d') && $todayDate <= $endDate->format('Y-m-d')) {
+			// 	$entity->start_date = $todayDate;
+			// 	$entity->end_date = $todayDate;
+			// } else {
+			// 	$entity->start_date = $startDate->format('Y-m-d');
+			// 	$entity->end_date = $startDate->format('Y-m-d');
+			// }
 		} else if ($this->action == 'edit') {
 			$this->ControllerAction->field('start_date');
 			$this->ControllerAction->field('end_date');
@@ -310,11 +323,11 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
 		$periodOptions = $AcademicPeriod->getList();
-		$selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : key($periodOptions);
+		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
