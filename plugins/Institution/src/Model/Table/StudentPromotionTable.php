@@ -262,7 +262,7 @@ class StudentPromotionTable extends AppTable {
 			$indexElements = $this->controller->viewVars['indexElements'];
 			$selectedPeriod = $this->request->query('period');
 			$currentPeriod = $this->AcademicPeriods->get($selectedPeriod);
-			$startDate = date('Y-m-d', strtotime($currentPeriod->start_date));
+			$startDate = $currentPeriod->start_date->format('Y-m-d');
 
 			$where = [
 				$this->AcademicPeriods->aliasField('id <>') => $selectedPeriod,
