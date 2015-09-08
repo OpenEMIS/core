@@ -384,6 +384,57 @@ class UsersTable extends AppTable {
 		return $validator;
 	}
 
+	// this is the method to call for user validation - currently in use by Student Staff.. 
+	public function setUserValidation(Validator $validator) {
+		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->allowEmpty('photo_content')
+			->add('date_of_birth', [
+					'ruleValidDate' => [
+						'rule' => ['date', 'dmy']
+					]
+				])
+			;
+
+		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$this->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
+		return $validator;
+	}
+
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		$fileContent = $entity->photo_content;
 		$value = "";
