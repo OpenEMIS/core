@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Student\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
@@ -31,8 +31,8 @@ class StudentSurveysTable extends AppTable {
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			// 'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
 			'recordKey' => 'institution_student_survey_id',
-			'fieldValueClass' => ['className' => 'Institution.StudentSurveyAnswers', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'Institution.StudentSurveyTableCells', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'fieldValueClass' => ['className' => 'Student.StudentSurveyAnswers', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Student.StudentSurveyTableCells', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 

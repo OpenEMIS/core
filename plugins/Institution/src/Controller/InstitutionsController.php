@@ -38,7 +38,7 @@ class InstitutionsController extends AppController  {
 
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
-			'StudentSurveys' 	=> ['className' => 'Institution.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
+			'StudentSurveys' 	=> ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],

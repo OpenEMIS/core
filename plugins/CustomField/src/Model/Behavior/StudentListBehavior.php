@@ -19,11 +19,13 @@ class StudentListBehavior extends Behavior {
             'CustomFormsFields' => 'Survey.SurveyFormsQuestions',
             'Sections' => 'Institution.InstitutionSiteSections',
             'SectionStudents' => 'Institution.InstitutionSiteSectionStudents',
-            'StudentSurveys' => 'Institution.StudentSurveys'
+            'StudentSurveys' => 'Student.StudentSurveys',
+            'StudentSurveyAnswers' => 'Student.StudentSurveyAnswers'
         ],
         'fieldType' => ['TEXT', 'NUMBER', 'DROPDOWN'],
         'fieldKey' => 'survey_question_id',
-        'formKey' => 'survey_form_id'
+        'formKey' => 'survey_form_id',
+        'recordKey' => 'institution_student_survey_id',
     ];
 
     public function initialize(array $config) {
@@ -151,6 +153,8 @@ class StudentListBehavior extends Behavior {
                         $rowData = [];
                         $rowInput = "";
                         $rowValue = "";
+                        $recordId = null;
+
                         if ($action == 'view') {
                             $rowValue = $student->user->name_with_id;
                             $rowData[] = $rowValue;
@@ -160,6 +164,21 @@ class StudentListBehavior extends Behavior {
                             $rowInput .= $Form->hidden($rowPrefix.".academic_period_id", ['value' => $periodId]);
                             $rowInput .= $Form->hidden($rowPrefix.".student_id", ['value' => $studentId]);
                             $rowInput .= $Form->hidden($rowPrefix.".survey_form_id", ['value' => $formId]);
+
+                            $recordResults = $this->StudentSurveys
+                                ->find()
+                                ->where([
+                                    $this->StudentSurveys->aliasField('institution_id') => $institutionId,
+                                    $this->StudentSurveys->aliasField('academic_period_id') => $periodId,
+                                    $this->StudentSurveys->aliasField('student_id') => $studentId,
+                                    $this->StudentSurveys->aliasField('survey_form_id') => $formId
+                                ])
+                                ->all();
+
+                            if (!$recordResults->isEmpty()) {
+                                $recordId = $recordResults->first()->id;
+                                $rowInput .= $Form->hidden($rowPrefix.".id", ['value' => $recordId]);
+                            }
 
                             $rowData[] = $rowInput;
                         }
@@ -172,12 +191,34 @@ class StudentListBehavior extends Behavior {
                             $cellInput = "";
                             $cellValue = "";
                             $cellOptions = ['label' => false, 'value' => ''];
+                            $answerValue = null;
+
+                            if (!is_null($recordId)) {
+                                $answerResults = $this->StudentSurveyAnswers
+                                    ->find()
+                                    ->where([
+                                        $this->StudentSurveyAnswers->aliasField($this->config('recordKey')) => $recordId,
+                                        $this->StudentSurveyAnswers->aliasField($this->config('fieldKey')) => $fieldId
+                                    ])
+                                    ->all();
+
+                                if (!$answerResults->isEmpty()) {
+                                    $answerObj = $answerResults->first();
+                                    $answerId = $answerObj->id;
+                                    $answerValue = $answerObj->{$fieldTypes[$fieldType]};
+
+                                    $cellInput .= $Form->hidden($cellPrefix.".id", ['value' => $answerId]);
+                                }
+                            }
 
                             switch ($fieldType) {
                                 case 'TEXT':
+                                    $cellOptions['type'] = 'string';
+                                    $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
                                     break;
                                 case 'NUMBER':
                                     $cellOptions['type'] = 'number';
+                                    $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
                                     break;
                                 case 'DROPDOWN':
                                     $dropdownOptions = [];
@@ -190,13 +231,14 @@ class StudentListBehavior extends Behavior {
                                     }
 
                                     $cellOptions['type'] = 'select';
-                                    // $cellOptions['default'] = !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
-                                    $cellOptions['default'] = $dropdownDefault;
+                                    $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
+                                    $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                     $cellOptions['options'] = $dropdownOptions;
                                     break;
                                 default:
                                     break;
                             }
+
                             $cellInput .= $Form->input($cellPrefix.".".$fieldTypes[$fieldType], $cellOptions);
                             $cellInput .= $Form->hidden($cellPrefix.".".$this->config('fieldKey'), ['value' => $fieldId]);
 

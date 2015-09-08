@@ -181,7 +181,7 @@ class RecordBehavior extends Behavior {
     	// Will move the logic to StudentListBehavior eventually
     	if (array_key_exists($this->_table->alias(), $data)) {
     		if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
-    			$StudentSurveys = TableRegistry::get('Institution.StudentSurveys');
+    			$StudentSurveys = TableRegistry::get('Student.StudentSurveys');
     			$fieldTypes = $this->CustomFieldTypes
 					->find('list', ['keyField' => 'code', 'valueField' => 'value'])
 					->toArray();
@@ -215,6 +215,14 @@ class RecordBehavior extends Behavior {
 		    							unset($surveyObj['custom_field_values'][$fieldkey]);
 									}
     							}
+
+    							// Delete all answer and reinsert
+    							if (isset($surveyObj['id'])) {
+    								$recordKey = Inflector::underscore(Inflector::singularize($StudentSurveys->table())) . '_id';
+	    							$StudentSurveys->CustomFieldValues->deleteAll([
+										$StudentSurveys->CustomFieldValues->aliasField($recordKey) => $surveyObj['id']
+									]);
+								}
 
 								$surveyEntity = $StudentSurveys->newEntity($surveyObj);
 								if ($StudentSurveys->save($surveyEntity)) {
