@@ -132,13 +132,16 @@ class FieldOptionValuesTable extends AppTable {
 			$table = TableRegistry::get($currentfieldOption->plugin.'.'.$currentfieldOption->code);
 			$columns = $table->schema()->columns();
 			$fieldOrder = 1000;
+			$fieldOrderExcluded = 5000;
 			foreach ($columns as $key => $attr) {
 				$this->fields[$attr]['model'] = $table->alias();
-				//$this->fields[$attr]['className'] = $currentfieldOption->plugin.'.'.$currentfieldOption->code;
+				$defaultFieldOrder[] = $attr;
 				if(!in_array($attr, $this->excludeFieldList)) {
-					$defaultFieldOrder[] = $attr;
 					$this->ControllerAction->field($attr, ['visible' => true, 'order' => $fieldOrder]);
 					$fieldOrder++;
+				} else {
+					$this->ControllerAction->field($attr, ['visible' => ['index' => false, 'edit' => false, 'add' => false, 'view' => true], 'order' => $fieldOrderExcluded]);
+					$fieldOrderExcluded++;
 				}
 			}	
 
