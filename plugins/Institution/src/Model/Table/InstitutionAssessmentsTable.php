@@ -84,7 +84,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = date('d-m-Y', strtotime($dateDisabled));
+			$value = $dateDisabled->format('d-m-Y');
 		}
 
 		return $value;
@@ -178,7 +178,7 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function _buildRecords($status=0) {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		//delete all New Assessment by Institution Id and reinsert
 		$this->deleteAll([

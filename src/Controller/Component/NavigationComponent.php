@@ -139,7 +139,7 @@ class NavigationComponent extends Component {
 
 	public function getInstitutionNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Institutions.id');
+		$id = $session->read('Institution.Institutions.id');
 
 		$navigation = [
 			'Dashboard' => [
@@ -167,7 +167,8 @@ class NavigationComponent extends Component {
 			'Students' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser', 'Promotion']],
+					// 'Admission' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission'], 'selected' => ['StudentAdmission']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser', 'Promotion', 'StudentAdmission', 'TransferApprovals']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
@@ -202,7 +203,7 @@ class NavigationComponent extends Component {
 				'collapse' => true,
 				'items' => [
 					'Forms' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys']],
-					'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics']]
+					'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics'], 'selected' => ['Rubrics', 'RubricAnswers']]
 				]
 			],
 
@@ -217,7 +218,7 @@ class NavigationComponent extends Component {
 
 	public function getStudentNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Students.id');
+		$id = $session->read('Student.Students.id');
 
 		$navigation = [
 			'General' => [
@@ -268,7 +269,7 @@ class NavigationComponent extends Component {
 
 	public function getStaffNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Staff.id');
+		$id = $session->read('Staff.Staff.id');
 
 		$navigation = [
 			'General' => [
@@ -322,7 +323,7 @@ class NavigationComponent extends Component {
 
 	public function getGuardianNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Guardians.id');
+		$id = $session->read('Guardian.Guardians.id');
 
 		$navigation = [
 			'General' => [
@@ -410,6 +411,11 @@ class NavigationComponent extends Component {
 								'selected' => ['Pages', 'Levels', 'Types']
 							],
 						]
+					],
+					'Labels' => [
+						'collapse' => true,
+						'url' => ['plugin' => false, 'controller' => 'Labels', 'action' => 'index'],
+						'selected' => ['index', 'view', 'edit']
 					],
 					'Translations' => [
 						'collapse' => true,

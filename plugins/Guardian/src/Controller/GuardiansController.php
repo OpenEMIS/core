@@ -37,15 +37,15 @@ class GuardiansController extends AppController {
 		$header = __('Guardians');
 
 		if ($action == 'index') {
-			$session->delete('Guardians.id');
-			$session->delete('Guardians.name');
-		} else if ($session->check('Guardians.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Guardian.Guardians.id');
+			$session->delete('Guardian.Guardians.name');
+		} else if ($session->check('Guardian.Guardians.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Guardians.id')) {
-				$id = $session->read('Guardians.id');
+			} else if ($session->check('Guardian.Guardians.id')) {
+				$id = $session->read('Guardian.Guardians.id');
 			}
 
 			if (!empty($id)) {
@@ -64,12 +64,12 @@ class GuardiansController extends AppController {
 		 */
 
 		$session = $this->request->session();
-		if ($session->check('Guardians.id')) {
+		if ($session->check('Guardian.Guardians.id')) {
 			$header = '';
-			$userId = $session->read('Guardians.id');
+			$userId = $session->read('Guardian.Guardians.id');
 
-			if ($session->check('Guardians.name')) {
-				$header = $session->read('Guardians.name');
+			if ($session->check('Guardian.Guardians.name')) {
+				$header = $session->read('Guardian.Guardians.name');
 			}
 
 			$alias = $model->alias;
@@ -110,8 +110,8 @@ class GuardiansController extends AppController {
 		$session = $this->request->session();
 
 		if ($model->alias() != 'Guardians') {
-			if ($session->check('Guardians.id')) {
-				$userId = $session->read('Guardians.id');
+			if ($session->check('Guardian.Guardians.id')) {
+				$userId = $session->read('Guardian.Guardians.id');
 				if ($model->hasField('security_user_id')) {
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('guardian_id')) {
