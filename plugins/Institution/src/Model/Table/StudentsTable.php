@@ -382,12 +382,15 @@ class StudentsTable extends AppTable {
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
-			$sectionData = [];
-			$sectionData['student_id'] = $entity->student_id;
-			$sectionData['education_grade_id'] = $entity->education_grade_id;
-			$sectionData['institution_site_section_id'] = $entity->class;
-			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			if (! $StudentStatuses->get($entity->student_status_id)->code == 'PENDING_ADMISSION') {
+				$sectionData = [];
+				$sectionData['student_id'] = $entity->student_id;
+				$sectionData['education_grade_id'] = $entity->education_grade_id;
+				$sectionData['institution_site_section_id'] = $entity->class;
+				$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+			}
 		}
 	}
 
