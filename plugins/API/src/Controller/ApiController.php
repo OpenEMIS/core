@@ -32,7 +32,7 @@ class ApiController extends AppController
 		} else {
 			throw new BadRequestException('App Key is missing', 400);
 		}
-		// $this->SecurityAPISessions = TableRegistry::get('SecurityAPISessions');
+		$this->Students = TableRegistry::get('Student.Students');
 	}
 
 	public function login() {
@@ -61,8 +61,18 @@ class ApiController extends AppController
 
 		if ($this->request->isGet()) {
 			if (!empty($this->request->query)) {
-				pr($this->request->query);die;
-				$json = $this->request->query;
+				$params = $this->request->query;
+				// pr($this->request->query);die;
+				$query = $this->Students->find();
+				$data = $query
+							->contain([
+								'Genders',
+								'Identities'
+							])
+							->where([$this->Students->aliasField('openemis_no') => $params['ss_id']])
+							// ->where(['default_identity_type' => $params['ss_id']])
+							->first();
+				$json = $data;
 			} else {
 				throw new BadRequestException('Missing query', 401);
 			}
