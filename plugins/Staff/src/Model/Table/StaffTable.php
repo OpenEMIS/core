@@ -140,7 +140,8 @@ class StaffTable extends AppTable {
 					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
 					'InstitutionStaff.institution_site_id IN ' => $institutionIds
 				]
-			);
+			)
+			->group([$this->aliasField('id')]);
 		}
 	}
 
