@@ -1,0 +1,39 @@
+/* DASHBOARD v.1.0.0 */
+
+.dashboard-container {
+	background-color: #F9F9F9 !important;
+    border: 1px solid #CCC !important;
+	padding: 0 10px 10px !important;
+	margin: 0 0 10px 0 !important;
+	-webkit-border-radius: 4px !important;
+	        border-radius: 4px !important;
+}
+
+.dashboard-container .table-bordered > tbody {
+	border: 1px solid #DDD !important;
+}
+
+.institution-dashboard .col-md-6 {
+	padding-left: 0 !important;
+}
+
+.institution-dashboard .highcharts-background,
+.highcharts-container {
+	border: 0 !important;
+}
+
+.dashboard-content {
+	overflow:auto;
+	max-height: 250px;
+}
+
+.institution-dashboard .highcharts-background {
+	stroke: #CCC;
+}
+
+/* RTL DASHBOARD */
+
+.rtl .institution-dashboard .col-md-6 {
+	padding-right: 0 !important;
+	padding-left: 20px !important;
+}

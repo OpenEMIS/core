@@ -44,7 +44,9 @@ class InstitutionsController extends AppController  {
 			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'edit', 'remove']],
 			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
+			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
 			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['add', 'edit', 'remove']],
+			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
@@ -122,7 +124,11 @@ class InstitutionsController extends AppController  {
 			else if ($alias == 'Classes') $alias = 'Subjects';
 
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $alias]);
+				/**
+				 * replaced 'action' => $alias to 'action' => $model->alias,
+				 * since only the name changes but not url
+				 */
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 				if (strtolower($action) != 'index')	{
 					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {

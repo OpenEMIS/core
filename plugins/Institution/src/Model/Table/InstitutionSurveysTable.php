@@ -252,6 +252,9 @@ class InstitutionSurveysTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
+		$options['auto_contain'] = false;
+		$query->contain(['AcademicPeriods', 'SurveyForms']);
+
 		$query
 			->where([$this->aliasField('status') => $selectedStatus])
 			->order([$this->AcademicPeriods->aliasField('order')]);
