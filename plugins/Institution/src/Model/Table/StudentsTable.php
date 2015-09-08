@@ -777,7 +777,7 @@ class StudentsTable extends AppTable {
 		$dataSet = [];
 		foreach ($institutionSiteStudentCount->toArray() as $value) {
 			//Compile the dataset
-			$dataSet[] = [$value['gender'], $value['count']];
+			$dataSet[] = [__($value['gender']), $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
@@ -837,7 +837,7 @@ class StudentsTable extends AppTable {
 		$dataSet = [];
 		foreach ($result as $value) {
 			//Compile the dataset
-			$dataSet[] = ['Age '.$value['age'], $value['count']];
+			$dataSet[] = [__('Age').' '.$value['age'], $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
@@ -873,7 +873,7 @@ class StudentsTable extends AppTable {
 
 		$dataSet = [];
 		foreach($studentByGrades as $value){
-			$dataSet[] = [$value['grade'], $value['count']];
+			$dataSet[] = [__($value['grade']), $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
 
