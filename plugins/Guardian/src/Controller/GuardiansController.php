@@ -18,7 +18,7 @@ class GuardiansController extends AppController {
         // $this->ControllerAction->model()->addBehavior('AdvanceSearch');
 
 		$this->ControllerAction->models = [
-			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts' 			=> ['className' => 'Guardian.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -124,5 +124,25 @@ class GuardiansController extends AppController {
 			}
 		}
 		return $options;
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
 	}
 }
