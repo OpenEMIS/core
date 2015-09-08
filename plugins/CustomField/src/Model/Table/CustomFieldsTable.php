@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 class CustomFieldsTable extends AppTable {
 	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows'];
 	protected $_fieldOrder = ['field_type', 'name', 'is_mandatory', 'is_unique'];
+	protected $_fieldFormat = ['OpenEMIS'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -157,7 +158,7 @@ class CustomFieldsTable extends AppTable {
 
 	public function getSelectOptions() {
 		//Return all required options and their key
-		$fieldTypeOptions = $this->getFieldTypeList();
+		$fieldTypeOptions = $this->getFieldTypeList($this->_fieldFormat);
         $selectedFieldType = key($fieldTypeOptions);
 
         $mandatoryOptions = $this->getMandatoryList();

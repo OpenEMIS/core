@@ -11,11 +11,15 @@ class FieldTypeBehavior extends Behavior {
         $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
     }
 
-    public function getFieldTypeList() {
+    public function getFieldTypeList($format=[]) {
         $list = $this->CustomFieldTypes
         	->find('list', ['keyField' => 'code', 'valueField' => 'name'])
         	->find('visible')
+            ->where([
+                $this->CustomFieldTypes->aliasField('format IN ') => $format
+            ])
         	->toArray();
+
         return $list;
     }
 }
