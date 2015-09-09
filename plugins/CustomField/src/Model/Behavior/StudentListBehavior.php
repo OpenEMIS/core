@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 
 class StudentListBehavior extends Behavior {
     protected $_defaultConfig = [
+        'setup' => false,
         'module' => 'Student.StudentSurveys',
         'models' => [
             'CustomModules' => 'CustomField.CustomModules',
@@ -27,7 +28,7 @@ class StudentListBehavior extends Behavior {
         'fieldType' => ['TEXT', 'NUMBER', 'DROPDOWN'],
         'fieldKey' => 'survey_question_id',
         'formKey' => 'survey_form_id',
-        'recordKey' => 'institution_student_survey_id',
+        'recordKey' => 'institution_student_survey_id'
     ];
 
     public function initialize(array $config) {
@@ -43,7 +44,7 @@ class StudentListBehavior extends Behavior {
             }
         }
 
-        if (isset($config['setup']) && $config['setup'] == true) {
+        if ($this->config('setup')) {
             $formOptions = $this->CustomForms
                 ->find('list')
                 ->innerJoin(
@@ -65,9 +66,11 @@ class StudentListBehavior extends Behavior {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 100];
-        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 100];
-        $events['ControllerAction.Model.onUpdateFieldSurveyForm'] = ['callable' => 'onUpdateFieldSurveyForm', 'priority' => 100];
+        if ($this->config('setup')) {
+            $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 100];
+            $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 100];
+            $events['ControllerAction.Model.onUpdateFieldSurveyForm'] = ['callable' => 'onUpdateFieldSurveyForm', 'priority' => 100];
+        }
 
         return $events;
     }
