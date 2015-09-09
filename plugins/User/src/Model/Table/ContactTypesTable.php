@@ -12,7 +12,8 @@ class ContactTypesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('ContactOptions', ['className' => 'User.ContactOptions']);
-		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'contact_type_id']);
+		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'contact_type_id'])
+		;
 	}
 
 	public function findWithContactOptions(Query $query, array $options) {

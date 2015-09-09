@@ -15,8 +15,8 @@ use Cake\Utility\Inflector;
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
 	private $fieldOption = null;
-	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['FieldOption.Banks', 'bank_id'], 
-									  'User.ContactTypes' => ['User.ContactOptions', 'contact_option_id'], 
+	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id'], 
+									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id'], 
 									  'FieldOption.Banks' => [],
 									  'FieldOption.Countries' => []
 									  ];
@@ -29,6 +29,7 @@ class FieldOptionValuesTable extends AppTable {
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
 
 		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
+		$this->addBehavior('ParamModel');
 	}
 
 	public function onGetFieldOptionId(Event $event, Entity $entity) {
@@ -52,6 +53,9 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		pr($options);
+		pr($entity); die;
+
 		parent::beforeSave($event, $entity, $options);
 
 		if ($entity->default == 1) {
@@ -93,59 +97,44 @@ class FieldOptionValuesTable extends AppTable {
 		$currentfieldOption = $this->FieldOptions->get($selectedOption);
 		if(array_key_exists($currentfieldOption->plugin.'.'.$currentfieldOption->code, $this->parentFieldOptionList)) {
 			$parentFieldOptionInfo = $this->parentFieldOptionList[$currentfieldOption->plugin.'.'.$currentfieldOption->code];	
-			$parentFieldOptionTable = TableRegistry::get($parentFieldOptionInfo[0]);
+			$parentFieldOptionTable = TableRegistry::get($parentFieldOptionInfo['parentModel']);
 
-			if(!empty($parentFieldOptionInfo[1])) {
+			if(!empty($parentFieldOptionInfo['foreignKey'])) {
 				$parentFieldOptions = $parentFieldOptionTable->find('list')->where([$parentFieldOptionTable->aliasField('visible') => 1])->toArray();	
+
 				$this->controller->set('parentFieldOptions', $parentFieldOptions);
 				$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
 				$this->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
-				$this->controller->set('foreignKey', $parentFieldOptionInfo[1]);
+				$this->controller->set('foreignKey', $parentFieldOptionInfo['foreignKey']);
 
-				$foreignKey =  $parentFieldOptionInfo[1];
-				$parentFieldOption = $parentFieldOptionTable->findById($selectedParentFieldOption)->first();
-				$parentFieldOptionValue = $parentFieldOption->name;
-				
-				$foreignKeyLabel = Inflector::humanize($foreignKey);
-				if($this->endsWith($foreignKey, '_id')){
-					$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
-				}
+				$foreignKey =  $parentFieldOptionInfo['foreignKey'];
+				$parentFieldOptionValue = $parentFieldOptions[$selectedParentFieldOption];
 
-				$this->ControllerAction->field($foreignKeyLabel, ['type' => 'readonly', 
+				// $foreignKeyLabel = Inflector::humanize($foreignKey);
+				// if($this->endsWith($foreignKey, '_id')){
+				// 	$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
+				// }
+
+				$this->ControllerAction->field($foreignKey, ['type' => 'readonly', 
 																  'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
 																  'model' => $parentFieldOptionTable->alias(), 
 																  'value' => $parentFieldOptionValue,
-																  'className' => $parentFieldOptionInfo[0], 
+																  'className' => $parentFieldOptionInfo['parentModel'], 
 																  'attr' => ['value' => $parentFieldOptionValue]]);
 
-				$this->ControllerAction->field($foreignKey, ['type' => 'hidden', 
-															 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => false], 
-															 'model' => $parentFieldOptionTable->alias(), 
-															 'className' => $parentFieldOptionInfo[0], 
-															 'attr' => ['value' => $selectedParentFieldOption]]);
+				// $this->ControllerAction->field($foreignKey, ['type' => 'hidden', 
+				// 											 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => false], 
+				// 											 'model' => $parentFieldOptionTable->alias(), 
+				// 											 'className' => $parentFieldOptionInfo['parentModel'], 
+				// 											 'attr' => ['value' => $selectedParentFieldOption]]);
 			}
 
-			foreach($defaultFieldOrder as $each) {
-				$this->ControllerAction->field($each, ['visible' => false]);
+			//activate behaviour on the fly
+			if(!empty($parentFieldOptionInfo['behavior'])){
+				// pr($parentFieldOptionInfo['behavior']); //die;
+				// $this->addBehavior($parentFieldOptionInfo['behavior']);
 			}
-
-			$table = TableRegistry::get($currentfieldOption->plugin.'.'.$currentfieldOption->code);
-			$columns = $table->schema()->columns();
-			$fieldOrder = 1000;
-			$fieldOrderExcluded = 5000;
-			foreach ($columns as $key => $attr) {
-				$this->fields[$attr]['model'] = $table->alias();
-				$defaultFieldOrder[] = $attr;
-				if(!in_array($attr, $this->excludeFieldList)) {
-					$this->ControllerAction->field($attr, ['visible' => true, 'order' => $fieldOrder]);
-					$fieldOrder++;
-				} else {
-					$this->ControllerAction->field($attr, ['visible' => ['index' => false, 'edit' => false, 'add' => false, 'view' => true], 'order' => $fieldOrderExcluded]);
-					$fieldOrderExcluded++;
-				}
-			}	
-
-			$defaultFieldOrder = ['parent_field_option_id']; 
+			
 		}
 
 		if ($this->action == 'index') {
@@ -365,4 +354,5 @@ class FieldOptionValuesTable extends AppTable {
 		}
 		return $result;
 	}
+
 }
