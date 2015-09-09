@@ -45,7 +45,7 @@ class StudentSurveysTable extends AppTable {
 	public function beforeAction(Event $event) {
 		//Add controls filter to index, view and edit page
 		$toolbarElements = [
-			['name' => 'Institution.StudentSurveys/controls', 'data' => [], 'options' => []]
+			['name' => 'Student.StudentSurveys/controls', 'data' => [], 'options' => []]
 		];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
