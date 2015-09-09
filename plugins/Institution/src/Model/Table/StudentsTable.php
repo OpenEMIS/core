@@ -740,16 +740,7 @@ class StudentsTable extends AppTable {
 					}
 				}
 
-				if ($checkIfCanTransfer) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'add'
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				} else if ($student->student_status_id == $pendingStatus) {
-					$transferRequest = $TransferRequests
+				$transferRequest = $TransferRequests
 						->find()
 						->where([
 							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
@@ -758,6 +749,7 @@ class StudentsTable extends AppTable {
 						])
 						->first();
 
+				if (!empty($transferRequest)) {
 					$transferButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
 						'controller' => $buttons['back']['url']['controller'],
@@ -766,7 +758,15 @@ class StudentsTable extends AppTable {
 						$transferRequest->id
 					];
 					$toolbarButtons['transfer'] = $transferButton;
-				}
+				} else if ($checkIfCanTransfer) {
+					$transferButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'TransferRequests',
+						'add'
+					];
+					$toolbarButtons['transfer'] = $transferButton;
+				} 
 			}
 		}
 	}
