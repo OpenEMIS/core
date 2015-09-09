@@ -333,22 +333,34 @@ class TransferRequestsTable extends AppTable {
 
 			switch ($studentStatusCode) {
 				case 'GRADUATED': case 'PROMOTED':
-					// grades that are higher than student's current grade in order
-					$moreAdvancedEducationGrades = $this->EducationGrades
-						->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-						->hydrate(false)
-						->where([$this->EducationGrades->aliasField('order').' > ' => $studentInfo->education_grade->order])
-						->order([$this->EducationGrades->aliasField('order asc')])
-						->toArray();
+					if ($action == 'add') {
+						// grades that are higher than student's current grade in order
+						$moreAdvancedEducationGradesData = $this->EducationGrades
+							->find()
+							->hydrate(false)
+							->contain(['EducationProgrammes'])
+							->where([$this->EducationGrades->aliasField('order').' > ' => $studentInfo->education_grade->order])
+							->order([$this->EducationGrades->aliasField('order asc')])
+							;
 
-					$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];	
-					if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
-						reset($moreAdvancedEducationGrades);
-						$this->selectedGrade = key($moreAdvancedEducationGrades);
+							foreach ($moreAdvancedEducationGradesData->toArray() as $key => $value) {
+								$moreAdvancedEducationGrades[$value['id']] = $value['education_programme']['name'].' - '.$value['name'];
+							}
+
+						$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];	
+						if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
+							reset($moreAdvancedEducationGrades);
+							$this->selectedGrade = key($moreAdvancedEducationGrades);
+						}
+
+						$attr['options'] = $moreAdvancedEducationGrades;
+						$attr['onChangeReload'] = true;
+					} else if ($action == 'edit') {
+						$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+						$attr['type'] = 'readonly';
+						$attr['attr']['value'] = $this->EducationGrades->get($this->selectedGrade)->programme_grade_name;
 					}
 
-					$attr['options'] = $moreAdvancedEducationGrades;
-					$attr['onChangeReload'] = true;
 					break;
 				
 				default:
