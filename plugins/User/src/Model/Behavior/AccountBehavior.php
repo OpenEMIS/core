@@ -15,6 +15,7 @@ class AccountBehavior extends Behavior {
 
 	public function initialize(array $config) {
 		$this->_table->table('security_users');
+		$this->_table->entityClass('User.User');
 		parent::initialize($config);
 		// is_institution
 		$this->userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
