@@ -50,6 +50,7 @@ class StudentAttendancesTable extends AppTable {
 		$startDate = $AcademicPeriodTable->get($this->request->query['period_id'])->start_date->format('Y-m-d');
 		$endDate = $AcademicPeriodTable->get($this->request->query['period_id'])->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
+		$sectionId = $this->request->query['section_id'];
 
 		foreach ($months as $month) {
 			$sheetName = $month['month']['inString'];
@@ -62,20 +63,26 @@ class StudentAttendancesTable extends AppTable {
 				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
 				$daysIndex[] = $item['date'];
 			}
+			$headerInfo = [
+				__('Openemis No')
+			];
 			$sheets[] = [
 				'name' => $month['month']['inString'],
 				'table' => $this,
 				'query' => $this
 					->find(),
-					// ->select([$this->aliasField('institution_site_section_id'), 'Users.openemis_no']),
-				'additionalHeader' => $headerDays,
-				'additionalData' => $this->getData($daysIndex),
+				'additionalHeader' => array_merge($headerInfo, $headerDays),
+				'additionalData' => $this->getData($daysIndex, $sectionId),
 			];
 		}
 		
 	}
 
-	public function getData($days) {
+	public function onExcelBeforeFields(Event $event, ArrayObject $settings, $fields) {
+		
+	}
+
+	public function getData($days, $sectionId) {
 		if(count($days) == 0){
 			return null;
 		}else{
@@ -87,10 +94,10 @@ class StudentAttendancesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$InstitutionSiteSectionTable = $this->InstitutionSiteSections;
 		$academicPeriodId = $this->request->query['period_id'];
+
 		$sections = $InstitutionSiteSectionTable->find('list')
 			->where([
-				$InstitutionSiteSectionTable->aliasField('institution_site_id') => $institutionId, 
-				$InstitutionSiteSectionTable->aliasField('academic_period_id') => $academicPeriodId
+				$InstitutionSiteSectionTable->aliasField('id') => $sectionId
 			])
 			->toArray();
 
@@ -152,7 +159,8 @@ class StudentAttendancesTable extends AppTable {
 
 			foreach ($studentList as $student){
 				$studentId = $student['id'];
-				$row = array();
+				$row = [];
+				$row[] = $student['openemis_no'];
 				foreach ($days as $index){
 					if (isset($absenceCheckList[$studentId][$index])) {
 						$absenceObj = $absenceCheckList[$studentId][$index];
