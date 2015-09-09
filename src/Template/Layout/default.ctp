@@ -35,7 +35,7 @@
 
 </head>
 
-<body class='default fuelux' ng-controller="WizardController">
+<body class='default'>
 
 	<?=  $this->element('OpenEmis.header'); ?>
 	  
@@ -73,6 +73,9 @@
 		<i class="fa fa-angle-double-left"></i>
 		<span class="menu-text"><?= __('Menu') ?></span>
 	</div>
+	<script type="text/javascript">
+	initNavigation();
+	</script>
 	
 	<?= $this->element('OpenEmis.footer') ?>
 	<?= $this->fetch('scriptBottom'); ?>
