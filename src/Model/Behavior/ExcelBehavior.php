@@ -116,6 +116,7 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function generate($writer, $settings=[]) {
+		$checkForAssociation = false;
 		$sheets = new ArrayObject();
 		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets]);
 
@@ -174,6 +175,10 @@ class ExcelBehavior extends Behavior {
 
 				$writer->writeSheetRow($sheetName, $row);
 
+				if (isset($sheet['checkForAssociation'])) {
+					$checkForAssociation = $sheet['checkForAssociation'];
+				}
+
 				// process every page based on the limit
 				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 					$resultSet = $query
@@ -189,7 +194,7 @@ class ExcelBehavior extends Behavior {
 					foreach ($resultSet as $entity) {
 						$row = [];
 						foreach ($fields as $attr) {
-							$row[] = $this->getValue($entity, $sheet['table'], $attr);
+							$row[] = $this->getValue($entity, $sheet['table'], $attr, $checkForAssociation);
 						}
 
 						if (!empty ($additionalRows)) {
@@ -205,7 +210,7 @@ class ExcelBehavior extends Behavior {
 				$entity = $query->first();
 				foreach ($fields as $attr) {
 					$row = [$attr['label']];
-					$row[] = $this->getValue($entity, $this->_table, $attr);
+					$row[] = $this->getValue($entity, $this->_table, $attr, $checkForAssociation);
 					$writer->writeSheetRow($sheetName, $row);
 				}
 				$rowCount++;
@@ -259,10 +264,12 @@ class ExcelBehavior extends Behavior {
 		return $footer;
 	}
 
-	private function getValue($entity, $table, $attr) {
+	private function getValue($entity, $table, $attr, $checkForAssociation=false) {
 		$value = '';
 		$field = $attr['field'];
 		$type = $attr['type'];
+
+		// pr($entity);
 
 		if (!in_array($type, ['string', 'integer', 'decimal'])) {
 			$method = 'onExcelRender' . Inflector::camelize($type);
@@ -280,7 +287,7 @@ class ExcelBehavior extends Behavior {
 			if ($event->result) {
 				$value = $event->result;
 			} else if ($entity->has($field)) {
-				if ($this->isForeignKey($table, $field)) {
+				if ($this->isForeignKey($table, $field)  && !$checkForAssociation) {
 					$associatedField = $this->getAssociatedKey($table, $field);
 					if ($entity->has($associatedField)) {
 						$value = $entity->$associatedField->name;
