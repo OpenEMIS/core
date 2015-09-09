@@ -70,7 +70,8 @@ class StudentAttendancesTable extends AppTable {
 				'name' => $month['month']['inString'],
 				'table' => $this,
 				'query' => $this
-					->find(),
+					->find()
+					,
 				'additionalHeader' => array_merge($headerInfo, $headerDays),
 				'additionalData' => $this->getData($daysIndex, $sectionId),
 			];
@@ -78,8 +79,8 @@ class StudentAttendancesTable extends AppTable {
 		
 	}
 
-	public function onExcelBeforeFields(Event $event, ArrayObject $settings, $fields) {
-		
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+
 	}
 
 	public function getData($days, $sectionId) {
