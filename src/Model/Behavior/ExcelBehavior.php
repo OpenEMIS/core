@@ -116,33 +116,31 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function generate($writer, $settings=[]) {
-		$sheets = [];
-		// [
-		// 	'name' => 'sheet 1',
-		// 	'params' => ['id' => 1, 'institution_id' => 1, 'date' => 1]
-		// ],
-
+		$sheets = new ArrayObject();
 		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets]);
-		if ($event->isStopped()) { return $event->result; }
-		if (is_array($event->result)) {
-			$sheets = $event->result;
+
+		if (empty((array)$sheets)) {
+			$sheets[] = [
+				'name' => $this->_table->alias(),
+				'table' => $this->_table,
+				'query' => $this->_table->find(),
+			];
 		}
 
-		if (empty($sheets)) {
-			$fields = $this->getFields();
-			// $header = $this->getHeader($fields);
+		foreach ($sheets as $sheet) {
+			$fields = $this->getFields($sheet['table']);
 			$footer = $this->getFooter();
+			$query = $sheet['query'];
 
-			$query = $this->_table->find();
-			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
-			$sheetName = $this->_table->alias();
+			$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
+			$sheetName = $sheet['name'];
 
 			// if the primary key of the record is given, only generate that record
 			if (array_key_exists('id', $settings)) {
 				$id = $settings['id'];
 				if ($id != 0) {
-					$primaryKey = $this->_table->primaryKey();
-					$query->where([$this->_table->aliasField($primaryKey) => $id]);
+					$primaryKey = $sheet['table']->primaryKey();
+					$query->where([$sheet['table']->aliasField($primaryKey) => $id]);
 				}
 			}
 
@@ -164,6 +162,11 @@ class ExcelBehavior extends Behavior {
 				foreach ($fields as $attr) {
 					$row[] = $attr['label'];
 				}
+				
+				if(isset($sheet['additionalHeader'])) {
+					$row = array_merge($row, $sheet['additionalHeader']);
+				}
+
 				$writer->writeSheetRow($sheetName, $row);
 
 				// process every page based on the limit
@@ -173,12 +176,21 @@ class ExcelBehavior extends Behavior {
 					->page($pageNo+1)
 					->all();
 
+					$additionalRows = [];
+					if (isset($sheet['additionalData'])) {
+						$additionalRows = $sheet['additionalData'];
+					}
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
 						$row = [];
 						foreach ($fields as $attr) {
-							$row[] = $this->getValue($entity, $this->_table, $attr);
+							$row[] = $this->getValue($entity, $sheet['table'], $attr);
 						}
+
+						if (!empty ($additionalRows)) {
+							$row = array_merge($row, array_shift($additionalRows));
+						}
+
 						$rowCount++;
 						$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
 						$writer->writeSheetRow($sheetName, $row);
@@ -196,50 +208,34 @@ class ExcelBehavior extends Behavior {
 			$writer->writeSheetRow($sheetName, ['']);
 			$writer->writeSheetRow($sheetName, $footer);
 			$this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
-		} else {
-			foreach ($sheets as $sheet) {
-				$sheetName = $sheet['sheetName'];
-				$header = $sheet['sheetHeader'];
-				$rows = $sheet['rows'];
-				$footer = $sheet['footer'];
-				$writer->writeSheetRow($sheetName, $header);
-				foreach ($rows as $row) {
-					$writer->writeSheetRow($sheetName, $row);
-				}
-				$writer->writeSheetRow($sheetName, ['']);
-				$writer->writeSheetRow($sheetName, $footer);
-			}
 		}
 	}
 
-	private function getFields() {
-		$schema = $this->_table->schema();
+	private function getFields($table) {
+		$schema = $table->schema();
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
-		$excludes[] = $this->_table->primaryKey();
+		$excludes[] = $table->primaryKey();
 		$fields = [];
-
-		$module = $this->_table->alias();
+		$module = $table->alias();
 		$language = I18n::locale();
-
 		$excludedTypes = ['binary'];
-
 		$columns = array_diff($columns, $excludes);
 
-		$this->onEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel');
+		$this->onEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel');
 
 		foreach ($columns as $col) {
 			$field = $schema->column($col);
 			if (!in_array($field['type'], $excludedTypes)) {
-				$label = $this->_table->aliasField($col);
+				$label = $table->aliasField($col);
 
-				$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), null, [$module, $col, $language]);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), null, [$module, $col, $language]);
 				if (strlen($event->result)) {
 					$label = $event->result;
 				}
 
 				$fields[] = [
-					'key' => $this->_table->aliasField($col),
+					'key' => $table->aliasField($col),
 					'field' => $col,
 					'type' => $field['type'],
 					'label' => $label
