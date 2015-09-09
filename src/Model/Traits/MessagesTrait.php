@@ -87,6 +87,7 @@ trait MessagesTrait {
 		'Institutions' => [
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
+			'noSections' => 'No Available Classes'
 		],
 		'InstitutionSiteStaff' => [
 			'title' => 'Staff',
@@ -199,9 +200,13 @@ trait MessagesTrait {
 			//'rubric_section_id' => 'Rubric Section',
 			'criterias' => 'Criterias'
 		],
+		'RubricTemplateOptions' => [
+			'weighting' => 'Weighting'
+		],
 		'security' => [
 			'login' => [
-				'fail' => 'You have entered an invalid username or password.'
+				'fail' => 'You have entered an invalid username or password.',
+				'inactive' => 'Your account has been disabled.'
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
@@ -303,7 +308,12 @@ trait MessagesTrait {
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
 		],
-
+		'StudentAdmission' => [
+			'exists' => 'Student exists in the school',
+			'existsInRecord' => 'Student has already been added to admission list',
+			'approve' => 'Student admission has been approved successfully.',
+			'reject' => 'Student admission has been rejected successfully.'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -324,6 +334,9 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
+				],
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
 				]
 			],
 			
@@ -348,19 +361,20 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
-			'InstitutionSiteShifts' => [
-				'start_time' => [
-					'ruleCompareDate' => 'Start Time should not be later than End Time'
+			'Absences' => [
+				'start_date' => [
+					'ruleNoOverlappingAbsenceDate' => 'Absence is already added for this date and time.',
+					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
 				],
-				'end_time' => [
-					'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
-				]
-			],
-			'InstitutionSiteStudentAbsences' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
-				]
+				],
 			],
+			// 'InstitutionSiteStudentAbsences' => [
+			// 	'end_date' => [
+			// 		'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+			// 	]
+			// ],
 			'InstitutionSiteStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -700,6 +714,11 @@ trait MessagesTrait {
 				'username' => [
 					'ruleUnique' => 'This username is already in use'
 				]
+			]
+		],
+		'Labels' => [
+			'code' => [
+				'ruleUnique' => 'This code already exists in the system'
 			]
 		]
 	];
