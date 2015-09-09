@@ -7,8 +7,11 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use App\Model\Traits\HtmlTrait;
 
 class EducationProgrammesTable extends AppTable {
+	use HtmlTrait;
+
 	private $_contain = ['EducationNextProgrammes._joinData'];
 	private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id', 'education_cycle_id', 'education_certification_id'];
 
@@ -94,10 +97,11 @@ class EducationProgrammesTable extends AppTable {
 	}
 
 	public function onGetCustomNextProgrammeElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$EducationProgrammesNextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
 		if ($action == 'index') {
-			$EducationProgrammesNextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
 			$value = $EducationProgrammesNextProgrammes
-				->findByEducationProgrammeId($entity->id)
+				->find()
+				->where([$EducationProgrammesNextProgrammes->aliasField('education_programme_id') => $entity->id])
 				->count();
 			$attr['value'] = $value;
 		} else if ($action == 'view') {
@@ -107,7 +111,7 @@ class EducationProgrammesTable extends AppTable {
 			$educationNextProgrammes = $entity->extractOriginal(['education_next_programmes']);
 			foreach ($educationNextProgrammes['education_next_programmes'] as $key => $obj) {
 				if (!is_null($obj->_joinData)) {
-					$programe = $this->findById($obj->_joinData->next_programme_id)->contain(['EducationCycles'])->first();
+					$programe = $this->find()->where([$this->aliasField('id') => $obj->_joinData->next_programme_id])->contain(['EducationCycles'])->first();
 					$rowData = [];
 					$rowData[] = $programe->cycle_programme_name;
 					$tableCells[] = $rowData;
@@ -118,32 +122,33 @@ class EducationProgrammesTable extends AppTable {
 	  		$attr['tableCells'] = $tableCells;
 		} else if ($action == 'edit') {
 			if (isset($entity->id)) {
-				$nextProgrammeslist = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->findByEducationProgrammeId($entity->id);
-				$nextProgrammesArray = [];
-
-				foreach($nextProgrammeslist as $nextProgramme){
-					$nextProgrammesArray[] = $nextProgramme->next_programme_id;
-				}
-
+				$nextProgrammeslist = $EducationProgrammesNextProgrammes
+													->find('list', ['keyField' => 'id', 'valueField' => 'next_programme_id'])
+													->where([$EducationProgrammesNextProgrammes->aliasField('education_programme_id') => $entity->id])
+													->toArray()
+													;						
 				$form = $event->subject()->Form;
 				$nextProgrammeOptions = [];
 
-				$currentProgrammSystem = $this->findById($entity->id)->contain(['EducationCycles.EducationLevels.EducationSystems'])->first();
+				$currentProgrammSystem = $this->find()->contain(['EducationCycles.EducationLevels.EducationSystems'])->where([$this->aliasField('id') => $entity->id])->first();
 				$systemId = $currentProgrammSystem->education_cycle->education_level->education_system->id;
 				$currentCycleOrder = $currentProgrammSystem->education_cycle->order;
 				$currentLevelOrder = $currentProgrammSystem->education_cycle->education_level->order;
 
-				$systems = TableRegistry::get('Education.EducationSystems')
-							->findById($systemId)
+				$EducationSystems = TableRegistry::get('Education.EducationSystems');
+				$systems = $EducationSystems
+							->find()
+							->where([$EducationSystems->aliasField('id') => $systemId])
 							->contain(['EducationLevels.EducationCycles.EducationProgrammes']);
 
+				//retrieving all programmes belonging to current level's cycle's or next level's cycle's			
 				foreach($systems as $system) {
 					foreach($system->education_levels as $level){
-						if($level->order > $currentLevelOrder) {
+						if($level->order >= $currentLevelOrder) {
 							foreach($level->education_cycles as $cycle){
 								if($cycle->order >= $currentCycleOrder) {
 									foreach($cycle->education_programmes as $programme) {
-										if(($programme->id != $entity->id) && !in_array($programme->id, $nextProgrammesArray)){
+										if(($programme->id != $entity->id) && !in_array($programme->id, $nextProgrammeslist)){
 											$nextProgrammeOptions[$programme->id] = $cycle->name.' - ('.$programme->name.')';
 										}
 									}
@@ -160,12 +165,12 @@ class EducationProgrammesTable extends AppTable {
 				$arrayNextProgrammes = [];
 				if ($this->request->is(['get'])) {
 					$educationProgramme = TableRegistry::get('Education.EducationProgrammes');
-					foreach($nextProgrammeslist as $nextProgramme){
-						$programme = $educationProgramme->findById($nextProgramme->next_programme_id)->contain(['EducationCycles'])->first();
+					foreach($nextProgrammeslist as $next_programme_id){
+						$programme = $educationProgramme->find()->where([$educationProgramme->aliasField('id') => $next_programme_id])->contain(['EducationCycles'])->first();
 						$arrayNextProgrammes[] = [
-							'id' => $nextProgramme->id,
-							'education_programme_id' => $nextProgramme->education_programme_id,
-							'next_programme_id' => $nextProgramme->next_programme_id,
+							'id' => $programme->id,
+							'education_programme_id' => $programme->education_programme_id,
+							'next_programme_id' => $next_programme_id,
 							'name' => $programme->cycle_programme_name
 						];
 					}
@@ -179,7 +184,8 @@ class EducationProgrammesTable extends AppTable {
 					if (array_key_exists('next_programme_id', $requestData[$this->alias()])) {
 						$nextProgrammeId = $requestData[$this->alias()]['next_programme_id'];
 						$programmeObj = $this
-										->findById($nextProgrammeId)
+										->find()
+										->where([$this->aliasField('id') => $nextProgrammeId])
 										->first();
 
 						$arrayNextProgrammes[] = [
@@ -209,7 +215,7 @@ class EducationProgrammesTable extends AppTable {
 					$rowData = [];
 					$rowData[] = $nextProgrammeName;
 					$rowData[] = $cellData;
-					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					$rowData[] = $this->getDeleteButton();
 
 					$tableCells[] = $rowData;
 					unset($nextProgrammeOptions[$obj['next_programme_id']]);
@@ -231,7 +237,7 @@ class EducationProgrammesTable extends AppTable {
 		// to be revisit
 		// $data[$this->alias()]['setVisible'] = true;
 
-		// To handle when delete all subjects
+		// To handle when delete all programmes
 		if (!array_key_exists('education_next_programmes', $data[$this->alias()])) {
 			$data[$this->alias()]['education_next_programmes'] = [];
 		}
