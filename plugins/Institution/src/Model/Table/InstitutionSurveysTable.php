@@ -146,7 +146,7 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -170,19 +170,19 @@ class InstitutionSurveysTable extends AppTable {
 					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
 				]
 			])
-			->first();
+			->all();
 
-		$dateDisabled = null;
-		if (!is_null($results)) {
-			$data = $results->toArray();
-			$dateDisabled = $data['date_disabled'];
+		$value = '<i class="fa fa-minus"></i>';
+		if (!$results->isEmpty()) {
+			$dateDisabled = $results->first()->date_disabled;
+			$value = $this->formatDate($dateDisabled);
 		}
 
-		return $dateDisabled;
+		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {

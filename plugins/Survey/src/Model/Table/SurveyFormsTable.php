@@ -220,8 +220,15 @@ class SurveyFormsTable extends CustomFormsTable {
 				$cellCount = 0;
 				$form = $event->subject()->Form;
 				// Build Questions options
+				list($moduleOptions, $selectedModule) = array_values($this->_getSelectOptions());
+				$customModule = $this->CustomModules->get($selectedModule);
+				$supportedFieldTypes = explode(",", $customModule->supported_field_types);
+
 				$questionOptions = $this->CustomFields
 					->find('list')
+					->where([
+						$this->CustomFields->aliasField('field_type IN') => $supportedFieldTypes
+					])
 					->toArray();
 				
 				$arrayQuestions = [];
