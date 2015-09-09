@@ -250,7 +250,8 @@ trait MessagesTrait {
 		],
 		'SurveyForms' => [
 			'add_question' => 'Add Question',
-			'add_to_section' => 'Add to Section'
+			'add_to_section' => 'Add to Section',
+			'notSupport' => 'Not supported in this form.'
 		],
 		'time' => [
 			'start' => 'Start Time',
