@@ -170,7 +170,6 @@ class AppTable extends Table {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		$Labels = TableRegistry::get('Labels');
 		$label = $Labels->getLabel($module, $field, $language);
-
 		if ($label === false && $autoHumanize) {
 			$label = Inflector::humanize($field);
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
@@ -178,6 +177,10 @@ class AppTable extends Table {
 			}
 		}
 		return $label;
+	}
+
+	public function onExcelGetLabel(Event $event, $module, $col, $language) {
+		return $this->onGetFieldLabel($event, $module, $col, $language);
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'

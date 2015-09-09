@@ -9,6 +9,7 @@ use Cake\ORM\Behavior;
 use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
+use Cake\I18n\I18n;
 
 // 3rd party xlsx writer library
 require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.php');
@@ -115,71 +116,100 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function generate($writer, $settings=[]) {
-		$fields = $this->getFields();
-		// $header = $this->getHeader($fields);
-		$footer = $this->getFooter();
+		$sheets = [];
+		// [
+		// 	'name' => 'sheet 1',
+		// 	'params' => ['id' => 1, 'institution_id' => 1, 'date' => 1]
+		// ],
 
-		$query = $this->_table->find();
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
-		$sheetName = $this->_table->alias();
-
-		// if the primary key of the record is given, only generate that record
-		if (array_key_exists('id', $settings)) {
-			$id = $settings['id'];
-			if ($id != 0) {
-				$primaryKey = $this->_table->primaryKey();
-				$query->where([$this->_table->aliasField($primaryKey) => $id]);
-			}
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets]);
+		if ($event->isStopped()) { return $event->result; }
+		if (is_array($event->result)) {
+			$sheets = $event->result;
 		}
 
-		$this->contain($query, $fields);
+		if (empty($sheets)) {
+			$fields = $this->getFields();
+			// $header = $this->getHeader($fields);
+			$footer = $this->getFooter();
 
-		$count = $query->count();
-		$rowCount = 0;
-		$percentCount = intval($count / 100);
-		$pages = ceil($count / $this->config('limit'));
+			$query = $this->_table->find();
+			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
+			$sheetName = $this->_table->alias();
 
-		if ($count == 1) {
-			$this->config('orientation', 'portrait');
-		}
-
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
-		$this->onEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-		if ($this->config('orientation') == 'landscape') {
-			$row = [];
-			foreach ($fields as $attr) {
-				$row[] = $attr['label'];
-			}
-			$writer->writeSheetRow($sheetName, $row);
-
-			// process every page based on the limit
-			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
-				$resultSet = $query
-				->limit($this->config('limit'))
-				->page($pageNo+1)
-				->all();
-
-				// process each row based on the result set
-				foreach ($resultSet as $entity) {
-					$row = [];
-					foreach ($fields as $attr) {
-						$row[] = $this->getValue($entity, $this->_table, $attr);
-					}
-					$rowCount++;
-					$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-					$writer->writeSheetRow($sheetName, $row);
+			// if the primary key of the record is given, only generate that record
+			if (array_key_exists('id', $settings)) {
+				$id = $settings['id'];
+				if ($id != 0) {
+					$primaryKey = $this->_table->primaryKey();
+					$query->where([$this->_table->aliasField($primaryKey) => $id]);
 				}
 			}
-		} else {
-			$entity = $query->first();
-			foreach ($fields as $attr) {
-				$row = [$attr['label']];
-				$row[] = $this->getValue($entity, $this->_table, $attr);
-				$writer->writeSheetRow($sheetName, $row);
+
+			$this->contain($query, $fields);
+
+			$count = $query->count();
+			$rowCount = 0;
+			$percentCount = intval($count / 100);
+			$pages = ceil($count / $this->config('limit'));
+
+			if ($count == 1) {
+				$this->config('orientation', 'portrait');
 			}
-			$rowCount++;
+
+			$this->dispatchEvent($this->_table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
+			$this->onEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
+			if ($this->config('orientation') == 'landscape') {
+				$row = [];
+				foreach ($fields as $attr) {
+					$row[] = $attr['label'];
+				}
+				$writer->writeSheetRow($sheetName, $row);
+
+				// process every page based on the limit
+				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
+					$resultSet = $query
+					->limit($this->config('limit'))
+					->page($pageNo+1)
+					->all();
+
+					// process each row based on the result set
+					foreach ($resultSet as $entity) {
+						$row = [];
+						foreach ($fields as $attr) {
+							$row[] = $this->getValue($entity, $this->_table, $attr);
+						}
+						$rowCount++;
+						$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
+						$writer->writeSheetRow($sheetName, $row);
+					}
+				}
+			} else {
+				$entity = $query->first();
+				foreach ($fields as $attr) {
+					$row = [$attr['label']];
+					$row[] = $this->getValue($entity, $this->_table, $attr);
+					$writer->writeSheetRow($sheetName, $row);
+				}
+				$rowCount++;
+			}
+			$writer->writeSheetRow($sheetName, ['']);
+			$writer->writeSheetRow($sheetName, $footer);
+			$this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
+		} else {
+			foreach ($sheets as $sheet) {
+				$sheetName = $sheet['sheetName'];
+				$header = $sheet['sheetHeader'];
+				$rows = $sheet['rows'];
+				$footer = $sheet['footer'];
+				$writer->writeSheetRow($sheetName, $header);
+				foreach ($rows as $row) {
+					$writer->writeSheetRow($sheetName, $row);
+				}
+				$writer->writeSheetRow($sheetName, ['']);
+				$writer->writeSheetRow($sheetName, $footer);
+			}
 		}
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
 	}
 
 	private function getFields() {
@@ -188,6 +218,9 @@ class ExcelBehavior extends Behavior {
 		$excludes = $this->config('excludes');
 		$excludes[] = $this->_table->primaryKey();
 		$fields = [];
+
+		$module = $this->_table->alias();
+		$language = I18n::locale();
 
 		$excludedTypes = ['binary'];
 
@@ -200,7 +233,7 @@ class ExcelBehavior extends Behavior {
 			if (!in_array($field['type'], $excludedTypes)) {
 				$label = $this->_table->aliasField($col);
 
-				$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), null, [$col]);
+				$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), null, [$module, $col, $language]);
 				if (strlen($event->result)) {
 					$label = $event->result;
 				}
@@ -221,7 +254,8 @@ class ExcelBehavior extends Behavior {
 	}
 
 	private function getFooter() {
-		return 'footer';
+		$footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
+		return $footer;
 	}
 
 	private function getValue($entity, $table, $attr) {
