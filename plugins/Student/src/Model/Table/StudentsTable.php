@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use User\Model\Table\UsersTable AS BaseUsers;
 
 class StudentsTable extends AppTable {
 	public $InstitutionStudent;
@@ -19,19 +20,11 @@ class StudentsTable extends AppTable {
 		$this->entityClass('User.User');
 		parent::initialize($config);
 
-		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		// Associations
+		BaseUsers::handleAssociations($this);
+		self::handleAssociations($this);
 
-		$this->belongsToMany('Institutions', [
-			'className' => 'Institution.Institutions',
-			'joinTable' => 'institution_students',
-			'foreignKey' => 'student_id',
-			'targetForeignKey' => 'institution_id',
-			'through' => 'Institution.Students',
-			'dependent' => true
-		]);
-
+		// Behaviors
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
@@ -73,6 +66,37 @@ class StudentsTable extends AppTable {
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
+	}
+
+	public static function handleAssociations($model) {
+
+		// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
+
+
+		$model->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_students',
+			'foreignKey' => 'student_id',
+			'targetForeignKey' => 'institution_id',
+			'through' => 'Institution.Students',
+			'dependent' => true
+		]);
+
+		$model->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->belongsToMany('Guardians', [
+			'className' => 'Student.Guardians',
+			'foreignKey' => 'student_id',
+			'targetForeignKey' => 'guardian_id',
+			'through' => 'Student.StudentGuardians',
+			'dependent' => true
+		]);
+		$model->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('StudentCustomFieldValues', ['className' => 'CustomField.StudentCustomFieldValues',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentCustomTableCells', ['className' => 'CustomField.StudentCustomTableCells',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentFees', ['className' => 'Institution.StudentFees',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -201,7 +225,43 @@ class StudentsTable extends AppTable {
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
-			$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
+			$studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
+			// contain was used to test newly created associations
+			// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']); 
+
+			if ($studentData) {
+				if ($studentData->is_staff || $studentData->is_guardian) {
+					// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
+					$deletionInformation = [
+						['class' => 'Institution.InstitutionSiteStudentAbsences', 'foreignKey' => 'security_user_id'],
+						['class' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_id'],
+						['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'security_user_id'],
+						['class' => 'Institution.StudentAdmission', 'foreignKey' => 'student_id'],
+						['class' => 'CustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id'],
+						['class' => 'CustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id'],
+						['class' => 'Institution.StudentFees', 'foreignKey' => 'security_user_id'],
+						['class' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id'],
+						['class' => 'Student.Guardians', 'foreignKey' => 'student_id'],
+					];
+
+					foreach ($deletionInformation as $key => $value) {
+						$deletionClass = TableRegistry::get($value['class']);
+						$deletionEntities = $deletionClass->find()->where([$deletionClass->aliasField($value['foreignKey']) => $id]);
+						foreach ($deletionEntities as $dkey => $dvalue) {
+							$deletionClass->delete($dvalue);
+						}
+					}
+
+					// do not delete user record
+					$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
+				} else {
+					// student is neither a guardian or staff... delete the user record along with all associated data
+					$model->delete($studentData);	
+				}
+			}
+
+			// die('dead');
+			
 			return true;
 		};
 		return $process;
