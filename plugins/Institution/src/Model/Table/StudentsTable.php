@@ -1032,10 +1032,6 @@ class StudentsTable extends AppTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
 			pr($id);
-			pr($this->request->query);
-			$selectedAcademicPeriodId = (array_key_exists('academic_period_id', $this->request->query) && $this->request->query['academic_period_id'] > 0)? $this->request->query['academic_period_id']: null;
-			$selectedStatusId = (array_key_exists('status_id', $this->request->query) && $this->request->query['status_id'] > 0)? $this->request->query['status_id']: null;
-			$selectedEducationGradeId = (array_key_exists('education_grade_id', $this->request->query) && $this->request->query['education_grade_id'] > 0)? $this->request->query['education_grade_id']: null;
 
 			$studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
 			$studentId = $studentData->student_id;
@@ -1052,10 +1048,8 @@ class StudentsTable extends AppTable {
 			} else {
 				$endDate = date('Y-m-d', strtotime($endDate));
 			}
-
 			$academicPeriodId = $studentData->academic_period_id;
-			pr($studentId);
-			pr($studentData);
+			$educationGradeId = $studentData->education_grade_id;
 
 
 
@@ -1063,12 +1057,12 @@ class StudentsTable extends AppTable {
 			// delete the student from all classes(sections) that have the same grade (grade info can be found in institution_student)
 			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 			$sectionStudentData = $InstitutionSiteSectionStudents->find();
-			if (!empty($selectedEducationGradeId)) {
+			if (!empty($educationGradeId)) {
 				// pr('filtering');
 				$sectionStudentData->contain([
-					'EducationGrades' => function ($q) {
+					'EducationGrades' => function ($q) use ($educationGradeId) {
 							return $q
-								->where(['EducationGrades.id' => $selectedEducationGradeId]);
+								->where(['EducationGrades.id' => $educationGradeId]);
 						}
 					]
 				);
@@ -1190,17 +1184,32 @@ class StudentsTable extends AppTable {
 			// }
 
 			// delete all fees paid by students to that specific grade (grade info can be found in institution_site_fees)
-				// selectedEducationGradeId
+				// educationGradeId
 			$StudentFees = TableRegistry::get('Institution.StudentFees');
 			$studentFeeData = $StudentFees->find()
-				->contain('InstitutionSiteFees')
+				->contain(['InstitutionSiteFees' => function ($q) use ($educationGradeId) {
+							return $q
+								->where(['InstitutionSiteFees.education_grade_id' => $educationGradeId]);
+						}
+					]
+				)
 				;
 
-				pr($studentFeeData->toArray()); die;
+			// DELETION TO BE DONE HERE FOR $studentFeeData
+			// foreach ($studentFeeData as $key => $value) {
+			// 	$StudentFees->delete($value);
+			// }
+
+				pr($educationGradeId);
+				pr($studentFeeData->toArray()); 
+
+
+
+				// DELETION TO BE DONE remember to kill itself
 
 
 			
-			die;
+			die('mati');
 			// contain was used to test newly created associations
 			// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']); 
 
