@@ -67,15 +67,13 @@ ALTER TABLE `institution_student_survey_table_cells`
 -- custom_modules
 ALTER TABLE `custom_modules` ADD `supported_field_types` VARCHAR(500) NULL DEFAULT NULL AFTER `filter`;
 
+INSERT INTO `custom_modules` (`code`, `name`, `model`, `behavior`, `filter`, `supported_field_types`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
+('Student List', 'Institution - Student List', 'Student.StudentSurveys', NULL, NULL, NULL, 1, 0, 1, '0000-00-00 00:00:00');
+
 UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,STUDENT_LIST' WHERE `model` = 'Institution.Institutions';
 UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE' WHERE `model` = 'Student.Students';
 UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE' WHERE `model` = 'Staff.Staff';
 UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,DROPDOWN' WHERE `model` = 'Student.StudentSurveys';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,DROPDOWN' WHERE `model` = 'Staff.StaffSurveys';
-
-INSERT INTO `custom_modules` (`code`, `name`, `model`, `behavior`, `filter`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
-('Student List', 'Institution - Student List', 'Student.StudentSurveys', NULL, NULL, 1, 0, 1, '0000-00-00 00:00:00'),
-('Staff List', 'Institution - Staff List', 'Staff.StaffSurveys', NULL, NULL, 1, 0, 1, '0000-00-00 00:00:00');
 
 -- custom_field_types
 INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
