@@ -33,31 +33,47 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->addBehavior('Excel', [
-			// 'excludes' => ['start_year', 'end_year'], 
+			'excludes' => ['status', 'education_grade_id'],
 			'pages' => ['index']
 		]);
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$sectionId = $this->request->query['section_id'];
+		$query->where([$this->aliasField('institution_site_section_id') => $sectionId]);
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$startDate = $AcademicPeriodTable->get($this->request->query['period_id'])->start_date->format('Y-m-d');
 		$endDate = $AcademicPeriodTable->get($this->request->query['period_id'])->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
-		$days = $AcademicPeriodTable->generateDaysOfMonth($months[0]['year'], $months[0]['month']['inNumber'], $startDate, $endDate);
-		$daysIndex = [];
-		foreach($days as $item){
-			$daysIndex[] = $item['date'];
+
+		foreach ($months as $month) {
+			$sheetName = $month['month']['inString'];
+			$monthInNumber = $month['month']['inNumber'];
+			$year = $month['year'];
+			$days = $AcademicPeriodTable->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
+			$headerDays = [];
+			$daysIndex = [];
+			foreach($days as $item){
+				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
+				$daysIndex[] = $item['date'];
+			}
+			$sheets[] = [
+				'name' => $month['month']['inString'],
+				'table' => $this,
+				'query' => $this
+					->find(),
+					// ->select([$this->aliasField('institution_site_section_id'), 'Users.openemis_no']),
+				'additionalHeader' => $headerDays,
+				'additionalData' => $this->getData($daysIndex),
+			];
 		}
-
-		pr($this->getData($daysIndex));die;
-		pr($query->sql());
-		$query = $StudentAbsences->find()->where([$StudentAbsences->aliasField('institution_site_id') => $institutionId]);
-		pr($query->sql());
-
+		
 	}
-
 
 	public function getData($days) {
 		if(count($days) == 0){
@@ -97,8 +113,8 @@ class StudentAttendancesTable extends AppTable {
 				->matching('StudentAbsenceReasons')
 				->where([
 					$StudentAbsenceTable->aliasField('institution_site_id') => $institutionId,
-					$StudentAbsenceTable->aliasField('start_date').' <= ' => $monthStartDay,
-					$StudentAbsenceTable->aliasField('end_date').' >= ' => $monthStartDay,
+					$StudentAbsenceTable->aliasField('start_date').' >= ' => $monthStartDay,
+					$StudentAbsenceTable->aliasField('end_date').' <= ' => $monthEndDay,
 				])
 				->select([
 						'security_user_id' => $StudentAbsenceTable->aliasField('security_user_id'),
@@ -137,10 +153,6 @@ class StudentAttendancesTable extends AppTable {
 			foreach ($studentList as $student){
 				$studentId = $student['id'];
 				$row = array();
-				$row[] = $sectionName;
-				$row[] = $student['openemis_no'];
-				$row[] = $student['first_name'];
-				$row[] = $student['last_name'];
 				foreach ($days as $index){
 					if (isset($absenceCheckList[$studentId][$index])) {
 						$absenceObj = $absenceCheckList[$studentId][$index];
@@ -449,7 +461,6 @@ class StudentAttendancesTable extends AppTable {
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 			$daysPerWeek = $ConfigItems->value('days_per_week');
-			pr($daysPerWeek);
 			$schooldays = [];
 
 			for($i=0; $i<$daysPerWeek; $i++) {
