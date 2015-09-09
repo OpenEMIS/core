@@ -9,11 +9,6 @@ if (!empty($homeUrl)) {
 
 <header>
 	<nav class="navbar navbar-fixed-top">
-		<?php if (!isset($menuToggle) || (isset($menuToggle) && $menuToggle)) : ?>
-		<div id="menu-toggle">
-			<a href="#menu-toggle" class="btn toggle-btn"><i class="fa fa-reorder"></i></a>
-		</div>
-		<?php endif ?>
 		<div class="navbar-left">
 			<a href="<?= $this->Url->build($homeUrl) ?>">
 				<span class="brand-logo">
@@ -30,12 +25,3 @@ if (!empty($homeUrl)) {
 		<?php endif ?>
 	</nav>
 </header>
-
-
-<!-- Menu Toggle Script -->
-<script>
-	$("#menu-toggle").click(function(e) {
-	    e.preventDefault();
-	    $("#wrapper").toggleClass("toggled");
-	});
-</script>
