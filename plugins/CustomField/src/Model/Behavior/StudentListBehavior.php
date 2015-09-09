@@ -5,18 +5,20 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class StudentListBehavior extends Behavior {
     protected $_defaultConfig = [
-        'module' => 'Student.Students',
+        'module' => 'Student.StudentSurveys',
         'models' => [
             'CustomModules' => 'CustomField.CustomModules',
             'CustomFieldTypes' => 'CustomField.CustomFieldTypes',
             'CustomFields' => 'Survey.SurveyQuestions',
             'CustomForms' => 'Survey.SurveyForms',
             'CustomFormsFields' => 'Survey.SurveyFormsQuestions',
+            'SurveyQuestionParams' => 'Survey.SurveyQuestionParams',
             'Sections' => 'Institution.InstitutionSiteSections',
             'SectionStudents' => 'Institution.InstitutionSiteSectionStudents',
             'StudentSurveys' => 'Student.StudentSurveys',
@@ -53,7 +55,7 @@ class StudentListBehavior extends Behavior {
                 )
                 ->toArray();
 
-            $this->_table->ControllerAction->addField('survey_form', [
+            $this->_table->ControllerAction->field('survey_form', [
                 'options' => $formOptions
             ]);
 
@@ -61,11 +63,36 @@ class StudentListBehavior extends Behavior {
         }
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 100];
+        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 100];
+        $events['ControllerAction.Model.onUpdateFieldSurveyForm'] = ['callable' => 'onUpdateFieldSurveyForm', 'priority' => 100];
+
+        return $events;
+    }
+
     public function onGetSurveyForm(Event $event, Entity $entity) {
-        foreach ($entity->custom_field_params as $key => $fieldParam) {
-            if ($fieldParam->param_key == 'survey_form_id') {
-                return $this->CustomForms->get($fieldParam->param_value)->name;
-                break;
+        $paramsResults = $this->SurveyQuestionParams
+            ->find()
+            ->where([
+                $this->SurveyQuestionParams->aliasField($this->config('fieldKey')) => $entity->id,
+                $this->SurveyQuestionParams->aliasField('param_key') => $this->config('formKey')
+            ])
+            ->all();
+
+        if (!$paramsResults->isEmpty()) {
+            $paramValue = $paramsResults->first()->param_value;
+
+            $customFormResults = $this->CustomForms
+                ->find()
+                ->where([
+                    $this->CustomForms->aliasField('id') => $paramValue
+                ])
+                ->all();
+
+            if (!$customFormResults->isEmpty()) {
+                return $customFormResults->first()->name;
             }
         }
     }
@@ -80,12 +107,18 @@ class StudentListBehavior extends Behavior {
 
         $customFieldObj = $attr['customField'];
         $formId = null;
-        foreach ($customFieldObj->custom_field_params as $key => $fieldParam) {
-            if ($fieldParam->param_key == 'survey_form_id') {
-                $formId = $fieldParam->param_value;
-                break;
-            }
+        // Find Survey Form ID from survey_question_params table
+        $paramsResults = $this->SurveyQuestionParams
+            ->find()
+            ->where([
+                $this->SurveyQuestionParams->aliasField($this->config('fieldKey')) => $customFieldObj->id,
+                $this->SurveyQuestionParams->aliasField('param_key') => $this->config('formKey')
+            ])
+            ->all();
+        if (!$paramsResults->isEmpty()) {
+            $formId = $paramsResults->first()->param_value;
         }
+        // End
 
         if (!is_null($formId)) {
             $customFields = $this->CustomFormsFields
@@ -153,7 +186,22 @@ class StudentListBehavior extends Behavior {
                         $rowData = [];
                         $rowInput = "";
                         $rowValue = "";
+
+                        // Record Id
                         $recordId = null;
+                        $recordResults = $this->StudentSurveys
+                            ->find()
+                            ->where([
+                                $this->StudentSurveys->aliasField('institution_id') => $institutionId,
+                                $this->StudentSurveys->aliasField('academic_period_id') => $periodId,
+                                $this->StudentSurveys->aliasField('student_id') => $studentId,
+                                $this->StudentSurveys->aliasField('survey_form_id') => $formId
+                            ])
+                            ->all();
+                        if (!$recordResults->isEmpty()) {
+                            $recordId = $recordResults->first()->id;
+                        }
+                        // End
 
                         if ($action == 'view') {
                             $rowValue = $student->user->name_with_id;
@@ -165,18 +213,7 @@ class StudentListBehavior extends Behavior {
                             $rowInput .= $Form->hidden($rowPrefix.".student_id", ['value' => $studentId]);
                             $rowInput .= $Form->hidden($rowPrefix.".survey_form_id", ['value' => $formId]);
 
-                            $recordResults = $this->StudentSurveys
-                                ->find()
-                                ->where([
-                                    $this->StudentSurveys->aliasField('institution_id') => $institutionId,
-                                    $this->StudentSurveys->aliasField('academic_period_id') => $periodId,
-                                    $this->StudentSurveys->aliasField('student_id') => $studentId,
-                                    $this->StudentSurveys->aliasField('survey_form_id') => $formId
-                                ])
-                                ->all();
-
-                            if (!$recordResults->isEmpty()) {
-                                $recordId = $recordResults->first()->id;
+                            if (!is_null($recordId)) {
                                 $rowInput .= $Form->hidden($rowPrefix.".id", ['value' => $recordId]);
                             }
 
@@ -215,10 +252,14 @@ class StudentListBehavior extends Behavior {
                                 case 'TEXT':
                                     $cellOptions['type'] = 'string';
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+
+                                    $cellValue = !is_null($answerValue) ? $answerValue : '';
                                     break;
                                 case 'NUMBER':
                                     $cellOptions['type'] = 'number';
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+
+                                    $cellValue = !is_null($answerValue) ? $answerValue : '';
                                     break;
                                 case 'DROPDOWN':
                                     $dropdownOptions = [];
@@ -234,6 +275,8 @@ class StudentListBehavior extends Behavior {
                                     $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                     $cellOptions['options'] = $dropdownOptions;
+
+                                    $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : $dropdownOptions[$dropdownDefault];
                                     break;
                                 default:
                                     break;
@@ -270,5 +313,43 @@ class StudentListBehavior extends Behavior {
         }
 
         return $value;
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+        // For Student List field type, save survey_form_id into survey_question_params table.
+        $paramsData = [
+            'param_key' => 'survey_form_id',
+            'param_value' => $entity->survey_form,
+            'survey_question_id' => $entity->id
+        ];
+
+        $paramsEntity = $this->SurveyQuestionParams->newEntity($paramsData);
+        if ($this->SurveyQuestionParams->save($paramsEntity)) {
+        } else {
+            $this->log($paramsEntity->errors(), 'debug');
+        }
+    }
+
+    public function editAfterAction(Event $event, Entity $entity) {
+        $this->_table->ControllerAction->field('survey_form');
+        $paramsResults = $this->SurveyQuestionParams
+            ->find()
+            ->where([
+                $this->SurveyQuestionParams->aliasField($this->config('fieldKey')) => $entity->id,
+                $this->SurveyQuestionParams->aliasField('param_key') => $this->config('formKey')
+            ])
+            ->all();
+
+        if (!$paramsResults->isEmpty()) {
+            $entity->survey_form = $paramsResults->first()->param_value;
+        }
+    }
+
+    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+        }
+
+        return $attr;
     }
 }

@@ -316,8 +316,7 @@ class RecordBehavior extends Behavior {
 			       return $q
 			       		->find('visible')
 			       		->find('order');
-			    },
-			    'CustomFields.CustomFieldParams'
+			    }
 			])
 			->where([
 				$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds

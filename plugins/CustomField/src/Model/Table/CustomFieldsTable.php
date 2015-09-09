@@ -11,7 +11,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class CustomFieldsTable extends AppTable {
-	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows', 'CustomFieldParams'];
+	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows'];
 	protected $_fieldOrder = ['field_type', 'name', 'is_mandatory', 'is_unique'];
 	protected $_fieldFormat = ['OpenEMIS'];
 
@@ -21,7 +21,6 @@ class CustomFieldsTable extends AppTable {
 		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomTableColumns', ['className' => 'CustomField.CustomTableColumns', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomFieldParams', ['className' => 'CustomField.CustomFieldParams', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'CustomField.CustomForms',
 			'joinTable' => 'custom_form_fields',
@@ -52,7 +51,6 @@ class CustomFieldsTable extends AppTable {
 		       		->find('visible');
 		    }
 		]);
-		$query->contain(['CustomFieldParams']);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -118,10 +116,6 @@ class CustomFieldsTable extends AppTable {
 			$data[$this->alias()]['custom_table_rows'] = [];
 			$entity->custom_table_rows = [];
 		}
-		if (!array_key_exists('custom_field_params', $data[$this->alias()])) {
-			$data[$this->alias()]['custom_field_params'] = [];
-			$entity->custom_field_params = [];
-		}
 		// End
 
 		// Mark all visible to dirty in order to save properly
@@ -138,12 +132,6 @@ class CustomFieldsTable extends AppTable {
 		if (isset($entity->custom_table_rows)) {
 			foreach ($entity->custom_table_rows as $rowKey => $rowObj) {
 				$entity->custom_table_rows[$rowKey]->dirty('visible', true);
-			}
-		}
-		if (isset($entity->custom_field_params)) {
-			foreach ($entity->custom_field_params as $rowKey => $rowObj) {
-				$entity->custom_field_params[$rowKey]->dirty('param_key', true);
-				$entity->custom_field_params[$rowKey]->dirty('param_value', true);
 			}
 		}
 		// End
@@ -184,9 +172,6 @@ class CustomFieldsTable extends AppTable {
 			}
 			if (array_key_exists('custom_table_rows', $request->data[$this->alias()])) {
 				unset($data[$this->alias()]['custom_table_rows']);
-			}
-			if (array_key_exists('custom_field_params', $request->data[$this->alias()])) {
-				unset($data[$this->alias()]['custom_field_params']);
 			}
 		}
 	}

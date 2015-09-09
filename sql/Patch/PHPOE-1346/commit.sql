@@ -64,26 +64,22 @@ CREATE TABLE IF NOT EXISTS `institution_student_survey_table_cells` (
 ALTER TABLE `institution_student_survey_table_cells`
   ADD PRIMARY KEY (`id`), ADD KEY `survey_question_id` (`survey_question_id`), ADD KEY `survey_table_column_id` (`survey_table_column_id`), ADD KEY `survey_table_row_id` (`survey_table_row_id`), ADD KEY `institution_student_survey_id` (`institution_student_survey_id`);
 
+-- custom_modules
+ALTER TABLE `custom_modules` ADD `supported_field_types` VARCHAR(500) NULL DEFAULT NULL AFTER `filter`;
+
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,STUDENT_LIST' WHERE `model` = 'Institution.Institutions';
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE' WHERE `model` = 'Student.Students';
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE' WHERE `model` = 'Staff.Staff';
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,DROPDOWN' WHERE `model` = 'Student.StudentSurveys';
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,DROPDOWN' WHERE `model` = 'Staff.StaffSurveys';
+
+INSERT INTO `custom_modules` (`code`, `name`, `model`, `behavior`, `filter`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
+('Student List', 'Institution - Student List', 'Student.StudentSurveys', NULL, NULL, 1, 0, 1, '0000-00-00 00:00:00'),
+('Staff List', 'Institution - Staff List', 'Staff.StaffSurveys', NULL, NULL, 1, 0, 1, '0000-00-00 00:00:00');
+
 -- custom_field_types
 INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
 ('STUDENT_LIST', 'Student List', 'text_value', '', 'OpenEMIS_Institution', 0, 0, 1);
-
--- New table - custom_field_params
-DROP TABLE IF EXISTS `custom_field_params`;
-CREATE TABLE IF NOT EXISTS `custom_field_params` (
-  `id` char(36) NOT NULL,
-  `param_key` varchar(100) NOT NULL,
-  `param_value` varchar(100) DEFAULT NULL,
-  `custom_field_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `custom_field_params`
-  ADD PRIMARY KEY (`id`), ADD KEY `custom_field_id` (`custom_field_id`);
 
 -- New table - survey_question_params
 DROP TABLE IF EXISTS `survey_question_params`;
