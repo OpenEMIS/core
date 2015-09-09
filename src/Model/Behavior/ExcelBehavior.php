@@ -129,6 +129,11 @@ class ExcelBehavior extends Behavior {
 
 		foreach ($sheets as $sheet) {
 			$fields = $this->getFields($sheet['table']);
+			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeFields'), 'onExcelBeforeFields', [$settings, $fields]);
+			if ($event->result) {
+				$fields = $event->result;
+			}
+
 			$footer = $this->getFooter();
 			$query = $sheet['query'];
 
