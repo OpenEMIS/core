@@ -48,8 +48,9 @@ class StudentAttendancesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$startDate = $AcademicPeriodTable->get($this->request->query['period_id'])->start_date->format('Y-m-d');
-		$endDate = $AcademicPeriodTable->get($this->request->query['period_id'])->end_date->format('Y-m-d');
+		$academicPeriodId = $this->request->query['academic_period_id'];
+		$startDate = $AcademicPeriodTable->get($academicPeriodId)->start_date->format('Y-m-d');
+		$endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
 		$sectionId = $this->request->query['section_id'];
 
