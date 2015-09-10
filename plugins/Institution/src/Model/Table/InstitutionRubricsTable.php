@@ -79,7 +79,7 @@ class InstitutionRubricsTable extends AppTable {
 					if ($this->AccessControl->check([$this->controller->name, 'RubricAnswers', 'edit'])) {
 						$editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
 						$status = $this->get($entity->id)->status;
-						if ($editable && $status != 2) {
+						if ($editable || $status == 2) {
 							$sectionName = $event->subject()->Html->link($obj->name, [
 								'plugin' => $this->controller->plugin,
 								'controller' => $this->controller->name,
