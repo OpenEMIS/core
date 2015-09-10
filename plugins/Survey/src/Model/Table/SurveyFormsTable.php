@@ -360,17 +360,22 @@ class SurveyFormsTable extends CustomFormsTable {
 	    		$attr['tableCells'] = $tableCells;
 	    		$attr['reorder'] = true;
 
-				$questionOptions[0] = "-- ".__('Add Question') ." --";
-				$selectedQuestion = 0;	// Set selected question to 0
+				$questionOptions[-1] = "-- ".__('Add Question') ." --";
+				$selectedQuestion = -1;	// Set selected question to -1
 				$this->advancedSelectOptions($questionOptions, $selectedQuestion, [
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('notSupport')),
 					'callable' => function($id) use ($SurveyQuestions, $supportedFieldTypes) {
-						$fieldType = $SurveyQuestions->get($id)->field_type;
-						if (in_array($fieldType, $supportedFieldTypes)) {
+						if ($id == -1) {
+							// Skip checking for -- Add Question --
 							return 1;
 						} else {
-							// field type not support for this module
-							return 0;
+							$fieldType = $SurveyQuestions->get($id)->field_type;
+							if (in_array($fieldType, $supportedFieldTypes)) {
+								return 1;
+							} else {
+								// field type not support for this module
+								return 0;
+							}
 						}
 					}
 				]);
