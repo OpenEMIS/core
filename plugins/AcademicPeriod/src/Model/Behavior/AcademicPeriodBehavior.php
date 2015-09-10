@@ -118,17 +118,22 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$isEditable = 1;
 		if ($entity->has('academic_period_id')) {
 			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
-			if (! $isEditable) {
-				$urlParams = $this->_table->ControllerAction->url('add');
-				$event->stopPropagation();
+		} else if (isset($data[$this->_table->alias()]['academic_period_id'])) {
+			$academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
+			$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+		}
+		if (! $isEditable) {
+			$urlParams = $this->_table->ControllerAction->url('add');
+			$event->stopPropagation();
 
-				// Error message to tell user that they cannot add into a non-editable academic period
-				$this->_table->Alert->error('general.academicPeriod.notEditable');
-				return $this->_table->controller->redirect($urlParams);
-			}
+			// Error message to tell user that they cannot add into a non-editable academic period
+			$this->_table->Alert->error('general.academicPeriod.notEditable');
+			return $this->_table->controller->redirect($urlParams);
 		}
 	}
 
