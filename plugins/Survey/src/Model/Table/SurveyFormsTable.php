@@ -13,6 +13,7 @@ class SurveyFormsTable extends CustomFormsTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomFields', [
 			'className' => 'Survey.SurveyQuestions',
 			'joinTable' => 'survey_forms_questions',

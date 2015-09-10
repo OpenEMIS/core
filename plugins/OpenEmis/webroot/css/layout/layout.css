@@ -1900,6 +1900,9 @@ footer {
 }
 
 @media (max-width: 767px) {
+    .table-responsive {
+        overflow: auto !important;
+    }
     .table-responsive .dropdown-menu {
         position: relative !important;
         top: -4px;
