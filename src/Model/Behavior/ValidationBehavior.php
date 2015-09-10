@@ -168,18 +168,35 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function compareWithInstitutionDateOpened($field, array $globalData) {
+		$model = $globalData['providers']['table'];
+		try {
+			$startDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return $model->getMessage('general.invalidDate');
+		}
+		if ($model->institutionId) {
+			$Institution = TableRegistry::get('Institution.Institutions');
+			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $model->institutionId])->first();
+			return $startDate >= $institution->date_opened;
+		} else {
+		    return $model->getMessage('Institution.Institutions.noActiveInstitution');
+		}
+	}
+
 	/**
 	 * Check if user input for date is valid
 	 * @param  [type] $field      [description]
 	 * @param  [type] $globalData [description]
 	 * @return [type]             [description]
 	 */
-	public static function checkDateInput($field, $globalData) {
+	public static function checkDateInput($field, array $globalData) {
+		$model = $globalData['providers']['table'];
 		try {
 			$field = new DateTime($field);
 			return true;
 		} catch (Exception $e) {
-			return __('Please input a proper value');
+		    return $model->getMessage('general.invalidDate');
 		}
 	}
 
@@ -189,16 +206,17 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return mixed              Boolean or String
 	 */
-	public static function amPmValue($field, $globalData) {
+	public static function amPmValue($field, array $globalData) {
+		$model = $globalData['providers']['table'];
 		$explode = explode(' ', $field);
 		if (isset($explode[1])) {
 			if (!in_array($explode[1], ['am', 'AM', 'pm', 'PM'])) {
-				return __('Wrong time format');
+			    return $model->getMessage('general.invalidTime');
 			} else {
 				return true;
 			}
 		} else {
-			return __('Wrong time format');
+		    return $model->getMessage('general.invalidTime');
 		}
 	}
 
@@ -365,6 +383,16 @@ class ValidationBehavior extends Behavior {
 			;
 		return $existingRecords <= 0;
 	}
+
+	// To allow case sensitive entry
+	public static function checkUniqueEnglishField($check) {
+		$englishField = trim($check);
+		$Translation = TableRegistry::get('Localization.Translations');
+      	$count = $Translation->find()
+      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->count();
+        return $count==0;
+    }
 
 	public static function inAcademicPeriod($field, $academicFieldName, $globalData) {
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
