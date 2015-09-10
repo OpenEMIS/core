@@ -15,21 +15,20 @@ use Cake\Utility\Inflector;
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
 	private $fieldOption = null;
-	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id'], 
-									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id'], 
-									  'FieldOption.Banks' => [],
-									  'FieldOption.Countries' => []
+	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'ParamModel'], 
+									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'ParamModel'], 
+									  'FieldOption.Banks' => ['behavior' => 'ParamModel'],
+									  'FieldOption.Countries' => ['behavior' => 'ParamModel', 'identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes']]
 									  ];
 
-	private $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable', 'foreignKey'];
-	private $excludeFieldList = ['modified_user_id', 'modified', 'created_user_id', 'created'];
+	private $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
+	
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
 
 		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
-		$this->addBehavior('ParamModel');
 	}
 
 	public function onGetFieldOptionId(Event $event, Entity $entity) {
@@ -53,9 +52,6 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		pr($options);
-		pr($entity); die;
-
 		parent::beforeSave($event, $entity, $options);
 
 		if ($entity->default == 1) {
@@ -88,54 +84,11 @@ class FieldOptionValuesTable extends AppTable {
 
 		$selectedOption = $this->queryString('field_option_id', $fieldOptions);
 		$this->controller->set('selectedOption', $selectedOption);
+
 		$this->fieldOption = $this->FieldOptions->get($selectedOption);
 		$this->fieldOption->name = $this->fieldOption->parent . ' - ' . $this->fieldOption->name;
 
 		$defaultFieldOrder = $this->defaultFieldOrder;
-
-		//try to get the list of values from selected options
-		$currentfieldOption = $this->FieldOptions->get($selectedOption);
-		if(array_key_exists($currentfieldOption->plugin.'.'.$currentfieldOption->code, $this->parentFieldOptionList)) {
-			$parentFieldOptionInfo = $this->parentFieldOptionList[$currentfieldOption->plugin.'.'.$currentfieldOption->code];	
-			$parentFieldOptionTable = TableRegistry::get($parentFieldOptionInfo['parentModel']);
-
-			if(!empty($parentFieldOptionInfo['foreignKey'])) {
-				$parentFieldOptions = $parentFieldOptionTable->find('list')->where([$parentFieldOptionTable->aliasField('visible') => 1])->toArray();	
-
-				$this->controller->set('parentFieldOptions', $parentFieldOptions);
-				$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
-				$this->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
-				$this->controller->set('foreignKey', $parentFieldOptionInfo['foreignKey']);
-
-				$foreignKey =  $parentFieldOptionInfo['foreignKey'];
-				$parentFieldOptionValue = $parentFieldOptions[$selectedParentFieldOption];
-
-				// $foreignKeyLabel = Inflector::humanize($foreignKey);
-				// if($this->endsWith($foreignKey, '_id')){
-				// 	$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
-				// }
-
-				$this->ControllerAction->field($foreignKey, ['type' => 'readonly', 
-																  'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
-																  'model' => $parentFieldOptionTable->alias(), 
-																  'value' => $parentFieldOptionValue,
-																  'className' => $parentFieldOptionInfo['parentModel'], 
-																  'attr' => ['value' => $parentFieldOptionValue]]);
-
-				// $this->ControllerAction->field($foreignKey, ['type' => 'hidden', 
-				// 											 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => false], 
-				// 											 'model' => $parentFieldOptionTable->alias(), 
-				// 											 'className' => $parentFieldOptionInfo['parentModel'], 
-				// 											 'attr' => ['value' => $selectedParentFieldOption]]);
-			}
-
-			//activate behaviour on the fly
-			if(!empty($parentFieldOptionInfo['behavior'])){
-				// pr($parentFieldOptionInfo['behavior']); //die;
-				// $this->addBehavior($parentFieldOptionInfo['behavior']);
-			}
-			
-		}
 
 		if ($this->action == 'index') {
 			$toolbarElements = [
@@ -152,12 +105,19 @@ class FieldOptionValuesTable extends AppTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
-		$this->ControllerAction->field('parent_field_option_id', [
-			'type' => 'readonly', 
-			'options' => $parentFieldOptions,
-			'attr' => ['value' => $this->fieldOption->name],
-			'visible' => ['index' => false, 'view' => false, 'edit' => false]
-		]);
+
+		//try to get the list of values from selected options
+		$currentFieldOption = $this->FieldOptions->get($selectedOption);
+		$currentFieldOptionName = $currentFieldOption->plugin.'.'.$currentFieldOption->code;
+		if(array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
+			$behavior = $this->parentFieldOptionList[$currentFieldOptionName]['behavior'];
+			if(!empty($behavior)){
+				$this->addBehavior($behavior, [
+								  'fieldOptionName' => $currentFieldOptionName,
+								  'parentFieldOptionList' => $this->parentFieldOptionList
+								  ]);
+			}
+		}		
 		
 		$this->ControllerAction->setFieldOrder($defaultFieldOrder); //die;
 	}
