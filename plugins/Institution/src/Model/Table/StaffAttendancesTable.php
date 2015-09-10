@@ -57,19 +57,19 @@ class StaffAttendancesTable extends AppTable {
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$academicPeriodId = $this->request->query['period_id'];
+		$academicPeriodId = $this->request->query['academic_period_id'];
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
 			->where([$this->aliasField('institution_site_id') => $institutionId])
-			->find('academicPeriod', ['academic_period_id' => $id]);
+			->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
 	}
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$startDate = $AcademicPeriodTable->get($this->request->query['period_id'])->start_date->format('Y-m-d');
-		$endDate = $AcademicPeriodTable->get($this->request->query['period_id'])->end_date->format('Y-m-d');
+		$startDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->start_date->format('Y-m-d');
+		$endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
 		// $sectionId = $this->request->query['section_id'];
 
