@@ -126,47 +126,16 @@ class FieldOptionValuesTable extends AppTable {
 		$settings['pagination'] = false;
 
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
-
-		$fieldOption = $this->FieldOptions->get($selectedOption);
-		if (!empty($fieldOption->params)) {
-			$params = json_decode($fieldOption->params);
-			$table = TableRegistry::get($params->model);
-
-			$query = $table->find();
-		} else {
-			$query->where([$this->aliasField('field_option_id') => $selectedOption]);
+		$query->where([$this->aliasField('field_option_id') => $selectedOption]);
 			$this->ControllerAction->setFieldOrder([
 				'visible', 'default', 'editable', 'name', 'national_code'
 			]);
-		}
-
-		$selectedParentFieldOption = $this->ControllerAction->getVar('selectedParentFieldOption');
-		$foreignKey = $this->ControllerAction->getVar('foreignKey');
-		if (!empty($selectedParentFieldOption) && !empty($foreignKey)) {	
-			$query->where([$foreignKey => $selectedParentFieldOption]);
-		}	
 
 		return $query->find('order');
 	}
 
 	public function getFieldOption() {
 		return $this->fieldOption;
-	}
-
-	public function viewBeforeAction(Event $event) {
-		if (!empty($this->fieldOption->params)) {
-			$params = json_decode($this->fieldOption->params);
-			$table = TableRegistry::get($params->model);
-			return $table;
-		}
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		if (!empty($this->fieldOption->params)) {
-			$params = json_decode($this->fieldOption->params);
-			$table = TableRegistry::get($params->model);
-			return $table;
-		}
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
