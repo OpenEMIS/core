@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class AcademicPeriodsTable extends AppTable {
 	private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
@@ -312,6 +313,14 @@ class AcademicPeriodsTable extends AppTable {
 		} while ($endDate->lt($period->end_date));
 		
 		return $weeks;
+	}
+
+	public function getEditable($academicPeriodId) {
+		try {
+			return $this->get($academicPeriodId)->editable;
+		} catch (RecordNotFoundException $e) {
+			return false;
+		}
 	}
 
 	public function getAvailableAcademicPeriods($list = true, $order='DESC') {
