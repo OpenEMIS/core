@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
+use Cake\I18n\I18n;
 
 class StudentAttendancesTable extends AppTable {
 	use OptionsTrait;
@@ -63,24 +64,38 @@ class StudentAttendancesTable extends AppTable {
 				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
 				$daysIndex[] = $item['date'];
 			}
-			$headerInfo = [
-				__('Openemis No')
-			];
 			$sheets[] = [
 				'name' => $month['month']['inString'],
 				'table' => $this,
 				'query' => $this
 					->find()
-					,
-				'additionalHeader' => array_merge($headerInfo, $headerDays),
+					->select(['openemis_no' => 'Users.openemis_no']),
+				'additionalHeader' => $headerDays,
 				'additionalData' => $this->getData($daysIndex, $sectionId),
 			];
 		}
-		
 	}
 
+	// To select another one more field from the containable data
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$extraField[] = [
+			'key' => 'Users.openemis_no',
+			'field' => 'openemis_no',
+			'type' => 'string',
+			'label' => ''
+		];
+		$language = I18n::locale();
 
+		// Find the label
+		foreach($extraField as $extra) {
+			list($module, $field) = explode(".", $extra['key']);
+			$label = $this->onGetFieldLabel($event, $module, $field, $language);
+			$extra['label'] = $label;
+			$newArray[] = $extra;
+			$fields = array_merge($newArray, $fields);
+		}
+
+		return $fields;
 	}
 
 	public function getData($days, $sectionId) {
@@ -161,7 +176,6 @@ class StudentAttendancesTable extends AppTable {
 			foreach ($studentList as $student){
 				$studentId = $student['id'];
 				$row = [];
-				$row[] = $student['openemis_no'];
 				foreach ($days as $index){
 					if (isset($absenceCheckList[$studentId][$index])) {
 						$absenceObj = $absenceCheckList[$studentId][$index];
@@ -656,6 +670,9 @@ class StudentAttendancesTable extends AppTable {
     			$toolbarButtons['back'] = $buttons['back'];
 				if ($toolbarButtons['back']['url']['mode']) {
 					unset($toolbarButtons['back']['url']['mode']);
+				}
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
 				}
 				$toolbarButtons['back']['type'] = 'button';
 				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
