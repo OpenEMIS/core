@@ -320,6 +320,9 @@ trait MessagesTrait {
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.'
 		],
+		'EducationProgrammes' => [
+			'add_next_programme' => 'Add Next Programme'
+		],
 		'StudentAdmission' => [
 			'exists' => 'Student exists in the school',
 			'existsInRecord' => 'Student has already been added to admission list',
