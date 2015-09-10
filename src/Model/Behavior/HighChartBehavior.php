@@ -23,6 +23,8 @@ class HighChartBehavior extends Behavior {
 			$options = $params['options'];
 		}
 		$selectedConfig['title'] = array('text' => Inflector::humanize($chart));
+		$selectedConfig['tooltip'] = ['useHTML'=>true];
+		$selectedConfig['legend'] = ['useHTML'=>true];
 		unset($selectedConfig['_function']);
 		$options = array_replace_recursive($selectedConfig, $options);
 
@@ -62,11 +64,11 @@ class HighChartBehavior extends Behavior {
 		}
 		// Configuration for the donut chart
 		$selectedConfig['title'] = 
-					['text' => $key,
+					['text' => __($key),
 					'align' => 'center',
 					'verticalAlign' => 'middle',
 					'x' => '-40',
-					'y' => '12',
+					'y' => '11',
 					'style' => ['fontSize' => '12px', 'fontWeight'=> '400']];
 		$selectedConfig['chart'] = 
 					['backgroundColor' => 'rgba(255, 255, 255, 0.002)',
@@ -74,7 +76,7 @@ class HighChartBehavior extends Behavior {
 					'spacingTop' => -5,
 					'spacingBottom' => 10,
 					'spacingLeft' => 90];
-		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}'];
+		$selectedConfig['tooltip'] = ['pointFormat' => '{point.y}', 'useHTML'=>true];
 		$selectedConfig['plotOptions'] = 
 					['pie' => ['dataLabels' => [
 							'enabled' => false],
@@ -83,6 +85,7 @@ class HighChartBehavior extends Behavior {
 		$selectedConfig['legend'] = 
 					['enabled' => false,
 					'verticalAlign' => 'bottom',
+					'useHTML'=>true,
 					'align' => 'left',
 					'layout' => 'vertical',
 					'itemStyle' => ['fontSize' => '8pt']];
