@@ -57,6 +57,10 @@ trait MessagesTrait {
 				'success' => 'The record has been duplicated successfully.',
 				'failed' => 'The record is not duplicated due to errors encountered.',
 			],
+			'academicPeriod' => [
+				'notEditable' => 'The chosen academic period is not editable',
+			],
+			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
 			'notSelected' => 'No Record has been selected/saved.',
@@ -107,6 +111,20 @@ trait MessagesTrait {
 			'end_date' => 'End Date',
 			'education_grade' => 'Education Grades'
 		],
+		'InstitutionGrades' => [
+			'noEducationLevels' => 'There are no available Education Level.',
+			'noEducationProgrammes' => 'There are no available Education Programme.',
+			'noEducationGrades' => 'There are no available Education Grade.',
+			'noGradeSelected' => 'No Education Grade was selected.',
+			'failedSavingGrades' => 'Failed to save grades',
+			'start_date' => 'Start Date',
+			'end_date' => 'End Date',
+			'education_grade' => 'Education Grades'
+		],
+		'InstitutionSiteShifts' => [
+			'start_time' => 'Start Time',
+			'end_time' => 'End Time',
+		],
 		'InstitutionSiteSections' => [
 			'noSections' => 'No Classes',
 			'students' => 'Students',
@@ -115,7 +133,7 @@ trait MessagesTrait {
 			// 'security_user_id' => 'Home Room Teacher',
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
-			'multi_grade_field' => 'Multi-Grades Class',
+			'multi_grade_field' => 'Class Grades',
 			
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
@@ -127,7 +145,7 @@ trait MessagesTrait {
 			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
-			'classes' => 'Subjects',
+			'subjects' => 'Subjects',
 			'education_subject' => 'Subject',
 			'class' => 'Subject',
 			'teacher' => 'Teacher',
@@ -303,7 +321,11 @@ trait MessagesTrait {
 			'noData' => 'There are no available Students for Promotion / Graduation.',
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
-			'success' => 'Students have been promoted.'
+			'success' => 'Students have been promoted.',
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
+		],
+		'EducationProgrammes' => [
+			'add_next_programme' => 'Add Next Programme'
 		],
 		'StudentAdmission' => [
 			'exists' => 'Student exists in the school',
@@ -356,6 +378,9 @@ trait MessagesTrait {
 			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'start_date' => [
+					'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
 				]
 			],
 			'Absences' => [
