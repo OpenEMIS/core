@@ -233,6 +233,7 @@ class StudentsTable extends AppTable {
 				if ($studentData->is_staff || $studentData->is_guardian) {
 					// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
 					$deletionInformation = [
+						['class' => 'Institution.Students', 'foreignKey' => 'student_id'],
 						['class' => 'Institution.InstitutionSiteStudentAbsences', 'foreignKey' => 'security_user_id'],
 						['class' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_id'],
 						['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'security_user_id'],
