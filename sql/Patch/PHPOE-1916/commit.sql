@@ -13,6 +13,11 @@ SELECT `id`, `current`, `available`, `visible`
 FROM `academic_periods`;
 
 ALTER TABLE `academic_periods` 
-CHANGE COLUMN `available` `editable` CHAR(1) NOT NULL DEFAULT '1';
+CHANGE COLUMN `current` `current` INT(1) NOT NULL DEFAULT '0',
+CHANGE COLUMN `available` `editable` INT(1) NOT NULL DEFAULT '1' ,
+ADD INDEX `current` (`current`),
+ADD INDEX `visible` (`visible`),
+ADD INDEX `editable` (`editable`),
+ADD INDEX `parent_id` (`parent_id`);
 
 Update `academic_periods` SET `editable` = 1, `visible` = 1 WHERE `current` = 1; 
