@@ -528,6 +528,7 @@ class StudentAttendancesTable extends AppTable {
 
 	public function indexEdit() {
 		if ($this->request->is(['post', 'put'])) {
+			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
@@ -535,6 +536,7 @@ class StudentAttendancesTable extends AppTable {
 			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
 					foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
+						$obj['academic_period'] = $requestQuery['period_id'];
 						if ($obj['absence_type'] == 'UNEXCUSED') {
 							$obj['student_absence_reason_id'] = 0;
 						}
