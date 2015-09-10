@@ -51,13 +51,16 @@ class UsersController extends AppController {
 
 	public function postLogin() {
 		$this->autoRender = false;
-		
 		if ($this->request->is('post')) {
 			if ($this->request->data['submit'] == 'login') {
 				$username = $this->request->data('username');
 				$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
 				$user = $this->Auth->identify();
 				if ($user) {
+					if ($user['status'] != 1) {
+						$this->Alert->error('security.login.inactive');
+						return $this->redirect(['action' => 'login']);
+					}
 					$this->Auth->setUser($user);
 					$labels = TableRegistry::get('Labels');
 					$labels->storeLabelsInCache();

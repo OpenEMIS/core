@@ -168,7 +168,7 @@ class NavigationComponent extends Component {
 				'collapse' => true,
 				'items' => [
 					// 'Admission' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission'], 'selected' => ['StudentAdmission']],
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser', 'Promotion', 'StudentAdmission', 'TransferApprovals']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 'selected' => ['TransferRequests', 'StudentUser', 'StudentAccount', 'Promotion', 'StudentAdmission', 'TransferApprovals']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
@@ -179,7 +179,7 @@ class NavigationComponent extends Component {
 			'Staff' => [
 				'collapse' => true,
 				'items' => [
-					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['StaffUser']],
+					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['StaffUser', 'StaffAccount']],
 					'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions'], 'selected' => ['StaffPositions']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
 					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences']]

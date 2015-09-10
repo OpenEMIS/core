@@ -63,6 +63,12 @@
     background: none;
 }
 
+@media (max-width: 320px) {
+    .panel-breadcrumb {
+        padding: 10px 0;
+    }
+}
+
 
 /* RTL BREADCRUMBS */
 
@@ -79,11 +85,7 @@
 
 .rtl .panel-breadcrumb {
     text-align: right;
-    padding: 11px 0 24px;
-}
-
-.rtl .panel-breadcrumb li {
-    float: right;
+    padding: 10px 0;
 }
 
 .rtl .treemap-breadcrumb > li:after {
