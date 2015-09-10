@@ -133,10 +133,10 @@ class StudentsTable extends AppTable {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 
 		// Education Grades
-		$institutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
 		$session = $this->Session;
 		$institutionId = $session->read('Institution.Institutions.id');
-		$educationGradesOptions = $institutionEducationGrades
+		$educationGradesOptions = $InstitutionEducationGrades
 			->find('list', [
 					'keyField' => 'EducationGrades.id',
 					'valueField' => 'EducationGrades.name'
@@ -692,24 +692,15 @@ class StudentsTable extends AppTable {
 				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
 				$id = $this->request->params['pass'][1];
-				$selectedStudent = $this->get($id)->student_id;
-				$selectedPeriod = $this->get($id)->academic_period_id;
-				$selectedGrade = $this->get($id)->education_grade_id;
+				$studentData = $this->get($id);
+				$selectedStudent = $studentData->student_id;
+				$selectedPeriod = $studentData->academic_period_id;
+				$selectedGrade = $studentData->education_grade_id;
 				$this->Session->write($TransferRequests->registryAlias().'.id', $id);
 
 				// Show Transfer button only if the Student Status is Current
 				$institutionId = $this->Session->read('Institution.Institutions.id');
-				$currentStatus = $StudentStatuses
-					->find()
-					->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
-					->first()
-					->id;
-				$pendingStatus = $StudentStatuses
-					->find()
-					->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
-					->first()
-					->id;
-
+				
 				$student = $StudentPromotion
 					->find()
 					->where([
@@ -719,6 +710,8 @@ class StudentsTable extends AppTable {
 						$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
 					])
 					->first();
+
+				$checkIfCanTransfer = $this->checkIfCanTransfer($student);
 				// End
 
 				// Transfer button
@@ -730,16 +723,7 @@ class StudentsTable extends AppTable {
 				$transferButton['attr']['title'] = __('Transfer');
 				//End
 
-				if ($student->student_status_id == $currentStatus) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'add'
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				} else if ($student->student_status_id == $pendingStatus) {
-					$transferRequest = $TransferRequests
+				$transferRequest = $TransferRequests
 						->find()
 						->where([
 							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
@@ -748,6 +732,7 @@ class StudentsTable extends AppTable {
 						])
 						->first();
 
+				if (!empty($transferRequest)) {
 					$transferButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
 						'controller' => $buttons['back']['url']['controller'],
@@ -756,9 +741,55 @@ class StudentsTable extends AppTable {
 						$transferRequest->id
 					];
 					$toolbarButtons['transfer'] = $transferButton;
-				}
+				} else if ($checkIfCanTransfer) {
+					$transferButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'TransferRequests',
+						'add'
+					];
+					$toolbarButtons['transfer'] = $transferButton;
+				} 
 			}
 		}
+	}
+
+	private function checkIfCanTransfer($student) {
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$studentStatusList = array_flip($StudentStatuses->findCodeList());
+		
+		$checkIfCanTransfer = (in_array($studentStatusList[$student->student_status_id], ['CURRENT', 'PROMOTED', 'GRADUATED']));
+		if ($checkIfCanTransfer && $studentStatusList[$student->student_status_id] == 'PROMOTED') {
+			//'Promoted' status - this feature will be available if the student is at the last grade that the school offers
+			// Education Grades
+			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
+
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			$studentEducationGradeOrder = $EducationGrades->find()->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $student->education_grade_id])->first();
+			if (!empty($studentEducationGradeOrder)) {
+				$studentEducationGradeOrder = $studentEducationGradeOrder->order;
+			}					
+
+			$advancedGradeOptionsLeft = $InstitutionEducationGrades
+				->find('list', [
+						'keyField' => 'EducationGrades.order',
+						'valueField' => 'EducationGrades.name'
+					])
+				->select([
+						'EducationGrades.id', 'EducationGrades.name', 'EducationGrades.order'
+					])
+				->contain(['EducationGrades'])
+				->where(['EducationGrades.order > ' => $studentEducationGradeOrder])
+				->where(['institution_site_id' => $institutionId])
+				->group('education_grade_id')
+				->count()
+				;
+				
+			if ($advancedGradeOptionsLeft>0) {
+				$checkIfCanTransfer = false;
+			}
+		}
+		return $checkIfCanTransfer;
 	}
 
 	// Function use by the mini dashboard (For Institution Students)

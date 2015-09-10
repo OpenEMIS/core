@@ -77,15 +77,19 @@ class InstitutionRubricsTable extends AppTable {
 					$sectionId = $obj->id;
 					$sectionName = $obj->name;
 					if ($this->AccessControl->check([$this->controller->name, 'RubricAnswers', 'edit'])) {
-						$sectionName = $event->subject()->Html->link($obj->name, [
-							'plugin' => $this->controller->plugin,
-							'controller' => $this->controller->name,
-							'action' => 'RubricAnswers',
-							'edit',
-							$entity->id,
-							'status' => $status,
-							'section' => $sectionId
-						]);
+						$editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
+						$status = $this->get($entity->id)->status;
+						if ($editable || $status == 2) {
+							$sectionName = $event->subject()->Html->link($obj->name, [
+								'plugin' => $this->controller->plugin,
+								'controller' => $this->controller->name,
+								'action' => 'RubricAnswers',
+								'edit',
+								$entity->id,
+								'status' => $status,
+								'section' => $sectionId
+							]);
+						}
 					}
 					$criterias = $RubricCriterias
 						->find()
