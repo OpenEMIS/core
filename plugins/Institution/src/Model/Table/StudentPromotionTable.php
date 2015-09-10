@@ -90,7 +90,6 @@ class StudentPromotionTable extends AppTable {
 
 			if (!is_null($this->nextGrade)) {
 				if (array_key_exists($this->nextGrade->id, $this->nextPeriodGradeOptions)) {
-				// if (array_key_exists($this->nextGrade->id, $this->gradeOptions)) {
 					$Form = $event->subject()->Form;
 					$fieldPrefix = $this->EducationGrades->alias() . '.'.$alias.'.' . $id;
 					$html .= '<span class="grade_'.$id.'" id="grade_'.$id.'_'.$this->nextStatusId.'">';
@@ -366,7 +365,7 @@ class StudentPromotionTable extends AppTable {
 				$currentStatusId = $requestData[$this->EducationGrades->alias()]['current_status_id'];
 				$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
 
-				if ($requestData['submit']!='reload') {
+				if ($requestData['submit']=='save') {
 					if (array_key_exists('student_promotion', $requestData[$this->EducationGrades->alias()])) {
 						foreach ($requestData[$this->EducationGrades->alias()]['student_promotion'] as $key => $obj) {
 							if ($obj['student_status_id'] == $repeatStatusId) {
@@ -409,9 +408,7 @@ class StudentPromotionTable extends AppTable {
 						$this->Alert->error('general.add.failed');
 					}
 				} else {
-					$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Promotion'];
-					$url = array_merge($url, $this->request->query, $this->request->pass);
-					$url[0] = 'index';
+					$url = $this->ControllerAction->url('index');
 					$url['next_academic_period_id'] = $nextAcademicPeriodId;
 					return $this->controller->redirect($url);
 				}
