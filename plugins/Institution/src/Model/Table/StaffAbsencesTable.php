@@ -193,7 +193,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->ControllerAction->field('staff_absence_reason_id', ['type' => 'select']);
 	}
 
-	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$attr['onChangeReload'] = 'changePeriod';
 		if ($action != 'add') {
 			$attr['visible'] = false;
