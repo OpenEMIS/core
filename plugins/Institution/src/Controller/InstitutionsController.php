@@ -75,23 +75,17 @@ class InstitutionsController extends AppController  {
 
 		if (array_key_exists('institution_id', $query)) {
 			//check for permission
-			$accessFlag = false;
-
-			if(!$this->AccessControl->isAdmin()){
+			if (!$this->AccessControl->isAdmin()) {
 				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-				$accessFlag = array_key_exists($query['institution_id'], $institutionIds) ? true : false;
-			} else {
-				$accessFlag = true;
-			}
 
-			if($accessFlag) {
-				$session->write('Institution.Institutions.id', $query['institution_id']);
-			} else {
-				$this->Alert->error('security.noAccess');
-				$refererUrl = $this->request->referer();
-				$event->stopPropagation();
-				return $this->redirect($refererUrl);
+				if (!array_key_exists($query['institution_id'], $institutionIds)) {
+					$this->Alert->error('security.noAccess');
+					$refererUrl = $this->request->referer();
+					$event->stopPropagation();
+					return $this->redirect($refererUrl);
+				}
 			}
+			$session->write('Institution.Institutions.id', $query['institution_id']);
 		} 
 
 		if ($action == 'index') {
