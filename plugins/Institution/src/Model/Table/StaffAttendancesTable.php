@@ -43,6 +43,7 @@ class StaffAttendancesTable extends AppTable {
 				'end_year',
 				'FTE',
 				'staff_type_id',
+				'staff_status_id',
 				'institution_site_id',
 				'institution_site_position_id'
 			],
@@ -91,7 +92,7 @@ class StaffAttendancesTable extends AppTable {
 					->find()
 					->select(['openemis_no' => 'Users.openemis_no'])
 					,
-				// 'additionalHeader' => $headerDays,
+				'additionalHeader' => $headerDays,
 				// 'additionalData' => $this->getData($daysIndex, $sectionId),
 			];
 		}
@@ -117,82 +118,82 @@ class StaffAttendancesTable extends AppTable {
 		return $fields;
 	}
 
-	// public function getData($days) {
-	// 	if(count($days) == 0){
-	// 		return null;
-	// 	}else{
-	// 		$monthStartDay = $days[0];
-	// 		$monthEndDay = $days[count($days) - 1];
-	// 	}
+	public function getData($days) {
+		if(count($days) == 0){
+			return null;
+		}else{
+			$monthStartDay = $days[0];
+			$monthEndDay = $days[count($days) - 1];
+		}
 		
-	// 	$institutionSiteId = $this->Session->read('InstitutionSite.id');
-	// 	$yearId = $this->selectedPeriod;
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$yearId = $this->selectedPeriod;
 		
-	// 	$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-	// 	$staffList = $InstitutionSiteStaff->getStaffByInstitutionSite($institutionSiteId, $monthStartDay, $monthEndDay);
-	// 	//pr($staffList);die;
-	// 	$InstitutionSiteStaffAbsence = ClassRegistry::init('InstitutionSiteStaffAbsence');
-	// 	$absenceData = $InstitutionSiteStaffAbsence->getAbsenceData($institutionSiteId, $yearId, $monthStartDay, $monthEndDay);
+		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+		$staffList = $InstitutionSiteStaff->getStaffByInstitutionSite($institutionSiteId, $monthStartDay, $monthEndDay);
+		//pr($staffList);die;
+		$InstitutionSiteStaffAbsence = ClassRegistry::init('InstitutionSiteStaffAbsence');
+		$absenceData = $InstitutionSiteStaffAbsence->getAbsenceData($institutionSiteId, $yearId, $monthStartDay, $monthEndDay);
 		
-	// 	$data = array();
-	// 	$absenceCheckList = array();
-	// 	foreach($absenceData AS $absenceUnit){
-	// 		$absenceStaff = $absenceUnit['Staff'];
-	// 		$staffId = $absenceStaff['id'];
-	// 		$absenceRecord = $absenceUnit['InstitutionSiteStaffAbsence'];
-	// 		$indexAbsenceDate = date('Y-m-d', strtotime($absenceRecord['first_date_absent']));
+		$data = array();
+		$absenceCheckList = array();
+		foreach($absenceData AS $absenceUnit){
+			$absenceStaff = $absenceUnit['Staff'];
+			$staffId = $absenceStaff['id'];
+			$absenceRecord = $absenceUnit['InstitutionSiteStaffAbsence'];
+			$indexAbsenceDate = date('Y-m-d', strtotime($absenceRecord['first_date_absent']));
 
-	// 		$absenceCheckList[$staffId][$indexAbsenceDate] = $absenceUnit;
+			$absenceCheckList[$staffId][$indexAbsenceDate] = $absenceUnit;
 
-	// 		if($absenceRecord['full_day_absent'] == 'Yes' && !empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
-	// 			$tempStartDate = date("Y-m-d", strtotime($absenceRecord['first_date_absent']));
-	// 			$formatedLastDate = date("Y-m-d", strtotime($absenceRecord['last_date_absent']));
+			if($absenceRecord['full_day_absent'] == 'Yes' && !empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
+				$tempStartDate = date("Y-m-d", strtotime($absenceRecord['first_date_absent']));
+				$formatedLastDate = date("Y-m-d", strtotime($absenceRecord['last_date_absent']));
 
-	// 			while($tempStartDate <= $formatedLastDate){
-	// 				$stampTempDate = strtotime($tempStartDate);
-	// 				$tempIndex = date('Y-m-d', $stampTempDate);
+				while($tempStartDate <= $formatedLastDate){
+					$stampTempDate = strtotime($tempStartDate);
+					$tempIndex = date('Y-m-d', $stampTempDate);
 
-	// 				$absenceCheckList[$staffId][$tempIndex] = $absenceUnit;
+					$absenceCheckList[$staffId][$tempIndex] = $absenceUnit;
 
-	// 				$stampTempDateNew = strtotime('+1 day', $stampTempDate);
-	// 				$tempStartDate = date("Y-m-d", $stampTempDateNew);
-	// 			}
-	// 		}
-	// 	}
-	// 	//pr($absenceCheckList);die;
+					$stampTempDateNew = strtotime('+1 day', $stampTempDate);
+					$tempStartDate = date("Y-m-d", $stampTempDateNew);
+				}
+			}
+		}
+		//pr($absenceCheckList);die;
 
-	// 	foreach ($staffList as $staff){
-	// 		$staffObj = $staff['Staff'];
-	// 		$staffId = $staffObj['id'];
-	// 		//$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
+		foreach ($staffList as $staff){
+			$staffObj = $staff['Staff'];
+			$staffId = $staffObj['id'];
+			//$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
 
-	// 		$row = array();
-	// 		$row[] = $staff['SecurityUser']['openemis_no'];
-	// 		$row[] = $staff['SecurityUser']['first_name'];
-	// 		$row[] = $staff['SecurityUser']['last_name'];
+			$row = array();
+			$row[] = $staff['SecurityUser']['openemis_no'];
+			$row[] = $staff['SecurityUser']['first_name'];
+			$row[] = $staff['SecurityUser']['last_name'];
 
-	// 		foreach ($days as $index){
-	// 			if (isset($absenceCheckList[$staffId][$index])) {
-	// 				$absenceObj = $absenceCheckList[$staffId][$index]['InstitutionSiteStaffAbsence'];
-	// 				if ($absenceObj['full_day_absent'] !== 'Yes') {
-	// 					$startTimeAbsent = $absenceObj['start_time_absent'];
-	// 					$endTimeAbsent = $absenceObj['end_time_absent'];
-	// 					$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
-	// 					$row[] = $timeStr;
-	// 				}else{
-	// 					$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
-	// 				}
-	// 			}else{
-	// 				$row[] = __('');
-	// 			}
-	// 		}
+			foreach ($days as $index){
+				if (isset($absenceCheckList[$staffId][$index])) {
+					$absenceObj = $absenceCheckList[$staffId][$index]['InstitutionSiteStaffAbsence'];
+					if ($absenceObj['full_day_absent'] !== 'Yes') {
+						$startTimeAbsent = $absenceObj['start_time_absent'];
+						$endTimeAbsent = $absenceObj['end_time_absent'];
+						$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+						$row[] = $timeStr;
+					}else{
+						$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
+					}
+				}else{
+					$row[] = __('');
+				}
+			}
 
-	// 		$data[] = $row;
-	// 	}
+			$data[] = $row;
+		}
 			
-	// 	//pr($data);die;
-	// 	return $data;
-	// }
+		//pr($data);die;
+		return $data;
+	}
 
 	public function beforeAction(Event $event) {
 		$tabElements = [
