@@ -12,20 +12,20 @@ class ParamModelBehavior extends Behavior {
 	private $parentFieldOptionInfo;
 	private $parentFieldOptionList;
 	private $parentFieldOptions;
+	private $fieldOptionName;
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
-		//$events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
+		$events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
 		return $events;
 	}
 
 	public function initialize(array $config) {
-		$fieldOptionName = $config['fieldOptionName'];
+		$this->fieldOptionName = $config['fieldOptionName'];
 		$this->parentFieldOptionList = $config['parentFieldOptionList'];
 
-		$parentFieldOptionInfo = $this->parentFieldOptionList[$fieldOptionName];
+		$parentFieldOptionInfo = $this->parentFieldOptionList[$this->fieldOptionName];
 		$this->parentFieldOptionInfo = $parentFieldOptionInfo;	
 
 		if(!empty($parentFieldOptionInfo['parentModel']) && !empty($parentFieldOptionInfo['foreignKey'])) {
@@ -85,14 +85,10 @@ class ParamModelBehavior extends Behavior {
 			'visible' => ['index' => false, 'view' => false, 'edit' => false]
 		]);
 
-		
-	}	
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		pr('came');
+		$table = TableRegistry::get($this->fieldOptionName);
+		$query = $table->find();
 
 		$selectedParentFieldOption = $this->_table->ControllerAction->getVar('selectedParentFieldOption');
-		pr($selectedParentFieldOption);
 		$foreignKey = $this->_table->ControllerAction->getVar('foreignKey');
 		if (!empty($selectedParentFieldOption) && !empty($foreignKey)) {	
 			$query->where([$foreignKey => $selectedParentFieldOption]);
@@ -100,7 +96,14 @@ class ParamModelBehavior extends Behavior {
 		return $query;
 	}	
 
-	// public function addEditBeforeAction(Event $event) {
-	// 	$this->_table->ControllerAction->field('testing', ['visible' => true, 'order' => 1]);
-	// }	
+	public function viewBeforeAction(Event $event) {
+		$table = TableRegistry::get($this->fieldOptionName);
+		return $table;
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		$table = TableRegistry::get($this->fieldOptionName);
+		return $table;
+	}
+	
 }
