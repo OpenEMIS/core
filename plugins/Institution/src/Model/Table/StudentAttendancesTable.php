@@ -86,7 +86,7 @@ class StudentAttendancesTable extends AppTable {
 		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $entity->student_id;
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 			
@@ -272,9 +272,12 @@ class StudentAttendancesTable extends AppTable {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
+		if (empty($this->request->query['period_id'])) {
+			$this->request->query['period_id'] = $AcademicPeriod->getCurrent();
+		}
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [

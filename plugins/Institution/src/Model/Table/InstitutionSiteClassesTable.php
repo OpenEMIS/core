@@ -126,6 +126,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		if (empty($this->_academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
+
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+		}
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $this->_academicPeriodOptions);
 	}
 
@@ -139,8 +143,9 @@ class InstitutionSiteClassesTable extends AppTable {
 		$Sections = $this->InstitutionSiteSections;
 		$Subjects = $this;
 
-		$academicPeriodOptions = $this->_academicPeriodOptions;
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		$institutionId = $this->institutionId;
+
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
@@ -300,8 +305,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		$Sections = $this->InstitutionSiteSections;
 
 		$institutionId = $this->institutionId;
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		$periodOption = ['' => '-- Select Period --'];
+		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
+		
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
