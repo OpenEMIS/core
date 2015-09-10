@@ -45,7 +45,11 @@
 .treemap-breadcrumb {
     background: none;
     margin: 0;
-    padding: 5px 10px;
+    padding: 14px 10px;
+    height: 40px;
+    font-weight: normal;
+    font-size: 12px;
+    vertical-align: middle;
 }
 
 .treemap-breadcrumb li a,
