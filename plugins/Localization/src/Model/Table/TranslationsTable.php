@@ -94,10 +94,9 @@ class TranslationsTable extends AppTable {
     public function validationDefault(Validator $validator) {
 		$validator
 			->add('en', 'ruleUnique', [
-  				'rule' => 'validateUnique',
-  				'provider' => 'table'
+  				'rule' => 'checkUniqueEnglishField'
   			])
-	        ;
+  			;
 		return $validator;
 	}
 }

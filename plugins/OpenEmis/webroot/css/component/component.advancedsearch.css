@@ -1,0 +1,80 @@
+/* ADVANCED SEARCH v.1.0.0 */
+
+.advanced-search-wrapper {
+    float: none;
+    clear: both;
+    min-height: 105px;
+    margin: 0 0 5px;
+    display: block;
+    background-color: #F9F9F9;
+    border: 1px solid #CCC;
+    width: 100%;
+}
+
+.search-box {
+    padding: 8px !important;
+    color: #555 !important;
+    min-height: 105px;
+    margin: 0 0 8px !important;
+}
+
+.advanced-search-wrapper form {
+    padding: 0;
+}
+
+.advanced-search-wrapper input,
+.advanced-search-wrapper .input-select-wrapper {
+    width: 100% !important;
+}
+
+.advanced-search-wrapper .input-select-wrapper {
+    background-color: #FFF;
+}
+
+.advanced-search-wrapper .input {
+    width: 30%;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 20px;
+}
+
+.advanced-search-wrapper .form-label {
+    margin: 0;
+    padding: 0;
+    display: block;
+    clear: both;
+    text-align: left;
+    width: 100%;
+    border: 0;
+    margin-bottom: 5px;
+    min-height: 20px;
+}
+
+.advanced-search-wrapper .form-label:after {
+    display: none;
+}
+
+.advanced-search-wrapper .form-control {
+    height: 25px;
+    padding: 3px;
+}
+
+.advanced-search-wrapper .form-group {
+    margin-bottom: 5px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 30px;
+}
+
+.advanced-search-wrapper .btn-default {
+    margin: 8px 0 4px;
+}
+
+.advanced-search-wrapper .input-checkbox,
+.advanced-search-wrapper .input-checkbox-inline {
+    width: 100% !important;
+}
+
+.advanced-search-wrapper .checkbox-label {
+    width: 15% !important;
+}

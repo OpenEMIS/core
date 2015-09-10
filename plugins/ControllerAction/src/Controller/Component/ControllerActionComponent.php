@@ -244,6 +244,10 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
+	public function action() {
+		return $this->currentAction;
+	}
+
 	public function vars() {
 		return $this->controller->viewVars;
 	}
