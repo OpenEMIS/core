@@ -228,20 +228,7 @@ class SurveyFormsTable extends CustomFormsTable {
 				$questionOptions = $this->CustomFields
 					->find('list')
 					->toArray();
-				$selectedQuestion = $this->queryString('question_id', $questionOptions);
-				$this->advancedSelectOptions($questionOptions, $selectedQuestion, [
-					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('notSupport')),
-					'callable' => function($id) use ($SurveyQuestions, $supportedFieldTypes) {
-						$fieldType = $SurveyQuestions->get($id)->field_type;
-						if (in_array($fieldType, $supportedFieldTypes)) {
-							return 1;
-						} else {
-							// field type not support for this module
-							return 0;
-						}
-					}
-				]);
-				
+
 				$arrayQuestions = [];
 				// Showing the list of the questions that are already added
 				if ($this->request->is(['get'])) {
@@ -373,7 +360,20 @@ class SurveyFormsTable extends CustomFormsTable {
 	    		$attr['tableCells'] = $tableCells;
 	    		$attr['reorder'] = true;
 
-				$questionOptions[-1] = "-- ".__('Add Question') ." --";
+				$questionOptions[0] = "-- ".__('Add Question') ." --";
+				$selectedQuestion = 0;	// Set selected question to 0
+				$this->advancedSelectOptions($questionOptions, $selectedQuestion, [
+					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('notSupport')),
+					'callable' => function($id) use ($SurveyQuestions, $supportedFieldTypes) {
+						$fieldType = $SurveyQuestions->get($id)->field_type;
+						if (in_array($fieldType, $supportedFieldTypes)) {
+							return 1;
+						} else {
+							// field type not support for this module
+							return 0;
+						}
+					}
+				]);
 	    		ksort($questionOptions);
 	    		$attr['options'] = $questionOptions;
 				break;
