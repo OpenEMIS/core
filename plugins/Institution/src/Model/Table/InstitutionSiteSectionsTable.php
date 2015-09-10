@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Collection\Collection;
 
 use App\Model\Table\AppTable;
 
@@ -194,7 +195,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 		}
 		
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
-		// pr($this->_selectedEducationGradeId);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId, $selectedAcademicPeriodId) {
@@ -368,7 +368,6 @@ class InstitutionSiteSectionsTable extends AppTable {
     		if (array_key_exists('education_grade_id', $query)) {
 	    		unset($action['education_grade_id']);
     		}
-    		// $action = $this->ControllerAction->buttons['add']['url'];
 			$this->controller->redirect($action);
     	}
     	if (array_key_exists('grade_type', $query)) {
@@ -480,40 +479,40 @@ class InstitutionSiteSectionsTable extends AppTable {
 		if ($this->_selectedGradeType == 'single') {
 			$process = function ($model, $entity) use ($data) {
 				$commonData = $data['InstitutionSiteSections'];
-
-				foreach($data['MultiSections'] as $key => $row) {
-					$data['MultiSections'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
-					$data['MultiSections'][$key]['institution_site_id'] = $commonData['institution_site_id'];
-					$data['MultiSections'][$key]['academic_period_id'] = $commonData['academic_period_id'];
-					$data['MultiSections'][$key]['institution_site_section_grades'][0] = [
+				foreach($data['MultiClasses'] as $key => $row) {
+					$data['MultiClasses'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
+					$data['MultiClasses'][$key]['institution_site_id'] = $commonData['institution_site_id'];
+					$data['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
+					$data['MultiClasses'][$key]['institution_site_section_grades'][0] = [
 							'education_grade_id' => $commonData['education_grade'],
 							'status' => 1
 						];
 				}
-				// $data['InstitutionSiteSections'] = $data['MultiSections'];
-				// unset($data['MultiSections']);
-
-				$sections = $model->newEntities($data['MultiSections']);
+				$classes = $model->newEntities($data['MultiClasses']);
 				$error = false;
-				foreach ($sections as $key=>$section) {
-				    if ($section->errors()) {
-				    	$error = $section->errors();
-				    	$data['MultiSections'][$key]['errors'] = $error;
+				foreach ($classes as $key=>$class) {
+				    if ($class->errors()) {
+				    	$error = $class->errors();
+				    	$data['MultiClasses'][$key]['errors'] = $error;
 				    }
-					if (!$error) {
-						list($error) = $model->addSectionClassesSubjects($model, $section, $data);
-					}
 				}
+				/**
+				 * attempt to prevent memory leak
+				 */
+				unset($key);
+				unset($class);
 				if (!$error) {
-					foreach ($sections as $section) {
-				    	$model->save($section);
-					}
+					foreach ($classes as $class) {
+						$model->save($class);
+				    }
+					unset($class);
 					return true;
 				} else {
 					$errorMessage='';
 					foreach ($error as $key=>$value) {
 						$errorMessage .= Inflector::classify($key);
 					}
+					unset($value);
 					$model->log($error, 'debug');
 					/**
 					 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
@@ -523,18 +522,18 @@ class InstitutionSiteSectionsTable extends AppTable {
 							$model->validator()->remove($value['field']);
 						}
 					}
+					unset($value);
 					$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
-					$model->fields['single_grade_field']['data']['sections'] = $sections;
-					$model->request->data['MultiSections'] = $data['MultiSections'];
+					$model->fields['single_grade_field']['data']['sections'] = $classes;
+					$model->request->data['MultiClasses'] = $data['MultiClasses'];
 					return false;
 				}
 			};
 		} else {
 			$process = function ($model, $entity) use ($data) {
+				$error = false;
 				if (array_key_exists('MultiClasses', $data)) {
 					$error = [$data['MultiClasses']=>0];
-				} else {
-					list($error) = $this->addSectionClassesSubjects($model, $entity, $data);
 				}
 				if (!$error) {
 					return $model->save($entity);
@@ -543,6 +542,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 					foreach ($error as $key=>$value) {
 						$errorMessage .= Inflector::classify($key);
 					}
+					unset($value);
 					$model->log($error, 'debug');
 					return false;
 				}
@@ -551,49 +551,130 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $process;
 	}
 
-	public function addSectionClassesSubjects($model, Entity $entity, ArrayObject $data) {
-		$data['InstitutionSiteClasses'] = [
-		    'academic_period_id' => $data['InstitutionSiteSections']['academic_period_id'],
-		    'class_name' => 0,
-		    'id' => '',
-		    'institution_site_id' => $data['InstitutionSiteSections']['institution_site_id'],
-		];
-		$grades = [];
-		foreach ($entity->institution_site_section_grades as $grade) {
-			$grades[] = $grade->education_grade_id;
-		}
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$gradeSubjects = $EducationGrades
-				->find()
-				->contain(['EducationSubjects'])
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+        if ($entity->isNew()) {
+			/**
+			 * using the entity->id (section id), find the list of grades from (institution_site_section_grades) linked to this section
+			 */
+			$grades = [];
+			foreach ($entity->institution_site_section_grades as $grade) {
+				$grades[] = $grade->education_grade_id;
+			}
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			/**
+			 * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
+			 */
+			$educationGradeSubjects = $EducationGrades
+					->find()
+					->contain(['EducationSubjects' => function($query) use ($grades) {
+						return $query
+							->join([
+								[
+									'table' => 'education_grades_subjects',
+									'alias' => 'EducationGradesSubjects',
+									'conditions' => [
+										'EducationGradesSubjects.education_grade_id IN' => $grades,
+										'EducationGradesSubjects.education_subject_id = EducationSubjects.id',
+										'EducationGradesSubjects.visible' => 1
+									]
+								]
+							]);
+					}])
+					->where([
+						'EducationGrades.id IN' => $grades,
+						'EducationGrades.visible' => 1
+					])
+					->toArray();
+			unset($EducationGrades);
+			unset($grades);
+			
+			$educationSubjects = [];
+			if (count($educationGradeSubjects)>0) {
+				foreach ($educationGradeSubjects as $gradeSubject) {
+					foreach ($gradeSubject->education_subjects as $subject) {
+						if (!isset($educationSubjects[$subject->id])) {
+							$educationSubjects[$subject->id] = [
+								'id' => $subject->id,
+								'name' => $subject->name
+							];
+						}
+					}
+					unset($subject);
+				}
+				unset($gradeSubject);
+			}
+			unset($educationGradeSubjects);	
+
+			/**
+			 * for each education subjects, find the primary key of institution_site_classes using (entity->academic_period_id and institution_site_id and education_subject_id)
+			 */
+			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSiteClasses');
+			$institutionSubjects = $InstitutionSubjects->find('list', [
+				    'keyField' => 'id',
+				    'valueField' => 'education_subject_id'
+				])
 				->where([
-					'EducationGrades.id IN' => $grades
+					$InstitutionSubjects->aliasField('academic_period_id') => $entity->academic_period_id,
+					$InstitutionSubjects->aliasField('institution_site_id') => $entity->institution_site_id,
+					$InstitutionSubjects->aliasField('education_subject_id').' IN' => array_keys($educationSubjects)
 				])
 				->toArray();
-		$subjects = [];
-		$data['MultiClasses'] = [];
-		foreach ($gradeSubjects as $grade) {
-			foreach ($grade->education_subjects as $subject) {
-				if (!isset($subjects[$subject->id])) {
-					$subjects[$subject->id] = $subject->name;
-					$data['MultiClasses'][] = [
-					    'education_subject_id' => $subject->id,
-				        'name' => $subject->name,
-				        'institution_site_class_staff' => [
-				            0 => [
-				                'status' => 1,
-				                'security_user_id' => 0
-				            ]
-				        ]
+			$institutionSubjectsIds = [];
+			foreach ($institutionSubjects as $key => $value) {
+				$institutionSubjectsIds[$value][] = $key;
+			}
+			unset($institutionSubjects);	
+
+			/**
+			 * using the list of primary keys, search institution_site_section_classes (InstitutionClassSubjects) to check for existing records
+			 * if found, don't insert, 
+			 * else create a record in institution_site_classes (InstitutionSubjects)
+			 * and link to the subject in institution_site_section_classes (InstitutionClassSubjects) with status 1
+			 */
+			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
+			$newSchoolSubjects = [];
+
+			foreach ($educationSubjects as $key=>$educationSubject) {
+				$getExistingRecord = false;
+				if (empty($institutionSubjects)) {
+					if (array_key_exists($key, $institutionSubjectsIds)) {
+						$getExistingRecord = $InstitutionClassSubjects->find()
+							->where([
+								$InstitutionClassSubjects->aliasField('institution_site_section_id') => $entity->id,
+								$InstitutionClassSubjects->aliasField('institution_site_class_id').' IN' => $institutionSubjectsIds[$key],
+							])
+							->select(['id'])
+							->first();
+					}
+				}
+				if (!$getExistingRecord) {
+					$newSchoolSubjects[$key] = [
+						'name' => $educationSubject['name'],
+						'institution_site_id' => $entity->institution_site_id,
+						'education_subject_id' => $educationSubject['id'],
+						'academic_period_id' => $entity->academic_period_id,
+						'institution_site_section_classes' => [
+							[
+								'status' => 1,
+								'institution_site_section_id' => $entity->id
+							]
+						]
 					];
 				}
 			}
-		}
-		list($error, $classes, $data) = $model->InstitutionSiteClasses->prepareEntityObjects($model->InstitutionSiteClasses, $data);
-		if (!$error) {
-			$entity->institution_site_classes = $classes;
-		}
-		return [$error, $entity, $data];
+
+			if (!empty($newSchoolSubjects)) {
+				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
+				foreach ($newSchoolSubjects as $subject) {
+				    $InstitutionSubjects->save($subject);
+				}
+				unset($subject);
+			}
+			unset($newSchoolSubjects);
+			unset($InstitutionSubjects);
+			unset($InstitutionClassSubjects);
+        }
+        return true;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -616,21 +697,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	public function addAfterAction(Event $event, Entity $entity) {
         $this->controller->set('selectedAction', $this->_selectedGradeType);
-
-		// if ($entity->academic_period_id == '') {
-		// 	$this->fields['academic_period_id']['attr']['value'] = $this->_selectedAcademicPeriodId;
-		// }
-		// if (isset($entity->education_grade) && $entity->education_grade  == '') {
-		// 	$this->fields['education_grade']['attr']['value'] = $this->_selectedEducationGradeId;
-		// }
-		// if (isset($entity->number_of_sections)) { 
-		// 	if($entity->number_of_sections  == '') {
-		// 		$this->fields['number_of_sections']['attr']['value'] = $this->_numberOfSections;
-		// 		$this->fields['single_grade_field']['data']['numberOfSections'] = $this->_numberOfSections;
-		// 	} else {
-		// 		$this->fields['single_grade_field']['data']['numberOfSections'] = $entity->number_of_sections;
-		// 	}
-		// }
 	}
 
 
@@ -740,7 +806,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-		$record = $this->find()->contain(['InstitutionSiteClasses.InstitutionSiteClassStudents', 'InstitutionSiteClasses.InstitutionSiteSections', 'InstitutionSiteSectionStudents.Users'])->where([$this->aliasField('id')=>$entity->id])->first();
+		$record = $this->find()->contain([
+			'InstitutionSiteClasses.InstitutionSiteClassStudents', 
+			'InstitutionSiteClasses.InstitutionSiteSections', 
+			'InstitutionSiteSectionStudents.Users'
+		])->where([$this->aliasField('id')=>$entity->id])->first();
 		$classes = [];
 		foreach ($record->institution_site_classes as $class) {
 			$students = [];
