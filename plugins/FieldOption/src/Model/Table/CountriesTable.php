@@ -10,5 +10,6 @@ class CountriesTable extends AppTable {
 		$this->table('countries');
 		parent::initialize($config);
 		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'country_id']);
+		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
 	}
 }
