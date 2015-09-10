@@ -14,6 +14,10 @@ use App\Model\Table\AppTable;
 use Staff\Model\Table\StaffTable as UserTable;
 
 class StaffUserTable extends UserTable {
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+	}
+
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
 	}
@@ -56,20 +60,15 @@ class StaffUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-		
-		$tabElements = [
-			'Staff' => ['text' => __('Position')],
-			'StaffUser' => ['text' => __('General')]
-		];
+		$tabElements = $this->controller->getUserTabElements(['userRole' => 'Staff']);
 
-		if ($this->action == 'add') {
-			$tabElements['Staff']['url'] = array_merge($url, ['action' => 'Staff', 'add']);
-			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
-		} else {
+		if ($this->action != 'add') {
 			$id = $this->request->query['id'];
-			$tabElements['Staff']['url'] = array_merge($url, ['action' => 'Staff', 'view', $id]);
-			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id]);
+			$tabElements['Staff']['url'] = array_merge($tabElements['Staff']['url'], [$id]);
+			foreach ($tabElements as $key => $value) {
+				if ($key == 'Staff') continue;
+				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
+			}
 		}
 
 		$this->controller->set('tabElements', $tabElements);
