@@ -18,7 +18,7 @@ class FieldOptionValuesTable extends AppTable {
 	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'ParamModel'], 
 									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'ParamModel'], 
 									  'FieldOption.Banks' => ['behavior' => 'ParamModel'],
-									  'FieldOption.Countries' => ['behavior' => 'ParamModel', 'identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes']]
+									  'FieldOption.Countries' => ['behavior' => 'ParamModel', 'associations' => ['identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes', 'contain' => 'IdentityTypes']]]
 									  ];
 
 	private $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
@@ -117,9 +117,15 @@ class FieldOptionValuesTable extends AppTable {
 								  'parentFieldOptionList' => $this->parentFieldOptionList
 								  ]);
 			}
+
+			foreach($defaultFieldOrder as $field){
+				if(array_key_exists($field, $this->fields)){
+					$this->ControllerAction->field($field, ['visible' => false]);
+				}
+			}
 		}		
 		
-		$this->ControllerAction->setFieldOrder($defaultFieldOrder); //die;
+		$this->ControllerAction->setFieldOrder($defaultFieldOrder); 
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
