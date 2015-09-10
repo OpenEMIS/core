@@ -128,6 +128,12 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		// Temporary fix for error on view page
+		unset($this->_fieldOrder[0]); // Academic period not in use in view page
+		unset($this->_fieldOrder[1]); // Section not in use in view page
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+		// End fix
+
 		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
 		$this->ControllerAction->field('absence_type', [
 			'options' => $absenceTypeOptions

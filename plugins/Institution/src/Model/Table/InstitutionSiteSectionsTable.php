@@ -47,6 +47,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		// this behavior restricts current user to see All Classes or My Classes
 		$this->addBehavior('Security.InstitutionClass');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -687,6 +688,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+
 		$students = $entity->institution_site_section_students;
 		$studentOptions = $this->getStudentsOptions($entity);
 		/**

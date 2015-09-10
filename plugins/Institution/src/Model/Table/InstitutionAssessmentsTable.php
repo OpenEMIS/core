@@ -21,6 +21,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -187,7 +188,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		if ($selectedStatus == 0) {	// New
 			unset($buttons['remove']);
 		}
-
 		return $buttons;
 	}
 

@@ -57,6 +57,10 @@ trait MessagesTrait {
 				'success' => 'The record has been duplicated successfully.',
 				'failed' => 'The record is not duplicated due to errors encountered.',
 			],
+			'academicPeriod' => [
+				'notEditable' => 'The chosen academic period is not editable',
+			],
+			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
 			'notSelected' => 'No Record has been selected/saved.',
@@ -106,6 +110,20 @@ trait MessagesTrait {
 			'start_date' => 'Start Date',
 			'end_date' => 'End Date',
 			'education_grade' => 'Education Grades'
+		],
+		'InstitutionGrades' => [
+			'noEducationLevels' => 'There are no available Education Level.',
+			'noEducationProgrammes' => 'There are no available Education Programme.',
+			'noEducationGrades' => 'There are no available Education Grade.',
+			'noGradeSelected' => 'No Education Grade was selected.',
+			'failedSavingGrades' => 'Failed to save grades',
+			'start_date' => 'Start Date',
+			'end_date' => 'End Date',
+			'education_grade' => 'Education Grades'
+		],
+		'InstitutionSiteShifts' => [
+			'start_time' => 'Start Time',
+			'end_time' => 'End Time',
 		],
 		'InstitutionSiteSections' => [
 			'noSections' => 'No Classes',
@@ -356,6 +374,9 @@ trait MessagesTrait {
 			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'start_date' => [
+					'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
 				]
 			],
 			'Absences' => [
