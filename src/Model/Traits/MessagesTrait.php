@@ -318,7 +318,8 @@ trait MessagesTrait {
 			'noData' => 'There are no available Students for Promotion / Graduation.',
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
-			'success' => 'Students have been promoted.'
+			'success' => 'Students have been promoted.',
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
