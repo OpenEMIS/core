@@ -34,6 +34,7 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
@@ -190,7 +191,7 @@ class InstitutionSurveysTable extends AppTable {
 		$dateDisabled = null;
 		if (!is_null($results)) {
 			$data = $results->toArray();
-			$dateDisabled = $data['date_disabled'];
+			$dateDisabled = $this->formatDate($data['date_disabled']);
 		}
 
 		return $dateDisabled;
