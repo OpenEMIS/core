@@ -7,6 +7,9 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Exception\BadRequestException;
 use App\Controller\AppController;
+use Cake\Utility\Xml;
+use Cake\Utility\Exception\XmlException;
+use Cake\Network\Exception\InternalErrorException;
 
 /**
  * Previous API url: 'http://<CORE_WEBSITE_BASE_URL>/api/<APP_ID>/<APP_KEY>?<QUERIES_NAME_VALUE_PAIR_STRING>';
@@ -44,6 +47,12 @@ use App\Controller\AppController;
  * example: 'http://phpoev3.dev/api?security_token=acd87adcas9d8cad&version=1&user_id=4536&ss_id=S286812264P';
  *
  */
+
+define("NS_XHTML", "http://www.w3.org/1999/xhtml");
+define("NS_XF", "http://www.w3.org/2002/xforms");
+define("NS_EV", "http://www.w3.org/2001/xml-events");
+define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
+define("NS_OE", "https://www.openemis.org");
 class ApiController extends AppController
 {
 	private $_requestParams = null;
@@ -173,17 +182,27 @@ class ApiController extends AppController
 		0 => 'versionSISB',
 		1 => 'versionOne'
 	];
+	private $_allowableFormats = [
+		'json' => true,
+		'soap' => true
+	];
 	public function extract() {
 		$this->autoRender = false;
 		$result = [];
 
+		$format = 'json';
 		if ($this->_requestParams) {
 			$params = $this->_requestParams;
 
 			$versionFunction = $this->_versionFunctions[0];
-			if (array_key_exists('version', $params) || $params['version']!='') {
+			if (array_key_exists('version', $params) && $params['version']!='') {
 				if (array_key_exists($params['version'], $this->_versionFunctions)) {
 					$versionFunction = $this->_versionFunctions[$params['version']];
+				}
+			}
+			if (array_key_exists('format', $params) && $params['format']!='') {
+				if (array_key_exists($params['format'], $this->_allowableFormats)) {
+					$format = $params['format'];
 				}
 			}
 
@@ -197,12 +216,84 @@ class ApiController extends AppController
 			];
 		}
 
-		$this->response->body(json_encode($result, JSON_UNESCAPED_UNICODE));
-		$this->response->type('json');
-
+		if ($format == 'json') {
+			$this->response->body(json_encode($result, JSON_UNESCAPED_UNICODE));
+			$this->response->type('json');
+		} else if ($format == 'soap') {
+			$result = $this->buildXml($result);
+			// pr($result->asXML());die;
+			$this->response->body($result->asXML());
+			$this->response->type('xml');
+			// $this->response->type('soap');
+		} else {
+			$this->response->body($result);
+			// $this->response->type('html');
+		}
 		return $this->response;
 	}
 	
+	private function buildXML($result) {
+		if (is_null($result['error']['code'])) {
+
+			$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
+				<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+					<soap:Header/>
+					<soap:Body>
+
+						<ns2:getStudentResponse xmlns:ns2="https://' . $this->request->host() . '/api/OEQueryResult.xsd">
+					      <ns2:student>
+					        <ns2:ss_id>' . $result['ss_id']['value'] . '</ns2:ss_id>
+					        <ns2:name>' . $result['name']['value'] . '</ns2:name>
+					        <ns2:status>' . $result['status']['value'] . '</ns2:status>
+					        <ns2:school_name>' . $result['school_name']['value'] . '</ns2:school_name>
+					        <ns2:school_code>' . $result['ss_id']['value'] . '</ns2:school_code>
+					        <ns2:level>' . $result['level']['value'] . '</ns2:level>
+					        <ns2:openemis_id>' . $result['openemis_id']['value'] . '</ns2:openemis_id>
+					      </ns2:student>
+					    </ns2:getStudentResponse>
+
+					</soap:Body>
+				</soap:Envelope>';
+
+			} else {
+
+				$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
+					<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+						<soap:Header/>
+						<soap:Body>
+							<soap:Fault>
+
+								<soap:Code>
+									<soap:Value>
+										' . $result['error']['code'] . '
+									</soap:Value>
+								</soap:Code>
+								<soap:Reason>
+									<soap:Text xml:lang="en-US">
+										' . $result['error']['description'] . '
+									</soap:Text>
+								</soap:Reason>
+								<soap:Role>https://' . $this->request->host() . '/api</soap:Role>
+								
+							</soap:Fault>
+						</soap:Body>
+					</soap:Envelope>';
+
+					// <soap:Detail>
+					// 	<PO:order xmlns:PO="http://gizmos.com/orders/">
+					// 		Quantity element does not have a value
+					// 	</PO:order>
+					// 	<PO:confirmation xmlns:PO="http://gizmos.com/confirm">
+					// 		Incomplete address: no zip code
+					// 	</PO:confirmation>
+					// </soap:Detail>
+
+			}
+
+		$xml = Xml::build($xmlstr);
+		return $xml;
+	}
+
 	private function versionSISB() {
 		$params = $this->_requestParams;
 		$data = false;
@@ -285,7 +376,7 @@ class ApiController extends AppController
 					 * Current level: Form 2
 					 * OpenEMIS ID#: ????
 					 */
-						$json = [
+						$result = [
 							'ss_id' => [	
 								'label' => 'SS#',
 								'value' =>  $params['ss_id'],
@@ -310,11 +401,11 @@ class ApiController extends AppController
 								'label' => 'Current level',
 								'value' =>  $data['education_level'],
 							],
-							'error' => $this->_errorCodes[0],
 							'openemis_id' => [
 								'label' => 'OpenEMIS ID#',
 								'value' =>  $data['openemis_id'],
 							],
+							'error' => $this->_errorCodes[0],
 						];
 					} else {
 					/**
@@ -326,7 +417,7 @@ class ApiController extends AppController
 					 * Highest completed level: 0
 					 * OpenEMIS ID#: ????
 					 */
-						$json = [
+						$result = [
 							'ss_id' => [	
 								'label' => 'SS#',
 								'value' =>  $params['ss_id'],
@@ -351,18 +442,18 @@ class ApiController extends AppController
 								'label' => 'Highest completed level',
 								'value' =>  ($data['education_level']) ? $data['education_level'] : '0',
 							],
-							'error' => $this->_errorCodes[0],
 							'openemis_id' => [
 								'label' => 'OpenEMIS ID#',
 								'value' =>  $data['openemis_id'],
 							],
+							'error' => $this->_errorCodes[0],
 						];
 					}
 				} else {
 					/**
 					 * no record
 					 */
-					$json = [
+					$result = [
 						'ss_id' => [	
 							'label' => 'SS#',
 							'value' =>  $params['ss_id'],
@@ -387,29 +478,29 @@ class ApiController extends AppController
 							'label' => 'Highest completed level',
 							'value' =>  '0',
 						],
-						'error' => $this->_errorCodes[0],
 						'openemis_id' => [
 							'label' => 'OpenEMIS ID#',
 							'value' =>  'None',
 						],
+						'error' => $this->_errorCodes[0],
 					];
 				}
 			} else {
 				$message = 'ss_id is missing, shown "' . $this->_errorCodes[4]['description'] . '( ' .$this->_errorCodes[4]['code'] . ' )" error message to requestor';
 				Log::info($message, ['scope' => ['api']]);
-				$json = [
+				$result = [
 					'error' => $this->_errorCodes[4],
 				];
 			}
 		} else {
 			$message = 'external user_id is missing, shown "' . $this->_errorCodes[3]['description'] . '( ' .$this->_errorCodes[3]['code'] . ' )" error message to requestor';
 			Log::info($message, ['scope' => ['api']]);
-			$json = [
+			$result = [
 				'error' => $this->_errorCodes[3],
 			];
 		}
 
-		return $json;
+		return $result;
 	}
 
 	private function versionOne() {
