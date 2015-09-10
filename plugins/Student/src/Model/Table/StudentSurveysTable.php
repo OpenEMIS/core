@@ -19,7 +19,7 @@ class StudentSurveysTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->addBehavior('Survey.Survey', [
-			'module' => 'Student.Students'
+			'module' => 'Student.StudentSurveys'
 		]);
 		$this->addBehavior('CustomField.Record', [
 			'moduleKey' => null,
