@@ -533,7 +533,7 @@ class StudentAttendancesTable extends AppTable {
 			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
 					foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
-						$obj['academic_period'] = $requestQuery['period_id'];
+						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
 						if ($obj['absence_type'] == 'UNEXCUSED') {
 							$obj['student_absence_reason_id'] = 0;
 						}
