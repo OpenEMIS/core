@@ -127,7 +127,7 @@ class StaffAttendancesTable extends AppTable {
 					->where($condition)
 					,
 				'additionalHeader' => $headerDays,
-				'additionalData' => $this->getData($daysIndex),
+				'additionalData' => $this->getData($daysIndex, $condition),
 			];
 		}
 	}
@@ -152,7 +152,7 @@ class StaffAttendancesTable extends AppTable {
 		return $fields;
 	}
 
-	public function getData($days) {
+	public function getData($days, $condition) {
 		if(count($days) == 0){
 			return null;
 		}else{
@@ -163,35 +163,13 @@ class StaffAttendancesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		
 		$StaffTable = TableRegistry::get('Institution.Staff');
-		$staffList = $StaffTable->find()
+		$staffList = $this->find()
 			->distinct(['security_user_id'])
 			->where([
-				$StaffTable->aliasField('institution_site_id') => $institutionId,
-				'OR' => [
-					'OR' => [
-						[
-							$StaffTable->aliasField('end_date').' IS NOT NULL',
-							$StaffTable->aliasField('start_date').' <= "' . $monthStartDay . '"',
-							$StaffTable->aliasField('end_date').' >= "' . $monthStartDay . '"'
-						],
-						[
-							$StaffTable->aliasField('end_date').' IS NOT NULL',
-							$StaffTable->aliasField('start_date').' <= "' . $monthEndDay . '"',
-							$StaffTable->aliasField('end_date').' >= "' . $monthEndDay . '"'
-						],
-						[
-							$StaffTable->aliasField('end_date').' IS NOT NULL',
-							$StaffTable->aliasField('start_date').' >= "' . $monthStartDay . '"',
-							$StaffTable->aliasField('end_date').' <= "' . $monthEndDay . '"'
-						],
-						
-					],
-					[
-						$StaffTable->aliasField('start_date').' <= "' . $monthEndDay . '"',
-						$StaffTable->aliasField('end_date').' IS NULL',
-					]
-				]	
+				$this->aliasField('institution_site_id') => $institutionId
 			])
+			->where($condition)
+			->select(['id' => $this->aliasField('security_user_id')])
 			->toArray()
 			;
 
@@ -238,37 +216,27 @@ class StaffAttendancesTable extends AppTable {
 			}
 		}
 
-		// foreach ($staffList as $staff){
-		// 	$staffObj = $staff['Staff'];
-		// 	$staffId = $staffObj['id'];
-		// 	//$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
-
-		// 	$row = array();
-		// 	$row[] = $staff['SecurityUser']['openemis_no'];
-		// 	$row[] = $staff['SecurityUser']['first_name'];
-		// 	$row[] = $staff['SecurityUser']['last_name'];
-
-		// 	foreach ($days as $index){
-		// 		if (isset($absenceCheckList[$staffId][$index])) {
-		// 			$absenceObj = $absenceCheckList[$staffId][$index]['InstitutionSiteStaffAbsence'];
-		// 			if ($absenceObj['full_day_absent'] !== 'Yes') {
-		// 				$startTimeAbsent = $absenceObj['start_time_absent'];
-		// 				$endTimeAbsent = $absenceObj['end_time_absent'];
-		// 				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
-		// 				$row[] = $timeStr;
-		// 			}else{
-		// 				$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
-		// 			}
-		// 		}else{
-		// 			$row[] = __('');
-		// 		}
-		// 	}
-
-		// 	$data[] = $row;
-		// }
-			
-		// //pr($data);die;
-		// return $data;
+		foreach ($staffList as $staff){
+			$staffId = $staff['id'];
+			$row = [];
+			foreach ($days as $index){
+				if (isset($absenceCheckList[$staffId][$index])) {
+					$absenceObj = $absenceCheckList[$staffId][$index];
+					if (! $absenceObj['full_day']) {
+						$startTimeAbsent = $absenceObj['start_time'];
+						$endTimeAbsent = $absenceObj['end_time'];
+						$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+						$row[] = $timeStr;
+					}else{
+						$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
+					}
+				}else{
+					$row[] = __('');
+				}
+			}	
+			$data[] = $row;
+		}
+		return $data;
 	}
 
 	public function beforeAction(Event $event) {

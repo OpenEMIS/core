@@ -120,16 +120,12 @@ class StudentAttendancesTable extends AppTable {
 
 		$data = [];
 		foreach($sections as $sectionId => $sectionName){
-			$studentList = $this->find('all')
+			$studentList = $this->find()
 				->where([
 					$this->aliasField('institution_site_section_id') => $sectionId
 				])
-				->matching('Users')
 				->select([
-					'id' => $this->aliasField('student_id'), 
-					'openemis_no' => 'Users.openemis_no',
-					'first_name' => 'Users.first_name',
-					'last_name' => 'Users.last_name'
+					'id' => $this->aliasField('student_id')
 				])
 				->toArray();
 
