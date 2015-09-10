@@ -56,6 +56,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		 */
 		$this->InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$this->InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -211,7 +212,8 @@ class InstitutionSiteClassesTable extends AppTable {
 						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedClassId
 					]
 				]
-			]);
+			])
+			;
     }
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
