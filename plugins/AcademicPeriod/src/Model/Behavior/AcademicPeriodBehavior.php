@@ -19,7 +19,7 @@ class AcademicPeriodBehavior extends Behavior {
 			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
-			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
+			'Model.custom.onUpdateActionButtons' => ['callable' => 'onUpdateActionButtons', 'priority' => 100]
 		];
 
 		$tableAlias = $this->_table->alias();
@@ -39,9 +39,9 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		if (isset($entity->academic_period_id)) {
+		if ($entity->has('academic_period_id')) {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			if (! $isEditable) {
 				$urlParams = $this->_table->ControllerAction->url('view');
 				$event->stopPropagation();
@@ -51,9 +51,9 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		if (isset($entity->academic_period_id)) {
+		if ($entity->has('academic_period_id')) {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$this->request->data[$this->_table->alias()]['editable'] = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+			$this->request->data[$this->_table->alias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 		}
 	}
 
@@ -76,7 +76,7 @@ class AcademicPeriodBehavior extends Behavior {
 						$academicPeriodId = $this->_table->request->query['academic_period_id'];
 						$editable = 1;
 						if ($academicPeriodId != 0 || !empty($academicPeriodId)) {
-							$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($academicPeriodId)->editable;
+							$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 						}
 						if ($editable) {
 							$toolbarButtons['edit'] = $buttons['index'];
@@ -98,8 +98,8 @@ class AcademicPeriodBehavior extends Behavior {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$isEditable = 1;
-		if (isset($entity->academic_period_id)) {
-			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+		if ($entity->has('academic_period_id')) {
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 		} else if (isset($this->_table->request->query['academic_period_id'])) {
 			$academicPeriodId = $this->_table->request->query['academic_period_id'];
 			if(!empty($academicPeriodId) || $academicPeriodId > 0) {
@@ -113,16 +113,14 @@ class AcademicPeriodBehavior extends Behavior {
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
-			// To stop calling the onUpdateActionButtons event on the table again
-			$event->stopPropagation();
 			return $buttons;
 		}	
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		if (isset($data[$this->_table->alias()]['academic_period_id'])) {
-			$isEditable = $AcademicPeriodTable->get($data[$this->_table->alias()]['academic_period_id'])->editable;
+		if ($entity->has('academic_period_id')) {
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			if (! $isEditable) {
 				$urlParams = $this->_table->ControllerAction->url('add');
 				$event->stopPropagation();
@@ -136,8 +134,9 @@ class AcademicPeriodBehavior extends Behavior {
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		if (isset($entity->academic_period_id)) {
-			$isEditable = $AcademicPeriodTable->get($entity->academic_period_id)->editable;
+		if ($entity->has('academic_period_id')) {
+			// $academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			if (! $isEditable) {
 				$urlParams = $this->_table->ControllerAction->url('edit');
 				$event->stopPropagation();
@@ -151,7 +150,8 @@ class AcademicPeriodBehavior extends Behavior {
 
 	public function onGetType(Event $event, Entity $entity) {
 		if(isset($this->_table->request->query['mode'])) {
-			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->_table->request->query['academic_period_id'])->editable;
+			$academicPeriodId = $this->_table->request->query['academic_period_id'];
+			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 			if (!$editable) {
 				$urlParams = $this->_table->ControllerAction->url('index');
 				if (isset($urlParams['mode'])) {
@@ -164,7 +164,7 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function onGetAssessmentId(Event $event, Entity $entity) {
-		$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($entity->academic_period_id)->editable;
+		$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($entity->academic_period_id);
 		if (! $editable) {
 			$event->stopPropagation();
 			return $entity->assessment->code_name;

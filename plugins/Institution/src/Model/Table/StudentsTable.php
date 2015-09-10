@@ -558,7 +558,7 @@ class StudentsTable extends AppTable {
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// For PHPOE-1916
-		$editable = $this->AcademicPeriods->get($data['Students']['academic_period_id'])->editable;
+		$editable = $this->AcademicPeriods->getEditable($data['Students']['academic_period_id']);
 		if (! $editable) {
 			$this->Alert->error('general.academicPeriod.notEditable');
 		} 
