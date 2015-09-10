@@ -1,8 +1,6 @@
 <?php
 echo $this->Html->css('OpenEmis.reset');
 
-echo $this->Html->css('OpenEmis.../plugins/fuelux/css/fuelux.min');
-echo $this->Html->css('OpenEmis.../plugins/fuelux/css/fuelux');
 echo $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/grey');
 
 echo $this->Html->css('OpenEmis.../plugins/bootstrap/css/bootstrap.min');
