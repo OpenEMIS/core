@@ -116,8 +116,9 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function generate($writer, $settings=[]) {
-		$checkForAssociation = false;
 		$sheets = new ArrayObject();
+
+		// Event to get the sheets. If no sheet is specified, it will be by default one sheet
 		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets]);
 
 		if (empty((array)$sheets)) {
@@ -129,7 +130,10 @@ class ExcelBehavior extends Behavior {
 		}
 
 		foreach ($sheets as $sheet) {
+
 			$fields = $this->getFields($sheet['table']);
+
+			// Event to add or modify the fields to fetch from the table
 			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeFields'), 'onExcelUpdateFields', [$settings, $fields]);
 			if ($event->result) {
 				$fields = $event->result;
@@ -151,6 +155,9 @@ class ExcelBehavior extends Behavior {
 			}
 
 			$this->contain($query, $fields);
+			// To auto include the default fields. Using select will turn off autoFields by default
+			// This is set so that the containable data will still be in the array.
+			$query->autoFields(true);
 
 			$count = $query->count();
 			$rowCount = 0;
@@ -169,15 +176,13 @@ class ExcelBehavior extends Behavior {
 					$row[] = $attr['label'];
 				}
 				
+				// Any additional custom headers that require to be appended on the right side of the sheet
+				// Header column count must be more than the additional data columns
 				if(isset($sheet['additionalHeader'])) {
 					$row = array_merge($row, $sheet['additionalHeader']);
 				}
 
 				$writer->writeSheetRow($sheetName, $row);
-
-				if (isset($sheet['checkForAssociation'])) {
-					$checkForAssociation = $sheet['checkForAssociation'];
-				}
 
 				// process every page based on the limit
 				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
@@ -186,6 +191,7 @@ class ExcelBehavior extends Behavior {
 					->page($pageNo+1)
 					->all();
 
+					// Data to be appended on the right of spreadsheet
 					$additionalRows = [];
 					if (isset($sheet['additionalData'])) {
 						$additionalRows = $sheet['additionalData'];
@@ -194,7 +200,7 @@ class ExcelBehavior extends Behavior {
 					foreach ($resultSet as $entity) {
 						$row = [];
 						foreach ($fields as $attr) {
-							$row[] = $this->getValue($entity, $sheet['table'], $attr, $checkForAssociation);
+							$row[] = $this->getValue($entity, $sheet['table'], $attr);
 						}
 
 						if (!empty ($additionalRows)) {
@@ -210,7 +216,7 @@ class ExcelBehavior extends Behavior {
 				$entity = $query->first();
 				foreach ($fields as $attr) {
 					$row = [$attr['label']];
-					$row[] = $this->getValue($entity, $this->_table, $attr, $checkForAssociation);
+					$row[] = $this->getValue($entity, $this->_table, $attr);
 					$writer->writeSheetRow($sheetName, $row);
 				}
 				$rowCount++;
@@ -264,7 +270,7 @@ class ExcelBehavior extends Behavior {
 		return $footer;
 	}
 
-	private function getValue($entity, $table, $attr, $checkForAssociation=false) {
+	private function getValue($entity, $table, $attr) {
 		$value = '';
 		$field = $attr['field'];
 		$type = $attr['type'];
@@ -287,7 +293,7 @@ class ExcelBehavior extends Behavior {
 			if ($event->result) {
 				$value = $event->result;
 			} else if ($entity->has($field)) {
-				if ($this->isForeignKey($table, $field)  && !$checkForAssociation) {
+				if ($this->isForeignKey($table, $field)) {
 					$associatedField = $this->getAssociatedKey($table, $field);
 					if ($entity->has($associatedField)) {
 						$value = $entity->$associatedField->name;
