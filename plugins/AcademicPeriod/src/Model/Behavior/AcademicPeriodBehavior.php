@@ -17,7 +17,7 @@ class AcademicPeriodBehavior extends Behavior {
 			'ControllerAction.Model.edit.afterAction' => 'editAfterAction',
 			'ControllerAction.Model.add.beforeSave' => 'addBeforeSave',
 			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
-			'Model.custom.onUpdateToolbarButtons' => ['callable' => 'onUpdateToolbarButtons', 'priority' => 101],
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
 			'Model.custom.onUpdateActionButtons' => ['callable' => 'onUpdateActionButtons', 'priority' => 100]
 		];
