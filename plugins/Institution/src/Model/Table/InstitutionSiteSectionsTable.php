@@ -87,8 +87,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		if ($this->action == 'index') {
+			if (empty($this->request->query['academic_period_id'])) {
+				$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+			}
+		}
 		if (array_key_exists($this->alias(), $this->request->data)) {
 			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
 		} else if ($this->action == 'edit' && isset($this->request->pass[1])) {
@@ -156,10 +160,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$Sections = $this;
 
-		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
-		);
-		$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		// $conditions = array(
+		// 	'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
+		// );
+		//$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
@@ -833,12 +838,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * academic_period_id field setup
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+		$periodOption = ['' => '-- Select Period --'];
+		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
 			if ($this->_selectedAcademicPeriodId > -1) {
-				$attr['attr']['value'] = $academicPeriodOptions[$this->_selectedAcademicPeriodId];
+				$attr['attr']['value'] = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId)->name;
 			}
 
 		} elseif ($action == 'add') {
