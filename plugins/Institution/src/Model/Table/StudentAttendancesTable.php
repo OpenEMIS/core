@@ -110,7 +110,7 @@ class StudentAttendancesTable extends AppTable {
 		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$InstitutionSiteSectionTable = $this->InstitutionSiteSections;
-		$academicPeriodId = $this->request->query['period_id'];
+		$academicPeriodId = $this->request->query['academic_period_id'];
 
 		$sections = $InstitutionSiteSectionTable->find('list')
 			->where([
