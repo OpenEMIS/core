@@ -19,13 +19,13 @@
 				));
 			}
 
-			if (!empty($sectionOptions)) {
-				echo $this->Form->input('section_id_', array(
+			if (!empty($classOptions)) {
+				echo $this->Form->input('class_id', array(
 					'class' => 'form-control',
 					'label' => false,
-					'options' => $sectionOptions,
+					'options' => $classOptions,
 					'url' => $baseUrl,
-					'data-named-key' => 'section_id',
+					'data-named-key' => 'class_id',
 					'data-named-group' => 'academic_period_id',
 				));
 			}
