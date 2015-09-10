@@ -154,7 +154,7 @@ class ExcelBehavior extends Behavior {
 				}
 			}
 
-			$this->contain($query, $fields);
+			$this->contain($query, $fields, $sheet['table']);
 			// To auto include the default fields. Using select will turn off autoFields by default
 			// This is set so that the containable data will still be in the array.
 			$query->autoFields(true);
@@ -216,7 +216,7 @@ class ExcelBehavior extends Behavior {
 				$entity = $query->first();
 				foreach ($fields as $attr) {
 					$row = [$attr['label']];
-					$row[] = $this->getValue($entity, $this->_table, $attr);
+					$row[] = $this->getValue($entity, $sheet['table'], $attr);
 					$writer->writeSheetRow($sheetName, $row);
 				}
 				$rowCount++;
@@ -344,12 +344,12 @@ class ExcelBehavior extends Behavior {
 		return $key;
 	}
 
-	private function contain(Query $query, $fields) {
+	private function contain(Query $query, $fields, $table) {
 		$contain = [];
 		foreach ($fields as $attr) {
 			$field = $attr['field'];
-			if ($this->isForeignKey($this->_table, $field)) {
-				$contain[] = $this->getAssociatedTable($this->_table, $field)->alias();
+			if ($this->isForeignKey($table, $field)) {
+				$contain[] = $this->getAssociatedTable($table, $field)->alias();
 			}
 		}
 		$query->contain($contain);

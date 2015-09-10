@@ -91,43 +91,16 @@ class StaffAttendancesTable extends AppTable {
 			$monthStartDay = $daysIndex[0];
 			$monthEndDay = $daysIndex[count($days) - 1];
 
-			$condition = [
-				'OR' => [
-					'OR' => [
-						[
-							$this->aliasField('end_date').' IS NOT NULL',
-							$this->aliasField('start_date').' <= "' . $monthStartDay . '"',
-							$this->aliasField('end_date').' >= "' . $monthStartDay . '"'
-						],
-						[
-							$this->aliasField('end_date').' IS NOT NULL',
-							$this->aliasField('start_date').' <= "' . $monthEndDay . '"',
-							$this->aliasField('end_date').' >= "' . $monthEndDay . '"'
-						],
-						[
-							$this->aliasField('end_date').' IS NOT NULL',
-							$this->aliasField('start_date').' >= "' . $monthStartDay . '"',
-							$this->aliasField('end_date').' <= "' . $monthEndDay . '"'
-						],
-						
-					],
-					[
-						$this->aliasField('start_date').' <= "' . $monthEndDay . '"',
-						$this->aliasField('end_date').' IS NULL',
-					]
-				]
-			];
-
 			$sheets[] = [
 				'name' => $month['month']['inString'],
 				'table' => $this,
 				'query' => $this
 					->find()
 					->select(['openemis_no' => 'Users.openemis_no'])
-					->where($condition)
+					->find('InDateRange', ['start_date' => $monthStartDay, 'end_date' => $monthEndDay])
 					,
 				'additionalHeader' => $headerDays,
-				'additionalData' => $this->getData($daysIndex, $condition),
+				'additionalData' => $this->getData($daysIndex),
 			];
 		}
 	}
@@ -152,7 +125,7 @@ class StaffAttendancesTable extends AppTable {
 		return $fields;
 	}
 
-	public function getData($days, $condition) {
+	public function getData($days) {
 		if(count($days) == 0){
 			return null;
 		}else{
@@ -168,7 +141,7 @@ class StaffAttendancesTable extends AppTable {
 			->where([
 				$this->aliasField('institution_site_id') => $institutionId
 			])
-			->where($condition)
+			->find('InDateRange', ['start_date' => $monthStartDay, 'end_date' => $monthEndDay])
 			->select(['id' => $this->aliasField('security_user_id')])
 			->toArray()
 			;
