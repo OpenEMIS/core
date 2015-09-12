@@ -96,7 +96,7 @@ class InstitutionsTable extends AppTable  {
 		// return $generate;
 	}
 
-	public function onExcelBeforeQuery(Event $event, Query $query) {
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		// pr($this->Session->read($this->aliasField('id')));die;
 		// $query->where(['Institutions.id' => 2]);
 	}
