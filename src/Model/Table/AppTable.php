@@ -103,7 +103,11 @@ class AppTable extends Table {
 
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
-		return $this->formatDate($entity->$field);
+		if (!empty($entity->$field)) {
+			return $this->formatDate($entity->$field);
+		} else {
+			return $entity->$field;
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
