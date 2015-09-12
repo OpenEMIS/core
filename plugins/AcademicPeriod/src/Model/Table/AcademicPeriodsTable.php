@@ -388,7 +388,7 @@ class AcademicPeriodsTable extends AppTable {
 			$year = date('Y', $stampFirstDayOfMonth);
 			
 			$result[] = [
-				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString],
+				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString.' '.$year],
 				'year' => $year
 			];
 			
