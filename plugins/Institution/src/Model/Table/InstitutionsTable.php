@@ -351,7 +351,9 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'area_id' && $this->action == 'index') {
+		if ($field == 'area_id') {
+		// $this->action cannot be use with this function
+		// if ($field == 'area_id' && $this->action == 'index') {
 			// Getting the system value for the area
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
