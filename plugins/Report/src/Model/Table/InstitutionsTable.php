@@ -24,7 +24,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => []]);
+		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 	}
 
