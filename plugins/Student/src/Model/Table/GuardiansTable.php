@@ -43,7 +43,7 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $this->Session->read('Students.id')]);
+		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $this->Session->read('Student.Students.id')]);
 		$this->ControllerAction->field('guardian_id');
 		$this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
 	}

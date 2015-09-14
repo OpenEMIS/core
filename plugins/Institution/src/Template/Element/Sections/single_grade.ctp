@@ -2,7 +2,7 @@
 
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
-	<div class="table-in-view col-md-5 table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
@@ -26,18 +26,18 @@
 	    				$attrValue = $defaultName;
 	    			} else {
 	    				if ($this->request->data['submit'] == 'save') {
-	    					$attrValue = $this->request->data['MultiSections'][$i]['name'];
-	    					$attrErrors = $this->request->data['MultiSections'][$i]['errors'];
+	    					$attrValue = $this->request->data['MultiClasses'][$i]['name'];
+	    					$attrErrors = $this->request->data['MultiClasses'][$i]['errors'];
 	    				} else {
 		    				$attrValue = $defaultName;
 	    				}
 	    			}
 	    			$field = [
-	    				'fieldName' => 'MultiSections['.$i.'][name]',
+	    				'fieldName' => 'MultiClasses['.$i.'][name]',
 	    				'attr' => [
-	    					'id' => 'multisections-'.$i.'-name',
+	    					'id' => 'multiclasses-'.$i.'-name',
 	    					'label' => false, 
-	    					'name' => 'MultiSections['.$i.'][name]',
+	    					'name' => 'MultiClasses['.$i.'][name]',
 	    					'value' => $attrValue
 	    				],
 	    			];
@@ -59,13 +59,13 @@
 							<?php endforeach ?>
 							</ul>
 						<?php endif; ?>
-						<?= $this->Form->hidden(sprintf('MultiSections.%d.section_number', $i), array(
+						<?= $this->Form->hidden(sprintf('MultiClasses.%d.section_number', $i), array(
 							'value' => $startingSectionNumber
 						));?>
 					</td>
 
 					<td><?php 
-					echo $this->Form->input(sprintf('MultiSections.%d.security_user_id', $i), array(
+					echo $this->Form->input(sprintf('MultiClasses.%d.security_user_id', $i), array(
 						'options' => $attr['data']['staffOptions'], 
 						'label' => false,
 						'div' => false,
