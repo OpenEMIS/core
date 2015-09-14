@@ -144,19 +144,6 @@ class FieldOptionValuesTable extends AppTable {
 		return $this->fieldOption;
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$fieldOption = $this->fieldOption;
-		if (!empty($fieldOption->params)) {
-			$process = function($model, $id, $options) use ($fieldOption) {
-				$params = json_decode($this->fieldOption->params);
-				$table = TableRegistry::get($params->model);
-				$entity = $table->get($id);
-				return $table->delete($entity);
-			};
-			return $process;
-		}
-	}
-
 	public function addOnInitialize(Event $event, Entity $entity) {
 		// set field option value for add page
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
@@ -165,48 +152,27 @@ class FieldOptionValuesTable extends AppTable {
 
 	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
 		$fieldOption = $this->fieldOption;
-		$codes[] = $fieldOption->code;
-		if (in_array($fieldOption->code, $codes)) {
-			$settings['deleteStrategy'] = 'transfer';
-			if (empty($fieldOption->params)) {
-				$model = $fieldOption->code;
-				if (!is_null($fieldOption->plugin)) {
-					$model = $fieldOption->plugin . '.' . $model;
-				}
-				$settings['model'] = $model;
-			} else {
-				//get model through params
-				if (is_object(json_decode($fieldOption->params))) { 
-			        $decoded = json_decode($fieldOption->params);
-			        $settings['model'] = (!empty($decoded->model)) ? $decoded->model : '';
-			    }
-			}
+		$settings['deleteStrategy'] = 'transfer';
+		
+		$model = $fieldOption->code;
+		if (!is_null($fieldOption->plugin)) {
+			$model = $fieldOption->plugin . '.' . $model;
 		}
-
+		$settings['model'] = $model;
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$fieldOption = $this->fieldOption;
-		$codes[] = $fieldOption->code;
-		if (in_array($fieldOption->code, $codes)) {
-			if (empty($fieldOption->params)) {
-				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
-				$availFieldOptions = $this->findById($fieldOption->id)->count();
-				
-			} else{
-				if (is_object(json_decode($fieldOption->params))) { 
-					$decoded = json_decode($fieldOption->params);
-					if(array_key_exists($decoded->model, $this->parentFieldOptionList)){
-						$fieldOptionTable = TableRegistry::get($decoded->model);
-						$availFieldOptions = $fieldOptionTable->find()->count();
-					}
-				}
-			}
-			if($availFieldOptions == 1) {
-				$this->Alert->warning('general.notTransferrable');
-				$event->stopPropagation();
-				return $this->controller->redirect($this->ControllerAction->url('index'));
-			}
+	
+		if (empty($fieldOption->params)) {
+			$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
+			$availFieldOptions = $this->find()->where([$this->aliasField('field_option_id')	 => $fieldOption->id])->count();
+		} 
+	
+		if($availFieldOptions == 1) {
+			$this->Alert->warning('general.notTransferrable');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
 		}
 	}
 
