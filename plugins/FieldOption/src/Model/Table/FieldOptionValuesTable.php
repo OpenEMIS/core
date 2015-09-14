@@ -15,10 +15,10 @@ use Cake\Utility\Inflector;
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
 	private $fieldOption = null;
-	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'ParamModel'], 
-									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'ParamModel'], 
-									  'FieldOption.Banks' => ['behavior' => 'ParamModel'],
-									  'FieldOption.Countries' => ['behavior' => 'ParamModel', 'associations' => ['identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes', 'contain' => 'IdentityTypes']]]
+	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
+									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
+									 // 'FieldOption.Banks' => ['behavior' => 'ParamModel'],
+									 // 'FieldOption.Countries' => ['behavior' => 'ParamModel', 'associations' => ['identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes', 'contain' => 'IdentityTypes']]]
 									  ];
 
 	private $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
@@ -111,20 +111,20 @@ class FieldOptionValuesTable extends AppTable {
 		$currentFieldOptionName = $currentFieldOption->plugin.'.'.$currentFieldOption->code;
 		if(array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
 			$behavior = $this->parentFieldOptionList[$currentFieldOptionName]['behavior'];
-			if(!empty($behavior)){
-				$this->addBehavior($behavior, [
+			if(!empty($behavior)){	
+				$this->addBehavior('FieldOption.'.$behavior, [
 								  'fieldOptionName' => $currentFieldOptionName,
 								  'parentFieldOptionList' => $this->parentFieldOptionList
 								  ]);
 			}
 
-			foreach($defaultFieldOrder as $field){
-				if(array_key_exists($field, $this->fields)){
-					$this->ControllerAction->field($field, ['visible' => false]);
-				}
-			}
+			// foreach($defaultFieldOrder as $field){
+			// 	if(array_key_exists($field, $this->fields)){
+			// 		$this->ControllerAction->field($field, ['visible' => false]);
+			// 	}
+			// }
 		}		
-		
+	
 		$this->ControllerAction->setFieldOrder($defaultFieldOrder); 
 	}
 
