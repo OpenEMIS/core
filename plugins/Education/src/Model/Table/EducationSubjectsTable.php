@@ -14,7 +14,7 @@ class EducationSubjectsTable extends AppTable {
 			'foreignKey' => 'education_subject_id',
 			'targetForeignKey' => 'education_grade_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => false;
+			'dependent' => false
 		]);
 	}
 }
