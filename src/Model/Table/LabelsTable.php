@@ -10,9 +10,6 @@ use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
-use Cake\Network\Request;
-use Cake\ORM\Query;
-use ArrayObject;
 
 class LabelsTable extends AppTable {
 
