@@ -117,7 +117,7 @@ class RubricStatusesTable extends AppTable {
 
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $programmeOptions = $EducationProgrammes
-        	->find('list')
+        	->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
         	->find('visible')
 			->find('order')
         	->toArray();

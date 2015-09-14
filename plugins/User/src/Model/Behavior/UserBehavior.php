@@ -52,6 +52,9 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_staff']['type'] = 'hidden';
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
 
+		$this->_table->fields['username']['visible'] = false;
+		$this->_table->fields['last_login']['visible'] = false;
+
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->fields['photo_name']['visible'] = false;
@@ -71,7 +74,16 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['last_name']['order'] = $i++;
 			$this->_table->fields['preferred_name']['order'] = $i++;
 			$this->_table->fields['gender_id']['order'] = $i++;
+
+			$this->_table->ControllerAction->field('date_of_birth', [
+					'date_options' => [
+						'endDate' => date('d-m-Y')
+					],
+					'default_date' => false,
+				]
+			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
+			
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
 			$this->_table->fields['address_area_id']['order'] = $i++;

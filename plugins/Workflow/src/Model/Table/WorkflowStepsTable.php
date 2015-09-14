@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class WorkflowStepsTable extends AppTable {
+	private $_fieldOrder = ['workflow_id', 'name', 'security_roles'];
 	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
 
 	public function initialize(array $config) {
@@ -26,11 +27,48 @@ class WorkflowStepsTable extends AppTable {
 		]);
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		// Auto insert default workflow_actions when add
+		if ($entity->isNew()) {
+			$data = [
+				'workflow_actions' => [
+					[
+						'name' => __('Approve'),
+						'action' => 0,
+						'visible' => 1,
+						'next_workflow_step_id' => 0,
+						'comment_required' => 0
+					],
+					[
+						'name' => __('Reject'),
+						'action' => 1,
+						'visible' => 1,
+						'next_workflow_step_id' => 0,
+						'comment_required' => 0
+					]
+				]
+			];
+			$entity = $this->patchEntity($entity, $data);
+		}
+
+		// Always mark visible to dirty to handle retain Workflow Actions when update all visible to 0
+		foreach ($entity->workflow_actions as $key => $obj) {
+			$entity->workflow_actions[$key]->dirty('visible', true);
+		}
+	}
+
 	public function onGetActions(Event $event, Entity $entity) {
 		$workflowActions = [];
 		foreach ($entity->workflow_actions as $key => $obj) {
 			if ($obj->visible == 1) {
-				$workflowActions[$key] = $obj->name . ' - ' . $obj->next_workflow_step->name;
+				$workflowAction = $obj->name;
+				if (isset($obj->next_workflow_step)) {
+					$workflowAction .= ' - ' . $obj->next_workflow_step->name;
+				} else {
+					$workflowAction .= ' - (' . __('Not linked') . ')';
+				}
+				$workflowActions[$key] = $workflowAction;
 			}
 		}
 
@@ -45,15 +83,16 @@ class WorkflowStepsTable extends AppTable {
 			'placeholder' => __('Select Security Roles')
 		]);
 
-		$this->ControllerAction->field('actions', [
-			'type' => 'element',
-			'element' => 'Workflow.actions',
-			'valueClass' => 'table-full-width'
-		]);
+		if ($this->action != 'add') {
+			$this->ControllerAction->field('actions', [
+				'type' => 'element',
+				'element' => 'Workflow.actions',
+				'valueClass' => 'table-full-width'
+			]);
+			$this->_fieldOrder[] = 'actions';
+		}
 
-		$this->ControllerAction->setFieldOrder([
-			'workflow_id', 'name', 'security_roles', 'actions'
-		]);		
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -91,16 +130,18 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (!array_key_exists('workflow_actions', $data[$this->alias()])) {
-			$data[$this->alias()]['workflow_actions'] = [];
-		}
+		if (array_key_exists($this->alias(), $data)) {
+			if (!array_key_exists('workflow_actions', $data[$this->alias()])) {
+				$data[$this->alias()]['workflow_actions'] = [];
+			}
 
-		// Set all Workflow Actions to visible = 0
-		if (array_key_exists('id', $data[$this->alias()])) {
-			$this->WorkflowActions->updateAll(
-				['visible' => 0],
-				['workflow_step_id' => $data[$this->alias()]['id']]
-			);
+			// Set all Workflow Actions to visible = 0 (edit)
+			if (array_key_exists('id', $data[$this->alias()])) {
+				$this->WorkflowActions->updateAll(
+					['visible' => 0],
+					['workflow_step_id' => $data[$this->alias()]['id']]
+				);
+			}
 		}
 
 		//Required by patchEntity for associated data
@@ -118,8 +159,7 @@ class WorkflowStepsTable extends AppTable {
 			$this->aliasField('workflow_id') => $entity->workflow_id
 		];
 
-		//edit
-		if (isset($entity->id)) {
+		if (isset($entity->id)) { // edit
 			//do not allow to edit name of Open and Closed
 			$this->fields['name']['attr']['disabled'] = !is_null($entity->stage) ? 'disabled' : '';
 			//exclude ownself in nextStepOptions
@@ -159,6 +199,19 @@ class WorkflowStepsTable extends AppTable {
 		//Initialize field values
 		list(, $selectedWorkflow) = array_values($this->_getSelectOptions());
 		$entity->workflow_id = $selectedWorkflow;
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		// Do not allow user to delete Open and Closed
+		if (!is_null($entity->stage)) {
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+
+		return $buttons;
 	}
 
 	public function _getSelectOptions() {

@@ -88,8 +88,8 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		// to set the guardian name in headers
-		$this->Session->write('Guardians.name', $entity->name);
+		$this->Session->write('Guardian.Guardians.name', $entity->name);
+		$this->setupTabElements(['id' => $entity->id]);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -125,5 +125,10 @@ class GuardiansTable extends AppTable {
 			return true;
 		};
 		return $process;
+	}
+
+	private function setupTabElements($options) {
+		$this->controller->set('selectedAction', $this->alias);
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 }
