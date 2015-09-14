@@ -25,7 +25,6 @@ class StudentListBehavior extends Behavior {
             'StudentSurveys' => 'Student.StudentSurveys',
             'StudentSurveyAnswers' => 'Student.StudentSurveyAnswers'
         ],
-        'fieldType' => ['TEXT', 'NUMBER', 'DROPDOWN'],
         'fieldKey' => 'survey_question_id',
         'formKey' => 'survey_form_id',
         'recordKey' => 'institution_student_survey_id'
@@ -104,6 +103,7 @@ class StudentListBehavior extends Behavior {
         $value = '';
 
         $Form = $event->subject()->Form;
+        $sectionOptions = [];
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;
@@ -137,8 +137,7 @@ class StudentListBehavior extends Behavior {
                 ->innerJoin(
                     [$this->CustomFields->alias() => $this->CustomFields->table()],
                     [
-                        $this->CustomFields->aliasField('id = ') . $this->CustomFormsFields->aliasField($this->config('fieldKey')),
-                        $this->CustomFields->aliasField('field_type IN') => $this->config('fieldType')
+                        $this->CustomFields->aliasField('id = ') . $this->CustomFormsFields->aliasField($this->config('fieldKey'))
                     ]
                 )
                 ->where([
@@ -150,32 +149,50 @@ class StudentListBehavior extends Behavior {
                 ->toArray();
 
             if (!empty($customFields)) {
-                // Build table header
-                $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
-                $headerHtml = __('Students') . ' / ' . __('Questions');
-                $headerHtml .= $Form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
-                $tableHeaders[] = $headerHtml;
-                foreach ($customFields as $colKey => $customField) {
-                    $customFieldName = !is_null($customField->name) ? $customField->name : $customField->custom_field->name;
-                    $tableHeaders[$colKey+1] = $customFieldName;
-                }
-                // End
-
                 $institutionId = $entity->institution_site_id;
                 $periodId = $entity->academic_period_id;
+
+                $sectionOptions = $this->Sections
+                    ->find('list')
+                    ->where([
+                        $this->Sections->aliasField('institution_site_id') => $institutionId,
+                        $this->Sections->aliasField('academic_period_id') => $periodId
+                    ])
+                    ->toArray();
+
+                if ($this->_table->request->is(['post', 'put'])) {
+                    $this->_table->request->query['section'] = $this->_table->request->data[$this->_table->alias()]['institution_site_section'];
+                }
+                $selectedSection = $this->_table->queryString('section', $sectionOptions);
+                $this->_table->advancedSelectOptions($sectionOptions, $selectedSection);
+                $studentQuery = $this->SectionStudents
+                    ->find()
+                    ->contain(['Users'])
+                    ->where([
+                        $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
+                    ]);
 
                 $students = $this->SectionStudents
                     ->find()
                     ->contain(['Users'])
-                    ->innerJoin(
-                        [$this->Sections->alias() => $this->Sections->table()],
-                        [
-                            $this->Sections->aliasField('id = ') . $this->SectionStudents->aliasField('institution_site_section_id'),
-                            $this->Sections->aliasField('institution_site_id') => $institutionId,
-                            $this->Sections->aliasField('academic_period_id') => $periodId
-                        ]
-                    )
+                    ->where([
+                        $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
+                    ])
                     ->toArray();
+
+                // Build table header
+                $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+                $headerHtml = __('OpenEMIS ID');
+                $headerHtml .= $Form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
+                $tableHeaders[] = $headerHtml;
+                $tableHeaders[] = __('Student Name');
+                $colOffset = 2; // 0 -> OpenEMIS ID, 1 -> Student Name
+
+                foreach ($customFields as $colKey => $customField) {
+                    $customFieldName = !is_null($customField->name) ? $customField->name : $customField->custom_field->name;
+                    $tableHeaders[$colKey+$colOffset] = $customFieldName;
+                }
+                // End
 
                 if (!empty($students)) {
                     $fieldTypes = $this->CustomFieldTypes
@@ -207,10 +224,9 @@ class StudentListBehavior extends Behavior {
                         // End
 
                         if ($action == 'view') {
-                            $rowValue = $student->user->name_with_id;
-                            $rowData[] = $rowValue;
+                            $rowData[] = $student->user->openemis_no . $rowValue;
+                            $rowData[] = $student->user->name;
                         } else if ($action == 'edit') {
-                            $rowInput = $student->user->name_with_id;
                             $rowInput .= $Form->hidden($rowPrefix.".institution_id", ['value' => $institutionId]);
                             $rowInput .= $Form->hidden($rowPrefix.".academic_period_id", ['value' => $periodId]);
                             $rowInput .= $Form->hidden($rowPrefix.".student_id", ['value' => $studentId]);
@@ -220,7 +236,8 @@ class StudentListBehavior extends Behavior {
                                 $rowInput .= $Form->hidden($rowPrefix.".id", ['value' => $recordId]);
                             }
 
-                            $rowData[] = $rowInput;
+                            $rowData[] = $student->user->openemis_no . $rowInput;
+                            $rowData[] = $student->user->name;
                         }
 
                         foreach ($customFields as $colKey => $customField) {
@@ -289,9 +306,9 @@ class StudentListBehavior extends Behavior {
                             $cellInput .= $Form->hidden($cellPrefix.".".$this->config('fieldKey'), ['value' => $fieldId]);
 
                             if ($action == 'view') {
-                                $rowData[$colKey+1] = $cellValue;
+                                $rowData[$colKey+$colOffset] = $cellValue;
                             } else if ($action == 'edit') {
-                                $rowData[$colKey+1] = $cellInput;
+                                $rowData[$colKey+$colOffset] = $cellInput;
                             }
                         }
                         $tableCells[$rowKey] = $rowData;
@@ -306,6 +323,8 @@ class StudentListBehavior extends Behavior {
             // Survey Form ID not found.
         }
 
+        $attr['alias'] = $this->StudentSurveys->alias();
+        $attr['sectionOptions'] = $sectionOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 

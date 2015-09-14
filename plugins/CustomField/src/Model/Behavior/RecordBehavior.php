@@ -214,15 +214,14 @@ class RecordBehavior extends Behavior {
 		    						if (strlen($fieldObj[$fieldValue]) == 0) {
 		    							unset($surveyObj['custom_field_values'][$fieldkey]);
 									}
-    							}
 
-    							// Delete all answer and reinsert
-    							if (isset($surveyObj['id'])) {
-    								$recordKey = Inflector::underscore(Inflector::singularize($StudentSurveys->table())) . '_id';
-	    							$StudentSurveys->CustomFieldValues->deleteAll([
-										$StudentSurveys->CustomFieldValues->aliasField($recordKey) => $surveyObj['id']
-									]);
-								}
+									// Delete existing answer and reinsert
+									if (isset($fieldObj['id'])) {
+										$StudentSurveys->CustomFieldValues->deleteAll([
+											'id' => $fieldObj['id']
+										]);
+									}
+    							}
 
 								$surveyEntity = $StudentSurveys->newEntity($surveyObj);
 								if ($StudentSurveys->save($surveyEntity)) {
@@ -231,6 +230,14 @@ class RecordBehavior extends Behavior {
 								}
     						}
     					}
+
+    					if ($entity->status == 1) {
+	    					$event->stopPropagation();
+
+	    					$url = $this->_table->ControllerAction->url('edit');
+	    					$url['section'] = $this->_table->request->data[$this->_table->alias()]['institution_site_section'];
+	    					return $this->_table->controller->redirect($url);
+	    				}
     				}
     			}
     		}

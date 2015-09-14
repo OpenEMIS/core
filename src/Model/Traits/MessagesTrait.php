@@ -172,7 +172,8 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
-			]
+			],
+			'section' => 'Class'
 		],
 		'InstitutionRubricAnswers' => [
 			'rubric_template' => 'Rubric Template',
