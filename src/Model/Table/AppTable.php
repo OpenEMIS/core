@@ -172,6 +172,10 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onGetFieldLabel'
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		return $this->getFieldLabel($module, $field, $language, $autoHumanize);
+	}
+
+	public function getFieldLabel($module, $field, $language, $autoHumanize=true) {
 		$Labels = TableRegistry::get('Labels');
 		$label = $Labels->getLabel($module, $field, $language);
 		if ($label === false && $autoHumanize) {
@@ -183,8 +187,9 @@ class AppTable extends Table {
 		return $label;
 	}
 
+	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return $this->onGetFieldLabel($event, $module, $col, $language);
+		return $this->getFieldLabel($module, $col, $language);
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
