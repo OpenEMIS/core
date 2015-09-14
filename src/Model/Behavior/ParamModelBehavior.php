@@ -19,6 +19,9 @@ class ParamModelBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
 		$events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
+		$events['ControllerAction.Model.onBeforeDelete'] = 'onBeforeDelete';
+		$events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
+		$events['ControllerAction.Model.delete.onInitialize'] = 'deleteOnInitialize';
 		return $events;
 	}
 
@@ -60,7 +63,6 @@ class ParamModelBehavior extends Behavior {
 		if($count > 0) {
 			$containsArray = [];
 			foreach($this->parentFieldOptionList[$this->fieldOptionName]['associations'] as $contains){
-				pr($contains);
 				$containsArray[] = $contains['contain'];
 			}
 			$query->contain($containsArray);
@@ -165,5 +167,35 @@ class ParamModelBehavior extends Behavior {
 	public function onGetIdentityTypeId(Event $event, Entity $entity) {
 		return $entity->identity_type->name;
 	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$table = TableRegistry::get($this->fieldOptionName);
+		$entity = $table->get($id);
+		return $table->delete($entity);
+	}
+
+	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
+		$settings['deleteStrategy'] = 'transfer';
+		$settings['model'] = $this->fieldOptionName;
+	}
 	
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$table = TableRegistry::get($this->fieldOptionName);
+		$foreignKey = $this->parentFieldOptionList[$this->fieldOptionName]['foreignKey'];
+		
+		if(!empty($foreignKey)) {
+			$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
+			$availFieldOptions = $table->find()->where([$foreignKey => $selectedParentFieldOption])->count();
+		} else {
+			$availFieldOptions = $table->find()->count();
+		}
+
+		if($availFieldOptions == 1) {
+			$this->_table->Alert->warning('general.notTransferrable');
+			$event->_table->stopPropagation();
+			return $this->_table->controller->redirect($this->ControllerAction->url('index'));
+		}
+	}
+
+
 }
