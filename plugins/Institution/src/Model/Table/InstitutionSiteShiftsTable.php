@@ -23,15 +23,14 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
 	
 		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+	
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator
  	        ->add('start_time', 'ruleCompareDate', [
-		            'rule' => ['compareDate', 'end_time', false]
-	    	    ])
- 	        ->add('end_time', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'start_time', false]
+		            'rule' => ['compareDate', 'end_time', true]
 	    	    ])
 	        ;
 		return $validator;

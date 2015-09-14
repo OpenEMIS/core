@@ -168,18 +168,35 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function compareWithInstitutionDateOpened($field, array $globalData) {
+		$model = $globalData['providers']['table'];
+		try {
+			$startDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return $model->getMessage('general.invalidDate');
+		}
+		if ($model->institutionId) {
+			$Institution = TableRegistry::get('Institution.Institutions');
+			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $model->institutionId])->first();
+			return $startDate >= $institution->date_opened;
+		} else {
+		    return $model->getMessage('Institution.Institutions.noActiveInstitution');
+		}
+	}
+
 	/**
 	 * Check if user input for date is valid
 	 * @param  [type] $field      [description]
 	 * @param  [type] $globalData [description]
 	 * @return [type]             [description]
 	 */
-	public static function checkDateInput($field, $globalData) {
+	public static function checkDateInput($field, array $globalData) {
+		$model = $globalData['providers']['table'];
 		try {
 			$field = new DateTime($field);
 			return true;
 		} catch (Exception $e) {
-			return __('Please input a proper value');
+		    return $model->getMessage('general.invalidDate');
 		}
 	}
 
@@ -189,16 +206,17 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return mixed              Boolean or String
 	 */
-	public static function amPmValue($field, $globalData) {
+	public static function amPmValue($field, array $globalData) {
+		$model = $globalData['providers']['table'];
 		$explode = explode(' ', $field);
 		if (isset($explode[1])) {
 			if (!in_array($explode[1], ['am', 'AM', 'pm', 'PM'])) {
-				return __('Wrong time format');
+			    return $model->getMessage('general.invalidTime');
 			} else {
 				return true;
 			}
 		} else {
-			return __('Wrong time format');
+		    return $model->getMessage('general.invalidTime');
 		}
 	}
 
@@ -369,5 +387,129 @@ class ValidationBehavior extends Behavior {
 			->count()
 			;
 		return $existingRecords <= 0;
+	}
+
+	// To allow case sensitive entry
+	public static function checkUniqueEnglishField($check) {
+		$englishField = trim($check);
+		$Translation = TableRegistry::get('Localization.Translations');
+      	$count = $Translation->find()
+      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->count();
+        return $count==0;
+    }
+
+	public static function inAcademicPeriod($field, $academicFieldName, $globalData) {
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$periodObj = $AcademicPeriods
+				->findById($globalData['data'][$academicFieldName])
+				->first();
+		$startDate = strtotime($globalData['data']['start_date']);
+		$endDate = strtotime($globalData['data']['end_date']);
+
+		if (!empty($periodObj)) {
+			$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
+			$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
+
+
+			$rangecheck = ($startDate >= $academicPeriodStartDate) && 
+			(is_null($academicPeriodEndDate) ||
+				(!is_null($academicPeriodEndDate) && ($endDate <= $academicPeriodEndDate))
+			)
+			;
+			return $rangecheck;
+		}
+
+		return false;
+	}
+
+	public static function noOverlappingAbsenceDate($field, $SearchTable, array $globalData) {
+		if ($globalData['data']['start_date'] instanceof Time) {
+			$startDate = $globalData['data']['start_date']->format('Y-m-d');
+		} else {
+			$startDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
+		}
+		if ($globalData['data']['end_date'] instanceof Time) {
+			$endDate = $globalData['data']['end_date']->format('Y-m-d');
+		} else {
+			$endDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
+		}
+		$security_user_id = $globalData['data']['security_user_id'];
+		$institution_site_id = $globalData['data']['institution_site_id'];
+
+		// this will assome there will be start date and end date and security_user_id and academic period
+		$overlapDateCondition = [];
+		$overlapDateCondition['OR'] = [
+			'OR' => [
+				[
+					$SearchTable->aliasField('end_date') . ' IS NOT NULL',
+					$SearchTable->aliasField('start_date') . ' <=' => $startDate,
+					$SearchTable->aliasField('end_date') . ' >=' => $startDate
+				],
+				[
+					$SearchTable->aliasField('end_date') . ' IS NOT NULL',
+					$SearchTable->aliasField('start_date') . ' <=' => $endDate,
+					$SearchTable->aliasField('end_date') . ' >=' => $endDate
+				],
+				[
+					$SearchTable->aliasField('end_date') . ' IS NOT NULL',
+					$SearchTable->aliasField('start_date') . ' >=' => $startDate,
+					$SearchTable->aliasField('end_date') . ' <=' => $endDate
+				]
+			],
+			[
+				$SearchTable->aliasField('end_date') . ' IS NULL',
+				$SearchTable->aliasField('start_date') . ' <=' => $endDate
+			]
+		];
+
+		if (!$globalData['data']['full_day']) {
+			$startTime = $globalData['data']['start_time'];
+			$endTime = $globalData['data']['end_time'];
+
+			$timeConditions = [];
+			$timeConditions['OR'] = [
+				'OR' => [
+					[	
+						$SearchTable->aliasField('start_time') . ' <=' => $startTime,
+						$SearchTable->aliasField('end_time') . ' >=' => $startTime,
+					],
+					[
+						$SearchTable->aliasField('start_time') . ' <=' => $endTime,
+						$SearchTable->aliasField('end_time') . ' >=' => $endTime,
+					],
+					[
+						$SearchTable->aliasField('start_time') . ' >=' => $startTime,
+						$SearchTable->aliasField('end_time') . ' <=' => $endTime,
+					],
+					[
+						// means full day
+						$SearchTable->aliasField('start_time') . ' IS NULL',	
+						$SearchTable->aliasField('end_time') . ' IS NULL',
+					]
+				]
+			];
+		}
+
+		// need to check for overlap time
+		$found = $SearchTable->find()
+			->where($overlapDateCondition)
+			->where($timeConditions)
+			->where([$SearchTable->aliasField('security_user_id') => $security_user_id])
+			->where([$SearchTable->aliasField('institution_site_id') => $institution_site_id])
+			;
+			// ->toArray();
+
+		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
+			$found->where([$SearchTable->aliasField('id').' != ' => $globalData['data']['id']]);
+		}
+			
+
+		$found = $found->count();
+			// ->sql();
+			// return false;
+		// pr($found == 0);
+		return ($found == 0);
+
 	}
 }
