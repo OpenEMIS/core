@@ -1236,8 +1236,6 @@ class ControllerActionComponent extends Component {
 							$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
 						}
 
-						pr($condition);die;
-
 						// Update all transfer records
 						$modelAssociationTable->updateAll(
 							[$assoc->foreignKey() => $transferTo],
