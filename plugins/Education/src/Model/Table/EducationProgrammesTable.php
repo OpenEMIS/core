@@ -35,8 +35,10 @@ class EducationProgrammesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width']);
-		$this->_fieldOrder[] = 'next_programmes';
+		if ($this->action != 'index') {
+			$this->ControllerAction->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width']);
+			$this->_fieldOrder[] = 'next_programmes';
+		}
 	}
 
 	public function afterAction(Event $event) {
