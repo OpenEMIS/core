@@ -48,10 +48,18 @@ select,
 
 .left-pane {
     overflow-y: auto;
+    background-color: #FFF;
+    width: 10%;
 }
 
 .right-pane {
     overflow-y: auto;
+    right: 0 !important;
+    position: absolute;
+    background-color: #FFF;
+    border-left: 1px solid #DDD;
+    height: 100%;
+    width: 90%;
 }
 
 .container-fluid {
