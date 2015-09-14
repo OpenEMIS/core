@@ -351,7 +351,6 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if (! $event->name == 'Model.excel.onExcelGetLabel') {
 			if ($field == 'area_id' && $this->action == 'index') {
 				// Getting the system value for the area
 				$ConfigItems = TableRegistry::get('ConfigItems');
@@ -362,9 +361,6 @@ class InstitutionsTable extends AppTable  {
 			} else {
 				return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 			}
-		} else {
-			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
