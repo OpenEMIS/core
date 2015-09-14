@@ -81,18 +81,18 @@ class ParamModelBehavior extends Behavior {
 
 	public function viewBeforeAction(Event $event) {
 		$table = TableRegistry::get($this->fieldOptionName);
-		//$this->_table->ControllerAction->field('something', ['model' => $table->alias()]); 
-		// $this->displayFields($table, 'add');
+		//$this->displayFields();
 		return $table;
 	}
 
 	public function addEditBeforeAction(Event $event) {
 		$table = TableRegistry::get($this->fieldOptionName);
-		$this->displayFields($table, 'add');
+		$this->displayFields();
 		return $table;
 	}
 
-	public function displayFields($table, $action){
+	public function displayFields(){
+		$table = TableRegistry::get($this->fieldOptionName);
 		$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
 		$selectedParentFieldOptionValue = $this->parentFieldOptions[$selectedParentFieldOption];
 
@@ -100,34 +100,36 @@ class ParamModelBehavior extends Behavior {
 		$fieldOrder = 1000;
 		$fieldOrderExcluded = 5000;
 		$selectedOption = $this->_table->ControllerAction->getVar('selectedOption');
-
-		if($action != 'index') {
-			if(!empty($selectedOption)){
-				$this->_table->ControllerAction->field('field_option_id', 
-															['type' => 'readonly', 
-															 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
-															 'model' => $table->alias(), 
-															 'value' => $selectedOption,
-															 'className' => $this->parentFieldOptionInfo['parentModel'], 
-															 'attr' => ['value' => $this->fieldOptionName],
-															 'order' => $fieldOrder]);
-				$defaultFieldOrder[] = 'field_option_id';
-				$fieldOrder++;
-			}
-
-			if(!empty($this->parentFieldOptionInfo['foreignKey'])){
-				$this->_table->ControllerAction->field($this->parentFieldOptionInfo['foreignKey'], 
-															['type' => 'readonly', 
-															 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
-															 'model' => $table->alias(), 
-															 'value' => $selectedParentFieldOption,
-															 'className' => $this->parentFieldOptionInfo['parentModel'], 
-															 'attr' => ['value' => $selectedParentFieldOptionValue],
-															 'order' => $fieldOrder]);
-				$defaultFieldOrder[] = $this->parentFieldOptionInfo['foreignKey'];
-				$fieldOrder++;
-			}
+		
+		if(!empty($selectedOption)){
+			$this->_table->ControllerAction->field('field_option_id', 
+														['type' => 'readonly', 
+														 'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
+														 'model' => $table->alias(), 
+														 'value' => $selectedOption,
+														 'className' => $this->parentFieldOptionInfo['parentModel'], 
+														 'attr' => ['value' => $this->fieldOptionName],
+														 'order' => $fieldOrder]);
+			$defaultFieldOrder[] = 'field_option_id';
+			$fieldOrder++;
 		}
+
+		if(!empty($this->parentFieldOptionInfo['foreignKey'])){
+			$this->_table->ControllerAction->field($this->parentFieldOptionInfo['foreignKey'], 
+														[
+														'type' => 'readonly', 
+														'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
+														'model' => $table->alias(), 
+														'value' => $selectedParentFieldOption,
+														 'className' => $this->fieldOptionName, 
+														 'attr' => ['value' => $selectedParentFieldOptionValue],
+														'order' => $fieldOrder
+
+														 ]);
+			$defaultFieldOrder[] = $this->parentFieldOptionInfo['foreignKey'];
+			$fieldOrder++;
+		}
+
 		
 
 		$columns = $table->schema()->columns();
@@ -155,12 +157,12 @@ class ParamModelBehavior extends Behavior {
 			if(!in_array($attr, $this->excludeFieldList) && ($attr != $this->parentFieldOptionInfo['foreignKey'])) {
 				$this->_table->ControllerAction->field($attr, ['visible' => true, 'order' => $fieldOrder]);
 				$fieldOrder++;
-			} else {
+			} else if($attr != $this->parentFieldOptionInfo['foreignKey']){
 				$this->_table->ControllerAction->field($attr, ['visible' => ['index' => false, 'edit' => false, 'add' => false, 'view' => true], 'order' => $fieldOrderExcluded]);
 				$fieldOrderExcluded++;
 			}
-		}
-
+		}	
+		
 		$this->_table->ControllerAction->setFieldOrder($defaultFieldOrder); 
 	}
 
@@ -186,6 +188,9 @@ class ParamModelBehavior extends Behavior {
 		if(!empty($foreignKey)) {
 			$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
 			$availFieldOptions = $table->find()->where([$foreignKey => $selectedParentFieldOption])->count();
+
+			$query->where([$foreignKey => $selectedParentFieldOption]);
+
 		} else {
 			$availFieldOptions = $table->find()->count();
 		}
@@ -195,7 +200,7 @@ class ParamModelBehavior extends Behavior {
 			$event->_table->stopPropagation();
 			return $this->_table->controller->redirect($this->ControllerAction->url('index'));
 		}
+
+		return $query;
 	}
-
-
 }
