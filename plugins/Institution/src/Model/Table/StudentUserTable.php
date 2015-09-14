@@ -13,6 +13,10 @@ use App\Model\Table\AppTable;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+	}
+
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
 	}
@@ -24,16 +28,40 @@ class StudentUserTable extends UserTable {
 			$academicData['student_id'] = $entity->id;
 			$class = $academicData['class'];
 			unset($academicData['class']);
-
-			$Student = TableRegistry::get('Institution.Students');
-			if ($Student->save($Student->newEntity($academicData))) {
-				if ($class > 0) {
-					$sectionData = [];
-					$sectionData['student_id'] = $entity->id;
-					$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-					$sectionData['institution_site_section_id'] = $class;
-					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
+			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
+				$Student = TableRegistry::get('Institution.Students');
+				if ($Student->save($Student->newEntity($academicData))) {
+					if ($class > 0) {
+						$sectionData = [];
+						$sectionData['student_id'] = $entity->id;
+						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
+						$sectionData['institution_site_section_id'] = $class;
+						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+					}
+				}
+			} else {
+				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+				$admissionStatus = 1;
+				$entityData = [
+					'start_date' => $academicData['start_date'],
+					'end_date' => $academicData['end_date'],
+					'student_id' => $academicData['student_id'],
+					'status' => 0,
+					'institution_id' => $academicData['institution_id'],
+					'academic_period_id' => $academicData['academic_period_id'],
+					'education_grade_id' => $academicData['education_grade_id'],
+					'previous_institution_id' => 0,
+					'student_transfer_reason_id' => 0,
+					'type' => $admissionStatus,
+				];
+				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData))) {
+					$this->Alert->success('general.add.success');
+				} else {
+					$AdmissionTable->log($admissionEntity->errors(), 'debug');
+					$this->Alert->error('general.add.failed');
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -52,20 +80,15 @@ class StudentUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-		
-		$tabElements = [
-			'Students' => ['text' => __('Academic')],
-			'StudentUser' => ['text' => __('General')]
-		];
+		$tabElements = $this->controller->getUserTabElements(['userRole' => 'Student']);
 
-		if ($this->action == 'add') {
-			$tabElements['Students']['url'] = array_merge($url, ['action' => 'Students', 'add']);
-			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
-		} else {
+		if ($this->action != 'add') {
 			$id = $this->request->query['id'];
-			$tabElements['Students']['url'] = array_merge($url, ['action' => 'Students', 'view', $id]);
-			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id]);
+			$tabElements['Students']['url'] = array_merge($tabElements['Students']['url'], [$id]);
+			foreach ($tabElements as $key => $value) {
+				if ($key == 'Students') continue;
+				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
+			}
 		}
 
 		$this->controller->set('tabElements', $tabElements);
