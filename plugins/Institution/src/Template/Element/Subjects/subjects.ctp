@@ -21,15 +21,17 @@
 			<?php //pr($this->request->data);?>
 			<tbody>
 				<?php foreach ($attr['data']['subjects'] as $i=>$obj) : ?>
-					<?php $n = intval($obj->education_subject->id) ?>
-					<?php //pr($obj->toArray());?>
-					<?php
-						$selected = (isset($attr['data']['existedSubjects']) && array_key_exists($n, $attr['data']['existedSubjects'])) ? 'checked' : ''; 
+					<?php 
+						$n = intval($obj->education_subject->id);
+						$selected = (array_key_exists('existedSubjects', $attr['data']) && array_key_exists($n, $attr['data']['existedSubjects'])) ? 'checked' : ''; 
 						if ($selected) {
-							// pr($attr['data']['existedSubjects'][$n]);
-							$attrValue = $attr['data']['existedSubjects'][$n];
+							$attrValue = $attr['data']['existedSubjects'][$n]['name'];
 							$disabled = 'disabled';
+							unset($attr['data']['existedSubjects'][$n]);
 						} else {
+							if (!$obj->visible) {
+								continue;
+							}
 			    			$attrValue = $obj->education_subject->name;
 							$disabled = false;
 						}
@@ -38,8 +40,8 @@
 	    			<?php 
     				$attrErrors = [];
     				$selectedInForm = false;
-	    			if(!empty($this->request->data) && isset($this->request->data['MultiClasses'])) {
-	    				$requestData = $this->request->data['MultiClasses'][$i];
+	    			if(!empty($this->request->data) && array_key_exists('MultiSubjects', $this->request->data['MultiSubjects']) && isset($this->request->data['MultiSubjects'][$i])) {
+	    				$requestData = $this->request->data['MultiSubjects'][$i];
 	    				if ($this->request->data['submit'] == 'save') {
 	    					if (!$selected) {
 	    						$attrValue = $requestData['name'];
@@ -53,11 +55,11 @@
 	    				}
 	    			}
 	    			$field = [
-	    				'fieldName' => 'MultiClasses['.$i.'][name]',
+	    				'fieldName' => 'MultiSubjects['.$i.'][name]',
 	    				'attr' => [
-	    					'id' => 'multiclasses-'.$i.'-name',
+	    					'id' => 'MultiSubjects-'.$i.'-name',
 	    					'label' => false, 
-	    					'name' => 'MultiClasses['.$i.'][name]',
+	    					'name' => 'MultiSubjects['.$i.'][name]',
 	    					'value' => $attrValue
 	    				],
 	    			];
@@ -72,7 +74,7 @@
 					?>
 
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiClasses[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" <?php echo $selectedInForm;?> <?php echo $selected;?> <?php echo $disabled;?> />
+						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiSubjects[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" <?php echo $selectedInForm;?> <?php echo $selected;?> <?php echo $disabled;?> />
 					</td>
 					<td><?= $obj->education_subject->name ?></td>
 
@@ -90,10 +92,10 @@
 					</td>
 
 					<td>
-						<input type="hidden" name="<?php echo sprintf('MultiClasses[%d][institution_site_class_staff][0][status]', $i) ?>" value="1" />
+						<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_site_class_staff][0][status]', $i) ?>" value="1" />
 						<?php 
 						if (!$selected) {
-							echo $this->Form->input(sprintf('MultiClasses.%d.institution_site_class_staff.0.security_user_id', $i), array(
+							echo $this->Form->input(sprintf('MultiSubjects.%d.institution_site_class_staff.0.security_user_id', $i), array(
 								'options' => $attr['data']['teachers'], 
 								'label' => false,
 							));
@@ -102,7 +104,49 @@
 					</td>
 
 				</tr>
-				<?php endforeach ?>
+				<?php endforeach;//end $attr['data']['subjects'] ?>
+
+				<?php
+				/**
+				 * if existedSubjects array is still not empty, it means that this class has this subject but the subject was set as not visible in the education structure
+				 * It should still be shown but disabled.
+				 */
+				?>
+				<?php if (array_key_exists('existedSubjects', $attr['data']) && !empty($attr['data']['existedSubjects'])) : ?>
+					<?php foreach ($attr['data']['existedSubjects'] as $key=>$obj) : ?>
+					<tr>
+						<?php
+							$n = intval($key);
+							$i = $i + $key + 1;
+			    			$field = [
+			    				'fieldName' => 'MultiSubjects['.$i.'][name]',
+			    				'attr' => [
+			    					'id' => 'MultiSubjects-'.$i.'-name',
+			    					'label' => false, 
+			    					'name' => 'MultiSubjects['.$i.'][name]',
+			    					'value' => $obj['name'],
+			    					'disabled' => 'disabled'
+			    				],
+			    			];
+						?>
+						<td class="checkbox-column">
+							<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiSubjects[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" checked disabled="disabled" />
+						</td>
+						<td><?= $obj['subject_name'] ?></td>
+
+						<td class="<?= $tdClass ?>">
+							<?php
+								echo $this->Form->input($field['fieldName'], $field['attr']);
+							?>	
+						</td>
+
+						<td>
+							<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_site_class_staff][0][status]', $i) ?>" value="1" />
+						</td>
+					</tr>
+					<?php endforeach;//end $attr['data']['existedSubjects'] ?>
+				<?php endif ?>
+
 			</tbody>
 			<?php endif ?>
 		</table>
