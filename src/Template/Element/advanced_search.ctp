@@ -4,7 +4,7 @@
 <div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
 
 	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
-	<h4>Advanced Search</h4>
+	<h4><?= __('Advanced Search')?></h4>
 
 	<?php
 		// pr($model);die;
@@ -27,22 +27,29 @@
 	<?php endforeach ?>
 
 	<hr>
-
+	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
 	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
-	<button id="reset" class="btn btn-default btn-xs" type="reset" value="Reset" href=""><?= __('Reset') ?></button>
+	<button id="reset" class="btn btn-default btn-xs" value="Reset" href=""><?= __('Reset') ?></button>
 </div>
 
 <script type="text/javascript">   
 	var box = $('#advanced-search');
+	var isSearch = $('#isSearch');
 	$('button#search-toggle').on('click', function () {
-	  box.toggleClass('hidden');
+		box.toggleClass('hidden');
+		if (! isSearch.val()) {
+			isSearch.val('true');
+		}else {
+			isSearch.val('');
+		}
 	});
 
 
 	//reset form 
 	$("#reset").click(function(){
-		$("#advance-search-form").find('input:text, select').val('');
+		box.find('input:text, select').val('');
 		$(".icheckbox_minimal-grey").removeClass("checked");
+		isSearch.val('true');
 	});
 
 </script>
