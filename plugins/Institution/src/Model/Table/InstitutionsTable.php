@@ -105,6 +105,11 @@ class InstitutionsTable extends AppTable  {
 	// 	return 'asd';
 	// }
 
+	public function addAfterAction(Event $event, Entity $entity) {
+		$header = __('Add New Institution');
+		$this->controller->set('contentHeader', $header);
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator
 			->add('date_opened', [
