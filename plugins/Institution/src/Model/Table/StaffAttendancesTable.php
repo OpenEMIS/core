@@ -500,19 +500,21 @@ class StaffAttendancesTable extends AppTable {
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->request->query('day') != -1) {
-    		if (!is_null($this->request->query('mode'))) {
-    			$toolbarButtons['back'] = $buttons['back'];
-				if ($toolbarButtons['back']['url']['mode']) {
-					unset($toolbarButtons['back']['url']['mode']);
+    	if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
+	    	if ($this->request->query('day') != -1) {
+	    		if (!is_null($this->request->query('mode'))) {
+	    			$toolbarButtons['back'] = $buttons['back'];
+					if ($toolbarButtons['back']['url']['mode']) {
+						unset($toolbarButtons['back']['url']['mode']);
+					}
+					$toolbarButtons['back']['type'] = 'button';
+					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+					$toolbarButtons['back']['attr'] = $attr;
+					$toolbarButtons['back']['attr']['title'] = __('Back');
+				} else {
+					$toolbarButtons['back'] = $buttons['back'];
+					$toolbarButtons['back']['type'] = null;
 				}
-				$toolbarButtons['back']['type'] = 'button';
-				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-				$toolbarButtons['back']['attr'] = $attr;
-				$toolbarButtons['back']['attr']['title'] = __('Back');
-			} else {
-				$toolbarButtons['back'] = $buttons['back'];
-				$toolbarButtons['back']['type'] = null;
 			}
 		}
     }
