@@ -277,7 +277,7 @@ class ExcelBehavior extends Behavior {
 
 		// pr($entity);
 
-		if (!in_array($type, ['string', 'integer', 'decimal'])) {
+		if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
 			$method = 'onExcelRender' . Inflector::camelize($type);
 			if (!$this->eventMap($method)) {
 				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $field]);
