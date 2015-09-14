@@ -15,7 +15,7 @@ class StaffController extends AppController {
 		$this->ControllerAction->model('Staff.Staff');
 
 		$this->ControllerAction->models = [
-			'Accounts'			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts'			=> ['className' => 'User.Contacts'],
 			'Identities'		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -25,12 +25,12 @@ class StaffController extends AppController {
 			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
 			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
-			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index']],
-			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index']],
-			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index']],
-			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index']],
+			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
+			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
+			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
+			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
 			'Leaves'			=> ['className' => 'Staff.Leaves'],
-			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index']],
+			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
 			'Employments'		=> ['className' => 'Staff.Employments'],
@@ -52,15 +52,15 @@ class StaffController extends AppController {
 		$header = __('Staff');
 
 		if ($action == 'index') {
-			$session->delete('Staff.id');
-			$session->delete('Staff.name');
-		} else if ($session->check('Staff.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Staff.Staff.id');
+			$session->delete('Staff.Staff.name');
+		} else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Staff.id')) {
-				$id = $session->read('Staff.id');
+			} else if ($session->check('Staff.Staff.id')) {
+				$id = $session->read('Staff.Staff.id');
 			}
 
 			if (!empty($id)) {
@@ -78,12 +78,12 @@ class StaffController extends AppController {
 		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
 		$session = $this->request->session();
-		if ($session->check('Staff.id')) {
+		if ($session->check('Staff.Staff.id')) {
 			$header = '';
-			$userId = $session->read('Staff.id');
+			$userId = $session->read('Staff.Staff.id');
 
-			if ($session->check('Staff.name')) {
-				$header = $session->read('Staff.name');
+			if ($session->check('Staff.Staff.name')) {
+				$header = $session->read('Staff.Staff.name');
 			}
 
 			$alias = $model->alias;
@@ -128,8 +128,8 @@ class StaffController extends AppController {
 		$session = $this->request->session();
 		
 		if ($model->alias() != 'Staff') {
-			if ($session->check('Staff.id')) {
-				$userId = $session->read('Staff.id');
+			if ($session->check('Staff.Staff.id')) {
+				$userId = $session->read('Staff.Staff.id');
 				if ($model->hasField('security_user_id')) {
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('staff_id')) {
@@ -146,5 +146,25 @@ class StaffController extends AppController {
 	public function excel($id=0) {
 		$this->Staff->excel($id);
 		$this->autoRender = false;
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
 	}
 }

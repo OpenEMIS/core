@@ -1,0 +1,69 @@
+/* BUTTONS v.1.0.0 */
+
+.btn.active,
+.btn:active,
+.btn-group.open .dropdown-toggle {
+    background-image: none;
+    outline: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.panel-toolbar .btn-group.open .dropdown-toggle {
+    border: 1px solid #EDEDED;
+}
+
+.btn-default,
+.selected,
+.selected:active,
+.input-group-addon,
+.pagination > .active > a:focus {
+    background-color: #999;
+    color: #FFF;
+    border: 1px solid #6B6B6B !important;
+    z-index: 2;
+}
+
+.btn-default:hover,
+.btn-default:active,
+.btn-active,
+.selected:hover,
+.selected-size,
+.selected-size:active,
+.input-group-addon:hover {
+    background-color: #6B6B6B;
+    color: #FFF;
+    transition: all 0.8s ease;
+}
+
+.btn-outline:hover,
+.btn-outline:active,
+.btn-outline:focus {
+    background-color: #6B6B6B !important;
+    color: #FFF !important;
+    transition: all 0.8s ease;
+}
+
+.btn-outline {
+    background-color: #FFF !important;
+    color: #6B6B6B !important;
+    border: 1px solid #6B6B6B !important;
+}
+
+.btn-cancel {
+    margin-left: 10px !important;
+}
+
+.btn-all {
+    height: 22px;
+}
+
+@media (min-width: 100px) and (max-width: 480px) {
+    .btn-default .btn {
+        margin-left: 0;
+        margin-right: 5px;
+    }
+}
+
+
+/* RTL BUTTONS v.1.0.0 */
