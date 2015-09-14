@@ -1228,10 +1228,20 @@ class ControllerActionComponent extends Component {
 							])
 							->toArray();
 
+						$condition = [];
+
+						if (empty($idNotToUpdate)) {
+							$condition = [$assoc->foreignKey() => $transferFrom];
+						} else {
+							$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+						}
+
+						pr($condition);die;
+
 						// Update all transfer records
 						$modelAssociationTable->updateAll(
 							[$assoc->foreignKey() => $transferTo],
-							[$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate]
+							$condition
 						);
 					}
 					$this->Alert->success('general.delete.success');
