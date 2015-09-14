@@ -30,7 +30,7 @@ class EducationProgrammesTable extends AppTable {
 			'foreignKey' => 'education_programme_id',
 			'targetForeignKey' => 'next_programme_id',
 			'through' => 'Education.EducationProgrammesNextProgrammes',
-			'dependent' => false,
+			'dependent' => true,
 		]);
 	}
 
@@ -60,6 +60,11 @@ class EducationProgrammesTable extends AppTable {
 			$this->Alert->error('general.deleteTransfer.restrictDelete');
 			$event->stopPropagation();
 			return $this->controller->redirect($this->ControllerAction->url('remove'));
+		} else {
+			$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+			$EducationProgrammesNextProgrammesTable->deleteAll([
+						$EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
+					]);
 		}
 	}
 
