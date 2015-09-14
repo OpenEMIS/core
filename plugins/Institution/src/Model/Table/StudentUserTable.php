@@ -107,6 +107,20 @@ class StudentUserTable extends UserTable {
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
+
+			if ($action == 'view') {
+				$statuses = TableRegistry::get('Student.StudentStatuses')->findCodeList();
+				$id = $this->request->params['pass'][1];
+				$studentData = $this->get($id);
+				pr($studentData);die;
+				// Start PHPOE-1897
+				// if ($studentData->student_status_id != $statuses['CURRENT']) {
+				// 	if (isset($toolbarButtons['edit'])) {
+				// 		unset($toolbarButtons['edit']);
+				// 	}
+				// }
+				// End PHPOE-1897
+			}
 		}
 	}
 
