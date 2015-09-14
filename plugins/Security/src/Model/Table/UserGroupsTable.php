@@ -429,21 +429,21 @@ class UserGroupsTable extends AppTable {
 			$query
 			->join([
 				[
-					'table' => 'security_group_institution_sites', 'alias' => 'SecurityGroupInstitutions', 'type' => 'INNER',
+					'table' => 'security_group_institution_sites', 'alias' => 'SecurityGroupInstitutions', 'type' => 'LEFT',
 					'conditions' => ['SecurityGroupInstitutions.security_group_id = ' . $this->aliasField('id')]
 				],
 				[
-					'table' => 'institution_sites', 'alias' => 'Institutions', 'type' => 'INNER',
+					'table' => 'institution_sites', 'alias' => 'Institutions', 'type' => 'LEFT',
 					'conditions' => [
 						'Institutions.id = ' . 'SecurityGroupInstitutions.institution_site_id',
 					]
 				],
 				[
-					'table' => 'security_group_areas', 'alias' => 'SecurityGroupAreas', 'type' => 'INNER',
+					'table' => 'security_group_areas', 'alias' => 'SecurityGroupAreas', 'type' => 'LEFT',
 					'conditions' => ['SecurityGroupAreas.security_group_id = ' . $this->aliasField('id')]
 				],
 				[
-					'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'LEFT',
 					'conditions' => [
 						'Areas.id = ' . 'SecurityGroupAreas.area_id',
 					]
