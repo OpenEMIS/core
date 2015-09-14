@@ -30,7 +30,7 @@ class EducationProgrammesTable extends AppTable {
 			'foreignKey' => 'education_programme_id',
 			'targetForeignKey' => 'next_programme_id',
 			'through' => 'Education.EducationProgrammesNextProgrammes',
-			'dependent' => true,
+			'dependent' => false,
 		]);
 	}
 
