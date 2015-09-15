@@ -122,6 +122,7 @@ class StudentsTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
 		$this->Session->write('Student.Students.name', $entity->name);
+		$this->request->data[$this->alias()]['student_id'] = $entity->id;
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
@@ -188,6 +189,57 @@ class StudentsTable extends AppTable {
 			$value = $entity->student_status;
 		}
 		return $value;
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$studentId = $this->request->data[$this->alias()]['student_id'];
+			$enrolledStatus = false;
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			foreach ($institutionIds as $id) {
+				$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+				if ($enrolledStatus) {
+					break;
+				}
+			}
+			if (! $enrolledStatus) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$institutionIds = $this->AccessControl->getInstitutionsByUser();
+		$studentId = $entity->id;
+		$enrolledStatus = false;
+		$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+		foreach ($institutionIds as $id) {
+			$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+			if ($enrolledStatus) {
+				break;
+			}
+		}
+
+		if (! $enrolledStatus) {
+			if (isset($buttons['edit'])) {
+				unset($buttons['edit']);
+			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+
+		return $buttons;
 	}
 
 	public function addBeforeAction(Event $event) {

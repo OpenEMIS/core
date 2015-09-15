@@ -747,6 +747,7 @@ class StudentsTable extends AppTable {
 			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+				$studentData = $this->get($id);
 				$selectedStudent = $studentData->student_id;
 				$selectedPeriod = $studentData->academic_period_id;
 				$selectedGrade = $studentData->education_grade_id;
