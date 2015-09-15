@@ -324,6 +324,13 @@ trait MessagesTrait {
 			'success' => 'Students have been promoted.',
 			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
 		],
+		'StudentTransfer' => [
+			'noData' => 'There are no available Students for Transfer.',
+			'current_grade' => 'Current Education Grade',
+			'next_grade' => 'Next Education Grade',
+			'current_period' => 'Current Academic Period',
+			'next_period' => 'Next Academic Period'
+		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
 		],
