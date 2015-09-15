@@ -685,7 +685,18 @@ class StudentsTable extends AppTable {
 				$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$graduateButton['attr']['title'] = __('Promotion / Graduation');
 
+				$transferButton = $buttons['index'];
+				$transferButton['url']['action'] = 'Transfer';
+				$transferButton['url'][0] = 'index';
+				$transferButton['url']['mode'] = 'edit';
+				$transferButton['type'] = 'button';
+				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
+				$transferButton['attr'] = $attr;
+				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$transferButton['attr']['title'] = __('Transfer');
+
 				$toolbarButtons['graduate'] = $graduateButton;
+				$toolbarButtons['transfer'] = $transferButton;
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}
