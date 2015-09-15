@@ -16,7 +16,7 @@ echo $this->Html->script('dashboards', ['block' => true]);
 		visibility: hidden;
 	}
 </style>
-<div class="overview-wrapper alert overview-box">
+<div class="overview-box alert">
 	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
 	<div class="data-section">
 		<!--Getting the correct icon and the header name base on the calling method-->

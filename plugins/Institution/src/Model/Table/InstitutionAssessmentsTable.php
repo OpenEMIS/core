@@ -21,6 +21,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -64,7 +65,7 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -91,14 +92,14 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = $dateDisabled->format('d-m-Y');
+			$value = $this->formatDate($dateDisabled);
 		}
 
 		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function beforeAction(Event $event) {
@@ -186,18 +187,15 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if ($selectedStatus == 0) {	// New
 			unset($buttons['remove']);
-		} else if ($selectedStatus == 2) {	// Completed
-			unset($buttons['edit']);
 		}
-
 		return $buttons;
 	}
 
 	public function _buildRecords($institutionId=null) {
 		if (is_null($institutionId)) {
 			$session = $this->controller->request->session();
-			if ($session->check('Institutions.id')) {
-				$institutionId = $session->read('Institutions.id');
+			if ($session->check('Institution.Institutions.id')) {
+				$institutionId = $session->read('Institution.Institutions.id');
 			}
 		}
 
