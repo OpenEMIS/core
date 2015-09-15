@@ -563,4 +563,10 @@ class UserGroupsTable extends AppTable {
 			die;
 		}
 	}
+
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->request->data['area_search'] = '';
+		$this->request->data['institution_search'] = '';
+		$this->request->data['user_search'] = '';
+	}
 }
