@@ -37,6 +37,7 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
@@ -142,7 +143,8 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
-		return $entity->survey_form->description;
+		$surveyFormId = $entity->survey_form->id;
+		return $this->SurveyForms->get($surveyFormId)->description;
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
@@ -187,21 +189,29 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
+		
+		$tabElements = [];
 
-		$tabElements = [
-			'New' => [
+		if ($this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			$tabElements['New'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=0'],
 				'text' => __('New')
-			],
-			'Draft' => [
+			];
+			$tabElements['Draft'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=1'],
 				'text' => __('Draft')
-			],
-			'Completed' => [
+			];
+		}
+
+		if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+			// if (empty($tabElements)) {
+			// 	$selectedStatus = 2;
+			// }
+			$tabElements['Completed'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=2'],
 				'text' => __('Completed')
-			]
-		];
+			];
+		}
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
@@ -237,6 +247,9 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		$options['auto_contain'] = false;
+		$query->contain(['AcademicPeriods', 'SurveyForms']);
 
 		$query
 			->where([$this->aliasField('status') => $selectedStatus])
@@ -293,7 +306,7 @@ class InstitutionSurveysTable extends AppTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($selectedStatus == 0) {	// New
-			unset($buttons['view']);
+			// unset($buttons['view']);
 			unset($buttons['remove']);
 		} else if ($selectedStatus == 2) {	// Completed
 			unset($buttons['edit']);
@@ -332,6 +345,13 @@ class InstitutionSurveysTable extends AppTable {
 		//Return all required options and their key
 		$statusOptions = $this->getSelectOptions('Surveys.status');
 		$selectedStatus = $this->queryString('status', $statusOptions);
+
+		// If do not have access to Survey - New but have access to Survey - Completed, then set selectedStatus to 2
+		if (!$this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+				$selectedStatus = 2;
+			}
+		}
 
 		return compact('statusOptions', 'selectedStatus');
 	}

@@ -23,6 +23,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function onGetInstitutionSiteClassId(Event $event, Entity $entity) {
@@ -32,6 +33,13 @@ class InstitutionQualityVisitsTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	// PHPOE-1916
+	// Bug fix on view page
+	public function viewAfterAction(Event $event, Entity $entity) {
+		unset($this->_fieldOrder[1]); // Remove academic period level on view page
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 

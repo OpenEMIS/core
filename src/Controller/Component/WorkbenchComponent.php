@@ -24,14 +24,12 @@ class WorkBenchComponent extends Component {
 		foreach ($models as $model) {
 			// trigger event for getList to each model
 			$subject = TableRegistry::get($model);
-
 			$eventMap = $subject->implementedEvents();
 			$params = [$this->AccessControl, $data];
 			$event = new Event('Workbench.Model.onGetList', $this, $params);
 			$subject->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
 		}
-
 		return $data;
 	}
 }
