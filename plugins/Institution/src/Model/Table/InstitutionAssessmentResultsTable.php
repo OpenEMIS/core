@@ -17,6 +17,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	use MessagesTrait;
 
 	private $gradingOptions = [];
+	private $gradingOptionParams = [];
 
 	public function initialize(array $config) {
 		$this->table('institution_site_class_students');
@@ -88,8 +89,9 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				if (!is_null($resultObj)) {
 					$html .= $Form->hidden($fieldPrefix.".id", ['value' => $resultObj->id]);
 				}
-				$options = ['type' => 'number', 'label' => false, 'value' => $marks];
+				$options = ['type' => 'number', 'label' => false, 'value' => $marks, 'min' => 0, 'data-id' => $id, 'class' => 'resultMark'];
 				$html .= $Form->input($fieldPrefix.".marks", $options);
+
 				$html .= $Form->hidden($Items->alias().".id", ['value' => $itemObj->id]);
 				$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
 				$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
@@ -100,6 +102,13 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		}
 
 		return $html;
+	}
+
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['results'] = [
+			'include' => true,
+			'js' => 'Institution.../js/results'
+		];
 	}
 
 	public function onGetGrade(Event $event, Entity $entity) {
@@ -113,14 +122,21 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			$alias = Inflector::underscore($Results->alias());
 			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->student_id;
 
-			$gradingOptions = $this->gradingOptions;
-			$selectedGrading = key($gradingOptions);
+			$bareGradingOptions = $this->gradingOptions;
+			$gradingOptionParams = $this->gradingOptionParams;
+			$selectedGrading = key($bareGradingOptions);
 			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
 				$selectedGrading = $entity->assessment_grading_option_id;
 			}
-			$this->advancedSelectOptions($gradingOptions, $selectedGrading);
+			$this->advancedSelectOptions($bareGradingOptions, $selectedGrading);
+			$gradingOptions = [];
+			foreach ($bareGradingOptions as $key=>$value) {
+				$gradingOptions[$key] = array_merge($value, $gradingOptionParams[$key]);
+			}
+			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions, 'class' => 'resultGrade' ];
+			$html .= $Form->input($fieldPrefix.".assessment_grading_option", $options);
 
-			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
+			$options = ['type' => 'hidden', 'label' => false, 'class' => 'resultGradeHidden' ];
 			$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
 		} else {
 			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
@@ -285,6 +301,11 @@ class InstitutionAssessmentResultsTable extends AppTable {
 
 					if (!is_null($itemObj)) {
 						foreach ($itemObj->grading_type->grading_options as $key => $obj) {
+							$this->gradingOptionParams[$obj->id] = [
+								'data-grading-type-id' => $obj->assessment_grading_type_id,
+								'data-min' => $obj->min,
+								'data-max' => $obj->max
+							];
 							$this->gradingOptions[$obj->id] = $obj->code ." - ". $obj->name;
 						}
 					}
