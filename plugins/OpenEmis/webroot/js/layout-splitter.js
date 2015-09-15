@@ -1,6 +1,7 @@
 /* SPLITTER JS v.1.0.0 */
 $(document).ready(function() {
     /* jqx starts here */
+    initNavigation();
 });
 
 function initNavigation() {
@@ -10,11 +11,7 @@ function initNavigation() {
     var panelId = (isRTL) ? 1 : 0;
     var panelsObject = getPanelsState(isRTL);
     console.log(JSON.stringify(panelsObject.data));
-    $('#main-splitter').jqxSplitter({
-        'orientation': 'vertical',
-        width: '100%',
-        panels: panelsObject.data
-    });
+    $('#main-splitter').jqxSplitter({'orientation': 'vertical', width: '100%', panels: panelsObject.data});
     $('#main-splitter').jqxSplitter('refresh');
     $('#main-splitter').on('resize', function(event) {
         var panels = event.args.panels;
