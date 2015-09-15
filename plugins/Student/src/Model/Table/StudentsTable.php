@@ -146,6 +146,7 @@ class StudentsTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			$query->innerJoin(
 				['InstitutionStudent' => 'institution_students'],
 				[
@@ -177,8 +178,9 @@ class StudentsTable extends AppTable {
 				$institutionArr[$obj->institution->id] = $obj->institution->name;
 			}
 			$value = implode('<BR>', $institutionArr);
-
-			$entity->student_status = $query->first()->student_status->name;
+			$studentStatus = $query->first()->student_status;
+			$entity->student_status = $studentStatus->name;
+			$entity->status_code = $studentStatus->code;
 		}
 		return $value;
 	}
@@ -200,7 +202,7 @@ class StudentsTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $this->AccessControl->getInstitutionsByUser();
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
 				$studentId = $this->request->data[$this->alias()]['student_id'];
 				$enrolledStatus = false;
 				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
@@ -222,18 +224,7 @@ class StudentsTable extends AppTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (!$this->AccessControl->isAdmin()) {
-			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$studentId = $entity->id;
-			$enrolledStatus = false;
-			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-			foreach ($institutionIds as $id) {
-				$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-				if ($enrolledStatus) {
-					break;
-				}
-			}
-
-			if (! $enrolledStatus) {
+			if ($entity->status_code != 'CURRENT') {
 				if (isset($buttons['edit'])) {
 					unset($buttons['edit']);
 				}
