@@ -35,7 +35,7 @@ class InstitutionSiteSectionClassesTable extends AppTable {
     public function indexBeforeAction($event) { 
 		$query = $this->request->query;
  		
- 		$institutionsId = $this->Session->read('Institutions.id');
+ 		$institutionsId = $this->Session->read('Institution.Institutions.id');
 		$conditions = array(
 			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
 		);
@@ -61,7 +61,7 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		}
 
 		$toolbarElements = [
-            ['name' => 'Institution.Classes/controls', 
+            ['name' => 'Institution.Subjects/controls', 
              'data' => [
 	            	'academicPeriodOptions'=>$academicPeriodOptions, 
 	            	'selectedAcademicPeriod'=>$this->_selectedAcademicPeriod, 
