@@ -49,6 +49,8 @@ select,
 .left-pane {
     overflow-y: auto;
     background-color: #FFF;
+    position: absolute;
+    left: 0 !important;
     width: 10%;
 }
 
@@ -688,6 +690,7 @@ label + select {
     background: #EFEFEF;
 }
 
+
 /* FORM v.1.0.0 */
 
 .form-horizontal {
@@ -756,7 +759,6 @@ label + select {
     background-color: #FFF;
     border-left: 2px solid #FFF;
 }
-
 
 
 /* Time picker */
