@@ -56,6 +56,7 @@ define("NS_OE", "https://www.openemis.org");
 class ApiController extends AppController
 {
 	private $_requestParams = null;
+	private $_externalApplication = null;
 	private $_errorCodes = [
 		0 => [
 			'code' => null,
@@ -82,7 +83,6 @@ class ApiController extends AppController
 			'description' => 'Unable to log in to OpenEMIS server. Please contact OpenEMIS server administrator.'
 		]
 	];
-	private $_externalApplication = null;
 
 	public function initialize() {
 		parent::initialize();
@@ -140,10 +140,12 @@ class ApiController extends AppController
 		$this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 	}
 
-	private $_versionFunctions = [
-		0 => 'versionSISB',
-		1 => 'versionOne'
-	];
+
+/******************************************************************************************************************
+**
+** individual version functions
+**
+******************************************************************************************************************/
 	private $_allowableFormats = [
 		'json',
 		'soap'
@@ -256,6 +258,17 @@ class ApiController extends AppController
 		return $xml;
 	}
 
+
+/**
+* ******************************************************************************************************************
+*
+* individual version functions (@todo port each function to individual component files)
+*
+******************************************************************************************************************/
+	private $_versionFunctions = [
+		0 => 'versionSISB',
+		1 => 'versionOne'
+	];
 	private function versionSISB() {
 		$params = $this->_requestParams;
 		$data = false;
