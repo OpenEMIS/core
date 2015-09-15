@@ -1,6 +1,6 @@
 <?php $CustomFields = $attr['model']; ?>
 <?php if ($action == 'view') : ?>
-	<div class="table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
