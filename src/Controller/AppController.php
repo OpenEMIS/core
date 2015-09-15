@@ -122,6 +122,13 @@ class AppController extends Controller {
 		$this->set('theme', $theme);
 		$this->set('SystemVersion', $this->getCodeVersion());
 		$this->set('_productName', $this->_productName);
+
+		//Retriving the panel width size from session
+		if ($session->check('System.layout')) {
+			$layout = $session->read('System.layout');
+			$this->set('SystemLayout_leftPanel', 'width:'.$layout['panelLeft'].'px');
+			$this->set('SystemLayout_rightPanel','width:'.$layout['panelRight'].'px');
+		}
 	}
 
 	public function getCodeVersion() {
@@ -137,4 +144,17 @@ class AppController extends Controller {
 		}
 		return $version;
 	}
+
+	//Storing the panel width size from session
+	public function setJqxSpliterSize(){
+		$this->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$session = $this->request->session();
+			$session->write('System.layout', $this->request->data);
+			$layout = $session->read('System.layout');
+		}
+	}
+
+
 }

@@ -38,9 +38,8 @@
 <body class='default'>
 
 	<?=  $this->element('OpenEmis.header'); ?>
-	  
 	<div id="main-splitter">
-		<div class="left-pane">
+		<div class="left-pane" style="<?= $SystemLayout_leftPanel; ?>">
 			<?php 
         		if($htmlLangDir != 'rtl'){
         			echo $this->element('OpenEmis.navigation');
@@ -54,7 +53,7 @@
 				}
 			?>
 		</div>
-        <div class="right-pane">
+        <div class="right-pane" style="<?= $SystemLayout_rightPanel; ?>">
         	<?php 
         		if($htmlLangDir != 'rtl'){
 					echo $this->element('OpenEmis.header');
