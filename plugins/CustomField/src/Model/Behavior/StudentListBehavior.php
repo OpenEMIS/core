@@ -160,25 +160,89 @@ class StudentListBehavior extends Behavior {
                     ])
                     ->toArray();
 
-                if ($this->_table->request->is(['post', 'put'])) {
-                    $this->_table->request->query['section'] = $this->_table->request->data[$this->_table->alias()]['institution_site_section'];
+                // Set selectedSection to session and read it back.
+                $selectedSection = key($sectionOptions);
+                $session = $this->_table->request->session();
+                $plugin = $this->_table->controller->plugin;
+                $model = $this->_table->alias();
+                $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_site_section";
+
+                if ($this->_table->request->is(['get'])) {
+                    // Clear session if is not redirect from save
+                } else if ($this->_table->request->is(['post', 'put'])) {
+                    if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+                        if (array_key_exists($attr['field'], $this->_table->request->data[$this->_table->alias()]['custom_field_values'])) {
+                            if (array_key_exists('institution_site_section', $this->_table->request->data[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
+                                $session->write($sessionKey, $this->_table->request->data[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_site_section']);
+                            }
+                        }
+                    }
                 }
-                $selectedSection = $this->_table->queryString('section', $sectionOptions);
-                $this->_table->advancedSelectOptions($sectionOptions, $selectedSection);
+
+                if ($session->check($sessionKey)) {
+                    $selectedSection = $session->read($sessionKey);
+                }
+                // End
+
+                $Sections = $this->Sections;
+                $userId = $this->_table->Auth->user('id');
+
+                $this->_table->advancedSelectOptions($sectionOptions, $selectedSection, [
+                    'message' => '{{label}} - ' . $this->_table->getMessage('InstitutionSurveys.noAccess'),
+                    'callable' => function($id) use ($Sections, $institutionId, $periodId, $userId) {
+                        if ($this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
+                            // User has access to AllClasses
+                            return 1;
+                        } else {
+                            $sectionResults = $Sections
+                                ->find()
+                                ->where([
+                                    $Sections->aliasField('id') => $id,
+                                    $Sections->aliasField('institution_site_id') => $institutionId,
+                                    $Sections->aliasField('academic_period_id') => $periodId,
+                                    $Sections->aliasField('security_user_id') => $userId
+                                ])
+                                ->first();
+
+                            if (!empty($sectionResults)) {
+                                // User has access to the Class
+                                return 1;
+                            } else {
+                                // Do not have access to the Class
+                                return 0;
+                            }
+                        }
+                    }
+                ]);
+
                 $studentQuery = $this->SectionStudents
                     ->find()
-                    ->contain(['Users'])
-                    ->where([
-                        $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
-                    ]);
+                    ->contain(['Users']);
 
-                $students = $this->SectionStudents
-                    ->find()
-                    ->contain(['Users'])
-                    ->where([
-                        $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
-                    ])
-                    ->toArray();
+                if ($action == 'view') {
+                    // Filter section by staff if user do not have access to AllClasses
+                    $sectionConditions = [
+                        $this->Sections->aliasField('id = ') . $this->SectionStudents->aliasField('institution_site_section_id'),
+                        $this->Sections->aliasField('institution_site_id') => $institutionId,
+                        $this->Sections->aliasField('academic_period_id') => $periodId
+                    ];
+                    if (!$this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
+                        $sectionConditions[$this->Sections->aliasField('security_user_id')] = $userId;
+                    }
+
+                    $studentQuery
+                        ->innerJoin(
+                            [$this->Sections->alias() => $this->Sections->table()], $sectionConditions
+                        );
+
+                } else if ($action == 'edit') {
+                    $studentQuery
+                        ->where([
+                            $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
+                        ]);
+                }
+
+                $students = $studentQuery->toArray();
 
                 // Build table header
                 $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
@@ -323,7 +387,7 @@ class StudentListBehavior extends Behavior {
             // Survey Form ID not found.
         }
 
-        $attr['alias'] = $this->StudentSurveys->alias();
+        $attr['alias'] = $fieldPrefix;
         $attr['sectionOptions'] = $sectionOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
