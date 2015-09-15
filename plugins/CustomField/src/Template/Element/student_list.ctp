@@ -18,7 +18,7 @@
 	<h3><?= $attr['attr']['label']; ?></h3>
 	<div class="clearfix">
 		<?php
-			echo $this->Form->input($ControllerAction['table']->alias().".institution_site_section", [
+			echo $this->Form->input($alias.".institution_site_section", [
 				'label' => $this->Label->get('InstitutionSurveys.section'),
 				'type' => 'select',
 				'options' => $sectionOptions,

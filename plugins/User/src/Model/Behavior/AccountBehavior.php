@@ -71,7 +71,6 @@ class AccountBehavior extends Behavior {
 		$tabElements = $this->_table->controller->getUserTabElements($options);
 
 		if ($this->_table->action != 'add') {
-			$id = $this->_table->request->query['id'];
 			if ($this->isInstitution) {
 				// url of tabElements is build in Institution->getUserTabElements()
 			} else {
