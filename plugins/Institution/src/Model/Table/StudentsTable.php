@@ -557,17 +557,21 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// For PHPOE-1916
-		$editable = $this->AcademicPeriods->getEditable($data['Students']['academic_period_id']);
-		if (! $editable) {
-			$this->Alert->error('general.academicPeriod.notEditable');
-		} 
-		// End PHPOE-1916
-		else {
-			$this->Session->write('Institution.Students.new', $data[$this->alias()]);
-			$event->stopPropagation();
-			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
-			return $this->controller->redirect($action);
+		if (isset($data['Students']['academic_period_id'])) {
+			// For PHPOE-1916
+			$editable = $this->AcademicPeriods->getEditable($data['Students']['academic_period_id']);
+			if (! $editable) {
+				$this->Alert->error('general.academicPeriod.notEditable');
+			} 
+			// End PHPOE-1916
+			else {
+				$this->Session->write('Institution.Students.new', $data[$this->alias()]);
+				$event->stopPropagation();
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
+				return $this->controller->redirect($action);
+			}
+		} else {
+			$this->Alert->error('Institution.InstitutionSiteStudents.educationProgrammeId');
 		}
 	}
 
