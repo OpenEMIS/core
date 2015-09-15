@@ -129,10 +129,10 @@ class StudentsTable extends AppTable {
 		$this->fields = []; // unset all fields first
 
 		//find out current academic period and store it in session
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods')->findByCurrent(1)->first();
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
 		if(!empty($AcademicPeriod)) {
 			$session = $this->request->session();
-			$session->write('Student.AcademicPeriod.Current.id', $AcademicPeriod->id);
+			$session->write('Student.AcademicPeriod.Current.id', $AcademicPeriod);
 		}
 
 		$this->ControllerAction->field('institution', ['order' => 50]);
