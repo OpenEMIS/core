@@ -4,27 +4,35 @@ $(document).ready(function() {
 
 var results = {
 	init: function() {
-		$('.resultGrade').prop({'disabled': 'disabled'});
 		$('.resultMark').on('keyup', function() {$(this).trigger('change');})
 						.on('change', function() {results.changed(this);})
-						.trigger('change');
+						.on('click', function() {results.clicked(this);})
+						;
+	},
+	clicked: function(element) {
+		$(element).select();
 	},
 	changed: function(element) {
-		var highest = 0;
-		var val = $(element).val();
+		var val = parseInt($(element).val());
+		var highest = parseInt($(element).parent().siblings('.maxMark').val());
 		var select = $(element).closest('tr').find('.resultGrade');
+
 		select.find(":selected").removeAttr('selected');
-		select.find("option").each( function(key, option) {
-			if (highest < $(option).data('max')) {
-				highest = $(option).data('max');
+		if (val == '') {
+			/**
+			 * using first() since the first option is set for empty value
+			 */
+			select.find("option").first().prop('selected', 'selected');
+		} else {
+			if (val > highest) {
+				val = highest;
 			}
-			if (($(option).data('min') == val || $(option).data('min') < val) && ($(option).data('max') > val || $(option).data('max') == val)) {
-				$(option).prop('selected', 'selected');
-				$('#' + $(select).prop('id') + "-id").val($(option).val());
-			}
-		});
-		if (val > highest) {
-			$(element).val(highest);
+			select.find("option").each( function(key, option) {
+				if (($(option).data('min') == val || $(option).data('min') < val) && ($(option).data('max') > val || $(option).data('max') == val)) {
+					$(option).prop('selected', 'selected');
+				}
+			});
+			$(element).val(parseInt(val));
 		}
 	},
 }
