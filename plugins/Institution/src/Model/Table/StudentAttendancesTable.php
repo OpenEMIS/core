@@ -31,6 +31,8 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
@@ -272,13 +274,13 @@ class StudentAttendancesTable extends AppTable {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
-		if (empty($this->request->query['period_id'])) {
-			$this->request->query['period_id'] = $AcademicPeriod->getCurrent();
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
@@ -287,6 +289,8 @@ class StudentAttendancesTable extends AppTable {
 			}
 		]);
 		// End setup periods
+
+		$this->request->query['academic_period_id'] = $selectedPeriod;
 
 		if ($selectedPeriod != 0) {
 			$todayDate = date("Y-m-d");
@@ -512,14 +516,7 @@ class StudentAttendancesTable extends AppTable {
 				$toolbarButtons['back']['attr'] = $attr;
 				$toolbarButtons['back']['attr']['title'] = __('Back');
 			} else {
-				$toolbarButtons['edit'] = $buttons['index'];
-		    	$toolbarButtons['edit']['url'][0] = 'index';
-				$toolbarButtons['edit']['url']['mode'] = 'edit';
-				$toolbarButtons['edit']['type'] = 'button';
-				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-				$toolbarButtons['edit']['attr'] = $attr;
-				$toolbarButtons['edit']['attr']['title'] = __('Edit');
-
+				
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}

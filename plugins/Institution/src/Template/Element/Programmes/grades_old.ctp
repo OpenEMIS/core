@@ -16,7 +16,7 @@ echo implode(', ', $grades);
 
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
-	<div class="table-in-view col-md-4 table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered table-checkable">
 			<thead>
 				<tr>
