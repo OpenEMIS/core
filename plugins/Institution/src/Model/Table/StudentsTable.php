@@ -426,16 +426,14 @@ class StudentsTable extends AppTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => Inflector::singularize($this->alias())]);
+		$options = [
+			'userRole' => 'Student',
+			'action' => $this->action,
+			'id' => $entity->id,
+			'userId' => $entity->student_id
+		];
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements[$this->alias()]['url'] = array_merge($tabElements[$this->alias()]['url'], [$entity->id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == $this->alias()) continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->student_id, 'id' => $entity->id]);
-			}
-		}
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());

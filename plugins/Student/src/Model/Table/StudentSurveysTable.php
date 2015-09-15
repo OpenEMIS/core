@@ -54,7 +54,7 @@ class StudentSurveysTable extends AppTable {
 		if ($session->check('Institution.Institutions.id')) {
 			$institutionId = $session->read('Institution.Institutions.id');
 		}
-		$studentId = !is_null($this->request->query('student_id')) ? $this->request->query('student_id') : 0;
+		$studentId = !is_null($this->request->query('user_id')) ? $this->request->query('user_id') : 0;
 
 		// Build Survey Records
 		$currentAction = $this->ControllerAction->action();
@@ -170,26 +170,21 @@ class StudentSurveysTable extends AppTable {
 	}
 
 	private function setupTabElements($entity=null) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-		$studentId = !is_null($this->request->query('student_id')) ? $this->request->query('student_id') : 0;
-		
-		$tabElements = [
-			'Students' => [
-				'text' => __('Academic'),
-				'url' => array_merge($url, ['action' => 'Students', 'view', $id])
-			],
-			'StudentUser' => [
-				'text' => __('General'),
-				'url' => array_merge($url, ['action' => 'StudentUser', 'view', $studentId, 'id' => $id])
-			],
-			'StudentSurveys' => ['text' => __('Survey')]
+		$userId = !is_null($this->request->query('user_id')) ? $this->request->query('user_id') : 0;
+
+		$options = [
+			'userRole' => 'Student',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $userId
 		];
 
-		if ($this->action == 'index') {
-			$tabElements['StudentSurveys']['url'] = array_merge($url, ['action' => $this->alias(), 'index', 'id' => $id, 'student_id' => $studentId]);
-		} else {
-			$tabElements['StudentSurveys']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id, 'student_id' => $studentId]);
+		$tabElements = $this->controller->getUserTabElements($options);
+
+		if (!is_null($entity)) {
+			$tabElements['StudentSurveys']['url'][0] = 'view';
+			$tabElements['StudentSurveys']['url'][1] = $entity->id;
 		}
 
 		$this->controller->set('tabElements', $tabElements);
