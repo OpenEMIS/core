@@ -84,8 +84,11 @@ class StudentAttendancesTable extends AppTable {
 	// Event: ControllerAction.Model.onGetType
 	public function onGetType(Event $event, Entity $entity) {
 		$html = '';
+		$studentId = $entity->student_id;
+		$StudentTable = TableRegistry::get('Institution.Students');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		if (!is_null($this->request->query('mode'))) {
+		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -134,8 +137,10 @@ class StudentAttendancesTable extends AppTable {
 	// Event: ControllerAction.Model.onGetReason
 	public function onGetReason(Event $event, Entity $entity) {
 		$html = '';
-
-		if (!is_null($this->request->query('mode'))) {
+		$studentId = $entity->student_id;
+		$StudentTable = TableRegistry::get('Institution.Students');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$Form = $event->subject()->Form;
 
 			$id = $entity->student_id;

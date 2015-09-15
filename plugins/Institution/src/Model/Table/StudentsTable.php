@@ -681,8 +681,10 @@ class StudentsTable extends AppTable {
 	// Start PHPOE-1897
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$statuses = $this->StudentStatuses->findCodeList();
-		if ($entity->student_status_id != $statuses['CURRENT']) {
+		$studentId = $this->get($entity->id)->student_id;
+		$institutionId = $entity->institution_id;
+
+		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
 			if (isset($buttons['edit'])) {
 				unset($buttons['edit']);
 			}
@@ -693,6 +695,18 @@ class StudentsTable extends AppTable {
 		return $buttons;
 	}
 	// End PHPOE-1897
+
+	public function checkEnrolledInInstitution($studentId, $institutionId) {
+		$statuses = TableRegistry::get('Student.StudentStatuses')->findCodeList();
+		$status = $this
+			->find()
+			->where([$this->aliasField('student_id') => $studentId, 
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_status_id') => $statuses['CURRENT']
+			])
+			->count();
+		return $status > 0;
+	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'index') { // for promotion button in index page
@@ -714,9 +728,11 @@ class StudentsTable extends AppTable {
 		} else if ($action == 'view') { // for transfer button in view page
 			$statuses = $this->StudentStatuses->findCodeList();
 			$id = $this->request->params['pass'][1];
-			$studentData = $this->get($id);
+			$studentId = $this->get($id)->student_id;
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			
 			// Start PHPOE-1897
-			if ($studentData->student_status_id != $statuses['CURRENT']) {
+			if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
 				}
