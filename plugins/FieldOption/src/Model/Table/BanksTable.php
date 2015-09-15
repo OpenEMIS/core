@@ -11,4 +11,13 @@ class BanksTable extends AppTable {
 		parent::initialize($config);
 		$this->hasMany('BankBranches', ['className' => 'FieldOption.BankBranches', 'foreignKey' => 'bank_id']);
 	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->notEmpty('name', 'Please enter a name.')
+			->notEmpty('code', 'Please enter a code.');
+
+		return $validator;
+	}
+
 }

@@ -17,8 +17,8 @@ class FieldOptionValuesTable extends AppTable {
 	private $fieldOption = null;
 	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
 									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
-									 // 'FieldOption.Banks' => ['behavior' => 'ParamModel'],
-									 // 'FieldOption.Countries' => ['behavior' => 'ParamModel', 'associations' => ['identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes', 'contain' => 'IdentityTypes']]]
+									  'FieldOption.Banks' => ['behavior' => 'Display'],
+									  'FieldOption.Countries' => ['behavior' => 'Countries']
 									  ];
 
 	private $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
@@ -118,11 +118,11 @@ class FieldOptionValuesTable extends AppTable {
 								  ]);
 			}
 
-			// foreach($defaultFieldOrder as $field){
-			// 	if(array_key_exists($field, $this->fields)){
-			// 		$this->ControllerAction->field($field, ['visible' => false]);
-			// 	}
-			// }
+			foreach($defaultFieldOrder as $field){
+				if(array_key_exists($field, $this->fields) && ($field != 'field_option_id')){
+					$this->ControllerAction->field($field, ['visible' => false]);
+				}
+			}
 		}		
 	
 		$this->ControllerAction->setFieldOrder($defaultFieldOrder); 

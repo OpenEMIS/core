@@ -12,4 +12,11 @@ class CountriesTable extends AppTable {
 		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'country_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
 	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->notEmpty('name', 'Please enter a name.');
+
+		return $validator;
+	}
 }
