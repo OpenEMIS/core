@@ -35,7 +35,7 @@ class StaffBehavior extends Behavior {
 
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $event->subject()->request->session();
-				$institutionId = $session->read('Institutions.id');
+				$institutionId = $session->read('Institution.Institutions.id');
 				$query->andWhere(['InstitutionSiteStaff.institution_site_id' => $institutionId]);
 			}
 		}
@@ -70,7 +70,7 @@ class StaffBehavior extends Behavior {
 		$name = '';
 		if ($entity instanceof User) {
 			$session = $event->subject()->request->session();
-			$institutionId = $session->read('Institutions.id');
+			$institutionId = $session->read('Institution.Institutions.id');
 
 			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
 			$obj = $InstitutionSiteStaff->find()
@@ -99,7 +99,7 @@ class StaffBehavior extends Behavior {
 			// For Institution Staff
 			case "Staff":
 				$session = $this->_table->Session;
-				$institutionId = $session->read('Institutions.id');
+				$institutionId = $session->read('Institution.Institutions.id');
 				// Total Students: number
 
 				// Get Number of staff in an institution
