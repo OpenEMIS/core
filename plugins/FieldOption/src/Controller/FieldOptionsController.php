@@ -11,6 +11,10 @@ class FieldOptionsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
+		// $this->ControllerAction->models = [
+		// 	'Countries' 			=> ['className' => 'FieldOption.Countries']
+		// ];
+
 		// $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search']);
 	}
 

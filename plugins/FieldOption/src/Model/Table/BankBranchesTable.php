@@ -13,4 +13,13 @@ class BankBranchesTable extends AppTable {
 		$this->hasMany('UserBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'bank_branch_id']);
 		$this->hasMany('InstitutionBankAccounts', ['className' => 'Institution.InstitutionSiteBankAccounts', 'foreignKey' => 'bank_branch_id']);
 	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->notEmpty('name', 'Please enter a name.')
+			->notEmpty('code', 'Please enter a code.');;
+
+		return $validator;
+	}
+	
 }
