@@ -82,6 +82,7 @@ class StaffTable extends AppTable {
 		]);
 
 		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('InstitutionRubrics', 		['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'security_user_id']);
 	}
 
 

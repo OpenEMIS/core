@@ -421,6 +421,45 @@ class StaffTable extends AppTable {
 			$InstitutionSiteClassStaff->delete($value);
 		}
 
+		
+		// Staff behavior associated to institution must be deleted.
+		$StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
+		$staffBehaviourQuery = $StaffBehaviours->find()
+			->where([
+				$StaffBehaviours->aliasField('staff_id') => $entity->security_user_id,
+				$StaffBehaviours->aliasField('institution_id') => $entity->institution_site_id,
+			])
+			;
+		foreach ($staffBehaviourQuery as $key => $value) {
+			$StaffBehaviours->delete($value);
+		}
+
+		// Staff absence associated to institution must be deleted.
+		$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+		$staffAbsencesQuery = $StaffAbsences->find()
+			->where([
+				$StaffAbsences->aliasField('security_user_id') => $entity->security_user_id,
+				$StaffAbsences->aliasField('institution_site_id') => $entity->institution_site_id,
+			])
+		;
+		foreach ($staffAbsencesQuery as $key => $value) {
+			$StaffAbsences->delete($value);
+		}
+
+		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
+		// association cascade deletes institution_site_quality_rubric_answers
+		$InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
+		$institutionRubricsQuery = $InstitutionRubrics->find()
+			->where([
+				$InstitutionRubrics->aliasField('security_user_id') => $entity->security_user_id,
+				$InstitutionRubrics->aliasField('institution_site_id') => $entity->institution_site_id,
+			])
+		;
+		foreach ($institutionRubricsQuery as $key => $value) {
+			$InstitutionRubrics->delete($value);
+		}
+
+
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
 
