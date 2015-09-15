@@ -25,16 +25,14 @@ class StudentBehavioursTable extends AppTable {
 
 	}
 
-	// PHPOE-1916
-	// Not yet implemented due to possible performance issue
-	// public function implementedEvents() {
-	// 	$events = parent::implementedEvents();
-	// 	$newEvent = [
-	// 		'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
-	// 	];
-	// 	$events = array_merge($events, $newEvent);
-	// 	return $events;
-	// }
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
 
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
 	// public function validationDefault(Validator $validator) {
@@ -283,6 +281,8 @@ class StudentBehavioursTable extends AppTable {
 			if ($selectedPeriod != 0) {
 				$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
 				$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				// $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				// $statuses = $StudentStatuses->findCodeList();
 				$classOptions = $classOptions + $Classes
 					->find('list')
 					->where([
@@ -296,6 +296,8 @@ class StudentBehavioursTable extends AppTable {
 				if ($request->is(['post', 'put'])) {
 					$selectedClass = $request->data($this->aliasField('class'));
 				}
+
+				// PHPOE-1897 - Amended advance select option to select only enrolled students only
 				$this->advancedSelectOptions($classOptions, $selectedClass, [
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
 					'callable' => function($id) use ($Students) {
@@ -316,6 +318,41 @@ class StudentBehavioursTable extends AppTable {
 		return $attr;
 	}
 
+	// Start PHPOE-1897
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		// $ClassStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$studentId = $entity->student_id;
+		$institutionId = $entity->institution_id;
+		$StudentTable = TableRegistry::get('Institution.Students');
+
+		if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+			if (isset($buttons['edit'])) {
+				unset($buttons['edit']);
+			}
+		}
+		return $buttons;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$studentId = $this->request->data[$this->alias()]['student_id'];
+			$StudentTable = TableRegistry::get('Institution.Students');
+			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+		}
+	}
+	// End PHPOE-1897
+
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
 			$studentOptions = ['' => $this->selectEmpty('student')];
@@ -324,9 +361,11 @@ class StudentBehavioursTable extends AppTable {
 			if ($request->is(['post', 'put'])) {
 				$selectedClass = $request->data($this->aliasField('class'));
 			}
-
+			// PHPOE-1897 - Amended option to select only enrolled students only
 			if (! $selectedClass==0	&& ! empty($selectedClass)) {
 				$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				$statuses = $StudentStatuses->findCodeList();
 				$studentOptions = $studentOptions + $Students
 				->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 				->contain(['Users'])

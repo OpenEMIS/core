@@ -79,8 +79,10 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				$gradingId = $resultObj->assessment_grading_option_id;
 			}
 			$entity->assessment_grading_option_id = $gradingId;
-
-			if ($selectedMode == 'edit') {
+			$studentId = $entity->student_id;
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$StudentTable = TableRegistry::get('Institution.Students');
+			if ($selectedMode == 'edit' && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 				$Form = $event->subject()->Form;
 				$alias = Inflector::underscore($Results->alias());
 				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
@@ -104,9 +106,11 @@ class InstitutionAssessmentResultsTable extends AppTable {
 
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
-
+		$studentId = $entity->student_id;
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$StudentTable = TableRegistry::get('Institution.Students');
 		$selectedMode = $this->request->query('mode');
-		if ($selectedMode == 'edit') {
+		if ($selectedMode == 'edit' && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$Form = $event->subject()->Form;
 			$Items = TableRegistry::get('Assessment.AssessmentItems');
 			$Results = TableRegistry::get('Assessment.AssessmentItemResults');

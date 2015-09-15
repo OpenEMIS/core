@@ -109,16 +109,16 @@ class StudentUserTable extends UserTable {
 			}
 
 			if ($action == 'view') {
-				$statuses = TableRegistry::get('Student.StudentStatuses')->findCodeList();
-				$id = $this->request->params['pass'][1];
-				$studentData = $this->get($id);
-				pr($studentData);die;
+				$institutionId = $this->Session->read('Institution.Institutions.id');
+				$id = $this->request->query['id'];
+				$StudentTable = TableRegistry::get('Institution.Students');
+				$studentId = $StudentTable->get($id)->student_id;
 				// Start PHPOE-1897
-				// if ($studentData->student_status_id != $statuses['CURRENT']) {
-				// 	if (isset($toolbarButtons['edit'])) {
-				// 		unset($toolbarButtons['edit']);
-				// 	}
-				// }
+				if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+					if (isset($toolbarButtons['edit'])) {
+						unset($toolbarButtons['edit']);
+					}
+				}
 				// End PHPOE-1897
 			}
 		}
