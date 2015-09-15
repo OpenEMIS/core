@@ -186,6 +186,7 @@ class RecordBehavior extends Behavior {
 					->find('list', ['keyField' => 'code', 'valueField' => 'value'])
 					->toArray();
 
+				$redirectUrl = null;
     			foreach ($data[$this->_table->alias()]['custom_field_values'] as $key => $obj) {
     				if (array_key_exists($StudentSurveys->alias(), $obj)) {
     					$fieldId = $obj[$this->config('fieldKey')];
@@ -231,14 +232,15 @@ class RecordBehavior extends Behavior {
     						}
     					}
 
-    					if ($entity->status == 1) {
-	    					$event->stopPropagation();
-
-	    					$url = $this->_table->ControllerAction->url('edit');
-	    					$url['section'] = $this->_table->request->data[$this->_table->alias()]['institution_site_section'];
-	    					return $this->_table->controller->redirect($url);
-	    				}
+    					if (is_null($redirectUrl)) {
+    						$redirectUrl = $this->_table->ControllerAction->url('edit');
+    					}
     				}
+    			}
+
+    			if ($entity->status == 1 && !is_null($redirectUrl)) {
+					$event->stopPropagation();
+					return $this->_table->controller->redirect($url);
     			}
     		}
     	}
