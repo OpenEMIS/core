@@ -44,7 +44,7 @@ use Cake\Network\Exception\InternalErrorException;
  * 	@value: one of these array values ['json', 'soap']
  * If not defined, default output format will be json string
  * 
- * example: 'http://phpoev3.dev/api?security_token=acd87adcas9d8cad&version=1&user_id=4536&ss_id=S286812264P';
+ * example: 'http://phpoev3.dev/api?security_token=acd87adcas9d8cad&version=1&format=soap&user_id=4536&ss_id=S286812264P';
  *
  */
 
@@ -102,46 +102,28 @@ class ApiController extends AppController
 		Log::info($message, ['scope' => ['api']]);
 
 		if ($this->request->isGet() && !empty($this->request->query) && !empty($this->request->query('security_token'))) {
-		// if (array_key_exists('0', $this->request->pass)) {
+			$ApiAuthorizations = TableRegistry::get('ApiAuthorizations');
+			$this->_externalApplication = $ApiAuthorizations->find()
+					->where([
+						$ApiAuthorizations->aliasField('security_token') => $this->request->query('security_token')
+					])
+					->first()
+					;
 
-			$user = $this->login();
-			
-			if ($user) {
-				
-				$ApiAuthorizations = TableRegistry::get('ApiAuthorizations');
-				$this->_externalApplication = $ApiAuthorizations->find()
-						->where([
-							$ApiAuthorizations->aliasField('security_token') => $this->request->query('security_token')
-						])
-						->first()
-						;
-
-				if ($this->_externalApplication) {
-					$this->_requestParams = $this->request->query;
-					$this->request->params['action'] = 'extract';
-				} else {
-					$this->autoRender = false;
-					$message = 'the given app_id and app_key has no matches, shown "' . $this->_errorCodes[2]['description'] . '( ' .$this->_errorCodes[2]['code'] . ' )" error message to requestor';
-					Log::info($message, ['scope' => ['api']]);
-					$json = [
-						'error' => $this->_errorCodes[2],
-					];
-					$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-					$this->response->type('json');
-					die($this->response);
-				}
+			if ($this->_externalApplication) {
+				$this->_requestParams = $this->request->query;
+				$this->request->params['action'] = 'extract';
 			} else {
 				$this->autoRender = false;
-				$message = 'unable to login using hard-coded user info, shown "' . $this->_errorCodes[5]['description'] . '( ' .$this->_errorCodes[5]['code'] . ' )" error message to requestor';
+				$message = 'the given app_id and app_key has no matches, shown "' . $this->_errorCodes[2]['description'] . '( ' .$this->_errorCodes[2]['code'] . ' )" error message to requestor';
 				Log::info($message, ['scope' => ['api']]);
 				$json = [
-					'error' => $this->_errorCodes[5],
+					'error' => $this->_errorCodes[2],
 				];
 				$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
 				$this->response->type('json');
 				die($this->response);
 			}
-
 		} else {
 			$this->autoRender = false;
 			$message = 'missing app_key, shown "' . $this->_errorCodes[1]['description'] . '( ' .$this->_errorCodes[1]['code'] . ' )" error message to requestor';
@@ -158,33 +140,13 @@ class ApiController extends AppController
 		$this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 	}
 
-	public function login() {
-		$data = [
-			'username' => 'admin',
-			'password' => 'demo',
-			'submit' => 'login',
-			'System' => [
-            	'language' => 'en'
-        	]
-		];
-		$this->request->data = $data;
-
-		$user = $this->Auth->identify();
-		if ($user) {
-			$this->Auth->setUser($user);
-			return $user;
-		} else {
-			return false;
-		}
-	}
-
 	private $_versionFunctions = [
 		0 => 'versionSISB',
 		1 => 'versionOne'
 	];
 	private $_allowableFormats = [
-		'json' => true,
-		'soap' => true
+		'json',
+		'soap'
 	];
 	public function extract() {
 		$this->autoRender = false;
@@ -201,7 +163,7 @@ class ApiController extends AppController
 				}
 			}
 			if (array_key_exists('format', $params) && $params['format']!='') {
-				if (array_key_exists($params['format'], $this->_allowableFormats)) {
+				if (in_array($params['format'], $this->_allowableFormats)) {
 					$format = $params['format'];
 				}
 			}
@@ -513,133 +475,4 @@ class ApiController extends AppController
 		];
 	}
 
-	// public function auth() {
-	// 	$this->autoRender = false;
-	// 	$json = [];
-
-	// 	// We check if request came from a post form
-	// 	if ($this->request->is(['post', 'put'])) {
-	// 		// do the login..
-	// 		$user = $this->login();
-
-	// 		if ($user) {
-	// 			// get all the user details if login is successful.
-	// 			$userID = $user['id'];
-	// 			$accessToken = sha1(time() . $userID);
-	// 			$refreshToken = sha1(time());
-	// 			$json = ['message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken];
-
-	// 			// set the values, and save the data
-	// 			$startDate = time() + 3600; // current time + one hour
- //                $expiryTime = new Time($startDate);
-	// 			$saveData = [
-	// 				'access_token' => $accessToken,
-	// 				'refresh_token' => $refreshToken,
-	// 				'expiry_date' => $expiryTime
-	// 			];
-
-	// 			$entity = $this->SecurityAPISessions->newEntity($saveData);
-	// 			$this->SecurityAPISessions->save($entity);
-	// 		} else {
-	// 			// if the login is wrong, show the error message.
-	// 			$json = ['message' => 'failure'];
-	// 		}
-	// 	}
-
-	// 	$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-	// 	$this->response->type('json');
-
-	// 	return $this->response;
-	// }
-
-	// public function refreshToken() {
-	// 	$this->autoRender = false;
-	// 	// This function checks for the existence of both the access and refresh tokens
-	// 	// If found, updates the refresh token, and the expiry time accordingly.
-	// 	$accessToken = '';
-	// 	$refreshToken = '';
-	// 	$json = [];
-
-	// 	if ($this->request->is(['post', 'put'])) {
-	// 		$accessToken = $this->request->data['access_token'];
-	// 		$refreshToken = $this->request->data['refresh_token'];
-
-	// 		$search = $this->SecurityAPISessions
-	// 			->find()
-	// 			->where([
-	// 				$this->SecurityAPISessions->aliasField('access_token') => $accessToken,
-	// 				$this->SecurityAPISessions->aliasField('refresh_token') => $refreshToken
-	// 			])
-	// 			->first();
-
-	// 		if (!empty($search)) {
-	// 			$refreshToken = sha1(time());
-	// 			$startDate = time() + 3600; // current time + one hour
-	// 			$expiryTime = date('Y-m-d H:i:s', $startDate);
-
-	// 			$search->refresh_token = $refreshToken;
-	// 			$search->expiry_date = $expiryTime;
-
-	// 			$this->SecurityAPISessions->save($search);
-	// 			$json = ['message' => 'updated', 'refresh_token' => $refreshToken];
-	// 		} else {
-	// 			throw new BadRequestException('Custom error message', 302);
-	// 		}
-	// 	} else {
-	// 		throw new BadRequestException('Custom error message', 400);
-	// 	}
-
-	// 	$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-	// 	$this->response->type('json');
-
-	// 	return $this->response;
-	// }
-
-	// public function token() {
-	// 	$this->autoRender = false;
-	// 	$accessToken = '';
-	// 	$refreshToken = '';
-	// 	$json = [];
-
-	// 	if ($this->request->is(['post', 'put'])) {
-	// 		$accessToken = $this->request->data['access_token'];
-	// 		$refreshToken = $this->request->data['refresh_token'];
-
-	// 		$search = $this->SecurityAPISessions
-	// 			->find()
-	// 			->where([
-	// 				$this->SecurityAPISessions->aliasField('access_token') => $accessToken,
-	// 				$this->SecurityAPISessions->aliasField('refresh_token') => $refreshToken
-	// 			])
-	// 			->first();
-
-	// 		// check if the record actually exists. if it does, do the update, else just return fail.
-	// 		// we check if the expiry time has already passed. if it has passed, return error.
-	// 		if (!empty($search)) {
-	// 			$current = time();
-	// 			$expiry = strtotime($search->expiry_date);
-
-	// 			if ($current < $expiry) {
-	// 				$refreshToken = sha1(time());
-	// 				$startDate = time() + 3600; // current time + one hour
-	// 				$expiryTime = date('Y-m-d H:i:s', $startDate);
-
-	// 				$search->refresh_token = $refreshToken;
-	// 				$search->expiry_date = $expiryTime;
-
-	// 				$this->SecurityAPISessions->save($search);
-	// 				$json = ['message' => 'success', 'refresh_token' => $refreshToken];
-	// 			} else {
-	// 				$json = ['message' => 'token not updated'];
-	// 			}
-	// 		} else {
-	// 			$json = ['message' => 'token not found'];
-	// 		}
-	// 	}
-
-	// 	$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-	// 	$this->response->type('json');
-
-	// 	return $this->response;
-	// }
 }
