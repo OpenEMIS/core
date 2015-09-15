@@ -38,36 +38,39 @@ class StudentsController extends AppController {
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
-		$institutionIds = $this->AccessControl->getInstitutionsByUser();
-		$session = $this->request->session();
-		$studentId = $session->read('Student.Students.id');
-		$enrolledStatus = false;
-		$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-		foreach ($institutionIds as $id) {
-			$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-			if ($enrolledStatus) {
-				break;
+
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$session = $this->request->session();
+			$studentId = $session->read('Student.Students.id');
+			$enrolledStatus = false;
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			foreach ($institutionIds as $id) {
+				$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+				if ($enrolledStatus) {
+					break;
+				}
 			}
-		}
-		if (! $enrolledStatus) {
-			$models = $this->ControllerAction->models;
-			$newModel = [];
-			foreach($models as $key => $model) {
-				if ($key != 'BankAccounts' && $key != 'StudentFees') {
-					if (!(isset($model['actions']))) {
-						$model['actions'] = ['index', 'view'];
-					} else {
-						if (array_search('edit', $model['actions'])) {
-							unset($model['actions'][array_search('edit', $model['actions'])]);
-						}
-						if (array_search('remove', $model['actions'])) {
-							unset($model['actions'][array_search('remove', $model['actions'])]);
+			if (! $enrolledStatus) {
+				$models = $this->ControllerAction->models;
+				$newModel = [];
+				foreach($models as $key => $model) {
+					if ($key != 'BankAccounts' && $key != 'StudentFees') {
+						if (!(isset($model['actions']))) {
+							$model['actions'] = ['index', 'view'];
+						} else {
+							if (array_search('edit', $model['actions'])) {
+								unset($model['actions'][array_search('edit', $model['actions'])]);
+							}
+							if (array_search('remove', $model['actions'])) {
+								unset($model['actions'][array_search('remove', $model['actions'])]);
+							}
 						}
 					}
+					$newModel[$key] = $model;
 				}
-				$newModel[$key] = $model;
+				$this->ControllerAction->models = $newModel;		
 			}
-			$this->ControllerAction->models = $newModel;		
 		}
 		$this->set('contentHeader', 'Students');
 	}
