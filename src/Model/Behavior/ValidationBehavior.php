@@ -338,7 +338,8 @@ class ValidationBehavior extends Behavior {
 		$Students = TableRegistry::get('Institution.Students');
 		$enrolled = false;
 		if (!empty($globalData['data']['academic_period_id'])) {
-			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id']);
+			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
+			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
 		}
 		return !$enrolled;
 	}                                                                                                                                                                 
