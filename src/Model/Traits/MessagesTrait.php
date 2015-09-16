@@ -328,10 +328,7 @@ trait MessagesTrait {
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
 			'noData' => 'There are no available Students for Transfer.',
-			'next_period' => 'Next Academic Period',
-			'next_grade' => 'Next Education Grade',
-			'next_institution_id' => 'Institution',
-			'student_transfer_reason_id' => 'Student Transfer Reason'
+			'success' => 'Students have been transferred.',
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
