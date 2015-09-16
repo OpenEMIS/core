@@ -687,8 +687,7 @@ class StudentsTable extends AppTable {
 
 				$transferButton = $buttons['index'];
 				$transferButton['url']['action'] = 'Transfer';
-				$transferButton['url'][0] = 'index';
-				$transferButton['url']['mode'] = 'edit';
+				$transferButton['url'][0] = 'add';
 				$transferButton['type'] = 'button';
 				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
 				$transferButton['attr'] = $attr;
