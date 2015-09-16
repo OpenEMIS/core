@@ -237,4 +237,9 @@ class SecurityRolesTable extends AppTable {
 		}
 		return $roleOptions;
 	}
+
+	public function onGetName(Event $event, Entity $entity) {
+		//Transalation is only for security roles
+		return ($entity->security_group_id == -1) ? __($entity->name) : $entity->name;
+	}
 }
