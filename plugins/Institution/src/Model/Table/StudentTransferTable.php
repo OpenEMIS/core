@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 
 class StudentTransferTable extends AppTable {
@@ -64,31 +65,28 @@ class StudentTransferTable extends AppTable {
     }
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$event->stopPropagation();
-
     	if (array_key_exists($this->alias(), $data)) {
+			$nextAcademicPeriodId = null;
+			$nextEducationGradeId = null;
+			$nextInstitutionId = null;
+			$studentTransferReasonId = null;
+
+			if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
+				$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
+			}
+			if (array_key_exists('next_education_grade_id', $data[$this->alias()])) {
+				$nextEducationGradeId = $data[$this->alias()]['next_education_grade_id'];
+			}
+			if (array_key_exists('next_institution_id', $data[$this->alias()])) {
+				$nextInstitutionId = $data[$this->alias()]['next_institution_id'];
+			}
+			if (array_key_exists('student_transfer_reason_id', $data[$this->alias()])) {
+				$studentTransferReasonId = $data[$this->alias()]['student_transfer_reason_id'];
+			}
+
 			if (array_key_exists('students', $data[$this->alias()])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 				$institutionId = $data[$this->alias()]['institution_id'];
-				$nextAcademicPeriodId = null;
-				$nextEducationGradeId = null;
-				$nextInstitutionId = null;
-				$studentTransferReasonId = null;
-
-				if (array_key_exists($this->alias(), $data)) {
-					if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
-						$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
-					}
-					if (array_key_exists('next_education_grade_id', $data[$this->alias()])) {
-						$nextEducationGradeId = $data[$this->alias()]['next_education_grade_id'];
-					}
-					if (array_key_exists('next_institution_id', $data[$this->alias()])) {
-						$nextInstitutionId = $data[$this->alias()]['next_institution_id'];
-					}
-					if (array_key_exists('student_transfer_reason_id', $data[$this->alias()])) {
-						$studentTransferReasonId = $data[$this->alias()]['student_transfer_reason_id'];
-					}
-				}
 
 				foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
 					if ($studentObj['selected']) {
@@ -98,6 +96,10 @@ class StudentTransferTable extends AppTable {
 						$studentObj['institution_id'] = $nextInstitutionId;
 						$studentObj['student_transfer_reason_id'] = $studentTransferReasonId;
 						$studentObj['previous_institution_id'] = $institutionId;
+
+						$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
+						$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
+						$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
 
 						$entity = $TransferRequests->newEntity($studentObj);
 						if ($TransferRequests->save($entity)) {
@@ -113,10 +115,12 @@ class StudentTransferTable extends AppTable {
 				$url = array_merge($url, $this->request->query, $this->request->pass);
 				$url[0] = 'index';
 
+				$event->stopPropagation();
 				return $this->controller->redirect($url);
 			}
 		}
 
+		$event->stopPropagation();
     	return $this->_redirect();
     }
 
@@ -151,7 +155,7 @@ class StudentTransferTable extends AppTable {
 		$selectedGrade = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-			'callable' => function($id) use ($GradeStudents, $StudentStatuses, $institutionId, $selectedPeriod, $statuses) {
+			'callable' => function($id) use ($GradeStudents, $institutionId, $selectedPeriod, $statuses) {
 				return $GradeStudents
 					->find()
 					->where([
@@ -238,22 +242,30 @@ class StudentTransferTable extends AppTable {
     }
 
     public function onUpdateFieldNextEducationGradeId(Event $event, array $attr, $action, Request $request) {
-    	$nextPeriodId = $request->query('next_academic_period_id');
+		$selectedGrade = $request->query('education_grade_id');
+		$nextPeriodId = $request->query('next_academic_period_id');
     	$nextGradeOptions = [];
 
-    	if (!is_null($nextPeriodId)) {
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
-			$GradeStudents = TableRegistry::get('Institution.StudentTransfer');
+    	if (!is_null($selectedGrade)) {
+	   		$currentGrade = $this->EducationGrades->get($selectedGrade);
 
-    		$nextGradeOptions = $Grades
-				->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-				->contain(['EducationGrades'])
-				->where([$Grades->aliasField('institution_site_id') => $institutionId])
-				->find('academicPeriod', ['academic_period_id' => $nextPeriodId])
+			$nextGradeOptions = $this->EducationGrades
+				->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+				->find('visible')
+				->where([
+					$this->EducationGrades->aliasField('education_programme_id') => $currentGrade->education_programme_id,
+					$this->EducationGrades->aliasField('order >') => $currentGrade->order
+				])
 				->toArray();
+
+			$NextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+			$gradeOptions = $NextProgrammes->getNextGradeList($currentGrade->education_programme_id);
+
+			$nextGradeOptions = $nextGradeOptions + $gradeOptions;
+
 			$nextGradeId = $this->queryString('next_education_grade_id', $nextGradeOptions);
 			$this->advancedSelectOptions($nextGradeOptions, $nextGradeId);
+
     	}
 
     	$attr['options'] = $nextGradeOptions;
@@ -265,6 +277,7 @@ class StudentTransferTable extends AppTable {
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request) {
 		$nextPeriodId = $request->query('next_academic_period_id');
 		$nextGradeId = $request->query('next_education_grade_id');
+
     	$institutionOptions = [];
 
     	if (!is_null($nextPeriodId) && !is_null($nextGradeId)) {

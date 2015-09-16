@@ -21,14 +21,10 @@
 									<?php
 										$alias = $ControllerAction['table']->alias();
 										$fieldPrefix = "$alias.students.$i";
-										$startDate = $obj->start_date->format('Y-m-d');
-    									$endDate = $obj->end_date->format('Y-m-d');
 
 										$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
 										echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
 										echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
-										echo $this->Form->hidden("$fieldPrefix.start_date", ['value' => $startDate]);
-										echo $this->Form->hidden("$fieldPrefix.end_date", ['value' => $endDate]);
 										echo $this->Form->hidden("$fieldPrefix.status", ['value' => $attr['attr']['status']]);
 										echo $this->Form->hidden("$fieldPrefix.type", ['value' => $attr['attr']['type']]);
 									?>
