@@ -59,13 +59,6 @@ class TransferRequestsTable extends AppTable {
 			$result = $model->save($entity);
 
 			if ($result) {
-				// only student status that is pending transfer will be updated, promoted and graduated will retain
-				if (!$isPromotedOrGraduated) {
-					$Students->updateAll(
-						['student_status_id' => $pendingStatus],
-						['id' => $id]
-					);
-				}
 				$this->Alert->success('TransferRequests.request');
 			}
 			return $result;
