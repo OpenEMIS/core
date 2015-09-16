@@ -39,6 +39,7 @@
 .table-icons a {
     margin: 5px;
     display: inline;
+    text-decoration: none;
 }
 
 .table thead,
@@ -122,6 +123,7 @@ th > a,
 th > a:hover,
 th > a:active {
     color: #444;
+    text-decoration: none;
 }
 
 table input,
@@ -138,6 +140,7 @@ table .input-select-wrapper {
 .table-sortable th > a {
     color: #333;
     padding: 10px 0;
+    text-decoration: none;
 }
 
 .table-thumb {
@@ -219,6 +222,7 @@ table .input-select-wrapper {
 .table-sortable th > a:hover,
 .table-sortable th > a:hover:after {
     color: #333;
+    text-decoration: none;
 }
 
 .table-sortable th > a:after {
