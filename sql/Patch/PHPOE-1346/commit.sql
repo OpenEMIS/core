@@ -1,6 +1,9 @@
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-1346');
 
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'Students.index|Students.view|StudentUser.view|StudentAccount.view|StudentSurveys.index|StudentSurveys.view', `_edit` = 'Students.edit|StudentUser.edit|StudentAccount.edit|StudentSurveys.edit' WHERE `id` = 1012;
+
 -- New table - institution_student_surveys
 DROP TABLE IF EXISTS `institution_student_surveys`;
 CREATE TABLE IF NOT EXISTS `institution_student_surveys` (

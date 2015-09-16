@@ -1,3 +1,6 @@
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'Students.index|Students.view|StudentUser.view', `_edit` = 'Students.edit|StudentUser.edit' WHERE `id` = 1012;
+
 -- Drop tables
 DROP TABLE IF EXISTS `institution_student_surveys`;
 DROP TABLE IF EXISTS `institution_student_survey_answers`;
