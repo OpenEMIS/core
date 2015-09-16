@@ -40,6 +40,12 @@ class EducationGradesTable extends AppTable {
 		}
 	}
 
+	// Getting the education system base on a given grade
+	public function getEducationSystem($gradeId) {
+		$educationSystemId = $this->find()->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])->where([$this->aliasField('id') => $gradeId])->first();
+		return $educationSystemId->education_programme->education_cycle->education_level->education_system->id;
+	}
+
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
 	}

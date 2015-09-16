@@ -418,9 +418,9 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($entity->class > 0) {
-			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
+			if ($entity->class > 0) {
 				$sectionData = [];
 				$sectionData['student_id'] = $entity->student_id;
 				$sectionData['education_grade_id'] = $entity->education_grade_id;
@@ -428,6 +428,11 @@ class StudentsTable extends AppTable {
 				$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 				$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 			}
+			$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+			$StudentAdmissionTable->updateAll(
+				['status' => 2],
+				['student_id' => $entity->student_id, 'academic_period_id' => $entity->academic_period_id]
+			);
 		}
 	}
 
