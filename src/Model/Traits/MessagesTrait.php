@@ -50,6 +50,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
 			],
+			'deleteTransfer' =>[
+				'restrictDelete' => 'The transfer cannot be performed as there is no options to transfer to.'
+			],
 			'view' => [
 				'label' => 'View',
 			],
