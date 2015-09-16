@@ -1132,24 +1132,26 @@ class ControllerActionComponent extends Component {
 
 				$associations = [];
 				foreach ($model->associations() as $assoc) {
-					if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-						if (!array_key_exists($assoc->table(), $associations)) {
-							$count = 0;
-							if($assoc->type() == 'oneToMany') {
-								$count = $assoc->find()
-								->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-								->count();
-							} else {
-								$modelAssociationTable = $assoc->junction();
-								$count = $modelAssociationTable->find()
-									->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+					if (!$assoc->dependent()) {
+						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+							if (!array_key_exists($assoc->table(), $associations)) {
+								$count = 0;
+								if($assoc->type() == 'oneToMany') {
+									$count = $assoc->find()
+									->where([$assoc->aliasField($assoc->foreignKey()) => $id])
 									->count();
+								} else {
+									$modelAssociationTable = $assoc->junction();
+									$count = $modelAssociationTable->find()
+										->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+										->count();
+								}
+								$title = $this->Alert->getMessage($assoc->aliasField('title'));
+								if ($title == '[Message Not Found]') {
+									$title = $assoc->name();
+								}
+								$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
 							}
-							$title = $this->Alert->getMessage($assoc->aliasField('title'));
-							if ($title == '[Message Not Found]') {
-								$title = $assoc->name();
-							}
-							$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
 						}
 					}
 				}
@@ -1200,53 +1202,56 @@ class ControllerActionComponent extends Component {
 						}
 					}
 				}
-
 				if ($process($model, $transferFrom, $deleteOptions)) {
-					if ($assoc->type() == 'oneToMany') {
-						$assoc->updateAll(
-							[$assoc->foreignKey() => $transferTo],
-							[$assoc->foreignKey() => $transferFrom]
-						);
-					} else if ($assoc->type() == 'manyToMany') {
-						$modelAssociationTable = $assoc->junction();
+					foreach ($associations as $assoc) {
+						if ($assoc->type() == 'oneToMany') {
+							$assoc->updateAll(
+								[$assoc->foreignKey() => $transferTo],
+								[$assoc->foreignKey() => $transferFrom]
+							);
 
-						// List of the target foreign keys for subqueries
-						$targetForeignKeys = $modelAssociationTable->find()
-							->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
-							->where([
-								$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-							]);
+						} else if ($assoc->type() == 'manyToMany') {
+							$modelAssociationTable = $assoc->junction();
 
-						// List of id in the junction table to be deleted
-						$idNotToUpdate = $modelAssociationTable->find('list',[
-								'keyField' => 'id',
-								'valueField' => 'id'
-							])
-							->where([
-								$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
-								$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
-							])
-							->toArray();
+							// List of the target foreign keys for subqueries
+							$targetForeignKeys = $modelAssociationTable->find()
+								->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+								->where([
+									$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+								]);
 
-						$condition = [];
+							// List of id in the junction table to be deleted
+							$idNotToUpdate = $modelAssociationTable->find('list',[
+									'keyField' => 'id',
+									'valueField' => 'id'
+								])
+								->where([
+									$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
+									$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
+								])
+								->toArray();
 
-						if (empty($idNotToUpdate)) {
-							$condition = [$assoc->foreignKey() => $transferFrom];
-						} else {
-							$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+							$condition = [];
+
+							if (empty($idNotToUpdate)) {
+								$condition = [$assoc->foreignKey() => $transferFrom];
+							} else {
+								$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+							}
+							
+							// Update all transfer records
+							$modelAssociationTable->updateAll(
+								[$assoc->foreignKey() => $transferTo],
+								$condition
+							);
 						}
 
-						// Update all transfer records
-						$modelAssociationTable->updateAll(
-							[$assoc->foreignKey() => $transferTo],
-							$condition
-						);
+
 					}
 					$this->Alert->success('general.delete.success');
 				} else {
 					$this->Alert->error('general.delete.failed');
 				}
-				
 				return $this->controller->redirect($this->url('index'));
 			}
 		} else {
