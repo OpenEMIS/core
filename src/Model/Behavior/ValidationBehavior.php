@@ -463,11 +463,11 @@ class ValidationBehavior extends Behavior {
 			]
 		];
 
+		$timeConditions = [];
 		if (!$globalData['data']['full_day']) {
 			$startTime = $globalData['data']['start_time'];
 			$endTime = $globalData['data']['end_time'];
 
-			$timeConditions = [];
 			$timeConditions['OR'] = [
 				'OR' => [
 					[	
@@ -494,22 +494,23 @@ class ValidationBehavior extends Behavior {
 		// need to check for overlap time
 		$found = $SearchTable->find()
 			->where($overlapDateCondition)
-			->where($timeConditions)
 			->where([$SearchTable->aliasField('security_user_id') => $security_user_id])
 			->where([$SearchTable->aliasField('institution_site_id') => $institution_site_id])
 			;
 			// ->toArray();
 
+		if (!empty($timeConditions)) {
+			$found->where($timeConditions);
+		}
+
 		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
 			$found->where([$SearchTable->aliasField('id').' != ' => $globalData['data']['id']]);
 		}
-			
 
 		$found = $found->count();
 			// ->sql();
 			// return false;
 		// pr($found == 0);
 		return ($found == 0);
-
 	}
 }
