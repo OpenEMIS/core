@@ -79,6 +79,10 @@ class StudentsTable extends AppTable {
 				'rule' => ['institutionStudentId'],
 				'on' => 'create'
 			])
+			->add('student_name', 'ruleStudentEnrolledInOthers', [
+				'rule' => ['checkEnrolledInOtherInstitution'],
+				'on' => 'create'
+			])
 		;
 	}
 
@@ -119,6 +123,17 @@ class StudentsTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 		}
+	}
+
+	public function checkIfEnrolledInAllInstitution($studentId, $academicPeriodId) {
+		$isEnrolled = $this->find()
+						->where([
+							$this->aliasField('student_id') => $studentId, 
+							$this->aliasField('academic_period_id') => $academicPeriodId,
+							$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
+						])
+						->count();
+		return $isEnrolled > 0;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -351,7 +366,8 @@ class StudentsTable extends AppTable {
 			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
 
 			// Check if the student that is pass over is a pending admission student
-			if ($pendingAdmissionCode == $studentData['student_status_id']) {
+			if ($pendingAdmissionCode == $studentData['student_status_id'] && 
+				$this->checkIfEnrolledInAllInstitution($studentData['academic_period_id'], $studentId)) {
 
 				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
 				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
