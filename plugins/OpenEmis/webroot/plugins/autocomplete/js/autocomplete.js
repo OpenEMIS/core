@@ -60,6 +60,10 @@ var Autocomplete = {
 
 	beforeSearch: function(event, ui) {
 		var obj = $(event.target);
+		var loader = obj.parent().find('.autocomplete-loader');
+		if (loader.length > 0) {
+			loader.remove();
+		}
 		var text = obj.parent().find('.autocomplete-text');
 		if (text.length > 0) {
 			text.remove();
