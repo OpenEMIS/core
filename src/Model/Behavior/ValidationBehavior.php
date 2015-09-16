@@ -332,6 +332,15 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
 		}
+	}
+
+	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+		$enrolled = false;
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id']);
+		}
+		return !$enrolled;
 	}                                                                                                                                                                 
 
 	public static function institutionStudentId($field, array $globalData) {
