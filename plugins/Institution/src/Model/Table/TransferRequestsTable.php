@@ -82,9 +82,10 @@ class TransferRequestsTable extends AppTable {
 		$id = $this->Session->read($this->registryAlias().'.id');
 
 		$Students = TableRegistry::get('Institution.Students');
-		$selectedStudent = $Students->get($id)->student_id;
-		$selectedPeriod = $Students->get($id)->academic_period_id;
-		$selectedGrade = $Students->get($id)->education_grade_id;
+		$studentData = $Students->get($id);
+		$selectedStudent = $studentData->student_id;
+		$selectedPeriod = $studentData->academic_period_id;
+		$selectedGrade = $studentData->education_grade_id;
 
 		$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
 		$student = $StudentPromotion
@@ -100,6 +101,7 @@ class TransferRequestsTable extends AppTable {
 		$entity->student_id = $student->student_id;
 		$entity->academic_period_id = $student->academic_period_id;
 		$entity->education_grade_id = $student->education_grade_id;
+		$entity->student_status_id = $studentData->student_status_id;
 		if ($student->start_date instanceof Time) {
 			$entity->start_date = $student->start_date->format('Y-m-d');
 		} else {
@@ -120,6 +122,7 @@ class TransferRequestsTable extends AppTable {
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['previous_institution_id'] = $entity->previous_institution_id;
+		$this->request->data[$this->alias()]['student_status_id'] = $entity->student_status_id;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -137,6 +140,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->field('comment');
 			$this->ControllerAction->field('previous_institution_id');
 			$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
+			$this->ControllerAction->field('student_status_id', ['type' => 'hidden']);
 
 			$this->ControllerAction->setFieldOrder([
 				'transfer_status', 'student', 'academic_period_id', 'education_grade_id',
@@ -321,34 +325,48 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$id = $this->Session->read($this->registryAlias().'.id');
-			$Students = TableRegistry::get('Institution.Students');
-			$studentInfo = $Students->find()->contain(['AcademicPeriods'])->where([$Students->aliasField($Students->primaryKey()) => $id])->first();
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$status = $StudentStatusesTable->findCodeList();
+			$studentStatus = $request->data[$this->alias()]['student_status_id'];
+			switch ($studentStatus) {
+				case $status['PROMOTED']:
+				case $status['GRADUATED']:
+					$id = $this->Session->read($this->registryAlias().'.id');
+					$Students = TableRegistry::get('Institution.Students');
+					$studentInfo = $Students->find()->contain(['AcademicPeriods'])->where([$Students->aliasField($Students->primaryKey()) => $id])->first();
 
-			$academicPeriodStartDate = $studentInfo->academic_period->start_date;
+					$academicPeriodStartDate = $studentInfo->academic_period->start_date;
 
-			if ($studentInfo->academic_period->start_date instanceof Time) {
-				$academicPeriodStartDate = $studentInfo->academic_period->start_date->format('Y-m-d');
-			} else {
-				$academicPeriodStartDate = date('Y-m-d', strtotime($studentInfo->academic_period->start_date));
+					if ($studentInfo->academic_period->start_date instanceof Time) {
+						$academicPeriodStartDate = $studentInfo->academic_period->start_date->format('Y-m-d');
+					} else {
+						$academicPeriodStartDate = date('Y-m-d', strtotime($studentInfo->academic_period->start_date));
+					}
+					$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+					$academicPeriodsAfter = $AcademicPeriods
+						->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+						->where([$AcademicPeriods->aliasField('start_date') .' > '  => $academicPeriodStartDate])
+						->where([$AcademicPeriods->aliasField('academic_period_level_id') => $studentInfo->academic_period->academic_period_level_id])
+						->order($AcademicPeriods->aliasField('start_date').' asc')
+						->toArray()
+						;
+
+					$this->selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];	
+					if (!array_key_exists($this->selectedAcademicPeriod, $academicPeriodsAfter)) {
+						reset($academicPeriodsAfter);
+						$this->selectedAcademicPeriod = key($academicPeriodsAfter);
+					}
+
+					$attr['options'] = $academicPeriodsAfter;
+					$attr['onChangeReload'] = true;
+
+					break;
+
+				case $status['CURRENT']:
+					$this->selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
+					$attr['type'] = 'hidden';
+					break;
 			}
-			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodsAfter = $AcademicPeriods
-				->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-				->where([$AcademicPeriods->aliasField('start_date') .' > '  => $academicPeriodStartDate])
-				->where([$AcademicPeriods->aliasField('academic_period_level_id') => $studentInfo->academic_period->academic_period_level_id])
-				->order($AcademicPeriods->aliasField('order').' asc')
-				->toArray()
-				;
-
-			$this->selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];	
-			if (!array_key_exists($this->selectedAcademicPeriod, $moreAdvancedEducationGrades)) {
-				reset($academicPeriodsAfter);
-				$this->selectedAcademicPeriod = key($academicPeriodsAfter);
-			}
-
-			$attr['options'] = $academicPeriodsAfter;
-			$attr['onChangeReload'] = true;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'hidden';
 		}
@@ -379,6 +397,7 @@ class TransferRequestsTable extends AppTable {
 							->order([$this->EducationGrades->aliasField('order asc')])
 							;
 
+						$moreAdvancedEducationGrades = [];
 						foreach ($moreAdvancedEducationGradesData->toArray() as $key => $value) {
 							$moreAdvancedEducationGrades[$value['id']] = $value['education_programme']['name'].' - '.$value['name'];
 						}
