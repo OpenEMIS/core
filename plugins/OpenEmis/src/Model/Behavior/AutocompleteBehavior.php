@@ -47,6 +47,11 @@ class AutocompleteBehavior extends Behavior {
 			if (array_key_exists('onBeforeSearch', $attr)) {
 				$options['autocomplete-before-search'] = $attr['onBeforeSearch'];
 			}
+
+			// action when selected
+			if (array_key_exists('onSelect', $attr)) {
+				$options['autocomplete-submit'] = $attr['onSelect'];
+			}
 			$options['autocomplete-class'] = 'error-message';
 			$options['autocomplete-target'] = $target['key'];
 

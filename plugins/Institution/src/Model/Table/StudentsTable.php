@@ -339,6 +339,11 @@ class StudentsTable extends AppTable {
 
 		$this->setupTabElements($entity);
 	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+	}
+
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 		$studentData = $data['Students'];
@@ -435,6 +440,12 @@ class StudentsTable extends AppTable {
 				if ($key == $this->alias()) continue;
 				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->student_id, 'id' => $entity->id]);
 			}
+		} else {
+			/**
+			 * Remove other tab elements and change the url to an anchor for add page
+			 */
+			$tabElements = [$this->alias() => $tabElements[$this->alias()]];
+			$tabElements[$this->alias()]['url'] = '#';
 		}
 
 		$this->controller->set('tabElements', $tabElements);
@@ -513,8 +524,13 @@ class StudentsTable extends AppTable {
 
 			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+
+			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			// $attr['onFocus'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			// $attr['onBlur'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
@@ -606,7 +622,23 @@ class StudentsTable extends AppTable {
 				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
 			
-			$list = $query->all();
+			/**
+			 * remove students having 'Enrolled' status
+			 */
+			$enrolled = $this->find()
+			    ->select(['student_id'])
+			    ->where(['student_status_id = 1']);
+			$query->where(['id NOT IN' => $enrolled]);
+
+			/**
+			 * remove students currently in the institution
+			 */
+			// $institutionId = $this->Session->read('Institution.Institutions.id');
+			// $query->where([$this->aliasField('institution_id') . ' != ' . $institutionId]);
+			
+			$query->group(['Users.id']);
+
+    		$list = $query->all();
 
 			$data = [];
 			foreach($list as $obj) {
