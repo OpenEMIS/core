@@ -125,15 +125,28 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function checkIfEnrolledInAllInstitution($studentId, $academicPeriodId) {
-		$isEnrolled = $this->find()
-						->where([
-							$this->aliasField('student_id') => $studentId, 
-							$this->aliasField('academic_period_id') => $academicPeriodId,
-							$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
-						])
-						->count();
-		return $isEnrolled > 0;
+	// Check if the student is enrolled in all the institution for a particular education system id
+	public function checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId) {
+		$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+		$gradeIds = $this->find('list', [
+					'keyField' => 'education_grade_id',
+					'valueField' => 'education_grade_id'
+				])
+				->where([
+					$this->aliasField('student_id') => $studentId, 
+					$this->aliasField('academic_period_id') => $academicPeriodId,
+					$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
+				])
+				->toArray();
+
+		$educationSystemId = [];
+		foreach ($gradeIds as $grade) {
+			$systemId = $EducationGradesTable->getEducationSystemId($grade);
+			if (!in_array($systemId, $educationSystemId)) {
+				$educationSystemId[] = $systemId;
+			}
+		}
+		return in_array($systemId, $educationSystemId);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -364,10 +377,11 @@ class StudentsTable extends AppTable {
 		if (!empty ($studentId)) {
 
 			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
 
 			// Check if the student that is pass over is a pending admission student
 			if ($pendingAdmissionCode == $studentData['student_status_id'] && 
-				$this->checkIfEnrolledInAllInstitution($studentData['academic_period_id'], $studentId)) {
+				$this->checkIfEnrolledInAllInstitution($studentData['academic_period_id'], $studentId, $educationSystemId)) {
 
 				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
 				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
@@ -429,9 +443,20 @@ class StudentsTable extends AppTable {
 				$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 			}
 			$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+			$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+			$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
+			$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+
+			$conditions = [
+				'student_id' => $entity->student_id, 
+				'academic_period_id' => $entity->academic_period_id, 
+				'status' => 0,
+				'education_grade_id IN' => $educationGradesToUpdate
+			];
+
 			$StudentAdmissionTable->updateAll(
 				['status' => 2],
-				['student_id' => $entity->student_id, 'academic_period_id' => $entity->academic_period_id]
+				[$conditions]
 			);
 		}
 	}
