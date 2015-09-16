@@ -10,6 +10,7 @@
 						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 						<th><?= __('OpenEmis ID') ?></th>
 						<th><?= __('Student') ?></th>
+						<th><?= __('Status') ?></th>
 					</tr>
 				</thead>
 				<?php if (isset($attr['data'])) : ?>
@@ -32,8 +33,9 @@
 										echo $this->Form->hidden("$fieldPrefix.type", ['value' => $attr['attr']['type']]);
 									?>
 								</td>
-								<td><?= $obj->user->openemis_no ?></td>
-								<td><?= $obj->user->name ?></td>
+								<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
+								<td><?= $obj->_matchingData['Users']->name ?></td>
+								<td><?= $attr['attr']['statuses'][$obj->student_status_id ]?></td>
 							</tr>
 						<?php endforeach ?>
 					</tbody>
