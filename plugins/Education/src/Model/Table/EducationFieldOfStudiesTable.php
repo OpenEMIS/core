@@ -9,7 +9,7 @@ class EducationFieldOfStudiesTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
 		$this->belongsTo('ProgrammeOrientations', ['className' => 'Education.EducationProgrammeOrientations', 'foreignKey' => 'education_programme_orientation_id']);
-		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
 	}
 
 	public function addEditBeforeAction(Event $event) {
