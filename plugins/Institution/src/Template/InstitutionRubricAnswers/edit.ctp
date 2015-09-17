@@ -27,19 +27,21 @@ $this->start('panelBody');
 	?>
 	<div class="clearfix"></div>
 		<div class="clearfix">
-			<?php
-				echo $this->Form->input($alias.".rubric_template_name", [
-					'label' => $this->Label->get('InstitutionRubricAnswers.rubric_template'),
-					'type' => 'string',
-					'readonly' => 'readonly'
-				]);
-				echo $this->Form->hidden("$alias.count");
-				echo $this->Form->hidden("$alias.rubric_section_name");
-				echo $this->Form->hidden("$alias.rubric_section_order");
-				echo $this->Form->hidden("$alias.id");
-				echo $this->Form->hidden("$alias.status", ['rubric-status' => 1]);
-				echo $this->Form->hidden("$alias.rubric_template_id");
-			?>
+			<div class="row">
+				<div class="col-xs-6 col-md-3 form-label"><?= $this->Label->get('InstitutionRubricAnswers.rubric_template'); ?></div>
+				<div class="form-input">
+					<?= $data->rubric_template_name; ?>
+					<?php
+						echo $this->Form->hidden("$alias.rubric_template_name");
+						echo $this->Form->hidden("$alias.count");
+						echo $this->Form->hidden("$alias.rubric_section_name");
+						echo $this->Form->hidden("$alias.rubric_section_order");
+						echo $this->Form->hidden("$alias.id");
+						echo $this->Form->hidden("$alias.status", ['rubric-status' => 1]);
+						echo $this->Form->hidden("$alias.rubric_template_id");
+					?>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="table-responsive">

@@ -168,6 +168,22 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function compareWithInstitutionDateOpened($field, array $globalData) {
+		$model = $globalData['providers']['table'];
+		try {
+			$startDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return $model->getMessage('general.invalidDate');
+		}
+		if ($model->institutionId) {
+			$Institution = TableRegistry::get('Institution.Institutions');
+			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $model->institutionId])->first();
+			return $startDate >= $institution->date_opened;
+		} else {
+		    return $model->getMessage('Institution.Institutions.noActiveInstitution');
+		}
+	}
+
 	/**
 	 * To check date entered is earlier today
 	 * @param  mixed   $field        current field value
@@ -228,12 +244,13 @@ class ValidationBehavior extends Behavior {
 	 * @param  [type] $globalData [description]
 	 * @return [type]             [description]
 	 */
-	public static function checkDateInput($field, $globalData) {
+	public static function checkDateInput($field, array $globalData) {
+		$model = $globalData['providers']['table'];
 		try {
 			$field = new DateTime($field);
 			return true;
 		} catch (Exception $e) {
-			return __('Please input a proper value');
+		    return $model->getMessage('general.invalidDate');
 		}
 	}
 
@@ -243,16 +260,17 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return mixed              Boolean or String
 	 */
-	public static function amPmValue($field, $globalData) {
+	public static function amPmValue($field, array $globalData) {
+		$model = $globalData['providers']['table'];
 		$explode = explode(' ', $field);
 		if (isset($explode[1])) {
 			if (!in_array($explode[1], ['am', 'AM', 'pm', 'PM'])) {
-				return __('Wrong time format');
+			    return $model->getMessage('general.invalidTime');
 			} else {
 				return true;
 			}
 		} else {
-			return __('Wrong time format');
+		    return $model->getMessage('general.invalidTime');
 		}
 	}
 
@@ -372,19 +390,24 @@ class ValidationBehavior extends Behavior {
 
 	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
+		$existingRecords = 0;
 
-		$existingRecords = $Students->find()
-			->where(
-				[
-					$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
-					$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
-					$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
-					$Students->aliasField('student_id') => $globalData['data']['student_id']
-				]
-				
-			)
-			->count();
-			;
+		// Added the check for academic_period_id as the academic period id is possible to be all disabled 
+		// due to no programme found
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$existingRecords = $Students->find()
+				->where(
+					[
+						$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
+						$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+						$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
+						$Students->aliasField('student_id') => $globalData['data']['student_id']
+					]
+					
+				)
+				->count();
+				;
+		}
 		return ($existingRecords <= 0);
 	}
 
@@ -419,6 +442,16 @@ class ValidationBehavior extends Behavior {
 			;
 		return $existingRecords <= 0;
 	}
+
+	// To allow case sensitive entry
+	public static function checkUniqueEnglishField($check) {
+		$englishField = trim($check);
+		$Translation = TableRegistry::get('Localization.Translations');
+      	$count = $Translation->find()
+      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->count();
+        return $count==0;
+    }
 
 	public static function inAcademicPeriod($field, $academicFieldName, $globalData) {
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -484,11 +517,11 @@ class ValidationBehavior extends Behavior {
 			]
 		];
 
+		$timeConditions = [];
 		if (!$globalData['data']['full_day']) {
 			$startTime = $globalData['data']['start_time'];
 			$endTime = $globalData['data']['end_time'];
 
-			$timeConditions = [];
 			$timeConditions['OR'] = [
 				'OR' => [
 					[	
@@ -515,22 +548,23 @@ class ValidationBehavior extends Behavior {
 		// need to check for overlap time
 		$found = $SearchTable->find()
 			->where($overlapDateCondition)
-			->where($timeConditions)
 			->where([$SearchTable->aliasField('security_user_id') => $security_user_id])
 			->where([$SearchTable->aliasField('institution_site_id') => $institution_site_id])
 			;
 			// ->toArray();
 
+		if (!empty($timeConditions)) {
+			$found->where($timeConditions);
+		}
+
 		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
 			$found->where([$SearchTable->aliasField('id').' != ' => $globalData['data']['id']]);
 		}
-			
 
 		$found = $found->count();
 			// ->sql();
 			// return false;
 		// pr($found == 0);
 		return ($found == 0);
-
 	}
 }

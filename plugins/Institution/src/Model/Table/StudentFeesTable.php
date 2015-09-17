@@ -47,7 +47,7 @@ class StudentFeesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$session = $this->request->session();
-		$this->institutionId = $session->read('Institutions.id');
+		$this->institutionId = $session->read('Institution.Institutions.id');
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
@@ -135,9 +135,12 @@ class StudentFeesTable extends AppTable {
 		$conditions = array(
 			'InstitutionGrades.institution_site_id' => $this->institutionId
 		);
-		$academicPeriodOptions = $this->Institutions->InstitutionGrades->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
-			$this->Alert->warning('Institutions.noProgrammes');
+			$this->Alert->warning('InstitutionQualityVisits.noPeriods');
+		}
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -180,6 +183,17 @@ class StudentFeesTable extends AppTable {
 			$this->aliasField('education_grade_id') => $this->_selectedEducationGradeId,
 		])
 		;
+		if (!$this->InstitutionFeeEntity) {
+			$this->Alert->warning('InstitutionFees.noProgrammeGradeFees');
+			$query->where([
+				' EXISTS (
+  					SELECT `id` 
+  					FROM `student_fees` 
+  					WHERE `student_fees`.`student_id` = ' . $this->aliasField('student_id') . '
+  					AND `student_fees`.`institution_fee_id` = 0)'
+			])
+			;
+		}
 	}
 
 

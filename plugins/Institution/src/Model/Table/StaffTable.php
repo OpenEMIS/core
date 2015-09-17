@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Controller\Controller;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Utility\Inflector;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
@@ -32,6 +33,7 @@ class StaffTable extends AppTable {
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Excel', [
 			'excludes' => ['start_year', 'end_year'], 
@@ -68,9 +70,9 @@ class StaffTable extends AppTable {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
-		$periodId = $this->request->query['period'];
+		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
 		}
@@ -94,12 +96,17 @@ class StaffTable extends AppTable {
 		}
 		$options['sortWhitelist'] = $sortList;
 
+		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// Academic Periods
-		$periodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getList();
+		$periodOptions = $AcademicPeriodTable->getList();
+
+		if (empty($request->query['academic_period_id'])) {
+			$request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
+		}
 
 		// Positions
 		$session = $request->session();
-		$institutionId = $session->read('Institutions.id');
+		$institutionId = $session->read('Institution.Institutions.id');
 		$positionData = $this->Positions
 		->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 		->contain(['StaffPositionTitles'])
@@ -109,18 +116,18 @@ class StaffTable extends AppTable {
 		$positionOptions = [0 => __('All Positions')] + $positionData;
 
 		// Query Strings
-		$selectedPeriod = $this->queryString('period', $periodOptions);
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 		$selectedPosition = $this->queryString('position', $positionOptions);
-
-		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
-		if ($selectedPosition != 0) {
-			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
-		}
 
 		// Advanced Select Options
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
+		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
+		if ($selectedPosition != 0) {
+			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
+		}
+		
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
@@ -162,20 +169,14 @@ class StaffTable extends AppTable {
 	}
 
 	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-
-		$tabElements = [
-			'Staff' => ['text' => __('Position')],
-			'StaffUser' => ['text' => __('General')]
+		$options = [
+			'userRole' => 'Staff',
+			'action' => $this->action,
+			'id' => $entity->id,
+			'userId' => $entity->security_user_id
 		];
 
-		if ($this->action == 'add') {
-			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
-			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'add']);
-		} else {
-			$tabElements['Staff']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
-			$tabElements['StaffUser']['url'] = array_merge($url, ['action' => 'StaffUser', 'view', $entity->security_user_id, 'id' => $entity->id]);
-		}
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -183,7 +184,7 @@ class StaffTable extends AppTable {
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$positionOptions = $this->Positions
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->contain(['StaffPositionTitles'])
@@ -197,7 +198,7 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldRole(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$Roles = TableRegistry::get('Security.SecurityRoles');
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$institutionEntity = $this->Institutions->get($institutionId);
 			$groupId = $institutionEntity->security_group_id;
 			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
@@ -312,26 +313,35 @@ class StaffTable extends AppTable {
 		
 		if ($this->action == 'index') {
 			$institutionSiteArray = [];
+			
 
 			$session = $this->Session;
-			$institutionId = $session->read('Institutions.id');
-			$periodId = $this->request->query('period');
+			$institutionId = $session->read('Institution.Institutions.id');
+
+			$periodId = $this->request->query('academic_period_id');
+			$conditions = ['institution_site_id' => $institutionId];
+
+			$positionId = $this->request->query('position');
 
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
-				->distinct(['security_user_id'])
-				->count(['security_user_id']);
+				->distinct(['security_user_id']);
 
+			if ($positionId != 0) {
+				$staffCount->where([$this->aliasField('institution_site_position_id') => $positionId]);
+				$conditions = array_merge($conditions, ['institution_site_position_id' => $positionId])	;
+			}
 			// Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['institution_site_id' => $institutionId, 'key' => __('Gender')]);
+				['conditions' => $conditions, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
+			// Revisit here in awhile
 			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['institution_site_id' => $institutionId, 'key' => __('Licenses')]);
+				['conditions' => $conditions, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
@@ -339,7 +349,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount,
+	            	'modelCount' => $staffCount->count(['security_user_id']),
 	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
@@ -381,11 +391,38 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// note that $this->table('institution_site_staff');
+		$id = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$securityUserId = $entity->security_user_id;
+
+		// sets the staff_id in institution_site_sections to 0 if the staff was allocated to it
+		// todobug: possible problem as it will set all the sections to 0, including previous period sections
+		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$InstitutionSiteSections->updateAll(
+				['security_user_id' => 0],
+				['security_user_id' => $securityUserId, 'institution_site_id' => $institutionId]
+			);
+
+		// delete the staff from subjects		
+		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+		$classStaffQuery = $InstitutionSiteClassStaff->find()
+			->contain('InstitutionSiteClasses')
+			->where(
+				[
+					'InstitutionSiteClasses.institution_site_id' => $institutionId, 
+					$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId
+				]
+			)
+			;
+		foreach ($classStaffQuery as $key => $value) {
+			$InstitutionSiteClassStaff->delete($value);
+		}
+
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
-		$institutionId = $entity->institution_site_id;
 		try {
 			$institutionEntity = $this->Institutions->get($institutionId);
 			$groupId = $institutionEntity->security_group_id;
@@ -428,6 +465,12 @@ class StaffTable extends AppTable {
 
 	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+			foreach ($conditions as $key => $value) {
+				$_conditions[$this->alias().'.'.$key] = $value;
+			}
+
 			$institutionSiteRecords = $this->find();
 			$institutionSiteStaffCount = $institutionSiteRecords
 				->contain(['Users', 'Users.Genders'])
@@ -435,11 +478,8 @@ class StaffTable extends AppTable {
 					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
 					'gender' => 'Genders.name'
 				])
+				->where($_conditions)
 				->group('gender_id');
-
-			if (!empty($params['institution_site_id'])) {
-				$institutionSiteStaffCount->where(['institution_site_id' => $params['institution_site_id']]);
-			}	
 
 			// Creating the data set		
 			$dataSet = [];
