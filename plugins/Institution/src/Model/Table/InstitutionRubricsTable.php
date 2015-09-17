@@ -28,6 +28,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
@@ -74,15 +75,22 @@ class InstitutionRubricsTable extends AppTable {
 				foreach ($data as $key => $obj) {
 					$rowData = [];
 					$sectionId = $obj->id;
-					$sectionName = $event->subject()->Html->link($obj->name, [
-						'plugin' => $this->controller->plugin,
-						'controller' => $this->controller->name,
-						'action' => 'RubricAnswers',
-						'edit',
-						$entity->id,
-						'status' => $status,
-						'section' => $sectionId
-					]);
+					$sectionName = $obj->name;
+					if ($this->AccessControl->check([$this->controller->name, 'RubricAnswers', 'edit'])) {
+						$editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
+						$status = $this->get($entity->id)->status;
+						if ($editable || $status == 2) {
+							$sectionName = $event->subject()->Html->link($obj->name, [
+								'plugin' => $this->controller->plugin,
+								'controller' => $this->controller->name,
+								'action' => 'RubricAnswers',
+								'edit',
+								$entity->id,
+								'status' => $status,
+								'section' => $sectionId
+							]);
+						}
+					}
 					$criterias = $RubricCriterias
 						->find()
 						->where([
@@ -169,7 +177,7 @@ class InstitutionRubricsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = date('d-m-Y', strtotime($dateDisabled));
+			$value = $dateDisabled->format('d-m-Y');
 		}
 
 		return $value;
@@ -187,10 +195,21 @@ class InstitutionRubricsTable extends AppTable {
 		$action = $this->alias;
 
 		$tabElements = [];
-		foreach ($statusOptions as $key => $status) {
-			$tabElements[$status] = [
-				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status='.$key],
-				'text' => $status
+		if ($this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
+			$tabElements['New'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=0'],
+				'text' => __('New')
+			];
+			$tabElements['Draft'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=1'],
+				'text' => __('Draft')
+			];
+		}
+
+		if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
+			$tabElements['Completed'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=2'],
+				'text' => __('Completed')
 			];
 		}
 
@@ -281,13 +300,15 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	public function _buildRecords() {
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		//delete all New Rubric by Institution Id and reinsert (maybe dont need to delete and reinsert)
-		// $this->deleteAll([
-		// 	$this->aliasField('institution_site_id') => $institutionId,
-		// 	$this->aliasField('status') => 0
-		// ]);
+		// Update all New Rubric to Expired by Institution Id
+		$this->updateAll(['status' => -1],
+			[
+				'institution_site_id' => $institutionId,
+				'status' => 0
+			]
+		);
 
 		$rubrics = $this->RubricTemplates
 			->find('list')
@@ -392,6 +413,7 @@ class InstitutionRubricsTable extends AppTable {
 										->all();
 									
 									if ($results->isEmpty()) {
+										// Insert New Rubric if not found
 										$data = [
 											'institution_site_id' => $institutionId,
 											'rubric_template_id' => $templateId,
@@ -407,6 +429,20 @@ class InstitutionRubricsTable extends AppTable {
 										} else {
 											$this->log($entity->errors(), 'debug');
 										}
+									} else {
+										// Update Expired Rubric back to New
+										$this->updateAll(['status' => 0],
+											[
+												'institution_site_id' => $institutionId,
+												'rubric_template_id' => $templateId,
+												'academic_period_id' => $academicPeriodId,
+												'education_grade_id' => $gradeId,
+												'institution_site_section_id' => $sectionId,
+												'institution_site_class_id' => $classId,
+												'security_user_id' => $staffId,
+												'status' => -1
+											]
+										);
 									}
 								}
 							}
@@ -421,6 +457,13 @@ class InstitutionRubricsTable extends AppTable {
 		//Return all required options and their key
 		$statusOptions = $this->getSelectOptions('Rubrics.status');
 		$selectedStatus = $this->queryString('status', $statusOptions);
+
+		// If do not have access to Rubric - New but have access to Rubric - Completed, then set selectedStatus to 2
+		if (!$this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
+				$selectedStatus = 2;
+			}
+		}
 
 		return compact('statusOptions', 'selectedStatus');
 	}
