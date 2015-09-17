@@ -342,6 +342,7 @@ class StudentsTable extends AppTable {
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+		$buttons[0]['attr']['value'] = 'new';
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -442,10 +443,9 @@ class StudentsTable extends AppTable {
 			}
 		} else {
 			/**
-			 * Remove other tab elements and change the url to an anchor for add page
+			 * flush tabElements during add action
 			 */
-			$tabElements = [$this->alias() => $tabElements[$this->alias()]];
-			$tabElements[$this->alias()]['url'] = '#';
+			$tabElements = [];
 		}
 
 		$this->controller->set('tabElements', $tabElements);
@@ -526,9 +526,6 @@ class StudentsTable extends AppTable {
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
 
 			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-			// $attr['onFocus'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-			// $attr['onBlur'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 		} else if ($action == 'index') {
@@ -621,22 +618,19 @@ class StudentsTable extends AppTable {
 			if (!empty($term)) {
 				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
-			
-			/**
-			 * remove students having 'Enrolled' status
-			 */
-			$enrolled = $this->find()
-			    ->select(['student_id'])
-			    ->where(['student_status_id = 1']);
-			$query->where(['id NOT IN' => $enrolled]);
 
 			/**
-			 * remove students currently in the institution
+			 * filter out students having 'Enrolled' status
 			 */
-			// $institutionId = $this->Session->read('Institution.Institutions.id');
-			// $query->where([$this->aliasField('institution_id') . ' != ' . $institutionId]);
-			
-			$query->group(['Users.id']);
+			$query->where([
+				'NOT EXISTS (
+					SELECT `id` 
+					FROM `institution_students` 
+					WHERE `institution_students`.`student_id` = `Users`.`id`
+					AND `institution_students`.`student_status_id` = 1
+				)'
+			]);
+			// $query->group(['Users.id']);
 
     		$list = $query->all();
 
