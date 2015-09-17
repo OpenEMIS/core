@@ -336,8 +336,6 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_name'
 		]);
-
-		$this->setupTabElements($entity);
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -441,11 +439,6 @@ class StudentsTable extends AppTable {
 				if ($key == $this->alias()) continue;
 				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->student_id, 'id' => $entity->id]);
 			}
-		} else {
-			/**
-			 * flush tabElements during add action
-			 */
-			$tabElements = [];
 		}
 
 		$this->controller->set('tabElements', $tabElements);
@@ -630,7 +623,6 @@ class StudentsTable extends AppTable {
 					AND `institution_students`.`student_status_id` = 1
 				)'
 			]);
-			// $query->group(['Users.id']);
 
     		$list = $query->all();
 
