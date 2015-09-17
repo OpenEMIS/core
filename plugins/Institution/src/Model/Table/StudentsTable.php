@@ -125,7 +125,15 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	// Check if the student is enrolled in all the institution for a particular education system id
+	 /**
+     * Method to check if the student is enrolled in all institution within a particular
+     * education system in the academic period
+     *
+     * @param integer $studentId The student identitifier (id)
+     * @param integer $academicPeriodId The selected academic period id
+     * @param integer $systemId The education system id to check
+     * @return bool True if the student is enrolled in the same education system in that academic period
+     */
 	public function checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId) {
 		$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 		$gradeIds = $this->find('list', [
@@ -141,9 +149,9 @@ class StudentsTable extends AppTable {
 
 		$educationSystemId = [];
 		foreach ($gradeIds as $grade) {
-			$systemId = $EducationGradesTable->getEducationSystemId($grade);
+			$eduSystemId = $EducationGradesTable->getEducationSystemId($grade);
 			if (!in_array($systemId, $educationSystemId)) {
-				$educationSystemId[] = $systemId;
+				$educationSystemId[] = $eduSystemId;
 			}
 		}
 		return in_array($systemId, $educationSystemId);
@@ -378,10 +386,9 @@ class StudentsTable extends AppTable {
 
 			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
 			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
-
 			// Check if the student that is pass over is a pending admission student
 			if ($pendingAdmissionCode == $studentData['student_status_id'] && 
-				$this->checkIfEnrolledInAllInstitution($studentData['academic_period_id'], $studentId, $educationSystemId)) {
+				!$this->checkIfEnrolledInAllInstitution($studentId, $studentData['academic_period_id'], $educationSystemId)) {
 
 				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
 				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
