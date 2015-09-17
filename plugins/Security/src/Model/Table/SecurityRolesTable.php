@@ -69,7 +69,8 @@ class SecurityRolesTable extends AppTable {
 
 		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
 
-		if ($selectedAction == 'user') {
+		$action = $this->ControllerAction->action();
+		if ($action == 'index' && $selectedAction == 'user') {
 			$toolbarElements = [
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
