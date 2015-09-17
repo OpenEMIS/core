@@ -8,10 +8,18 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
+use Cake\Network\Request;
 
 class TransferRequestsTable extends AppTable {
 	private $selectedAcademicPeriod;
 	private $selectedGrade;
+	
+	// Type for application
+	const NEW_REQUEST = 0;
+	const APPROVED = 1;
+	const REJECTED = 2;
+
 	// Type status for admission
 	const TRANSFER = 2;
 	const ADMISSION = 1;
@@ -32,6 +40,57 @@ class TransferRequestsTable extends AppTable {
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
+
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
+		$typeToShow = [];
+
+		if ($this->AccessControl->check(['Institutions', 'TransferApprovals', 'view'])) {
+			$typeToShow[] = self::TRANSFER;
+		}
+
+		$query->where([$this->aliasField('previous_institution_id') => $institutionId], [], true);
+
+		$query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
+	}
+
+
+
+    public function onGetStudentId(Event $event, Entity $entity){
+		$urlParams = $this->ControllerAction->url('index');
+		$action = $urlParams['action'];
+		if ($entity->status == self::NEW_REQUEST) {
+			if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
+				return $event->subject()->Html->link($entity->user->name, [
+					'plugin' => $urlParams['plugin'],
+					'controller' => $urlParams['controller'],
+					'action' => $action,
+					'0' => 'edit',
+					'1' => $entity->id
+				]);
+			}
+		}
+	}
+
+    public function onGetStatus(Event $event, Entity $entity) {
+		$statusName = "";
+		switch ($entity->status) {
+			case self::NEW_REQUEST:
+				$statusName = __('New');
+				break;
+			case self::APPROVED:
+				$statusName = __('Approved');
+				break;
+			case self::REJECTED:
+				$statusName = __('Rejected');
+				break;
+			default:
+				$statusName = $entity->status;
+				break;
+		}
+		return __($statusName);
+	}
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$process = function($model, $entity) {
@@ -67,14 +126,16 @@ class TransferRequestsTable extends AppTable {
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$id = $this->Session->read($this->registryAlias().'.id');
-    	// $action = $this->ControllerAction->buttons['add']['url'];
-    	$action = $this->ControllerAction->url('add');
-		$action['action'] = 'Students';
-		$action[0] = 'view';
-		$action[1] = $id;
-    	$event->stopPropagation();
-    	return $this->controller->redirect($action);
+    	if ($this->Session->read($this->registryAlias().'.id')) {
+	    	$id = $this->Session->read($this->registryAlias().'.id');
+	    	// $action = $this->ControllerAction->buttons['add']['url'];
+	    	$action = $this->ControllerAction->url('add');
+			$action['action'] = 'Students';
+			$action[0] = 'view';
+			$action[1] = $id;
+	    	$event->stopPropagation();
+	    	return $this->controller->redirect($action);
+    	}
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -125,6 +186,39 @@ class TransferRequestsTable extends AppTable {
 		$this->request->data[$this->alias()]['student_status_id'] = $entity->student_status_id;
 	}
 
+	public function indexBeforeAction(Event $event) {
+    	$this->ControllerAction->field('student_transfer_reason_id', ['visible' => true]);
+    	$this->ControllerAction->field('start_date', ['visible' => false]);
+    	$this->ControllerAction->field('end_date', ['visible' => false]);
+    	$this->ControllerAction->field('previous_institution_id', ['visible' => false]);
+    	$this->ControllerAction->field('type', ['visible' => false]);
+    	$this->ControllerAction->field('comment', ['visible' => false]);
+    	$this->ControllerAction->field('student_id');
+    	$this->ControllerAction->field('status');
+    	$this->ControllerAction->field('institution_id', ['visible' => false]);
+    	$this->ControllerAction->field('academic_period_id');
+    	$this->ControllerAction->field('education_grade_id');
+    	$this->ControllerAction->field('comment');
+    	$this->ControllerAction->field('created', ['visible' => false]);
+    	$this->Session->delete($this->registryAlias().'.id');
+    }
+
+    public function viewBeforeAction(Event $event) {
+    	$this->ControllerAction->field('student_transfer_reason_id', ['visible' => true]);
+    	$this->ControllerAction->field('start_date', ['visible' => true]);
+    	$this->ControllerAction->field('end_date', ['visible' => true]);
+    	$this->ControllerAction->field('previous_institution_id', ['visible' => false]);
+    	$this->ControllerAction->field('type', ['visible' => false]);
+    	$this->ControllerAction->field('comment', ['visible' => true]);
+    	$this->ControllerAction->field('student_id');
+    	$this->ControllerAction->field('status');
+    	$this->ControllerAction->field('institution_id', ['visible' => true]);
+    	$this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
+    	$this->ControllerAction->field('education_grade_id');
+    	$this->ControllerAction->field('comment');
+    	$this->ControllerAction->field('created', ['visible' => true]);
+    }
+
 	public function addAfterAction(Event $event, Entity $entity) {
 		if ($this->Session->check($this->registryAlias().'.id')) {
 			$this->ControllerAction->field('transfer_status');
@@ -159,36 +253,16 @@ class TransferRequestsTable extends AppTable {
 		}
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		// Set all selected values only
-		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
-		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
-		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
-		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
-		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
-		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
-		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['status'] = $entity->status;
+		$this->ControllerAction->setFieldOrder([
+			'created', 'status', 'type', 'student_id',
+			'institution_id', 'academic_period_id', 'education_grade_id',
+			'start_date', 'end_date', 'student_transfer_reason_id', 'comment'
+		]);
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$transferEntity = $this->newEntity($data[$this->alias()]);
-		if ($this->save($transferEntity)) {
-		} else {
-			$this->log($transferEntity->errors(), 'debug');
-		}
-
-		$Students = TableRegistry::get('Institution.Students');
-		$id = $this->Session->read($this->registryAlias().'.id');
-		// $action = $this->ControllerAction->buttons['edit']['url'];
-		$action = $this->ControllerAction->url('edit');
-		$action['action'] = $Students->alias();
-		$action[0] = 'view';
-		$action[1] = $id;
-		$event->stopPropagation();
-		return $this->controller->redirect($action);
-    }
-
-    // add viewAfterAction to perform redirect if type is not 2
+	// add viewAfterAction to perform redirect if type is not 2
     // do the same for TransferApproval
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -218,6 +292,39 @@ class TransferRequestsTable extends AppTable {
 			'previous_institution_id'
 		]);
 	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		// Set all selected values only
+		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
+		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
+		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
+		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
+		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
+		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
+		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$transferEntity = $this->newEntity($data[$this->alias()]);
+		if ($this->save($transferEntity)) {
+		} else {
+			$this->log($transferEntity->errors(), 'debug');
+		}
+
+		if ($this->Session->read($this->registryAlias().'.id')) {
+			$Students = TableRegistry::get('Institution.Students');
+			$id = $this->Session->read($this->registryAlias().'.id');
+			// $action = $this->ControllerAction->buttons['edit']['url'];
+			$action = $this->ControllerAction->url('edit');
+			$action['action'] = $Students->alias();
+			$action[0] = 'view';
+			$action[1] = $id;
+			$event->stopPropagation();
+			return $this->controller->redirect($action);
+		}
+    }
+
+
 
 	/* to be implemented with custom autocomplete
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
@@ -261,12 +368,12 @@ class TransferRequestsTable extends AppTable {
 	}
 
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
-		$selectedStudent = $request->data[$this->alias()]['student_id'];
-
-		$attr['type'] = 'hidden';
-		$attr['attr']['value'] = $selectedStudent;
-
-		return $attr;
+		if ($action == 'add' || $action == 'edit') {
+			$selectedStudent = $request->data[$this->alias()]['student_id'];
+			$attr['type'] = 'hidden';
+			$attr['attr']['value'] = $selectedStudent;
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
@@ -388,21 +495,25 @@ class TransferRequestsTable extends AppTable {
 			switch ($studentStatusCode) {
 				case 'GRADUATED': case 'PROMOTED':
 					if ($action == 'add') {
-						// grades that are higher than student's current grade in order
-						$moreAdvancedEducationGradesData = $this->EducationGrades
-							->find()
-							->hydrate(false)
-							->contain(['EducationProgrammes'])
-							->where([$this->EducationGrades->aliasField('order').' > ' => $studentInfo->education_grade->order])
-							->order([$this->EducationGrades->aliasField('order asc')])
-							;
-
 						$moreAdvancedEducationGrades = [];
-						foreach ($moreAdvancedEducationGradesData->toArray() as $key => $value) {
-							$moreAdvancedEducationGrades[$value['id']] = $value['education_programme']['name'].' - '.$value['name'];
-						}
+						$currentProgrammeGrades = $this->EducationGrades
+							->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'programme_grade_name'
+							])
+							->find('visible')
+							->where([
+								$this->EducationGrades->aliasField('order').' > ' => $studentInfo->education_grade->order,
+								$this->EducationGrades->aliasField('education_programme_id') => $studentInfo->education_grade->education_programme_id
+							])
+							->toArray();
 
-						$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];	
+						$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+						$educationProgrammeId = $studentInfo->education_grade->education_programme_id;
+						$nextEducationGradeList = $EducationProgrammesNextProgrammesTable->getNextGradeList($educationProgrammeId);
+						$moreAdvancedEducationGrades = $currentProgrammeGrades + $nextEducationGradeList;
+
+						$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];
 						if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
 							reset($moreAdvancedEducationGrades);
 							$this->selectedGrade = key($moreAdvancedEducationGrades);
@@ -479,10 +590,36 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'add' || $action == 'edit') {
-			$Students = TableRegistry::get('Institution.Students');
-			$toolbarButtons['back']['url']['action'] = $Students->alias();
-			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->Session->read($this->registryAlias().'.id');
+			if ($this->Session->read($this->registryAlias().'.id')) {
+				$Students = TableRegistry::get('Institution.Students');
+				$toolbarButtons['back']['url']['action'] = $Students->alias();
+				$toolbarButtons['back']['url'][0] = 'view';
+				$toolbarButtons['back']['url'][1] = $this->Session->read($this->registryAlias().'.id');
+			} else {
+				if ($action == 'edit') {
+					$toolbarButtons['back']['url'][0] = 'index';
+					if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
+						$toolbarButtons['back']['url']['action']= 'index';
+						unset($toolbarButtons['back']['url'][0]);
+					}
+					unset($toolbarButtons['back']['url'][1]);
+				}
+			}
+		} else if ($action == 'index') {
+			if (isset($toolbarButtons['add'])) {
+				unset($toolbarButtons['add']);
+			}
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+			$toolbarButtons['back']['url']['plugin'] = 'Institution';
+			$toolbarButtons['back']['url']['controller'] = 'Institutions';
+			$toolbarButtons['back']['url']['action'] = 'Students';
+			$toolbarButtons['back']['url'][0] = 'index';
+			$toolbarButtons['back']['attr'] = $attr;
+		} else if ($action == 'view') {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+				unset($toolbarButtons['edit']);
+			}
 		}
 	}
 
