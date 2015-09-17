@@ -327,8 +327,9 @@ trait MessagesTrait {
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
+			'noInstitutions' => 'No Available Institutions',
 			'noData' => 'There are no available Students for Transfer.',
-			'success' => 'Students have been transferred.',
+			'success' => 'Students have been transferred.'
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'

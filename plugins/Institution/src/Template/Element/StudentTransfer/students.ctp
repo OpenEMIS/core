@@ -31,7 +31,7 @@
 								</td>
 								<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 								<td><?= $obj->_matchingData['Users']->name ?></td>
-								<td><?= $attr['attr']['statuses'][$obj->student_status_id ]?></td>
+								<td><?= $attr['attr']['statusOptions'][$obj->student_status_id ]?></td>
 							</tr>
 						<?php endforeach ?>
 					</tbody>
