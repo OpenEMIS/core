@@ -336,9 +336,13 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_name'
 		]);
-
-		$this->setupTabElements($entity);
 	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+		$buttons[0]['attr']['value'] = 'new';
+	}
+
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 		$studentData = $data['Students'];
@@ -511,8 +515,10 @@ class StudentsTable extends AppTable {
 
 			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+
+			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
@@ -603,8 +609,20 @@ class StudentsTable extends AppTable {
 			if (!empty($term)) {
 				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
-			
-			$list = $query->all();
+
+			/**
+			 * filter out students having 'Enrolled' status
+			 */
+			$query->where([
+				'NOT EXISTS (
+					SELECT `id` 
+					FROM `institution_students` 
+					WHERE `institution_students`.`student_id` = `Users`.`id`
+					AND `institution_students`.`student_status_id` = 1
+				)'
+			]);
+
+    		$list = $query->all();
 
 			$data = [];
 			foreach($list as $obj) {
