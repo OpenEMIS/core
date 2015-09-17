@@ -367,12 +367,11 @@ class StudentAdmissionTable extends AppTable {
 
 				$conditions = [
 					'student_id' => $entity->student_id, 
-					'academic_period_id' => $entity->academic_period_id, 
 					'status' => self::NEW_REQUEST,
 					'education_grade_id IN' => $educationGradesToUpdate
 				];
 
-				// Reject all other new pending admission entry of the 
+				// Reject all other new pending admission / transfer application entry of the 
 				// same student for the same academic period
 				$this->updateAll(
 					['status' => self::REJECTED],
