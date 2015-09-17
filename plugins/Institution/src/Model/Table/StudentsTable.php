@@ -404,7 +404,7 @@ class StudentsTable extends AppTable {
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			if (! $StudentStatuses->get($entity->student_status_id)->code == 'PENDING_ADMISSION') {
+			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
 				$sectionData = [];
 				$sectionData['student_id'] = $entity->student_id;
 				$sectionData['education_grade_id'] = $entity->education_grade_id;
