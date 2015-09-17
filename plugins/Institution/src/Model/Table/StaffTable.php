@@ -434,11 +434,21 @@ class StaffTable extends AppTable {
 			'order' => 11,
 			'attr' => ['value' => $entity->position->name]
 		]);
-		$this->ControllerAction->field('FTE', [
-			'type' => 'select', 
-			'order' => 12,
-			'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
-		]);
+
+		if (empty($entity->end_date)) {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'select', 
+				'order' => 12,
+				'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
+			]);
+		} else {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'readonly', 
+				'order' => 12, 
+				'attr' => ['value' => $entity->FTE]
+			]);
+		}
+		
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
