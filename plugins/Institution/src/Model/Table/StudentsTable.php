@@ -336,9 +336,13 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_name'
 		]);
-
-		$this->setupTabElements($entity);
 	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+		$buttons[0]['attr']['value'] = 'new';
+	}
+
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 		$studentData = $data['Students'];
@@ -404,7 +408,7 @@ class StudentsTable extends AppTable {
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			if (! $StudentStatuses->get($entity->student_status_id)->code == 'PENDING_ADMISSION') {
+			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
 				$sectionData = [];
 				$sectionData['student_id'] = $entity->student_id;
 				$sectionData['education_grade_id'] = $entity->education_grade_id;
@@ -426,16 +430,14 @@ class StudentsTable extends AppTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => Inflector::singularize($this->alias())]);
+		$options = [
+			'userRole' => 'Student',
+			'action' => $this->action,
+			'id' => $entity->id,
+			'userId' => $entity->student_id
+		];
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements[$this->alias()]['url'] = array_merge($tabElements[$this->alias()]['url'], [$entity->id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == $this->alias()) continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->student_id, 'id' => $entity->id]);
-			}
-		}
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -513,8 +515,10 @@ class StudentsTable extends AppTable {
 
 			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+
+			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
@@ -605,8 +609,20 @@ class StudentsTable extends AppTable {
 			if (!empty($term)) {
 				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
-			
-			$list = $query->all();
+
+			/**
+			 * filter out students having 'Enrolled' status
+			 */
+			$query->where([
+				'NOT EXISTS (
+					SELECT `id` 
+					FROM `institution_students` 
+					WHERE `institution_students`.`student_id` = `Users`.`id`
+					AND `institution_students`.`student_status_id` = 1
+				)'
+			]);
+
+    		$list = $query->all();
 
 			$data = [];
 			foreach($list as $obj) {
