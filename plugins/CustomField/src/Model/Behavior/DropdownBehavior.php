@@ -72,6 +72,7 @@ class DropdownBehavior extends Behavior {
             $form = $event->subject()->Form;
             $options['type'] = 'select';
             $options['default'] = !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
+            $options['value'] = !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
 			$options['options'] = $dropdownOptions;
 
  			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];

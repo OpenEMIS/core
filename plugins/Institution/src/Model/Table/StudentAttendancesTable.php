@@ -31,6 +31,8 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
@@ -86,7 +88,7 @@ class StudentAttendancesTable extends AppTable {
 		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
-			$institutionId = $this->Session->read('Institutions.id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $entity->student_id;
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 			
@@ -147,15 +149,12 @@ class StudentAttendancesTable extends AppTable {
 			$unexcusedDisplay = 'display: none;';
 			$reasonId = 0;
 			if (empty($entity->StudentAbsences['id'])) {
-				// $options['value'] = 'PRESENT';
-				$presentDisplay = '';
+				$presentDisplay = '';	// PRESENT
 			} else {
 				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
-					// $options['value'] = 'UNEXCUSED';
-					$unexcusedDisplay = '';
+					$unexcusedDisplay = '';	// UNEXCUSED
 				} else {
-					// $options['value'] = 'EXCUSED';
-					$excusedDisplay = '';
+					$excusedDisplay = '';	// EXCUSED
 					$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
 				}
 			}
@@ -275,10 +274,13 @@ class StudentAttendancesTable extends AppTable {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
+		}
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$institutionId = $this->Session->read('Institutions.id');
-		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
@@ -287,6 +289,8 @@ class StudentAttendancesTable extends AppTable {
 			}
 		]);
 		// End setup periods
+
+		$this->request->query['academic_period_id'] = $selectedPeriod;
 
 		if ($selectedPeriod != 0) {
 			$todayDate = date("Y-m-d");
@@ -501,33 +505,28 @@ class StudentAttendancesTable extends AppTable {
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->request->query('day') != -1) {
-    		if (!is_null($this->request->query('mode'))) {
-    			$toolbarButtons['back'] = $buttons['back'];
-				if ($toolbarButtons['back']['url']['mode']) {
-					unset($toolbarButtons['back']['url']['mode']);
+    	if ($this->AccessControl->check(['Institutions', 'StudentAttendances', 'indexEdit'])) {
+	    	if ($this->request->query('day') != -1) {
+	    		if (!is_null($this->request->query('mode'))) {
+	    			$toolbarButtons['back'] = $buttons['back'];
+					if ($toolbarButtons['back']['url']['mode']) {
+						unset($toolbarButtons['back']['url']['mode']);
+					}
+					$toolbarButtons['back']['type'] = 'button';
+					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+					$toolbarButtons['back']['attr'] = $attr;
+					$toolbarButtons['back']['attr']['title'] = __('Back');
+				} else {
+					$toolbarButtons['back'] = $buttons['back'];
+					$toolbarButtons['back']['type'] = null;
 				}
-				$toolbarButtons['back']['type'] = 'button';
-				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-				$toolbarButtons['back']['attr'] = $attr;
-				$toolbarButtons['back']['attr']['title'] = __('Back');
-			} else {
-				$toolbarButtons['edit'] = $buttons['index'];
-		    	$toolbarButtons['edit']['url'][0] = 'index';
-				$toolbarButtons['edit']['url']['mode'] = 'edit';
-				$toolbarButtons['edit']['type'] = 'button';
-				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-				$toolbarButtons['edit']['attr'] = $attr;
-				$toolbarButtons['edit']['attr']['title'] = __('Edit');
-
-				$toolbarButtons['back'] = $buttons['back'];
-				$toolbarButtons['back']['type'] = null;
 			}
 		}
     }
 
 	public function indexEdit() {
 		if ($this->request->is(['post', 'put'])) {
+			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
@@ -535,6 +534,7 @@ class StudentAttendancesTable extends AppTable {
 			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
 					foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
+						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
 						if ($obj['absence_type'] == 'UNEXCUSED') {
 							$obj['student_absence_reason_id'] = 0;
 						}

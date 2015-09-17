@@ -12,7 +12,7 @@ use App\Model\Traits\OptionsTrait;
 class StaffAbsencesTable extends AppTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
-		'academic_period', 'security_user_id',
+		'academic_period_id', 'security_user_id',
 		'full_day', 'start_date', 'end_date', 'start_time', 'end_time',
 		'absence_type', 'staff_absence_reason_id'
 	];
@@ -24,6 +24,7 @@ class StaffAbsencesTable extends AppTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -36,7 +37,7 @@ class StaffAbsencesTable extends AppTable {
 					'rule' => ['noOverlappingAbsenceDate', $this]
 				],
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period'],
+					'rule' => ['inAcademicPeriod', 'academic_period_id'],
 					'on' => 'create'
 				]
 			])
@@ -129,6 +130,9 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		unset($this->_fieldOrder[0]);// Academic period not in use in view page
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+		
 		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
 		$this->ControllerAction->field('absence_type', [
 			'options' => $absenceTypeOptions
@@ -145,7 +149,7 @@ class StaffAbsencesTable extends AppTable {
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
 		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
 
-		$this->ControllerAction->field('academic_period', [
+		$this->ControllerAction->field('academic_period_id', [
 			'options' => $periodOptions
 		]);
 		$this->ControllerAction->field('security_user_id', [
@@ -189,7 +193,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->ControllerAction->field('staff_absence_reason_id', ['type' => 'select']);
 	}
 
-	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$attr['onChangeReload'] = 'changePeriod';
 		if ($action != 'add') {
 			$attr['visible'] = false;
@@ -200,7 +204,7 @@ class StaffAbsencesTable extends AppTable {
 		$periodOptions = $attr['options'];
 		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
 
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
@@ -283,8 +287,8 @@ class StaffAbsencesTable extends AppTable {
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('academic_period', $request->data[$this->alias()])) {
-					$request->query['period'] = $request->data[$this->alias()]['academic_period'];
+				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+					$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
 				}
 			}
 		}
@@ -318,11 +322,11 @@ class StaffAbsencesTable extends AppTable {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
 		$periodOptions = $AcademicPeriod->getList();
-		$selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : key($periodOptions);
+		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
 			'callable' => function($id) use ($Staff, $institutionId) {

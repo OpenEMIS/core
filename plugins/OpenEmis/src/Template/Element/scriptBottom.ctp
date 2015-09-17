@@ -69,5 +69,4 @@ $('.table-responsive').on('show.bs.dropdown', function () {
 $('.table-responsive').on('hide.bs.dropdown', function () {
      $('.table-responsive').css( "overflow", "auto" );
 })
-
 </script>

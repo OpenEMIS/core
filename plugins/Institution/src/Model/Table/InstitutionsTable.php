@@ -81,7 +81,7 @@ class InstitutionsTable extends AppTable  {
 			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
-        $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
+        $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institution.Institutions.id']);
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
@@ -250,16 +250,24 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
-			$institutionRecords = $this->find();
+			$institutionCount = $this->find();
+			$conditions = [];
 
-			// Total Institutions: number
-			$institutionCount = $institutionRecords
-				->count();
+			if (! $this->AccessControl->isAdmin()) {
+
+				$institutionIds = $this->AccessControl->getInstitutionsByUser();
+
+				// Total Institutions: number
+				$institutionCount = $institutionCount
+					->where([$this->aliasField('id').' IN' => $institutionIds]);
+
+				$conditions['id IN'] = $institutionIds;
+			}
 
 			$models = [
-				['InstitutionSiteTypes', 'institution_site_type_id', 'Type'],
-				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector'],
-				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality'],
+				['InstitutionSiteTypes', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
+				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
+				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
 			];
 
 			foreach ($models as $key => $model) {
@@ -271,7 +279,7 @@ class InstitutionsTable extends AppTable  {
 	            'name' => $indexDashboard,
 	            'data' => [ 
 	            	'model' => 'institutions',
-	            	'modelCount' => $institutionCount,
+	            	'modelCount' => $institutionCount->count(),
 	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
@@ -293,8 +301,9 @@ class InstitutionsTable extends AppTable  {
 			$params['key'] = __($key);
 
 			foreach ($conditions as $key => $value) {
-				$_conditions[$modelName.'.'.$key] = $value;
+				$_conditions[$this->aliasField($key)] = $value;
 			}
+
 			$institutionRecords = $this->find();
 			
 			$selectString = $modelName.'.name';
@@ -305,6 +314,7 @@ class InstitutionsTable extends AppTable  {
 					'name' => $selectString
 				])
 				->group($modelId)
+				->where($_conditions)
 				->toArray();
 
 			// Creating the data set		
