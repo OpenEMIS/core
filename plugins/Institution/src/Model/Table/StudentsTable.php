@@ -859,14 +859,37 @@ class StudentsTable extends AppTable {
 			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$studentEducationGradeOrder = $EducationGrades->find()->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $student->education_grade_id])->first();
-			if (!empty($studentEducationGradeOrder)) {
-				$studentEducationGradeOrder = $studentEducationGradeOrder->order;
-			}					
+			$studentEducationGrade = $EducationGrades
+				->find()
+				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $student->education_grade_id])
+				->first();
 
+			$currentProgrammeGrades = $EducationGrades
+				->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'programme_grade_name'
+				])
+				->find('visible')
+				->where([
+					$this->EducationGrades->aliasField('order').' > ' => $studentEducationGrade->order,
+					$this->EducationGrades->aliasField('education_programme_id') => $studentEducationGrade->education_programme_id
+				])
+				->toArray();
+
+			$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+			$educationProgrammeId = $studentEducationGrade->education_programme_id;
+			$nextEducationGradeList = $EducationProgrammesNextProgrammesTable->getNextGradeList($educationProgrammeId);
+			$moreAdvancedEducationGrades = $currentProgrammeGrades + $nextEducationGradeList;
+
+			$studentEducationGradeOrder = [];
+			if (!empty($studentEducationGrade)) {
+				$studentEducationGradeOrder = $studentEducationGrade->order;
+			}					
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+	
 			$advancedGradeOptionsLeft = $InstitutionEducationGrades
 				->find('list', [
-						'keyField' => 'EducationGrades.order',
+						'keyField' => 'EducationGrades.id',
 						'valueField' => 'EducationGrades.name'
 					])
 				->select([
@@ -876,11 +899,13 @@ class StudentsTable extends AppTable {
 				->where(['EducationGrades.order > ' => $studentEducationGradeOrder])
 				->where(['institution_site_id' => $institutionId])
 				->group('education_grade_id')
-				->count()
+				->toArray()
 				;
 				
-			if ($advancedGradeOptionsLeft>0) {
+			if (count(array_intersect_key($moreAdvancedEducationGrades, $advancedGradeOptionsLeft))>0) {
 				$checkIfCanTransfer = false;
+			} else {
+				$checkIfCanTransfer = true;
 			}
 		}
 		return $checkIfCanTransfer;
