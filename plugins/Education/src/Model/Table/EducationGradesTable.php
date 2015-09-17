@@ -40,7 +40,12 @@ class EducationGradesTable extends AppTable {
 		}
 	}
 
-	// Getting the education system base on a given grade
+	 /**
+     * Method to get the education system id for the particular grade given
+     *
+     * @param integer $gradeId The grade id to check for
+     * @return integer Education system id that the grade belongs to
+     */
 	public function getEducationSystemId($gradeId) {
 		$educationSystemId = $this->find()
 			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -49,6 +54,12 @@ class EducationGradesTable extends AppTable {
 		return $educationSystemId->education_programme->education_cycle->education_level->education_system->id;
 	}
 
+	 /**
+     * Method to check the list of the grades that belongs to the education system
+     *
+     * @param integer $systemId The education system id to check for
+     * @return array A list of the education system grades belonging to that particular education system
+     */
 	public function getEducationGradesBySystem($systemId) {
 		$educationSystemId = $this->find('list', [
 				'keyField' => 'id',

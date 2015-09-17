@@ -334,6 +334,7 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	// Return false if not enrolled in other education system
 	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
 		$enrolled = false;
