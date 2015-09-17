@@ -400,6 +400,7 @@ class StaffAttendancesTable extends AppTable {
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
 				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->distinct()
 				;
 
 			if ($selectedDay == -1) {
