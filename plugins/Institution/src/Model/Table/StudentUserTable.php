@@ -17,10 +17,6 @@ class StudentUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
@@ -89,11 +85,6 @@ class StudentUserTable extends UserTable {
 				if ($key == 'Students') continue;
 				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
 			}
-		} else {
-			/**
-			 * flush tabElements during add action
-			 */
-			$tabElements = [];
 		}
 
 		$this->controller->set('tabElements', $tabElements);
