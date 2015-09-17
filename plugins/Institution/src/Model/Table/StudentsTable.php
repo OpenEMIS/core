@@ -760,6 +760,12 @@ class StudentsTable extends AppTable {
 				$graduateButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$graduateButton['attr']['title'] = __('Promotion / Graduation');
 
+				$toolbarButtons['graduate'] = $graduateButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
+
+			if ($this->AccessControl->check([$this->controller->name, 'Transfer', 'add'])) {
 				$transferButton = $buttons['index'];
 				$transferButton['url']['action'] = 'Transfer';
 				$transferButton['url'][0] = 'add';
@@ -769,7 +775,6 @@ class StudentsTable extends AppTable {
 				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$transferButton['attr']['title'] = __('Transfer');
 
-				$toolbarButtons['graduate'] = $graduateButton;
 				$toolbarButtons['transfer'] = $transferButton;
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
