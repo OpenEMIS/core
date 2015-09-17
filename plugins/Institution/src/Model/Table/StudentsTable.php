@@ -408,6 +408,7 @@ class StudentsTable extends AppTable {
 							$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
 							$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
 							$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
+							$AdmissionTable->aliasField('type') => 1
 						])
 					->count();
 				// Check if the student is already added to the student admission table
