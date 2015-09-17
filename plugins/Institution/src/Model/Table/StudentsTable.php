@@ -404,7 +404,7 @@ class StudentsTable extends AppTable {
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		if ($entity->class > 0) {
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			if (! $StudentStatuses->get($entity->student_status_id)->code == 'PENDING_ADMISSION') {
+			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
 				$sectionData = [];
 				$sectionData['student_id'] = $entity->student_id;
 				$sectionData['education_grade_id'] = $entity->education_grade_id;
@@ -426,16 +426,14 @@ class StudentsTable extends AppTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => Inflector::singularize($this->alias())]);
+		$options = [
+			'userRole' => 'Student',
+			'action' => $this->action,
+			'id' => $entity->id,
+			'userId' => $entity->student_id
+		];
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements[$this->alias()]['url'] = array_merge($tabElements[$this->alias()]['url'], [$entity->id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == $this->alias()) continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->student_id, 'id' => $entity->id]);
-			}
-		}
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
