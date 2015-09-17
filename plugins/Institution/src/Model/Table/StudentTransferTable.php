@@ -268,6 +268,7 @@ class StudentTransferTable extends AppTable {
 						->count();
 				}
 			]);
+			$this->request->query['next_academic_period_id'] = $nextPeriodId;
 		}
 
 		$attr['options'] = $nextPeriodOptions;
@@ -337,6 +338,7 @@ class StudentTransferTable extends AppTable {
 					}
 				]);
 			}
+			$this->request->query['next_education_grade_id'] = $nextGradeId;
     	}
 
     	$attr['options'] = $nextGradeOptions;
@@ -432,6 +434,10 @@ class StudentTransferTable extends AppTable {
 	  			;
 
 	  		$students = $studentQuery->toArray();
+	  	}
+
+	  	if (empty($students)) {
+	  		$this->Alert->warning($this->aliasField('noData'));
 	  	}
 
 		$statusOptions = $this->StudentStatuses->find('list')->toArray();
