@@ -446,6 +446,9 @@ trait MessagesTrait {
 			'Staff' => [
 				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
+				],
+				'FTE' => [
+					'ruleCheckFTE' => 'No available FTE.'
 				]
 			]
 		],
