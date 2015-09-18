@@ -15,7 +15,7 @@
 					'label' => false,
 					'options' => $periodOptions,
 					'url' => $baseUrl,
-					'data-named-key' => 'period_id'
+					'data-named-key' => 'academic_period_id'
 				));
 			}
 
@@ -26,7 +26,7 @@
 					'options' => $classOptions,
 					'url' => $baseUrl,
 					'data-named-key' => 'class_id',
-					'data-named-group' => 'period_id'
+					'data-named-group' => 'academic_period_id'
 				));
 			}
 		?>
