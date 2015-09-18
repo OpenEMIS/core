@@ -126,7 +126,7 @@ class StudentsTable extends AppTable {
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'TransferRequests']);
 				break;
-			case $statuses['PENDING_DROPOUT']:
+			case $status['PENDING_DROPOUT']:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentDropout']);
 		}
