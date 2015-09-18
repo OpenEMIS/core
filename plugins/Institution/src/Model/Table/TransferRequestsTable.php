@@ -422,7 +422,6 @@ class TransferRequestsTable extends AppTable {
 			*/
 		} else if ($action == 'edit') {
 			$selectedInstitution = $request->data[$this->alias()]['institution_id'];
-
 			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = $this->Institutions->get($selectedInstitution)->code_name;
 		}

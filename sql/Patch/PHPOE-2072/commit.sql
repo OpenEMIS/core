@@ -6,3 +6,6 @@ UPDATE `security_functions` SET `_view`='TransferRequests.index|TransferRequests
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TransferRequests', 'created', 'Institutions -> Transfer Requests','Date of Application', 1, 1, NOW());
+
+-- student_statuses
+DELETE FROM `student_statuses` WHERE `code`='REJECTED';

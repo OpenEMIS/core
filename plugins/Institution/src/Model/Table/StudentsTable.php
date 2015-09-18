@@ -119,7 +119,6 @@ class StudentsTable extends AppTable {
 		$selectedStatus = $this->request->query('status_id');
 		switch ($selectedStatus) {
 			case $status['PENDING_ADMISSION']:
-			case $status['REJECTED']:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 				break;
@@ -141,15 +140,24 @@ class StudentsTable extends AppTable {
      */
 	public function checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId) {
 		$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+		$conditions = [
+			$this->aliasField('student_id') => $studentId,
+			$this->aliasField('academic_period_id') => $academicPeriodId,
+			$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
+		];
+
+		if (is_null($academicPeriodId)) {
+			$conditions = [
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
+			];
+		}
+
 		$gradeIds = $this->find('list', [
 					'keyField' => 'education_grade_id',
 					'valueField' => 'education_grade_id'
 				])
-				->where([
-					$this->aliasField('student_id') => $studentId, 
-					$this->aliasField('academic_period_id') => $academicPeriodId,
-					$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
-				])
+				->where([$conditions])
 				->toArray();
 
 		$educationSystemId = [];
@@ -466,7 +474,6 @@ class StudentsTable extends AppTable {
 
 			$conditions = [
 				'student_id' => $entity->student_id, 
-				'academic_period_id' => $entity->academic_period_id, 
 				'status' => 0,
 				'education_grade_id IN' => $educationGradesToUpdate
 			];
@@ -859,6 +866,15 @@ class StudentsTable extends AppTable {
 			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+			$systemId = $EducationGrades->getEducationSystemId($student->education_grade_id);
+	    	// Check all academic period for enrol
+	    	$academicPeriodId = null;
+	    	$studentId = $student->student_id;
+	    	if ($this->checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId)) {
+	    		return false;
+	    	}
+
 			$studentEducationGrade = $EducationGrades
 				->find()
 				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $student->education_grade_id])
