@@ -18,6 +18,7 @@ class WorkflowComponent extends Component {
 	public $Workflows;
 	public $WorkflowModels;
 	public $WorkflowsFilters;
+	public $attachWorkflow = true;
 
 	public $components = ['Auth', 'ControllerAction', 'AccessControl'];
 
@@ -48,30 +49,33 @@ class WorkflowComponent extends Component {
 		// End
 	}
 
+	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Event $event) {
 		$controller = $event->subject();
 		$this->model = $this->ControllerAction->model();
 		$this->currentAction = $this->ControllerAction->action();
 
-		if (in_array($this->currentAction, ['view', 'processWorkflow'])) {
-			$alias = $this->model->alias();
-			$registryAlias = $this->model->registryAlias();
+		if ($this->attachWorkflow) {
+			if (in_array($this->currentAction, ['view', 'processWorkflow'])) {
+				$alias = $this->model->alias();
+				$registryAlias = $this->model->registryAlias();
 
-			$setup = $this->WorkflowModels
-				->find()
-				->where([
-					$this->WorkflowModels->aliasField('model') => $registryAlias
-				])
-				->first();
+				$setup = $this->WorkflowModels
+					->find()
+					->where([
+						$this->WorkflowModels->aliasField('model') => $registryAlias
+					])
+					->first();
 
-			// Trigger WorkflowBehavior if Workflow is applicable for this model.
-			if (!empty($setup)) {
-				$workflowId = $this->getWorkflow($setup);
+				// Trigger WorkflowBehavior if Workflow is applicable for this model.
+				if (!empty($setup)) {
+					$workflowId = $this->getWorkflow($setup);
 
-				if (!empty($workflowId)) {
-					$this->model->addBehavior('Workflow.Workflow', [
-						'workflowId' => $workflowId
-					]);
+					if (!empty($workflowId)) {
+						$this->model->addBehavior('Workflow.Workflow', [
+							'workflowId' => $workflowId
+						]);
+					}
 				}
 			}
 		}
@@ -86,42 +90,54 @@ class WorkflowComponent extends Component {
 			])
 			->toArray();
 
-		// Filter key
-		list(, $base) = pluginSplit($workflowModel->filter);
-		$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
-
-		$paramsPass = $this->ControllerAction->paramsPass();
-		$modelReference = current($paramsPass);
-		$entity = $this->model->get($modelReference);
-
 		$workflowId = 0;
 
-		if (isset($entity->$filterKey)) {
-			$filterId = $entity->$filterKey;
-			$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
-
-			$filterQuery = $this->WorkflowsFilters
+		if (empty($workflowModel->filter)) {
+			$workflowResults = $this->Workflows
 				->find()
-				->where($conditions)
-				->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
-
-			$workflowFilterResults = $filterQuery->all();
-				
-			// Use Workflow with filter if found otherwise use Workflow that Apply To All
-			if ($workflowFilterResults->isEmpty()) {
-				$filterQuery
-				->where($conditions, [], true)
-				->where([$this->WorkflowsFilters->aliasField('filter_id') => 0]);
-
-				$workflowResults = $filterQuery->all();
-			} else {
-				$workflowResults = $workflowFilterResults;
-			}
+				->where([$this->Workflows->aliasField('id IN') => $workflowIds])
+				->all();
 
 			if (!$workflowResults->isEmpty()) {
-				$workflowId = $workflowResults->first()->workflow_id;
+				$workflowId = $workflowResults->first()->id;
+			}
+		} else {
+			// Filter key
+			list(, $base) = pluginSplit($workflowModel->filter);
+			$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+
+			$paramsPass = $this->ControllerAction->paramsPass();
+			$modelReference = current($paramsPass);
+			$entity = $this->model->get($modelReference);
+
+			if (isset($entity->$filterKey)) {
+				$filterId = $entity->$filterKey;
+				$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
+
+				$filterQuery = $this->WorkflowsFilters
+					->find()
+					->where($conditions)
+					->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
+
+				$workflowFilterResults = $filterQuery->all();
+					
+				// Use Workflow with filter if found otherwise use Workflow that Apply To All
+				if ($workflowFilterResults->isEmpty()) {
+					$filterQuery
+					->where($conditions, [], true)
+					->where([$this->WorkflowsFilters->aliasField('filter_id') => 0]);
+
+					$workflowResults = $filterQuery->all();
+				} else {
+					$workflowResults = $workflowFilterResults;
+				}
+
+				if (!$workflowResults->isEmpty()) {
+					$workflowId = $workflowResults->first()->workflow_id;
+				}
 			}
 		}
+
 		return $workflowId;
 	}
 }

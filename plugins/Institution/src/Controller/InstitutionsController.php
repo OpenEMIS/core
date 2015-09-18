@@ -78,11 +78,16 @@ class InstitutionsController extends AppController  {
 		$query = $this->request->query;
 		if (array_key_exists('institution_id', $query)) {
 			$session->write('Institution.Institutions.id', $query['institution_id']);
-
 		}
 
 		if ($action == 'index') {
 			$session->delete('Institution.Institutions.id');
+		} else if ($action == 'Surveys') {
+			// This is to turn off workflow for New and Draft Survey
+			$this->loadComponent('Survey.Survey', [
+				'model' => 'Institution.InstitutionSurveys'
+			]);
+			$this->Workflow->attachWorkflow = $this->Survey->getAttachWorkflow();
 		}
 
 		if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
