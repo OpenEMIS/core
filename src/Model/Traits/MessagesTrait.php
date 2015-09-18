@@ -66,7 +66,7 @@ trait MessagesTrait {
 			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
-			'notSelected' => 'No Record has been selected/saved.',
+			'notSelected' => 'No Record has been selected / saved.',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
@@ -336,6 +336,13 @@ trait MessagesTrait {
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.',
 			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
+		],
+		'StudentTransfer' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noInstitutions' => 'No Available Institutions',
+			'noData' => 'There are no available Students for Transfer.',
+			'success' => 'Students have been transferred.'
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
