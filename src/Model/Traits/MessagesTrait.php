@@ -50,6 +50,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
 			],
+			'deleteTransfer' =>[
+				'restrictDelete' => 'The transfer cannot be performed as there is no options to transfer to.'
+			],
 			'view' => [
 				'label' => 'View',
 			],
@@ -191,7 +194,9 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
-			]
+			],
+			'section' => 'Class',
+			'noAccess' => 'You do not have access to this Class.'
 		],
 		'InstitutionRubricAnswers' => [
 			'rubric_template' => 'Rubric Template',
@@ -205,6 +210,13 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
+			]
+		],
+		'StudentSurveys' => [
+			'noSurveys' => 'No Surveys',
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
 			]
 		],
 		'password'=> [
@@ -266,7 +278,8 @@ trait MessagesTrait {
 		],
 		'SurveyForms' => [
 			'add_question' => 'Add Question',
-			'add_to_section' => 'Add to Section'
+			'add_to_section' => 'Add to Section',
+			'notSupport' => 'Not supported in this form.'
 		],
 		'time' => [
 			'start' => 'Start Time',
