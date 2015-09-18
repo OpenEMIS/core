@@ -22,7 +22,7 @@ class EducationGradesTable extends AppTable {
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => true,
+			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
 	}
@@ -37,6 +37,18 @@ class EducationGradesTable extends AppTable {
 				// 	['education_grade_id' => $entity->id]
 				// );
 			}
+		}
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		if (empty($this->request->data['transfer_to'])) {
+			$this->Alert->error('general.deleteTransfer.restrictDelete');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('remove'));
 		}
 	}
 
