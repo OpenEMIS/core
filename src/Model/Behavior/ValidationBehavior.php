@@ -332,6 +332,17 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
 		}
+	}
+
+	// Return false if not enrolled in other education system
+	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+		$enrolled = false;
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
+			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
+		}
+		return !$enrolled;
 	}                                                                                                                                                                 
 
 	public static function institutionStudentId($field, array $globalData) {
