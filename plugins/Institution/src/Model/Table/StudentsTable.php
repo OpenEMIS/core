@@ -119,7 +119,6 @@ class StudentsTable extends AppTable {
 		$selectedStatus = $this->request->query('status_id');
 		switch ($selectedStatus) {
 			case $status['PENDING_ADMISSION']:
-			case $status['REJECTED']:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 				break;
