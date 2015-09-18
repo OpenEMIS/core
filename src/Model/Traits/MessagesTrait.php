@@ -447,7 +447,8 @@ trait MessagesTrait {
 			],
 			'Students' => [
 				'student_name' => [
-					'ruleInstitutionStudentId' => 'Student has already been added.'
+					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				]
 			],
 			'Staff' => [

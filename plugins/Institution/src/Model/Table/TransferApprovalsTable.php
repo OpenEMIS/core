@@ -376,6 +376,24 @@ class TransferApprovalsTable extends AppTable {
 					]
 				);
 
+				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+
+				$educationSystemId = $EducationGradesTable->getEducationSystemId($gradeId);
+				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $studentId,
+					'status' => self::NEW_REQUEST,
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				// Reject all other new pending admission / transfer application entry of the 
+				// same student for the same academic period
+				$this->updateAll(
+					['status' => self::REJECTED],
+					[$conditions]
+				);
+
 				// finally update the transfer request to become approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;
