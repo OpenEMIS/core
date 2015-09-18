@@ -20,7 +20,7 @@
 			}
 
 			if (!empty($sectionOptions)) {
-				echo $this->Form->input('section_id_', array(
+				echo $this->Form->input('section_id', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $sectionOptions,

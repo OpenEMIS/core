@@ -26,7 +26,7 @@ class StudentsTable extends AppTable {
 		$this->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
 			'joinTable' => 'institution_students',
-			'foreignKey' => 'student_id',
+			'foreignKey'	 => 'student_id',
 			'targetForeignKey' => 'institution_id',
 			'through' => 'Institution.Students',
 			'dependent' => true
@@ -122,11 +122,19 @@ class StudentsTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
 		$this->Session->write('Student.Students.name', $entity->name);
+		$this->setupTabElements(['id' => $entity->id]);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
+
+		//find out current academic period and store it in session
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
+		if(!empty($AcademicPeriod)) {
+			$session = $this->request->session();
+			$session->write('Student.AcademicPeriod.Current.id', $AcademicPeriod);
+		}
 
 		$this->ControllerAction->field('institution', ['order' => 50]);
 		$this->ControllerAction->field('status', ['order' => 51, 'sort' => false]);
@@ -150,17 +158,29 @@ class StudentsTable extends AppTable {
 					'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
 					'InstitutionStudent.institution_id IN ' => $institutionIds
 				]
-			);
+			)
+			->group([$this->aliasField('id')]);
+			;
 		}
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
 		$userId = $entity->id;
+
+		$session = $this->request->session();
+		$currentAcademicPeriod = $session->read('Student.AcademicPeriod.Current.id');
+
+		$selectedStudentStatusId = 1; //Related to task PHPOE-1872
+
 		$query = $this->InstitutionStudent->find()
-		->contain(['Institutions', 'StudentStatuses'])
-		->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
-		->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
-		;
+						 ->contain(['Institutions'])
+						 ->matching('StudentStatuses', function ($q) use ($selectedStudentStatusId) {
+						    return $q->where(['StudentStatuses.id' => $selectedStudentStatusId]);
+						 })	
+						 ->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
+						 ->andWhere([$this->InstitutionStudent->aliasField('academic_period_id') => $currentAcademicPeriod])
+						 ->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
+						 ;	
 
 		$value = '';
 		if ($query->count() > 0) {
@@ -172,9 +192,9 @@ class StudentsTable extends AppTable {
 			foreach ($results as $key => $obj) {
 				$institutionArr[$obj->institution->id] = $obj->institution->name;
 			}
-			$value = implode('<BR>', $institutionArr);
 
-			$entity->student_status = $query->first()->student_status->name;
+			$value = implode('<BR>', $institutionArr);
+			$entity->student_status = $query->first()->_matchingData['StudentStatuses']->name;
 		}
 		return $value;
 	}
@@ -229,6 +249,11 @@ class StudentsTable extends AppTable {
 	            'order' => 1
 	        ];
 	    }
+	}
+	
+	private function setupTabElements($options) {
+		$this->controller->set('selectedAction', $this->alias);
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 
 	// Function use by the mini dashboard (For Student.Students)

@@ -52,12 +52,11 @@ class InstitutionSiteClassesTable extends AppTable {
 		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
 
 		/**
-		 * Short cuts to initialised models set in relations.
-		 * By using initialised models set in relations, the relation's className is set at a single place.
-		 * In add operations, these models attributes are empty by default.
+		 * Short cuts 
 		 */
-		$this->InstitutionSiteSections = $this->Institutions->InstitutionSiteSections;
-		$this->InstitutionSiteSectionGrades = $this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
+		$this->InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$this->InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -174,7 +173,7 @@ class InstitutionSiteClassesTable extends AppTable {
 											'table' => 'institution_site_section_classes',
 											'alias' => 'InstitutionSiteSectionClass',
 											'conditions' => [
-												'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClasses.id',
+												'InstitutionSiteSectionClass.institution_site_class_id = '.$Classes->aliasField('id'),
 												'InstitutionSiteSectionClass.institution_site_section_id' => $id
 											]
 										]
@@ -199,7 +198,6 @@ class InstitutionSiteClassesTable extends AppTable {
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
-
 	}
 
     public function findBySections(Query $query, array $options) {
@@ -213,7 +211,8 @@ class InstitutionSiteClassesTable extends AppTable {
 						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedSectionId
 					]
 				]
-			]);
+			])
+			;
     }
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -310,7 +309,11 @@ class InstitutionSiteClassesTable extends AppTable {
 		$periodOption = ['' => '-- Select Period --'];
 		$academicPeriodOptions = $this->AcademicPeriods->getlist();
 		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
-		
+
+		if ($this->request->is(['post', 'put']) && $this->request->data($this->aliasField('academic_period_id'))) {
+			$this->_selectedAcademicPeriodId = $this->request->data($this->aliasField('academic_period_id'));
+		}
+
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
 			'callable' => function($id) use ($Sections, $institutionId) {
@@ -342,8 +345,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		$commonData = $data['InstitutionSiteClasses'];
 		$error = false;
 		$classes = false;
-		if (isset($data['MultiClasses']) && count($data['MultiClasses'])>0) {
-			foreach ($data['MultiClasses'] as $key=>$row) {
+		if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
+			foreach ($data['MultiSubjects'] as $key=>$row) {
 				if (isset($row['education_subject_id']) && isset($row['institution_site_class_staff'])) {
 					$subjectSelected = true;
 					$classes[$key] = [
@@ -374,7 +377,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				foreach ($classes as $class) {
 				    if ($class->errors()) {
 				    	$error = $class->errors();
-				    	$data['MultiClasses'][$class->key]['errors'] = $error;
+				    	$data['MultiSubjects'][$class->key]['errors'] = $error;
 				    }
 				}
 			}
@@ -388,7 +391,6 @@ class InstitutionSiteClassesTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$process = function ($model, $entity) use ($data) {
 			list($error, $classes, $data) = $model->prepareEntityObjects($model, $data);
-			// pr($data);die;
 			if (!$error && $classes) {
 				foreach ($classes as $class) {
 			    	$model->save($class);
@@ -567,7 +569,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		 */
 		$includedStudents = [];
 		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
-			$includedStudents = [];
 			if (array_key_exists('institution_site_class_students', $this->request->data[$this->alias()])) {
 				foreach ($this->request->data[$this->alias()]['institution_site_class_students'] as $row) {
 					if ($row['status']>0) {
@@ -737,13 +738,18 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-		$subjects = $EducationGradesSubjects
+		/**
+		 * Do not check for the visible attribute in sql query,
+		 * message the data in the view file instead so that we could counter-check for
+		 * subjects that are already created in the institution.
+		 */
+		$query = $EducationGradesSubjects
 				->find()
 				->contain(['EducationSubjects'])
 				->where([
 					'EducationGradesSubjects.education_grade_id IN ' => array_keys($gradeData),
-					'EducationGradesSubjects.visible' => 1
-				])
+				]);
+		$subjects = $query
 				->order('EducationSubjects.order')
 				->group('EducationSubjects.id')
 				->toArray();
@@ -781,7 +787,10 @@ class InstitutionSiteClassesTable extends AppTable {
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
-				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->name;
+				$subjectList[$value->institution_site_class->education_subject->id] = [
+					'name' => $value->institution_site_class->name,
+					'subject_name' => $value->institution_site_class->education_subject->name
+				];
 			}
 			$data = $subjectList;
 		} else {

@@ -31,6 +31,7 @@ class InstitutionsController extends AppController  {
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
+			'StaffAccount' 	=> ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
@@ -38,13 +39,18 @@ class InstitutionsController extends AppController  {
 
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
+			'StudentAccount' 	=> ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
+			'StudentSurveys' 	=> ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'edit', 'remove']],
+			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'remove']],
 			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
-			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['add', 'edit', 'remove']],
+			'Transfer' 			=> ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
+			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
+			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
+			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
@@ -122,7 +128,11 @@ class InstitutionsController extends AppController  {
 			else if ($alias == 'Classes') $alias = 'Subjects';
 
 			if ($action) {
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $alias]);
+				/**
+				 * replaced 'action' => $alias to 'action' => $model->alias,
+				 * since only the name changes but not url
+				 */
+				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 				if (strtolower($action) != 'index')	{
 					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
 						if (isset($params['pass'][1])) {
@@ -246,6 +256,65 @@ class InstitutionsController extends AppController  {
 		} else {
 			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		}
+	}
+
+	public function getUserTabElements($options = []) {
+		$userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
+		$action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+		$userId = (array_key_exists('userId', $options))? $options['userId']: 0;
+
+		switch ($userRole) {
+			case 'Staff':
+				$pluralUserRole = 'Staff'; // inflector unable to handle
+				break;
+			default:
+				$pluralUserRole = Inflector::pluralize($userRole);
+				break;
+		}
+
+		$url = ['plugin' => $this->plugin, 'controller' => $this->name];
+
+		$tabElements = [
+			$pluralUserRole => ['text' => __('Academic')],
+			$userRole.'User' => ['text' => __('General')],
+			$userRole.'Account' => ['text' => __('Account')]
+		];
+
+		if ($action == 'add') {
+			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
+			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'add']);
+			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'add']);
+		} else {
+			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
+			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'view']);
+			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
+
+			// Only Student has Survey tab
+			if ($userRole == 'Student') {
+				$tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
+				$tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
+			}
+		}
+
+		foreach ($tabElements as $key => $tabElement) {
+			switch ($key) {
+				case $userRole.'User':
+					$params = [$userId, 'id' => $id];
+					break;
+				case $userRole.'Account':
+					$params = [$userId, 'id' => $id];
+					break;
+				case $userRole.'Surveys':
+					$params = ['id' => $id, 'user_id' => $userId];
+					break;
+				default:
+					$params = [$id];
+			}
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
+
+		return $tabElements;
 	}
 
 }
