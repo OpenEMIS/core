@@ -31,7 +31,7 @@ class DashboardController extends AppController {
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 
-    	$header = __('Dashboard');
+    	$header = __('Home Page');
 		$this->set('contentHeader', $header);
     }
 

@@ -1,9 +1,8 @@
 /* PAGE HEADER v.1.0.0 */
 
 .page-header {
-    display: block;
+    display: inline-block;
     width: 100%;
-    float: left;
     padding: 0;
     clear: both;
     margin: 0;
@@ -26,7 +25,6 @@
     padding: 10px 12px 10px 0;
 }
 
-
 /* buttons, toolbar and page-header alignments in safari */
 
 .safari .page-header {
@@ -34,14 +32,14 @@
 }
 
 .safari .toolbar {
-    top: 48px;
     margin-left: -1px;
 }
 
-@media (max-width: 1198px) {
+@media (max-width: 800px) {
     .page-header {
         border-bottom: 0;
         height: auto;
+        border-bottom: 1px solid #DDD;
     }
     .page-header h2 {
         width: 100%;
@@ -50,10 +48,13 @@
     }
 }
 
-@media (min-width: 100px) and (max-width: 480px) {
+@media (min-width: 800px) {
     .page-header {
-        height: auto;
+        border-bottom: 1px solid #DDD;
     }
+}
+
+@media (min-width: 100px) and (max-width: 480px) {
     .page-header h2 {
         width: 100%;
         float: none;

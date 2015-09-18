@@ -21,6 +21,7 @@ class RubricCriteriasTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('RubricSections', ['className' => 'Rubric.RubricSections']);
 		$this->hasMany('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('Reorder', ['filter' => 'rubric_section_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
