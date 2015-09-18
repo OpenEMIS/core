@@ -169,7 +169,6 @@ class StudentsTable extends AppTable {
 			if (!in_array($systemId, $educationSystemId)) {
 				$educationSystemId[] = $eduSystemId;
 			}
->>>>>>> 74382fbac635d9683f1fe94143c6a7f91db3a233
 		}
 		return in_array($systemId, $educationSystemId);
 	}
