@@ -45,7 +45,11 @@
 .treemap-breadcrumb {
     background: none;
     margin: 0;
-    padding: 5px 10px;
+    padding: 14px 10px;
+    height: 40px;
+    font-weight: normal;
+    font-size: 12px;
+    vertical-align: middle;
 }
 
 .treemap-breadcrumb li a,
@@ -61,6 +65,12 @@
 .panel-toolbar .treemap-breadcrumb a.active {
     padding: 0;
     background: none;
+}
+
+@media (max-width: 320px) {
+    .panel-breadcrumb {
+        padding: 10px 0;
+    }
 }
 
 
@@ -79,11 +89,7 @@
 
 .rtl .panel-breadcrumb {
     text-align: right;
-    padding: 11px 0 24px;
-}
-
-.rtl .panel-breadcrumb li {
-    float: right;
+    padding: 10px 0;
 }
 
 .rtl .treemap-breadcrumb > li:after {
