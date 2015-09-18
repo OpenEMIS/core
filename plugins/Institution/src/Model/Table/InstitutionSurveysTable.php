@@ -21,6 +21,9 @@ class InstitutionSurveysTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->addBehavior('Survey.Survey', [
+			'module' => 'Institution.Institutions'
+		]);
 		$this->addBehavior('CustomField.Record', [
 			'moduleKey' => null,
 			'fieldKey' => 'survey_question_id',
@@ -51,27 +54,10 @@ class InstitutionSurveysTable extends AppTable {
 			}
 		}
 
-		$CustomModules = $this->SurveyForms->CustomModules;
-		$customModuleResults = $CustomModules
-			->find('all')
-			->select([
-				$CustomModules->aliasField('id'),
-				$CustomModules->aliasField('filter')
-			])
-			->where([
-				$CustomModules->aliasField('model') => 'Institution.Institutions'
-			])
-			->first();
-		$customModuleId = $customModuleResults->id;
+		$surveyForms = $this->getForms();
 		$todayDate = date("Y-m-d");
-
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-
-		$surveyForms = $this->SurveyForms
-			->find('list')
-			->where([$this->SurveyForms->aliasField('custom_module_id') => $customModuleId])
-			->toArray();
 
 		// Update all New Survey to Expired by Institution Id
 		$this->updateAll(['status' => -1],
@@ -82,7 +68,7 @@ class InstitutionSurveysTable extends AppTable {
 		);
 
 		foreach ($surveyForms as $surveyFormId => $surveyForm) {
-			$surveyStatuesIds = $SurveyStatuses
+			$surveyStatusIds = $SurveyStatuses
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 				->where([
 					$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
@@ -92,7 +78,7 @@ class InstitutionSurveysTable extends AppTable {
 
 			$academicPeriodIds = $SurveyStatusPeriods
 				->find('list', ['keyField' => 'academic_period_id', 'valueField' => 'academic_period_id'])
-				->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatuesIds])
+				->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatusIds])
 				->toArray();
 
 			foreach ($academicPeriodIds as $key => $academicPeriodId) {
@@ -162,7 +148,7 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -186,19 +172,19 @@ class InstitutionSurveysTable extends AppTable {
 					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
 				]
 			])
-			->first();
+			->all();
 
-		$dateDisabled = null;
-		if (!is_null($results)) {
-			$data = $results->toArray();
-			$dateDisabled = $this->formatDate($data['date_disabled']);
+		$value = '<i class="fa fa-minus"></i>';
+		if (!$results->isEmpty()) {
+			$dateDisabled = $results->first()->date_disabled;
+			$value = $this->formatDate($dateDisabled);
 		}
 
-		return $dateDisabled;
+		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {

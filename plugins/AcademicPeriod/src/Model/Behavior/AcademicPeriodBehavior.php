@@ -141,7 +141,7 @@ class AcademicPeriodBehavior extends Behavior {
 		$isEditable = 1;
 		if ($entity->has('academic_period_id')) {
 			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
-		} else if (isset($data[$this->_table->alias()]['academic_period_id'])) {
+		} else if (isset($data[$this->_table->alias()]['academic_period_id']) && !empty($data[$this->_table->alias()]['academic_period_id'])) {
 			$academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
 			$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
 		}
