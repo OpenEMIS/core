@@ -93,36 +93,51 @@ class TransferRequestsTable extends AppTable {
 	}
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function($model, $entity) {
-			$Students = TableRegistry::get('Institution.Students');
-			$id = $this->Session->read('Institution.Students.id');
-			$institutionStudentData = $Students->get($id);
+    	$GradeTable = $this->EducationGrades;
+    	$systemId = $GradeTable->getEducationSystemId($entity->education_grade_id);
+    	// Check all academic period for enrol
+    	$academicPeriodId = null;
+    	$studentId = $entity->student_id;
+    	$Students = TableRegistry::get('Institution.Students');
 
-			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			$statusCodeList = array_flip($StudentStatuses->findCodeList());
+    	if(!$Students->checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId)) {
+			$process = function($model, $entity) use ($Students) {
+				
+				$id = $this->Session->read('Institution.Students.id');
+				$institutionStudentData = $Students->get($id);
 
-			$isPromotedOrGraduated = in_array($statusCodeList[$institutionStudentData->student_status_id], ['GRADUATED', 'PROMOTED']);
-			if ($isPromotedOrGraduated) {
-				$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				$targetAcademicPeriodData = $AcademicPeriods->get($entity->academic_period_id);
-				$entity->start_date = $targetAcademicPeriodData->start_date->format('Y-m-d');
-				$entity->end_date = $targetAcademicPeriodData->end_date->format('Y-m-d');
-			}
+				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				$statusCodeList = array_flip($StudentStatuses->findCodeList());
 
-			$pendingStatus = $StudentStatuses
-				->find()
-				->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
-				->first()
-				->id;
+				$isPromotedOrGraduated = in_array($statusCodeList[$institutionStudentData->student_status_id], ['GRADUATED', 'PROMOTED']);
+				if ($isPromotedOrGraduated) {
+					$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+					$targetAcademicPeriodData = $AcademicPeriods->get($entity->academic_period_id);
+					$entity->start_date = $targetAcademicPeriodData->start_date->format('Y-m-d');
+					$entity->end_date = $targetAcademicPeriodData->end_date->format('Y-m-d');
+				}
 
-			$result = $model->save($entity);
+				$pendingStatus = $StudentStatuses
+					->find()
+					->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
+					->first()
+					->id;
 
-			if ($result) {
-				$this->Alert->success('TransferRequests.request');
-			}
-			return $result;
-		};
-		return $process;
+				$result = $model->save($entity);
+
+				if ($result) {
+					$this->Alert->success('TransferRequests.request');
+				}
+				return $result;
+			};
+			return $process;
+		} else {
+			$process = function($model, $entity) {
+				$this->Alert->error('TransferRequests.enrolled');
+				return false;
+			}; 
+			return $process;
+		}
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
