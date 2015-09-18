@@ -162,13 +162,34 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
-		if ($action == 'add' || $action == 'edit') {
+		if ($action == 'add') {
+			$Workflows = TableRegistry::get('Workflow.Workflows');
 			$modelOptions = $attr['options'];
+
+			// Loop through modelOptions and unset it if the model do not have filter and already created workflow.
+			foreach ($modelOptions as $key => $value) {
+				$filter = $this->WorkflowModels->get($key)->filter;
+				if (empty($filter)) {
+					$workflowResults = $Workflows
+						->find()
+						->where([
+							$Workflows->aliasField('workflow_model_id') => $key
+						])
+						->all();
+					if (!$workflowResults->isEmpty()) {
+						unset($modelOptions[$key]);
+					}
+				}
+			}
+			// End
+
 			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
 			$this->advancedSelectOptions($modelOptions, $selectedModel);
 
 			$attr['options'] = $modelOptions;
 			$attr['onChangeReload'] = 'changeModel';
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
 		}
 
 		return $attr;
