@@ -474,7 +474,6 @@ class StudentsTable extends AppTable {
 
 			$conditions = [
 				'student_id' => $entity->student_id, 
-				'academic_period_id' => $entity->academic_period_id, 
 				'status' => 0,
 				'education_grade_id IN' => $educationGradesToUpdate
 			];
