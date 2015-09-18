@@ -332,6 +332,17 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
 		}
+	}
+
+	// Return false if not enrolled in other education system
+	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+		$enrolled = false;
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
+			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
+		}
+		return !$enrolled;
 	}                                                                                                                                                                 
 
 	public static function institutionStudentId($field, array $globalData) {
@@ -513,4 +524,78 @@ class ValidationBehavior extends Behavior {
 		// pr($found == 0);
 		return ($found == 0);
 	}
+
+	public static function checkFTE($field, array $globalData) {
+		if (!empty($globalData['data']['start_date'])) {
+			$date = new DateTime($globalData['data']['start_date']);
+			$startDate = date_format($date, 'Y-m-d');
+		} else {
+			$startDate = null;
+		}
+
+		if (!empty($globalData['data']['end_date'])) {
+			$date = new DateTime($globalData['data']['end_date']);
+			$endDate = date_format($date, 'Y-m-d');
+		} else {
+			$endDate = null;
+		}
+
+
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$identicalPositionHolders = $InstitutionStaff->find()
+			->where(
+				[
+					$InstitutionStaff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id']
+					
+				]
+			)
+			;
+
+		// no id this is NOT a add method
+		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
+			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['id']]);
+		}
+
+		$dateCondition = [];
+		// start and end date is of the new entry
+		$dateCondition['OR'] = [];
+		if (empty($endDate)) {
+			// current position has no end date
+			$dateCondition['OR'][] = 'end_date IS NULL';
+			$dateCondition['OR'][] = [
+				'end_date IS NOT NULL',
+				'end_date >= ' => $startDate
+			];
+		} else {
+			// current position HAS end date
+			$dateCondition['OR'][] = [
+				'end_date IS NULL',
+				'start_date'.' <= ' => $endDate
+			];
+			$dateCondition['OR']['OR'] = [];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' >= ' => $startDate, 'start_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
+		}
+
+		$identicalPositionHolders->where($dateCondition);
+
+		$FTEused = 0;
+		if ($identicalPositionHolders->count()>0) {
+			// need to tally all the FTE
+			foreach ($identicalPositionHolders->toArray() as $key => $value) {
+				$FTEused += $value->FTE;
+			}
+		}
+
+		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
+		// got id this is a add method
+		if (!(array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) && (!$validationResult)) {
+			$model = $globalData['providers']['table'];
+			$model->Alert->error(__('No available FTE.'), ['type' => 'text']);
+		}
+
+		return $validationResult;
+	}
+
 }

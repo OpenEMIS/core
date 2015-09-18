@@ -1547,6 +1547,7 @@ ALTER TABLE `institution_site_assessments`
 
 DELETE FROM config_items where `type`='Nationality' AND `code`='country_id';
 DELETE FROM config_items where `type`='Year Book Report';
+DELETE FROM config_items where `code` = 'institution_code';
 
 UPDATE config_items 
 SET 
