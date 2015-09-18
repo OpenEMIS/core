@@ -197,8 +197,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
-		$this->ControllerAction->field('education_section', ['type' => 'section', 'title' => __('Area (Education)')]);
-		$this->ControllerAction->field('administrative_section', ['type' => 'section', 'title' => __('Area (Administrative)')]);
+		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => __('Area')]);
 		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
 		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
@@ -454,11 +453,8 @@ class InstitutionsTable extends AppTable  {
 			'location_section',
 			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
 
-			'education_section',
-			'area_id', 
-
-			'adminstrative_section',
-			'area_administrative_id',
+			'area_section',
+			'area_id', 'area_administrative_id',
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
@@ -484,11 +480,8 @@ class InstitutionsTable extends AppTable  {
 			'location_section',
 			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
 
-			'education_section',
-			'area_id', 
-
-			'adminstrative_section',
-			'area_administrative_id',
+			'area_section',
+			'area_id', 'area_administrative_id',
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
