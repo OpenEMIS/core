@@ -14,6 +14,12 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 		$this->belongsTo('EducationnNextProgrammes', ['className' => 'Education.EducationnNextProgrammes', 'foreignKey' => 'next_programme_id']);
 	}
 
+    /**
+     * Function to get the list of the next programme base on a given programme id
+     *
+     * @param $id Education programme id
+     * @return array List of next education programmes id
+     */
 	public function getNextProgrammeList($id) {
 		return $this
 			->find('list', ['keyField' => 'next_programme_id', 'valueField' => 'next_programme_id'])
@@ -23,9 +29,14 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 			->toArray();
 	}
 
+    /**
+     * Function to get the list of the next education grade base on a given education programme id
+     *
+     * @param $id Education programme id
+     * @return array List of next grade programmes id
+     */
 	public function getNextGradeList($id) {
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-
 		return $EducationGrades
 			->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
 			->find('visible')
