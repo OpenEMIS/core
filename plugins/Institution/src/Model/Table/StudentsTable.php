@@ -705,6 +705,21 @@ class StudentsTable extends AppTable {
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}
+
+			if ($this->AccessControl->check([$this->controller->name, 'Transfer', 'add'])) {
+				$transferButton = $buttons['index'];
+				$transferButton['url']['action'] = 'Transfer';
+				$transferButton['url'][0] = 'add';
+				$transferButton['type'] = 'button';
+				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
+				$transferButton['attr'] = $attr;
+				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$transferButton['attr']['title'] = __('Transfer');
+
+				$toolbarButtons['transfer'] = $transferButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
 		} else if ($action == 'view') { // for transfer button in view page
 			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
