@@ -34,6 +34,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
@@ -281,13 +282,13 @@ class StaffAttendancesTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
 
-		if (empty($this->request->query['period_id'])) {
-			$this->request->query['period_id'] = $AcademicPeriod->getCurrent();
+		if (empty($this->request->query['academic_period_id'])) {
+			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 
 		$Staff = $this;
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+		$selectedPeriod = $this->request->query['academic_period_id'];
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
@@ -299,6 +300,7 @@ class StaffAttendancesTable extends AppTable {
 			}
 		]);
 		// End setup periods
+		$this->request->query['academic_period_id'] = $selectedPeriod;
 
 		if ($selectedPeriod != 0) {
 			$todayDate = date("Y-m-d");
@@ -498,33 +500,28 @@ class StaffAttendancesTable extends AppTable {
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->request->query('day') != -1) {
-    		if (!is_null($this->request->query('mode'))) {
-    			$toolbarButtons['back'] = $buttons['back'];
-				if ($toolbarButtons['back']['url']['mode']) {
-					unset($toolbarButtons['back']['url']['mode']);
+    	if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
+	    	if ($this->request->query('day') != -1) {
+	    		if (!is_null($this->request->query('mode'))) {
+	    			$toolbarButtons['back'] = $buttons['back'];
+					if ($toolbarButtons['back']['url']['mode']) {
+						unset($toolbarButtons['back']['url']['mode']);
+					}
+					$toolbarButtons['back']['type'] = 'button';
+					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+					$toolbarButtons['back']['attr'] = $attr;
+					$toolbarButtons['back']['attr']['title'] = __('Back');
+				} else {
+					$toolbarButtons['back'] = $buttons['back'];
+					$toolbarButtons['back']['type'] = null;
 				}
-				$toolbarButtons['back']['type'] = 'button';
-				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-				$toolbarButtons['back']['attr'] = $attr;
-				$toolbarButtons['back']['attr']['title'] = __('Back');
-			} else {
-				$toolbarButtons['edit'] = $buttons['index'];
-		    	$toolbarButtons['edit']['url'][0] = 'index';
-				$toolbarButtons['edit']['url']['mode'] = 'edit';
-				$toolbarButtons['edit']['type'] = 'button';
-				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-				$toolbarButtons['edit']['attr'] = $attr;
-				$toolbarButtons['edit']['attr']['title'] = __('Edit');
-
-				$toolbarButtons['back'] = $buttons['back'];
-				$toolbarButtons['back']['type'] = null;
 			}
 		}
     }
 
 	public function indexEdit() {
 		if ($this->request->is(['post', 'put'])) {
+			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 			$alias = Inflector::underscore($StaffAbsences->alias());
@@ -532,6 +529,7 @@ class StaffAttendancesTable extends AppTable {
 			if (array_key_exists($StaffAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StaffAbsences->Users->alias()])) {
 					foreach ($requestData[$StaffAbsences->Users->alias()][$alias] as $key => $obj) {
+						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
 						if ($obj['absence_type'] == 'UNEXCUSED') {
 							$obj['staff_absence_reason_id'] = 0;
 						}
