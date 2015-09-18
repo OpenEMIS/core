@@ -2,11 +2,13 @@
 
 .toolbar {
     display: inline-block;
-    background-color: #FFF;
+    background-color: transparent;
     border-left: 1px solid #DDD;
     z-index: 9;
     padding: 4px 10px;
     height: 38px;
+    position: relative;
+    font-size: 0px;
 }
 
 .toolbar .btn {
@@ -50,8 +52,8 @@
 .button-responsive {
     display: inline-block;
     border-left: 1px solid #DDD;
-    margin: -6px 8px;
-    padding: 6px 0 0 12px;
+    margin: -6px 10px;
+    padding: 5px 0 0 10px;
 }
 
 .button-responsive .btn {
@@ -77,66 +79,37 @@
     display: block;
 }
 
-@media (min-width: 100px) and (max-width: 480px) {
-    .toolbar {
-        width: 100%;
-        padding-left: 0;
-        border: 0;
-        clear: both;
-        height: auto;
-        border-bottom: 1px solid #DDD;
-    }
-    .toolbar .btn {
-        margin: 0 5px 5px 0;
-    }
-    .toolbar .search {
-        margin-top: 5px;
-    }
-    .toolbar-btn::after {
-        left: 80px !important;
-    }
-    .search {
-        clear: both;
-        float: none;
-        width: 180px;
-    }
-    .search .form-control {
-        margin: 0 2px;
-    }
-    .search input {
-        width: 150px !important;
-        margin: 0;
-    }
+
+/* TOOLBAR SEARCH */
+
+.toolbar-search {
+    padding-right: 238px !important;
+}
+
+.toolbar .search {
+    position: absolute;
+    right: 0;
+    top: 18% !important;
 }
 
 @media (max-width: 480px) {
-    .button-responsive .action-dropdown {
-        left: 0;
-        top: 72%;
-    }
-}
-
-@media (max-width: 510px) {
     .toolbar {
         height: auto;
-        border-bottom: 1px solid #DDD;
     }
-}
-
-@media (max-width: 510px) {
-    .search {
-        clear: both;
-        float: none;
+    .toolbar .btn {
+        margin-bottom: 0;
     }
-}
-
-@media (max-width: 515px) {
+    .button-responsive {
+        border-left: 0;
+        padding: 0;
+        margin: 0;
+    }
     .button-responsive .action-dropdown {
         left: 0;
-        top: 30px;
+        top: 26px;
     }
-    .dropdown-menu .dropdown-arrow {
-        left: 85px;
+    .toolbar .dropdown-menu .dropdown-arrow {
+        left: 87px;
     }
     .button-responsive {
         border-right: 0 !important;
@@ -144,96 +117,72 @@
         margin: 0 !important;
         display: block;
         clear: both;
+        border-left: 0;
     }
     .action-dropdown {
         right: 4px;
         top: 30px;
     }
+    .action-toggle {
+        margin-bottom: 0 !important;
+    }
 }
 
-@media (max-width: 765px) {
-    .search input {
-        width: 100% !important;
+@media (max-width: 650px) {
+    .toolbar.btn-none {
+        height: 34px !important;
+        margin: 2px 0 -4px;
     }
-    .toolbar {
-        height: auto;
-        border-bottom: 1px solid #DDD;
-    }
-    .toolbar .btn {
-        margin: 0 3px 3px;
+    .toolbar-search {
+        padding-right: 0 !important;
+        padding-bottom: 35px !important;
+        height: 75px;
     }
     .toolbar .search {
-        margin: 5px 3px -5px;
+        top: auto !important;
+        right: auto !important;
+        bottom: 3px;
+        left: -3px;
     }
-    .toolbar .search input {
-        margin: 0;
-    }
-    .custom-buttons {
-        border-left: 0;
+    .chrome .toolbar .search {
+        top: auto !important;
     }
 }
 
 @media (max-width: 768px) {
-    .dropdown-menu .dropdown-arrow {
+    .toolbar .dropdown-menu .dropdown-arrow {
         color: #FFF;
-        right: 4px;
+        right: 6px;
         font-size: 25px;
         top: -20px;
     }
-    .search input {
-        min-width: 170px;
-    }
 }
 
-@media (min-width: 400px) and (max-width: 1110px) {
-    .search input {
-        width: 200px;
-    }
-}
-
-@media (min-width: 1190px) and (max-width:1198px) {
-    .toolbar .btn {
-        float: none;
-    }
-}
-
-@media (max-width: 1198px) {
+@media (max-width: 800px) {
     .toolbar {
-        width: 100%;
+        border-left: 0;
         padding-left: 0;
-        border: 0;
-        border-bottom: 1px solid #DDD;
+    }
+    .toolbar.btn-none {
+        height: 34px !important;
     }
 }
 
 
-/* RTL TOOLBAR */
+/* RTL TOOLBAR */
 
 .rtl .toolbar {
     border-left: 0;
     border-right: 1px solid #DDD;
-    padding: 5px 10px 5px 0;
+    padding: 4px 10px;
 }
 
-.rtl .toolbar .btn {
-    float: right;
+.rtl .toolbar-search {
+    padding-left: 245px !important;
+    padding-right: 10px !important;
 }
 
-.rtl .custom-buttons {
-    display: inline-block;
-    border-left: 0;
-    border-right: 1px solid #DDD;
-    padding: 6px 12px 3px 0;
-}
-
-.rtl .btn-reset,
-.rtl .btn-reset:hover {
-    margin-left: 0 !important;
-    margin-right: -34px !important;
-}
-
-.rtl .input-group-btn {
-    position: absolute;
+.rtl .toolbar .search {
     left: 0;
 }
 
@@ -255,6 +204,34 @@
     border-top-right-radius: 0 !important;
     -webkit-border-bottom-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+}
+
+.rtl .toolbar-search .search .input-group-btn {
+    right: auto !important;
+    left: -220px;
+}
+
+.rtl .toolbar-search-adv .search .input-group-btn {
+    right: auto !important;
+    left: -190px;
+}
+
+.rtl .custom-buttons {
+    display: inline-block;
+    border-left: 0;
+    border-right: 1px solid #DDD;
+    padding: 4px 12px 0 0;
+}
+
+.rtl .btn-reset,
+.rtl .btn-reset:hover {
+    margin-left: 0 !important;
+    margin-right: -34px !important;
+}
+
+.rtl .input-group-btn {
+    position: absolute;
+    left: 0;
 }
 
 .rtl .action-dropdown {
@@ -290,16 +267,12 @@
     padding: 5px 9px 4px;
 }
 
-.rtl .search input {
-    margin-right: 10px;
-}
-
 @media (min-width: 320px) and (max-width: 480px) {
     .rtl .search {
         margin-right: 4px;
     }
     .rtl .search input {
-        margin-right: 0;
+        margin-right: -6px;
     }
     .rtl .action-dropdown {
         right: 4px;
@@ -311,7 +284,7 @@
         top: -18px;
     }
     .rtl .toolbar .action-dropdown .dropdown-arrow {
-        left: 53px;
+        left: 53px !important;
     }
     .rtl .button-responsive {
         border-right: 0 !important;
@@ -331,13 +304,6 @@
     .rtl .action-dropdown {
         right: 4px;
         top: 30px;
-    }
-}
-
-@media(max-width: 585px) {
-    .rtl .toolbar {
-        border-right: 0;
-        padding-right: 0;
     }
 }
 
@@ -361,38 +327,74 @@
     }
 }
 
-@media (max-width: 768px) {
-    .rtl .search {
-        margin-right: 5px !important;
+@media (max-width: 480px) {
+    .rtl .button-responsive .action-dropdown {
+        right: 0;
+        left: auto !important;
     }
-}
-
-@media (max-width:1170px) {
-    .rtl .toolbar {
-        border: 0;
-        padding-right: 0;
+    .rtl .toolbar .dropdown-menu .dropdown-arrow {
+        right: 87px;
+        left: auto !important;
     }
-}
-
-@media (max-width:1194px) {
-    .rtl .toolbar {
+    .rtl .button-responsive {
         border-right: 0 !important;
-        padding-right: 0;
-        border-bottom: 1px solid #DDD;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block;
+        clear: both;
+        border-left: 0;
+    }
+    .rtl .action-dropdown {
+        right: auto !important;
+        left: 4px;
+    }
+    .rtl .action-toggle {
+        margin-bottom: 0 !important;
     }
 }
 
-@media (max-width:1196px) {
+@media (max-width: 650px) {
+    .rtl .toolbar-search {
+        padding-left: 0 !important;
+        padding-bottom: 35px !important;
+        height: 75px;
+    }
+    .rtl .toolbar .search {
+        top: auto !important;
+        left: auto !important;
+        bottom: 33px;
+        right: 4px !important;
+    }
+    .rtl .chrome .toolbar .search {
+        top: auto !important;
+    }
+    .rtl .toolbar.btn-none {
+        height: auto !important;
+        margin: 2px 0 -2px;
+        display: block;
+        width: 100%;
+        clear: both;
+    }
+    .rtl .toolbar-search {
+        padding-right: 0 !important;
+        padding-bottom: 35px !important;
+        height: 75px;
+    }
+}
+
+@media (max-width: 800px) {
     .rtl .toolbar {
         border-right: 0;
-        padding-right: 0;
+        padding-right: 0 !important;
     }
 }
 
-@media (max-width: 1198px) {
-    .rtl .toolbar {
-        border-right: 0 !important;
-        padding: 5px 0 5px 10px !important;
+@media (max-width: 768px) {
+    .rtl .toolbar .dropdown-menu .dropdown-arrow {
+        color: #FFF;
+        right: 6px;
+        font-size: 25px;
+        top: -20px;
     }
 }
 

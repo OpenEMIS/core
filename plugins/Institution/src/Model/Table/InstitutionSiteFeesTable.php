@@ -32,6 +32,7 @@ class InstitutionSiteFeesTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteFeeTypes', ['className' => 'Institution.InstitutionSiteFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -78,6 +79,7 @@ class InstitutionSiteFeesTable extends AppTable {
 				return $Fees->find()->where(['institution_site_id'=>$institutionId, 'academic_period_id'=>$id])->count();
 			}
 		]);
+
 		$this->controller->set('selectedOption', $selectedOption);
 		$this->controller->set(compact('academicPeriodOptions'));
 
@@ -170,8 +172,7 @@ class InstitutionSiteFeesTable extends AppTable {
     	}
 		$this->fields['fee_types']['exists'] = $exists;
 
- 		
-		$this->fields['academic_period_id']['attr']['value'] = $this->_academicPeriodOptions[$entity->academic_period_id];
+		$this->fields['academic_period_id']['attr']['value'] = $this->AcademicPeriods->get($entity->academic_period_id)->name;
 		$this->fields['education_grade_id']['attr']['value'] = $this->_gradeOptions[$entity->education_grade_id];
 
 	}
@@ -186,21 +187,6 @@ class InstitutionSiteFeesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id'
 		]);
-
-		$this->advancedSelectOptions($this->_academicPeriodOptions, $this->_selectedAcademicPeriodId);
-		$this->fields['academic_period_id']['options'] = $this->_academicPeriodOptions;
-
-		// find the grades that already has fees
-		$existedGrades = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
-							->where([
-								$this->aliasField('institution_site_id') => $this->institutionId,
-								$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId
-							])
-							->toArray();
-		// remove the existed grades from the options
-		$gradeOptions = array_diff_key($this->_gradeOptions, $existedGrades);
-		$this->fields['education_grade_id']['options'] = $gradeOptions;
-
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -236,18 +222,22 @@ class InstitutionSiteFeesTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		$this->_academicPeriodOptions = $this->AcademicPeriods->getAvailableAcademicPeriods(true);
+
+		$this->_academicPeriodOptions = $this->AcademicPeriods->getList();
+		if ($this->_selectedAcademicPeriodId == 0) {
+			$this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+		}
+		$this->advancedSelectOptions($this->_academicPeriodOptions, $this->_selectedAcademicPeriodId);
 		$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $this->_academicPeriodOptions);
 		$attr['options'] = $this->_academicPeriodOptions;
 		return $attr;
 	}
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request) {
-		if ($this->_selectedAcademicPeriodId ==0) {
-			$this->_academicPeriodOptions = $this->AcademicPeriods->getAvailableAcademicPeriods(true);
-			$this->_selectedAcademicPeriodId = $this->postString('academic_period_id', $this->_academicPeriodOptions);
+		if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
+			$this->request->data[$this->alias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
- 		
+		$this->_selectedAcademicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
 		$this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$attr['options'] = $this->_gradeOptions;
 		return $attr;

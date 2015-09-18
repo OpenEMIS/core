@@ -365,6 +365,24 @@ class StudentAdmissionTable extends AppTable {
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
 
+				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+
+				$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
+				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $entity->student_id, 
+					'status' => self::NEW_REQUEST,
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				// Reject all other new pending admission / transfer application entry of the 
+				// same student for the same academic period
+				$this->updateAll(
+					['status' => self::REJECTED],
+					[$conditions]
+				);
+
 				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;

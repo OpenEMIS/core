@@ -1,8 +1,9 @@
 /* SPLITTER JS v.1.0.0 */
 $(document).ready(function() {
 	/* jqx starts here */
+});
 
-
+function initNavigation() {
 	/*$('#jqxButton').hide();*/
 	var isRTL = ($('.rtl #main-splitter').length > 0)? true: false;
 	var rtlClassName = (isRTL)? ".rtl ": "";
@@ -36,7 +37,7 @@ $(document).ready(function() {
 
 	/*on first load*/
 	loadNavToggle(isRTL);
-});
+}
 
 function checkNavToggle(isRTL) {
 	var rtlClassName = (isRTL)? ".rtl ": "";
