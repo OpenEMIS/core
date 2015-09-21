@@ -1,7 +1,11 @@
 <?php ?>
 
 <div class="input clearfix">
+	<?php if ($this->ControllerAction->locale() == 'ar'): ?>
+	<label class="pull-right" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
+	<?php else: ?>
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
+	<?php endif; ?>
 	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
@@ -15,7 +19,14 @@
 				<?php 
 				$startingSectionNumber = $attr['data']['startingSectionNumber'];
 				for ($i=0; $i<$attr['data']['numberOfSections']; $i++) :
-					$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+					/**
+					 * In case in the future, a specific arabic locale such as "ar_JO" or "ar_SA" is being used.
+					 */
+					if ($this->ControllerAction->locale() == 'ar' || substr_count($this->ControllerAction->locale(), 'ar_') > 0) {
+						$letter = $this->Label->getArabicLetter($startingSectionNumber);
+					} else {
+						$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+					}
 					$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
 				?>
 				<tr>
