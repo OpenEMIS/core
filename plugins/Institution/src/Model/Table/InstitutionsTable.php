@@ -90,6 +90,26 @@ class InstitutionsTable extends AppTable  {
 
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		switch ($action) {
+			case 'index':
+				$toolbarButtons['import'] = $toolbarButtons['add'];
+				$toolbarButtons['import']['url']['action'] = 'Import';
+				$toolbarButtons['import']['attr']['title'] = 'Import';
+				$toolbarButtons['import']['label'] = '<i class="fa kd-upload"></i>';
+				break;
+		}
+	}
+
 	public function onExcelGenerate(Event $event, $writer, $settings) {
 		// pr($settings);
 		// $generate = function() { pr('dsa'); };

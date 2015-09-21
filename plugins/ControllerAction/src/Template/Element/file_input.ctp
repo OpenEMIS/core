@@ -5,10 +5,21 @@ if (isset($attr['null']) && empty($attr['null'])) {
 } else {
 	$required = '';
 }
+if (isset($attr['label'])){
+	if (!empty($attr['label'])) {
+		$label = __($attr['label']);
+	} else {
+		$label = false;
+	}
+} else {
+	$label = __('File');
+}
 ?>
 
 <div class="input file <?= $required ?>">
-	<label><?= __('File') ?></label>
+	<?php if ($label): ?>
+	<label><?= $label ?></label>
+	<?php endif; ?>
 
 	<div class="fileinput fileinput-new input-group" data-provides="fileinput">
 		<div class="form-control" data-trigger="fileinput">
