@@ -131,7 +131,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
-		$this->_selectedAcademicPeriodId = $this->request->query['academic_period_id'];
+		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $this->_academicPeriodOptions);
 	}
 
 
