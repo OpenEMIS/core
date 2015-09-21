@@ -123,8 +123,18 @@ class StaffTable extends AppTable {
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 		$selectedPosition = $this->queryString('position', $positionOptions);
 
+		$Staff = $this;
+
 		// Advanced Select Options
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->findByInstitutionSiteId($institutionId)
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);

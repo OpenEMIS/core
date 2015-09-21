@@ -60,8 +60,18 @@ class StaffBehavioursTable extends AppTable {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 
+		$Staff = TableRegistry::get('Institution.Staff');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->findByInstitutionSiteId($institutionId)
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 
 		if (!empty($selectedPeriod)) {
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
