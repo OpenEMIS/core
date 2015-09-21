@@ -10,7 +10,7 @@ echo $this->Html->css('OpenEmis.../plugins/scrolltabs/css/scrolltabs.css');
 
 echo $this->Html->css('highchart-override');
 
-echo $this->Html->css('OpenEmis.master');
+echo $this->Html->css('OpenEmis.master.min');
 echo $this->Html->css('OpenEmis.kordit/kordit');
 if (isset($theme)) {
 	echo $this->Html->css($theme);
