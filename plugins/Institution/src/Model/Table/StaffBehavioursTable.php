@@ -82,6 +82,17 @@ class StaffBehavioursTable extends AppTable {
 		// will need to check for search by name: AdvancedNameSearchBehavior
 	}
 
+	public function addBeforeAction(Event $event) {
+		if(!empty($this->request->data[$this->alias()]['academic_period_id'])) {
+			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
+			$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
+			$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
+		}
+		$this->ControllerAction->field('date_of_behaviour');
+	}
+
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
@@ -100,6 +111,17 @@ class StaffBehavioursTable extends AppTable {
 			$attr['visible'] = false;
 		}
 		return $attr;
+	}
+
+	public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, $request) {
+		if(!empty($request->data[$this->alias()]['academic_period_id'])) {
+			$startDate = $request->data[$this->alias()]['academic_start_date'];
+			$endDate = $request->data[$this->alias()]['academic_end_date'];
+			$attr['value'] = $startDate->format('d-m-Y');
+			$attr['default_date'] = false;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
