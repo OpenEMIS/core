@@ -391,6 +391,10 @@ class InstitutionSiteSectionsTable extends AppTable {
 		    	$_data = $this->request->data[$this->alias()];
 				$this->_selectedEducationGradeId = $_data['education_grade'];
 				$this->_numberOfSections = $_data['number_of_sections'];
+				/**
+				 * PHPOE-2090, check if selected academic_period_id changes
+				 */
+				$this->_selectedAcademicPeriodId = $_data['academic_period_id'];
 			}
 
 			/**
@@ -443,6 +447,13 @@ class InstitutionSiteSectionsTable extends AppTable {
 			]);
 
     	} else {
+			/**
+			 * PHPOE-2090, check if selected academic_period_id changes
+			 */
+	    	if (array_key_exists($this->alias(), $this->request->data)) {
+		    	$_data = $this->request->data[$this->alias()];
+				$this->_selectedAcademicPeriodId = $_data['academic_period_id'];
+			}
 
 			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId, false);
 			$this->ControllerAction->field('multi_grade_field', [
@@ -479,53 +490,61 @@ class InstitutionSiteSectionsTable extends AppTable {
 		if ($this->_selectedGradeType == 'single') {
 			$process = function ($model, $entity) use ($data) {
 				$commonData = $data['InstitutionSiteSections'];
-				foreach($data['MultiClasses'] as $key => $row) {
-					$data['MultiClasses'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
-					$data['MultiClasses'][$key]['institution_site_id'] = $commonData['institution_site_id'];
-					$data['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
-					$data['MultiClasses'][$key]['institution_site_section_grades'][0] = [
-							'education_grade_id' => $commonData['education_grade'],
-							'status' => 1
-						];
-				}
-				$classes = $model->newEntities($data['MultiClasses']);
-				$error = false;
-				foreach ($classes as $key=>$class) {
-				    if ($class->errors()) {
-				    	$error = $class->errors();
-				    	$data['MultiClasses'][$key]['errors'] = $error;
-				    }
-				}
 				/**
-				 * attempt to prevent memory leak
+				 * PHPOE-2090, check if grade is empty as it is mandatory
 				 */
-				unset($key);
-				unset($class);
-				if (!$error) {
-					foreach ($classes as $class) {
-						$model->save($class);
-				    }
-					unset($class);
-					return true;
-				} else {
-					$errorMessage='';
-					foreach ($error as $key=>$value) {
-						$errorMessage .= Inflector::classify($key);
+				if (!empty($commonData['education_grade'])) {
+					foreach($data['MultiClasses'] as $key => $row) {
+						$data['MultiClasses'][$key]['institution_site_shift_id'] = $commonData['institution_site_shift_id'];
+						$data['MultiClasses'][$key]['institution_site_id'] = $commonData['institution_site_id'];
+						$data['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
+						$data['MultiClasses'][$key]['institution_site_section_grades'][0] = [
+								'education_grade_id' => $commonData['education_grade'],
+								'status' => 1
+							];
 					}
-					unset($value);
-					$model->log($error, 'debug');
+					$classes = $model->newEntities($data['MultiClasses']);
+					$error = false;
+					foreach ($classes as $key=>$class) {
+					    if ($class->errors()) {
+					    	$error = $class->errors();
+					    	$data['MultiClasses'][$key]['errors'] = $error;
+					    }
+					}
 					/**
-					 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
+					 * attempt to prevent memory leak
 					 */
-					foreach ($model->fields as $value) {
-						if ($value['field'] != 'name') {
-							$model->validator()->remove($value['field']);
+					unset($key);
+					unset($class);
+					if (!$error) {
+						foreach ($classes as $class) {
+							$model->save($class);
+					    }
+						unset($class);
+						return true;
+					} else {
+						$errorMessage='';
+						foreach ($error as $key=>$value) {
+							$errorMessage .= Inflector::classify($key);
 						}
+						unset($value);
+						$model->log($error, 'debug');
+						/**
+						 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
+						 */
+						foreach ($model->fields as $value) {
+							if ($value['field'] != 'name') {
+								$model->validator()->remove($value['field']);
+							}
+						}
+						unset($value);
+						$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
+						$model->fields['single_grade_field']['data']['sections'] = $classes;
+						$model->request->data['MultiClasses'] = $data['MultiClasses'];
+						return false;
 					}
-					unset($value);
-					$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
-					$model->fields['single_grade_field']['data']['sections'] = $classes;
-					$model->request->data['MultiClasses'] = $data['MultiClasses'];
+				} else {
+					$model->Alert->error('Institution.'.$model->alias().'.noGrade');
 					return false;
 				}
 			};
