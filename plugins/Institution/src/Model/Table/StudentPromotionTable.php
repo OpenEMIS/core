@@ -383,7 +383,8 @@ class StudentPromotionTable extends AppTable {
 								'institution_id' => $obj['institution_id'],
 								'student_id' => $obj['student_id'],
 								'academic_period_id' => $academicPeriodId,
-								'education_grade_id' => $educationGradeId
+								'education_grade_id' => $educationGradeId,
+								'student_status_id' => $currentStatusId,
 							]);
 
 							if (isset($obj['education_grade_id'])) {
@@ -392,7 +393,9 @@ class StudentPromotionTable extends AppTable {
 									->where([
 										$this->aliasField('student_id') => $obj['student_id'],
 										$this->aliasField('education_grade_id') => $obj['education_grade_id'],
-										$this->aliasField('academic_period_id') => $obj['academic_period_id']
+										$this->aliasField('academic_period_id') => $obj['academic_period_id'],
+										$this->aliasField('institution_id') => $obj['institution_id'],
+										$this->aliasField('student_status_id') => $currentStatusId,
 									])
 									->count();
 								if ($count == 0) {

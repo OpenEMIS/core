@@ -130,6 +130,13 @@ class StudentsTable extends AppTable {
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
 
+		//find out current academic period and store it in session
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
+		if(!empty($AcademicPeriod)) {
+			$session = $this->request->session();
+			$session->write('Student.AcademicPeriod.Current.id', $AcademicPeriod);
+		}
+
 		$this->ControllerAction->field('institution', ['order' => 50]);
 		$this->ControllerAction->field('status', ['order' => 51, 'sort' => false]);
 	}
@@ -161,11 +168,21 @@ class StudentsTable extends AppTable {
 
 	public function onGetInstitution(Event $event, Entity $entity) {
 		$userId = $entity->id;
+
+		$session = $this->request->session();
+		$currentAcademicPeriod = $session->read('Student.AcademicPeriod.Current.id');
+
+		$selectedStudentStatusId = 1; //Related to task PHPOE-1872
+
 		$query = $this->InstitutionStudent->find()
-		->contain(['Institutions', 'StudentStatuses'])
-		->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
-		->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
-		;
+						 ->contain(['Institutions'])
+						 ->matching('StudentStatuses', function ($q) use ($selectedStudentStatusId) {
+						    return $q->where(['StudentStatuses.id' => $selectedStudentStatusId]);
+						 })	
+						 ->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
+						 ->andWhere([$this->InstitutionStudent->aliasField('academic_period_id') => $currentAcademicPeriod])
+						 ->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
+						 ;	
 
 		$value = '';
 		if ($query->count() > 0) {
@@ -178,7 +195,7 @@ class StudentsTable extends AppTable {
 				$institutionArr[$obj->institution->id] = $obj->institution->name;
 			}
 			$value = implode('<BR>', $institutionArr);
-			$studentStatus = $query->first()->student_status;
+			$studentStatus = $query->first()->_matchingData['StudentStatuses'];
 			$entity->student_status = $studentStatus->name;
 			$entity->status_code = $studentStatus->code;
 		}
