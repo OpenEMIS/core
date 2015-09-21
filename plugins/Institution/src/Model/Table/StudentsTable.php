@@ -861,28 +861,20 @@ class StudentsTable extends AppTable {
 				$id = $this->request->pass[1];
 				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 				$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
-
+				$studentData = $this->get($id);
 				// Check if the student is enrolled
-				if ($this->get($id)->student_status_id == $enrolledStatus) {
+				if ($studentData->student_status_id == $enrolledStatus) {
 
 					$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
 					$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
 					$NEW = 0;
-
-					// Check if the student exist in the dropdown table
-					$selectedStudent = $this->find()
-						->select(['institution_student_dropout_id' => 'StudentDropout.id'])
-						->where([$this->aliasField('id')=>$id])
-						->innerJoin(['StudentDropout' => 'institution_student_dropout'], [
-								'StudentDropout.student_id = '.$this->aliasField('student_id'),
-								'StudentDropout.institution_id = '.$this->aliasField('institution_id'),
-								'StudentDropout.education_grade_id = '.$this->aliasField('education_grade_id'),
-								'StudentDropout.academic_period_id = '.$this->aliasField('academic_period_id'),
-								'StudentDropout.status' => $NEW
-							])
-						->innerJoin(['StudentStatuses' => 'student_statuses'],[
-								'StudentStatuses.id ='.$this->aliasField('student_status_id'),
-								'StudentStatuses.id =' => $enrolledStatus
+					
+					$selectedStudent = $DropoutRequests->find()
+						->select(['institution_student_dropout_id' => 'id'])
+						->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
+								$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
+								$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
+								$DropoutRequests->aliasField('status') => $NEW
 							])
 						->first();
 
