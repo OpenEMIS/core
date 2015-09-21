@@ -388,8 +388,10 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
-		$buttons[0]['attr']['value'] = 'new';
+		if ($this->action == 'add') {
+			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+			$buttons[0]['attr']['value'] = 'new';
+		}
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
