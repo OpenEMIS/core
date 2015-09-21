@@ -14,6 +14,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Inflector;
 
+
 class StaffTable extends AppTable {
 	use OptionsTrait;
 
@@ -65,6 +66,9 @@ class StaffTable extends AppTable {
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
+			])
+			->add('FTE', 'ruleCheckFTE', [
+				'rule' => ['checkFTE'],
 			])
 		;
 	}
@@ -166,6 +170,53 @@ class StaffTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+		if (array_key_exists('FTE', $data[$alias])) {
+			$newFTE = $data[$alias]['FTE'];
+			$newEndDate = $data[$alias]['end_date'];
+
+			if ($newFTE != $entity->FTE) {
+				$data[$alias]['FTE'] = $entity->FTE;
+				$entity->newFTE = $newFTE;
+
+				if (empty($newEndDate)) {
+					$data[$alias]['end_date'] = date('Y-m-d');
+				}
+			}
+		}
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew()) { // edit operation
+			if ($entity->has('newFTE')) {
+				unset($entity->id);
+				$entity->FTE = $entity->newFTE;
+				$entity->start_date = $entity->end_date;
+				if ($entity->start_date instanceof Date) {
+					$entity->start_date->modify('+1 days');
+				} else {
+					$entity->start_date = date('Y-m-d', strtotime($entity->start_date . ' +1 day'));
+				}
+				$entity->end_date = null;
+				$entity->end_year = null;
+				unset($entity->staff_type);
+				unset($entity->staff_status);
+				unset($entity->position);
+				unset($entity->user);
+				
+				$newEntity = $this->newEntity($entity->toArray());
+				if (!$this->save($newEntity)) {
+					pr($newEntity->errors());die;
+				}
+			}
+		}
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+		
 	}
 
 	private function setupTabElements($entity) {
@@ -383,11 +434,21 @@ class StaffTable extends AppTable {
 			'order' => 11,
 			'attr' => ['value' => $entity->position->name]
 		]);
-		$this->ControllerAction->field('FTE', [
-			'type' => 'select', 
-			'order' => 12,
-			'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
-		]);
+
+		if (empty($entity->end_date)) {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'select', 
+				'order' => 12,
+				'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
+			]);
+		} else {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'readonly', 
+				'order' => 12, 
+				'attr' => ['value' => $entity->FTE]
+			]);
+		}
+		
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -396,28 +457,82 @@ class StaffTable extends AppTable {
 		$institutionId = $entity->institution_site_id;
 		$securityUserId = $entity->security_user_id;
 
-		// sets the staff_id in institution_site_sections to 0 if the staff was allocated to it
-		// todobug: possible problem as it will set all the sections to 0, including previous period sections
+		
+		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
+		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
+			
+
 		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$InstitutionSiteSections->updateAll(
-				['security_user_id' => 0],
+		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
+		$sectionsInPosition = $InstitutionSiteSections->find()
+			->where(
 				['security_user_id' => $securityUserId, 'institution_site_id' => $institutionId]
+			)
+			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+				$overlapDateCondition = [];
+				if (empty($endDate)) {
+					$overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+				} else {
+					$overlapDateCondition['OR'] = [];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+				}
+				return $q->where($overlapDateCondition);
+			})
+			;
+			
+		$sectionArray = [];
+		foreach ($sectionsInPosition as $key => $value) {
+			$sectionArray[] = $value->id;
+		}
+		if (!empty($sectionArray)) {
+			$InstitutionSiteSections->updateAll(
+				['security_user_id' => 0],
+				['id IN ' => $sectionArray]
 			);
+		}
 
 		// delete the staff from subjects		
-		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
-		$classStaffQuery = $InstitutionSiteClassStaff->find()
-			->contain('InstitutionSiteClasses')
-			->where(
-				[
-					'InstitutionSiteClasses.institution_site_id' => $institutionId, 
-					$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId
-				]
-			)
+		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+		$InstitutionSiteClasses = TableRegistry::get('Institution.InstitutionSiteClasses');	
+		$classesDuringStaffPeriod = $InstitutionSiteClasses->find()
+			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+				$overlapDateCondition = [];
+				if (empty($endDate)) {
+					$overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+				} else {
+					$overlapDateCondition['OR'] = [];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+				}
+				return $q->where($overlapDateCondition);
+			})
 			;
-		foreach ($classStaffQuery as $key => $value) {
-			$InstitutionSiteClassStaff->delete($value);
+		$classIdsDuringStaffPeriod = [];
+		foreach ($classesDuringStaffPeriod as $key => $value) {
+			$classIdsDuringStaffPeriod[] = $value->id;
 		}
+
+		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+
+		$targetData = $InstitutionSiteClassStaff->find()
+			->where([$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
+			;
+
+		$InstitutionSiteClassStaff->deleteAll([
+			$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		]);
+
+
+		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
+
+
+
+
 
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
