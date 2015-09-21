@@ -60,16 +60,20 @@ class AccountBehavior extends Behavior {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->_table->controller->getUserTabElements(['userRole' => Inflector::singularize($this->userRole)]);
+		$id = !is_null($this->_table->request->query('id')) ? $this->_table->request->query('id') : 0;
+
+		$options = [
+			'userRole' => Inflector::singularize($this->userRole),
+			'action' => $this->_table->action,
+			'id' => $id,
+			'userId' => $entity->id
+		];
+
+		$tabElements = $this->_table->controller->getUserTabElements($options);
 
 		if ($this->_table->action != 'add') {
-			$id = $this->_table->request->query['id'];
 			if ($this->isInstitution) {
-				$tabElements[$this->userRole]['url'] = array_merge($tabElements[$this->userRole]['url'], [$id]);
-				foreach ($tabElements as $key => $value) {
-					if ($key == $this->userRole) continue;
-					$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
-				}
+				// url of tabElements is build in Institution->getUserTabElements()
 			} else {
 				foreach ($tabElements as $key => $value) {
 					end($tabElements[$key]['url']);
