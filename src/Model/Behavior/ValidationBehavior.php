@@ -401,13 +401,18 @@ class ValidationBehavior extends Behavior {
 	}
 
 	// To allow case sensitive entry
-	public static function checkUniqueEnglishField($check) {
-		$englishField = trim($check);
-		$Translation = TableRegistry::get('Localization.Translations');
-      	$count = $Translation->find()
-      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
-      		->count();
-        return $count==0;
+	public static function checkUniqueEnglishField($check, array $globalData) {
+		// Only edit update fields will have the id field populated with the id to update
+		if(empty($globalData['data']['id'])) {
+			$englishField = trim($check);
+			$Translation = TableRegistry::get('Localization.Translations');
+	      	$count = $Translation->find()
+	      		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+	      		->count();
+	        return $count==0;
+   		} else {
+   			return true;
+   		}
     }
 
 	public static function inAcademicPeriod($field, $academicFieldName, $globalData) {
