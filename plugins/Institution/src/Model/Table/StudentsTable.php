@@ -126,6 +126,9 @@ class StudentsTable extends AppTable {
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'TransferRequests']);
 				break;
+			case $status['PENDING_DROPOUT']:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentDropout']);
 		}
 	}
 
@@ -853,6 +856,59 @@ class StudentsTable extends AppTable {
 					];
 					$toolbarButtons['transfer'] = $transferButton;
 				} 
+			}
+
+			if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
+				// Institution student id
+				$id = $this->request->pass[1];
+				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
+				$studentData = $this->get($id);
+				// Check if the student is enrolled
+				if ($studentData->student_status_id == $enrolledStatus) {
+
+					$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
+					$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
+					$NEW = 0;
+					
+					$selectedStudent = $DropoutRequests->find()
+						->select(['institution_student_dropout_id' => 'id'])
+						->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
+								$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
+								$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
+								$DropoutRequests->aliasField('status') => $NEW
+							])
+						->first();
+
+					// Dropout button
+					$dropoutButton = $buttons['back'];
+					$dropoutButton['type'] = 'button';
+					$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
+					$dropoutButton['attr'] = $attr;
+					$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+					$dropoutButton['attr']['title'] = __('Dropout');
+
+					// If this is a new application
+					if (count($selectedStudent) == 0) {
+						$dropoutButton['url'] = [
+								'plugin' => $buttons['back']['url']['plugin'],
+								'controller' => $buttons['back']['url']['controller'],
+								'action' => 'DropoutRequests',
+								'add'
+							];
+					} 
+					// If the application is not new
+					else {
+						$dropoutButton['url'] = [
+								'plugin' => $buttons['back']['url']['plugin'],
+								'controller' => $buttons['back']['url']['controller'],
+								'action' => 'DropoutRequests',
+								'edit',
+								$selectedStudent->institution_student_dropout_id
+							];
+					}
+					$toolbarButtons['dropout'] = $dropoutButton;
+				}
 			}
 		}
 	}
