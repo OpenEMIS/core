@@ -1,4 +1,4 @@
-/* GENERAL STYLE v.1.0.0 */
+/* GENERAL STYLE v.1.0.2 */
 
 body,
 div {
@@ -11,7 +11,20 @@ body {
 }
 
 pre {
-    margin-top: 80px;
+    margin: 15px 10px;
+    position: relative;
+    z-index: 9999;
+    border: 1px solid #BBB;
+    color: #333;
+    background: #F9F9F9;
+}
+
+pre a {
+    color: #CC5C5C;
+}
+
+pre a:hover {
+    color: #f00;
 }
 
 body,
