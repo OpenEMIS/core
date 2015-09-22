@@ -215,7 +215,7 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 71]);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
 	}
 
