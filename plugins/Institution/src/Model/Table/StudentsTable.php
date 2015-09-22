@@ -829,11 +829,10 @@ class StudentsTable extends AppTable {
 		} else if ($action == 'view') { // for transfer button in view page
 			$statuses = $this->StudentStatuses->findCodeList();
 			$id = $this->request->params['pass'][1];
-			$studentId = $this->get($id)->student_id;
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			
+			$studentStatusId = $this->get($id)->student_status_id;			
+			$statuses = $this->StudentStatuses->findCodeList();
 			// Start PHPOE-1897
-			if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
+			if ($studentStatusId != $statuses['CURRENT']) {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
 				}
