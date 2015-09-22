@@ -38,7 +38,15 @@
 <body class='default'>
 
 	<?=  $this->element('OpenEmis.header'); ?>
-	<div id="main-splitter">
+
+	<?php
+	$baseUrl = $this->Url->build([
+		'plugin' => $this->request->params['plugin'],
+		'controller' => $this->request->params['controller'],
+		'action' => 'setJqxSpliterSize'
+	]);
+	?>
+	<div id="main-splitter" url="<?= $baseUrl ?>">
 		<div class="left-pane" style="<?= $SystemLayout_leftPanel; ?>">
 			<?php 
         		if($htmlLangDir != 'rtl'){

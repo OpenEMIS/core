@@ -113,9 +113,10 @@ function storePanelsState(refObject) {
     };
 
     //post panel width size to server 
+    var url = $('#main-splitter').attr('url');
     $.ajax({
             method: "POST",
-            url: "App/setJqxSpliterSize",
+            url: url,
             data: {
                 panelLeft: refObject[0].size,
                 panelRight: refObject[1].size,
