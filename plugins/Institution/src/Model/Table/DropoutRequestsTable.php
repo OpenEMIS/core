@@ -34,6 +34,29 @@ class DropoutRequestsTable extends AppTable {
     	return $this->controller->redirect($action);
 	}
 
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData) {
+		$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+
+		$conditions = [
+			'student_id' => $entity->student_id, 
+			'status' => self::NEW_REQUEST,
+			'type' => 2,
+			'education_grade_id' => $entity->education_grade_id,
+			'previous_institution_id' => $entity->institution_id
+		];
+
+		$count = $StudentAdmissionTable->find()
+			->where($conditions)
+			->count();
+
+		if ($count > 0) {
+			$process = function ($model, $entity) {
+				$this->Alert->error('StudentDropout.hasTransferApplication');
+			};
+			return $process;
+		}
+	}
+
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$id = $this->Session->read($this->registryAlias().'.id');
     	$action = $this->ControllerAction->url('edit');

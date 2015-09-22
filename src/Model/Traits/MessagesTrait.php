@@ -322,6 +322,7 @@ trait MessagesTrait {
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
 			'enrolled' => 'This student has already been enrolled in an institution.',
+			'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 		],
 		'TransferApprovals' => [
 			'exists' => 'Student is already exists in the new school',
@@ -360,7 +361,8 @@ trait MessagesTrait {
 		'StudentDropout' => [
 			'exists' => 'Student has already dropped out from the school.',
 			'approve' => 'Dropout request has been approved successfully.',
-			'reject' => 'Dropout request has been rejected successfully.'
+			'reject' => 'Dropout request has been rejected successfully.',
+			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
 
 		// Validation Messages
