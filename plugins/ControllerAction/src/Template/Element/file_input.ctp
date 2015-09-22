@@ -8,8 +8,7 @@ if (isset($attr['null']) && empty($attr['null'])) {
 ?>
 
 <div class="input file <?= $required ?>">
-	<label><?= __('File') ?></label>
-
+	<label><?= !empty($attr['label']) ? $attr['label'] : __('File') ?></label>
 	<div class="fileinput fileinput-new input-group" data-provides="fileinput">
 		<div class="form-control" data-trigger="fileinput">
 			<i class="fa fa-file-o fileinput-exists"></i> 
