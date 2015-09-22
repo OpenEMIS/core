@@ -121,7 +121,7 @@ class ExcelBehavior extends Behavior {
 		// Event to get the sheets. If no sheet is specified, it will be by default one sheet
 		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets]);
 
-		if (empty((array)$sheets)) {
+		if (count($sheets->getArrayCopy())==0) {
 			$sheets[] = [
 				'name' => $this->_table->alias(),
 				'table' => $this->_table,
