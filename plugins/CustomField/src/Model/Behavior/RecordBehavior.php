@@ -113,6 +113,14 @@ class RecordBehavior extends Behavior {
 				if (strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
 				}
+
+				// Delete existing answer and reinsert
+				if (isset($obj['id'])) {
+					$this->CustomFieldValues->deleteAll([
+						'id' => $obj['id']
+					]);
+				}
+
 				$count++;
 			}
 
@@ -161,6 +169,13 @@ class RecordBehavior extends Behavior {
 
 				if (strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_table_cells'][$key]);
+				}
+
+				// Delete existing answer and reinsert
+				if (isset($obj['id'])) {
+					$this->CustomTableCells->deleteAll([
+						'id' => $obj['id']
+					]);
 				}
 			}
 		}
