@@ -119,17 +119,6 @@ class StudentsTable extends AppTable {
 			return $process;
 		}
 	}
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$status = $entity->student_status_id;
-		$studentStatuses = $this->StudentStatuses->findCodeList();
-		if ($status != $studentStatuses['CURRENT']) {
-			if (isset($buttons['remove'])) {
-				unset($buttons['remove']);
-			}
-		}
-		return $buttons;
-	}
 	// End PHPOE-2123
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -801,6 +790,14 @@ class StudentsTable extends AppTable {
 			if (isset($buttons['edit'])) {
 				unset($buttons['edit']);
 			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+
+		$status = $entity->student_status_id;
+		$studentStatuses = $this->StudentStatuses->findCodeList();
+		if ($status != $studentStatuses['CURRENT']) {
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
