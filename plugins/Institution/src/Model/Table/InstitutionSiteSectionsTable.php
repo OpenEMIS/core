@@ -746,7 +746,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		// $this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
 
-		// pr($data);die;
 		/**
 		 * In students.ctp, we set the student_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
@@ -769,7 +768,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
-		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -1058,9 +1056,13 @@ class InstitutionSiteSectionsTable extends AppTable {
 	
 	private function getNewSectionNumber() {
 		$sectionsByGrade = $this->InstitutionSiteSectionGrades
-			->find('list')
-			->where([$this->InstitutionSiteSectionGrades->aliasField('education_grade_id')=>$this->_selectedEducationGradeId])
-			->select(['institution_site_section_id'])
+			->find('list', [
+				'keyField'=>'id',
+				'valueField'=>'institution_site_section_id'
+			])
+			->where([
+				$this->InstitutionSiteSectionGrades->aliasField('education_grade_id') => $this->_selectedEducationGradeId
+			])
 			->toArray();
 		$data = $this->find('all')
 			->where([
