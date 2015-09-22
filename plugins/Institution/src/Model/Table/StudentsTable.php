@@ -64,7 +64,7 @@ class StudentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator
+		$validator
 			->add('start_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'end_date', false]
 			])
@@ -82,9 +82,16 @@ class StudentsTable extends AppTable {
 			->add('student_name', 'ruleStudentEnrolledInOthers', [
 				'rule' => ['checkEnrolledInOtherInstitution'],
 				'on' => 'create'
-			])
-		;
+			]);
+
+		return $validator;
 	}
+
+	public function validationAllowEmptyName(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator->remove('student_name');
+        return $validator;
+    }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -640,6 +647,7 @@ class StudentsTable extends AppTable {
 			} 
 			// End PHPOE-1916
 			else {
+			// pr('onAddNew');pr($data['Students']);pr($data[$this->alias()]);die;
 				$this->Session->write('Institution.Students.new', $data[$this->alias()]);
 				$event->stopPropagation();
 				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
