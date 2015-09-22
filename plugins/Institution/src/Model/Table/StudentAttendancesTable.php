@@ -505,26 +505,28 @@ class StudentAttendancesTable extends AppTable {
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->request->query('day') != -1) {
-    		if (!is_null($this->request->query('mode'))) {
-    			$toolbarButtons['back'] = $buttons['back'];
-				if ($toolbarButtons['back']['url']['mode']) {
-					unset($toolbarButtons['back']['url']['mode']);
+    	if ($this->AccessControl->check(['Institutions', 'StudentAttendances', 'indexEdit'])) {
+	    	if ($this->request->query('day') != -1) {
+	    		if (!is_null($this->request->query('mode'))) {
+	    			$toolbarButtons['back'] = $buttons['back'];
+					if ($toolbarButtons['back']['url']['mode']) {
+						unset($toolbarButtons['back']['url']['mode']);
+					}
+					$toolbarButtons['back']['type'] = 'button';
+					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+					$toolbarButtons['back']['attr'] = $attr;
+					$toolbarButtons['back']['attr']['title'] = __('Back');
+				} else {
+					$toolbarButtons['back'] = $buttons['back'];
+					$toolbarButtons['back']['type'] = null;
 				}
-				$toolbarButtons['back']['type'] = 'button';
-				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-				$toolbarButtons['back']['attr'] = $attr;
-				$toolbarButtons['back']['attr']['title'] = __('Back');
-			} else {
-				
-				$toolbarButtons['back'] = $buttons['back'];
-				$toolbarButtons['back']['type'] = null;
 			}
 		}
     }
 
 	public function indexEdit() {
 		if ($this->request->is(['post', 'put'])) {
+			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
@@ -532,6 +534,7 @@ class StudentAttendancesTable extends AppTable {
 			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
 					foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
+						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
 						if ($obj['absence_type'] == 'UNEXCUSED') {
 							$obj['student_absence_reason_id'] = 0;
 						}

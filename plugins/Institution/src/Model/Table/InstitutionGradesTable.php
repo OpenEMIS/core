@@ -281,52 +281,14 @@ class InstitutionGradesTable extends AppTable {
 		$data[$this->alias()]['programme'] = 0;
 	}
 
-	public function getConditionsByAcademicPeriodId($academicPeriodId=0, $conditions=[]) {
-		$modelConditions = [];
-		if($academicPeriodId > 0) {
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodObj = $AcademicPeriod->get($academicPeriodId);
-			$startDate = $AcademicPeriod->getDate($academicPeriodObj->start_date);
-			$endDate = $AcademicPeriod->getDate($academicPeriodObj->end_date);
-
-			$modelConditions['OR'] = array(
-				'OR' => array(
-					array(
-						'end_date IS NOT NULL',
-						'start_date <= "' . $startDate . '"',
-						'end_date >= "' . $startDate . '"'
-					),
-					array(
-						'end_date IS NOT NULL',
-						'start_date <= "' . $endDate . '"',
-						'end_date >= "' . $endDate . '"'
-					),
-					array(
-						'end_date IS NOT NULL',
-						'start_date >= "' . $startDate . '"',
-						'end_date <= "' . $endDate . '"'
-					)
-				),
-				array(
-					'end_date IS NULL',
-					'start_date <= "' . $endDate . '"'
-				)
-			);
-		}
-
-		$conditions = array_merge($conditions, $modelConditions);
-
-		return $conditions;
-	}
-	
 	public function getGradeOptions($institutionsId, $academicPeriodId, $listOnly=true) {
-		$conditions = array(
-			'InstitutionGrades.institution_site_id = ' . $institutionsId
-		);
-		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+		/**
+		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php
+		 */
 		$query = $this->find('all')
 					->contain(['EducationGrades'])
-					->where($conditions)
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					->where(['InstitutionGrades.institution_site_id = ' . $institutionsId])
 					->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
 		$data = $query->toArray();
 		if($listOnly) {
