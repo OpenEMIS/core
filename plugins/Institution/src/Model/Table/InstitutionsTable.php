@@ -47,7 +47,6 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences', 'dependent' => true]);
 
 		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'foreignKey' => 'institution_id']);
-		$this->hasMany('StudentsAbstract', 					['className' => 'Institution.StudentsAbstract', 'dependent' => true, 'foreignKey' => 'institution_id']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
