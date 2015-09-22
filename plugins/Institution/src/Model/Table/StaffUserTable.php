@@ -27,7 +27,7 @@ class StaffUserTable extends UserTable {
 			$institutionId = $positionData['institution_site_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
-			if ($Staff->save($Staff->newEntity($positionData))) {
+			if ($Staff->save($Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']))) {
 				if ($role > 0) {
 					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
 					$obj = [

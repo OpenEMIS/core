@@ -73,6 +73,12 @@ class StaffTable extends AppTable {
 		;
 	}
 
+	public function validationAllowEmptyName(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+        $validator->remove('staff_name');
+        return $validator;
+	}
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
