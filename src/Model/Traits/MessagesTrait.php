@@ -424,6 +424,7 @@ trait MessagesTrait {
 				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
 				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
+				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.'
 			],
 			'InstitutionSiteStaff' => [
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
