@@ -28,7 +28,8 @@
 						'options' => $sectionOptions,
 						'default' => $selectedSection,
 						'url' => $baseUrl,
-						'data-named-key' => 'section'
+						'data-named-key' => 'section',
+						'data-named-group' => 'template'
 					));
 				}
 			?>
