@@ -1,7 +1,10 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Table;
+use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Cache\Cache;
 use Cake\Event\Event;
@@ -89,5 +92,21 @@ class LabelsTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->where(['visible' => 1]);
+	}
+
+	public function getDefaultConfig(){
+		return $this->defaultConfig;
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->add('code', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			;
+		return $validator;
 	}
 }
