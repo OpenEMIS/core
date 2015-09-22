@@ -50,6 +50,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
 			],
+			'deleteTransfer' =>[
+				'restrictDelete' => 'The transfer cannot be performed as there is no options to transfer to.'
+			],
 			'view' => [
 				'label' => 'View',
 			],
@@ -63,7 +66,7 @@ trait MessagesTrait {
 			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
-			'notSelected' => 'No Record has been selected/saved.',
+			'notSelected' => 'No Record has been selected / saved.',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
@@ -191,7 +194,9 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
-			]
+			],
+			'section' => 'Class',
+			'noAccess' => 'You do not have access to this Class.'
 		],
 		'InstitutionRubricAnswers' => [
 			'rubric_template' => 'Rubric Template',
@@ -205,6 +210,13 @@ trait MessagesTrait {
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
+			]
+		],
+		'StudentSurveys' => [
+			'noSurveys' => 'No Surveys',
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
 			]
 		],
 		'password'=> [
@@ -266,7 +278,8 @@ trait MessagesTrait {
 		],
 		'SurveyForms' => [
 			'add_question' => 'Add Question',
-			'add_to_section' => 'Add to Section'
+			'add_to_section' => 'Add to Section',
+			'notSupport' => 'Not supported in this form.'
 		],
 		'time' => [
 			'start' => 'Start Time',
@@ -308,6 +321,8 @@ trait MessagesTrait {
 		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
+			'enrolled' => 'This student has already been enrolled in an institution.',
+			'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 		],
 		'TransferApprovals' => [
 			'exists' => 'Student is already exists in the new school',
@@ -324,6 +339,13 @@ trait MessagesTrait {
 			'success' => 'Students have been promoted.',
 			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
 		],
+		'StudentTransfer' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noInstitutions' => 'No Available Institutions',
+			'noData' => 'There are no available Students for Transfer.',
+			'success' => 'Students have been transferred.'
+		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
 		],
@@ -332,6 +354,15 @@ trait MessagesTrait {
 			'existsInRecord' => 'Student has already been added to admission list',
 			'approve' => 'Student admission has been approved successfully.',
 			'reject' => 'Student admission has been rejected successfully.'
+		],
+		'DropoutRequests' => [
+			'request' => 'Dropout request hsa been submitted successfully.',
+		],
+		'StudentDropout' => [
+			'exists' => 'Student has already dropped out from the school.',
+			'approve' => 'Dropout request has been approved successfully.',
+			'reject' => 'Dropout request has been rejected successfully.',
+			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
 
 		// Validation Messages
@@ -427,12 +458,16 @@ trait MessagesTrait {
 			],
 			'Students' => [
 				'student_name' => [
-					'ruleInstitutionStudentId' => 'Student has already been added.'
+					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				]
 			],
 			'Staff' => [
 				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
+				],
+				'FTE' => [
+					'ruleCheckFTE' => 'No available FTE.'
 				]
 			]
 		],

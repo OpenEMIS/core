@@ -15,7 +15,8 @@ class EducationNextProgrammesTable extends AppTable {
 			'joinTable' => 'education_programmes_next_programmes',
 			'foreignKey' => 'next_programme_id',
 			'targetForeignKey' => 'education_programme_id',
-			'through' => 'Education.EducationProgrammesNextProgrammes'
+			'through' => 'Education.EducationProgrammesNextProgrammes',
+			'dependent' => false
 		]);
 	}
 }
