@@ -189,7 +189,7 @@ class StaffTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 100]);
-		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 101]);
 		$this->ControllerAction->field('is_staff', ['value' => 1]);
 	}
 

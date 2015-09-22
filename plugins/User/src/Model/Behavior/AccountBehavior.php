@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 
 class AccountBehavior extends Behavior {
 	private $isInstitution = false;
@@ -115,7 +116,7 @@ class AccountBehavior extends Behavior {
 		}
 
 		$this->_table->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
-		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '']]);
+		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 
 
 
