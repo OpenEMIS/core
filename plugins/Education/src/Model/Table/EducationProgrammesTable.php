@@ -179,7 +179,7 @@ class EducationProgrammesTable extends AppTable {
 					}
 				}			
 
-				$tableHeaders = [__('Cycle - (Programme)')];
+				$tableHeaders = [__('Cycle - (Programme)'), '', ''];
 				$tableCells = [];
 				$cellCount = 0;
 
