@@ -284,15 +284,18 @@ class StudentDropoutTable extends AppTable {
 		// If the student is not already drop out
 		if (!$Students->exists($conditions)) {
 			// Change the status of the student in the school
+			// Update only enrolled statuses student
 			$Students->updateAll(
 				['student_status_id' => $statuses['DROPOUT'], 'end_date' => $effectiveDate],
 				[
 					'institution_id' => $institutionId,
 					'student_id' => $studentId,
 					'academic_period_id' => $periodId,
-					'education_grade_id' => $gradeId
+					'education_grade_id' => $gradeId,
+					'student_status_id' => $statuses['CURRENT']
 				]
 			);
+
 			$this->Alert->success('StudentDropout.approve');
 
 			$entity->status = self::APPROVED;
