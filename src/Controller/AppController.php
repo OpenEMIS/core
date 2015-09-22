@@ -128,6 +128,9 @@ class AppController extends Controller {
 			$layout = $session->read('System.layout');
 			$this->set('SystemLayout_leftPanel', 'width:'.$layout['panelLeft'].'px');
 			$this->set('SystemLayout_rightPanel','width:'.$layout['panelRight'].'px');
+		} else {
+			$this->set('SystemLayout_leftPanel', 'width: 10%');
+			$this->set('SystemLayout_rightPanel','width: 90%');
 		}
 	}
 
@@ -146,7 +149,7 @@ class AppController extends Controller {
 	}
 
 	//Storing the panel width size from session
-	public function setJqxSpliterSize(){
+	public function setJqxSpliterSize() {
 		$this->autoRender = false;
 
 		if ($this->request->is(['ajax'])) {
