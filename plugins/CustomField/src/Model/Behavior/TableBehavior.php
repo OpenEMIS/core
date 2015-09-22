@@ -3,6 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 
@@ -18,6 +19,15 @@ class TableBehavior extends Behavior {
 	            'valueClass' => 'table-full-width'
 	        ]);
 		}
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        if (!$this->config('setup')) {
+            $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch', 'priority' => 100];
+        }
+
+        return $events;
     }
 
 	public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -48,6 +58,35 @@ class TableBehavior extends Behavior {
 		];
 	}
 
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+		$fieldTypes = $CustomFieldTypes
+			->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+			->toArray();
+		$fieldValue = $fieldTypes['TABLE'];
+
+		$cellCount = 0;
+		$tableCells = [];
+		if (array_key_exists('custom_tables', $data[$this->_table->alias()])) {
+			foreach ($data[$this->_table->alias()]['custom_tables'] as $customTable) {
+				foreach ($customTable['custom_table_cells'] as $key => $obj) {
+					if (strlen($obj[$fieldValue]) > 0) {
+						$tableCells[$cellCount++] = $obj;
+					}
+
+					// Delete existing answer and reinsert
+					if (isset($obj['id'])) {
+						$this->_table->CustomTableCells->deleteAll([
+							'id' => $obj['id']
+						]);
+					}
+				}
+			}
+			unset($data[$this->_table->alias()]['custom_tables']);
+			$data[$this->_table->alias()]['custom_table_cells'] = $tableCells;
+		}
+	}
+
 	public function onGetCustomTableElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
@@ -74,7 +113,8 @@ class TableBehavior extends Behavior {
 				$tableColumnId = $colObj->id;
 				$tableRowId = $rowObj->id;
 
-				$fieldPrefix = $attr['model'] . '.custom_table_cells.' . $cellCount++;
+				$fieldPrefix = $attr['model'] . '.custom_tables.' . $attr['field'];
+				$cellPrefix = $fieldPrefix . '.custom_table_cells.' . $cellCount++;
 				$cellInput = "";
 				$cellValue = "";
 
@@ -101,14 +141,14 @@ class TableBehavior extends Behavior {
 
 						$cellValue = $data['text_value'];
 						$cellOptions['value'] = $cellValue;
-						$cellInput .= $form->hidden($fieldPrefix.".id", ['value' => $data['id']]);
+						$cellInput .= $form->hidden($cellPrefix.".id", ['value' => $data['id']]);
 					}
 				}
 
-				$cellInput .= $form->input($fieldPrefix.".text_value", $cellOptions);
-				$cellInput .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $fieldId]);
-				$cellInput .= $form->hidden($fieldPrefix.".".$attr['tableColumnKey'], ['value' => $tableColumnId]);
-				$cellInput .= $form->hidden($fieldPrefix.".".$attr['tableRowKey'], ['value' => $tableRowId]);				
+				$cellInput .= $form->input($cellPrefix.".text_value", $cellOptions);
+				$cellInput .= $form->hidden($cellPrefix.".".$attr['fieldKey'], ['value' => $fieldId]);
+				$cellInput .= $form->hidden($cellPrefix.".".$attr['tableColumnKey'], ['value' => $tableColumnId]);
+				$cellInput .= $form->hidden($cellPrefix.".".$attr['tableRowKey'], ['value' => $tableRowId]);
 
 				if ($action == 'view') {
 					$rowData[$colKey] = $cellValue;
