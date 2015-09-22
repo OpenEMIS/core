@@ -63,6 +63,8 @@ class RecordBehavior extends Behavior {
 		if (empty($model)) {
 			$this->config('model', $this->_table->registryAlias());
 		}
+
+		$this->_table->addBehavior('CustomField.Table');
     }
 
     public function implementedEvents() {
@@ -77,7 +79,7 @@ class RecordBehavior extends Behavior {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     	// Checking : skip insert if value is empty
-    	if (array_key_exists('custom_field_values', $data[$this->_table->alias()]) || array_key_exists('custom_table_cells', $data[$this->_table->alias()])) {
+    	if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
 			$fieldTypes = $this->CustomFieldTypes
 				->find('list', ['keyField' => 'code', 'valueField' => 'value'])
 				->toArray();
@@ -113,6 +115,14 @@ class RecordBehavior extends Behavior {
 				if (strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
 				}
+
+				// Delete existing answer and reinsert
+				if (isset($obj['id'])) {
+					$this->CustomFieldValues->deleteAll([
+						'id' => $obj['id']
+					]);
+				}
+
 				$count++;
 			}
 
@@ -148,22 +158,6 @@ class RecordBehavior extends Behavior {
 			}
 		}
 
-		if (array_key_exists('custom_table_cells', $data[$this->_table->alias()])) {
-			foreach ($data[$this->_table->alias()]['custom_table_cells'] as $key => $obj) {
-				$fieldType = $this->CustomFields
-					->find('all')
-					->select([$this->CustomFields->aliasField('field_type')])
-					->where([$this->CustomFields->aliasField('id') => $obj[$this->config('fieldKey')]])
-					->first()
-					->field_type;
-
-				$fieldValue = $fieldTypes[$fieldType];
-
-				if (strlen($obj[$fieldValue]) == 0) {
-					unset($data[$this->_table->alias()]['custom_table_cells'][$key]);
-				}
-			}
-		}
 		// End Checking
 
     	$associatedOptions = $options->offsetExists('associated') ? $options->offsetGet('associated') : [];
