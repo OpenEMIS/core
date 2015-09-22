@@ -352,13 +352,16 @@ class ValidationBehavior extends Behavior {
 		// Added the check for academic_period_id as the academic period id is possible to be all disabled 
 		// due to no programme found
 		if (!empty($globalData['data']['academic_period_id'])) {
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$statuses = $StudentStatusesTable->findCodeList();
 			$existingRecords = $Students->find()
 				->where(
 					[
 						$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
 						$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
 						$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
-						$Students->aliasField('student_id') => $globalData['data']['student_id']
+						$Students->aliasField('student_id') => $globalData['data']['student_id'],
+						$Students->aliasField('student_status_id').' IS NOT ' => $statuses['DROPOUT']
 					]
 					
 				)
