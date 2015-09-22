@@ -352,12 +352,23 @@ class InstitutionAssessmentsTable extends AppTable {
 	    	$selectedGrade = $request->query('education_grade_id');
 	    	$selectedClass = $request->query('class');
 
-	    	// pr('institutionId: ' . $institutionId . ' selectedPeriod: ' . $selectedPeriod . ' selectedAssessment: ' . $selectedAssessment);
-	    	// pr('selectedStatus: ' . $selectedStatus . ' selectedGrade: ' . $selectedGrade . ' selectedClass: ' . $selectedClass);die;
-	    	// $Classes,$ClassSubjects,$ClassGrades
-    		// $Subjects,$SubjectStudents,$subjectIds
     		$subjectOptions = [];
+    		$query = $this->Subjects
+    			->find('list')
+    			->innerJoin(
+    				[$this->ClassSubjects->alias() => $this->ClassSubjects->table()],
+    				[
+    					$this->ClassSubjects->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+    					$this->ClassSubjects->aliasField('institution_site_section_id') => $selectedClass
+    				]
+    			)
+    			->where([
+    				$this->Subjects->aliasField('institution_site_id') => $institutionId,
+    				$this->Subjects->aliasField('academic_period_id') => $selectedPeriod,
+    				$this->Subjects->aliasField('education_subject_id IN') => $this->subjectIds
+    			]);
 
+    		$subjectOptions = $query->toArray();
     		if (empty($subjectOptions)) {
 		  		$this->Alert->warning($this->aliasField('noClasses'));
 		  	}
