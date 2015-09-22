@@ -122,6 +122,7 @@ class StudentsTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
 		$this->Session->write('Student.Students.name', $entity->name);
+		$this->request->data[$this->alias()]['student_id'] = $entity->id;
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
@@ -152,6 +153,7 @@ class StudentsTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			$query->innerJoin(
 				['InstitutionStudent' => 'institution_students'],
 				[
@@ -192,9 +194,10 @@ class StudentsTable extends AppTable {
 			foreach ($results as $key => $obj) {
 				$institutionArr[$obj->institution->id] = $obj->institution->name;
 			}
-
 			$value = implode('<BR>', $institutionArr);
-			$entity->student_status = $query->first()->_matchingData['StudentStatuses']->name;
+			$studentStatus = $query->first()->_matchingData['StudentStatuses'];
+			$entity->student_status = $studentStatus->name;
+			$entity->status_code = $studentStatus->code;
 		}
 		return $value;
 	}
@@ -205,6 +208,49 @@ class StudentsTable extends AppTable {
 			$value = $entity->student_status;
 		}
 		return $value;
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$studentId = $this->request->data[$this->alias()]['student_id'];
+				$enrolledStatus = false;
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				foreach ($institutionIds as $id) {
+					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+					if ($enrolledStatus) {
+						break;
+					}
+				}
+				if (! $enrolledStatus) {
+					if (isset($toolbarButtons['edit'])) {
+						unset($toolbarButtons['edit']);
+					}
+				}
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (!$this->AccessControl->isAdmin()) {
+			if ($entity->status_code != 'CURRENT') {
+				if (isset($buttons['edit'])) {
+					unset($buttons['edit']);
+				}
+				if (isset($buttons['remove'])) {
+					unset($buttons['remove']);
+				}
+			}
+		}
+		return $buttons;
 	}
 
 	public function addBeforeAction(Event $event) {
