@@ -15,13 +15,187 @@ class InstitutionAssessmentsTable extends AppTable {
 	use OptionsTrait;
 	use MessagesTrait;
 
+	// Assessments Status
+	const EXPIRED = -1;
+	const NEW_STATUS = 0;
+	const DRAFT = 1;
+	const COMPLETED = 2;
+
 	public function initialize(array $config) {
 		$this->table('institution_site_assessments');
 		parent::initialize($config);
 		
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+	}
+
+	public function onGetStatus(Event $event, Entity $entity) {
+		$statusOptions = $this->getSelectOptions('Assessments.status');
+		return $statusOptions[$entity->status];
+	}
+
+	public function onGetAssessmentId(Event $event, Entity $entity) {
+		$currentAction = $this->ControllerAction->action();
+		if ($currentAction == 'index') {
+			if ($entity->status == self::NEW_STATUS || $entity->status == self::DRAFT) {
+				$url = $this->ControllerAction->url('edit');
+			} else if ($entity->status == self::COMPLETED) {
+				$url = $this->ControllerAction->url('view');
+			}
+			$url[1] = $entity->id;
+
+			return $event->subject()->Html->link($entity->assessment->code_name, $url);
+		} else if ($currentAction == 'view') {
+			return $entity->assessment->code_name;
+		}
+	}
+
+	public function onGetDescription(Event $event, Entity $entity) {
+		$value = '';
+
+		$results = $this->Assessments
+			->find()
+			->where([
+				$this->Assessments->aliasField('id') => $entity->assessment_id
+			])
+			->all();
+
+		if (!$results->isEmpty()) {
+			$value = $results->first()->description;
+		}
+
+		return $value;
+	}
+
+	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
+		$value = '<i class="fa fa-minus"></i>';
+
+		$AssessmentStatuses = TableRegistry::get('Assessment.AssessmentStatuses');
+		$AssessmentStatusPeriods = TableRegistry::get('Assessment.AssessmentStatusPeriods');
+
+		$results = $AssessmentStatuses
+			->find()
+			->select([
+				$AssessmentStatuses->aliasField('date_disabled')
+			])
+			->where([$AssessmentStatuses->aliasField('assessment_id') => $entity->assessment_id])
+			->innerJoin(
+				[$AssessmentStatusPeriods->alias() => $AssessmentStatusPeriods->table()],
+				[
+					$AssessmentStatusPeriods->aliasField('assessment_status_id = ') . $AssessmentStatuses->aliasField('id'),
+					$AssessmentStatusPeriods->aliasField('academic_period_id') => $entity->academic_period_id
+				]
+			)
+			->all();
+
+		if (!$results->isEmpty()) {
+			$dateDisabled = $results->first()->date_disabled;
+			$value = $this->formatDate($dateDisabled);
+		}
+
+		return $value;
+	}
+
+	public function onGetLastModified(Event $event, Entity $entity) {
+		return $this->formatDateTime($entity->modified);
+	}
+
+	public function beforeAction(Event $event) {
+		// $this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+	}
+
+	public function indexBeforeAction(Event $event) {
+		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		// tabElements
+		$plugin = $this->controller->plugin;
+		$controller = $this->controller->name;
+		$action = $this->alias;
+
+		$tabElements = [];
+		if ($this->AccessControl->check([$this->controller->name, 'Assessments', 'edit'])) {
+			$tabElements['New'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status='.self::NEW_STATUS],
+				'text' => __('New')
+			];
+			$tabElements['Draft'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status='.self::DRAFT],
+				'text' => __('Draft')
+			];
+		}
+		if ($this->AccessControl->check([$this->controller->name, 'Assessments', 'index'])) {
+			$tabElements['Completed'] = [
+				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status='.self::COMPLETED],
+				'text' => __('Completed')
+			];
+		}
+
+		$this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
+        // End
+
+        $this->ControllerAction->field('status', ['visible' => false]);
+        $this->ControllerAction->field('description');
+
+        // Set field order
+        $fieldOrder = ['assessment_id', 'description', 'academic_period_id'];
+        if ($selectedStatus == self::NEW_STATUS) {	// New
+			$this->ControllerAction->field('to_be_completed_by');
+			$fieldOrder[] = 'to_be_completed_by';
+			$this->_buildRecords();
+        } else if ($selectedStatus == self::DRAFT) {	// Draft
+			$this->ControllerAction->field('last_modified');
+			$this->ControllerAction->field('to_be_completed_by');
+			$fieldOrder[] = 'last_modified';
+			$fieldOrder[] = 'to_be_completed_by';
+        } else if ($selectedStatus == self::COMPLETED) {	// Completed
+			$this->ControllerAction->field('completed_on');
+			$fieldOrder[] = 'completed_on';
+        }
+
+        $this->ControllerAction->setFieldOrder($fieldOrder);
+        // End
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		$options['auto_contain'] = false;
+		$query
+			->contain(['Assessments', 'AcademicPeriods'])
+			->where([$this->aliasField('status') => $selectedStatus])
+			->order([$this->AcademicPeriods->aliasField('order')]);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->_setupFields($entity);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->_setupFields($entity);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$assessmentRecord = $this->get($id);
+
+		if ($assessmentRecord->status == self::COMPLETED) {
+			$entity = $this->newEntity(['id' => $id, 'status' => self::DRAFT], ['validate' => false]);
+
+			if ($this->save($entity)) {
+				$this->Alert->success('InstitutionAssessments.reject.success');
+			} else {
+				$this->Alert->success('InstitutionAssessments.reject.failed');
+				$this->log($entity->errors(), 'debug');
+			}
+
+			$event->stopPropagation();
+			$url = $this->ControllerAction->url('index'); //$this->ControllerAction->buttons['index']['url']
+			$url['status'] = self::COMPLETED;
+
+			return $this->controller->redirect($url);
+		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -40,157 +214,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		]);
 	}
 
-	public function onGetStatus(Event $event, Entity $entity) {
-		list($statusOptions) = array_values($this->_getSelectOptions());
-		return $statusOptions[$entity->status];
-	}
-
-	public function onGetAssessmentId(Event $event, Entity $entity) {
-		if ($entity->status == 0 || $entity->status == 1) {
-			$mode = 'edit';
-		} else {
-			$mode = 'view';
-		}
-
-		return $event->subject()->Html->link($entity->assessment->code_name, [
-			'plugin' => $this->controller->plugin,
-			'controller' => $this->controller->name,
-			'action' => 'Results',
-			'index',
-			'status' => $entity->status,
-			'assessment' => $entity->assessment_id,
-			'period' => $entity->academic_period_id,
-			'mode' => $mode
-		]);
-	}
-
-	public function onGetLastModified(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
-	}
-
-	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
-		$value = '<i class="fa fa-minus"></i>';
-
-		$AssessmentStatuses = $this->Assessments->AssessmentStatuses;
-		$AssessmentStatusPeriods = TableRegistry::get('Assessment.AssessmentStatusPeriods');
-
-		$results = $AssessmentStatuses
-			->find()
-			->select([
-				$AssessmentStatuses->aliasField('date_disabled')
-			])
-			->where([$AssessmentStatuses->aliasField('assessment_id') => $entity->assessment->id])
-			->join([
-				'table' => $AssessmentStatusPeriods->_table,
-				'alias' => $AssessmentStatusPeriods->alias(),
-				'conditions' => [
-					$AssessmentStatusPeriods->aliasField('assessment_status_id =') . $AssessmentStatuses->aliasField('id'),
-					$AssessmentStatusPeriods->aliasField('academic_period_id') => $entity->academic_period_id
-				]
-			])
-			->all();
-
-		if (!$results->isEmpty()) {
-			$dateDisabled = $results->first()->date_disabled;
-			$value = $this->formatDate($dateDisabled);
-		}
-
-		return $value;
-	}
-
-	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
-	}
-
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => false]]);
-	}
-
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
-
-		$plugin = $this->controller->plugin;
-		$controller = $this->controller->name;
-		$action = $this->alias;
-
-		$tabElements = [];
-		if ($this->AccessControl->check([$this->controller->name, 'Results', 'indexEdit'])) {
-			$tabElements['New'] = [
-				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=0'],
-				'text' => __('New')
-			];
-			$tabElements['Draft'] = [
-				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=1'],
-				'text' => __('Draft')
-			];
-		}
-		if ($this->AccessControl->check([$this->controller->name, 'Results', 'index'])) {
-			$tabElements['Completed'] = [
-				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=2'],
-				'text' => __('Completed')
-			];                           
-		}
-
-		$this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
-
-        $fieldOrder = ['assessment_id', 'academic_period_id'];
-        if ($selectedStatus == 0) {	//New
-			$this->ControllerAction->field('to_be_completed_by');
-			$fieldOrder[] = 'to_be_completed_by';
-			$this->_buildRecords();
-        } else if ($selectedStatus == 1) {	//Draft
-			$this->ControllerAction->field('last_modified');
-			$this->ControllerAction->field('to_be_completed_by');
-			$fieldOrder[] = 'last_modified';
-			$fieldOrder[] = 'to_be_completed_by';
-        } else if ($selectedStatus == 2) {	//Completed
-			$this->ControllerAction->field('completed_on');
-			$fieldOrder[] = 'completed_on';
-        }
-
-        $this->ControllerAction->setFieldOrder($fieldOrder);
-    }
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list(, $selectedStatus) = array_values($this->_getSelectOptions());
-
-		$options['auto_contain'] = false;
-		$query
-			->contain(['Assessments', 'AcademicPeriods'])
-			->where([$this->aliasField('status') => $selectedStatus])
-			->order([$this->AcademicPeriods->aliasField('order')]);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$assessmentRecord = $this->get($id);
-
-		if ($assessmentRecord->status == 2) {
-			$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
-			if ($this->save($entity)) {
-				$this->Alert->success('InstitutionAssessments.reject.success');
-			} else {
-				$this->Alert->success('InstitutionAssessments.reject.failed');
-				$this->log($entity->errors(), 'debug');
-			}
-
-			$event->stopPropagation();
-			$action = $this->ControllerAction->url('index'); //$this->ControllerAction->buttons['index']['url']
-			$action['status'] = 2;
-			return $this->controller->redirect($action);
-		}
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		list(, $selectedStatus) = array_values($this->_getSelectOptions());
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-		if ($selectedStatus == 0) {	// New
-			unset($buttons['remove']);
-		}
-		return $buttons;
-	}
-
 	public function _buildRecords($institutionId=null) {
 		if (is_null($institutionId)) {
 			$session = $this->controller->request->session();
@@ -200,72 +223,100 @@ class InstitutionAssessmentsTable extends AppTable {
 		}
 
 		// Update all New Assessment to Expired by Institution Id
-		$this->updateAll(['status' => -1],
+		$this->updateAll(['status' => self::EXPIRED],
 			[
 				'institution_site_id' => $institutionId,
-				'status' => 0
+				'status' => self::NEW_STATUS
 			]
 		);
 
 		$assessments = $this->Assessments
-			->find('list')
+			->find()
 			->find('visible')
 			->find('order')
-			->toArray();
+			->all();
 		$todayDate = date("Y-m-d");
 
-		$AssessmentStatuses = $this->Assessments->AssessmentStatuses;
-		foreach ($assessments as $key => $assessment) {
+		$AssessmentStatuses = TableRegistry::get('Assessment.AssessmentStatuses');
+		$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+
+		foreach ($assessments as $assessment) {
+			$assessmentId = $assessment->id;
+			$gradeId = $assessment->education_grade_id;
+
 			$assessmentStatuses = $AssessmentStatuses
 				->find()
 				->contain(['AcademicPeriods'])
 				->where([
-					$AssessmentStatuses->aliasField('assessment_id') => $key,
+					$AssessmentStatuses->aliasField('assessment_id') => $assessmentId,
 					$AssessmentStatuses->aliasField('date_disabled >=') => $todayDate
 				])
-				->toArray();
+				->all();
 
 			foreach ($assessmentStatuses as $assessmentStatus) {
 				foreach ($assessmentStatus->academic_periods as $academic_period) {
 					$academicPeriodId = $academic_period->id;
-					$assessmentId = $assessmentStatus->assessment_id;
 
-					$results = $this
+					// Check whether the school got offer the grade in the academic period
+					$gradeResults = $Grades
 						->find()
+						->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
 						->where([
-							$this->aliasField('institution_site_id') => $institutionId,
-							$this->aliasField('academic_period_id') => $academicPeriodId,
-							$this->aliasField('assessment_id') => $assessmentId
+							$Grades->aliasField('institution_site_id') => $institutionId,
+							$Grades->aliasField('education_grade_id') => $gradeId
 						])
 						->all();
+					// End
 
-					if ($results->isEmpty()) {
-						// Insert New Assessment if not found
-						$data = [
-							'institution_site_id' => $institutionId,
-							'academic_period_id' => $academicPeriodId,
-							'assessment_id' => $assessmentId
-						];
-						$entity = $this->newEntity($data);
+					if (!$gradeResults->isEmpty()) {
+						$results = $this
+							->find()
+							->where([
+								$this->aliasField('institution_site_id') => $institutionId,
+								$this->aliasField('academic_period_id') => $academicPeriodId,
+								$this->aliasField('assessment_id') => $assessmentId
+							])
+							->all();
 
-						if ($this->save($entity)) {
-						} else {
-							$this->log($entity->errors(), 'debug');
-						}
-					} else {
-						// Update Expired Assessment back to New
-						$this->updateAll(['status' => 0],
-							[
+						if ($results->isEmpty()) {
+							// Insert New Assessment if not found
+							$data = [
 								'institution_site_id' => $institutionId,
 								'academic_period_id' => $academicPeriodId,
-								'assessment_id' => $assessmentId,
-								'status' => -1
-							]
-						);
+								'assessment_id' => $assessmentId
+							];
+							$entity = $this->newEntity($data);
+
+							if ($this->save($entity)) {
+							} else {
+								$this->log($entity->errors(), 'debug');
+							}
+						} else {
+							// Update Expired Assessment back to New
+							$this->updateAll(['status' => self::NEW_STATUS],
+								[
+									'institution_site_id' => $institutionId,
+									'academic_period_id' => $academicPeriodId,
+									'assessment_id' => $assessmentId,
+									'status' => self::EXPIRED
+								]
+							);
+						}
 					}
 				}
 			}
 		}
+	}
+
+	public function _setupFields(Entity $entity) {
+		$this->ControllerAction->field('status');
+		$this->ControllerAction->field('assessment_id', ['type' => 'select']);
+		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
+		$this->ControllerAction->field('class', ['visible' => ['view' => false, 'edit' => true]]);
+		$this->ControllerAction->field('subject', ['visible' => ['view' => false, 'edit' => true]]);
+		$this->ControllerAction->field('students');
+
+		$this->ControllerAction->setFieldOrder(['status', 'assessment_id', 'academic_period_id', 'class', 'subject']);
 	}
 
 	public function _getSelectOptions() {
@@ -274,8 +325,8 @@ class InstitutionAssessmentsTable extends AppTable {
 		$selectedStatus = $this->queryString('status', $statusOptions);
 
 		// If do not have access to Assessment - edit but have access to Assessment - view, then set selectedStatus to 2
-		if (!$this->AccessControl->check([$this->controller->name, 'Results', 'indexEdit'])) {
-			if ($this->AccessControl->check([$this->controller->name, 'Results', 'index'])) {
+		if (!$this->AccessControl->check([$this->controller->name, 'Assessments', 'edit'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'Assessments', 'index'])) {
 				$selectedStatus = 2;
 			}
 		}
