@@ -674,12 +674,8 @@ trait MessagesTrait {
 				]
 			],
 			'Leaves' => [
-				'date_from' => [
-					'ruleCompareDate' => 'Date From cannot be later than Date To',
-					'ruleNoOverlap' => 'Leave have been selected for this date. Please choose a different date'
-				],
-				'number_of_days' => [
-					'ruleNotBlank' => 'Please enter the number of days'
+				'date_to' => [
+					'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
 				]
 			],
 			'Extracurriculars' => [
