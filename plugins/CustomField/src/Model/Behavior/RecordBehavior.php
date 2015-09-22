@@ -14,7 +14,8 @@ class RecordBehavior extends Behavior {
 		'events' => [
 			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
 			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
-			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction'
+			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction',
+			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave'
 		],
 		'model' => null,
 		'behavior' => null,
@@ -110,9 +111,18 @@ class RecordBehavior extends Behavior {
 					$obj[$fieldValue] = '';
 				}
 
-				if (strlen($obj[$fieldValue]) == 0) {
+				// Will move the logic to StudentListBehavior eventually
+				if ($fieldType != 'STUDENT_LIST' && strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
 				}
+
+				// Delete existing answer and reinsert
+				if (isset($obj['id'])) {
+					$this->CustomFieldValues->deleteAll([
+						'id' => $obj['id']
+					]);
+				}
+
 				$count++;
 			}
 
@@ -162,6 +172,13 @@ class RecordBehavior extends Behavior {
 				if (strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_table_cells'][$key]);
 				}
+
+				// Delete existing answer and reinsert
+				if (isset($obj['id'])) {
+					$this->CustomTableCells->deleteAll([
+						'id' => $obj['id']
+					]);
+				}
 			}
 		}
 		// End Checking
@@ -174,6 +191,75 @@ class RecordBehavior extends Behavior {
     public function addEditAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
 	}
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	// Will move the logic to StudentListBehavior eventually
+    	if (array_key_exists($this->_table->alias(), $data)) {
+    		if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
+    			$StudentSurveys = TableRegistry::get('Student.StudentSurveys');
+    			$fieldTypes = $this->CustomFieldTypes
+					->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+					->toArray();
+
+				$redirectUrl = null;
+    			foreach ($data[$this->_table->alias()]['custom_field_values'] as $key => $obj) {
+    				if (array_key_exists($StudentSurveys->alias(), $obj)) {
+    					$fieldId = $obj[$this->config('fieldKey')];
+    					// Student List field type no need to store
+    					$this->CustomFieldValues->deleteAll([
+							$this->CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id,
+							$this->CustomFieldValues->aliasField($this->config('fieldKey')) => $fieldId
+						]);
+
+    					foreach ($obj[$StudentSurveys->alias()] as $studentId => $surveyObj) {
+    						if (array_key_exists('custom_field_values', $surveyObj)) {
+    							$surveyObj['status'] = $entity->status;
+    							foreach ($surveyObj['custom_field_values'] as $fieldkey => $fieldObj) {
+		    						$fieldType = $this->CustomFields
+										->find('all')
+										->select([$this->CustomFields->aliasField('field_type')])
+										->where([$this->CustomFields->aliasField('id') => $fieldObj[$this->config('fieldKey')]])
+										->first()
+										->field_type;
+		    						$fieldValue = $fieldTypes[$fieldType];
+
+		    						if (!isset($fieldObj[$fieldValue])) {
+		    							$fieldObj[$fieldValue] = '';
+		    						}
+
+		    						if (strlen($fieldObj[$fieldValue]) == 0) {
+		    							unset($surveyObj['custom_field_values'][$fieldkey]);
+									}
+
+									// Delete existing answer and reinsert
+									if (isset($fieldObj['id'])) {
+										$StudentSurveys->CustomFieldValues->deleteAll([
+											'id' => $fieldObj['id']
+										]);
+									}
+    							}
+
+								$surveyEntity = $StudentSurveys->newEntity($surveyObj);
+								if ($StudentSurveys->save($surveyEntity)) {
+								} else {
+									$this->log($surveyEntity->errors(), 'debug');
+								}
+    						}
+    					}
+
+    					if (is_null($redirectUrl)) {
+    						$redirectUrl = $this->_table->ControllerAction->url('edit');
+    					}
+    				}
+    			}
+
+    			if ($entity->status == 1 && !is_null($redirectUrl)) {
+					$event->stopPropagation();
+					return $this->_table->controller->redirect($url);
+    			}
+    		}
+    	}
+    }
 
 	public function getCustomFieldQuery($entity) {
 		$customFieldQuery = null;
