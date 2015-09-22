@@ -60,16 +60,16 @@ class StaffUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => 'Staff']);
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements['Staff']['url'] = array_merge($tabElements['Staff']['url'], [$id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == 'Staff') continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
-			}
-		}
+		$options = [
+			'userRole' => 'Staff',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $entity->id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
