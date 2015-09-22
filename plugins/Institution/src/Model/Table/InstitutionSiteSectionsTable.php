@@ -428,15 +428,15 @@ class InstitutionSiteSectionsTable extends AppTable {
 				    'contain' => ['EducationProgrammes']
 				])->toArray();
 			}
-			$startingSectionNumber = $this->getNewSectionNumber();
 
 			$this->ControllerAction->field('single_grade_field', [
 				'type' => 'element', 
 				'element' => 'Institution.Sections/single_grade',
 				'data' => [	'numberOfSections'=>$this->_numberOfSections,
 				 			'staffOptions'=>$staffOptions,
-				 			'startingSectionNumber'=>$startingSectionNumber,
-				 			'grade'=>$grade	]
+				 			'existedSections'=>$this->getExistedSections(),
+				 			'grade'=>$grade	
+				]
 			]);
 
 			$this->fields['name']['visible'] = false;
@@ -1046,7 +1046,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	private function numberOfSectionsOptions() {
 		$total = 10;
-		$options = array();
+		$options = [];
 		for($i=1; $i<=$total; $i++){
 			$options[$i] = $i;
 		}
@@ -1054,34 +1054,33 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $options;
 	}
 	
-	private function getNewSectionNumber() {
+	private function getExistedSections() {
 		$sectionsByGrade = $this->InstitutionSiteSectionGrades
 			->find('list', [
 				'keyField'=>'id',
 				'valueField'=>'institution_site_section_id'
 			])
-			->where([
-				$this->InstitutionSiteSectionGrades->aliasField('education_grade_id') => $this->_selectedEducationGradeId
-			])
+			->where([$this->InstitutionSiteSectionGrades->aliasField('education_grade_id') => $this->_selectedEducationGradeId])
 			->toArray();
-		$data = $this->find('all')
-			->where([
-				$this->aliasField('section_number').' IS NOT NULL',
-				[
-					$this->aliasField('institution_site_id') => $this->institutionId,
-					$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-					$this->aliasField('id').' IN' => $sectionsByGrade,
-				]
+
+		$data = $this->find('list', [
+				'keyField' => 'id',
+			    'valueField' => 'name'
 			])
-			->count()
+			->where([
+				/**
+				 * If section_number is null, it is considered as a multi-grade section
+				 */
+				$this->aliasField('section_number').' IS NOT NULL',
+				$this->aliasField('institution_site_id') => $this->institutionId,
+				$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
+				$this->aliasField('id').' IN' => $sectionsByGrade,
+			])
+			->toArray()
 			;
-		$number = 1;
-		if(!empty($data)) {
-			$number = $data + 1;
-		}		
-		return $number;
+		return $data;
 	}
-	
+
 	protected function createVirtualStudentEntity($id, $entity) {
 		$userData = $this->Institutions->Students->find()
 			->contain(['Users'=>['Genders']])
@@ -1138,15 +1137,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 * @return [type]                    [description]
 	 */
 	public function getSectionOptions($academicPeriodId, $institutionId, $gradeId=false) {
-	// 	$singleGradeOptions = array(
-	// 		'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
-	// 		'conditions' => array(
-	// 			'InstitutionSiteSections.academic_period_id' => $academicPeriodId,
-	// 			'InstitutionSiteSections.institution_site_id' => $institutionId
-	// 		),
-	// 		'order' => array('InstitutionSiteSections.name')
-	// 	);
-
 		$multiGradeOptions = array(
 			'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
 			'conditions' => array(
