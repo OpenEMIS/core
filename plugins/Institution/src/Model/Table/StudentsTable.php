@@ -830,7 +830,6 @@ class StudentsTable extends AppTable {
 			$statuses = $this->StudentStatuses->findCodeList();
 			$id = $this->request->params['pass'][1];
 			$studentStatusId = $this->get($id)->student_status_id;			
-			$statuses = $this->StudentStatuses->findCodeList();
 			// Start PHPOE-1897
 			if ($studentStatusId != $statuses['CURRENT']) {
 				if (isset($toolbarButtons['edit'])) {
