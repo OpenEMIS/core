@@ -81,9 +81,9 @@ class UsersTable extends AppTable {
 		$this->fields['birthplace_area_id']['visible'] = false;
 
 		if ($this->action != 'index' && $this->action != 'view') {
-			$this->fields['password']['visible'] = true;
-			$this->fields['password']['type'] = 'password';
-			$this->fields['password']['attr']['value'] = '';
+			// $this->fields['password']['visible'] = true;
+			// $this->fields['password']['type'] = 'password';
+			// $this->fields['password']['attr']['value'] = '';
 		}
 		if ($this->action == 'edit') {
 			$this->fields['last_login']['visible'] = false;
