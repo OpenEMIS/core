@@ -21,6 +21,14 @@ class InstitutionAssessmentsTable extends AppTable {
 	const DRAFT = 1;
 	const COMPLETED = 2;
 
+	private $Classes = null;
+	private $ClassGrades = null;
+	private $ClassSubjects = null;
+	private $Subjects = null;
+	private $SubjectStudents = null;
+	private $subjectIds = [];
+	private $userId = null;
+
 	public function initialize(array $config) {
 		$this->table('institution_site_assessments');
 		parent::initialize($config);
@@ -103,8 +111,14 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		// $this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => true]]);
-	}
+		$this->Classes = TableRegistry::get('Institution.InstitutionSiteSections');
+		$this->ClassGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
+		$this->ClassSubjects = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
+		$this->Subjects = TableRegistry::get('Institution.InstitutionSiteClasses');
+		$this->SubjectStudents = TableRegistry::get('Institution.InstitutionSiteClassStudents');
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
+		$this->userId = $this->Auth->user('id');
+    }
 
 	public function indexBeforeAction(Event $event) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
@@ -173,6 +187,12 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->_setupFields($entity);
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['status'] = $entity->status;
+		$this->request->query['academic_period_id'] = $entity->academic_period_id;
+		$this->request->query['assessment_id'] = $entity->assessment_id;
+	}
+
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_setupFields($entity);
 	}
@@ -213,6 +233,169 @@ class InstitutionAssessmentsTable extends AppTable {
 			$Results->aliasField('assessment_item_id IN') => $itemIds
 		]);
 	}
+
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit') {
+			list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
+
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = __($statusOptions[$selectedStatus]);
+			$attr['attr']['assessment-status'] = 1;
+		}
+
+    	return $attr;
+    }
+
+    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request) {
+    	if ($action == 'edit') {
+    		$selectedAssessment = $request->query('assessment_id');
+			$assessment = $this->Assessments->get($selectedAssessment);
+			$request->query['education_grade_id'] = $assessment->education_grade_id;
+
+    		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+    		$this->subjectIds = $AssessmentItems
+    			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
+    			->find('visible')
+    			->where([
+    				$AssessmentItems->aliasField('assessment_id') => $selectedAssessment
+    			])
+    			->toArray();
+
+    		if (empty($this->subjectIds)) {
+    			$this->Alert->warning($this->aliasField('noSubjects'));
+    		}
+
+    		$attr['type'] = 'readonly';
+    		$attr['attr']['value'] = $assessment->code_name;
+    	}
+
+    	return $attr;
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit') {
+    		$selectedPeriod = $request->query('academic_period_id');
+
+    		$attr['type'] = 'readonly';
+    		$attr['attr']['value'] = $this->AcademicPeriods->get($selectedPeriod)->name;
+    	}
+
+    	return $attr;
+    }
+
+    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit') {
+			$institutionId = $this->institutionId;
+			$selectedStatus = $request->query('status');
+	    	$selectedPeriod = $request->query('academic_period_id');
+	    	$selectedAssessment = $request->query('assessment_id');
+	    	$selectedGrade = $request->query('education_grade_id');
+
+    		$classOptions = [];
+    		$query = $this->Classes
+    			->find('list')
+    			->innerJoin(
+    				[$this->ClassGrades->alias() => $this->ClassGrades->table()],
+    				[
+    					$this->ClassGrades->aliasField('institution_site_section_id = ') . $this->Classes->aliasField('id'),
+    					$this->ClassGrades->aliasField('education_grade_id') => $selectedGrade
+    				]
+    			)
+    			->innerJoin(
+    				[$this->ClassSubjects->alias() => $this->ClassSubjects->table()],
+    				[
+    					$this->ClassSubjects->aliasField('institution_site_section_id = ') . $this->Classes->aliasField('id')
+    				]
+    			)
+    			->innerJoin(
+    				[$this->Subjects->alias() => $this->Subjects->table()],
+    				[
+    					$this->Subjects->aliasField('id = ') . $this->ClassSubjects->aliasField('institution_site_class_id'),
+    					$this->Subjects->aliasField('education_subject_id IN') => $this->subjectIds
+    				]
+    			)
+    			->where([
+					$this->Classes->aliasField('institution_site_id') => $institutionId,
+					$this->Classes->aliasField('academic_period_id') => $selectedPeriod
+    			]);
+
+    		if ($this->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
+    			// User has access to AllClasses
+    		} else {
+    			$query->where([
+					$this->Classes->aliasField('security_user_id') => $this->userId
+    			]);
+    		}
+
+			$classOptions = $query->toArray();
+    		if (empty($classOptions )) {
+		  		$this->Alert->warning($this->aliasField('noSections'));
+		  	} else {
+		  		$selectedClass = $this->queryString('class', $classOptions);
+				$this->advancedSelectOptions($classOptions, $selectedClass);
+		  	}
+
+    		$attr['type'] = 'select';
+    		$attr['attr']['options'] = $classOptions;
+    		$attr['onChangeReload'] = 'changeClass';
+    	}
+
+    	return $attr;
+    }
+
+    public function onUpdateFieldSubject(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit') {
+			$institutionId = $this->institutionId;
+			$selectedStatus = $request->query('status');
+	    	$selectedPeriod = $request->query('academic_period_id');
+	    	$selectedAssessment = $request->query('assessment_id');
+	    	$selectedGrade = $request->query('education_grade_id');
+	    	$selectedClass = $request->query('class');
+
+	    	// pr('institutionId: ' . $institutionId . ' selectedPeriod: ' . $selectedPeriod . ' selectedAssessment: ' . $selectedAssessment);
+	    	// pr('selectedStatus: ' . $selectedStatus . ' selectedGrade: ' . $selectedGrade . ' selectedClass: ' . $selectedClass);die;
+	    	// $Classes,$ClassSubjects,$ClassGrades
+    		// $Subjects,$SubjectStudents,$subjectIds
+    		$subjectOptions = [];
+
+    		if (empty($subjectOptions)) {
+		  		$this->Alert->warning($this->aliasField('noClasses'));
+		  	}
+
+    		$attr['type'] = 'select';
+    		$attr['attr']['options'] = $subjectOptions;
+    		$attr['onChangeReload'] = 'changeSubject';
+    	}
+
+    	return $attr;
+    }
+
+    public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) {
+		$students = [];
+
+		if (empty($students)) {
+	  		$this->Alert->warning($this->aliasField('noStudents'));
+	  	}
+
+	  	$attr['type'] = 'element';
+		$attr['element'] = 'Institution.Assessment/students';
+		$attr['data'] = $students;
+
+    	return $attr;
+    }
+
+    public function editOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	$request = $this->request;
+		unset($request->query['class']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('class', $request->data[$this->alias()])) {
+					$request->query['class'] = $request->data[$this->alias()]['class'];
+				}
+			}
+		}
+    }
 
 	public function _buildRecords($institutionId=null) {
 		if (is_null($institutionId)) {
@@ -327,7 +510,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		// If do not have access to Assessment - edit but have access to Assessment - view, then set selectedStatus to 2
 		if (!$this->AccessControl->check([$this->controller->name, 'Assessments', 'edit'])) {
 			if ($this->AccessControl->check([$this->controller->name, 'Assessments', 'index'])) {
-				$selectedStatus = 2;
+				$selectedStatus = self::COMPLETED;
 			}
 		}
 
