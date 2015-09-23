@@ -28,7 +28,7 @@ class StudentUserTable extends UserTable {
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
-				if ($Student->save($Student->newEntity($academicData))) {
+				if ($Student->save($Student->newEntity($academicData, ['validate' => 'AllowEmptyName']))) {
 					if ($class > 0) {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
@@ -103,6 +103,18 @@ class StudentUserTable extends UserTable {
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
+			
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$id = $this->request->query['id'];
+			$StudentTable = TableRegistry::get('Institution.Students');
+			$studentId = $StudentTable->get($id)->student_id;
+			// Start PHPOE-1897
+			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End PHPOE-1897
 		} else if ($action == 'add') {
 			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {

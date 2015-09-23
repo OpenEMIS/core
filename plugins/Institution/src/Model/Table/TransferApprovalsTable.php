@@ -67,7 +67,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('comment');
 		$this->ControllerAction->field('previous_institution_id');
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
-		$this->ControllerAction->field('created', ['visible'=>true, 'type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
+		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
 
 		$this->ControllerAction->setFieldOrder([
 			'created', 'transfer_status', 'student',
