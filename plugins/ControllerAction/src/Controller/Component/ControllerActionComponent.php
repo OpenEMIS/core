@@ -1020,7 +1020,20 @@ class ControllerActionComponent extends Component {
 					$request->data = $requestData->getArrayCopy();
 					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
 
-					if ($model->save($entity)) {
+					$process = function ($model, $entity) {
+						return $model->save($entity);
+					};
+
+					// Event: onBeforeSave
+					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeSave');
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforeSave', null, [$entity, $requestData]);
+					if ($event->isStopped()) { return $event->result; }
+					if (is_callable($event->result)) {
+						$process = $event->result;
+					}
+					// End Event
+
+					if ($process($model, $entity)) {
 						// event: onSaveSuccess
 						$this->Alert->success('general.edit.success');
 
