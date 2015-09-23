@@ -17,6 +17,8 @@ class InstitutionAssessmentResultsTable extends AppTable {
 	use MessagesTrait;
 
 	private $gradingOptions = [];
+	private $gradingOptionParams = [];
+	private	$itemObj = null;
 
 	public function initialize(array $config) {
 		$this->table('institution_site_class_students');
@@ -33,7 +35,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
     	return $events;
     }
 
-	public function onGetIdentity(Event $event, Entity $entity) {
+	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		return $entity->user->openemis_no;
 	}
 
@@ -45,41 +47,30 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$selectedStatus = $this->request->query('status');
-		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
-		$selectedClass = $this->request->query('class');
-		$subjectId = $Classes->get($selectedClass)->education_subject_id;
+		$selectedMode = $this->request->query('mode');
 		$id = $entity->student_id;
 
-		$itemObj = $Items
-			->find()
-			->where([
-				$Items->aliasField('assessment_id') => $selectedAssessment,
-				$Items->aliasField('education_subject_id') => $subjectId
-			])
-			->first();
-
-		if (!is_null($itemObj)) {
+		if (!is_null($this->itemObj)) {
 			$resultObj = $Results
 				->find()
 				->where([
-					$Results->aliasField('assessment_item_id') => $itemObj->id,
+					$Results->aliasField('assessment_item_id') => $this->itemObj->id,
 					$Results->aliasField('security_user_id') => $id,
 					$Results->aliasField('institution_site_id') => $institutionId,
 					$Results->aliasField('academic_period_id') => $selectedPeriod
 				])
 				->first();
 
-			$marks = 0;
-			$gradingId = 0;
+			$marks = '';
 			if (!is_null($resultObj)) {
 				$marks = $resultObj->marks;
-				$gradingId = $resultObj->assessment_grading_option_id;
 			}
 			$entity->assessment_grading_option_id = $gradingId;
-
-			if ($selectedStatus == 0 || $selectedStatus == 1) {
+			$studentId = $entity->student_id;
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$StudentTable = TableRegistry::get('Institution.Students');
+			if ($selectedMode == 'edit' && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 				$Form = $event->subject()->Form;
 				$alias = Inflector::underscore($Results->alias());
 				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
@@ -87,9 +78,11 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				if (!is_null($resultObj)) {
 					$html .= $Form->hidden($fieldPrefix.".id", ['value' => $resultObj->id]);
 				}
-				$options = ['type' => 'number', 'label' => false, 'value' => $marks];
+				$options = ['type' => 'number', 'label' => false, 'value' => $marks, 'min' => 0, 'data-id' => $id, 'class' => 'resultMark'];
 				$html .= $Form->input($fieldPrefix.".marks", $options);
-				$html .= $Form->hidden($Items->alias().".id", ['value' => $itemObj->id]);
+				$html .= $Form->hidden($fieldPrefix.".max_mark", ['value' => $this->itemObj->max, 'class' => 'maxMark']);
+
+				$html .= $Form->hidden($Items->alias().".id", ['value' => $this->itemObj->id]);
 				$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
 				$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
 				$html .= $Form->hidden($fieldPrefix.".academic_period_id", ['value' => $selectedPeriod]);
@@ -101,29 +94,63 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		return $html;
 	}
 
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['results'] = [
+			'include' => true,
+			'js' => 'Institution.../js/results'
+		];
+	}
+
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
+		$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
+		$Items = TableRegistry::get('Assessment.AssessmentItems');
+		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
+		$StudentTable = TableRegistry::get('Institution.Students');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$selectedPeriod = $this->request->query('period');
+		$selectedMode = $this->request->query('mode');
+		$studentId = $entity->student_id;
 
-		$selectedStatus = $this->request->query('status');
-		if ($selectedStatus == 0 || $selectedStatus == 1) {
+		$resultObj = null;
+		if (!is_null($this->itemObj)) {
+			$resultObj = $Results
+				->find()
+				->where([
+					$Results->aliasField('assessment_item_id') => $this->itemObj->id,
+					$Results->aliasField('security_user_id') => $studentId,
+					$Results->aliasField('institution_site_id') => $institutionId,
+					$Results->aliasField('academic_period_id') => $selectedPeriod
+				])
+				->first();
+		}
+
+		if ($selectedMode == 'edit' && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$Form = $event->subject()->Form;
-			$Items = TableRegistry::get('Assessment.AssessmentItems');
-			$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 			$alias = Inflector::underscore($Results->alias());
-			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $entity->student_id;
+			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
 
-			$gradingOptions = $this->gradingOptions;
-			$selectedGrading = key($gradingOptions);
-			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
-				$selectedGrading = $entity->assessment_grading_option_id;
+			$bareGradingOptions = $this->gradingOptions;
+			$gradingOptionParams = $this->gradingOptionParams;
+			$selectedGrading = 0;
+			if (!is_null($resultObj)) {
+				if ($resultObj->assessment_grading_option_id != 0) {
+					$selectedGrading = $resultObj->assessment_grading_option_id;
+				}
 			}
-			$this->advancedSelectOptions($gradingOptions, $selectedGrading);
-
-			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions];
+			$this->advancedSelectOptions($bareGradingOptions, $selectedGrading);
+			foreach ($bareGradingOptions as $key=>$value) {
+				$gradingOptions[$key] = array_merge($value, $gradingOptionParams[$key]);
+			}
+			$options = ['type' => 'select', 'label' => false, 'options' => $gradingOptions, 'class' => 'resultGrade' ];
 			$html .= $Form->input($fieldPrefix.".assessment_grading_option_id", $options);
 		} else {
-			if (isset($entity->assessment_grading_option_id) && $entity->assessment_grading_option_id != 0) {
-				$html = $this->gradingOptions[$entity->assessment_grading_option_id];
+			if (!is_null($resultObj)) {
+				if ($resultObj->assessment_grading_option_id != 0) {
+					$html = $this->gradingOptions[$resultObj->assessment_grading_option_id];
+				} else {
+					$html = '<i class="fa fa-minus"></i>';
+				}
 			} else {
 				$html = '<i class="fa fa-minus"></i>';
 			}
@@ -136,15 +163,16 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('institution_site_class_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
-		$this->ControllerAction->field('identity');
+		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('mark');
 		$this->ControllerAction->field('grade');
-		$this->ControllerAction->setFieldOrder(['identity', 'student_id', 'mark', 'grade']);
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'mark', 'grade']);
 
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedStatus = $this->request->query('status');
 		$selectedAssessment = $this->request->query('assessment');
 		$selectedPeriod = $this->request->query('period');
+		$selectedMode = $this->request->query('mode');
 
 		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$subjectIds = $AssessmentItems
@@ -211,6 +239,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				$action .= '?status=' . $selectedStatus;
 				$action .= '&assessment=' . $selectedAssessment;
 				$action .= '&period=' . $selectedPeriod;
+				$action .= '&mode=' . $selectedMode;
 				// End
 				
 				$tabElements = [];
@@ -271,7 +300,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 					$subjectId = $Classes->get($selectedClass)->education_subject_id;
 
 					$Items = TableRegistry::get('Assessment.AssessmentItems');
-					$itemObj = $Items
+					$this->itemObj = $Items
 						->find()
 						->where([
 							$Items->aliasField('assessment_id') => $selectedAssessment,
@@ -280,9 +309,29 @@ class InstitutionAssessmentResultsTable extends AppTable {
 						->contain(['GradingTypes.GradingOptions'])
 						->first();
 
-					if (!is_null($itemObj)) {
-						foreach ($itemObj->grading_type->grading_options as $key => $obj) {
-							$this->gradingOptions[$obj->id] = $obj->code ." - ". $obj->name;
+					if (!is_null($this->itemObj)) {
+						$this->gradingOptions = [''];
+						$this->gradingOptionParams = [
+							[
+								'value' => '',
+					            'text' => '-- Select Grade --'
+			            	]
+			            ];
+						foreach ($this->itemObj->grading_type->grading_options as $key => $obj) {
+							$this->gradingOptionParams[$obj->id] = [
+								'data-grading-type-id' => $obj->assessment_grading_type_id,
+								'data-min' => $obj->min,
+								'data-max' => $obj->max
+							];
+							/**
+							 * on grading administration page, $obj->name field is compulsory therefore;
+							 * it will always have a value
+							 */
+							if (empty($obj->code)) {
+								$this->gradingOptions[$obj->id] = $obj->name;
+							} else {
+								$this->gradingOptions[$obj->id] = $obj->code ." - ". $obj->name;
+							}
 						}
 					}
 					// End
@@ -310,12 +359,13 @@ class InstitutionAssessmentResultsTable extends AppTable {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		$selectedStatus = $this->request->query('status');
-		if ($selectedStatus == 0 || $selectedStatus == 1) {
+		$selectedMode = $this->request->query('mode');
+		if ($selectedMode == 'edit') {
 			$config['formButtons'] = true;
 			$config['url'] = $config['buttons']['index']['url'];
 			$config['url'][0] = 'indexEdit';
 
-			// Add hidden fields
+			// This hidden field (with class = "assessment-status") is important in order for Save As Draft and Submit to work
 			$Items = TableRegistry::get('Assessment.AssessmentItems');
 			$indexElements = $this->controller->viewVars['indexElements'];
 			$indexElements[] = [
@@ -350,7 +400,7 @@ class InstitutionAssessmentResultsTable extends AppTable {
 		$cancelButton = $buttons[1];
 		$buttons[0] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[assessment-status=1]\').val(1);']
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'style' => 'margin-right:10px', 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[assessment-status=1]\').val(1);']
 		];
 		$buttons[1] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
