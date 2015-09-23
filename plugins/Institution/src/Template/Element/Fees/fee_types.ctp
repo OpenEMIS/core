@@ -54,7 +54,7 @@
 			<?php endif; ?>
 			<tfoot>
 				<tr>
-					<td class="">Total</td>
+					<td class=""><?= __('Total') ?></td>
 					<td class="">
 						<span><?= $attr['currency']?></span>
 						<span class="totalFee"><?= $totalFee ?></span>
