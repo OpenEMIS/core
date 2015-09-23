@@ -18,6 +18,7 @@ class InstitutionClassBehavior extends Behavior {
 		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
 	}
 
@@ -26,6 +27,23 @@ class InstitutionClassBehavior extends Behavior {
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
 			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]);
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$AccessControl = $this->_table->AccessControl;
+		$allClassesEditPermission = $AccessControl->check(['Institutions', 'AllClasses', 'edit']);
+		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
+
+		if (!$allClassesEditPermission) {
+			if ($myClassesEditPermission) {
+				$userId = $this->_table->Auth->user('id');
+				if ($userId != $entity->security_user_id) {
+					$urlParams = $this->_table->ControllerAction->url('view');
+					$event->stopPropagation();
+					return $this->_table->controller->redirect($urlParams);
+				}
+			}
 		}
 	}
 
