@@ -114,6 +114,20 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
 
+	// Start PHPOE-2123
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		// Another check to check before deletion. In case of concurrency issue.
+		$status = $this->get($id)->student_status_id;
+		$studentStatuses = $this->StudentStatuses->findCodeList();
+		if ($status != $studentStatuses['CURRENT']) {
+			$process = function() use ($id, $options) {
+				$this->Alert->error('Institution.InstitutionSiteStudents.deleteNotEnrolled');
+			};
+			return $process;
+		}
+	}
+	// End PHPOE-2123
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('class', ['order' => 90]);
@@ -787,6 +801,14 @@ class StudentsTable extends AppTable {
 			if (isset($buttons['edit'])) {
 				unset($buttons['edit']);
 			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+
+		$status = $entity->student_status_id;
+		$studentStatuses = $this->StudentStatuses->findCodeList();
+		if ($status != $studentStatuses['CURRENT']) {
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
