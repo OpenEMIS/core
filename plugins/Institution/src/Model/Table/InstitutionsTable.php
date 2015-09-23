@@ -85,6 +85,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
 
 
@@ -212,6 +214,14 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
+
+		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
+		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
+		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => __('Area')]);
+		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
+		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
+
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
@@ -456,14 +466,45 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
+			'information_section',
 			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
 			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
 			
+			'location_section',
 			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
 
+			'area_section',
 			'area_id', 'area_administrative_id',
 
-			'contact_person', 'telephone', 'fax', 'email', 'website'
+			'contact_section',
+			'contact_person', 'telephone', 'fax', 'email', 'website',
+
+			'map_section',
+			'map',
+
+		]);
+	}
+
+
+/******************************************************************************************************************
+**
+** addEdit action methods
+**
+******************************************************************************************************************/
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'information_section',
+			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
+			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
+			
+			'location_section',
+			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
+
+			'area_section',
+			'area_id', 'area_administrative_id',
+
+			'contact_section',
+			'contact_person', 'telephone', 'fax', 'email', 'website',
 		]);
 	}
 
