@@ -749,6 +749,7 @@ class ControllerActionComponent extends Component {
 
 	public function view($id=0) {
 		$model = $this->model;
+		$request = $this->request;
 
 		// Event: viewBeforeAction
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.beforeAction');
@@ -798,6 +799,29 @@ class ControllerActionComponent extends Component {
 				return $this->controller->redirect($this->url('index'));
 			}
 
+			if ($request->is(['get'])) {
+
+			} else if ($request->is(['post', 'put'])) {
+				$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+				$patchOptions = new ArrayObject([]);
+				$requestData = new ArrayObject($request->data);
+
+				$params = [$entity, $requestData, $patchOptions];
+
+				if ($submit == 'save') {
+				} else {
+					$methodKey = 'on' . ucfirst($submit);
+
+					// Event: viewOnReload
+					$eventKey = 'ControllerAction.Model.view.' . $methodKey;
+					$this->debug(__METHOD__, ': Event -> ' . $eventKey);
+					$method = 'view' . ucfirst($methodKey);
+					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					if ($event->isStopped()) { return $event->result; }
+					// End Event
+				}
+			}
+
 			// Event: viewAfterAction
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.view.afterAction');
 			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.view.afterAction', null, [$entity]);
@@ -839,7 +863,7 @@ class ControllerActionComponent extends Component {
 
 		$entity = $model->newEntity();
 
-	if ($request->is(['get'])) {
+		if ($request->is(['get'])) {
 			// Event: addOnInitialize
 			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
 			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);

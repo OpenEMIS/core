@@ -15,5 +15,12 @@ $this->start('panelBody');
 			echo $this->element($element['name'], $element['data'], $element['options']);
 		}
 	}
+	$template = $this->ControllerAction->getFormTemplate();
+	$formOptions = $this->ControllerAction->getFormOptions();
+	$this->Form->templates($template);
+
+	echo $this->Form->create($data, $formOptions);
 	echo $this->ControllerAction->getViewElements($data);
+	// echo $this->ControllerAction->getFormButtons();
+	echo $this->Form->end();
 $this->end();
