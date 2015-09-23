@@ -96,6 +96,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
+		'ControllerAction.Model.edit.beforeSave'			=> 'editBeforeSave', // you can overwrite this function to implement your own saving logic
+		// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }
+
 		'ControllerAction.Model.edit.afterSave'				=> 'editAfterSave', // extra processing after saving
 		// public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
