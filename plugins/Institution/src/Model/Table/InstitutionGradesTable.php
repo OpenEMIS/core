@@ -16,8 +16,6 @@ class InstitutionGradesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
-		// should not need to link to site programme anymore
-		$this->belongsTo('InstitutionSiteProgrammes',	['className' => 'Institution.InstitutionSiteProgrammes']);
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
@@ -256,27 +254,6 @@ class InstitutionGradesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	// remove this function when institution_site_programmes is dropped
-	private function getSiteProgrammeEntity($institutionId, $programmeId, $startDate) {
-		$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
-		$entity = $InstitutionSiteProgrammes->find()
-		->where([
-			$InstitutionSiteProgrammes->aliasField('institution_site_id') => $institutionId,
-			$InstitutionSiteProgrammes->aliasField('education_programme_id') => $programmeId
-		])
-		->first();
-
-		if (is_null($entity)) {
-			$newEntity = $InstitutionSiteProgrammes->newEntity([
-				'institution_site_id' => $institutionId,
-				'education_programme_id' => $programmeId,
-				'start_date' => $startDate
-			]);
-			$entity = $InstitutionSiteProgrammes->save($newEntity);
-		}
-		return $entity;
-	}
-
 	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$data[$this->alias()]['programme'] = 0;
 	}

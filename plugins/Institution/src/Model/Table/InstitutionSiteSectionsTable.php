@@ -42,7 +42,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 		/**
 		 * Shortcuts
 		 */
-		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
 		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
 		// $this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
 
@@ -161,14 +160,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$Sections = $this;
 
-		// $conditions = array(
-		// 	'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
-		// );
-		//$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
-		if (empty($academicPeriodOptions)) {
-			$this->Alert->warning('Institutions.noProgrammes');
-		}
+
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
@@ -177,7 +170,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {
