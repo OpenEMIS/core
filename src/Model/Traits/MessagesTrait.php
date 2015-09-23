@@ -171,12 +171,12 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
-			'noSubjects' => 'There are no available Subjects.',
+			'noSubjects' => 'There are no available Education Subjects.',
 			'noSections' => 'No Available Classes',
 			'noClasses' => 'No Available Subjects',
 			'noStudents' => 'No Available Students',
 			'mark' => 'Mark',
-			'grade' => 'Grade',
+			'grading' => 'Grading',
 			'save' => [
 				'draft' => 'Assessment record has been saved to draft successfully.',
 				'final' => 'Assessment record has been submitted successfully.',
