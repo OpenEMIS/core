@@ -170,6 +170,7 @@ class StaffTable extends AppTable {
 		->contain(['Institutions'])
 		->select(['Institutions.name'])
 		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
+		->andWhere([$this->InstitutionStaff->aliasField('end_date').' IS NULL'])
 		->toArray();
 		;
 
