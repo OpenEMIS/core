@@ -28,7 +28,12 @@ class StudentUserTable extends UserTable {
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
-				if ($Student->save($Student->newEntity($academicData, ['validate' => 'AllowEmptyName']))) {
+				if (empty($academicData['student_name'])) {
+					$academicData['student_name'] = $entity->openemis_no;
+				}
+
+				$newStudentEntity = $Student->newEntity($academicData);
+				if ($Student->save($newStudentEntity)) {
 					if ($class > 0) {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
@@ -37,6 +42,19 @@ class StudentUserTable extends UserTable {
 						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 					}
+				} else {
+					$validationErrors = [];
+					foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
+						foreach ($nvalue as $ekey => $evalue) {
+							$validationErrors[] = $evalue;
+						}
+					}
+
+					$validationErrors = implode('; ', $validationErrors);
+					$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
+					$event->stopPropagation();
+					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+					return $this->controller->redirect($action);
 				}
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
@@ -59,20 +77,9 @@ class StudentUserTable extends UserTable {
 					$AdmissionTable->log($admissionEntity->errors(), 'debug');
 					$this->Alert->error('general.add.failed');
 				}
-			} else {
-				$validationErrors = [];
-				foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
-					foreach ($nvalue as $ekey => $evalue) {
-						$validationErrors[] = $evalue;
-					}
-				}
+			} 
 
-				$validationErrors = implode('; ', $validationErrors);
-				$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
-				$event->stopPropagation();
-				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-				return $this->controller->redirect($action);
-			}
+			
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
