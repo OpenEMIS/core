@@ -146,6 +146,19 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		}
 	}
 
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$StudentTable = TableRegistry::get('Institution.Students');
+		$studentId = $entity->security_user_id;
+		$institutionId = $entity->institution_site_id;
+		if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+			$process = function ($model, $entity) {
+				return false;
+			};
+			$this->Alert->error('InstitutionSiteStudentAbsences.notEnrolled');
+			return $process;
+		}
+	}
+
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		list($periodOptions, $selectedPeriod, $sectionOptions, $selectedSection, $studentOptions, $selectedStudent) = array_values($this->_getSelectOptions());
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
