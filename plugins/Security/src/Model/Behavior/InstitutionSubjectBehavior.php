@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\ORM\Entity;
 
 class InstitutionSubjectBehavior extends Behavior {
 	public function implementedEvents() {
@@ -14,6 +15,10 @@ class InstitutionSubjectBehavior extends Behavior {
 
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
+		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
 	}
 
@@ -24,6 +29,48 @@ class InstitutionSubjectBehavior extends Behavior {
 			// pr($this->_table->Session->read('Permissions.Institutions.AllClasses'));
 			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]);
 		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+		$AccessControl = $this->_table->AccessControl;
+		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'edit']);
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
+
+		// Remove the edit function if the user does not have the right to access that page
+		if (!$allSubjectsEditPermission) {
+			if ($mySubjectsEditPermission) {
+				$userId = $this->_table->Auth->user('id');
+				if ($entity->has('teachers')) {
+					if (!empty($entity->teachers)) {
+						if ($userId != $entity->teachers[0]->id) {
+							if (isset($buttons['edit'])) {
+								unset($buttons['edit']);
+								return $buttons;
+							}
+						}
+					} else {
+						if (isset($buttons['edit'])) {
+							unset($buttons['edit']);
+							return $buttons;
+						}
+					}
+					
+				}
+			}
+		}
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+
 	}
 
 	public function findByAccess(Query $query, array $options) {
@@ -54,7 +101,6 @@ class InstitutionSubjectBehavior extends Behavior {
 				]);
 			}
 		}
-
 		return $query;
 	}
 }
