@@ -1,38 +1,48 @@
-<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
-
 <?php if ($action == 'edit') : ?>
+	<?php
+		$gradingOptions = $attr['attr']['gradingOptions'];
+	?>
 	<div class="input clearfix">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="table-in-view">
 			<table class="table table-striped table-hover table-bordered table-checkable">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 						<th><?= $this->Label->get('General.openemis_no'); ?></th>
 						<th><?= $this->Label->get('Users.name'); ?></th>
 						<th><?= $this->Label->get('InstitutionAssessments.mark'); ?></th>
-						<th><?= $this->Label->get('InstitutionAssessments.grade'); ?></th>
+						<th><?= $this->Label->get('InstitutionAssessments.grading'); ?></th>
 					</tr>
 				</thead>
-				<?php if (isset($attr['data'])) : ?>
+				<?php if (isset($attr['data'])) : //pr($attr['data']); ?>
 					<tbody>
-						<?php foreach ($attr['data'] as $i => $obj) : ?>
+						<?php foreach ($attr['data'] as $i => $student) : ?>
 							<tr>
-								<td class="checkbox-column">
+								<td>
 									<?php
 										$alias = $ControllerAction['table']->alias();
 										$fieldPrefix = "$alias.students.$i";
-
-										$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
-										echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
-										echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
-										echo $this->Form->hidden("$fieldPrefix.status", ['value' => $attr['attr']['status']]);
-										echo $this->Form->hidden("$fieldPrefix.type", ['value' => $attr['attr']['type']]);
+										echo $student->_matchingData['Users']->openemis_no;
+										echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $student->student_id]);
 									?>
 								</td>
-								<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
-								<td><?= $obj->_matchingData['Users']->name ?></td>
-								<td><?= $attr['attr']['statusOptions'][$obj->student_status_id ]?></td>
+								<td><?= $student->_matchingData['Users']->name; ?></td>
+								<td><?= $this->Form->input("$fieldPrefix.marks", ['label' => false, 'value' => $student->AssessmentItemResults['marks']]); ?></td>
+								<td>
+									<?php
+										$inputOptions = [
+											'type' => 'select',
+											'label' => false,
+											'default' => $student->AssessmentItemResults['assessment_grading_option_id'],
+											'value' => $student->AssessmentItemResults['assessment_grading_option_id'],
+											'options' => $gradingOptions
+										];
+										echo $this->Form->input("$fieldPrefix.assessment_grading_option_id", $inputOptions);
+										if (isset($student->AssessmentItemResults['id'])) {
+											echo $this->Form->hidden("$fieldPrefix.id", ['value' => $student->AssessmentItemResults['id']]);
+										}
+									?>
+								</td>
 							</tr>
 						<?php endforeach ?>
 					</tbody>
