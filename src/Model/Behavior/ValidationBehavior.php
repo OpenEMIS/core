@@ -433,6 +433,11 @@ class ValidationBehavior extends Behavior {
 			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value(admission_age_minus);
 			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value(admission_age_plus);
 
+			// pr('ageOfStudent: '.$ageOfStudent);
+			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
+			// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
+			// die;
+
 			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
 		}
 		
