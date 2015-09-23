@@ -249,7 +249,8 @@ trait MessagesTrait {
 		],
 		'InstitutionSiteStudentAbsences' => [
 			'noSections' => 'No Available Classes',
-			'noStudents' => 'No Available Students'
+			'noStudents' => 'No Available Students',
+			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
 			'noStaff' => 'No Available Staff'
