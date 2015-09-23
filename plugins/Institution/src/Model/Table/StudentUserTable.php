@@ -28,7 +28,7 @@ class StudentUserTable extends UserTable {
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
-				if ($Student->save($Student->newEntity($academicData))) {
+				if ($Student->save($Student->newEntity($academicData, ['validate' => 'AllowEmptyName']))) {
 					if ($class > 0) {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
