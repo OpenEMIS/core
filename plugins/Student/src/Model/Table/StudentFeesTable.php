@@ -33,7 +33,7 @@ class StudentFeesTable extends AppTable {
 
 	public function beforeAction() {
 		$session = $this->request->session();
-		$this->studentId = $session->read('Students.id');
+		$this->studentId = $session->read('Student.Students.id');
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
