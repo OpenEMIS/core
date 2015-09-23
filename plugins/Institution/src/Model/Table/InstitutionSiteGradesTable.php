@@ -12,7 +12,6 @@ class InstitutionSiteGradesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
-		$this->belongsTo('InstitutionSiteProgrammes',	['className' => 'Institution.InstitutionSiteProgrammes']);
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
