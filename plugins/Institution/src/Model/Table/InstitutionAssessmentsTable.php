@@ -851,18 +851,18 @@ class InstitutionAssessmentsTable extends AppTable {
 		}
     }
 
-	// public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-	// 	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-	// 	list(, $selectedStatus) = array_values($this->_getSelectOptions());
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
-	// 	if ($selectedStatus == self::NEW_STATUS) {	// New
-	// 		unset($buttons['remove']);
-	// 	} else if ($selectedStatus == self::COMPLETED) {	// Completed
-	// 		unset($buttons['edit']);
-	// 	}
+		if ($selectedStatus == self::NEW_STATUS) {	// New
+			unset($buttons['remove']);
+		} else if ($selectedStatus == self::COMPLETED) {	// Completed
+			unset($buttons['edit']);
+		}
 
-	// 	return $buttons;
-	// }
+		return $buttons;
+	}
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		$includes['results'] = [
