@@ -12,9 +12,9 @@ use Cake\ORM\Entity;
 class InstitutionSubjectBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
+		// set the priority of the action button to be after the academic period behavior
 		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
@@ -26,51 +26,98 @@ class InstitutionSubjectBehavior extends Behavior {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
-			// pr($this->_table->Session->read('Permissions.Institutions.AllClasses'));
 			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]);
 		}
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		$AccessControl = $this->_table->AccessControl;
-		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'edit']);
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
-
-		// Remove the edit function if the user does not have the right to access that page
-		if (!$allSubjectsEditPermission) {
-			if ($mySubjectsEditPermission) {
+		if (!$this->checkAllSubjectsEditPermission()) {
+			if ($this->checkMySubjectsEditPermission()) {
 				$userId = $this->_table->Auth->user('id');
-				if ($entity->has('teachers')) {
-					if (!empty($entity->teachers)) {
-						if ($userId != $entity->teachers[0]->id) {
-							if (isset($buttons['edit'])) {
-								unset($buttons['edit']);
-								return $buttons;
-							}
-						}
-					} else {
-						if (isset($buttons['edit'])) {
-							unset($buttons['edit']);
-							return $buttons;
-						}
-					}
-					
+				if (empty($entity->teachers)) {
+					$urlParams = $this->_table->ControllerAction->url('view');
+					$event->stopPropagation();
+					$this->_table->Alert->error('security.noAccess');
+					return $this->_table->controller->redirect($urlParams);
+				} elseif ($userId != $entity->teachers[0]->id) {
+					$urlParams = $this->_table->ControllerAction->url('view');
+					$event->stopPropagation();
+					$this->_table->Alert->error('security.noAccess');
+					return $this->_table->controller->redirect($urlParams);
 				}
 			}
 		}
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+		// Remove the edit function if the user does not have the right to access that page
+		if (!$this->checkAllSubjectsEditPermission()) {
+			if ($this->checkMySubjectsEditPermission()) {
+				$userId = $this->_table->Auth->user('id');
+				if ($entity->has('teachers')) {
+					if (empty($entity->teachers)) {
+						if (isset($buttons['edit'])) {
+							unset($buttons['edit']);
+							return $buttons;
+						}
+					} elseif ($userId != $entity->teachers[0]->id) {
+						if (isset($buttons['edit'])) {
+							unset($buttons['edit']);
+							return $buttons;
+						}
+					}
+				}
+			}
+		}
+	}
 
+	// Function to check MySubjects edit permission is set
+	public function checkMySubjectsEditPermission() {
+		$AccessControl = $this->_table->AccessControl;
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
+		if ($mySubjectsEditPermission) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// Function to check AllSubjects edit permission is set
+	public function checkAllSubjectsEditPermission() {
+		$AccessControl = $this->_table->AccessControl;
+		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'edit']);
+		if ($allSubjectsEditPermission) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$staffId = '';
+		if (!empty($entity->teachers)) {
+			$staffId = $entity->teachers[0]->id;
+		}
+		$this->_table->request->data[$this->_table->alias()]['teacher_id'] = $staffId;
+	}
 
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		switch ($action) {
+			case 'view':
+				if (!$this->checkAllSubjectsEditPermission()) {
+					if ($this->checkMySubjectsEditPermission()) {
+						$userId = $this->_table->Auth->user('id');
+						$staffId = $this->_table->request->data[$this->_table->alias()]['teacher_id'];
+						if ($userId != $staffId) {
+							if (isset($toolbarButtons['edit'])) {
+								unset($toolbarButtons['edit']);
+							}
+						}
+					}
+				}
+				break;
+		}
 	}
 
 	public function findByAccess(Query $query, array $options) {
