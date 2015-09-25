@@ -180,5 +180,9 @@ VALUES (1031, 'Student Dropout', 'Institutions', 'Institutions', 'Students', 100
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StudentDropout', 'created', 'Institutions -> Student Dropout','Date of Application', 1, 1, NOW());
 
+ALTER TABLE `security_group_users` ADD INDEX ( `security_group_id` ) ;
+ALTER TABLE `security_group_users` ADD INDEX ( `security_user_id` ) ;
+ALTER TABLE `security_group_users` ADD INDEX ( `security_role_id` ) ;
+
 UPDATE `config_items` SET `value` = '3.2.2' WHERE `code` = 'db_version';
 
