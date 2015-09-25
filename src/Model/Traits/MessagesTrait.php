@@ -364,6 +364,15 @@ trait MessagesTrait {
 			'reject' => 'Dropout request has been rejected successfully.',
 			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
+		'Import' => [
+			'total_rows' => 'Total Rows',
+			'rows_imported' => 'Rows Imported',
+			'rows_updated' => 'Rows Updated',
+			'rows_failed' => 'Rows Failed',
+			'download_failed_records' => 'Download Failed Records',
+			'row_number' => 'Row Number',
+			'duplicate_code' => 'Duplicate Code Identified'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -782,7 +791,6 @@ trait MessagesTrait {
 
 	public function getMessage($code) {
 		$index = explode('.', $code);
-
 		$message = $this->messages;
 		foreach ($index as $i) {
 			if (isset($message[$i])) {
