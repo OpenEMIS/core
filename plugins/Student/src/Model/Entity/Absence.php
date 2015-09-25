@@ -35,7 +35,7 @@ class Absence extends Entity
     		$settingWeekdays = $InstitutionSiteStudentAbsences->getWeekdaysBySetting();
 
     		if ($this->full_day) {
-				$timeStr = __('full day');
+				$timeStr = __('Full Day');
     		} else {
 				$timeStr = sprintf('%s - %s', $this->start_time, $this->end_time);
     		}

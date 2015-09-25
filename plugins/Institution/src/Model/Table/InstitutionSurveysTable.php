@@ -21,6 +21,9 @@ class InstitutionSurveysTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->addBehavior('Survey.Survey', [
+			'module' => 'Institution.Institutions'
+		]);
 		$this->addBehavior('CustomField.Record', [
 			'moduleKey' => null,
 			'fieldKey' => 'survey_question_id',
@@ -34,6 +37,7 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
@@ -42,42 +46,29 @@ class InstitutionSurveysTable extends AppTable {
     	return $events;
     }
 
-	public function buildSurveyRecords() {
-		$CustomModules = $this->SurveyForms->CustomModules;
-		$customModuleResults = $CustomModules
-			->find('all')
-			->select([
-				$CustomModules->aliasField('id'),
-				$CustomModules->aliasField('filter')
-			])
-			->where([
-				$CustomModules->aliasField('model') => $this->request->params['plugin'] .'.'. $this->request->params['controller']
-			])
-			->first();
-		$customModuleId = $customModuleResults->id;
-		$todayDate = date("Y-m-d");
-
-		$institutionId = null;
-		$session = $this->controller->request->session();
-		if ($session->check('Institutions.id')) {
-			$institutionId = $session->read('Institutions.id');
+	public function buildSurveyRecords($institutionId=null) {
+		if (is_null($institutionId)) {
+			$session = $this->controller->request->session();
+			if ($session->check('Institution.Institutions.id')) {
+				$institutionId = $session->read('Institution.Institutions.id');
+			}
 		}
+
+		$surveyForms = $this->getForms();
+		$todayDate = date("Y-m-d");
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
 
-		$surveyForms = $this->SurveyForms
-			->find('list')
-			->where([$this->SurveyForms->aliasField('custom_module_id') => $customModuleId])
-			->toArray();
-
-		//delete all New Survey by Institution Id and reinsert
-		$this->deleteAll([
-			$this->aliasField('institution_site_id') => $institutionId,
-			$this->aliasField('status') => 0
-		]);
+		// Update all New Survey to Expired by Institution Id
+		$this->updateAll(['status' => -1],
+			[
+				'institution_site_id' => $institutionId,
+				'status' => 0
+			]
+		);
 
 		foreach ($surveyForms as $surveyFormId => $surveyForm) {
-			$surveyStatuesIds = $SurveyStatuses
+			$surveyStatusIds = $SurveyStatuses
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 				->where([
 					$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
@@ -87,7 +78,7 @@ class InstitutionSurveysTable extends AppTable {
 
 			$academicPeriodIds = $SurveyStatusPeriods
 				->find('list', ['keyField' => 'academic_period_id', 'valueField' => 'academic_period_id'])
-				->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatuesIds])
+				->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatusIds])
 				->toArray();
 
 			foreach ($academicPeriodIds as $key => $academicPeriodId) {
@@ -102,6 +93,7 @@ class InstitutionSurveysTable extends AppTable {
 						->all();
 
 					if ($results->isEmpty()) {
+						// Insert New Survey if not found
 						$InstitutionSurvey = $this->newEntity();
 						$InstitutionSurvey->status = 0;
 						$InstitutionSurvey->academic_period_id = $academicPeriodId;
@@ -112,6 +104,16 @@ class InstitutionSurveysTable extends AppTable {
 						} else {
 							$this->log($InstitutionSurvey->errors(), 'debug');
 						}
+					} else {
+						// Update Expired Survey back to New
+						$this->updateAll(['status' => 0],
+							[
+								'academic_period_id' => $academicPeriodId,
+								'survey_form_id' => $surveyFormId,
+								'institution_site_id' => $institutionId,
+								'status' => -1
+							]
+						);
 					}
 				}
 			}
@@ -141,11 +143,12 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
-		return $entity->survey_form->description;
+		$surveyFormId = $entity->survey_form->id;
+		return $this->SurveyForms->get($surveyFormId)->description;
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -169,38 +172,46 @@ class InstitutionSurveysTable extends AppTable {
 					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
 				]
 			])
-			->first();
+			->all();
 
-		$dateDisabled = null;
-		if (!is_null($results)) {
-			$data = $results->toArray();
-			$dateDisabled = $data['date_disabled'];
+		$value = '<i class="fa fa-minus"></i>';
+		if (!$results->isEmpty()) {
+			$dateDisabled = $results->first()->date_disabled;
+			$value = $this->formatDate($dateDisabled);
 		}
 
-		return $dateDisabled;
+		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
+		
+		$tabElements = [];
 
-		$tabElements = [
-			'New' => [
+		if ($this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			$tabElements['New'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=0'],
 				'text' => __('New')
-			],
-			'Draft' => [
+			];
+			$tabElements['Draft'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=1'],
 				'text' => __('Draft')
-			],
-			'Completed' => [
+			];
+		}
+
+		if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+			// if (empty($tabElements)) {
+			// 	$selectedStatus = 2;
+			// }
+			$tabElements['Completed'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=2'],
 				'text' => __('Completed')
-			]
-		];
+			];
+		}
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
@@ -236,6 +247,9 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+
+		$options['auto_contain'] = false;
+		$query->contain(['AcademicPeriods', 'SurveyForms']);
 
 		$query
 			->where([$this->aliasField('status') => $selectedStatus])
@@ -292,7 +306,7 @@ class InstitutionSurveysTable extends AppTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($selectedStatus == 0) {	// New
-			unset($buttons['view']);
+			// unset($buttons['view']);
 			unset($buttons['remove']);
 		} else if ($selectedStatus == 2) {	// Completed
 			unset($buttons['edit']);
@@ -331,6 +345,13 @@ class InstitutionSurveysTable extends AppTable {
 		//Return all required options and their key
 		$statusOptions = $this->getSelectOptions('Surveys.status');
 		$selectedStatus = $this->queryString('status', $statusOptions);
+
+		// If do not have access to Survey - New but have access to Survey - Completed, then set selectedStatus to 2
+		if (!$this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+				$selectedStatus = 2;
+			}
+		}
 
 		return compact('statusOptions', 'selectedStatus');
 	}
