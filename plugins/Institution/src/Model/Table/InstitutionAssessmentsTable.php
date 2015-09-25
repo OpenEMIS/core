@@ -602,7 +602,8 @@ class InstitutionAssessmentsTable extends AppTable {
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
 						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
-						$this->SubjectStaff->aliasField('security_user_id') => $this->userId
+						$this->SubjectStaff->aliasField('security_user_id') => $this->userId,
+						$this->SubjectStaff->aliasField('status') => 1
 					]
 				);
 
