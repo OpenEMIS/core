@@ -13,8 +13,8 @@ use App\Model\Table\AppTable;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -24,16 +24,40 @@ class StudentUserTable extends UserTable {
 			$academicData['student_id'] = $entity->id;
 			$class = $academicData['class'];
 			unset($academicData['class']);
-
-			$Student = TableRegistry::get('Institution.Students');
-			if ($Student->save($Student->newEntity($academicData))) {
-				if ($class > 0) {
-					$sectionData = [];
-					$sectionData['student_id'] = $entity->id;
-					$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-					$sectionData['institution_site_section_id'] = $class;
-					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
+			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
+				$Student = TableRegistry::get('Institution.Students');
+				if ($Student->save($Student->newEntity($academicData, ['validate' => 'AllowEmptyName']))) {
+					if ($class > 0) {
+						$sectionData = [];
+						$sectionData['student_id'] = $entity->id;
+						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
+						$sectionData['institution_site_section_id'] = $class;
+						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+					}
+				}
+			} else {
+				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+				$admissionStatus = 1;
+				$entityData = [
+					'start_date' => $academicData['start_date'],
+					'end_date' => $academicData['end_date'],
+					'student_id' => $academicData['student_id'],
+					'status' => 0,
+					'institution_id' => $academicData['institution_id'],
+					'academic_period_id' => $academicData['academic_period_id'],
+					'education_grade_id' => $academicData['education_grade_id'],
+					'previous_institution_id' => 0,
+					'student_transfer_reason_id' => 0,
+					'type' => $admissionStatus,
+				];
+				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData))) {
+					$this->Alert->success('general.add.success');
+				} else {
+					$AdmissionTable->log($admissionEntity->errors(), 'debug');
+					$this->Alert->error('general.add.failed');
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -52,21 +76,16 @@ class StudentUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-		
-		$tabElements = [
-			'Students' => ['text' => __('Academic')],
-			'StudentUser' => ['text' => __('General')]
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+
+		$options = [
+			'userRole' => 'Student',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $entity->id
 		];
 
-		if ($this->action == 'add') {
-			$tabElements['Students']['url'] = array_merge($url, ['action' => 'Students', 'add']);
-			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => $this->alias(), 'add']);
-		} else {
-			$id = $this->request->query['id'];
-			$tabElements['Students']['url'] = array_merge($url, ['action' => 'Students', 'view', $id]);
-			$tabElements['StudentUser']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id]);
-		}
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -79,8 +98,25 @@ class StudentUserTable extends UserTable {
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view' || $action == 'add') {
+		if ($action == 'view') {
 			unset($toolbarButtons['back']);
+			if ($toolbarButtons->offsetExists('export')) {
+				unset($toolbarButtons['export']);
+			}
+			
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$id = $this->request->query['id'];
+			$StudentTable = TableRegistry::get('Institution.Students');
+			$studentId = $StudentTable->get($id)->student_id;
+			// Start PHPOE-1897
+			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End PHPOE-1897
+		} else if ($action == 'add') {
+			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
