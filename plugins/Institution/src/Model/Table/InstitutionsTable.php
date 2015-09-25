@@ -109,7 +109,7 @@ class InstitutionsTable extends AppTable  {
 	// }
 
 	public function addAfterAction(Event $event, Entity $entity) {
-		$header = __('Add New Institution');
+		$header = __('Add new Institution');
 		$this->controller->set('contentHeader', $header);
 	}
 
