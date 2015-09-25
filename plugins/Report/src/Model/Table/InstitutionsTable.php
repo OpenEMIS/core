@@ -42,15 +42,4 @@ class InstitutionsTable extends AppTable  {
 	public function onGetReportName(Event $event, ArrayObject $data) {
 		return __('Overview');
 	}
-
-	public function onExcelGenerate(Event $event, $writer, $settings) {
-		// pr($settings);
-		// $generate = function() { pr('dsa'); };
-		// return $generate;
-	}
-
-	public function onExcelBeforeQuery(Event $event, Query $query) {
-		// pr($this->Session->read($this->aliasField('id')));die;
-		// $query->where(['Institutions.id' => 2]);
-	}
 }
