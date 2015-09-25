@@ -1,5 +1,14 @@
 <?php
-	$gradingOptions = $attr['attr']['gradingOptions'];
+	$assessmentItemObj = $attr['attr']['assessmentItemObj'];
+	if (!empty($assessmentItemObj)) {
+		$resultType = $assessmentItemObj['result_type'];
+		$maxMark = $assessmentItemObj['max'];
+		$gradingOptions = $assessmentItemObj['options'];
+	} else {
+		$resultType = 'MARKS';
+		$maxMark = 100;
+		$gradingOptions = [];
+	}
 ?>
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
@@ -8,7 +17,9 @@
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
-					<th><?= $this->Label->get('InstitutionAssessments.mark'); ?></th>
+					<?php if ($resultType == 'MARKS') : ?>
+						<th><?= $this->Label->get('InstitutionAssessments.mark'); ?></th>
+					<?php endif ?>
 					<th><?= $this->Label->get('InstitutionAssessments.grading'); ?></th>
 				</tr>
 			</thead>
@@ -18,7 +29,9 @@
 						<tr>
 							<td><?= $student->_matchingData['Users']->openemis_no; ?></td>
 							<td><?= $student->_matchingData['Users']->name; ?></td>
-							<td><?= $student->AssessmentItemResults['marks']; ?></td>
+							<?php if ($resultType == 'MARKS') : ?>
+								<td><?= $student->AssessmentItemResults['marks']; ?></td>
+							<?php endif ?>
 							<td>
 								<?php
 									if (!empty($student->AssessmentItemResults['assessment_grading_option_id'])) {
@@ -41,7 +54,9 @@
 					<tr>
 						<th><?= $this->Label->get('General.openemis_no'); ?></th>
 						<th><?= $this->Label->get('Users.name'); ?></th>
-						<th><?= $this->Label->get('InstitutionAssessments.mark'); ?></th>
+						<?php if ($resultType == 'MARKS') : ?>
+							<th><?= $this->Label->get('InstitutionAssessments.mark'); ?></th>
+						<?php endif ?>
 						<th><?= $this->Label->get('InstitutionAssessments.grading'); ?></th>
 					</tr>
 				</thead>
@@ -58,15 +73,32 @@
 									?>
 								</td>
 								<td><?= $student->_matchingData['Users']->name; ?></td>
-								<td><?= $this->Form->input("$fieldPrefix.marks", ['label' => false, 'value' => $student->AssessmentItemResults['marks']]); ?></td>
+								<?php if ($resultType == 'MARKS') : ?>
+									<td>
+										<?php
+											$marks = !empty($student->AssessmentItemResults['marks']) ? $student->AssessmentItemResults['marks'] : '';
+											echo $this->Form->input("$fieldPrefix.marks", [
+												'type' => 'number',
+												'label' => false,
+												'value' => $marks,
+												'min' => 0,
+												'data-id' => $student->_matchingData['Users']->id,
+												'class' => 'resultMark'
+											]);
+											echo $this->Form->hidden("$fieldPrefix.max_mark", ['value' => $maxMark, 'class' => 'maxMark']);
+										?>
+									</td>
+								<?php endif ?>
 								<td>
 									<?php
+										$grading = !empty($student->AssessmentItemResults['assessment_grading_option_id']) ? $student->AssessmentItemResults['assessment_grading_option_id'] : 0;
 										$inputOptions = [
 											'type' => 'select',
 											'label' => false,
-											'default' => $student->AssessmentItemResults['assessment_grading_option_id'],
-											'value' => $student->AssessmentItemResults['assessment_grading_option_id'],
-											'options' => $gradingOptions
+											'default' => $grading,
+											'value' => $grading,
+											'options' => $gradingOptions,
+											'class' => 'resultGrade'
 										];
 										echo $this->Form->input("$fieldPrefix.assessment_grading_option_id", $inputOptions);
 										if (isset($student->AssessmentItemResults['id'])) {
