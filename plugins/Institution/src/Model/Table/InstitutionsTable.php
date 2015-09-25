@@ -202,7 +202,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
-		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Locality')]);
+		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 		
 		$language = I18n::locale();
 		$field = 'area_id';
