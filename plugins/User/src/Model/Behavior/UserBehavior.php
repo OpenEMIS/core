@@ -144,6 +144,20 @@ class UserBehavior extends Behavior {
 			$value = $entity->_matchingData['Users']->openemis_no;
 		} else if ($entity->has('user')) {
 			$value = $entity->user->openemis_no;
+			$action = $this->_table->ControllerAction->action();
+			$model = $this->_table->alias();
+
+			$pluginName = '';
+			if ($model == 'Students') {
+				$pluginName = 'Student';
+			} else if ($model == 'Staff') {
+				$pluginName = 'Staff';
+			}
+
+			if (($action == 'view') ) {
+				$url = ['plugin' => $pluginName, 'controller' => $model, 'action' => $action, $entity->user->id];
+				$value = $event->subject()->Html->link($value, $url);
+			}
 		}
 		return $value;
 	}
