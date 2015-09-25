@@ -9,6 +9,7 @@ class ImportTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        $this->addBehavior('Import.Import');
+        // $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Institutions']);
+	    $this->addBehavior('Import.Import');
 	}
 }
