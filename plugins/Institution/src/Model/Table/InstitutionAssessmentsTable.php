@@ -36,6 +36,11 @@ class InstitutionAssessmentsTable extends AppTable {
 	private $educationSubjectIds = [];
 	private $userId = null;
 
+	private $classOptions = [];
+	private $subjectOptions = [];
+	private $dataNamedGroup = [];
+	private $baseUrl = null;
+
 	public function initialize(array $config) {
 		$this->table('institution_site_assessments');
 		parent::initialize($config);
@@ -98,6 +103,73 @@ class InstitutionAssessmentsTable extends AppTable {
 		}
 
 		return $value;
+	}
+
+	public function onGetClass(Event $event, Entity $entity) {
+		$html = '';
+
+		$Form = $event->subject()->Form;
+		$url = [
+			'plugin' => $this->request->params['plugin'],
+		    'controller' => $this->request->params['controller'],
+		    'action' => $this->request->params['action']
+		];
+		if (!empty($this->request->pass)) {
+			$url = array_merge($url, $this->request->pass);
+		}
+		$this->dataNamedGroup = [];
+		if (!empty($this->request->query)) {
+			foreach ($this->request->query as $key => $value) {
+				if (in_array($key, ['class', 'subject'])) continue;
+				echo $Form->hidden($key, [
+					'value' => $value,
+					'data-named-key' => $key
+				]);
+				$this->dataNamedGroup[] = $key;
+			}
+		}
+		$this->baseUrl = $event->subject()->Url->build($url);
+
+		$inputOptions = [
+			'class' => 'form-control',
+			'label' => false,
+			'options' => $this->classOptions,
+			'url' => $this->baseUrl,
+			'data-named-key' => 'class',
+			'escape' => false
+		];
+		if (!empty($this->dataNamedGroup)) {
+			$inputOptions['data-named-group'] = implode(',', $this->dataNamedGroup);
+			$this->dataNamedGroup[] = 'class';
+		}
+
+		$fieldPrefix = $this->alias();
+        $html = $Form->input($fieldPrefix.".class", $inputOptions);
+
+		return $html;
+	}
+
+	public function onGetSubject(Event $event, Entity $entity) {
+		$html = '';
+
+		$Form = $event->subject()->Form;
+		$inputOptions = [
+			'class' => 'form-control',
+			'label' => false,
+			'options' => $this->subjectOptions,
+			'url' => $this->baseUrl,
+			'data-named-key' => 'subject',
+			'escape' => false
+		];
+		if (!empty($this->dataNamedGroup)) {
+			$inputOptions['data-named-group'] = implode(',', $this->dataNamedGroup);
+			$this->dataNamedGroup[] = 'subject';
+		}
+
+		$fieldPrefix = $this->alias();
+        $html = $Form->input($fieldPrefix.".subject", $inputOptions);
+
+		return $html;
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -247,14 +319,36 @@ class InstitutionAssessmentsTable extends AppTable {
 				foreach ($data[$InstitutionAssessments->alias()]['students'] as $key => $obj) {
 					$students[$key] = [
 						'student_id' => $obj['student_id'],
-						'marks' => $obj['marks'],
+						// 'marks' => $obj['marks'],
 						'assessment_grading_option_id' => $obj['assessment_grading_option_id'],
-						'institution_site_id' => $institutionId,
+						'institution_id' => $institutionId,
 						'academic_period_id' => $periodId
 					];
 
-					if (!empty($obj['id'])) {
+					// If grading result type is not MARKS, then marks field will not be sent
+					$insertRecord = true;
+					if (isset($obj['marks'])) {	// MARKS
+						$students[$key]['marks'] = $obj['marks'];
+						if (strlen($obj['marks']) == 0 && $obj['assessment_grading_option_id'] == 0) {
+							$insertRecord = false;
+						}
+					} else {	// GRADES
+						if ($obj['assessment_grading_option_id'] == 0) {
+							$insertRecord = false;
+						}
+					}
+
+					if (isset($obj['id'])) {
 						$students[$key]['id'] = $obj['id'];
+						if (!$insertRecord) {
+							$this->AssessmentItemResults->deleteAll([
+								$this->AssessmentItemResults->aliasField('id') => $obj['id']
+							]);
+						}
+					}
+
+					if (!$insertRecord) {
+						unset($students[$key]);
 					}
 				}
 
@@ -285,6 +379,24 @@ class InstitutionAssessmentsTable extends AppTable {
 		return $process;
 	}
 
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($entity->status == self::DRAFT) {
+			$url = $this->ControllerAction->url('edit');
+		} else if ($entity->status == self::COMPLETED) {
+			$indexUrl = $this->ControllerAction->url('index');
+			$url = [
+				'plugin' => $indexUrl['plugin'],
+				'controller' => $indexUrl['controller'],
+				'action' => $indexUrl['action'],
+				0 => 'index',
+				'status' => $indexUrl['status']
+			];
+		}
+
+		$event->stopPropagation();
+		return $this->controller->redirect($url);
+	}
+
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_setupFields($entity);
 	}
@@ -305,7 +417,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 				$Results->deleteAll([
-					$Results->aliasField('institution_site_id') => $assessmentRecord->institution_site_id,
+					$Results->aliasField('institution_id') => $assessmentRecord->institution_site_id,
 					$Results->aliasField('academic_period_id') => $assessmentRecord->academic_period_id,
 					$Results->aliasField('assessment_item_id IN') => $itemIds
 				]);
@@ -446,10 +558,8 @@ class InstitutionAssessmentsTable extends AppTable {
 	  	}
 
     	if ($action == 'view') {
-    		$attr['type'] = 'element';
-			$attr['element'] = 'Institution.Assessment/class';
-			$attr['valueClass'] = 'table-full-width';
-			$attr['attr']['options'] = $classOptions;
+    		$this->classOptions = $classOptions;
+    		$attr['valueClass'] = 'table-full-width';
     	} else if ($action == 'edit') {
     		$attr['type'] = 'select';
     		$attr['attr']['options'] = $classOptions;
@@ -522,10 +632,8 @@ class InstitutionAssessmentsTable extends AppTable {
 	  	}
 
 		if ($action == 'view') {
-    		$attr['type'] = 'element';
-			$attr['element'] = 'Institution.Assessment/subject';
-			$attr['valueClass'] = 'table-full-width';
-			$attr['attr']['options'] = $subjectOptions;
+			$this->subjectOptions = $subjectOptions;
+    		$attr['valueClass'] = 'table-full-width';
     	} else if ($action == 'edit') {
     		$attr['type'] = 'select';
     		$attr['attr']['options'] = $subjectOptions;
@@ -595,7 +703,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					[$this->AssessmentItemResults->alias() => $this->AssessmentItemResults->table()],
 					[
 						$this->AssessmentItemResults->aliasField('student_id = ') . $this->SubjectStudents->aliasField('student_id'),
-						$this->AssessmentItemResults->aliasField('institution_site_id') => $institutionId,
+						$this->AssessmentItemResults->aliasField('institution_id') => $institutionId,
 						$this->AssessmentItemResults->aliasField('academic_period_id') => $selectedPeriod,
 						$this->AssessmentItemResults->aliasField('assessment_item_id') => $assessmentItemId
 					]
@@ -743,18 +851,18 @@ class InstitutionAssessmentsTable extends AppTable {
 		}
     }
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		list(, $selectedStatus) = array_values($this->_getSelectOptions());
+	// public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	// 	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+	// 	list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
-		if ($selectedStatus == self::NEW_STATUS) {	// New
-			unset($buttons['remove']);
-		} else if ($selectedStatus == self::COMPLETED) {	// Completed
-			unset($buttons['edit']);
-		}
+	// 	if ($selectedStatus == self::NEW_STATUS) {	// New
+	// 		unset($buttons['remove']);
+	// 	} else if ($selectedStatus == self::COMPLETED) {	// Completed
+	// 		unset($buttons['edit']);
+	// 	}
 
-		return $buttons;
-	}
+	// 	return $buttons;
+	// }
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		$includes['results'] = [
