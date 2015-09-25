@@ -960,12 +960,11 @@ class InstitutionAssessmentsTable extends AppTable {
 							$data = [
 								'institution_site_id' => $institutionId,
 								'academic_period_id' => $academicPeriodId,
-								'assessment_id' => $assessmentId,
-								// to bypass validation
-								'class' => 0,
-								'subject' => 0
+								'assessment_id' => $assessmentId
 							];
-							$entity = $this->newEntity($data);
+
+							// Set validate = false to bypass validation
+							$entity = $this->newEntity($data, ['validate' => false]);
 
 							if ($this->save($entity)) {
 							} else {
