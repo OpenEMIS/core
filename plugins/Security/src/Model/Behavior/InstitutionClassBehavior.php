@@ -12,9 +12,9 @@ use Cake\ORM\Entity;
 class InstitutionClassBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
+		// set the priority of the action button to be after the academic period behavior
 		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
@@ -31,16 +31,13 @@ class InstitutionClassBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$AccessControl = $this->_table->AccessControl;
-		$allClassesEditPermission = $AccessControl->check(['Institutions', 'AllClasses', 'edit']);
-		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
-
-		if (!$allClassesEditPermission) {
-			if ($myClassesEditPermission) {
+		if (!$this->checkAllClassesEditPermission()) {
+			if ($this->checkMyClassesEditPermission()) {
 				$userId = $this->_table->Auth->user('id');
 				if ($userId != $entity->security_user_id) {
 					$urlParams = $this->_table->ControllerAction->url('view');
 					$event->stopPropagation();
+					$this->_table->Alert->error('security.noAccess');
 					return $this->_table->controller->redirect($urlParams);
 				}
 			}
@@ -60,13 +57,9 @@ class InstitutionClassBehavior extends Behavior {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		$AccessControl = $this->_table->AccessControl;
-		$allClassesEditPermission = $AccessControl->check(['Institutions', 'AllClasses', 'edit']);
-		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
-
 		// Remove the edit function if the user does not have the right to access that page
-		if (!$allClassesEditPermission) {
-			if ($myClassesEditPermission) {
+		if (!$this->checkAllClassesEditPermission()) {
+			if ($this->checkMyClassesEditPermission()) {
 				$userId = $this->_table->Auth->user('id');
 				if ($userId != $entity->security_user_id) {
 					if (isset($buttons['edit'])) {
@@ -78,6 +71,28 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
+	// Function to check MyClass edit permission is set
+	public function checkMyClassesEditPermission() {
+		$AccessControl = $this->_table->AccessControl;
+		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
+		if ($myClassesEditPermission) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// Function to check AllClass edit permission is set
+	public function checkAllClassesEditPermission() {
+		$AccessControl = $this->_table->AccessControl;
+		$allClassesEditPermission = $AccessControl->check(['Institutions', 'AllClasses', 'edit']);
+		if ($allClassesEditPermission) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->_table->request->data[$this->_table->alias()]['security_user_id'] = $entity->security_user_id;
 	}
@@ -85,14 +100,10 @@ class InstitutionClassBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
-				$AccessControl = $this->_table->AccessControl;
-				$allClassesEditPermission = $AccessControl->check(['Institutions', 'AllClasses', 'edit']);
-				$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
-
 				// If all classes can edit, then skip the removal of the button
-				if (!$allClassesEditPermission) {
+				if (!$this->checkAllClassesEditPermission()) {
 					// If there is no permission to edit my classes
-					if ($myClassesEditPermission) {
+					if ($this->checkMyClassesEditPermission()) {
 						$userId = $this->_table->Auth->user('id');
 						$entityUserId = $this->_table->request->data[$this->_table->alias()]['security_user_id'];
 						// Remove the edit button from those records who does not belong to the user
