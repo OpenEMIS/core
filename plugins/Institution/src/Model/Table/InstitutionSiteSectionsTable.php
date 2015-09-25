@@ -442,6 +442,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$this->fields['name']['visible'] = false;
 			$this->fields['students']['visible'] = false;
 			$this->fields['security_user_id']['visible'] = false;
+			$this->fields['security_user_id']['type'] = 'hidden';
 			$this->ControllerAction->setFieldOrder([
 				'academic_period_id', 'education_grade', 'institution_site_shift_id', 'section_number', 'number_of_sections', 'single_grade_field'
 			]);
