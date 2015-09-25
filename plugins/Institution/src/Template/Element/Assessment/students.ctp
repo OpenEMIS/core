@@ -76,7 +76,7 @@
 								<?php if ($resultType == 'MARKS') : ?>
 									<td>
 										<?php
-											$marks = !empty($student->AssessmentItemResults['marks']) ? $student->AssessmentItemResults['marks'] : '';
+											$marks = strlen($student->AssessmentItemResults['marks']) != 0 ? $student->AssessmentItemResults['marks'] : '';
 											echo $this->Form->input("$fieldPrefix.marks", [
 												'type' => 'number',
 												'label' => false,

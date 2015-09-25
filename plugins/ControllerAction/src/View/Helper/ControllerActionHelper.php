@@ -10,7 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\I18n;
 
 class ControllerActionHelper extends Helper {
-	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label'];
+	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
 	public function getColumnLetter($columnNumber) {
         if ($columnNumber > 26) {
