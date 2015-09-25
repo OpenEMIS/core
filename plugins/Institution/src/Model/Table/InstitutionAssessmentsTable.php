@@ -245,18 +245,16 @@ class InstitutionAssessmentsTable extends AppTable {
 
 				$students = [];
 				foreach ($data[$InstitutionAssessments->alias()]['students'] as $key => $obj) {
-					if (strlen($obj['marks']) > 0) {
-						$students[$key] = [
-							'student_id' => $obj['student_id'],
-							'marks' => $obj['marks'],
-							'assessment_grading_option_id' => $obj['assessment_grading_option_id'],
-							'institution_site_id' => $institutionId,
-							'academic_period_id' => $periodId
-						];
+					$students[$key] = [
+						'student_id' => $obj['student_id'],
+						'marks' => $obj['marks'],
+						'assessment_grading_option_id' => $obj['assessment_grading_option_id'],
+						'institution_site_id' => $institutionId,
+						'academic_period_id' => $periodId
+					];
 
-						if (!empty($obj['id'])) {
-							$students[$key]['id'] = $obj['id'];
-						}
+					if (!empty($obj['id'])) {
+						$students[$key]['id'] = $obj['id'];
 					}
 				}
 
@@ -266,7 +264,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						$AssessmentItemResults->table() => $students
 					]
 				];
-				$assessmentEntity = $AssessmentItems->newEntity($assessmentData);
+				$assessmentEntity = $AssessmentItems->newEntity($assessmentData, ['validate' => false]);
 
 				if( $AssessmentItems->save($assessmentEntity) ){
 					$InstitutionAssessments->updateAll(
@@ -581,13 +579,10 @@ class InstitutionAssessmentsTable extends AppTable {
     	$selectedSubject = $request->query('subject');
     	$assessmentItemId = $request->query('assessment_item_id');
 
-    	// pr('institutionId: ' . $institutionId . '  selectedPeriod: ' . $selectedPeriod . '  selectedAssessment: ' . $selectedAssessment);
-    	// pr('selectedGrade: ' . $selectedGrade . '  selectedClass: ' . $selectedClass . '  selectedSubject: ' . $selectedSubject);
-    	// pr('assessmentItemId: ' . $assessmentItemId . '  selectedClass: ' . $selectedClass . '  selectedSubject: ' . $selectedSubject);
-    	// die;
-
 		$students = [];
+		$assessmentItemObj = [];
 		if (!is_null($assessmentItemId)) {
+			// Students
 			$query = $this->SubjectStudents
 				->find()
 				->matching('Users')
@@ -612,53 +607,68 @@ class InstitutionAssessmentsTable extends AppTable {
 				->autoFields(true);
 
 			$students = $query->toArray();
+			// End
+
+			// Grading Options
+			$gradingOptions = [];
+			$results = $this->AssessmentItems
+				->find()
+				->where([
+					$this->AssessmentItems->aliasField('id') => $assessmentItemId
+				])
+				->contain([
+					'GradingTypes' => function ($q) {
+						return $q->find('visible');
+					},
+					'GradingTypes.GradingOptions' => function ($q) {
+						return $q
+							->find('visible')
+							->find('order');
+					}
+				])
+				->first();
+
+			if ($action == 'view') {
+				// List only
+				foreach ($results->grading_type->grading_options as $grading) {
+			  		$gradingName = !empty($grading->code) ? $grading->code . ' - ' . $grading->name : $grading->name;
+			  		$gradingOptions[$grading->id] = $gradingName;
+			  	}
+			} else if ($action == 'edit') {
+				$gradingOptions[0] = [
+					'value' => 0,
+					'text' => __('-- Select Grading --')
+				];
+			  	foreach ($results->grading_type->grading_options as $grading) {
+			  		$gradingName = !empty($grading->code) ? $grading->code . ' - ' . $grading->name : $grading->name;
+			  		$gradingOptions[$grading->id] = [
+			  			'value' => $grading->id,
+			  			'text' => $gradingName,
+			  			'data-grading-type-id' => $grading->assessment_grading_type_id,
+			  			'data-min' => $grading->min,
+			  			'data-max' => $grading->max
+			  		];
+			  	}
+			}
+		  	// End
+
+		  	$assessmentItemObj = [
+		  		'result_type' => $results->result_type,
+		  		'max' => $results->max,
+		  		'options' => $gradingOptions
+		  	];
 		}
 
-		if (empty($students)) {
+	  	if (empty($students)) {
 	  		$this->Alert->warning($this->aliasField('noStudents'));
 	  	}
-
-	  	// Grading Options
-	  	$gradingOptions = [];
-		$results = $this->AssessmentItems
-			->find()
-			->where([
-				$this->AssessmentItems->aliasField('id') => $assessmentItemId
-			])
-			->contain([
-				'GradingTypes' => function ($q) {
-					return $q->find('visible');
-				},
-				'GradingTypes.GradingOptions' => function ($q) {
-					return $q
-						->find('visible')
-						->find('order');
-				}
-			])
-			->first();
-
-		if ($action == 'view') {
-			foreach ($results->grading_type->grading_options as $grading) {
-		  		$gradingName = !empty($grading->code) ? $grading->code . ' - ' . $grading->name : $grading->name;
-		  		$gradingOptions[$grading->id] = $gradingName;
-		  	}
-		} else if ($action == 'edit') {
-			$gradingOptions[0] = __('-- Select Grade --');
-		  	foreach ($results->grading_type->grading_options as $grading) {
-		  		$gradingName = !empty($grading->code) ? $grading->code . ' - ' . $grading->name : $grading->name;
-		  		$gradingOptions[$grading->id] = $gradingName;
-		  	}
-		  	$selectedGrading = 0;
-		  	$this->advancedSelectOptions($gradingOptions, $selectedGrading);
-		}
-	  	// End
 
 		if ($action == 'view' || $action == 'edit') {
 		  	$attr['type'] = 'element';
 			$attr['element'] = 'Institution.Assessment/students';
 			$attr['valueClass'] = 'table-full-width';
 			$attr['data'] = $students;
-			$attr['attr']['gradingOptions'] = $gradingOptions;
+			$attr['attr']['assessmentItemObj'] = $assessmentItemObj;
 		}
 
     	return $attr;
@@ -714,6 +724,9 @@ class InstitutionAssessmentsTable extends AppTable {
 				if (array_key_exists('subject', $request->data[$this->alias()])) {
 					$request->query['subject'] = $request->data[$this->alias()]['subject'];
 				}
+				if (array_key_exists('students', $request->data[$this->alias()])) {
+					$this->request->data[$this->alias()]['students'] = [];
+				}
 			}
 		}
     }
@@ -741,6 +754,13 @@ class InstitutionAssessmentsTable extends AppTable {
 		}
 
 		return $buttons;
+	}
+
+    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['results'] = [
+			'include' => true,
+			'js' => 'Institution.../js/results'
+		];
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
