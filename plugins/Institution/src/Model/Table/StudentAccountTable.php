@@ -22,4 +22,26 @@ class StudentAccountTable extends AppTable {
 		return $validator;
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+				$institutionId = $this->Session->read('Institution.Institutions.id');
+				$id = $this->request->query['id'];
+				$StudentTable = TableRegistry::get('Institution.Students');
+				$studentId = $StudentTable->get($id)->student_id;
+				// Start PHPOE-1897
+				if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+					if (isset($toolbarButtons['edit'])) {
+						unset($toolbarButtons['edit']);
+					}
+				}
+				// End PHPOE-1897
+			}
+	}
+
 }

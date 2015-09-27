@@ -4,7 +4,7 @@
 <div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
 
 	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
-	<h4>Advanced Search</h4>
+	<h4><?= __('Advanced Search')?></h4>
 
 	<?php
 		// pr($model);die;

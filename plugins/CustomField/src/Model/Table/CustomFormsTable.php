@@ -175,7 +175,7 @@ class CustomFormsTable extends AppTable {
 		list($moduleOptions, $selectedModule) = array_values($this->_getSelectOptions());
 
 		$attr['options'] = $moduleOptions;
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeModule';
 
 		return $attr;
 	}
@@ -253,6 +253,14 @@ class CustomFormsTable extends AppTable {
 		$attr['options'] = $customFieldOptions;
 
 		return $attr;
+	}
+
+	public function addEditOnChangeModule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if (array_key_exists($this->alias(), $data)) {
+			if (array_key_exists('custom_module_id', $data[$this->alias()])) {
+				$this->request->query['module'] = $data[$this->alias()]['custom_module_id'];
+			}
+		}
 	}
 
 	public function initFields() {

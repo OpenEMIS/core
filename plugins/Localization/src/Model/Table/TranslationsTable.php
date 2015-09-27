@@ -78,7 +78,7 @@ class TranslationsTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if($action == "index"){
 			$toolbarButtons['download']['type'] = 'button';
-			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+			$toolbarButtons['download']['label'] = '<span class="icon-big"><i class="fa kd-compile"></i></span>';
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Compile');
 			$toolbarButtons['download']['attr']['onclick'] = 'Translations.compile(this);';
