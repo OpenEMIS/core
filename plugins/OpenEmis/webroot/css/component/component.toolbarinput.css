@@ -1,0 +1,36 @@
+/* TOOLBAR WITH INPUTS v.1.0.0 */
+
+.toolbar-wrapper {
+    height: 40px;
+}
+
+.toolbar-wrapper .input {
+    width: 20%;
+    margin: 5px 10px;
+    display: inline-block;
+}
+
+.toolbar-wrapper .form-control {
+    height: 25px;
+    padding: 2px 25px 2px 6px;
+    font-size: 11px;
+    margin: 3px 0;
+}
+
+.toolbar-wrapper .input-select-wrapper:after {
+    top: 57%;
+}
+
+.toolbar-wrapper .select {
+    position: relative;
+}
+
+.toolbar-wrapper .select:after {
+    top: -2px;
+    right: 1px;
+    padding: 0 8px;
+}
+
+.format-item .col-md-12 {
+    float: none !important;
+}

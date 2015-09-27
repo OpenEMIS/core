@@ -11,7 +11,8 @@
 		$this->Form->input($alias.".next_academic_period_id", [
 			'label' => $this->Label->get('StudentPromotion.next_period'),
 			'type' => 'select',
-			'options' => $periods
+			'options' => $periods,
+			'onchange' => "$('#reload').click();return false;"
 		]);
 	?>
 </div>
