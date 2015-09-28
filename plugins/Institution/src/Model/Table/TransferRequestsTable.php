@@ -393,7 +393,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$InstitutionGrades = TableRegistry::get('Institutions.InstitutionGrades');
+			$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
