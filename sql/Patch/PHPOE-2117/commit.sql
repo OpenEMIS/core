@@ -8,8 +8,8 @@ RENAME TO  `z_2117_institution_site_programmes` ;
 CREATE TABLE `z_2117_institution_site_grades` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `institution_site_programme_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-) ENGINE=InnoDB AUTO_INCREMENT=179 DEFAULT CHARSET=utf8
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=179 DEFAULT CHARSET=utf8;
 
 INSERT INTO `z_2117_institution_site_grades` (`id`, `institution_site_programme_id`)
 SELECT `id`, `institution_site_programme_id` FROM `institution_site_grades`;
