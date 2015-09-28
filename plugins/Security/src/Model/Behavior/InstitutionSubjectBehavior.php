@@ -39,11 +39,22 @@ class InstitutionSubjectBehavior extends Behavior {
 					$event->stopPropagation();
 					$this->_table->Alert->error('security.noAccess');
 					return $this->_table->controller->redirect($urlParams);
-				} elseif ($userId != $entity->teachers[0]->id) {
-					$urlParams = $this->_table->ControllerAction->url('view');
-					$event->stopPropagation();
-					$this->_table->Alert->error('security.noAccess');
-					return $this->_table->controller->redirect($urlParams);
+				} else {
+					$isFound = false;
+					foreach ($entity->teachers as $staff) {
+						if ($userId == $staff->id) {
+							$isFound = true;
+							break;
+						}
+					}
+					if (! $isFound) {
+						if (isset($buttons['edit'])) {
+							$urlParams = $this->_table->ControllerAction->url('view');
+							$event->stopPropagation();
+							$this->_table->Alert->error('security.noAccess');
+							return $this->_table->controller->redirect($urlParams);
+						}
+					}
 				}
 			}
 		}
@@ -61,10 +72,19 @@ class InstitutionSubjectBehavior extends Behavior {
 							unset($buttons['edit']);
 							return $buttons;
 						}
-					} elseif ($userId != $entity->teachers[0]->id) {
-						if (isset($buttons['edit'])) {
-							unset($buttons['edit']);
-							return $buttons;
+					} else {
+						$isFound = false;
+						foreach ($entity->teachers as $staff) {
+							if ($userId == $staff->id) {
+								$isFound = true;
+								break;
+							}
+						}
+						if (! $isFound) {
+							if (isset($buttons['edit'])) {
+								unset($buttons['edit']);
+								return $buttons;
+							}
 						}
 					}
 				}
@@ -97,9 +117,9 @@ class InstitutionSubjectBehavior extends Behavior {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$staffId = '';
 		if (!empty($entity->teachers)) {
-			$staffId = $entity->teachers[0]->id;
+			$staff = $entity->teachers;
 		}
-		$this->_table->request->data[$this->_table->alias()]['teacher_id'] = $staffId;
+		$this->_table->request->data[$this->_table->alias()]['teachers'] = $staff;
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -108,8 +128,15 @@ class InstitutionSubjectBehavior extends Behavior {
 				if (!$this->checkAllSubjectsEditPermission()) {
 					if ($this->checkMySubjectsEditPermission()) {
 						$userId = $this->_table->Auth->user('id');
-						$staffId = $this->_table->request->data[$this->_table->alias()]['teacher_id'];
-						if ($userId != $staffId) {
+						$staffs = $this->_table->request->data[$this->_table->alias()]['teachers'];
+						$isFound = false;
+						foreach ($staffs as $staff) {
+							if ($userId == $staff->id) {
+								$isFound = true;
+								break;
+							}
+						}
+						if (! $isFound) {
 							if (isset($toolbarButtons['edit'])) {
 								unset($toolbarButtons['edit']);
 							}
