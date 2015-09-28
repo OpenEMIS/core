@@ -114,6 +114,20 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
 
+	// Start PHPOE-2123
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		// Another check to check before deletion. In case of concurrency issue.
+		$status = $this->get($id)->student_status_id;
+		$studentStatuses = $this->StudentStatuses->findCodeList();
+		if ($status != $studentStatuses['CURRENT']) {
+			$process = function() use ($id, $options) {
+				$this->Alert->error('Institution.InstitutionSiteStudents.deleteNotEnrolled');
+			};
+			return $process;
+		}
+	}
+	// End PHPOE-2123
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('class', ['order' => 90]);
@@ -526,6 +540,16 @@ class StudentsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+
+		// Start PHPOE-1897
+		$statuses = $this->StudentStatuses->findCodeList();
+		if ($entity->student_status_id != $statuses['CURRENT']) {
+			$event->stopPropagation();
+			$urlParams = $this->ControllerAction->url('view');
+			return $this->controller->redirect($urlParams);
+		}
+		// End PHPOE-1897
+
 		$this->ControllerAction->field('student_id', [
 			'type' => 'readonly', 
 			'order' => 10, 
@@ -766,6 +790,44 @@ class StudentsTable extends AppTable {
 		
 		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'sectionOptions', 'selectedSection');
 	}
+	
+	// Start PHPOE-1897
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$studentId = $this->get($entity->id)->student_id;
+		$institutionId = $entity->institution_id;
+
+		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
+			if (isset($buttons['edit'])) {
+				unset($buttons['edit']);
+			}
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+
+		$status = $entity->student_status_id;
+		$studentStatuses = $this->StudentStatuses->findCodeList();
+		if ($status != $studentStatuses['CURRENT']) {
+			if (isset($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+		}
+		return $buttons;
+	}
+	// End PHPOE-1897
+
+	public function checkEnrolledInInstitution($studentId, $institutionId) {
+		$statuses = TableRegistry::get('Student.StudentStatuses')->findCodeList();
+		$status = $this
+			->find()
+			->where([$this->aliasField('student_id') => $studentId, 
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_status_id') => $statuses['CURRENT']
+			])
+			->count();
+		return $status > 0;
+	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'index') { // for promotion button in index page
@@ -800,12 +862,21 @@ class StudentsTable extends AppTable {
 				$toolbarButtons['back']['type'] = null;
 			}
 		} else if ($action == 'view') { // for transfer button in view page
+			$statuses = $this->StudentStatuses->findCodeList();
+			$id = $this->request->params['pass'][1];
+			$studentStatusId = $this->get($id)->student_status_id;			
+			// Start PHPOE-1897
+			if ($studentStatusId != $statuses['CURRENT']) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End PHPOE-1897
+
+
 			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-
-				$id = $this->request->params['pass'][1];
 				$studentData = $this->get($id);
 				$selectedStudent = $studentData->student_id;
 				$selectedPeriod = $studentData->academic_period_id;

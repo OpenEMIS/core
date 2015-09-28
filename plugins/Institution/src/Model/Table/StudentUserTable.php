@@ -103,6 +103,18 @@ class StudentUserTable extends UserTable {
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
+			
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$id = $this->request->query['id'];
+			$StudentTable = TableRegistry::get('Institution.Students');
+			$studentId = $StudentTable->get($id)->student_id;
+			// Start PHPOE-1897
+			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End PHPOE-1897
 		} else if ($action == 'add') {
 			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {

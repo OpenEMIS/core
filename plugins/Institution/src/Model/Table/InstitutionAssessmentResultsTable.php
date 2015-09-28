@@ -66,8 +66,11 @@ class InstitutionAssessmentResultsTable extends AppTable {
 			if (!is_null($resultObj)) {
 				$marks = $resultObj->marks;
 			}
-			
-			if ($selectedMode == 'edit') {
+			$entity->assessment_grading_option_id = $gradingId;
+			$studentId = $entity->student_id;
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$StudentTable = TableRegistry::get('Institution.Students');
+			if ($selectedMode == 'edit' && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 				$Form = $event->subject()->Form;
 				$alias = Inflector::underscore($Results->alias());
 				$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
@@ -100,15 +103,14 @@ class InstitutionAssessmentResultsTable extends AppTable {
 
 	public function onGetGrade(Event $event, Entity $entity) {
 		$html = '';
-
 		$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
 		$Items = TableRegistry::get('Assessment.AssessmentItems');
 		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
-
+		$StudentTable = TableRegistry::get('Institution.Students');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->request->query('period');
 		$selectedMode = $this->request->query('mode');
-		$id = $entity->student_id;
+		$studentId = $entity->student_id;
 
 		$resultObj = null;
 		if (!is_null($this->itemObj)) {
@@ -116,14 +118,14 @@ class InstitutionAssessmentResultsTable extends AppTable {
 				->find()
 				->where([
 					$Results->aliasField('assessment_item_id') => $this->itemObj->id,
-					$Results->aliasField('security_user_id') => $id,
+					$Results->aliasField('security_user_id') => $studentId,
 					$Results->aliasField('institution_site_id') => $institutionId,
 					$Results->aliasField('academic_period_id') => $selectedPeriod
 				])
 				->first();
 		}
 
-		if ($selectedMode == 'edit') {
+		if ($selectedMode == 'edit' && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$Form = $event->subject()->Form;
 			$alias = Inflector::underscore($Results->alias());
 			$fieldPrefix = $Items->alias() . '.'.$alias.'.' . $id;
