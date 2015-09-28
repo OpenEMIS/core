@@ -106,8 +106,8 @@ class InstitutionsTable extends AppTable  {
 			case 'index':
 				$toolbarButtons['import'] = $toolbarButtons['add'];
 				$toolbarButtons['import']['url']['action'] = 'Import';
-				$toolbarButtons['import']['attr']['title'] = 'Import';
-				$toolbarButtons['import']['label'] = '<i class="fa kd-upload"></i>';
+				$toolbarButtons['import']['attr']['title'] = __('Import');
+				$toolbarButtons['import']['label'] = '<i class="fa kd-import"></i>';
 				break;
 		}
 	}
