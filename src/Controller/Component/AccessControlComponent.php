@@ -136,7 +136,6 @@ class AccessControlComponent extends Component {
 		if ($superAdmin) {
 			return true;
 		}
-
 		// we only need controller and action
 		foreach ($url as $i => $val) {
 			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
@@ -166,7 +165,7 @@ class AccessControlComponent extends Component {
 	}
 
 	private function isUuid($input) {
-		if (preg_match('/^\{?[A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}\}?$/', $input)) {
+		if (preg_match('/^\{?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}?$/', strtolower($input))) {
 			return true;
 		} else {
 			return false;
