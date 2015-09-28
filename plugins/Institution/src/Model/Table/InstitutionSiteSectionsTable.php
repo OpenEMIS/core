@@ -42,8 +42,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		/**
 		 * Shortcuts
 		 */
-		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
-		// $this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
+		$this->InstitutionGrades = $this->Institutions->InstitutionGrades;
 
 		// this behavior restricts current user to see All Classes or My Classes
 		$this->addBehavior('Security.InstitutionClass');

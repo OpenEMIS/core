@@ -17,3 +17,6 @@ SELECT `id`, `institution_site_programme_id` FROM `institution_site_grades`;
 ALTER TABLE `institution_site_grades` 
 DROP COLUMN `institution_site_programme_id`,
 DROP INDEX `institution_site_programme_id` ;
+
+-- labels
+DELETE FROM `labels` WHERE `module`='InstitutionSiteProgrammes';
