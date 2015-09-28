@@ -17,5 +17,15 @@ LEFT JOIN `z_2117_institution_site_grades` ON `institution_site_grades`.`id` = `
   WHERE `institution_site_grades`.`id` = `z_2117_institution_site_grades`.`id`;
 DROP TABLE `z_2117_institution_site_grades`;
 
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES 
+(uuid(), 'InstitutionSiteProgrammes', 'created_user_id', 'Institutions -> Programmes', 'Created By', '1', '0', NOW()),
+(uuid(), 'InstitutionSiteProgrammes', 'created', 'Institutions -> Programmes', 'Created On', '1', '0', NOW()),
+(uuid(), 'InstitutionSiteProgrammes', 'created_user_id', 'Institutions -> Programmes', 'Created By', '1', '0', NOW()),
+(uuid(), 'InstitutionSiteProgrammes', 'education_programme_id', 'Institutions -> Programmes', 'Programme', '1', '0', NOW()),
+(uuid(), 'InstitutionSiteProgrammes', 'modified', 'Institutions -> Programmes', 'Modified On', '1', '0', NOW()),
+(uuid(), 'InstitutionSiteProgrammes', 'modified_user_id', 'Institutions -> Programmes', 'Modified By', '1', '0', NOW()),
+(uuid(), 'InstitutionSiteProgrammes', 'openemis_no', 'Institutions -> Programmes', 'OpenEMIS ID', '1', '0', NOW());
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2117';
