@@ -248,6 +248,26 @@ class ControllerActionComponent extends Component {
 		return $this->currentAction;
 	}
 
+	public function removeDefaultActions(array $actions) {
+		$defaultActions = $this->defaultActions;
+		foreach ($actions as $action) {
+			if (array_search($action, $defaultActions)) {
+				unset($defaultActions[array_search($action, $defaultActions)]);
+			}
+		}
+		$this->defaultActions = $defaultActions;
+	}
+
+	public function addDefaultActions(array $actions) {
+		$defaultActions = $this->defaultActions;
+		foreach ($actions as $action) {
+			if (! array_search($action, $defaultActions)) {
+				$defaultActions[] = $action;
+			}
+		}
+		$this->defaultActions = $defaultActions;
+	}
+
 	public function vars() {
 		return $this->controller->viewVars;
 	}
