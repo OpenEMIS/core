@@ -4,7 +4,9 @@ RENAME TO  `institution_site_programmes` ;
 
 -- institution_site_grades
 ALTER TABLE `institution_site_grades` 
-ADD COLUMN `institution_site_programme_id` INT(11) NOT NULL DEFAULT 0 AFTER `end_year`;
+ADD COLUMN `institution_site_programme_id` INT(11) NOT NULL DEFAULT 0 AFTER `end_year`,
+ADD INDEX `institution_site_programme_id` (`institution_site_programme_id` ASC);
+
 
 ALTER TABLE `institution_site_grades` 
 CHANGE COLUMN `institution_site_programme_id` `institution_site_programme_id` INT(11) NOT NULL;
