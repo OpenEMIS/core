@@ -36,7 +36,6 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('level');
 		$this->ControllerAction->field('programme');
 		$this->ControllerAction->field('education_grade_id');
@@ -83,17 +82,16 @@ class InstitutionGradesTable extends AppTable {
 		$process = function($model, $entity) use ($data) {
 			$errors = $entity->errors();
 			/**
-			 * institution_site_programme_id will always be empty
+			 * PHPOE-2117
+			 * Remove 		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
+			 * 
 			 * education_grade_id will always be empty
-			 * so if errors array is more than 2, other fields are having an error
+			 * so if errors array is more than 1, other fields are having an error
 			 */
-			if (empty($errors) || count($errors)==2) {
+			if (empty($errors) || count($errors)==1) {
 				$startDate = $entity->start_date;
 				$institutionId = $entity->institution_site_id;
 				if ($data->offsetExists('grades')) {
-					// will need to remove institution_site_programme_id soon
-					$programmeId = $entity->programme;
-					$programmeEntity = $this->getSiteProgrammeEntity($institutionId, $programmeId, $startDate);
 
 					$error = true;
 					$gradeEntities = [];
@@ -106,7 +104,6 @@ class InstitutionGradesTable extends AppTable {
 							if ($entity->has('end_date')) {
 								$grade['end_date'] = $entity->end_date;
 							}
-							$grade['institution_site_programme_id'] = $programmeEntity->id; // to be removed
 
 							$gradeEntities[$key] = $this->newEntity($grade);
 							if ($gradeEntities[$key]->errors()) {
