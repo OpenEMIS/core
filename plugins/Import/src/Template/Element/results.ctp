@@ -13,7 +13,7 @@
 	if(!empty($attr['results']['dataFailed'])):
 	?>
 	<span><?= __('(Hover on the icon(s) to view errors.)') ?></span>
-	<span><?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), ['action' => 'downloadFailed', $attr['results']['excelFile']], ['class'=>"btn btn-default", 'escape'=>false]); ?></span>
+	<span><?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), ['action' => 'Import', 'downloadFailed', $attr['results']['excelFile']], ['class'=>"btn btn-default", 'escape'=>false]); ?></span>
 	<?php
 	endif;
 	?>

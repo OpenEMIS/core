@@ -28,7 +28,7 @@ class ImportBehavior extends Behavior {
 		// 'csv' 	=> 'text/csv',
 		'xls' 	=> 'application/vnd.ms-excel',
 		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		'zip' 	=> 'application/zip',
+		// 'zip' 	=> 'application/zip',
 	];
 
 	public function initialize(array $config) {
@@ -80,7 +80,7 @@ class ImportBehavior extends Behavior {
 			case 'add':
 				$toolbarButtons['import'] = $toolbarButtons['back'];
 				$toolbarButtons['import']['url'][0] = 'template';
-				$toolbarButtons['import']['attr']['title'] = 'Download Template';
+				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
 
 				$toolbarButtons['back']['url']['action'] = 'index';
@@ -96,7 +96,7 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		$buttons[0]['name'] = '<i class="fa kd-upload"></i> ' . __('Import');
+		$buttons[0]['name'] = '<i class="fa kd-import"></i> ' . __('Import');
 	}
 
 	public function beforeAction($event) {
@@ -183,9 +183,7 @@ class ImportBehavior extends Behavior {
 
 					$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 					$highestRow = $sheet->getHighestRow();
-					$totalRows = $highestRow;
-					//$highestColumn = $sheet->getHighestColumn();
-					//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
+					$totalRows = $highestRow - 1;
 					for ($row = 1; $row <= $highestRow; ++$row) {
 						$tempRow = [];
 						$originalRow = [];
@@ -195,7 +193,7 @@ class ImportBehavior extends Behavior {
 							$cell = $sheet->getCellByColumnAndRow($col, $row);
 							$originalValue = $cell->getValue();
 							$cellValue = $originalValue;
-							if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean'){
+							if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
 								$cellValue = (string) $cellValue;
 							}
 							$excelMappingObj = $mapping[$col];
@@ -206,7 +204,7 @@ class ImportBehavior extends Behavior {
 							
 							if ($row > 1) {
 								if (!empty($val)) {
-									if($columnName == 'date_opened' || $columnName == 'date_closed'){
+									if($columnName == 'date_opened' || $columnName == 'date_closed') {
 										$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
 										$originalRow[$col] = $val;
 									}
@@ -219,10 +217,15 @@ class ImportBehavior extends Behavior {
 										if (array_key_exists($cellValue, $lookup[$col])) {
 											$val = $cellValue;
 										} else {
-											if($row !== 1 && $cellValue != ''){
+											if($row !== 1) {
 												$rowPass = false;
 												$rowInvalidCodeCols[] = $translatedCol;
 											}
+										}
+									} else {
+										if($row !== 1) {
+											$rowPass = false;
+											$rowInvalidCodeCols[] = $translatedCol;
 										}
 									}
 								} else if ($foreignKey == 2) {
@@ -235,7 +238,7 @@ class ImportBehavior extends Behavior {
 									if (!empty($recordId)) {
 										$val = $recordId->id;
 									} else {
-										if ($row !== 1 && $cellValue != '') {
+										if($row !== 1) {
 											$rowPass = false;
 											$rowInvalidCodeCols[] = $translatedCol;
 										}
@@ -588,7 +591,7 @@ class ImportBehavior extends Behavior {
 
 /******************************************************************************************************************
 **
-** Events
+** Actions
 **
 ******************************************************************************************************************/
 	public function template() {
@@ -614,7 +617,6 @@ class ImportBehavior extends Behavior {
 
 	public function downloadFailed($excelFile) {
 		$this->performDownload($this->_table, $excelFile);
-		// $this->template();
 	}
 
 	public function view() {
