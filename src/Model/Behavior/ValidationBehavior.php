@@ -4,6 +4,7 @@ namespace App\Model\Behavior;
 use DateTime;
 use Exception;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
@@ -352,13 +353,16 @@ class ValidationBehavior extends Behavior {
 		// Added the check for academic_period_id as the academic period id is possible to be all disabled 
 		// due to no programme found
 		if (!empty($globalData['data']['academic_period_id'])) {
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$statuses = $StudentStatusesTable->findCodeList();
 			$existingRecords = $Students->find()
 				->where(
 					[
 						$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
 						$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
 						$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
-						$Students->aliasField('student_id') => $globalData['data']['student_id']
+						$Students->aliasField('student_id') => $globalData['data']['student_id'],
+						$Students->aliasField('student_status_id').' IS NOT ' => $statuses['DROPOUT']
 					]
 					
 				)
@@ -398,6 +402,47 @@ class ValidationBehavior extends Behavior {
 			->count()
 			;
 		return $existingRecords <= 0;
+	}
+
+	public static function checkAdmissionAgeWithEducationCycle($field, array $globalData) {
+		$data = $globalData['data'];
+		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
+			// getting admission  age
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			$educationGradeQuery = $EducationGrades->find()
+				->select(['EducationCycles.name', 'EducationCycles.admission_age'])
+				->contain('EducationProgrammes.EducationCycles')
+				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $data['education_grade_id']])
+				->first()
+				;
+			$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
+
+			// getting age fo student
+			$Students = TableRegistry::get('Student.Students');
+			$studentQuery = $Students->find()
+				->select([$Students->aliasField('date_of_birth')])
+				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
+				->first();
+				;
+			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			$ageOfStudent = Time::fromNow($dateOfBirth);
+			$ageOfStudent = $ageOfStudent->y;
+
+
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value(admission_age_minus);
+			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value(admission_age_plus);
+
+			// pr('ageOfStudent: '.$ageOfStudent);
+			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
+			// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
+			// die;
+
+			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
+		}
+		
+		// if there is no cycle to check with, allow validation to pass
+		return true;;
 	}
 
 	// To allow case sensitive entry
@@ -597,5 +642,4 @@ class ValidationBehavior extends Behavior {
 
 		return $validationResult;
 	}
-
 }
