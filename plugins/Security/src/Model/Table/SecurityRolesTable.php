@@ -216,7 +216,9 @@ class SecurityRolesTable extends AppTable {
 			if (!is_null($highestRole)) {
 				// find the list of roles with lower privilege than the current highest privilege role assigned to this user
 				// within -1 (system defined roles), 0 (system defined roles), and user defined roles in the specified group
-				$roleOptions = $this->find('list')
+				$roleOptions = $this
+					->find('list')
+					->find('visible')
 					->where([
 						$this->aliasField('security_group_id') . ' IN ' => $groupIds,
 						$this->aliasField('order') . ' > ' => $highestRole->security_role->order,
