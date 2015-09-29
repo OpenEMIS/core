@@ -74,24 +74,34 @@ class StudentsTable extends AppTable {
 			])
 			->add('academic_period_id', [
 			])
-			// ->allowEmpty('student_id') required for create new but disabling for now
 			->add('student_name', 'ruleInstitutionStudentId', [
 				'rule' => ['institutionStudentId'],
+				'on' => 'create'
+			])
+			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycle', [
+				'rule' => ['checkAdmissionAgeWithEducationCycle'],
 				'on' => 'create'
 			])
 			->add('student_name', 'ruleStudentEnrolledInOthers', [
 				'rule' => ['checkEnrolledInOtherInstitution'],
 				'on' => 'create'
-			]);
-
+			])
+			;
 		return $validator;
 	}
 
-	public function validationAllowEmptyName(Validator $validator) {
-        $validator = $this->validationDefault($validator);
-        $validator->remove('student_name');
-        return $validator;
-    }
+	// no longer needed. student_name will be filled if it is not there to trigger hte validation and avoid the required validation fail
+	// public function validationAllowEmptyName(Validator $validator) {
+	// 	$validator = $this->validationDefault($validator);
+	// 	// PHPOE-1919
+	// 	// hanafi and malcolm made changes on this branch. 
+	// 	// $validator->remove('student_name'); is the old code
+	// 	// this is latest
+	// 	$validator->allowEmpty('student_name');
+	// 	// die;
+
+	// 	return $validator;
+	// }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
