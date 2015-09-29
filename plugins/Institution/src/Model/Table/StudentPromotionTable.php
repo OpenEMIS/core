@@ -137,7 +137,7 @@ class StudentPromotionTable extends AppTable {
 			// End
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+			$Grades = TableRegistry::get('Institution.InstitutionGrades');
 			$GradeStudents = TableRegistry::get('Institution.StudentPromotion');
 
 			// Academic Periods
@@ -304,7 +304,7 @@ class StudentPromotionTable extends AppTable {
 				 * Get the available grades during next period
 				 */
 				$institutionId = $this->Session->read('Institution.Institutions.id');
-				$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+				$Grades = TableRegistry::get('Institution.InstitutionGrades');
 				$this->nextPeriodGradeOptions = $Grades
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 					->contain(['EducationGrades'])

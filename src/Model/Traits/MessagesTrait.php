@@ -106,14 +106,6 @@ trait MessagesTrait {
 			'current_staff_list' => 'Current Staff List',
 			'past_staff_list' => 'Past Staff List',
 		],
-		'InstitutionSiteProgrammes' => [
-			'noEducationLevels' => 'There are no available Education Level.',
-			'noEducationProgrammes' => 'There are no available Education Programme.',
-			'noEducationGrades' => 'There are no available Education Grade.',
-			'start_date' => 'Start Date',
-			'end_date' => 'End Date',
-			'education_grade' => 'Education Grades'
-		],
 		'InstitutionGrades' => [
 			'noEducationLevels' => 'There are no available Education Level.',
 			'noEducationProgrammes' => 'There are no available Education Programme.',
