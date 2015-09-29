@@ -2,14 +2,10 @@
 namespace API\Controller;
 
 use Cake\Log\Log;
-use Cake\I18n\Time;
-use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Exception\BadRequestException;
 use App\Controller\AppController;
 use Cake\Utility\Xml;
 use Cake\Utility\Exception\XmlException;
-use Cake\Network\Exception\InternalErrorException;
 
 /**
  * Previous API url: 'http://<CORE_WEBSITE_BASE_URL>/api/<APP_ID>/<APP_KEY>?<QUERIES_NAME_VALUE_PAIR_STRING>';
@@ -48,14 +44,8 @@ use Cake\Network\Exception\InternalErrorException;
  *
  */
 
-define("NS_XHTML", "http://www.w3.org/1999/xhtml");
-define("NS_XF", "http://www.w3.org/2002/xforms");
-define("NS_EV", "http://www.w3.org/2001/xml-events");
-define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
-define("NS_OE", "https://www.openemis.org");
 class ApiController extends AppController
 {
-	private $_requestParams = null;
 	private $_externalApplication = null;
 	private $_errorCodes = [
 		0 => [
@@ -84,12 +74,20 @@ class ApiController extends AppController
 		]
 	];
 
+
+/******************************************************************************************************************
+**
+** plugin gateway
+**
+******************************************************************************************************************/
 	public function initialize() {
 		parent::initialize();
 
 		/**
-		 * register a specific log for this plugin
+		 * Allow public access to extract action
 		 */
+		$this->Auth->allow(['extract']);
+
 		Log::config('api', [
 		    'className' => 'Cake\Log\Engine\FileLog',
 		    'path' => LOGS,
@@ -97,21 +95,21 @@ class ApiController extends AppController
 		    'scopes' => ['api'],
 		    'file' => 'api_authorizations.log',
 		]);
-
+		
 		$message = 'Receives request from ' . $this->request->referer() . ' ( ' . $this->request->clientIp() . ' ) trying to access OpenEMIS system.';
 		Log::info($message, ['scope' => ['api']]);
 
-		if ($this->request->isGet() && !empty($this->request->query) && !empty($this->request->query('security_token'))) {
+		$securityToken = $this->request->query('security_token');
+		if ($this->request->isGet() && !empty($this->request->query) && !empty($securityToken)) {
 			$ApiAuthorizations = TableRegistry::get('ApiAuthorizations');
 			$this->_externalApplication = $ApiAuthorizations->find()
 					->where([
-						$ApiAuthorizations->aliasField('security_token') => $this->request->query('security_token')
+						$ApiAuthorizations->aliasField('security_token') => $securityToken
 					])
 					->first()
 					;
 
 			if ($this->_externalApplication) {
-				$this->_requestParams = $this->request->query;
 				$this->request->params['action'] = 'extract';
 			} else {
 				$this->autoRender = false;
@@ -136,14 +134,12 @@ class ApiController extends AppController
 			die($this->response);
 		}
 
-		$this->StudentIdentities = TableRegistry::get('User.Identities');
-		$this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 	}
 
 
 /******************************************************************************************************************
 **
-** individual version functions
+** action methods
 **
 ******************************************************************************************************************/
 	private $_allowableFormats = [
@@ -155,8 +151,8 @@ class ApiController extends AppController
 		$result = [];
 
 		$format = 'json';
-		if ($this->_requestParams) {
-			$params = $this->_requestParams;
+		if ($this->request->query) {
+			$params = $this->request->query;
 
 			$versionFunction = $this->_versionFunctions[0];
 			if (array_key_exists('version', $params) && $params['version']!='') {
@@ -259,8 +255,7 @@ class ApiController extends AppController
 	}
 
 
-/**
-* ******************************************************************************************************************
+/********************************************************************************************************************
 *
 * individual version functions (@todo port each function to individual component files)
 *
@@ -270,7 +265,7 @@ class ApiController extends AppController
 		1 => 'versionOne'
 	];
 	private function versionSISB() {
-		$params = $this->_requestParams;
+		$params = $this->request->query;
 		$data = false;
 
 		if (array_key_exists('user_id', $params) || $params['user_id']!='') {
@@ -279,18 +274,20 @@ class ApiController extends AppController
 				$message = 'User ' . $params['user_id'] . ' from ' . $this->_externalApplication->name . ' queries for ' . $params['ss_id'];
 				Log::info($message, ['scope' => ['api']]);
 
-				// $studentStatuses = $this->StudentStatuses->find('list', [
+				// $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				// $studentStatuses = $StudentStatuses->find('list', [
 				// 	'keyField' => 'id',
 				// 	'valueField' => 'name'
 				// ])->toArray();
 
-				$query = $this->StudentIdentities->find('all');
+				$StudentIdentities = TableRegistry::get('User.Identities');
+				$query = $StudentIdentities->find('all');
 				$data = $query
 							->join([
 								'Student' => [
 									'table' => 'security_users',
 									'conditions' => [
-										'Student.id = '.$this->StudentIdentities->aliasField('security_user_id')
+										'Student.id = '.$StudentIdentities->aliasField('security_user_id')
 									]
 								],
 								'InstitutionStudent' => [
@@ -332,7 +329,7 @@ class ApiController extends AppController
 								'education_level' => 'EducationGrade.name',
 							])
 							->where([
-								$this->StudentIdentities->aliasField('number') => $params['ss_id'],
+								$StudentIdentities->aliasField('number') => $params['ss_id'],
 								'InstitutionStudent.institution_id IS NOT NULL'
 							])
 							->order(['AcademicPeriod.end_date DESC'])
@@ -479,7 +476,7 @@ class ApiController extends AppController
 	}
 
 	private function versionOne() {
-		$params = $this->_requestParams;
+		$params = $this->request->query;
 		return [
 			'api_version' => [	
 				'label' => 'API Version',
