@@ -36,7 +36,8 @@ class StudentsController extends AppController {
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
-			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
+			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
+			'Import' 			=> ['className' => 'Student.Import', 'actions' => ['index', 'add', 'view']],
 		];
 
 		$this->set('contentHeader', 'Students');
@@ -135,9 +136,15 @@ class StudentsController extends AppController {
 				}
 			}
 		} else {
-			$this->Alert->warning('general.notExists');
-			$event->stopPropagation();
-			return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+			if ($model->alias() == 'Import') {
+				$this->Navigation->addCrumb($model->getHeader($model->alias()));
+				$header = __('Students') . ' - ' . $model->getHeader($model->alias());
+				$this->set('contentHeader', $header);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$event->stopPropagation();
+				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+			}
 		}
 	}
 
