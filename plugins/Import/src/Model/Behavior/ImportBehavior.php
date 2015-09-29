@@ -88,7 +88,7 @@ class ImportBehavior extends Behavior {
 				break;
 
 			case 'view':
-				unset($toolbarButtons['back']['url']['action']);
+				$toolbarButtons['back']['url']['action'] = 'index';
 				unset($toolbarButtons['back']['url'][0]);
 				break;
 
@@ -100,8 +100,9 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function beforeAction($event) {
-		$this->sessionKey = $this->config('plugin').'.'.$this->config('plugin').'.Import.data';
+		$this->sessionKey = $this->config('plugin').'.'.$this->config('model').'.Import.data';
 		if (strtolower($this->_table->action) == 'index') {
+			$event->stopPropagation();
 			return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
 		}
 
@@ -176,157 +177,175 @@ class ImportBehavior extends Behavior {
 
 				$totalImported = 0;
 				$totalUpdated = 0;
-				$importedCodes = [];
+				$importedUniqueCodes = [];
 				$dataFailed = [];
 				foreach ($worksheets as $sheet) {
 					if ($firstSheetOnly) {break;}
 
 					$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 					$highestRow = $sheet->getHighestRow();
-					$totalRows = $highestRow - 1;
+					$totalRows = 0; 
+
 					for ($row = 1; $row <= $highestRow; ++$row) {
 						$tempRow = [];
 						$originalRow = [];
 						$rowPass = true;
 						$rowInvalidCodeCols = [];
-						for ($col = 0; $col < $totalColumns; ++$col) {
-							$cell = $sheet->getCellByColumnAndRow($col, $row);
-							$originalValue = $cell->getValue();
-							$cellValue = $originalValue;
-							if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
-								$cellValue = (string) $cellValue;
-							}
-							$excelMappingObj = $mapping[$col];
-							$foreignKey = $excelMappingObj->foreign_key;
-							$columnName = $columns[$col];
-							$originalRow[$col] = $originalValue;
-							$val = $cellValue;
-							
-							if ($row > 1) {
-								if (!empty($val)) {
-									if($columnName == 'date_opened' || $columnName == 'date_closed') {
-										$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
-										$originalRow[$col] = $val;
-									}
+						if ($row == $highestRow) {
+							$rowNotEmpty = $this->checkRowCells($sheet, $totalColumns, $row);
+						} else {
+							$rowNotEmpty = true;
+						}
+						if ($rowNotEmpty) {
+							for ($col = 0; $col < $totalColumns; ++$col) {
+								$cell = $sheet->getCellByColumnAndRow($col, $row);
+								$originalValue = $cell->getValue();
+								$cellValue = $originalValue;
+								if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
+									$cellValue = (string) $cellValue;
 								}
+								$excelMappingObj = $mapping[$col];
+								$foreignKey = $excelMappingObj->foreign_key;
+								$columnName = $columns[$col];
+								$originalRow[$col] = $originalValue;
+								$val = $cellValue;
 								
-								$translatedCol = $this->getExcelLabel($this->config('model'), $columnName);
+								if ($row > 1) {
+									if (!empty($val)) {
+										if(substr_count($columnName, 'date')) {
+											$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
+											$originalRow[$col] = $val;
+										}
+									}
+									if (empty($val) && $columnName=='openemis_no') {
+										$val = TableRegistry::get('User.Users')->getUniqueOpenemisId(['model' => $this->config('plugin')]);
+									}
+									$translatedCol = $this->getExcelLabel($this->config('model'), $columnName);
 
-								if ($foreignKey == 1) {
-									if (!empty($cellValue)) {
-										if (array_key_exists($cellValue, $lookup[$col])) {
-											$val = $cellValue;
+									if ($foreignKey == 1) {
+										if (!empty($cellValue)) {
+											if (array_key_exists($cellValue, $lookup[$col])) {
+												$val = $cellValue;
+											} else {
+												if($row !== 1) {
+													$rowPass = false;
+													$rowInvalidCodeCols[] = $translatedCol;
+												}
+											}
 										} else {
 											if($row !== 1) {
 												$rowPass = false;
 												$rowInvalidCodeCols[] = $translatedCol;
 											}
 										}
-									} else {
-										if($row !== 1) {
-											$rowPass = false;
-											$rowInvalidCodeCols[] = $translatedCol;
+									} else if ($foreignKey == 2) {
+										$excelLookupModel = TableRegistry::get($excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model);
+										if (!empty($cellValue)) {
+											$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
+										} else {
+											$recordId = '';
 										}
-									}
-								} else if ($foreignKey == 2) {
-									$excelLookupModel = TableRegistry::get($excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model);
-									if (!empty($cellValue)) {
-										$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
-									} else {
-										$recordId = '';
-									}
-									if (!empty($recordId)) {
-										$val = $recordId->id;
-									} else {
-										if($row !== 1) {
-											$rowPass = false;
-											$rowInvalidCodeCols[] = $translatedCol;
+										if (!empty($recordId)) {
+											$val = $recordId->id;
+										} else {
+											if($row !== 1) {
+												$rowPass = false;
+												$rowInvalidCodeCols[] = $translatedCol;
+											}
 										}
 									}
 								}
+								
+								$tempRow[$columnName] = $val;
 							}
-							
-							$tempRow[$columnName] = $val;
-						}
 
-						if (!$rowPass) {
-							$rowCodeError = $this->getExcelLabel('Import', 'invalid_code');
-							$colCount = 1;
-							foreach($rowInvalidCodeCols as $codeCol){
-								if ($colCount == 1) {
-									$rowCodeError .= ': ' . $codeCol;
-								} else {
-									$rowCodeError .= ', ' . $codeCol;
+							if (!$rowPass) {
+								$rowCodeError = $this->getExcelLabel('Import', 'invalid_code');
+								$colCount = 1;
+								foreach($rowInvalidCodeCols as $codeCol){
+									if ($colCount == 1) {
+										$rowCodeError .= ': ' . $codeCol;
+									} else {
+										$rowCodeError .= ', ' . $codeCol;
+									}
+									$colCount ++;
 								}
-								$colCount ++;
+								
+								$dataFailed[] = array(
+									'row_number' => $row,
+									'error' => $rowCodeError,
+									'data' => $originalRow
+								);
+								continue;
 							}
 							
-							$dataFailed[] = array(
-								'row_number' => $row,
-								'error' => $rowCodeError,
-								'data' => $originalRow
-							);
-							continue;
-						}
-						
-						if ($row === 1) {
-							$header = $tempRow;
-							$dataFailed = [];
-							continue;
-						}
-
-						$tableEntity = $activeModel->newEntity($tempRow);
-						if (empty($tableEntity->errors())) {
-							if ($activeModel->save($tableEntity)) {
-								$totalImported++;
-								$importedCodes[] = $tableEntity->code;
+							if ($row === 1) {
+								$header = $tempRow;
+								$dataFailed = [];
+								continue;
 							}
-						} else {
-							$validationErrors = $tableEntity->errors();
-							if (array_key_exists('code', $validationErrors) && count($validationErrors) == 1) {
-								if (!in_array($tempRow['code'], $importedCodes)) {
-									$existingRecord = $activeModel->find()->where(['code' => $tempRow['code']])->first();
-									$tempRow['id'] = $existingRecord->id;
-									$activeModel->patchEntity($tableEntity, $tempRow, ['validate'=>false]);
-									if ($activeModel->save($tableEntity)) {
-										$totalUpdated++;
-										$importedCodes[] = $tempRow['code'];
+
+							if (in_array($this->config('plugin').'.'.$this->config('model'), ['Student.Students', 'Staff.Staff'])) {
+								$tempRow['is_'.strtolower($this->config('plugin'))] = 1;
+								$uniqueCode = 'openemis_no';
+							} else {
+								$uniqueCode = 'code';
+							}
+
+							$tableEntity = $activeModel->newEntity($tempRow);
+							if (empty($tableEntity->errors())) {
+								if ($activeModel->save($tableEntity)) {
+									$totalImported++;
+									$importedUniqueCodes[] = $tableEntity->$uniqueCode;
+								}
+							} else {
+								$validationErrors = $tableEntity->errors();
+								if (array_key_exists($uniqueCode, $validationErrors) && count($validationErrors) == 1) {
+									if (!in_array($tempRow[$uniqueCode], $importedUniqueCodes)) {
+										$existingRecord = $activeModel->find()->where([$uniqueCode => $tempRow[$uniqueCode]])->first();
+										$tempRow['id'] = $existingRecord->id;
+										$activeModel->patchEntity($tableEntity, $tempRow, ['validate'=>false]);
+										if ($activeModel->save($tableEntity)) {
+											$totalUpdated++;
+											$importedUniqueCodes[] = $tempRow[$uniqueCode];
+										} else {
+											$dataFailed[] = [
+												'row_number' => $row,
+												'error' => $this->getExcelLabel('Import', 'saving_failed'),
+												'data' => $originalRow
+											];
+										}
 									} else {
 										$dataFailed[] = [
 											'row_number' => $row,
-											'error' => $this->getExcelLabel('Import', 'saving_failed'),
+											'error' => $this->getExcelLabel('Import', 'duplicate_code'),
 											'data' => $originalRow
 										];
 									}
 								} else {
+									$errorStr = $this->getExcelLabel('Import', 'validation_failed');
+									$count = 1;
+									foreach($validationErrors as $field => $arr) {
+										$fieldName = $this->getExcelLabel($this->config('model'), $field);
+										if (empty($fieldName)) {
+											$fieldName = __($field);
+										}
+										if ($count === 1) {
+											$errorStr .= ': ' . $fieldName;
+										} else {
+											$errorStr .= ', ' . $fieldName;
+										}
+										$count ++;
+									}
 									$dataFailed[] = [
 										'row_number' => $row,
-										'error' => $this->getExcelLabel('Import', 'duplicate_code'),
+										'error' => $errorStr,
 										'data' => $originalRow
 									];
+									$this->_table->log($validationErrors, 'debug');
 								}
-							} else {
-								$errorStr = $this->getExcelLabel('Import', 'validation_failed');
-								$count = 1;
-								foreach($validationErrors as $field => $arr) {
-									$fieldName = $this->getExcelLabel($this->config('model'), $field);
-									if (empty($fieldName)) {
-										$fieldName = __($field);
-									}
-									if ($count === 1) {
-										$errorStr .= ': ' . $fieldName;
-									} else {
-										$errorStr .= ', ' . $fieldName;
-									}
-									$count ++;
-								}
-								$dataFailed[] = [
-									'row_number' => $row,
-									'error' => $errorStr,
-									'data' => $originalRow
-								];
-								$this->_table->log($validationErrors, 'debug');
 							}
+							$totalRows++;
 						}
 					}
 
@@ -393,6 +412,19 @@ class ImportBehavior extends Behavior {
 ** Import methods
 **
 ******************************************************************************************************************/
+	protected function checkRowCells($sheet, $totalColumns, $row) {
+		$cellsState = [];
+		for ($col=0; $col < $totalColumns; $col++) {
+			$cell = $sheet->getCellByColumnAndRow($col, $row);
+			if (empty($cell->getValue())) {
+				$cellsState[] = false;
+			} else {
+				$cellsState[] = true;
+			}
+		}
+		return in_array(true, $cellsState);
+	}
+	
 	protected function getMapping(Table $model) {
 		$mapping = $model->find('all')
 			->where([
@@ -411,13 +443,6 @@ class ImportBehavior extends Behavior {
 		foreach($mapping as $key => $value) {
 			$column = $value->column_name;
 			$label = $this->getExcelLabel($value->model, $column);
-			// if($column == 'openemis_no') {
-			// 	$headerCol = $this->getExcelLabel($model, sprintf('%s.%s', 'Import', $column));
-			// } else if(!empty($label)) {
-			// 	$headerCol = $label;
-			// } else {
-			// 	$headerCol = __(Inflector::humanize($column));
-			// }
 			if (empty($label)) {
 				$headerCol = __(Inflector::humanize($column));
 			} else {
@@ -606,7 +631,7 @@ class ImportBehavior extends Behavior {
 		
 		$codesData = $this->excelGetCodesData($this->_table);
 		foreach($codesData as $modelName => $modelArr) {
-			foreach($modelArr as $row){
+			foreach($modelArr as $row) {
 				$writer->writeSheetRow($modelName, array_values($row));
 			}
 		}

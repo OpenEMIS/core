@@ -217,24 +217,32 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
-				$studentId = $this->request->data[$this->alias()]['student_id'];
-				$enrolledStatus = false;
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				foreach ($institutionIds as $id) {
-					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-					if ($enrolledStatus) {
-						break;
+		switch ($action) {
+			case 'view':
+				if (!$this->AccessControl->isAdmin()) {
+					$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+					$studentId = $this->request->data[$this->alias()]['student_id'];
+					$enrolledStatus = false;
+					$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+					foreach ($institutionIds as $id) {
+						$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+						if ($enrolledStatus) {
+							break;
+						}
+					}
+					if (! $enrolledStatus) {
+						if (isset($toolbarButtons['edit'])) {
+							unset($toolbarButtons['edit']);
+						}
 					}
 				}
-				if (! $enrolledStatus) {
-					if (isset($toolbarButtons['edit'])) {
-						unset($toolbarButtons['edit']);
-					}
-				}
-			}
+				break;
+			case 'index':
+				$toolbarButtons['import'] = $toolbarButtons['add'];
+				$toolbarButtons['import']['url']['action'] = 'Import';
+				$toolbarButtons['import']['attr']['title'] = __('Import');
+				$toolbarButtons['import']['label'] = '<i class="fa kd-import"></i>';	
+				break;
 		}
 	}
 
