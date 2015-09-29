@@ -36,6 +36,8 @@ class EducationGradesTable extends AppTable {
 			'dependent' => true,
 			// 'saveStrategy' => 'append'
 		]);
+
+		$this->addBehavior('ControllerAction.Delete');
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -86,38 +88,10 @@ class EducationGradesTable extends AppTable {
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$totalCount = 0;
-		$associations = [];
-		foreach ($this->associations() as $assoc) {
-			if ($assoc->dependent()) {
-				if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-					if (!array_key_exists($assoc->table(), $associations)) {
-						$count = 0;
-						if($assoc->type() == 'oneToMany') {
-							$count = $assoc->find()
-							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-							->count();
-							$totalCount = $totalCount + $count;
-						} else {
-							$modelAssociationTable = $assoc->junction();
-							$count += $modelAssociationTable->find()
-								->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
-								->count();
-							$totalCount = $totalCount + $count;
-						}
-						$title = $this->Alert->getMessage($assoc->aliasField('title'));
-						if ($title == '[Message Not Found]') {
-							$title = $assoc->name();
-						}
-						$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
-					}
-				}
-			}
-		}
-		if ($totalCount > 0) {
-			$this->Alert->error('general.deleteTransfer.restrictDelete');
+		if ($this->associationCount($this, $id) > 0) {
+			$this->Alert->error('EducationGrades.hasAssociation');
 			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('remove'));
+			return $this->controller->redirect($this->ControllerAction->url('index'));
 		}
 	}
 
