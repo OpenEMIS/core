@@ -31,7 +31,8 @@ class StaffUserTable extends UserTable {
 			$institutionId = $positionData['institution_site_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
-			if ($Staff->save($Staff->newEntity($positionData))) {
+			$staffEntity = $Staff->newEntity($positionData);
+			if ($Staff->save($staffEntity)) {
 				if ($role > 0) {
 					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
 					$obj = [
@@ -44,7 +45,12 @@ class StaffUserTable extends UserTable {
 					$GroupUsers->save($GroupUsers->newEntity($obj));
 				}
 			} else {
-				$this->Alert->error('Institution.InstitutionSiteStaff.noFTE');
+				$errors = $staffEntity->errors();
+				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
+					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE');
+				} else {
+					$this->Alert->error('Institution.InstitutionSiteStaff.error');
+				}
 			}
 			$this->Session->delete($sessionKey);
 		}
