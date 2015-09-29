@@ -8,3 +8,6 @@ ALTER TABLE `staff_leaves` ADD `file_name` VARCHAR(250) NULL AFTER `number_of_da
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Leaves', 'file_content', 'Staff -> Career -> Leave','Attachment', 1, 1, NOW());
+
+-- security_functions
+UPDATE `security_functions` SET `_execute` = 'Leaves.download' WHERE `id` = 3016;
