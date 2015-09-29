@@ -188,6 +188,8 @@ class StaffTable extends AppTable {
 					} else {
 						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
 					}
+				} else {
+					$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
 				}
 			}
 		}
