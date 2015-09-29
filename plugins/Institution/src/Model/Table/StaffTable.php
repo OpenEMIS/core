@@ -59,6 +59,10 @@ class StaffTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
+			->allowEmpty('end_date')
+			->add('end_date', 'ruleCompareDateReverse', [
+		        'rule' => ['compareDateReverse', 'start_date', false]
+	    	])
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
@@ -179,7 +183,11 @@ class StaffTable extends AppTable {
 				$entity->newFTE = $newFTE;
 
 				if (empty($newEndDate)) {
-					$data[$alias]['end_date'] = date('Y-m-d');
+					if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+						$data[$alias]['end_date'] = date('Y-m-d');
+					} else {
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']. ' +1 day'));
+					}
 				}
 			}
 		}
@@ -194,7 +202,10 @@ class StaffTable extends AppTable {
 				if ($entity->start_date instanceof Date) {
 					$entity->start_date->modify('+1 days');
 				} else {
-					$entity->start_date = date('Y-m-d', strtotime($entity->start_date . ' +1 day'));
+					$startDate = $entity->start_date->format('Y-m-d');
+					$date = date_create($startDate);
+					date_add($date, date_interval_create_from_date_string('1 day'));
+					$entity->start_date = $date->format('Y-m-d');
 				}
 				$entity->end_date = null;
 				$entity->end_year = null;
@@ -205,7 +216,7 @@ class StaffTable extends AppTable {
 				
 				$newEntity = $this->newEntity($entity->toArray());
 				if (!$this->save($newEntity)) {
-					pr($newEntity->errors());die;
+						
 				}
 			}
 		}
