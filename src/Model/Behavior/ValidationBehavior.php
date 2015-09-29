@@ -380,13 +380,14 @@ class ValidationBehavior extends Behavior {
 				[
 					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
 					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
-				]
-				
-			)
-			->count();
-			;
-		return ($existingRecords <= 0);
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					'OR' => [
+						[$Staff->aliasField('end_date').' IS NULL'],
+						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
+					],
+				]	
+			);
+		return ($existingRecords->count() <= 0);
 	}
 
 	public static function studentGuardianId($field, array $globalData) {
