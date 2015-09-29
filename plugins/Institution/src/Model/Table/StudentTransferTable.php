@@ -60,7 +60,7 @@ class StudentTransferTable extends AppTable {
     }
 
 	public function beforeAction(Event $event) {
-		$this->Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$this->Grades = TableRegistry::get('Institution.InstitutionGrades');
 		$this->GradeStudents = TableRegistry::get('Institution.StudentTransfer');
 		$this->institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->AcademicPeriods->getCurrent();

@@ -216,7 +216,7 @@ class StudentsTable extends AppTable {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 
 		// Education Grades
-		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 		$session = $this->Session;
 		$institutionId = $session->read('Institution.Institutions.id');
 		$educationGradesOptions = $InstitutionEducationGrades
@@ -751,7 +751,7 @@ class StudentsTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$Grades = TableRegistry::get('Institution.InstitutionGrades');
 		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
