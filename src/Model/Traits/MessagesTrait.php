@@ -441,6 +441,7 @@ trait MessagesTrait {
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
+				'noFTE' => 'There are no available FTE for this position, please add this staff to another position that has available FTE.',
 				'staffTypeId' => 'You need to configure Staff Types first.'
 			],
 			'StudentGuardians' => [
