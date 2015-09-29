@@ -16,7 +16,7 @@ class LeavesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',
-			'size' => '2MB',
+			'size' => '10MB',
 			'contentEditable' => true,
 			'allowable_file_types' => 'all'
 		]);
