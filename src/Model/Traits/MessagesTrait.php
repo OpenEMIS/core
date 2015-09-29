@@ -474,7 +474,10 @@ trait MessagesTrait {
 				],
 				'institution_site_position_id' => [
 					'ruleCheckFTE' => 'No available FTE.'
-				]
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
 			]
 		],
 		'User' => [
