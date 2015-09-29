@@ -44,7 +44,7 @@ class StaffUserTable extends UserTable {
 					$GroupUsers->save($GroupUsers->newEntity($obj));
 				}
 			} else {
-				$this->Alert->error('Institution.InstitutionSiteStaff.FTE');
+				$this->Alert->error('Institution.InstitutionSiteStaff.noFTE');
 			}
 			$this->Session->delete($sessionKey);
 		}
