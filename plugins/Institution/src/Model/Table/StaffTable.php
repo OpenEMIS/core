@@ -59,10 +59,6 @@ class StaffTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-			->add('institution_site_position_id', [
-			])
-			->add('institution_site_id', [
-			])
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
@@ -350,10 +346,14 @@ class StaffTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
-		return $this->controller->redirect($action);
+		if (empty($data[$this->alias()]['institution_site_position_id'])) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.noInstitutionSitePosition');
+		} else {
+			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
+			$event->stopPropagation();
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
+			return $this->controller->redirect($action);
+		}
 	}
 
 	public function afterAction(Event $event) {
