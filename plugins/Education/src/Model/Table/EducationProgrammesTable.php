@@ -22,7 +22,6 @@ class EducationProgrammesTable extends AppTable {
 		$this->belongsTo('EducationCertifications', ['className' => 'Education.EducationCertifications']);
 		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
 		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes', 'cascadeCallbacks' => true]);
 	
 		$this->belongsToMany('EducationNextProgrammes', [
 			'className' => 'Education.EducationNextProgrammes',
