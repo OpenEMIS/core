@@ -61,7 +61,7 @@ class StaffTable extends AppTable {
 		return $validator
 			->allowEmpty('end_date')
 			->add('end_date', 'ruleCompareDateReverse', [
-		        'rule' => ['compareDateReverse', 'start_date', false]
+		        'rule' => ['compareDateReverse', 'start_date', true]
 	    	])
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
@@ -186,7 +186,7 @@ class StaffTable extends AppTable {
 					if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
 						$data[$alias]['end_date'] = date('Y-m-d');
 					} else {
-						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']. ' +1 day'));
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
 					}
 				}
 			}
