@@ -216,7 +216,8 @@ trait MessagesTrait {
 			'retypePassword' => 'Retype New Password',
 		],
 		'EducationGrades' => [
-			'add_subject' => 'Add Subject'
+			'add_subject' => 'Add Subject',
+			'hasAssociation' => 'The education grade cannot be deleted as there are still records associated with it.'
 		],
 		'RubricCriterias' => [
 			//'rubric_section_id' => 'Rubric Section',
