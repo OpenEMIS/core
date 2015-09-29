@@ -915,7 +915,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		$todayDate = date("Y-m-d");
 
 		$AssessmentStatuses = TableRegistry::get('Assessment.AssessmentStatuses');
-		$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$Grades = TableRegistry::get('Institution.InstitutionGrades');
 
 		foreach ($assessments as $assessment) {
 			$assessmentId = $assessment->id;
