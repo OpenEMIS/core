@@ -67,7 +67,7 @@ class StaffTable extends AppTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			->add('FTE', 'ruleCheckFTE', [
+			->add('institution_site_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
 		;

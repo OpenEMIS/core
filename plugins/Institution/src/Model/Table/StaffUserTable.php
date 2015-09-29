@@ -43,6 +43,8 @@ class StaffUserTable extends UserTable {
 					$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 					$GroupUsers->save($GroupUsers->newEntity($obj));
 				}
+			} else {
+				$this->Alert->error('Institution.InstitutionSiteStaff.FTE');
 			}
 			$this->Session->delete($sessionKey);
 		}
