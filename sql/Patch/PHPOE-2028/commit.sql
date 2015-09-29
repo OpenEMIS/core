@@ -21,3 +21,6 @@ CREATE TABLE IF NOT EXISTS `api_authorizations` (
 ALTER TABLE `api_authorizations`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY (`security_token`);
+
+INSERT INTO `api_authorizations` (`id`, `name`, `security_token`) values 
+('00e588d8-6293-42ef-a0fe-395a63adf979', 'External Application Tester', 'acd87adcas9d8cad');
