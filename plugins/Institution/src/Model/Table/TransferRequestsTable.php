@@ -93,36 +93,51 @@ class TransferRequestsTable extends AppTable {
 	}
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function($model, $entity) {
-			$Students = TableRegistry::get('Institution.Students');
-			$id = $this->Session->read('Institution.Students.id');
-			$institutionStudentData = $Students->get($id);
 
-			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			$statusCodeList = array_flip($StudentStatuses->findCodeList());
+    	$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
 
-			$isPromotedOrGraduated = in_array($statusCodeList[$institutionStudentData->student_status_id], ['GRADUATED', 'PROMOTED']);
-			if ($isPromotedOrGraduated) {
-				$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				$targetAcademicPeriodData = $AcademicPeriods->get($entity->academic_period_id);
-				$entity->start_date = $targetAcademicPeriodData->start_date->format('Y-m-d');
-				$entity->end_date = $targetAcademicPeriodData->end_date->format('Y-m-d');
-			}
+    	$conditions = [
+			'student_id' => $entity->student_id, 
+			'status' => self::NEW_REQUEST,
+			'education_grade_id' => $entity->education_grade_id,
+			'institution_id' => $entity->previous_institution_id
+		];
 
-			$pendingStatus = $StudentStatuses
-				->find()
-				->where([$StudentStatuses->aliasField('code') => 'PENDING_TRANSFER'])
-				->first()
-				->id;
+		$count = $StudentDropoutTable->find()
+			->where($conditions)
+			->count();
 
-			$result = $model->save($entity);
+		if ($count > 0) {
+			$process = function ($model, $entity) {
+				$this->Alert->error('TransferRequests.hasDropoutApplication');
+			};
+			return $process;
+		} else {
+			$process = function($model, $entity) {
+				$Students = TableRegistry::get('Institution.Students');
+				$id = $this->Session->read('Institution.Students.id');
+				$institutionStudentData = $Students->get($id);
 
-			if ($result) {
-				$this->Alert->success('TransferRequests.request');
-			}
-			return $result;
-		};
-		return $process;
+				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+				$statusCodeList = array_flip($StudentStatuses->findCodeList());
+
+				$isPromotedOrGraduated = in_array($statusCodeList[$institutionStudentData->student_status_id], ['GRADUATED', 'PROMOTED']);
+				if ($isPromotedOrGraduated) {
+					$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+					$targetAcademicPeriodData = $AcademicPeriods->get($entity->academic_period_id);
+					$entity->start_date = $targetAcademicPeriodData->start_date->format('Y-m-d');
+					$entity->end_date = $targetAcademicPeriodData->end_date->format('Y-m-d');
+				}
+
+				$result = $model->save($entity);
+
+				if ($result) {
+					$this->Alert->success('TransferRequests.request');
+				}
+				return $result;
+			};
+			return $process;
+		}
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -378,7 +393,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$InstitutionSiteGrades = TableRegistry::get('Institutions.InstitutionSiteGrades');
+			$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -392,15 +407,15 @@ class TransferRequestsTable extends AppTable {
 			$institutionOptions = $this->Institutions
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->join([
-					'table' => $InstitutionSiteGrades->table(),
-					'alias' => $InstitutionSiteGrades->alias(),
+					'table' => $InstitutionGrades->table(),
+					'alias' => $InstitutionGrades->alias(),
 					'conditions' => [
-						$InstitutionSiteGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
-						$InstitutionSiteGrades->aliasField('education_grade_id') => $this->selectedGrade,
-						$InstitutionSiteGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
+						$InstitutionGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
+						$InstitutionGrades->aliasField('education_grade_id') => $this->selectedGrade,
+						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
 						'OR' => [
-							$InstitutionSiteGrades->aliasField('end_date').' IS NULL',
-							$InstitutionSiteGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
+							$InstitutionGrades->aliasField('end_date').' IS NULL',
+							$InstitutionGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
 						]
 					]
 				])
@@ -422,7 +437,6 @@ class TransferRequestsTable extends AppTable {
 			*/
 		} else if ($action == 'edit') {
 			$selectedInstitution = $request->data[$this->alias()]['institution_id'];
-
 			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = $this->Institutions->get($selectedInstitution)->code_name;
 		}
