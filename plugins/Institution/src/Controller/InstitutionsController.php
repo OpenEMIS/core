@@ -49,6 +49,8 @@ class InstitutionsController extends AppController  {
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
 			'Transfer' 			=> ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
 			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
+			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['index', 'edit', 'view']],
+			'DropoutRequests' 	=> ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
 			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
@@ -161,7 +163,7 @@ class InstitutionsController extends AppController  {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
-			if ($model->hasField('institution_id')) {
+			if ($model->hasField('institution_id') && !in_array($model->alias(), ['TransferRequests'])) {
 				$model->fields['institution_id']['type'] = 'hidden';
 				$model->fields['institution_id']['value'] = $session->read('Institution.Institutions.id');
 			}
