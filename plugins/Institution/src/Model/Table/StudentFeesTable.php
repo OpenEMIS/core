@@ -81,9 +81,6 @@ class StudentFeesTable extends AppTable {
 
 		$settings['model'] = 'Institution.StudentPromotion';
 
-		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
-		);
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');

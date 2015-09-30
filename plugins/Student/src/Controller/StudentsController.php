@@ -38,6 +38,7 @@ class StudentsController extends AppController {
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
+
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -79,6 +80,24 @@ class StudentsController extends AppController {
 		if ($session->check('Student.Students.id')) {
 			$header = '';
 			$userId = $session->read('Student.Students.id');
+
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $session->read('AccessControl.Institutions.ids');
+				$studentId = $session->read('Student.Students.id');
+				$enrolledStatus = false;
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				foreach ($institutionIds as $id) {
+					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+					if ($enrolledStatus) {
+						break;
+					}
+				}
+				if (! $enrolledStatus) {
+					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
+						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
+					}
+				}
+			}
 
 			if ($session->check('Student.Students.name')) {
 				$header = $session->read('Student.Students.name');
