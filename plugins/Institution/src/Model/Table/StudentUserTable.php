@@ -17,10 +17,6 @@ class StudentUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
@@ -32,7 +28,12 @@ class StudentUserTable extends UserTable {
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
-				if ($Student->save($Student->newEntity($academicData))) {
+				if (empty($academicData['student_name'])) {
+					$academicData['student_name'] = $entity->openemis_no;
+				}
+
+				$newStudentEntity = $Student->newEntity($academicData);
+				if ($Student->save($newStudentEntity)) {
 					if ($class > 0) {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
@@ -41,6 +42,19 @@ class StudentUserTable extends UserTable {
 						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
 					}
+				} else {
+					$validationErrors = [];
+					foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
+						foreach ($nvalue as $ekey => $evalue) {
+							$validationErrors[] = $evalue;
+						}
+					}
+
+					$validationErrors = implode('; ', $validationErrors);
+					$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
+					$event->stopPropagation();
+					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+					return $this->controller->redirect($action);
 				}
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
@@ -63,7 +77,9 @@ class StudentUserTable extends UserTable {
 					$AdmissionTable->log($admissionEntity->errors(), 'debug');
 					$this->Alert->error('general.add.failed');
 				}
-			}
+			} 
+
+			
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
@@ -80,16 +96,16 @@ class StudentUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => 'Student']);
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements['Students']['url'] = array_merge($tabElements['Students']['url'], [$id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == 'Students') continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
-			}
-		}
+		$options = [
+			'userRole' => 'Student',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $entity->id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -102,8 +118,25 @@ class StudentUserTable extends UserTable {
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view' || $action == 'add') {
+		if ($action == 'view') {
 			unset($toolbarButtons['back']);
+			if ($toolbarButtons->offsetExists('export')) {
+				unset($toolbarButtons['export']);
+			}
+			
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$id = $this->request->query['id'];
+			$StudentTable = TableRegistry::get('Institution.Students');
+			$studentId = $StudentTable->get($id)->student_id;
+			// Start PHPOE-1897
+			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End PHPOE-1897
+		} else if ($action == 'add') {
+			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}

@@ -6,6 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Traits\HtmlTrait;
 
@@ -20,8 +21,7 @@ class EducationProgrammesTable extends AppTable {
 		$this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
 		$this->belongsTo('EducationCertifications', ['className' => 'Education.EducationCertifications']);
 		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
-		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'cascadeCallbacks' => true]);
 	
 		$this->belongsToMany('EducationNextProgrammes', [
 			'className' => 'Education.EducationNextProgrammes',
@@ -34,8 +34,10 @@ class EducationProgrammesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width']);
-		$this->_fieldOrder[] = 'next_programmes';
+		if ($this->action != 'index') {
+			$this->ControllerAction->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width']);
+			$this->_fieldOrder[] = 'next_programmes';
+		}
 	}
 
 	public function afterAction(Event $event) {
@@ -49,6 +51,20 @@ class EducationProgrammesTable extends AppTable {
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
+	}
+
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		if (empty($this->request->data['transfer_to'])) {
+			$this->Alert->error('general.deleteTransfer.restrictDelete');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('remove'));
+		} else {
+			$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+			$EducationProgrammesNextProgrammesTable->deleteAll([
+						$EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
+					]);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -72,6 +88,10 @@ class EducationProgrammesTable extends AppTable {
 		}
 
 		return $attr;
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_cycle_id') => $entity->education_cycle_id]);
 	}
 
 	public function findWithCycle(Query $query, array $options) {
@@ -158,7 +178,7 @@ class EducationProgrammesTable extends AppTable {
 					}
 				}			
 
-				$tableHeaders = [__('Cycle - (Programme)')];
+				$tableHeaders = [__('Cycle - (Programme)'), '', ''];
 				$tableCells = [];
 				$cellCount = 0;
 

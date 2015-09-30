@@ -16,8 +16,6 @@ class InstitutionGradesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
-		// should not need to link to site programme anymore
-		$this->belongsTo('InstitutionSiteProgrammes',	['className' => 'Institution.InstitutionSiteProgrammes']);
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
@@ -38,7 +36,6 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('level');
 		$this->ControllerAction->field('programme');
 		$this->ControllerAction->field('education_grade_id');
@@ -85,17 +82,16 @@ class InstitutionGradesTable extends AppTable {
 		$process = function($model, $entity) use ($data) {
 			$errors = $entity->errors();
 			/**
-			 * institution_site_programme_id will always be empty
+			 * PHPOE-2117
+			 * Remove 		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
+			 * 
 			 * education_grade_id will always be empty
-			 * so if errors array is more than 2, other fields are having an error
+			 * so if errors array is more than 1, other fields are having an error
 			 */
-			if (empty($errors) || count($errors)==2) {
+			if (empty($errors) || count($errors)==1) {
 				$startDate = $entity->start_date;
 				$institutionId = $entity->institution_site_id;
 				if ($data->offsetExists('grades')) {
-					// will need to remove institution_site_programme_id soon
-					$programmeId = $entity->programme;
-					$programmeEntity = $this->getSiteProgrammeEntity($institutionId, $programmeId, $startDate);
 
 					$error = true;
 					$gradeEntities = [];
@@ -108,7 +104,6 @@ class InstitutionGradesTable extends AppTable {
 							if ($entity->has('end_date')) {
 								$grade['end_date'] = $entity->end_date;
 							}
-							$grade['institution_site_programme_id'] = $programmeEntity->id; // to be removed
 
 							$gradeEntities[$key] = $this->newEntity($grade);
 							if ($gradeEntities[$key]->errors()) {
@@ -256,77 +251,18 @@ class InstitutionGradesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	// remove this function when institution_site_programmes is dropped
-	private function getSiteProgrammeEntity($institutionId, $programmeId, $startDate) {
-		$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
-		$entity = $InstitutionSiteProgrammes->find()
-		->where([
-			$InstitutionSiteProgrammes->aliasField('institution_site_id') => $institutionId,
-			$InstitutionSiteProgrammes->aliasField('education_programme_id') => $programmeId
-		])
-		->first();
-
-		if (is_null($entity)) {
-			$newEntity = $InstitutionSiteProgrammes->newEntity([
-				'institution_site_id' => $institutionId,
-				'education_programme_id' => $programmeId,
-				'start_date' => $startDate
-			]);
-			$entity = $InstitutionSiteProgrammes->save($newEntity);
-		}
-		return $entity;
-	}
-
 	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$data[$this->alias()]['programme'] = 0;
 	}
 
-	public function getConditionsByAcademicPeriodId($academicPeriodId=0, $conditions=[]) {
-		$modelConditions = [];
-		if($academicPeriodId > 0) {
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodObj = $AcademicPeriod->get($academicPeriodId);
-			$startDate = $AcademicPeriod->getDate($academicPeriodObj->start_date);
-			$endDate = $AcademicPeriod->getDate($academicPeriodObj->end_date);
-
-			$modelConditions['OR'] = array(
-				'OR' => array(
-					array(
-						'end_date IS NOT NULL',
-						'start_date <= "' . $startDate . '"',
-						'end_date >= "' . $startDate . '"'
-					),
-					array(
-						'end_date IS NOT NULL',
-						'start_date <= "' . $endDate . '"',
-						'end_date >= "' . $endDate . '"'
-					),
-					array(
-						'end_date IS NOT NULL',
-						'start_date >= "' . $startDate . '"',
-						'end_date <= "' . $endDate . '"'
-					)
-				),
-				array(
-					'end_date IS NULL',
-					'start_date <= "' . $endDate . '"'
-				)
-			);
-		}
-
-		$conditions = array_merge($conditions, $modelConditions);
-
-		return $conditions;
-	}
-	
 	public function getGradeOptions($institutionsId, $academicPeriodId, $listOnly=true) {
-		$conditions = array(
-			'InstitutionGrades.institution_site_id = ' . $institutionsId
-		);
-		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+		/**
+		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php
+		 */
 		$query = $this->find('all')
 					->contain(['EducationGrades'])
-					->where($conditions)
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					->where(['InstitutionGrades.institution_site_id = ' . $institutionsId])
 					->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
 		$data = $query->toArray();
 		if($listOnly) {
