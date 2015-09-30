@@ -13,7 +13,8 @@ class EducationCyclesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
-		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->addBehavior('ControllerAction.Delete');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -30,9 +31,11 @@ class EducationCyclesTable extends AppTable {
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		if (empty($this->request->data['transfer_to'])) {
-			$this->Alert->error('general.deleteTransfer.restrictDelete');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('remove'));
+			if ($this->associationCount($this, $id) > 0) {
+				$this->Alert->error('general.deleteTransfer.restrictDelete');
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('remove'));
+			}
 		}
 	}
 

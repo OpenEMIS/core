@@ -51,7 +51,7 @@ trait MessagesTrait {
 				'label' => 'Delete',
 			],
 			'deleteTransfer' =>[
-				'restrictDelete' => 'The transfer cannot be performed as there is no options to transfer to.'
+				'restrictDelete' => 'The record cannot be deleted as there are still records associated with it.'
 			],
 			'view' => [
 				'label' => 'View',
@@ -217,7 +217,6 @@ trait MessagesTrait {
 		],
 		'EducationGrades' => [
 			'add_subject' => 'Add Subject',
-			'hasAssociation' => 'The education grade cannot be deleted as there are still records associated with it.'
 		],
 		'RubricCriterias' => [
 			//'rubric_section_id' => 'Rubric Section',

@@ -31,9 +31,11 @@ class EducationLevelsTable extends AppTable {
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		if (empty($this->request->data['transfer_to'])) {
-			$this->Alert->error('general.deleteTransfer.restrictDelete');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('remove'));
+			if ($this->associationCount($this, $id) > 0) {
+				$this->Alert->error('general.deleteTransfer.restrictDelete');
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('remove'));
+			}
 		}
 	}
 

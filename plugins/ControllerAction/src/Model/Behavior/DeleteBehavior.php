@@ -15,24 +15,22 @@ class DeleteBehavior extends Behavior {
 		$totalCount = 0;
 		$associations = [];
 		foreach ($table->associations() as $assoc) {
-			if ($assoc->dependent()) {
-				if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-					if (!in_array($assoc->table(), $associations)) {
-						$count = 0;
-						if($assoc->type() == 'oneToMany') {
-							$count = $assoc->find()
-							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+			if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+				if (!in_array($assoc->table(), $associations)) {
+					$count = 0;
+					if($assoc->type() == 'oneToMany') {
+						$count = $assoc->find()
+						->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+						->count();
+						$totalCount = $totalCount + $count;
+					} else {
+						$modelAssociationTable = $assoc->junction();
+						$count += $modelAssociationTable->find()
+							->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
 							->count();
-							$totalCount = $totalCount + $count;
-						} else {
-							$modelAssociationTable = $assoc->junction();
-							$count += $modelAssociationTable->find()
-								->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
-								->count();
-							$totalCount = $totalCount + $count;
-						}
-						$associations[] = $assoc->table();
+						$totalCount = $totalCount + $count;
 					}
+					$associations[] = $assoc->table();
 				}
 			}
 		}
