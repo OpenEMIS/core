@@ -15,6 +15,7 @@ class WorkflowActionsTable extends AppTable {
 			'className' => 'Workflow.WorkflowSteps',
 			'foreignKey' => 'next_workflow_step_id'
 		]);
+		$this->belongsTo('WorkflowEvents', ['className' => 'Workflow.WorkflowEvents']);
 	}
 
 	public function validationDefault(Validator $validator) {

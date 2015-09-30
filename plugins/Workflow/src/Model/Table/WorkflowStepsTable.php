@@ -11,7 +11,7 @@ use Cake\Event\Event;
 
 class WorkflowStepsTable extends AppTable {
 	private $_fieldOrder = ['workflow_id', 'name', 'security_roles'];
-	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
+	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'WorkflowActions.WorkflowEvents', 'SecurityRoles'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -171,6 +171,35 @@ class WorkflowStepsTable extends AppTable {
 			->where($where)
 			->toArray();
 		$this->controller->set('nextStepOptions', $nextStepOptions);
+		// End
+
+		// Build Event Options
+		$eventOptions = [];
+		if (isset($entity->workflow_id)) {
+			$workflow = $this->Workflows->get($entity->workflow_id);
+
+			$WorkflowEvents = $this->WorkflowActions->WorkflowEvents;
+			$events = $WorkflowEvents
+				->find('list')
+				->where([
+					$WorkflowEvents->aliasField('workflow_model_id') => $workflow->workflow_model_id
+				])
+				->toArray();
+
+			if (empty($events)) {
+				$eventOptions = [
+					0 => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
+				];
+			} else {
+				$eventOptions = [
+					0 => __('-- Select Event --')
+				];
+				foreach ($events as $key => $event) {
+					$eventOptions[$key] = $event;
+				}
+			}
+		}
+		$this->controller->set('eventOptions', $eventOptions);
 		// End
 	}
 

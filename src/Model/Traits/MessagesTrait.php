@@ -300,7 +300,8 @@ trait MessagesTrait {
 		],
 		'WorkflowActions' => [
 			'next_step' => 'Next Step',
-			'comment_required' => 'Comment Required'
+			'comment_required' => 'Comment Required',
+			'event' => 'Event'
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
