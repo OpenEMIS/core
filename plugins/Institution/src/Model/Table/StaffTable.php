@@ -174,22 +174,84 @@ class StaffTable extends AppTable {
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$alias = $this->alias();
-		if (array_key_exists('FTE', $data[$alias])) {
-			$newFTE = $data[$alias]['FTE'];
-			$newEndDate = $data[$alias]['end_date'];
+		$recordId = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$newEndDate = strtotime($data[$this->alias()]['end_date']);
+		$newStartDate = strtotime($data[$this->alias()]['start_date']);
+		$staffId = $data[$this->alias()]['security_user_id'];
+		$positionId = $data[$this->alias()]['institution_site_position_id'];
+		$condition = [
+			$this->aliasField('security_user_id') => $staffId,
+			$this->aliasField('institution_site_position_id') => $positionId,
+			$this->aliasField('id').' IS NOT' => $recordId,
+			$this->aliasField('institution_site_id') => $institutionId
+		];
+		$count = 0;
+		if (empty($newEndDate)) {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[
+								$this->aliasField('start_date').' >=' => $newStartDate, 
+							]
+						]
+					]);
+		} elseif ($newEndDate == $newStartDate) {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						$this->aliasField('start_date').' >=' => $newStartDate, 
+						$this->aliasField('end_date').' <=' => $newEndDate,
+					]);
+		} else {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' >=' => $newEndDate,
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' >=' => $newStartDate,
+							],
+						]
+					]);
+		}
+		if ($count->count() > 0) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.staffExistWithinPeriod');
+			$urlParams = $this->ControllerAction->url('edit');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		} else {
+			if (array_key_exists('FTE', $data[$alias])) {
+				$newFTE = $data[$alias]['FTE'];
+				$newEndDate = $data[$alias]['end_date'];
 
-			if ($newFTE != $entity->FTE) {
-				$data[$alias]['FTE'] = $entity->FTE;
-				$entity->newFTE = $newFTE;
+				if ($newFTE != $entity->FTE) {
+					$data[$alias]['FTE'] = $entity->FTE;
+					$entity->newFTE = $newFTE;
 
-				if (empty($newEndDate)) {
-					if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
-						$data[$alias]['end_date'] = date('Y-m-d');
+					if (empty($newEndDate)) {
+						if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+							$data[$alias]['end_date'] = date('Y-m-d');
+						} else {
+							$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
+						}
 					} else {
-						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
 					}
-				} else {
-					$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
 				}
 			}
 		}
