@@ -198,13 +198,6 @@ class StaffTable extends AppTable {
 							]
 						]
 					]);
-		} elseif ($newEndDate == $newStartDate) {
-			$count = $this->find()
-				->where($condition)
-				->where([
-						$this->aliasField('start_date').' >=' => $newStartDate, 
-						$this->aliasField('end_date').' <=' => $newEndDate,
-					]);
 		} else {
 			$count = $this->find()
 				->where($condition)
