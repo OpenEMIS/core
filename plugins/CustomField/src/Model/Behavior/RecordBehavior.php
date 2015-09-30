@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\ORM\Table;
 
 class RecordBehavior extends Behavior {
 	protected $_contain = ['CustomFieldValues', 'CustomTableCells'];
@@ -15,7 +16,8 @@ class RecordBehavior extends Behavior {
 			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
 			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
 			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction',
-			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave'
+			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave',
+			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
 		],
 		'model' => null,
 		'behavior' => null,
@@ -76,6 +78,25 @@ class RecordBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
+    }
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    	$recordId = $settings['id'];
+    	$entity = $this->_table->get($recordId);
+    	$headerValues = $this->buildCustomFieldsValues($entity);
+    	$header = [];
+    	$values = [];
+    	foreach ($headerValues  as $key => $value) {
+    		$header[] = $key;
+    		$values[] = $value;
+    	}
+    	$sheets[] = [
+    		'name' => $this->_table->alias(),
+			'table' => $this->_table,
+			'query' => $this->_table->find(),
+			'additionalHeader' => $header,
+			'additionalData' => $values,
+    	];
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -273,11 +294,11 @@ class RecordBehavior extends Behavior {
 				->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
 
 			if (!empty($filter)) {
-				$modelAlias = $this->_table->ControllerAction->getModel($filter)['model'];
+				$modelAlias = $this->getModel($filter)['model'];
 				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 
 				$filterId = $entity->$filterKey;
-				$filterModelAlias = $this->_table->ControllerAction->getModel($this->CustomFormsFilters->registryAlias())['model'];
+				$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
 				$customFormQuery
 					->join([
 						'table' => Inflector::tableize($filterModelAlias),
@@ -329,6 +350,93 @@ class RecordBehavior extends Behavior {
 			]);
 
 		return $customFieldQuery;
+	}
+
+	public function getModel($model) {
+		$split = explode('.', $model);
+		$plugin = null;
+		$modelClass = $model;
+		if (count($split) > 1) {
+			$plugin = $split[0];
+			$modelClass = $split[1];
+		}
+		return ['plugin' => $plugin, 'model' => $modelClass];
+	}
+
+	public function buildCustomFieldsValues($entity) {
+		$customFieldQuery = $this->getCustomFieldQuery($entity);
+		$returnArray = [];
+		if (isset($customFieldQuery)) {
+			$customFields = $customFieldQuery
+				->toArray();
+
+			$order = 0;
+			$fieldOrder = [];
+			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+			foreach ($this->_table->fields as $fieldName => $field) {
+				if (!in_array($fieldName, $ignoreFields)) {
+					$order = $field['order'] > $order ? $field['order'] : $order;
+					$fieldOrder[$field['order']] = $fieldName;
+				}
+			}
+			foreach ($customFields as $customFieldOrder => $customField) {
+				$_customField = $customField->custom_field;
+
+				$_field_type = $_customField->field_type;
+				$_name = $_customField->name;
+				$_attr = ['label' => $_name];
+				if ($_customField->is_mandatory == 1) {
+					$_attr['required'] = 'required';
+				}
+
+				$_id = null;
+				$_value = null;
+				if (isset($entity->id)) {
+					$fieldValueData = $this->CustomFieldTypes
+						->find('all')
+						->select([$this->CustomFieldTypes->aliasField('value')])
+						->where([$this->CustomFieldTypes->aliasField('code') => $_field_type])
+						->first();
+					$fieldValue = $fieldValueData->value;
+
+					$results = $this->CustomFieldValues
+						->find('all')
+						->select([
+							$this->CustomFieldValues->aliasField('id'),
+							$this->CustomFieldValues->aliasField($fieldValue),
+						])
+						->where([
+							$this->CustomFieldValues->aliasField($this->config('fieldKey')) => $_customField->id,
+							$this->CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id
+						])
+						->all();
+
+					if (!$results->isEmpty()) {
+						if ($_field_type == 'CHECKBOX') {
+							$_value = [];
+							$data = $results->toArray();
+							foreach ($data as $obj) {
+								$_value[] = [
+									'id' => $obj->id,
+									'value' => $obj->$fieldValue
+								];
+							}
+						} else {
+							$data = $results
+								->first();
+
+							$_id = $data->id;
+							$_value = $data->$fieldValue;
+						}
+
+						$_attr['value'] = $_value;
+
+						$returnArray[$_attr['label']] = $_attr['value'];
+					}
+				}
+			}
+		}
+		return $returnArray;
 	}
 
 	public function buildCustomFields($entity) {
