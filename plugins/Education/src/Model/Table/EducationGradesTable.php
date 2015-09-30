@@ -16,16 +16,16 @@ class EducationGradesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
-		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('InstitutionSiteFees', ['className' => 'Institution.InstitutionSiteFees', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('Visits', ['className' => 'Institution.InstitutionQualityVisits', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrades', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('InstitutionSiteSectionStudents', ['className' => 'Institution.InstitutionSiteSectionStudents', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'cascadeCallbacks' => true, 'dependent' => true]);
-		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'cascadeCallbacks' => true, 'dependent' => true]);
+		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades']);
+		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
+		$this->hasMany('InstitutionSiteFees', ['className' => 'Institution.InstitutionSiteFees']);
+		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
+		$this->hasMany('Visits', ['className' => 'Institution.InstitutionQualityVisits']);
+		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrades']);
+		$this->hasMany('InstitutionSiteSectionStudents', ['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
+		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
+		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
 
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
@@ -33,7 +33,7 @@ class EducationGradesTable extends AppTable {
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => true,
+			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
 
@@ -88,10 +88,12 @@ class EducationGradesTable extends AppTable {
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		if ($this->associationCount($this, $id) > 0) {
-			$this->Alert->error('EducationGrades.hasAssociation');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('index'));
+		if (empty($this->request->data['transfer_to'])) {
+			if ($this->associationCount($this, $id) > 0) {
+				$this->Alert->error('general.deleteTransfer.restrictDelete');
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('remove'));
+			}
 		}
 	}
 
