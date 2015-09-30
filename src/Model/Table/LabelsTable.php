@@ -1,15 +1,15 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Table;
+use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
-use Cake\Network\Request;
-use Cake\ORM\Query;
-use ArrayObject;
 
 class LabelsTable extends AppTable {
 
