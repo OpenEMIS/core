@@ -36,8 +36,6 @@ class EducationGradesTable extends AppTable {
 			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
-
-		$this->addBehavior('ControllerAction.Delete');
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -85,16 +83,6 @@ class EducationGradesTable extends AppTable {
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		if (empty($this->request->data['transfer_to'])) {
-			if ($this->associationCount($this, $id) > 0) {
-				$this->Alert->error('general.deleteTransfer.restrictDelete');
-				$event->stopPropagation();
-				return $this->controller->redirect($this->ControllerAction->url('remove'));
-			}
-		}
 	}
 
 	public function beforeAction(Event $event) {
