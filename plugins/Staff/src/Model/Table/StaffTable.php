@@ -264,4 +264,22 @@ class StaffTable extends AppTable {
 		$params['dataSet'] = $dataSet;
 		return $params;
 	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		switch ($action) {
+			case 'index':
+				$toolbarButtons['import'] = $toolbarButtons['add'];
+				$toolbarButtons['import']['url']['action'] = 'Import';
+				$toolbarButtons['import']['attr']['title'] = __('Import');
+				$toolbarButtons['import']['label'] = '<i class="fa kd-import"></i>';	
+				break;
+		}
+	}
+
 }
