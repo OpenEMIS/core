@@ -13,7 +13,7 @@ class EducationLevelsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevelIsced', ['className' => 'Education.EducationLevelIsced']);
 		$this->belongsTo('EducationSystems', ['className' => 'Education.EducationSystems']);
-		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles', 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles']);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -27,16 +27,6 @@ class EducationLevelsTable extends AppTable {
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		if (empty($this->request->data['transfer_to'])) {
-			if ($this->associationCount($this, $id) > 0) {
-				$this->Alert->error('general.deleteTransfer.restrictDelete');
-				$event->stopPropagation();
-				return $this->controller->redirect($this->ControllerAction->url('remove'));
-			}
-		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
