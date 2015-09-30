@@ -130,11 +130,11 @@ class ExcelBehavior extends Behavior {
 		}
 
 		foreach ($sheets as $sheet) {
-
-			$fields = $this->getFields($sheet['table']);
+			$table = $sheet['table'];
+			$fields = $this->getFields($table);
 
 			// Event to add or modify the fields to fetch from the table
-			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeFields'), 'onExcelUpdateFields', [$settings, $fields]);
+			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields, $table]);
 			if ($event->result) {
 				$fields = $event->result;
 			}
@@ -149,12 +149,12 @@ class ExcelBehavior extends Behavior {
 			if (array_key_exists('id', $settings)) {
 				$id = $settings['id'];
 				if ($id != 0) {
-					$primaryKey = $sheet['table']->primaryKey();
-					$query->where([$sheet['table']->aliasField($primaryKey) => $id]);
+					$primaryKey = $table->primaryKey();
+					$query->where([$table->aliasField($primaryKey) => $id]);
 				}
 			}
 
-			$this->contain($query, $fields, $sheet['table']);
+			$this->contain($query, $fields, $table);
 			// To auto include the default fields. Using select will turn off autoFields by default
 			// This is set so that the containable data will still be in the array.
 			$query->autoFields(true);
@@ -200,7 +200,7 @@ class ExcelBehavior extends Behavior {
 					foreach ($resultSet as $entity) {
 						$row = [];
 						foreach ($fields as $attr) {
-							$row[] = $this->getValue($entity, $sheet['table'], $attr);
+							$row[] = $this->getValue($entity, $table, $attr);
 						}
 
 						if (!empty ($additionalRows)) {
@@ -216,7 +216,24 @@ class ExcelBehavior extends Behavior {
 				$entity = $query->first();
 				foreach ($fields as $attr) {
 					$row = [$attr['label']];
-					$row[] = $this->getValue($entity, $sheet['table'], $attr);
+					$row[] = $this->getValue($entity, $table, $attr);
+					$writer->writeSheetRow($sheetName, $row);
+				}
+
+				// Any additional custom headers that require to be appended on the left column of the sheet
+				$additionalHeader = [];
+				if(isset($sheet['additionalHeader'])) {
+					$additionalHeader = $sheet['additionalHeader'];
+				}
+				// Data to be appended on the right column of spreadsheet
+				$additionalRows = [];
+				if (isset($sheet['additionalData'])) {
+					$additionalRows = $sheet['additionalData'];
+				}
+
+				for ($i = 0; $i < count($additionalHeader) ;$i++) {
+					$row = [$additionalHeader[$i]];
+					$row[] = $additionalRows[$i];
 					$writer->writeSheetRow($sheetName, $row);
 				}
 				$rowCount++;
