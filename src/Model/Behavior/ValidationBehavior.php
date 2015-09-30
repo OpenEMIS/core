@@ -380,13 +380,14 @@ class ValidationBehavior extends Behavior {
 				[
 					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
 					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
-				]
-				
-			)
-			->count();
-			;
-		return ($existingRecords <= 0);
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					'OR' => [
+						[$Staff->aliasField('end_date').' IS NULL'],
+						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
+					],
+				]	
+			);
+		return ($existingRecords->count() <= 0);
 	}
 
 	public static function studentGuardianId($field, array $globalData) {
@@ -634,11 +635,6 @@ class ValidationBehavior extends Behavior {
 		}
 
 		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
-		// got id this is a add method
-		if (!(array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) && (!$validationResult)) {
-			$model = $globalData['providers']['table'];
-			$model->Alert->error(__('No available FTE.'), ['type' => 'text']);
-		}
 
 		return $validationResult;
 	}
