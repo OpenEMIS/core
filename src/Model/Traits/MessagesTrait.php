@@ -443,6 +443,7 @@ trait MessagesTrait {
 				'FTE' => 'There are no available FTE for this position.',
 				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
 				'noInstitutionSitePosition' => 'There are no position available.',
+				'staffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
