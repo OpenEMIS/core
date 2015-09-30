@@ -364,7 +364,9 @@ trait MessagesTrait {
 			'rows_failed' => 'Rows Failed',
 			'download_failed_records' => 'Download Failed Records',
 			'row_number' => 'Row Number',
-			'duplicate_code' => 'Duplicate Code Identified'
+			'duplicate_code' => 'Duplicate Code Identified',
+			'duplicate_openemis_no' => 'Duplicate OpenEMIS ID Identified',
+			'validation_failed' => 'Failed Validation',
 		],
 
 		// Validation Messages
