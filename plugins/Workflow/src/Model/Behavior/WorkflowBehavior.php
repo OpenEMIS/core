@@ -24,9 +24,9 @@ class WorkflowBehavior extends Behavior {
 		'workflowId' => null
 	];
 
-	private $modelReference;
-	private $workflow;
-	private $workflowRecord;
+	private $modelReference = null;
+	private $workflow = null;
+	private $workflowRecord = null;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -46,7 +46,13 @@ class WorkflowBehavior extends Behavior {
 		// priority has to be set at 100 so that onUpdateToolbarButtons in model will be triggered first
 		$events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 100];
 		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
+		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 100];
 		return $events;
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// pr('afterDelete');
+		// to delete from records and transitions table
 	}
 
 	public function onGetWorkflowStatus(Event $event, Entity $entity) {
@@ -143,7 +149,10 @@ class WorkflowBehavior extends Behavior {
 			unset($toolbarButtons['edit']);
 		}
 
-		$workflowStep = $this->getWorkflowStep();
+		$workflowStep = null;
+		if (!is_null($this->workflowRecord)) {
+			$workflowStep = $this->getWorkflowStep();
+		}
 
 		$actionButtons = [];
 		if (!empty($workflowStep)) {
@@ -232,9 +241,77 @@ class WorkflowBehavior extends Behavior {
 		// End
 
 		// Modal
-		$modal = $this->getModalOptions();
-		$this->_table->controller->set('modal', $modal);
+		if (!is_null($this->workflowRecord)) {
+			$modal = $this->getModalOptions();
+			$this->_table->controller->set('modal', $modal);
+		}
 		// End
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+
+		// If is not super admin
+		// $attachWorkflow = $this->_table->controller->Workflow->attachWorkflow;
+
+		if (!$this->_table->AccessControl->isAdmin()) {
+			$isEditable = true;
+			$isRemovable = true;
+			$userId = $this->_table->Auth->user('id');
+			if ($userId == $entity->created_user_id) {
+				$WorkflowModels = $this->WorkflowModels;
+				$registryAlias = $this->_table->registryAlias();
+
+				$workflowRecord = $this->WorkflowRecords
+					->find()
+					->contain(['WorkflowTransitions'])
+					->matching('WorkflowSteps', function($q) {
+						return $q->where(['stage' => 0]);	// Open Stage
+					})
+					->matching('WorkflowModels', function($q) use ($registryAlias) {
+						return $q->where(['model' => $registryAlias]);
+					})
+					->where([
+						$this->WorkflowRecords->aliasField('model_reference') => $entity->id
+					])
+					->first();
+
+				// Not allowed to edit / delete if the record is not in Open Stage
+				if (empty($workflowRecord)) {
+					$isEditable = false;
+					$isRemovable = false;
+				} else {
+					// Not allow to delete if the record is in Open Stage but has workflow transition record
+					if (!empty($workflowRecord->workflow_transitions)) {
+						$isRemovable = false;
+					}
+				}
+			} else {
+				// Disable the edit and delete button if login user is not the creator
+				$isEditable = false;
+				$isRemovable = false;
+			}
+			// pr('isEditable: ' . $isEditable . ' isRemovable: ' . $isRemovable);
+
+			foreach ($buttons as $key => $button) {
+				switch ($key) {
+					case 'edit':
+						if (!$isEditable) {
+							unset($buttons[$key]);
+						}
+						break;
+					case 'remove':
+						if (!$isRemovable) {
+							unset($buttons[$key]);
+						}
+						break;
+					default:
+						continue;
+				}
+			}
+		}
+
+		return $buttons;
 	}
 
 	public function getRecord() {
