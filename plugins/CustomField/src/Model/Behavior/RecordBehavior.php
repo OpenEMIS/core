@@ -58,6 +58,7 @@ class RecordBehavior extends Behavior {
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 
 		$this->CustomFields = $this->CustomFieldValues->CustomFields;
+		$this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
 		$this->CustomForms = $this->CustomFields->CustomForms;
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
@@ -83,12 +84,12 @@ class RecordBehavior extends Behavior {
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
     	$recordId = $settings['id'];
     	$entity = $this->_table->get($recordId);
-    	$headerValues = $this->buildCustomFieldsValues($entity);
+    	$headerValues = $this->buildExcelCustomFieldsValues($entity);
     	$header = [];
     	$values = [];
-    	foreach ($headerValues  as $key => $value) {
-    		$header[] = $key;
-    		$values[] = $value;
+    	foreach ($headerValues  as $value) {
+    		$header[] = $value['label'];
+    		$values[] = $value['value'];
     	}
     	$sheets[] = [
     		'name' => $this->_table->alias(),
@@ -363,33 +364,18 @@ class RecordBehavior extends Behavior {
 		return ['plugin' => $plugin, 'model' => $modelClass];
 	}
 
-	public function buildCustomFieldsValues($entity) {
+	public function buildExcelCustomFieldsValues($entity) {
 		$customFieldQuery = $this->getCustomFieldQuery($entity);
-		$returnArray = [];
+		$labelValueArray = [];
 		if (isset($customFieldQuery)) {
+
 			$customFields = $customFieldQuery
 				->toArray();
 
-			$order = 0;
-			$fieldOrder = [];
-			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-			foreach ($this->_table->fields as $fieldName => $field) {
-				if (!in_array($fieldName, $ignoreFields)) {
-					$order = $field['order'] > $order ? $field['order'] : $order;
-					$fieldOrder[$field['order']] = $fieldName;
-				}
-			}
 			foreach ($customFields as $customFieldOrder => $customField) {
 				$_customField = $customField->custom_field;
-
 				$_field_type = $_customField->field_type;
 				$_name = $_customField->name;
-				$_attr = ['label' => $_name];
-				if ($_customField->is_mandatory == 1) {
-					$_attr['required'] = 'required';
-				}
-
-				$_id = null;
 				$_value = null;
 				if (isset($entity->id)) {
 					$fieldValueData = $this->CustomFieldTypes
@@ -412,31 +398,30 @@ class RecordBehavior extends Behavior {
 						->all();
 
 					if (!$results->isEmpty()) {
-						if ($_field_type == 'CHECKBOX') {
-							$_value = [];
-							$data = $results->toArray();
-							foreach ($data as $obj) {
-								$_value[] = [
-									'id' => $obj->id,
-									'value' => $obj->$fieldValue
-								];
-							}
-						} else {
-							$data = $results
-								->first();
-
-							$_id = $data->id;
-							$_value = $data->$fieldValue;
+						switch ($_field_type) {
+							case 'CHECKBOX':
+							case 'DROPDOWN':
+								$data = $results->toArray();
+								foreach ($data as $obj) {
+									$name = $this->CustomFieldOptions->get($obj->$fieldValue)->name;
+									if (empty($_value)) {
+										$_value = $name;
+									} else {
+										$_value = $_value.','.$name;									
+									}
+								}
+								break;
+							default:
+								$data = $results->first();
+								$_value = $data->$fieldValue;
+								break;
 						}
-
-						$_attr['value'] = $_value;
-
-						$returnArray[$_attr['label']] = $_attr['value'];
+						$labelValueArray[] = ['label'=> $_name, 'value' => $_value];
 					}
 				}
 			}
 		}
-		return $returnArray;
+		return $labelValueArray;
 	}
 
 	public function buildCustomFields($entity) {
