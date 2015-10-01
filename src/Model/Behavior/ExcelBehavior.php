@@ -203,6 +203,7 @@ class ExcelBehavior extends Behavior {
 							$row[] = $this->getValue($entity, $table, $attr);
 						}
 
+						// For custom data to be appended on the right side of the spreadsheet
 						if (!empty ($additionalRows)) {
 							$row = array_merge($row, array_shift($additionalRows));
 						}
