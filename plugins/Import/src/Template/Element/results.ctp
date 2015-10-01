@@ -1,5 +1,5 @@
 <?php //pr($attr['results']);?>
-<div class="btn btn-info"><i class="fa fa-check-circle"></i> <?= $uploadedName.$attr['results']['uploadedName']; ?></div>
+<div class="btn btn-info"><i class="fa fa-check-circle"></i> <?= $attr['results']['uploadedName']; ?></div>
 <div class="clearfix">&nbsp;</div>
 <div class="row">
 	<div class="col-sm-2"><label><?= $this->Label->get('Import.total_rows'); ?></label>: <span><?= $attr['results']['totalRows']; ?></span></div> 
