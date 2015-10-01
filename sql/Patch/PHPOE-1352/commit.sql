@@ -7,3 +7,6 @@ INSERT INTO `workflow_models` (`name`, `model`, `filter`, `created_user_id`, `cr
 
 -- workflow_actions
 ALTER TABLE `workflow_actions` ADD `event_key` varchar(200) NULL DEFAULT '0' AFTER `next_workflow_step_id`;
+
+-- workflow_records
+ALTER TABLE `workflow_records` ADD INDEX(`model_reference`), ADD INDEX(`workflow_model_id`), ADD INDEX(`workflow_step_id`);
