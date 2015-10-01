@@ -84,20 +84,24 @@ class RecordBehavior extends Behavior {
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
     	$recordId = $settings['id'];
     	$entity = $this->_table->get($recordId);
-    	$headerValues = $this->buildExcelCustomFieldsValues($entity);
-    	$header = [];
-    	$values = [];
-    	foreach ($headerValues  as $value) {
-    		$header[] = $value['label'];
-    		$values[] = $value['value'];
+    	$spreadSheetValues = $this->buildExcelCustomFieldsValues($entity);
+
+    	// The table answers will be place on different spreadsheet
+    	foreach ($spreadSheetValues as $headerValues) {
+	    	$header = [];
+	    	$values = [];
+	    	foreach ($headerValues  as $value) {
+	    		$header[] = $value['label'];
+	    		$values[] = $value['value'];
+	    	}
+	    	$sheets[] = [
+	    		'name' => $this->_table->alias(),
+				'table' => $this->_table,
+				'query' => $this->_table->find(),
+				'additionalHeader' => $header,
+				'additionalData' => $values,
+	    	];
     	}
-    	$sheets[] = [
-    		'name' => $this->_table->alias(),
-			'table' => $this->_table,
-			'query' => $this->_table->find(),
-			'additionalHeader' => $header,
-			'additionalData' => $values,
-    	];
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -372,6 +376,7 @@ class RecordBehavior extends Behavior {
 			$customFields = $customFieldQuery
 				->toArray();
 
+			$sheetCount = 0;
 			foreach ($customFields as $customFieldOrder => $customField) {
 				$_customField = $customField->custom_field;
 				$_field_type = $_customField->field_type;
@@ -416,7 +421,7 @@ class RecordBehavior extends Behavior {
 								$_value = $data->$fieldValue;
 								break;
 						}
-						$labelValueArray[] = ['label'=> $_name, 'value' => $_value];
+						$labelValueArray[0][] = ['label'=> $_name, 'value' => $_value];
 					}
 				}
 			}
