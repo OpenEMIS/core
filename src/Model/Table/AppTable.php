@@ -364,15 +364,11 @@ class AppTable extends Table {
 		return $key;
 	}
 
-	public function postString($key, $options=[]) {
+	public function postString($key) {
 		$request = $this->request;
+		$selectedId = null;
 		if ($request->data($this->aliasField($key))) {
 			$selectedId = $request->data($this->aliasField($key));
-			if (!array_key_exists($selectedId, $options)) {
-				$selectedId = key($options);
-			}
-		} else {
-			$selectedId = key($options);
 		}
 		return $selectedId;
 	}

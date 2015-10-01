@@ -186,6 +186,60 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * To check date entered is earlier today
+	 * @param  mixed   $field        current field value
+	 * @param  boolean $equals       whether the equals sign should be included in the comparison
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return mixed                 returns true if validation passed or the error message if it fails
+	 */
+	public static function lessThanToday($field, $equal = false, array $globalData) {
+		$label = Inflector::humanize($field);
+		try {
+			$enteredDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$label);
+		}
+		$today = new DateTime('now');
+		if($equal) {
+			return $today >= $enteredDate;
+		} else {
+			return $today > $enteredDate;
+		}
+	}
+
+	/**
+	 * To check date entered is later than today
+	 * @param  mixed   $field        current field value
+	 * @param  boolean $equals       whether the equals sign should be included in the comparison
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return mixed                 returns true if validation passed or the error message if it fails
+	 */
+	public static function moreThanToday($field, $equal = false, array $globalData) {
+		$label = Inflector::humanize($field);
+		try {
+			$enteredDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$label);
+		}
+		$today = new DateTime('now');
+		if($equal) {
+			return $enteredDate >= $today;
+		} else {
+			return $enteredDate > $today;
+		}
+	}
+
+	/**
 	 * Check if user input for date is valid
 	 * @param  [type] $field      [description]
 	 * @param  [type] $globalData [description]
