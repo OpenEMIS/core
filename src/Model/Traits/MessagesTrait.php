@@ -364,9 +364,13 @@ trait MessagesTrait {
 			'rows_failed' => 'Rows Failed',
 			'download_failed_records' => 'Download Failed Records',
 			'row_number' => 'Row Number',
+			'invalid_code' => 'Invalid Code',
 			'duplicate_code' => 'Duplicate Code Identified',
 			'duplicate_openemis_no' => 'Duplicate OpenEMIS ID Identified',
 			'validation_failed' => 'Failed Validation',
+			'file_required' => 'File is required',
+			'not_supported_format' => 'File format not supported',
+			'over_max' => 'File records exceeds maximum allowed',
 		],
 
 		// Validation Messages
