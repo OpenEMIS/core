@@ -4,6 +4,7 @@ namespace App\Model\Behavior;
 use DateTime;
 use Exception;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
@@ -185,6 +186,60 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * To check date entered is earlier today
+	 * @param  mixed   $field        current field value
+	 * @param  boolean $equals       whether the equals sign should be included in the comparison
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return mixed                 returns true if validation passed or the error message if it fails
+	 */
+	public static function lessThanToday($field, $equal = false, array $globalData) {
+		$label = Inflector::humanize($field);
+		try {
+			$enteredDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$label);
+		}
+		$today = new DateTime('now');
+		if($equal) {
+			return $today >= $enteredDate;
+		} else {
+			return $today > $enteredDate;
+		}
+	}
+
+	/**
+	 * To check date entered is later than today
+	 * @param  mixed   $field        current field value
+	 * @param  boolean $equals       whether the equals sign should be included in the comparison
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return mixed                 returns true if validation passed or the error message if it fails
+	 */
+	public static function moreThanToday($field, $equal = false, array $globalData) {
+		$label = Inflector::humanize($field);
+		try {
+			$enteredDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$label);
+		}
+		$today = new DateTime('now');
+		if($equal) {
+			return $enteredDate >= $today;
+		} else {
+			return $enteredDate > $today;
+		}
+	}
+
+	/**
 	 * Check if user input for date is valid
 	 * @param  [type] $field      [description]
 	 * @param  [type] $globalData [description]
@@ -332,23 +387,42 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
 		}
+	}
+
+	// Return false if not enrolled in other education system
+	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+		$enrolled = false;
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
+			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
+		}
+		return !$enrolled;
 	}                                                                                                                                                                 
 
 	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
+		$existingRecords = 0;
 
-		$existingRecords = $Students->find()
-			->where(
-				[
-					$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
-					$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
-					$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
-					$Students->aliasField('student_id') => $globalData['data']['student_id']
-				]
-				
-			)
-			->count();
-			;
+		// Added the check for academic_period_id as the academic period id is possible to be all disabled 
+		// due to no programme found
+		if (!empty($globalData['data']['academic_period_id'])) {
+			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+			$statuses = $StudentStatusesTable->findCodeList();
+			$existingRecords = $Students->find()
+				->where(
+					[
+						$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
+						$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+						$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
+						$Students->aliasField('student_id') => $globalData['data']['student_id'],
+						$Students->aliasField('student_status_id').' IS NOT ' => $statuses['DROPOUT']
+					]
+					
+				)
+				->count();
+				;
+		}
 		return ($existingRecords <= 0);
 	}
 
@@ -360,13 +434,14 @@ class ValidationBehavior extends Behavior {
 				[
 					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
 					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
-				]
-				
-			)
-			->count();
-			;
-		return ($existingRecords <= 0);
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					'OR' => [
+						[$Staff->aliasField('end_date').' IS NULL'],
+						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
+					],
+				]	
+			);
+		return ($existingRecords->count() <= 0);
 	}
 
 	public static function studentGuardianId($field, array $globalData) {
@@ -382,6 +457,47 @@ class ValidationBehavior extends Behavior {
 			->count()
 			;
 		return $existingRecords <= 0;
+	}
+
+	public static function checkAdmissionAgeWithEducationCycle($field, array $globalData) {
+		$data = $globalData['data'];
+		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
+			// getting admission  age
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			$educationGradeQuery = $EducationGrades->find()
+				->select(['EducationCycles.name', 'EducationCycles.admission_age'])
+				->contain('EducationProgrammes.EducationCycles')
+				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $data['education_grade_id']])
+				->first()
+				;
+			$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
+
+			// getting age fo student
+			$Students = TableRegistry::get('Student.Students');
+			$studentQuery = $Students->find()
+				->select([$Students->aliasField('date_of_birth')])
+				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
+				->first();
+				;
+			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			$ageOfStudent = Time::fromNow($dateOfBirth);
+			$ageOfStudent = $ageOfStudent->y;
+
+
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value(admission_age_minus);
+			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value(admission_age_plus);
+
+			// pr('ageOfStudent: '.$ageOfStudent);
+			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
+			// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
+			// die;
+
+			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
+		}
+		
+		// if there is no cycle to check with, allow validation to pass
+		return true;;
 	}
 
 	// To allow case sensitive entry
@@ -458,11 +574,11 @@ class ValidationBehavior extends Behavior {
 			]
 		];
 
+		$timeConditions = [];
 		if (!$globalData['data']['full_day']) {
 			$startTime = $globalData['data']['start_time'];
 			$endTime = $globalData['data']['end_time'];
 
-			$timeConditions = [];
 			$timeConditions['OR'] = [
 				'OR' => [
 					[	
@@ -489,22 +605,91 @@ class ValidationBehavior extends Behavior {
 		// need to check for overlap time
 		$found = $SearchTable->find()
 			->where($overlapDateCondition)
-			->where($timeConditions)
 			->where([$SearchTable->aliasField('security_user_id') => $security_user_id])
 			->where([$SearchTable->aliasField('institution_site_id') => $institution_site_id])
 			;
 			// ->toArray();
 
+		if (!empty($timeConditions)) {
+			$found->where($timeConditions);
+		}
+
 		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
 			$found->where([$SearchTable->aliasField('id').' != ' => $globalData['data']['id']]);
 		}
-			
 
 		$found = $found->count();
 			// ->sql();
 			// return false;
 		// pr($found == 0);
 		return ($found == 0);
+	}
 
+	public static function checkFTE($field, array $globalData) {
+		if (!empty($globalData['data']['start_date'])) {
+			$date = new DateTime($globalData['data']['start_date']);
+			$startDate = date_format($date, 'Y-m-d');
+		} else {
+			$startDate = null;
+		}
+
+		if (!empty($globalData['data']['end_date'])) {
+			$date = new DateTime($globalData['data']['end_date']);
+			$endDate = date_format($date, 'Y-m-d');
+		} else {
+			$endDate = null;
+		}
+
+
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$identicalPositionHolders = $InstitutionStaff->find()
+			->where(
+				[
+					$InstitutionStaff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id']
+					
+				]
+			)
+			;
+
+		// no id this is NOT a add method
+		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
+			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['id']]);
+		}
+
+		$dateCondition = [];
+		// start and end date is of the new entry
+		$dateCondition['OR'] = [];
+		if (empty($endDate)) {
+			// current position has no end date
+			$dateCondition['OR'][] = 'end_date IS NULL';
+			$dateCondition['OR'][] = [
+				'end_date IS NOT NULL',
+				'end_date >= ' => $startDate
+			];
+		} else {
+			// current position HAS end date
+			$dateCondition['OR'][] = [
+				'end_date IS NULL',
+				'start_date'.' <= ' => $endDate
+			];
+			$dateCondition['OR']['OR'] = [];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' >= ' => $startDate, 'start_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
+		}
+
+		$identicalPositionHolders->where($dateCondition);
+
+		$FTEused = 0;
+		if ($identicalPositionHolders->count()>0) {
+			// need to tally all the FTE
+			foreach ($identicalPositionHolders->toArray() as $key => $value) {
+				$FTEused += $value->FTE;
+			}
+		}
+
+		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
+
+		return $validationResult;
 	}
 }
