@@ -21,17 +21,25 @@ class SurveyComponent extends Component {
 	}
 
 	public function getAttachWorkflow() {
+		$currentAction = 'index';
 		$paramsPass = $this->controller->ControllerAction->paramsPass();
-		$currentAction = current($paramsPass);
+		if (!empty($paramsPass)) {
+			$currentAction = current($paramsPass);
+		}
 
-		if ($currentAction == 'view') {
+		$status = self::COMPLETED;
+		if ($currentAction == 'index') {
+			$status = $this->controller->request->query('status');
+		} else if ($currentAction == 'view') {
 			$recordId = next($paramsPass);
 			$Surveys = TableRegistry::get($this->config('model'));
 			$entity = $Surveys->get($recordId);
 
-			if ($entity->status != self::COMPLETED) {
-				return false;
-			}
+			$status = $entity->status;
+		}
+
+		if ($status != self::COMPLETED) {
+			return false;
 		}
 
 		return true;
