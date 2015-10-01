@@ -48,12 +48,10 @@ class InstitutionSubjectBehavior extends Behavior {
 						}
 					}
 					if (! $isFound) {
-						if (isset($buttons['edit'])) {
-							$urlParams = $this->_table->ControllerAction->url('view');
-							$event->stopPropagation();
-							$this->_table->Alert->error('security.noAccess');
-							return $this->_table->controller->redirect($urlParams);
-						}
+						$urlParams = $this->_table->ControllerAction->url('view');
+						$event->stopPropagation();
+						$this->_table->Alert->error('security.noAccess');
+						return $this->_table->controller->redirect($urlParams);
 					}
 				}
 			}
