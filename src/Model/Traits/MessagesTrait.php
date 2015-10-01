@@ -51,7 +51,7 @@ trait MessagesTrait {
 				'label' => 'Delete',
 			],
 			'deleteTransfer' =>[
-				'restrictDelete' => 'The transfer cannot be performed as there is no options to transfer to.'
+				'restrictDelete' => 'The record cannot be deleted as there are still records associated with it.'
 			],
 			'view' => [
 				'label' => 'View',
@@ -147,9 +147,10 @@ trait MessagesTrait {
 			'students' => 'Students',
 			'teachers' => 'Teachers',
 		],
-		'InstitutionSiteFees' => [
+		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+			'fee_payments_exists' => 'Unable to delete this record due to payments by students already exists'
 		],
 		'Students' => [
 			'noGrades' => 'No Grades',
@@ -157,6 +158,10 @@ trait MessagesTrait {
 		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+			'payment_date' => 'Payment Date',
+			'created_user_id' => 'Created By',
+			'comments' => 'Comments',
+			'amount' => 'Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
@@ -216,7 +221,7 @@ trait MessagesTrait {
 			'retypePassword' => 'Retype New Password',
 		],
 		'EducationGrades' => [
-			'add_subject' => 'Add Subject'
+			'add_subject' => 'Add Subject',
 		],
 		'RubricCriterias' => [
 			//'rubric_section_id' => 'Rubric Section',
