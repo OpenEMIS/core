@@ -58,15 +58,37 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'actions') {
+			$label = __('Actions');
+			$label .= '<span class="divider"></span>';
+			$label .= $this->ControllerAction->Alert->getMessage('WorkflowActions.next_step');
+			$label .= '<span class="divider"></span>';
+			$label .= $this->ControllerAction->Alert->getMessage('WorkflowActions.event');
+
+			return $label;
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
+	}
+
 	public function onGetActions(Event $event, Entity $entity) {
 		$workflowActions = [];
 		foreach ($entity->workflow_actions as $key => $obj) {
 			if ($obj->visible == 1) {
 				$workflowAction = $obj->name;
+				$workflowAction .= '<span class="divider"></span>';
 				if (isset($obj->next_workflow_step)) {
-					$workflowAction .= ' - ' . $obj->next_workflow_step->name;
+					$workflowAction .= $obj->next_workflow_step->name;
+					// $workflowAction .= ' - ' . $obj->next_workflow_step->name;
 				} else {
-					$workflowAction .= ' - (' . __('Not linked') . ')';
+					$workflowAction .= '(' . __('Not linked') . ')';
+					// $workflowAction .= ' - (' . __('Not linked') . ')';
+				}
+				if (!empty($obj->event_key)) {
+					$eventOptions = $this->getEvents($entity);
+					$workflowAction .= '<span class="divider"></span>';
+					$workflowAction .= $eventOptions[$obj->event_key];
 				}
 				$workflowActions[$key] = $workflowAction;
 			}
