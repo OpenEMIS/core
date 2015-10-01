@@ -40,19 +40,23 @@ class InstitutionsController extends AppController  {
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
 			'StudentAccount' 	=> ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
+			'StudentSurveys' 	=> ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'remove']],
 			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
+			'Transfer' 			=> ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
 			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
-			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['add', 'edit', 'remove']],
+			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['index', 'edit', 'view']],
+			'DropoutRequests' 	=> ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
+			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
-			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
-			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'edit']],
+			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
+			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'add']],
 
 			// Surveys
 			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
@@ -154,7 +158,7 @@ class InstitutionsController extends AppController  {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
-			if ($model->hasField('institution_id')) {
+			if ($model->hasField('institution_id') && !in_array($model->alias(), ['TransferRequests'])) {
 				$model->fields['institution_id']['type'] = 'hidden';
 				$model->fields['institution_id']['value'] = $session->read('Institution.Institutions.id');
 			}
@@ -258,6 +262,10 @@ class InstitutionsController extends AppController  {
 
 	public function getUserTabElements($options = []) {
 		$userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
+		$action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+		$userId = (array_key_exists('userId', $options))? $options['userId']: 0;
+
 		switch ($userRole) {
 			case 'Staff':
 				$pluralUserRole = 'Staff'; // inflector unable to handle
@@ -266,7 +274,6 @@ class InstitutionsController extends AppController  {
 				$pluralUserRole = Inflector::pluralize($userRole);
 				break;
 		}
-		
 
 		$url = ['plugin' => $this->plugin, 'controller' => $this->name];
 
@@ -276,7 +283,7 @@ class InstitutionsController extends AppController  {
 			$userRole.'Account' => ['text' => __('Account')]
 		];
 
-		if ($this->action == 'add') {
+		if ($action == 'add') {
 			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'add']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'add']);
@@ -284,6 +291,29 @@ class InstitutionsController extends AppController  {
 			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'view']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
+
+			// Only Student has Survey tab
+			if ($userRole == 'Student') {
+				$tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
+				$tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
+			}
+		}
+
+		foreach ($tabElements as $key => $tabElement) {
+			switch ($key) {
+				case $userRole.'User':
+					$params = [$userId, 'id' => $id];
+					break;
+				case $userRole.'Account':
+					$params = [$userId, 'id' => $id];
+					break;
+				case $userRole.'Surveys':
+					$params = ['id' => $id, 'user_id' => $userId];
+					break;
+				default:
+					$params = [$id];
+			}
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
 
 		return $tabElements;

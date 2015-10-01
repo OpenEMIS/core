@@ -31,7 +31,8 @@ class StaffUserTable extends UserTable {
 			$institutionId = $positionData['institution_site_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
-			if ($Staff->save($Staff->newEntity($positionData))) {
+			$staffEntity = $Staff->newEntity($positionData);
+			if ($Staff->save($staffEntity)) {
 				if ($role > 0) {
 					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
 					$obj = [
@@ -42,6 +43,13 @@ class StaffUserTable extends UserTable {
 					];
 					$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 					$GroupUsers->save($GroupUsers->newEntity($obj));
+				}
+			} else {
+				$errors = $staffEntity->errors();
+				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
+					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE');
+				} else {
+					$this->Alert->error('Institution.InstitutionSiteStaff.error');
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -60,16 +68,16 @@ class StaffUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => 'Staff']);
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements['Staff']['url'] = array_merge($tabElements['Staff']['url'], [$id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == 'Staff') continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
-			}
-		}
+		$options = [
+			'userRole' => 'Staff',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $entity->id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
