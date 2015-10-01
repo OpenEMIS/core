@@ -67,7 +67,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('comment');
 		$this->ControllerAction->field('previous_institution_id');
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
-		$this->ControllerAction->field('created', ['visible'=>true, 'type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
+		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
 
 		$this->ControllerAction->setFieldOrder([
 			'created', 'transfer_status', 'student',
@@ -285,7 +285,7 @@ class TransferApprovalsTable extends AppTable {
 				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
 				->where($where)
 				->order([
-					$this->aliasField('created')
+					$this->aliasField('modified') => 'DESC'
 				])
 				->toArray();
 
@@ -374,6 +374,24 @@ class TransferApprovalsTable extends AppTable {
 						'academic_period_id' => $periodId,
 						'education_grade_id' => $gradeId
 					]
+				);
+
+				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+
+				$educationSystemId = $EducationGradesTable->getEducationSystemId($gradeId);
+				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $studentId,
+					'status' => self::NEW_REQUEST,
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				// Reject all other new pending admission / transfer application entry of the 
+				// same student for the same academic period
+				$this->updateAll(
+					['status' => self::REJECTED],
+					[$conditions]
 				);
 
 				// finally update the transfer request to become approved

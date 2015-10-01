@@ -14,6 +14,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Inflector;
 
+
 class StaffTable extends AppTable {
 	use OptionsTrait;
 
@@ -58,13 +59,16 @@ class StaffTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-			->add('institution_site_position_id', [
-			])
-			->add('institution_site_id', [
-			])
+			->allowEmpty('end_date')
+			->add('end_date', 'ruleCompareDateReverse', [
+		        'rule' => ['compareDateReverse', 'start_date', true]
+	    	])
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
+			])
+			->add('institution_site_position_id', 'ruleCheckFTE', [
+				'rule' => ['checkFTE'],
 			])
 		;
 	}
@@ -168,17 +172,126 @@ class StaffTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
-	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => Inflector::singularize($this->alias())]);
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+		$recordId = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$newEndDate = strtotime($data[$this->alias()]['end_date']);
+		$newStartDate = strtotime($data[$this->alias()]['start_date']);
+		$staffId = $data[$this->alias()]['security_user_id'];
+		$positionId = $data[$this->alias()]['institution_site_position_id'];
+		$condition = [
+			$this->aliasField('security_user_id') => $staffId,
+			$this->aliasField('institution_site_position_id') => $positionId,
+			$this->aliasField('id').' IS NOT' => $recordId,
+			$this->aliasField('institution_site_id') => $institutionId
+		];
+		$count = 0;
+		if (empty($newEndDate)) {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[
+								$this->aliasField('start_date').' >=' => $newStartDate, 
+							]
+						]
+					]);
+		} else {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' >=' => $newEndDate,
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' >=' => $newStartDate,
+							],
+						]
+					]);
+		}
+		if ($count->count() > 0) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.staffExistWithinPeriod');
+			$urlParams = $this->ControllerAction->url('edit');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		} else {
+			if (array_key_exists('FTE', $data[$alias])) {
+				$newFTE = $data[$alias]['FTE'];
+				$newEndDate = $data[$alias]['end_date'];
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements[$this->alias()]['url'] = array_merge($tabElements[$this->alias()]['url'], [$entity->id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == $this->alias()) continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->security_user_id, 'id' => $entity->id]);
+				if ($newFTE != $entity->FTE) {
+					$data[$alias]['FTE'] = $entity->FTE;
+					$entity->newFTE = $newFTE;
+
+					if (empty($newEndDate)) {
+						if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+							$data[$alias]['end_date'] = date('Y-m-d');
+						} else {
+							$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
+						}
+					} else {
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
+					}
+				}
 			}
 		}
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew()) { // edit operation
+			if ($entity->has('newFTE')) {
+				unset($entity->id);
+				$entity->FTE = $entity->newFTE;
+				$entity->start_date = $entity->end_date;
+				if ($entity->start_date instanceof Date) {
+					$entity->start_date->modify('+1 days');
+				} else {
+					$startDate = $entity->start_date->format('Y-m-d');
+					$date = date_create($startDate);
+					date_add($date, date_interval_create_from_date_string('1 day'));
+					$entity->start_date = $date->format('Y-m-d');
+				}
+				$entity->end_date = null;
+				$entity->end_year = null;
+				unset($entity->staff_type);
+				unset($entity->staff_status);
+				unset($entity->position);
+				unset($entity->user);
+				
+				$newEntity = $this->newEntity($entity->toArray());
+				if (!$this->save($newEntity)) {
+						
+				}
+			}
+		}
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+		
+	}
+
+	private function setupTabElements($entity) {
+		$options = [
+			'userRole' => 'Staff',
+			'action' => $this->action,
+			'id' => $entity->id,
+			'userId' => $entity->security_user_id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -192,7 +305,6 @@ class StaffTable extends AppTable {
 			->contain(['StaffPositionTitles'])
 			->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
 			->toArray();
-
 			$attr['options'] = $positionOptions;
 		}
 		return $attr;
@@ -302,10 +414,14 @@ class StaffTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
-		return $this->controller->redirect($action);
+		if (empty($data[$this->alias()]['institution_site_position_id'])) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.noInstitutionSitePosition');
+		} else {
+			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
+			$event->stopPropagation();
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
+			return $this->controller->redirect($action);
+		}
 	}
 
 	public function afterAction(Event $event) {
@@ -386,11 +502,21 @@ class StaffTable extends AppTable {
 			'order' => 11,
 			'attr' => ['value' => $entity->position->name]
 		]);
-		$this->ControllerAction->field('FTE', [
-			'type' => 'select', 
-			'order' => 12,
-			'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
-		]);
+
+		if (empty($entity->end_date)) {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'select', 
+				'order' => 12,
+				'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
+			]);
+		} else {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'readonly', 
+				'order' => 12, 
+				'attr' => ['value' => $entity->FTE]
+			]);
+		}
+		
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -399,28 +525,82 @@ class StaffTable extends AppTable {
 		$institutionId = $entity->institution_site_id;
 		$securityUserId = $entity->security_user_id;
 
-		// sets the staff_id in institution_site_sections to 0 if the staff was allocated to it
-		// todobug: possible problem as it will set all the sections to 0, including previous period sections
+		
+		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
+		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
+			
+
 		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$InstitutionSiteSections->updateAll(
-				['security_user_id' => 0],
+		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
+		$sectionsInPosition = $InstitutionSiteSections->find()
+			->where(
 				['security_user_id' => $securityUserId, 'institution_site_id' => $institutionId]
+			)
+			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+				$overlapDateCondition = [];
+				if (empty($endDate)) {
+					$overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+				} else {
+					$overlapDateCondition['OR'] = [];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+				}
+				return $q->where($overlapDateCondition);
+			})
+			;
+			
+		$sectionArray = [];
+		foreach ($sectionsInPosition as $key => $value) {
+			$sectionArray[] = $value->id;
+		}
+		if (!empty($sectionArray)) {
+			$InstitutionSiteSections->updateAll(
+				['security_user_id' => 0],
+				['id IN ' => $sectionArray]
 			);
+		}
 
 		// delete the staff from subjects		
-		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
-		$classStaffQuery = $InstitutionSiteClassStaff->find()
-			->contain('InstitutionSiteClasses')
-			->where(
-				[
-					'InstitutionSiteClasses.institution_site_id' => $institutionId, 
-					$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId
-				]
-			)
+		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+		$InstitutionSiteClasses = TableRegistry::get('Institution.InstitutionSiteClasses');	
+		$classesDuringStaffPeriod = $InstitutionSiteClasses->find()
+			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+				$overlapDateCondition = [];
+				if (empty($endDate)) {
+					$overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+				} else {
+					$overlapDateCondition['OR'] = [];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+				}
+				return $q->where($overlapDateCondition);
+			})
 			;
-		foreach ($classStaffQuery as $key => $value) {
-			$InstitutionSiteClassStaff->delete($value);
+		$classIdsDuringStaffPeriod = [];
+		foreach ($classesDuringStaffPeriod as $key => $value) {
+			$classIdsDuringStaffPeriod[] = $value->id;
 		}
+
+		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+
+		$targetData = $InstitutionSiteClassStaff->find()
+			->where([$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
+			;
+
+		$InstitutionSiteClassStaff->deleteAll([
+			$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		]);
+
+
+		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
+
+
+
+
 
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
@@ -518,7 +698,7 @@ class StaffTable extends AppTable {
 				'Positions.type',
 				'Users.id',
 				'Genders.name',
-				'total' => $query->func()->count($this->aliasField('id'))
+				'total' => $query->func()->count('DISTINCT '.$this->aliasField('security_user_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([
