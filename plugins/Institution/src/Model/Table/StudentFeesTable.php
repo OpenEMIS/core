@@ -131,7 +131,6 @@ class StudentFeesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'openemis_no', 'student_id', 'total_fee', 'amount_paid', 'outstanding_fee'
 		]);
-		$settings['model'] = 'Institution.StudentPromotion';
 		$conditions = array(
 			'InstitutionGrades.institution_site_id' => $this->institutionId
 		);
