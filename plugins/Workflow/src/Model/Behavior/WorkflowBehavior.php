@@ -383,6 +383,24 @@ class WorkflowBehavior extends Behavior {
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData);
 			if ($this->WorkflowTransitions->save($entity)) {
+				// Trigger event here
+				$workflowAction = $this->WorkflowActions
+					->find()
+					->where([
+						$this->WorkflowActions->aliasField('id') => $entity->workflow_action_id
+					])
+					->first();
+
+				if (!empty($workflowAction->event_key)) {
+					$eventKey = $workflowAction->event_key;
+					$subject = $this->_table;
+
+					$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
+					$id = $workflowRecord->model_reference;
+
+					$event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
+					if ($event->isStopped()) { return $event->result; }
+				}
 			} else {
 				$this->log($entity->errors(), 'debug');
 			}

@@ -11,7 +11,7 @@ use Cake\Event\Event;
 
 class WorkflowStepsTable extends AppTable {
 	private $_fieldOrder = ['workflow_id', 'name', 'security_roles'];
-	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'WorkflowActions.WorkflowEvents', 'SecurityRoles'];
+	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -120,6 +120,13 @@ class WorkflowStepsTable extends AppTable {
 		$query->contain($this->_contain);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		// Build Event Options
+		$eventOptions = $this->getEvents($entity);
+		$this->controller->set('eventOptions', $eventOptions);
+		// End
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
 		list($workflowOptions, , $securityRoleOptions) = array_values($this->_getSelectOptions());
@@ -174,31 +181,7 @@ class WorkflowStepsTable extends AppTable {
 		// End
 
 		// Build Event Options
-		$eventOptions = [];
-		if (isset($entity->workflow_id)) {
-			$workflow = $this->Workflows->get($entity->workflow_id);
-
-			$WorkflowEvents = $this->WorkflowActions->WorkflowEvents;
-			$events = $WorkflowEvents
-				->find('list')
-				->where([
-					$WorkflowEvents->aliasField('workflow_model_id') => $workflow->workflow_model_id
-				])
-				->toArray();
-
-			if (empty($events)) {
-				$eventOptions = [
-					0 => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
-				];
-			} else {
-				$eventOptions = [
-					0 => __('-- Select Event --')
-				];
-				foreach ($events as $key => $event) {
-					$eventOptions[$key] = $event;
-				}
-			}
-		}
+		$eventOptions = $this->getEvents($entity);
 		$this->controller->set('eventOptions', $eventOptions);
 		// End
 	}
@@ -241,6 +224,42 @@ class WorkflowStepsTable extends AppTable {
 		}
 
 		return $buttons;
+	}
+
+	public function getEvents(Entity $entity) {
+		$eventOptions = [];
+
+		// trigger Workflow.getEvents to retrieve the list of available events for the model
+		if (isset($entity->workflow_id)) {
+			$workflow = $this->Workflows
+				->find()
+				->matching('WorkflowModels')
+				->where([
+					$this->Workflows->aliasField('id') => $entity->workflow_id
+				])
+				->first();
+
+			$registryAlias = $workflow->_matchingData['WorkflowModels']->model;
+			$subject = TableRegistry::get($registryAlias);
+			$subjectEvent = $subject->dispatchEvent('Workflow.getEvents', null, $subject);
+			if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
+
+			$events = $subjectEvent->result;
+			if (empty($events)) {
+				$eventOptions = [
+					0 => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
+				];
+			} else {
+				$eventOptions = [
+					0 => __('-- Select Event --')
+				];
+				foreach ($events as $key => $event) {
+					$eventOptions[$key] = $event;
+				}
+			}
+		}
+
+		return $eventOptions;
 	}
 
 	public function _getSelectOptions() {

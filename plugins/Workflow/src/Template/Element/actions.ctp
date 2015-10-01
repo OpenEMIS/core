@@ -36,7 +36,9 @@
 								<i class="fa fa-close"></i>
 							<?php endif ?>
 						</td>
-						<td><?= $obj->workflow_event->name; ?></td>
+						<td>
+							<?= !empty($obj->event_key) ? $eventOptions[$obj->event_key] : ''; ?>
+						</td>
 					</tr>
 					<?php endforeach ?>
 				</tbody>
@@ -91,7 +93,7 @@
 											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
 										</td>
 										<td>
-											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.workflow_event_id", ['label' => false, 'options' => $eventOptions]); ?>											
+											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.event_key", ['label' => false, 'options' => $eventOptions]); ?>											
 										</td>
 										<td>
 											<?php if (is_null($obj->action)) : ?>
