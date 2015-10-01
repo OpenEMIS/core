@@ -55,8 +55,8 @@ class InstitutionsController extends AppController  {
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
-			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
-			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'edit']],
+			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
+			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'add']],
 
 			// Surveys
 			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
