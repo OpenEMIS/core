@@ -20,6 +20,11 @@ class InstitutionSurveysTable extends AppTable {
 	const DRAFT = 1;
 	const COMPLETED = 2;
 
+	private $workflowEvents = [
+		'Workflow.onApprove' => 'OnApprove',
+		'Workflow.onReject' => 'OnReject'
+	];
+
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
 		parent::initialize($config);
@@ -44,12 +49,21 @@ class InstitutionSurveysTable extends AppTable {
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+
 	}
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['Workflow.getEvents'] = 'getWorkflowEvents';
+    	foreach ($this->workflowEvents as $eventKey => $name) {
+    		$events[$eventKey] = $name;
+    	}
     	return $events;
+    }
+
+    public function getWorkflowEvents(Event $event) {
+    	return $this->workflowEvents;
     }
 
 	public function buildSurveyRecords($institutionId=null) {
@@ -352,6 +366,20 @@ class InstitutionSurveysTable extends AppTable {
 		// $action = $this->ControllerAction->buttons['index']['url'];
 		$action = $this->ControllerAction->url('index');
 		return $this->controller->redirect($action);
+	}
+
+	public function onApprove(Event $event, $id=null) {
+		$this->updateAll(
+			['status' => self::COMPLETED],
+			['id' => $id]
+		);
+	}
+
+	public function OnReject(Event $event, $id=null) {
+		$this->updateAll(
+			['status' => self::DRAFT],
+			['id' => $id]
+		);
 	}
 
 	public function _getSelectOptions() {
