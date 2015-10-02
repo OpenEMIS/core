@@ -18,17 +18,6 @@ use Cake\ORM\TableRegistry;
  */
 trait ImportExcelTrait {
 
-	protected function getNewOpenEmisNo($importedUniqueCodes) {
-		$val = TableRegistry::get('User.Users')->getUniqueOpenemisId(['model' => $this->config('plugin')]);
-		if (in_array($val, $importedUniqueCodes)) {
-			// sleep for 50 miliseconds to allow the previous record saving propagates till complete and avoid
-			// "connection reset" by server due to too much loops
-			usleep(50000);
-			$val = $this->getNewOpenEmisNo($importedUniqueCodes);
-		}
-		return $val;
-	}
-
 	/**
 	 * Check if all the columns in the row is not empty
 	 * @param  WorkSheet $sheet      The worksheet object
@@ -47,6 +36,24 @@ trait ImportExcelTrait {
 			}
 		}
 		return in_array(true, $cellsState);
+	}
+	
+	/**
+	 * Check if the uploaded file is the correct template by comparing the headers extracted from mapping table
+	 * and first row of the uploaded file record
+	 * @param  array  		$header      	The headers extracted from mapping table according to active model
+	 * @param  WorkSheet 	$sheet      	The worksheet object
+	 * @param  integer 		$totalColumns 	Total number of columns to be checked
+	 * @param  integer 		$row          	Row number
+	 * @return boolean               		the result to be return as true or false
+	 */
+	protected function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
+		$cellsValue = [];
+		for ($col=0; $col < $totalColumns; $col++) {
+			$cell = $sheet->getCellByColumnAndRow($col, $row);
+			$cellsValue[] = $cell->getValue();
+		}
+		return $header === $cellsValue;
 	}
 	
 	protected function getMapping(Table $model) {
@@ -74,7 +81,7 @@ trait ImportExcelTrait {
 			}
 			
 			if (!empty($value->description)) {
-				$headerCol .= ' ' . $value->description;
+				$headerCol .= ' ' . __($value->description);
 			}
 			
 			$header[] = $headerCol;
@@ -239,6 +246,72 @@ trait ImportExcelTrait {
 		}
 
 		return __($translatedCol);
+	}
+
+	protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+		// $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel];
+		$sheet = $references['sheet'];
+		$mapping = $references['mapping'];
+		$columns = $references['columns'];
+		$lookup = $references['lookup'];
+		$totalColumns = $references['totalColumns'];
+		$row = $references['row'];
+		$activeModel = $references['activeModel'];
+
+		$rowPass = true;
+		for ($col = 0; $col < $totalColumns; ++$col) {
+			$cell = $sheet->getCellByColumnAndRow($col, $row);
+			$originalValue = $cell->getValue();
+
+			// need to understand this check
+			$cellValue = $originalValue;
+			if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
+				$cellValue = (string) $cellValue;
+			}
+			// need to understand the above check
+
+			$excelMappingObj = $mapping[$col];
+			$foreignKey = $excelMappingObj->foreign_key;
+			$columnName = $columns[$col];
+			$originalRow[$col] = $originalValue;
+			$val = $cellValue;
+			
+			if (!empty($val)) {
+				if($activeModel->fields[$columnName]['type'] == 'date') {// should check the main table schema data type
+					$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
+					$originalRow[$col] = $val;
+				}
+			}
+			$translatedCol = $this->getExcelLabel($this->config('model'), $columnName);
+			if ($foreignKey == self::FIELD_OPTION) {
+				if (!empty($cellValue)) {
+					if (array_key_exists($cellValue, $lookup[$col])) {
+						$val = $cellValue;
+					} else { // if the cell value not found in lookup
+						$rowPass = false;
+						$rowInvalidCodeCols[] = $translatedCol;
+					}
+				} else { // if cell is empty
+					$rowPass = false;
+					$rowInvalidCodeCols[] = $translatedCol;
+				}
+			} else if ($foreignKey == self::DIRECT_TABLE) {
+				$excelLookupModel = TableRegistry::get($excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model);
+				if (!empty($cellValue)) {
+					$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
+				} else {
+					$recordId = '';
+				}
+				if (!empty($recordId)) {
+					$val = $recordId->id;
+				} else {
+					$rowPass = false;
+					$rowInvalidCodeCols[] = $translatedCol;
+				}
+			}
+			$tempRow[$columnName] = $val;
+		}
+		return $rowPass;
 	}
 
 /**
