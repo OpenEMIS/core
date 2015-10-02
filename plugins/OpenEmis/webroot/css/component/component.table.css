@@ -1,4 +1,4 @@
-/* TABLE v.1.0.0 */
+/* TABLE v.1.0.2 */
 
 .table-responsive {
     border: 0 !important;
@@ -39,12 +39,13 @@
 .table-icons a {
     margin: 5px;
     display: inline;
+    text-decoration: none;
 }
 
 .table thead,
 .table thead tr,
 .table tfoot {
-    border: 1px solid #CCC;
+    border: 1px solid #DDD;
 }
 
 .table > thead:first-child > tr:first-child > th,
@@ -122,6 +123,7 @@ th > a,
 th > a:hover,
 th > a:active {
     color: #444;
+    text-decoration: none;
 }
 
 table input,
@@ -138,6 +140,7 @@ table .input-select-wrapper {
 .table-sortable th > a {
     color: #333;
     padding: 10px 0;
+    text-decoration: none;
 }
 
 .table-thumb {
@@ -216,9 +219,14 @@ table .input-select-wrapper {
     font-size: 30px;
 }
 
+.table-sortable th {
+    text-wrap: ;    
+}
+
 .table-sortable th > a:hover,
 .table-sortable th > a:hover:after {
     color: #333;
+    text-decoration: none;
 }
 
 .table-sortable th > a:after {
@@ -261,10 +269,6 @@ table tr.sorting-row td {
     content: "\f0de";
 }
 
-.rtl .table-sortable th > a:after {
-    float: left;
-}
-
 .highlight {
     background-color: #FFEA57;
 }
@@ -288,4 +292,23 @@ table tr.sorting-row td {
 
 .table-lined .error-message {
     float: none;
+}
+
+/* RTL TABLE v.1.0.1 */
+
+.rtl .table-sortable th > a {
+    position: relative;
+    padding-left: 25px;
+}
+
+.rtl .table-sortable th > a:after {
+    position: absolute;
+    left: 0;
+    top: 10px;
+    margin-right: 10px;
+    display: inline;
+    content: "\f0dc";
+    font-family: 'FontAwesome';
+    font-weight: normal;
+    color: #333;
 }
