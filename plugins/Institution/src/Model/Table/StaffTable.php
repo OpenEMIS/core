@@ -73,6 +73,12 @@ class StaffTable extends AppTable {
 		;
 	}
 
+	public function validationAllowEmptyName(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+        $validator->remove('staff_name');
+        return $validator;
+	}
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
@@ -164,12 +170,17 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
-
-		$this->setupTabElements($entity);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'add') {
+			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+			$buttons[0]['attr']['value'] = 'new';
+		}
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -310,8 +321,9 @@ class StaffTable extends AppTable {
 			
 			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
