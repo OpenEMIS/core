@@ -35,7 +35,7 @@ class StudentsController extends AppController {
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
 			'Import' 			=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 		];
