@@ -59,18 +59,24 @@ class StaffTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-			->add('institution_site_position_id', [
-			])
-			->add('institution_site_id', [
-			])
+			->allowEmpty('end_date')
+			->add('end_date', 'ruleCompareDateReverse', [
+		        'rule' => ['compareDateReverse', 'start_date', true]
+	    	])
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			->add('FTE', 'ruleCheckFTE', [
+			->add('institution_site_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
 		;
+	}
+
+	public function validationAllowEmptyName(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+        $validator->remove('staff_name');
+        return $validator;
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -123,8 +129,18 @@ class StaffTable extends AppTable {
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 		$selectedPosition = $this->queryString('position', $positionOptions);
 
+		$Staff = $this;
+
 		// Advanced Select Options
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->findByInstitutionSiteId($institutionId)
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
@@ -164,26 +180,92 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
-
-		$this->setupTabElements($entity);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
 	}
 
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'add') {
+			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+			$buttons[0]['attr']['value'] = 'new';
+		}
+	}
+
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$alias = $this->alias();
-		if (array_key_exists('FTE', $data[$alias])) {
-			$newFTE = $data[$alias]['FTE'];
-			$newEndDate = $data[$alias]['end_date'];
+		$recordId = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$newEndDate = strtotime($data[$this->alias()]['end_date']);
+		$newStartDate = strtotime($data[$this->alias()]['start_date']);
+		$staffId = $data[$this->alias()]['security_user_id'];
+		$positionId = $data[$this->alias()]['institution_site_position_id'];
+		$condition = [
+			$this->aliasField('security_user_id') => $staffId,
+			$this->aliasField('institution_site_position_id') => $positionId,
+			$this->aliasField('id').' IS NOT' => $recordId,
+			$this->aliasField('institution_site_id') => $institutionId
+		];
+		$count = 0;
+		if (empty($newEndDate)) {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[
+								$this->aliasField('start_date').' >=' => $newStartDate, 
+							]
+						]
+					]);
+		} else {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' >=' => $newEndDate,
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' >=' => $newStartDate,
+							],
+						]
+					]);
+		}
+		if ($count->count() > 0) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.staffExistWithinPeriod');
+			$urlParams = $this->ControllerAction->url('edit');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		} else {
+			if (array_key_exists('FTE', $data[$alias])) {
+				$newFTE = $data[$alias]['FTE'];
+				$newEndDate = $data[$alias]['end_date'];
 
-			if ($newFTE != $entity->FTE) {
-				$data[$alias]['FTE'] = $entity->FTE;
-				$entity->newFTE = $newFTE;
+				if ($newFTE != $entity->FTE) {
+					$data[$alias]['FTE'] = $entity->FTE;
+					$entity->newFTE = $newFTE;
 
-				if (empty($newEndDate)) {
-					$data[$alias]['end_date'] = date('Y-m-d');
+					if (empty($newEndDate)) {
+						if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+							$data[$alias]['end_date'] = date('Y-m-d');
+						} else {
+							$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
+						}
+					} else {
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
+					}
 				}
 			}
 		}
@@ -198,7 +280,10 @@ class StaffTable extends AppTable {
 				if ($entity->start_date instanceof Date) {
 					$entity->start_date->modify('+1 days');
 				} else {
-					$entity->start_date = date('Y-m-d', strtotime($entity->start_date . ' +1 day'));
+					$startDate = $entity->start_date->format('Y-m-d');
+					$date = date_create($startDate);
+					date_add($date, date_interval_create_from_date_string('1 day'));
+					$entity->start_date = $date->format('Y-m-d');
 				}
 				$entity->end_date = null;
 				$entity->end_year = null;
@@ -209,7 +294,7 @@ class StaffTable extends AppTable {
 				
 				$newEntity = $this->newEntity($entity->toArray());
 				if (!$this->save($newEntity)) {
-					pr($newEntity->errors());die;
+						
 				}
 			}
 		}
@@ -310,8 +395,9 @@ class StaffTable extends AppTable {
 			
 			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
 			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
 		} else if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
@@ -350,10 +436,14 @@ class StaffTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
-		return $this->controller->redirect($action);
+		if (empty($data[$this->alias()]['institution_site_position_id'])) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.noInstitutionSitePosition');
+		} else {
+			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
+			$event->stopPropagation();
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
+			return $this->controller->redirect($action);
+		}
 	}
 
 	public function afterAction(Event $event) {
