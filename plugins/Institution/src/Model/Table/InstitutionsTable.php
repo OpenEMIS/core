@@ -50,7 +50,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
+		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true, 'foreignKey' => 'institution_id']);
 
 		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
 		
@@ -404,16 +404,16 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'area_id' && $this->action == 'index') {
-			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
-			$areaLevel = $ConfigItems->value('institution_area_level_id');
+			if ($field == 'area_id' && $this->action == 'index') {
+				// Getting the system value for the area
+				$ConfigItems = TableRegistry::get('ConfigItems');
+				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
-			$AreaTable = TableRegistry::get('Area.AreaLevels');
-			return $AreaTable->get($areaLevel)->name;
-		} else {
-			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-		}
+				$AreaTable = TableRegistry::get('Area.AreaLevels');
+				return $AreaTable->get($areaLevel)->name;
+			} else {
+				return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+			}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
