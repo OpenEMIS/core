@@ -8,9 +8,21 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use App\Model\Traits\OptionsTrait;
 
 class WorkflowStepsTable extends AppTable {
-	private $_fieldOrder = ['workflow_id', 'name', 'security_roles'];
+	use OptionsTrait;
+
+	// Workflow Steps - stage
+	const OPEN = 0;
+	const PENDING = 1;
+	const CLOSED = 2;
+
+	// Workflow Actions - action
+	const APPROVE = 0;
+	const REJECT = 1;
+
+	private $_fieldOrder = ['workflow_id', 'name', 'security_roles', 'is_editable', 'is_removable'];
 	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
 
 	public function initialize(array $config) {
@@ -31,25 +43,28 @@ class WorkflowStepsTable extends AppTable {
 		parent::beforeSave($event, $entity, $options);
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
-			$data = [
-				'workflow_actions' => [
-					[
-						'name' => __('Approve'),
-						'action' => 0,
-						'visible' => 1,
-						'next_workflow_step_id' => 0,
-						'comment_required' => 0
-					],
-					[
-						'name' => __('Reject'),
-						'action' => 1,
-						'visible' => 1,
-						'next_workflow_step_id' => 0,
-						'comment_required' => 0
+			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {
+			} else {
+				$data = [
+					'workflow_actions' => [
+						[
+							'name' => __('Approve'),
+							'action' => self::APPROVE,
+							'visible' => 1,
+							'next_workflow_step_id' => 0,
+							'comment_required' => 0
+						],
+						[
+							'name' => __('Reject'),
+							'action' => self::REJECT,
+							'visible' => 1,
+							'next_workflow_step_id' => 0,
+							'comment_required' => 0
+						]
 					]
-				]
-			];
-			$entity = $this->patchEntity($entity, $data);
+				];
+				$entity = $this->patchEntity($entity, $data);
+			}
 		}
 
 		// Always mark visible to dirty to handle retain Workflow Actions when update all visible to 0
@@ -59,17 +74,25 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'actions') {
+		$currentAction = $this->ControllerAction->action();
+
+		if ($currentAction == 'index' && $field == 'actions') {
 			$label = __('Actions');
 			$label .= '<span class="divider"></span>';
 			$label .= $this->ControllerAction->Alert->getMessage('WorkflowActions.next_step');
-			$label .= '<span class="divider"></span>';
-			$label .= $this->ControllerAction->Alert->getMessage('WorkflowActions.event');
 
 			return $label;
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
+	}
+
+	public function onGetIsEditable(Event $event, Entity $entity) {
+		return $entity->is_editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+
+	public function onGetIsRemovable(Event $event, Entity $entity) {
+		return $entity->is_removable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
 	public function onGetActions(Event $event, Entity $entity) {
@@ -80,15 +103,8 @@ class WorkflowStepsTable extends AppTable {
 				$workflowAction .= '<span class="divider"></span>';
 				if (isset($obj->next_workflow_step)) {
 					$workflowAction .= $obj->next_workflow_step->name;
-					// $workflowAction .= ' - ' . $obj->next_workflow_step->name;
 				} else {
 					$workflowAction .= '(' . __('Not linked') . ')';
-					// $workflowAction .= ' - (' . __('Not linked') . ')';
-				}
-				if (!empty($obj->event_key)) {
-					$eventOptions = $this->getEvents($entity);
-					$workflowAction .= '<span class="divider"></span>';
-					$workflowAction .= $eventOptions[$obj->event_key];
 				}
 				$workflowActions[$key] = $workflowAction;
 			}
@@ -100,6 +116,8 @@ class WorkflowStepsTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$this->fields['stage']['visible'] = false;
 		$this->ControllerAction->field('workflow_id');
+		$this->ControllerAction->field('is_editable');
+		$this->ControllerAction->field('is_removable');
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Security Roles')
@@ -233,6 +251,18 @@ class WorkflowStepsTable extends AppTable {
 		//Initialize field values
 		list(, $selectedWorkflow) = array_values($this->_getSelectOptions());
 		$entity->workflow_id = $selectedWorkflow;
+	}
+
+	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+
+		return $attr;
+	}
+
+	public function onUpdateFieldIsRemovable(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+
+		return $attr;
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
