@@ -439,7 +439,11 @@ trait MessagesTrait {
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
-				'staffTypeId' => 'You need to configure Staff Types first.'
+				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
+				'noInstitutionSitePosition' => 'There are no position available.',
+				'staffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+				'staffTypeId' => 'You need to configure Staff Types first.',
+				'error' => 'New staff is not added to the institutition, due to an error',
 			],
 			'StudentGuardians' => [
 				'guardianRelationId' => 'You need to configure Guardian Relations first.',
@@ -467,9 +471,12 @@ trait MessagesTrait {
 				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				],
-				'FTE' => [
+				'institution_site_position_id' => [
 					'ruleCheckFTE' => 'No available FTE.'
-				]
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
 			]
 		],
 		'User' => [
