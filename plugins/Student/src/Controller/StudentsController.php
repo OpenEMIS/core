@@ -37,7 +37,7 @@ class StudentsController extends AppController {
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
-			'Import' 			=> ['className' => 'Student.Import', 'actions' => ['index', 'add', 'view']],
+			'Import' 			=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 		];
 
 		$this->set('contentHeader', 'Students');
@@ -136,7 +136,7 @@ class StudentsController extends AppController {
 				}
 			}
 		} else {
-			if ($model->alias() == 'Import') {
+			if ($model->alias() == 'ImportStudents') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Students') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);

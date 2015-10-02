@@ -367,10 +367,12 @@ trait MessagesTrait {
 			'invalid_code' => 'Invalid Code',
 			'duplicate_code' => 'Duplicate Code Identified',
 			'duplicate_openemis_no' => 'Duplicate OpenEMIS ID Identified',
+			'duplicate_unique_key' => 'Duplicate Unique Key on the same sheet',
 			'validation_failed' => 'Failed Validation',
 			'file_required' => 'File is required',
 			'not_supported_format' => 'File format not supported',
 			'over_max' => 'File records exceeds maximum allowed',
+			'wrong_template' => 'Wrong template file',
 		],
 
 		// Validation Messages
@@ -385,7 +387,8 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
 				],
 				'email' => [
-					'ruleValidEmail' => 'Please enter a valid Email'
+					'ruleValidEmail' => 'Please enter a valid Email',
+					'ruleUnique' => 'Email already exists in the system'
 				],
 				'longitude' => [
 					'ruleLongitude' => 'Please enter a valid Longitude'

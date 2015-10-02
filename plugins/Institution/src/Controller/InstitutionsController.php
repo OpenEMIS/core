@@ -66,7 +66,7 @@ class InstitutionsController extends AppController  {
 			'RubricAnswers' 	=> ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits'],
 
-			'Import' 			=> ['className' => 'Institution.Import', 'actions' => ['index', 'add']],
+			'Import' 			=> ['className' => 'Institution.ImportInstitutions', 'actions' => ['index', 'add']],
 		];
 	}
 
@@ -193,7 +193,7 @@ class InstitutionsController extends AppController  {
 			$this->set('contentHeader', $header);
 		} else {
 			// pr($model->alias());die;
-			if ($model->alias() == 'Import') {
+			if ($model->alias() == 'ImportInstitutions') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
