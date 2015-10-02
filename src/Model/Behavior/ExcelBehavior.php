@@ -164,7 +164,7 @@ class ExcelBehavior extends Behavior {
 			$percentCount = intval($count / 100);
 			$pages = ceil($count / $this->config('limit'));
 
-			if ($count == 1) {
+			if ($count == 1 && count($sheet) == 1) {
 				$this->config('orientation', 'portrait');
 			}
 
@@ -196,6 +196,7 @@ class ExcelBehavior extends Behavior {
 					if (isset($sheet['additionalData'])) {
 						$additionalRows = $sheet['additionalData'];
 					}
+
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
 						$row = [];
@@ -293,38 +294,34 @@ class ExcelBehavior extends Behavior {
 		$field = $attr['field'];
 		$type = $attr['type'];
 
-		// pr($entity);
-
-		if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
-			$method = 'onExcelRender' . Inflector::camelize($type);
-			if (!$this->eventMap($method)) {
-				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $field]);
-			} else {
-				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), null, [$entity, $field]);
-			}
-			if ($event->result) {
-				$value = $event->result;
-			}
-		} else {
-			$method = 'onExcelGet' . Inflector::camelize($field);
-			$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity]);
-			if ($event->result) {
-				$value = $event->result;
-			} else if ($entity->has($field)) {
-				if ($this->isForeignKey($table, $field)) {
-					$associatedField = $this->getAssociatedKey($table, $field);
-					if ($entity->has($associatedField)) {
-						$value = $entity->$associatedField->name;
-					}
+		if (!empty($entity)) {
+			if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
+				$method = 'onExcelRender' . Inflector::camelize($type);
+				if (!$this->eventMap($method)) {
+					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $field]);
 				} else {
-					$value = $entity->$field;
+					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), null, [$entity, $field]);
+				}
+				if ($event->result) {
+					$value = $event->result;
+				}
+			} else {
+				$method = 'onExcelGet' . Inflector::camelize($field);
+				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity]);
+				if ($event->result) {
+					$value = $event->result;
+				} else if ($entity->has($field)) {
+					if ($this->isForeignKey($table, $field)) {
+						$associatedField = $this->getAssociatedKey($table, $field);
+						if ($entity->has($associatedField)) {
+							$value = $entity->$associatedField->name;
+						}
+					} else {
+						$value = $entity->$field;
+					}
 				}
 			}
-		}
-		
-		// if (!is_string($value)) {
-		// 	pr($value);
-		// }
+		}	
 		return $value;
 	}
 
