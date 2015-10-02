@@ -1,3 +1,5 @@
+<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
+
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
@@ -59,7 +61,7 @@
 				<thead>
 					<tr>
 						<?php if ($action == 'edit') : ?>
-							<th><?= $this->Label->get('general.visible'); ?></th>
+							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
