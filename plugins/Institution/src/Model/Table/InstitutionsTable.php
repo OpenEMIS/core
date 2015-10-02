@@ -90,21 +90,6 @@ class InstitutionsTable extends AppTable  {
 
 	}
 
-	public function onExcelGenerate(Event $event, $writer, $settings) {
-		// pr($settings);
-		// $generate = function() { pr('dsa'); };
-		// return $generate;
-	}
-
-	public function onExcelBeforeQuery(Event $event, Query $query) {
-		// pr($this->Session->read($this->aliasField('id')));die;
-		// $query->where(['Institutions.id' => 2]);
-	}
-
-	// public function onExcelGetLabel(Event $event, $column) {
-	// 	return 'asd';
-	// }
-
 	public function validationDefault(Validator $validator) {
 		$validator
 			->add('date_opened', [
@@ -384,16 +369,16 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'area_id' && $this->action == 'index') {
-			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
-			$areaLevel = $ConfigItems->value('institution_area_level_id');
+			if ($field == 'area_id' && $this->action == 'index') {
+				// Getting the system value for the area
+				$ConfigItems = TableRegistry::get('ConfigItems');
+				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
-			$AreaTable = TableRegistry::get('Area.AreaLevels');
-			return $AreaTable->get($areaLevel)->name;
-		} else {
-			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-		}
+				$AreaTable = TableRegistry::get('Area.AreaLevels');
+				return $AreaTable->get($areaLevel)->name;
+			} else {
+				return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+			}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
