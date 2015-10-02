@@ -1,4 +1,4 @@
-/* GENERAL STYLE v.1.0.0 */
+/* GENERAL STYLE v.1.0.2 */
 
 body,
 div {
@@ -11,7 +11,20 @@ body {
 }
 
 pre {
-    margin-top: 80px;
+    margin: 15px 10px;
+    position: relative;
+    z-index: 9999;
+    border: 1px solid #BBB;
+    color: #333;
+    background: #F9F9F9;
+}
+
+pre a {
+    color: #CC5C5C;
+}
+
+pre a:hover {
+    color: #f00;
 }
 
 body,
@@ -552,18 +565,23 @@ body.large {
 /* View with Sections and Map */
 
 .section-header {
-    display: block;
-    background-color: #E2E2E2;
-    border: 1px solid #CCC;
-    color: #333;
-    font-weight: bold;
-    padding: 10px;
-    margin: 20px 0 0;
-    -webkit-border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    clear: both;
+    display: block !important;
+    background-color: #E2E2E2 !important;
+    border: 1px solid #CCC !important;
+    color: #333 !important;
+    font-weight: bold !important;
+    padding: 10px !important;
+    margin: 10px 0 0 !important;
+    -webkit-border-top-left-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    clear: both !important;
+    font-size: 13px !important;
+}
+
+.section-header:first-child {
+    margin-top: 0 !important;
 }
 
 #googlemap iframe {
@@ -680,6 +698,7 @@ label + select {
     background: #EFEFEF;
 }
 
+
 /* FORM v.1.0.0 */
 
 .form-horizontal {
@@ -748,7 +767,6 @@ label + select {
     background-color: #FFF;
     border-left: 2px solid #FFF;
 }
-
 
 
 /* Time picker */
