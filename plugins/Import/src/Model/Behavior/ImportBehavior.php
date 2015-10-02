@@ -4,16 +4,19 @@ namespace Import\Model\Behavior;
 use DateTime;
 use DateInterval;
 use ArrayObject;
+use PHPExcel_Worksheet;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\Table;
 use Cake\Network\Session;
-use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Utility\Inflector;
+use Cake\Collection\Collection;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use ControllerAction\Model\Traits\EventTrait;
 use Import\Model\Traits\ImportExcelTrait;
 
 /**
@@ -29,6 +32,9 @@ use Import\Model\Traits\ImportExcelTrait;
  * #2 Students
  * #3 Staff 
  * Refer to @link(PHPOE-2083, https://kordit.atlassian.net/browse/PHPOE-2083) for the latest import_mapping table schema
+ *
+ * This behavior could not be attached to a table file that loads ExportBehavior as well. Currently, there is a conflict
+ * since both ImportBehavior and ExcelBehavior uses ImportExcelTrait.
  *
  * 
  * Usage:
@@ -58,7 +64,13 @@ use Import\Model\Traits\ImportExcelTrait;
  * @author  hanafi <hanafi.ahmat@kordit.com>
  */
 class ImportBehavior extends Behavior {
+	use EventTrait;
 	use ImportExcelTrait;
+
+	const FIELD_OPTION = 1;
+	const DIRECT_TABLE = 2;
+
+	const RECORD_HEADER = 1;
 
 	protected $_defaultConfig = [
 		'plugin' => '',
@@ -134,7 +146,6 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['back']['url']['action'] = 'index';
 				unset($toolbarButtons['back']['url'][0]);
 				break;
-
 		}
 	}
 
@@ -174,6 +185,10 @@ class ImportBehavior extends Behavior {
 		]);
 	}
 
+	private function eventKey($key) {
+		return 'Model.import.' . $key;
+	}
+
 	/**
 	 * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size. 
 	 * @param Event       $event   [description]
@@ -184,18 +199,38 @@ class ImportBehavior extends Behavior {
 	 * Refer to ImportExcelTrait->phpFileUploadErrors for the list of file upload errors defination.
 	 */
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// pr($data);
 		$options['validate'] = false;
-		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
-			$data[$this->_table->alias()]['select_file']['error'] = 1;
-			$options['validate'] = false;
+		if (!array_key_exists($this->_table->alias(), $data)) {
+			$options['validate'] = true;
 		}
-		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
-			$data[$this->_table->alias()]['select_file']['error'] = 1;
-			$options['validate'] = false;
+		if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
+			$options['validate'] = true;
 		}
-		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
-			$data[$this->_table->alias()]['select_file']['error'] = 2;
-			$options['validate'] = false;
+		if (empty($data[$this->_table->alias()]['select_file'])) {
+			$options['validate'] = true;
+		}
+		if ($data[$this->_table->alias()]['select_file']['error']==4) {
+			$options['validate'] = true;
+		}
+
+		$fileObj = $data[$this->_table->alias()]['select_file'];
+		$supportedFormats = $this->_fileTypesMap;
+		$finfo = finfo_open(FILEINFO_MIME_TYPE);
+		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
+		finfo_close($finfo);
+		$model = $this->_table;
+
+		if (!in_array($fileFormat, $supportedFormats)) {
+			if (!empty($fileFormat)) {
+				$entity->errors('select_file', [$model->getMessage('Import.not_supported_format')]);				
+			}
+		} else if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
+			$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
+		} else if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
+			$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
+		} else if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
+			$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
 		}
 	}
 
@@ -208,288 +243,207 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		return function ($model, $entity) {
-			$fileObj = $entity->select_file;
-			if ($fileObj['error'] > 0) {
-				switch ($fileObj['error']) {
-					case 1:
-					case 2:
-					case 3:
-						$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
-						break;
-					
-					case 4:
-						$entity->errors('select_file', [$model->getMessage('Import.file_required')]);
-						break;
-					
-					default:
-						$entity->errors('select_file', [$model->getMessage('Import.file_required')]);
-						break;
-				}
-
+			if (!empty($entity->errors())) {
 				return false;
-
-			} else {
-
-				$supportedFormats = $this->_fileTypesMap;
-				$uploadedName = $fileObj['name'];
-				$finfo = finfo_open(FILEINFO_MIME_TYPE);
-				$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
-				finfo_close($finfo);
-
-				if (!in_array($fileFormat, $supportedFormats)) {
-					if (!empty($fileFormat)) {
-						$entity->errors('select_file', [$model->getMessage('Import.not_supported_format')]);				
-					} else {
-						$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
-					}
-				} else {
-
-					$controller = $model->controller;
-					$controller->loadComponent('PhpExcel');
-
-					$header = $this->getHeader($model);
-					$columns = $this->getColumns($model);
-					$mapping = $this->getMapping($model);
-					$totalColumns = count($columns);
-
-					$lookup = $this->getCodesByMapping($mapping);
-
-					$uploaded = $fileObj['tmp_name'];
-					$objPHPExcel = $controller->PhpExcel->loadWorksheet($uploaded);
-					$worksheets = $objPHPExcel->getWorksheetIterator();
-					$firstSheetOnly = false;
-
-					$totalImported = 0;
-					$totalUpdated = 0;
-					$importedUniqueCodes = [];
-					$dataFailed = [];
-					foreach ($worksheets as $sheet) {
-						if ($firstSheetOnly) {break;}
-
-						$highestRow = $sheet->getHighestRow();
-
-						for ($row = 1; $row <= $highestRow; ++$row) {
-							$tempRow = [];
-							$originalRow = [];
-							$rowPass = true;
-							$rowInvalidCodeCols = [];
-							if ($row == $highestRow) {
-								$rowNotEmpty = $this->checkRowCells($sheet, $totalColumns, $row);
-							} else {
-								$rowNotEmpty = true;
-							}
-							if ($rowNotEmpty) {
-								for ($col = 0; $col < $totalColumns; ++$col) {
-									$cell = $sheet->getCellByColumnAndRow($col, $row);
-									$originalValue = $cell->getValue();
-									$cellValue = $originalValue;
-									if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
-										$cellValue = (string) $cellValue;
-									}
-									$excelMappingObj = $mapping[$col];
-									$foreignKey = $excelMappingObj->foreign_key;
-									$columnName = $columns[$col];
-									$originalRow[$col] = $originalValue;
-									$val = $cellValue;
-									
-									if ($row > 1) {
-										if (!empty($val)) {
-											if(substr_count($columnName, 'date')) {
-												$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
-												$originalRow[$col] = $val;
-											}
-										}
-										if (empty($val) && $columnName=='openemis_no') {
-											$val = $this->getNewOpenEmisNo($importedUniqueCodes);
-										}
-										$translatedCol = $this->getExcelLabel($this->config('model'), $columnName);
-
-										if ($foreignKey == 1) {
-											if (!empty($cellValue)) {
-												if (array_key_exists($cellValue, $lookup[$col])) {
-													$val = $cellValue;
-												} else {
-													if($row !== 1) {
-														$rowPass = false;
-														$rowInvalidCodeCols[] = $translatedCol;
-													}
-												}
-											} else {
-												if($row !== 1) {
-													$rowPass = false;
-													$rowInvalidCodeCols[] = $translatedCol;
-												}
-											}
-										} else if ($foreignKey == 2) {
-											$excelLookupModel = TableRegistry::get($excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model);
-											if (!empty($cellValue)) {
-												$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
-											} else {
-												$recordId = '';
-											}
-											if (!empty($recordId)) {
-												$val = $recordId->id;
-											} else {
-												if($row !== 1) {
-													$rowPass = false;
-													$rowInvalidCodeCols[] = $translatedCol;
-												}
-											}
-										}
-									}
-									
-									$tempRow[$columnName] = $val;
-								}
-
-								if (!$rowPass) {
-									$rowCodeError = $this->getExcelLabel('Import', 'invalid_code');
-									$colCount = 1;
-									foreach ($rowInvalidCodeCols as $codeCol) {
-										if ($colCount == 1) {
-											$rowCodeError .= ': ' . $codeCol;
-										} else {
-											$rowCodeError .= ', ' . $codeCol;
-										}
-										$colCount ++;
-									}
-									
-									$dataFailed[] = array(
-										'row_number' => $row,
-										'error' => $rowCodeError,
-										'data' => $originalRow
-									);
-									continue;
-								}
-								
-								if ($row === 1) {
-									$header = $tempRow;
-									$dataFailed = [];
-									continue;
-								}
-
-								if (in_array($this->config('plugin').'.'.$this->config('model'), ['Student.Students', 'Staff.Staff'])) {
-									$tempRow['is_'.strtolower($this->config('plugin'))] = 1;
-									$uniqueCode = 'openemis_no';
-								} else {
-									$uniqueCode = 'code';
-								}
-								$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
-								$tableEntity = $activeModel->newEntity($tempRow);
-
-								// missing date_of_birth (NOT NULL column) validation in staff table
-								if ($activeModel->alias() == 'Staff' && array_key_exists('date_of_birth', $tempRow) && empty($tempRow['date_of_birth'])) {
-									$tableEntity->errors('date_of_birth', [$this->_table->getMessage('User.Users.date_of_birth.ruleNotBlank')]);
-								}
-								if (empty($tableEntity->errors())) {
-									if ($activeModel->save($tableEntity)) {
-										$totalImported++;
-										$importedUniqueCodes[] = $tableEntity->$uniqueCode;
-									}
-								} else {
-									$validationErrors = $tableEntity->errors();
-									if (array_key_exists($uniqueCode, $validationErrors) && count($validationErrors) == 1) {
-										if (!in_array($tempRow[$uniqueCode], $importedUniqueCodes)) {
-											$existingRecord = $activeModel->find()->where([$uniqueCode => $tempRow[$uniqueCode]])->first();
-											$tempRow['id'] = $existingRecord->id;
-											$activeModel->patchEntity($tableEntity, $tempRow, ['validate'=>false]);
-											if ($activeModel->save($tableEntity)) {
-												$totalUpdated++;
-												$importedUniqueCodes[] = $tempRow[$uniqueCode];
-											} else {
-												$dataFailed[] = [
-													'row_number' => $row,
-													'error' => $this->getExcelLabel('Import', 'saving_failed'),
-													'data' => $originalRow
-												];
-											}
-										} else {
-											$dataFailed[] = [
-												'row_number' => $row,
-												'error' => $this->getExcelLabel('Import', 'duplicate_'.$uniqueCode),
-												'data' => $originalRow
-											];
-										}
-									} else {
-										$errorStr = $this->getExcelLabel('Import', 'validation_failed');
-										$count = 1;
-										foreach($validationErrors as $field => $arr) {
-											$fieldName = $this->getExcelLabel($this->config('model'), $field);
-											if (empty($fieldName)) {
-												$fieldName = __($field);
-											}
-											if ($count === 1) {
-												$errorStr .= ': ' . $fieldName . ' => ' . $arr[0];
-											} else {
-												$errorStr .= ', ' . $fieldName . ' => ' . $arr[0];
-											}
-											$count ++;
-										}
-										$dataFailed[] = [
-											'row_number' => $row,
-											'error' => $errorStr,
-											'data' => $originalRow
-										];
-										$model->log($validationErrors, 'debug');
-									}
-								}
-							} // if ($rowNotEmpty)
-						} // for $row
-
-						$firstSheetOnly = true;
-					} // foreach ($worksheets as $sheet)
-
-					if (!empty($dataFailed)) {
-						$downloadFolder = $this->prepareDownload();
-						$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
-								$this->getExcelLabel('general', 'import'), 
-								$this->getExcelLabel('general',  $this->config('plugin')), 
-								$this->getExcelLabel('general',  $this->config('model')), 
-								$this->getExcelLabel('general', 'failed'),
-								time()
-						);
-						$excelPath = $downloadFolder . DS . $excelFile;
-
-						$writer = new \XLSXWriter();
-						$newHeader = $header;
-						$newHeader[] = $this->getExcelLabel('general', 'errors');
-						$dataSheetName = $this->getExcelLabel('general', 'data');
-						$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-						foreach($dataFailed as $record) {
-							$record['data'][] = $record['error'];
-							$writer->writeSheetRow($dataSheetName, array_values($record['data']));
-						}
-						
-						$codesData = $this->excelGetCodesData($this->_table);
-						foreach($codesData as $modelName => $modelArr) {
-							foreach($modelArr as $row) {
-								$writer->writeSheetRow($modelName, array_values($row));
-							}
-						}
-						
-						$writer->writeToFile($excelPath);
-					} else {
-						$excelFile = null;
-					}
-
-					$session = $model->controller->request->session();
-					$completedData = [
-						'uploadedName' => $uploadedName,
-						'dataFailed' => $dataFailed,
-						'totalImported' => $totalImported,
-						'totalUpdated' => $totalUpdated,
-						'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
-						'header' => $header,
-						'excelFile' => $excelFile,
-					];
-					$session->write($this->sessionKey, $completedData);
-					return $model->controller->redirect($this->_table->ControllerAction->url('view'));
-				} // file format not supported
-
 			}
+
+			$controller = $model->controller;
+			$controller->loadComponent('PhpExcel');
+
+			$header = $this->getHeader($model);
+			$columns = $this->getColumns($model);
+			$mapping = $this->getMapping($model);
+			$totalColumns = count($columns);
+			$lookup = $this->getCodesByMapping($mapping);
+
+			$fileObj = $entity->select_file;		
+			$uploadedName = $fileObj['name'];
+			$uploaded = $fileObj['tmp_name'];
+			$objPHPExcel = $controller->PhpExcel->loadWorksheet($uploaded);
+			$worksheets = $objPHPExcel->getWorksheetIterator();
+
+			$totalImported = 0;
+			$totalUpdated = 0;
+			$importedUniqueCodes = new ArrayObject;
+			$dataFailed = [];
+
+			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
+
+			foreach ($worksheets as $sheet) {
+				$highestRow = $sheet->getHighestRow();
+
+				for ($row = 1; $row <= $highestRow; ++$row) {
+					if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
+						if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
+							$entity->errors('select_file', [$model->getMessage('Import.wrong_template')]);
+							return false;
+						}
+						continue;
+					}
+
+					if ($row == $highestRow) {
+						if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
+							break;
+						}
+					}
+					
+					// check for unique record
+					$tempRow = new ArrayObject;
+					$tempRow['duplicates'] = false;
+					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
+					$event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
+					// $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$writer, $_settings]);
+					// if ($event->isStopped()) { return $event->result; }
+					// if (is_callable($event->result)) {
+					// 	$generate = $event->result;
+					// }
+
+					// for each columns
+					$references = [
+						'sheet'=>$sheet, 
+						'mapping'=>$mapping, 
+						'columns'=>$columns, 
+						'lookup'=>$lookup,
+						'totalColumns'=>$totalColumns, 
+						'row'=>$row, 
+						'activeModel'=>$activeModel
+					];
+					$rowInvalidCodeCols = new ArrayObject;
+					$originalRow = new ArrayObject;
+					$rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
+					if (!$rowPass || $tempRow['duplicates']) { // row contains error or record is a duplicate based on unique key(s)
+
+						$rowCodeError = '';
+						if ($tempRow['duplicates']) {
+							$rowCodeError .= $this->getExcelLabel('Import', 'duplicate_unique_key');
+						}
+						if (!$rowPass) {
+							if ($rowCodeError!='') {
+								$rowCodeError .= '
+								';
+							}
+							$rowCodeError .= $this->getExcelLabel('Import', 'invalid_code').': ';
+							$rowCodeError .= implode(', ', $rowInvalidCodeCols->getArrayCopy());
+						}
+
+						$dataFailed[] = array(
+							'row_number' => $row,
+							'error' => $rowCodeError,
+							'data' => $originalRow
+						);
+
+						continue;
+					}
+
+					if (in_array($this->config('plugin').'.'.$this->config('model'), ['Student.Students', 'Staff.Staff'])) {
+						$tempRow['is_'.strtolower($this->config('plugin'))] = 1;
+						$uniqueCode = 'openemis_no';
+					} else {
+						$uniqueCode = 'code';
+					}
+					
+					// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
+					$tableEntity = $tempRow['entity'];
+					$tempRow = $tempRow->getArrayCopy();
+					unset($tempRow['duplicates']);
+					unset($tempRow['entity']);
+					$activeModel->patchEntity($tableEntity, $tempRow);
+
+					// missing date_of_birth (NOT NULL column) validation in staff table
+					// jeff: need to test again after moving buildDefaultValidation from CA to ValidationBehavior
+					// if ($activeModel->alias() == 'Staff' && array_key_exists('date_of_birth', $tempRow) && empty($tempRow['date_of_birth'])) {
+					// 	$tableEntity->errors('date_of_birth', [$this->_table->getMessage('User.Users.date_of_birth.ruleNotBlank')]);
+					// }
+
+					$isNew = $tableEntity->isNew();
+					if ($activeModel->save($tableEntity)) {
+						if ($isNew) {
+							$totalImported++;
+						} else {
+							$totalUpdated++;
+						}
+
+						// update importedUniqueCodes either a single key or composite primary keys
+						$event = $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+
+					} else {
+						$errorStr = $this->getExcelLabel('Import', 'validation_failed');
+						$count = 1;
+						foreach($tableEntity->errors() as $field => $arr) {
+							pr($arr);
+							$fieldName = $this->getExcelLabel($this->config('plugin').'.'.$this->config('model'), $field);
+							if (empty($fieldName)) {
+								$fieldName = __($field);
+							}
+							if ($count === 1) {
+								$errorStr .= ': ' . $fieldName . ' => ' . $arr[key($arr)];
+							} else {
+								$errorStr .= ', ' . $fieldName . ' => ' . $arr[key($arr)];
+							}
+							$count ++;
+						}
+						$dataFailed[] = [
+							'row_number' => $row,
+							'error' => $errorStr,
+							'data' => $originalRow
+						];
+						$model->log($tableEntity->errors(), 'debug');
+					}
+				} // for ($row = 1; $row <= $highestRow; ++$row)
+
+				break; // only process first sheet
+			} // foreach ($worksheets as $sheet)
+
+			if (!empty($dataFailed)) {
+				$downloadFolder = $this->prepareDownload();
+				$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
+						$this->getExcelLabel('general', 'import'), 
+						$this->getExcelLabel('general',  $this->config('plugin')), 
+						$this->getExcelLabel('general',  $this->config('model')), 
+						$this->getExcelLabel('general', 'failed'),
+						time()
+				);
+				$excelPath = $downloadFolder . DS . $excelFile;
+
+				$writer = new \XLSXWriter();
+				$newHeader = $header;
+				$newHeader[] = $this->getExcelLabel('general', 'errors');
+				$dataSheetName = $this->getExcelLabel('general', 'data');
+				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
+				foreach($dataFailed as $record) {
+					$record['data'][] = $record['error'];
+					$writer->writeSheetRow($dataSheetName, array_values($record['data']));
+				}
+				
+				$codesData = $this->excelGetCodesData($this->_table);
+				foreach($codesData as $modelName => $modelArr) {
+					foreach($modelArr as $row) {
+						$writer->writeSheetRow($modelName, array_values($row));
+					}
+				}
+				
+				$writer->writeToFile($excelPath);
+			} else {
+				$excelFile = null;
+			}
+
+			$session = $model->controller->request->session();
+			$completedData = [
+				'uploadedName' => $uploadedName,
+				'dataFailed' => $dataFailed,
+				'totalImported' => $totalImported,
+				'totalUpdated' => $totalUpdated,
+				'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
+				'header' => $header,
+				'excelFile' => $excelFile,
+			];
+			$session->write($this->sessionKey, $completedData);
+			return $model->controller->redirect($this->_table->ControllerAction->url('results'));
+		
 		};
 	}
 
-	
+
 /******************************************************************************************************************
 **
 ** Actions
@@ -520,7 +474,7 @@ class ImportBehavior extends Behavior {
 		$this->performDownload($excelFile);
 	}
 
-	public function view() {
+	public function results() {
 		$session = $this->_table->controller->request->session();
 		if ($session->check($this->sessionKey)) {
 			$completedData = $session->read($this->sessionKey);
@@ -535,6 +489,7 @@ class ImportBehavior extends Behavior {
 			$session->delete($this->sessionKey);
 			// define data as empty entity so that the view file will not throw an undefined notice
 			$this->_table->controller->set('data', $this->_table->newEntity());
+			$this->_table->ControllerAction->renderView('/ControllerAction/view');
 		} else {
 			return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
 		}
