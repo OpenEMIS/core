@@ -66,6 +66,16 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
+		$this->attachWorkflow();
+	}
+
+	public function attachWorkflow() {
+		// check for session and attach workflow behavior
+		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
+			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
+				$this->addBehavior('Workflow.Workflow');
+			}
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
