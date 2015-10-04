@@ -4,6 +4,7 @@ namespace App\Model\Behavior;
 use DateTime;
 use Exception;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
@@ -185,6 +186,60 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * To check date entered is earlier today
+	 * @param  mixed   $field        current field value
+	 * @param  boolean $equals       whether the equals sign should be included in the comparison
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return mixed                 returns true if validation passed or the error message if it fails
+	 */
+	public static function lessThanToday($field, $equal = false, array $globalData) {
+		$label = Inflector::humanize($field);
+		try {
+			$enteredDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$label);
+		}
+		$today = new DateTime('now');
+		if($equal) {
+			return $today >= $enteredDate;
+		} else {
+			return $today > $enteredDate;
+		}
+	}
+
+	/**
+	 * To check date entered is later than today
+	 * @param  mixed   $field        current field value
+	 * @param  boolean $equals       whether the equals sign should be included in the comparison
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return mixed                 returns true if validation passed or the error message if it fails
+	 */
+	public static function moreThanToday($field, $equal = false, array $globalData) {
+		$label = Inflector::humanize($field);
+		try {
+			$enteredDate = new DateTime($field);
+		} catch (Exception $e) {
+		    return __('Please input a proper '.$label);
+		}
+		$today = new DateTime('now');
+		if($equal) {
+			return $enteredDate >= $today;
+		} else {
+			return $enteredDate > $today;
+		}
+	}
+
+	/**
 	 * Check if user input for date is valid
 	 * @param  [type] $field      [description]
 	 * @param  [type] $globalData [description]
@@ -278,12 +333,15 @@ class ValidationBehavior extends Behavior {
 				$newEntity = TableRegistry::get($className);
 				$recordWithField = $newEntity->find()
 											->select([$fieldName])
-											->where([$fieldName => 1]);
+											->where([
+												$fieldName => 1,
+												$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']
+											]);
 
-				if(!empty($additionalParameters))
+				if(!empty($additionalParameters)) {
 					$recordWithField->andWhere($additionalParameters);
-													
-				$total = $recordWithField->count();				
+				}								
+				$total = $recordWithField->count();		
 				$flag = ($total > 0) ? true : false;
 			}
 		} else {
@@ -379,13 +437,14 @@ class ValidationBehavior extends Behavior {
 				[
 					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
 					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
-				]
-				
-			)
-			->count();
-			;
-		return ($existingRecords <= 0);
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					'OR' => [
+						[$Staff->aliasField('end_date').' IS NULL'],
+						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
+					],
+				]	
+			);
+		return ($existingRecords->count() <= 0);
 	}
 
 	public static function studentGuardianId($field, array $globalData) {
@@ -403,12 +462,60 @@ class ValidationBehavior extends Behavior {
 		return $existingRecords <= 0;
 	}
 
+	public static function checkAdmissionAgeWithEducationCycle($field, array $globalData) {
+		$data = $globalData['data'];
+		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
+			// getting admission  age
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			$educationGradeQuery = $EducationGrades->find()
+				->select(['EducationCycles.name', 'EducationCycles.admission_age'])
+				->contain('EducationProgrammes.EducationCycles')
+				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $data['education_grade_id']])
+				->first()
+				;
+			$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
+
+			// getting age fo student
+			$Students = TableRegistry::get('Student.Students');
+			$studentQuery = $Students->find()
+				->select([$Students->aliasField('date_of_birth')])
+				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
+				->first();
+				;
+			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			$ageOfStudent = Time::fromNow($dateOfBirth);
+			$ageOfStudent = $ageOfStudent->y;
+
+
+			$ConfigItems = TableRegistry::get('ConfigItems');
+			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value(admission_age_minus);
+			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value(admission_age_plus);
+
+			// pr('ageOfStudent: '.$ageOfStudent);
+			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
+			// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
+			// die;
+
+			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
+		}
+		
+		// if there is no cycle to check with, allow validation to pass
+		return true;;
+	}
+
 	// To allow case sensitive entry
-	public static function checkUniqueEnglishField($check) {
+	public static function checkUniqueEnglishField($check, array $globalData) {
+		$condition = [];
 		$englishField = trim($check);
 		$Translation = TableRegistry::get('Localization.Translations');
+		if(!empty($globalData['data']['id'])) {
+			$condition['NOT'] = [
+				$Translation->aliasField('id') => $globalData['data']['id']
+			];
+		}
       	$count = $Translation->find()
       		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->where($condition)
       		->count();
         return $count==0;
     }
@@ -592,13 +699,7 @@ class ValidationBehavior extends Behavior {
 		}
 
 		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
-		// got id this is a add method
-		if (!(array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) && (!$validationResult)) {
-			$model = $globalData['providers']['table'];
-			$model->Alert->error(__('No available FTE.'), ['type' => 'text']);
-		}
 
 		return $validationResult;
 	}
-
 }
