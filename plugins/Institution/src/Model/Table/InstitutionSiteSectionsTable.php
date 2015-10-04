@@ -42,9 +42,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		/**
 		 * Shortcuts
 		 */
-		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
-		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
-		// $this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
+		$this->InstitutionGrades = $this->Institutions->InstitutionGrades;
 
 		// this behavior restricts current user to see All Classes or My Classes
 		$this->addBehavior('Security.InstitutionClass');
@@ -161,14 +159,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$Sections = $this;
 
-		// $conditions = array(
-		// 	'InstitutionSiteProgrammes.institution_site_id' => $this->institutionId
-		// );
-		//$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
-		if (empty($academicPeriodOptions)) {
-			$this->Alert->warning('Institutions.noProgrammes');
-		}
+
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
@@ -177,7 +169,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (empty($gradeOptions)) {
@@ -747,7 +738,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		// $this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
 
-		// pr($data);die;
 		/**
 		 * In students.ctp, we set the student_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
@@ -770,7 +760,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
-		// pr($data);die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -1060,27 +1049,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 	private function getExistedSections() {
 		$sectionsByGrade = $this->InstitutionSiteSectionGrades
 			->find('list', [
-				'keyField' => 'institution_site_section_id',
-			    'valueField' => 'institution_site_section_id'
+				'keyField'=>'id',
+				'valueField'=>'institution_site_section_id'
 			])
 			->where([$this->InstitutionSiteSectionGrades->aliasField('education_grade_id') => $this->_selectedEducationGradeId])
 			->toArray();
-
-		// $multiGradeSections = $this->InstitutionSiteSectionGrades
-		// 	->find('list', [
-		// 		'keyField' => 'id',
-		// 	    'valueField' => 'institution_site_section_id'
-		// 	])
-		// 	->where([
-		// 		$this->InstitutionSiteSectionGrades->aliasField('education_grade_id').' !=' => $this->_selectedEducationGradeId,
-		// 		$this->InstitutionSiteSectionGrades->aliasField('institution_site_section_id').' IN' => $sectionsByGrade
-		// 	])
-		// 	->toArray();
-		// foreach ($multiGradeSections as $key=>$value) {
-		// 	if (array_key_exists($value, $sectionsByGrade)) {
-		// 		unset($sectionsByGrade[$value]);
-		// 	}
-		// }
 
 		$data = $this->find('list', [
 				'keyField' => 'id',

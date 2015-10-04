@@ -1,18 +1,27 @@
 <?php
 $session = $this->request->session();
 if ($session->check('_alert')) :
-	$_alert = $session->read('_alert');
-	$class = 'alert ' . $_alert['class'];
+	$_alertArray = $session->read('_alert');
+	
 	$session->delete('_alert');
 ?>
 
-<div class="<?php echo $class; ?>">
-	<?php
-	if($_alert['closeButton']) {
-		echo '<a class="close" aria-hidden="true" href="#" data-dismiss="alert">&times;</a>';
+<?php 
+if (!empty($_alertArray)) {
+	foreach ($_alertArray as $key => $_alert) {
+		$class = 'alert ' . $_alert['class'];
+ ?>
+		<div class="<?php echo $class; ?>">
+			<?php
+			if($_alert['closeButton']) {
+				echo '<a class="close" aria-hidden="true" href="#" data-dismiss="alert">&times;</a>';
+			}
+			echo $_alert['message'];
+			?>
+		</div>
+<?php 
 	}
-	echo $_alert['message'];
-	?>
-</div>
+} 
+?>
 
 <?php endif; ?>
