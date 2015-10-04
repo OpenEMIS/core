@@ -374,4 +374,59 @@ class AcademicPeriodsTable extends AppTable {
 			}
 		}
 	}
+
+	public function generateMonthsByDates($startDate, $endDate) {
+		$result = [];
+		$stampStartDay = strtotime($startDate);
+		$stampEndDay = strtotime($endDate);
+		$stampToday = strtotime(date('Y-m-d'));
+		
+		$stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
+		while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
+			$monthString = date('F', $stampFirstDayOfMonth);
+			$monthNumber = date('m', $stampFirstDayOfMonth);
+			$year = date('Y', $stampFirstDayOfMonth);
+			
+			$result[] = [
+				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString.' '.$year],
+				'year' => $year
+			];
+			
+			$stampFirstDayOfMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+		}
+		
+		return $result;
+	}
+
+	public function generateDaysOfMonth($year, $month, $startDate, $endDate){
+		$days = [];
+		$stampStartDay = strtotime($startDate);
+		$stampEndDay = strtotime($endDate);
+		$stampToday = strtotime(date('Y-m-d'));
+		
+		$stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
+		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);	
+		
+		if($stampFirstDayOfMonth <= $stampStartDay){
+			$tempStamp = $stampStartDay;
+		}else{
+			$tempStamp = $stampFirstDayOfMonth;
+		}
+		
+		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
+			$weekDay = date('l', $tempStamp);
+			$date = date('Y-m-d', $tempStamp);
+			$day = date('d', $tempStamp);
+			
+			$days[] = [
+				'weekDay' => $weekDay,
+				'date' => $date,
+				'day' => $day
+			];
+			
+			$tempStamp = strtotime('+1 day', $tempStamp);
+		}
+
+		return $days;
+	}
 }

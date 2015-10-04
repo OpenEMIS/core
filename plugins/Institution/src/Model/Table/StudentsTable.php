@@ -21,7 +21,7 @@ class StudentsTable extends AppTable {
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions',	['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -74,24 +74,34 @@ class StudentsTable extends AppTable {
 			])
 			->add('academic_period_id', [
 			])
-			// ->allowEmpty('student_id') required for create new but disabling for now
 			->add('student_name', 'ruleInstitutionStudentId', [
 				'rule' => ['institutionStudentId'],
+				'on' => 'create'
+			])
+			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycle', [
+				'rule' => ['checkAdmissionAgeWithEducationCycle'],
 				'on' => 'create'
 			])
 			->add('student_name', 'ruleStudentEnrolledInOthers', [
 				'rule' => ['checkEnrolledInOtherInstitution'],
 				'on' => 'create'
-			]);
-
+			])
+			;
 		return $validator;
 	}
 
-	public function validationAllowEmptyName(Validator $validator) {
-        $validator = $this->validationDefault($validator);
-        $validator->remove('student_name');
-        return $validator;
-    }
+	// no longer needed. student_name will be filled if it is not there to trigger hte validation and avoid the required validation fail
+	// public function validationAllowEmptyName(Validator $validator) {
+	// 	$validator = $this->validationDefault($validator);
+	// 	// PHPOE-1919
+	// 	// hanafi and malcolm made changes on this branch. 
+	// 	// $validator->remove('student_name'); is the old code
+	// 	// this is latest
+	// 	$validator->allowEmpty('student_name');
+	// 	// die;
+
+	// 	return $validator;
+	// }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -206,7 +216,7 @@ class StudentsTable extends AppTable {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 
 		// Education Grades
-		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 		$session = $this->Session;
 		$institutionId = $session->read('Institution.Institutions.id');
 		$educationGradesOptions = $InstitutionEducationGrades
@@ -741,7 +751,7 @@ class StudentsTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Grades = TableRegistry::get('Institution.InstitutionSiteGrades');
+		$Grades = TableRegistry::get('Institution.InstitutionGrades');
 		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 

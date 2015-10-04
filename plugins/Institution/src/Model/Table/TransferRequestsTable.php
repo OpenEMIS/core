@@ -393,7 +393,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$InstitutionSiteGrades = TableRegistry::get('Institutions.InstitutionSiteGrades');
+			$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -407,15 +407,15 @@ class TransferRequestsTable extends AppTable {
 			$institutionOptions = $this->Institutions
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->join([
-					'table' => $InstitutionSiteGrades->table(),
-					'alias' => $InstitutionSiteGrades->alias(),
+					'table' => $InstitutionGrades->table(),
+					'alias' => $InstitutionGrades->alias(),
 					'conditions' => [
-						$InstitutionSiteGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
-						$InstitutionSiteGrades->aliasField('education_grade_id') => $this->selectedGrade,
-						$InstitutionSiteGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
+						$InstitutionGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
+						$InstitutionGrades->aliasField('education_grade_id') => $this->selectedGrade,
+						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
 						'OR' => [
-							$InstitutionSiteGrades->aliasField('end_date').' IS NULL',
-							$InstitutionSiteGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
+							$InstitutionGrades->aliasField('end_date').' IS NULL',
+							$InstitutionGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
 						]
 					]
 				])

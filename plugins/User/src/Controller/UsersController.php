@@ -51,7 +51,7 @@ class UsersController extends AppController {
 
 	public function postLogin() {
 		$this->autoRender = false;
-		if ($this->request->is('post')) { 
+		if ($this->request->is('post')) {
 			if ($this->request->data['submit'] == 'login') {
 				$username = $this->request->data('username');
 				$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
