@@ -199,7 +199,6 @@ class ImportBehavior extends Behavior {
 	 * Refer to ImportExcelTrait->phpFileUploadErrors for the list of file upload errors defination.
 	 */
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// pr($data);
 		$options['validate'] = false;
 		if (!array_key_exists($this->_table->alias(), $data)) {
 			$options['validate'] = true;
@@ -292,11 +291,6 @@ class ImportBehavior extends Behavior {
 					$tempRow['duplicates'] = false;
 					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
 					$event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
-					// $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$writer, $_settings]);
-					// if ($event->isStopped()) { return $event->result; }
-					// if (is_callable($event->result)) {
-					// 	$generate = $event->result;
-					// }
 
 					// for each columns
 					$references = [
@@ -335,26 +329,12 @@ class ImportBehavior extends Behavior {
 						continue;
 					}
 
-					if (in_array($this->config('plugin').'.'.$this->config('model'), ['Student.Students', 'Staff.Staff'])) {
-						$tempRow['is_'.strtolower($this->config('plugin'))] = 1;
-						$uniqueCode = 'openemis_no';
-					} else {
-						$uniqueCode = 'code';
-					}
-					
 					// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
 					$tableEntity = $tempRow['entity'];
 					$tempRow = $tempRow->getArrayCopy();
 					unset($tempRow['duplicates']);
 					unset($tempRow['entity']);
 					$activeModel->patchEntity($tableEntity, $tempRow);
-
-					// missing date_of_birth (NOT NULL column) validation in staff table
-					// jeff: need to test again after moving buildDefaultValidation from CA to ValidationBehavior
-					// if ($activeModel->alias() == 'Staff' && array_key_exists('date_of_birth', $tempRow) && empty($tempRow['date_of_birth'])) {
-					// 	$tableEntity->errors('date_of_birth', [$this->_table->getMessage('User.Users.date_of_birth.ruleNotBlank')]);
-					// }
-
 					$isNew = $tableEntity->isNew();
 					if ($activeModel->save($tableEntity)) {
 						if ($isNew) {
@@ -370,7 +350,6 @@ class ImportBehavior extends Behavior {
 						$errorStr = $this->getExcelLabel('Import', 'validation_failed');
 						$count = 1;
 						foreach($tableEntity->errors() as $field => $arr) {
-							pr($arr);
 							$fieldName = $this->getExcelLabel($this->config('plugin').'.'.$this->config('model'), $field);
 							if (empty($fieldName)) {
 								$fieldName = __($field);

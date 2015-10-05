@@ -77,7 +77,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return BaseUsers::setUserValidation($validator);
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
