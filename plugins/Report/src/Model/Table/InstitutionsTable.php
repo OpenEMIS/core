@@ -58,11 +58,11 @@ class InstitutionsTable extends AppTable  {
 				->where([$InstitutionCustomFormFiltersTable->aliasField('institution_custom_filter_id') => $key])
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->first();
-			$customField[$key]['custom_fields'] = [];
+			$customField[$key] = [];
 			$header[$key] = null;
 			if (isset($institutionCustomFormFilters['custom_form']['custom_fields'])) {
-				$customField[$key]['custom_fields'] = $institutionCustomFormFilters['custom_form']['custom_fields'];
-				foreach ($customField[$key]['custom_fields'] as $field) {
+				$customField[$key] = $institutionCustomFormFilters['custom_form']['custom_fields'];
+				foreach ($customField[$key] as $field) {
 					if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
 						$header[$key][$field->id] = $field->name;
 					}	
@@ -75,17 +75,14 @@ class InstitutionsTable extends AppTable  {
 			$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 			$customFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
 			$query = $this->find()->where([$this->aliasField($filterKey) => $key]);
-
-			// Getting the values
-
-			
+			$additionalRowValues = $this->getCustomFieldValues($query, $filterKey, $customField, $customFieldValueTable);
 
 			$sheets[] = [
 	    		'name' => __($name),
 				'table' => $this,
 				'query' => $query,
 				'additionalHeader' => $header[$key],
-				// 'additionalData' => $values,
+				'additionalData' => $additionalRowValues,
 	    	];
 		}
 	}
@@ -95,23 +92,23 @@ class InstitutionsTable extends AppTable  {
 	 *
 	 *	@param Query $query The primary query to run for the spreadsheet
 	 *	@param string $filterKey $filter column name
-	 *	@param array $customFields Array containing the custom fields for each of the id
+	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
 	 *	@param Table $customFieldValueTable The table of the customFieldValue for the specified report. 
 	 *			E.g. Institution will use InstitutionCustomFieldValue table
-	 *	@param Table $customFieldValueOptionsTable The table of the customFieldOptions for the specified report. 
-	 *			E.g. Institution will use InstitutionCustomFieldOptions table
 	 *	@return array The values of each of the custom fields sorted by the table
 	 */
-	public function getCustomFieldValues(Query $query, $filterKey, $customField, Table $customFieldValueTable, $customFieldOptionsTable) {
+	public function getCustomFieldValues(Query $query, $filterKey, $customField, Table $customFieldValueTable) {
 		$customFieldsForeignKey = $customFieldValueTable->association('CustomFields')->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->association('CustomRecords')->foreignKey();
 		$ids = $query->find('list', [
 				'keyField' => 'id',
 				'valueField' => $filterKey
 			])->toArray();
+
+		$consolidatedValues = [];
+
 		foreach ($ids as $id => $key) {
-			pr($id);
-			$fields = $customField[$key]['custom_fields'];
+			$fields = $customField[$key];
 			$answer = [];
 			foreach ($fields as $field) {
 				$fieldValue = $customFieldValueTable->find()
@@ -123,23 +120,22 @@ class InstitutionsTable extends AppTable  {
 				switch ($fieldType) {
 					case 'CHECKBOX':
 					case 'DROPDOWN':
+						$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
 						$fieldValue->innerJoin(
-								[$customFieldOptionsTable->alias() => $customFieldOptionsTable->table()],
-								[$customFieldOptionsTable->aliasField('id').'='.$customFieldValueTable->aliasField('number_value')]
+								[$CustomFieldOptionsTable->alias() => $CustomFieldOptionsTable->table()],
+								[$CustomFieldOptionsTable->aliasField('id').'='.$customFieldValueTable->aliasField('number_value')]
 							)
-							->select([$customFieldOptionsTable->aliasField('name')]);
+							->select([$CustomFieldOptionsTable->aliasField('name')]);
 						$tmpAnswer = '';
+						$alias = $CustomFieldOptionsTable->alias();
 						foreach ($fieldValue->toArray() as $value) {
-							$alias = $customFieldOptionsTable->alias();
 							if (empty($tmpAnswer)) {
 								$tmpAnswer = $value[$alias]['name'];
 							} else {
 								$tmpAnswer = $tmpAnswer.', '.$value[$alias]['name'];
 							}
 						}
-						if (!empty($tmpAnswer)){
-							$answer[] = $tmpAnswer;
-						}
+						$answer[] = $tmpAnswer;
 						break;
 
 					default:
@@ -170,12 +166,22 @@ class InstitutionsTable extends AppTable  {
 									$answer[] = $value->text_value;
 									break;
 							}
+						} else {
+							switch ($fieldType) {
+								case 'TABLE':
+								case 'STUDENT_LIST':
+									break;
+								default:
+									$answer[] = '';
+									break;
+							}
 						}
 						break;
 				}
 			}
-			pr($answer);
+			$consolidatedValues[] = $answer;
 		}
+		return $consolidatedValues;
 	}
 
 	/**
