@@ -73,7 +73,9 @@ class AppTable extends Table {
 		// check for session and attach workflow behavior
 		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
 			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
-				$this->addBehavior('Workflow.Workflow');
+				$this->addBehavior('Workflow.Workflow', [
+					'model' => $this->registryAlias()
+				]);
 			}
 		}
 	}
