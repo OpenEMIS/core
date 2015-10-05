@@ -39,7 +39,7 @@ class StaffController extends AppController {
 			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
-			'Import' 			=> ['className' => 'Staff.Import', 'actions' => ['index', 'add', 'view']],
+			'Import' 			=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 		];
 
 		$this->set('contentHeader', 'Staff');
@@ -119,7 +119,7 @@ class StaffController extends AppController {
 				}
 			}
 		} else {
-			if ($model->alias() == 'Import') {
+			if ($model->alias() == 'ImportStaff') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Staff') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);

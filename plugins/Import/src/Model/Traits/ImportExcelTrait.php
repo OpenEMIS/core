@@ -3,8 +3,9 @@ namespace Import\Model\Traits;
 
 use DateTime;
 use DateInterval;
-use Cake\Event\Event;
+use ArrayObject;
 use Cake\ORM\Table;
+use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 
@@ -59,7 +60,6 @@ trait ImportExcelTrait {
 	protected function getMapping(Table $model) {
 		$mapping = $model->find('all')
 			->where([
-				$model->aliasField('plugin') => $this->config('plugin'),
 				$model->aliasField('model') => $this->config('model')
 			])
 			->order($model->aliasField('order'))
@@ -106,7 +106,7 @@ trait ImportExcelTrait {
 		$lookup = [];
 		foreach ($mapping as $key => $obj) {
 			$mappingRow = $obj;
-			if ($mappingRow->foreign_key == 1) {
+			if ($mappingRow->foreign_key == self::FIELD_OPTION) {
 				$lookupPlugin = $mappingRow->lookup_plugin;
 				$lookupModel = $mappingRow->lookup_model;
 				$lookupAlias = $mappingRow->lookup_alias;
@@ -127,7 +127,7 @@ trait ImportExcelTrait {
 		$mapping = $model->find('all')
 			->where([
 				$model->aliasField('model') => $this->config('model'),
-				$model->aliasField('foreign_key') . ' IN' => [1, 2]
+				$model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE]
 			])
 			->order($model->aliasField('order'))
 			->toArray()
@@ -146,7 +146,7 @@ trait ImportExcelTrait {
 			$sheetName = $this->getExcelLabel($row->model, $row->column_name);
 			$data[$sheetName] = [];
 			$modelData = [];
-			if ($foreignKey == 1) {
+			if ($foreignKey == self::FIELD_OPTION) {
 				if (TableRegistry::exists($lookupAlias)) {
 					$relatedModel = TableRegistry::get($lookupAlias);
 				} else {
@@ -159,7 +159,7 @@ trait ImportExcelTrait {
 						$data[$sheetName][] = [$row, $key];
 					}
 				}
-			} else if ($foreignKey == 2) {
+			} else if ($foreignKey == self::DIRECT_TABLE) {
 				if ($lookupModel == 'Areas') {
 					$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 				} else if ($lookupModel == 'AreaAdministratives') {
@@ -276,9 +276,14 @@ trait ImportExcelTrait {
 			$originalRow[$col] = $originalValue;
 			$val = $cellValue;
 			
+			// skip a record column which has value defined earlier before this function is called
+			// example; openemis_no
+			if (!empty($tempRow[$columnName])) {
+				continue;
+			}
 			if (!empty($val)) {
-				if($activeModel->fields[$columnName]['type'] == 'date') {// should check the main table schema data type
-					$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
+				if($activeModel->fields[$columnName]['type'] == 'date') {// checking the main table schema data type
+					$val = date('d-m-Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
 					$originalRow[$col] = $val;
 				}
 			}
