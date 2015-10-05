@@ -1,5 +1,5 @@
 <?php
-namespace Student\Model\Table;
+namespace Staff\Model\Table;
 
 use ArrayObject;
 use PHPExcel_Worksheet;
@@ -8,13 +8,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 
-class ImportStudentsTable extends AppTable {
+class ImportStaffTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-	    $this->addBehavior('Import.Import');
-	    $this->addBehavior('Import.ImportUser');
+        $this->addBehavior('Import.Import', ['model'=>'Staff']);
+	    $this->addBehavior('Import.ImportUser', ['model'=>'Staff']);
 	}
 
 	public function implementedEvents() {
@@ -41,12 +41,12 @@ class ImportStudentsTable extends AppTable {
 		}
 
 		// $tempRow['entity'] must be assigned!!!
-		$model = TableRegistry::get('Student.Students');
+		$model = TableRegistry::get('Staff.Staff');
 		$user = $model->find()->where(['openemis_no'=>$code])->first();
 		if (!$user) {
 			$tempRow['entity'] = $model->newEntity();
 			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes);
-			$tempRow['is_student'] = 1;
+			$tempRow['is_staff'] = 1;
 		} else {
 			$tempRow['entity'] = $user;
 		}

@@ -688,7 +688,13 @@ trait MessagesTrait {
 				'guardian_id' => [
 					'ruleStudentGuardianId' => 'This guardian has already added.'
 				]
-			]
+			],
+			'Students' => [
+				'openemis_no' => [
+					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
+					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
+			],
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',
@@ -709,6 +715,12 @@ trait MessagesTrait {
 				'qualification_institution_name' => [
 					'validHiddenId' => 'Please enter a valid Institution'
 				]
+			],
+			'Staff' => [
+				'openemis_no' => [
+					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
+					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
 			],
 			'Leaves' => [
 				'date_from' => [
