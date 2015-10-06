@@ -45,7 +45,7 @@ class ImportStaffTable extends AppTable {
 		$user = $model->find()->where(['openemis_no'=>$code])->first();
 		if (!$user) {
 			$tempRow['entity'] = $model->newEntity();
-			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes);
+			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
 			$tempRow['is_staff'] = 1;
 		} else {
 			$tempRow['entity'] = $user;

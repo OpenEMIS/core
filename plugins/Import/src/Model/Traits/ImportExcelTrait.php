@@ -283,8 +283,20 @@ trait ImportExcelTrait {
 			}
 			if (!empty($val)) {
 				if($activeModel->fields[$columnName]['type'] == 'date') {// checking the main table schema data type
-					$val = date('d-m-Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
-					$originalRow[$col] = $val;
+					// if date value is not numeric, let it fail validation since using PHPExcel_Shared_Date::ExcelToPHP($val)
+					// will actually converts the non-numeric value to today's date
+					if (is_numeric($val)) {
+						$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
+						// converts val to DateTime object so that this field will pass 'validDate' check since
+						// different model has different date format checking. Example; user->date_of_birth
+						// so it is best to convert the date here instead of adjusting individual model's date validation format
+						try {
+							$val = new DateTime($val);
+							$originalRow[$col] = $val->format(TableRegistry::get('ConfigItems')->value('date_format'));
+						} catch (Exception $e) {
+						    $originalRow[$col] = $val;
+						}
+					}
 				}
 			}
 			$translatedCol = $this->getExcelLabel($this->config('model'), $columnName);

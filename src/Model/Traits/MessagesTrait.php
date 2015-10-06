@@ -379,6 +379,7 @@ trait MessagesTrait {
 			'not_supported_format' => 'File format not supported',
 			'over_max' => 'File records exceeds maximum allowed',
 			'wrong_template' => 'Wrong template file',
+			'execution_time' => 'Execution Time',
 		],
 
 		// Validation Messages
@@ -720,6 +721,11 @@ trait MessagesTrait {
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
+				'date_of_birth' => [
+					'ruleNotBlank' => 'Please select a Date of Birth',
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
 				],
 			],
 			'Leaves' => [

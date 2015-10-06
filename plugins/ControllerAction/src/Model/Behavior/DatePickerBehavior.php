@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 namespace ControllerAction\Model\Behavior;
 
+use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
@@ -27,7 +28,7 @@ class DatePickerBehavior extends Behavior {
 		$format = 'Y-m-d';
 		foreach ($this->config() as $field) {
 			if (!empty($entity->$field)) {
-				if (!$entity->$field instanceof Time) {
+				if (!$entity->$field instanceof Time && !$entity->$field instanceof DateTime) {
 					$entity->$field = date($format, strtotime($entity->$field));
 				}
 			}
