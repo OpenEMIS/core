@@ -28,7 +28,7 @@ class DatePickerBehavior extends Behavior {
 		$format = 'Y-m-d';
 		foreach ($this->config() as $field) {
 			if (!empty($entity->$field)) {
-				if (!$entity->$field instanceof Time && !$entity->$field instanceof DateTime) {
+				if (!$entity->$field instanceof Time) {
 					$entity->$field = date($format, strtotime($entity->$field));
 				}
 			}

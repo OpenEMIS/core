@@ -377,9 +377,11 @@ trait MessagesTrait {
 			'validation_failed' => 'Failed Validation',
 			'file_required' => 'File is required',
 			'not_supported_format' => 'File format not supported',
-			'over_max' => 'File records exceeds maximum allowed',
+			'over_max' => 'File records exceeds maximum size allowed',
 			'wrong_template' => 'Wrong template file',
 			'execution_time' => 'Execution Time',
+			'over_max_rows' => 'File records exceeds maximum rows allowed',
+			'has_failure' => 'Some record(s) were not imported. Please check the table below.',
 		],
 
 		// Validation Messages
@@ -694,6 +696,11 @@ trait MessagesTrait {
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
+				'date_of_birth' => [
+					'ruleNotBlank' => 'Please select a Date of Birth',
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
 				],
 			],
 		],
