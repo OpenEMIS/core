@@ -89,6 +89,7 @@ class CustomFieldListBehavior extends Behavior {
 	public function getCustomFieldValues(Table $table, Table $customFieldValueTable, $customField, $filterKey, $filterValue) {
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+		$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
 		$ids = $table
 			->find('list', [
 				'keyField' => 'id',
@@ -111,7 +112,6 @@ class CustomFieldListBehavior extends Behavior {
 				switch ($fieldType) {
 					case 'CHECKBOX':
 					case 'DROPDOWN':
-						$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
 						$fieldValue->innerJoin(
 								[$CustomFieldOptionsTable->alias() => $CustomFieldOptionsTable->table()],
 								[$CustomFieldOptionsTable->aliasField('id').'='.$customFieldValueTable->aliasField('number_value')]
