@@ -50,7 +50,6 @@ class CustomFieldListBehavior extends Behavior {
 	 *	Function to get the custom headers for each type of the filter
 	 *
 	 *	@param Table $customFormFilterTable The custom form filter table to use to get the headers
-	 *	@param string $filterKey The filter column name
 	 *	@param int $filterValue The id value of the filterKey
 	 *	@return array The value of the header and the custom fields
 	 */	
