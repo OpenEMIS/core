@@ -10,6 +10,58 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 
 class CustomFieldListBehavior extends Behavior {
+	protected $_defaultConfig = [
+		'events' => [
+			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
+		],
+		'model' => null,
+		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
+		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
+	];
+
+	public function initialize(array $config) {
+		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
+		$this->CustomFieldValues = TableRegistry::get($this->config('fieldValueClass.className'));
+		$model = $this->config('model');
+		if (empty($model)) {
+			$this->config('model', $this->_table->registryAlias());
+		}
+	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events = array_merge($events, $this->config('events'));
+    	return $events;
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$filter = $this->getFilter($this->config('model'));
+		$institutionSiteTypes = $this->getType($filter);
+		$InstitutionCustomFormFiltersTable = $this->CustomFormsFilters;
+		$InstitutionCustomFieldValueTable = $this->CustomFieldValues;
+		$filterKey = $this->getFilterKey($filter);
+		// Get the custom fields columns
+		foreach ($institutionSiteTypes as $key => $name) {
+
+			// Getting the header
+			$fields = $this->getCustomFields($InstitutionCustomFormFiltersTable, $key);
+			$header = $fields['header'];
+			$customField = $fields['customField'];
+
+			// Getting the custom field values
+			$query = $this->_table->find()->where([$this->_table->aliasField($filterKey) => $key]);
+			$data = $this->getCustomFieldValues($this->_table, $InstitutionCustomFieldValueTable, $customField, $filterKey, $key);
+
+			// The excel spreadsheets
+			$sheets[] = [
+	    		'name' => __($name),
+				'table' => $this->_table,
+				'query' => $this->_table->find()->where([$this->_table->aliasField($filterKey) => $key]),
+				'additionalHeader' => $header,
+				'additionalData' => $data,
+	    	];
+		}
+	}
 
 	/**
 	 *	Function to get the filter of the given model
@@ -44,6 +96,17 @@ class CustomFieldListBehavior extends Behavior {
 		}
 		$filterKey = Inflector::underscore(Inflector::singularize($modelClass)) . '_id';
 		return $filterKey;
+	}
+
+	/**
+	 *	Function to get the filter type list
+	 *
+	 *	@param string $filter custom field filter
+	 *	@return array The list of institution site types
+	 */
+	public function getType($filter) {
+		$types = TableRegistry::get($filter)->getList()->toArray();
+		return $types;
 	}
 
 	/**
