@@ -93,43 +93,6 @@ class StaffTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		// Test scripts for institution report
-
-		// $InstitutionReportTable = TableRegistry::get('Report.Institutions');
-		// $filter = $InstitutionReportTable->getFilter('Institution.Institutions');
-		// $type = $InstitutionReportTable->getInstitutionType($filter);
-		// $InstitutionCustomFormFiltersTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFormsFilters');
-		// $header = [];
-		// foreach ($type as $key => $name) {
-		// 	$institutionCustomFormFilters = $InstitutionCustomFormFiltersTable->find()
-		// 		->where([$InstitutionCustomFormFiltersTable->aliasField('institution_custom_filter_id') => $key])
-		// 		->contain(['CustomForms', 'CustomForms.CustomFields'])
-		// 		->first();
-		// 	$customField[$key]['custom_fields'] = [];
-		// 	$header[$key] = null;
-		// 	if (isset($institutionCustomFormFilters['custom_form']['custom_fields'])) {
-		// 		$customField[$key]['custom_fields'] = $institutionCustomFormFilters['custom_form']['custom_fields'];
-		// 		foreach ($customField[$key]['custom_fields'] as $field) {
-		// 			if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
-		// 				$header[$key][$field->id] = $field->name;
-		// 			}	
-		// 		}
-		// 		if (!empty($header[$key])) {
-		// 			ksort($header[$key]);
-		// 		}
-		// 	}
-
-		// 	$modelAlias = $this->ControllerAction->getModel($filter)['model'];
-		// 	$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
-		// 	$customFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
-		// 	$customFieldOptionsTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldOptions');
-		// 	$InstitutionTable = TableRegistry::get('Institution.Institutions');
-		// 	$q = $InstitutionTable->find()->where([$InstitutionTable->aliasField($filterKey) => $key]);
-		// 	pr($InstitutionReportTable->getCustomFieldValues($q, $filterKey, $customField, $customFieldValueTable, $customFieldOptionsTable));			
-		// }
-
-		// pr($header);
-		// pr('done');die;
 		$query->contain(['Positions']);
 		$sortList = ['start_date', 'end_date'];
 		if (array_key_exists('sortWhitelist', $options)) {
