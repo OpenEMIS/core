@@ -27,7 +27,8 @@ class StaffUserTable extends UserTable {
 			$institutionId = $positionData['institution_site_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
-			if ($Staff->save($Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']))) {
+			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
+			if ($Staff->save($staffEntity)) {
 				if ($role > 0) {
 					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
 					$obj = [
@@ -42,9 +43,9 @@ class StaffUserTable extends UserTable {
 			} else {
 				$errors = $staffEntity->errors();
 				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
-					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE');
+					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
 				} else {
-					$this->Alert->error('Institution.InstitutionSiteStaff.error');
+					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);
 				}
 			}
 			$this->Session->delete($sessionKey);
