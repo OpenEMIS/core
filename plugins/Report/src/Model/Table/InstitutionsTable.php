@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
@@ -47,10 +48,10 @@ class InstitutionsTable extends AppTable  {
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$filter = $this->getFilter('Institution.Institutions');
 		$institutionSiteTypes = $this->getInstitutionType($filter);
-		$customField = [];
 		$header = [];
 		$InstitutionCustomFormFiltersTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFormsFilters');
-
+		$modelAlias = $this->getModel($filter)['model'];
+		$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 		// Get the custom fields columns
 		foreach ($institutionSiteTypes as $key => $name) {
 			// Getting the headers
@@ -58,11 +59,11 @@ class InstitutionsTable extends AppTable  {
 				->where([$InstitutionCustomFormFiltersTable->aliasField('institution_custom_filter_id') => $key])
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->first();
-			$customField[$key] = [];
+			$customField = [];
 			$header[$key] = null;
 			if (isset($institutionCustomFormFilters['custom_form']['custom_fields'])) {
-				$customField[$key] = $institutionCustomFormFilters['custom_form']['custom_fields'];
-				foreach ($customField[$key] as $field) {
+				$customField = $institutionCustomFormFilters['custom_form']['custom_fields'];
+				foreach ($customField as $field) {
 					if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
 						$header[$key][$field->id] = $field->name;
 					}	
@@ -71,20 +72,33 @@ class InstitutionsTable extends AppTable  {
 					ksort($header[$key]);
 				}
 			}
-			$modelAlias = $this->ControllerAction->getModel($filter)['model'];
-			$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+
 			$customFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
 			$query = $this->find()->where([$this->aliasField($filterKey) => $key]);
-			$additionalRowValues = $this->getCustomFieldValues($query, $filterKey, $customField, $customFieldValueTable);
-
+			$data = $this->getCustomFieldValues($query, $filterKey, $customField, $customFieldValueTable);
 			$sheets[] = [
 	    		'name' => __($name),
 				'table' => $this,
-				'query' => $query,
+				'query' => $this->find()->where([$this->aliasField($filterKey) => $key]),
 				'additionalHeader' => $header[$key],
-				'additionalData' => $additionalRowValues,
+				'additionalData' => $data,
 	    	];
 		}
+	}
+
+	/**
+	 *	Controller action component getModel function
+	 *
+	 */
+	public function getModel($model) {
+		$split = explode('.', $model);
+		$plugin = null;
+		$modelClass = $model;
+		if (count($split) > 1) {
+			$plugin = $split[0];
+			$modelClass = $split[1];
+		}
+		return ['plugin' => $plugin, 'model' => $modelClass];
 	}
 
 	/**
@@ -106,9 +120,8 @@ class InstitutionsTable extends AppTable  {
 			])->toArray();
 
 		$consolidatedValues = [];
-
 		foreach ($ids as $id => $key) {
-			$fields = $customField[$key];
+			$fields = $customField;
 			$answer = [];
 			foreach ($fields as $field) {
 				$fieldValue = $customFieldValueTable->find()
