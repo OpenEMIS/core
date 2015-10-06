@@ -44,6 +44,9 @@ class WorkflowStepsTable extends AppTable {
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
 			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {
+				$data = [
+					'workflow_actions' => []
+				];
 			} else {
 				$data = [
 					'workflow_actions' => [
@@ -63,8 +66,8 @@ class WorkflowStepsTable extends AppTable {
 						]
 					]
 				];
-				$entity = $this->patchEntity($entity, $data);
 			}
+			$entity = $this->patchEntity($entity, $data);
 		}
 
 		// Always mark visible to dirty to handle retain Workflow Actions when update all visible to 0
