@@ -47,17 +47,47 @@ class CustomFieldListBehavior extends Behavior {
 	}
 
 	/**
+	 *	Function to get the custom headers for each type of the filter
+	 *
+	 *	@param Table $customFormFilterTable The custom form filter table to use to get the headers
+	 *	@param string $filterKey The filter column name
+	 *	@param int $filterValue The id value of the filterKey
+	 *	@return array The value of the header and the custom fields
+	 */	
+	public function getCustomFields($customFormFilterTable, $filterValue) {
+		$customFilterKey = $customFormFilterTable->CustomFilters->foreignKey();
+		$customFormFilters = $customFormFilterTable->find()
+				->where([$customFormFilterTable->aliasField($customFilterKey) => $filterValue])
+				->contain(['CustomForms', 'CustomForms.CustomFields'])
+				->first();
+		$customField = [];
+		$header = null;
+		if (isset($customFormFilters['custom_form']['custom_fields'])) {
+			$customField = $customFormFilters['custom_form']['custom_fields'];
+			foreach ($customField as $field) {
+				if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
+					$header[$field->id] = $field->name;
+				}	
+			}
+			if (!empty($header)) {
+				ksort($header);
+			}
+		}
+		return ['header' => $header, 'customField' => $customField];
+	}
+
+	/**
 	 *	Function to get the custom values for each type of the filter
 	 *
 	 *	@param Table $table The model for which the custom field values is tagged to
-	 *	@param string $filterKey The filter column name
-	 *	@param int $filterValue The id value of the filterKey
-	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
 	 *	@param Table $customFieldValueTable The table of the customFieldValue for the specified report. 
 	 *			E.g. Institution will use InstitutionCustomFieldValue table
+	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
+	 *	@param string $filterKey The filter column name
+	 *	@param int $filterValue The id value of the filterKey
 	 *	@return array The values of each of the custom fields value base on the filter value specified
 	 */
-	public function getCustomFieldValues(Table $table, $filterKey, $filterValue, $customField, Table $customFieldValueTable) {
+	public function getCustomFieldValues(Table $table, Table $customFieldValueTable, $customField, $filterKey, $filterValue) {
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
 		$ids = $table

@@ -53,29 +53,16 @@ class InstitutionsTable extends AppTable  {
 		$filterKey = $this->getFilterKey($filter);
 		// Get the custom fields columns
 		foreach ($institutionSiteTypes as $key => $name) {
-			// Getting the headers
-			$institutionCustomFormFilters = $InstitutionCustomFormFiltersTable->find()
-				->where([$InstitutionCustomFormFiltersTable->aliasField('institution_custom_filter_id') => $key])
-				->contain(['CustomForms', 'CustomForms.CustomFields'])
-				->first();
-			$customField = [];
-			$header = null;
-			if (isset($institutionCustomFormFilters['custom_form']['custom_fields'])) {
-				$customField = $institutionCustomFormFilters['custom_form']['custom_fields'];
-				foreach ($customField as $field) {
-					if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
-						$header[$field->id] = $field->name;
-					}	
-				}
-				if (!empty($header)) {
-					ksort($header);
-				}
-			}
+
+			// Getting the header
+			$fields = $this->getCustomFields($InstitutionCustomFormFiltersTable, $key);
+			$header = $fields['header'];
+			$customField = $fields['customField'];
 
 			// Getting the custom field values
 			$customFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
 			$query = $this->find()->where([$this->aliasField($filterKey) => $key]);
-			$data = $this->getCustomFieldValues($this, $filterKey, $key, $customField, $customFieldValueTable);
+			$data = $this->getCustomFieldValues($this, $customFieldValueTable, $customField, $filterKey, $key);
 
 			// The excel spreadsheets
 			$sheets[] = [
