@@ -67,6 +67,7 @@ class InstitutionsController extends AppController  {
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits'],
 
 			'Import' 			=> ['className' => 'Institution.ImportInstitutions', 'actions' => ['index', 'add']],
+			'ImportStudentAttendances' 			=> ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['index', 'add']],
 		];
 	}
 
