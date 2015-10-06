@@ -5,6 +5,7 @@
 	<div class="col-sm-2"><label><?= $this->Label->get('Import.total_rows'); ?></label>: <span><?= $attr['results']['totalRows']; ?></span></div> 
 	<div class="col-sm-2"><label><?= $this->Label->get('Import.rows_imported'); ?></label>: <span><?= $attr['results']['totalImported']; ?></span></div>
 	<div class="col-sm-2"><label><?= $this->Label->get('Import.rows_updated'); ?></label>: <span><?= $attr['results']['totalUpdated']; ?></span></div>
+	<div class="col-sm-2"><label><?= $this->Label->get('Import.execution_time'); ?></label>: <span><?= $attr['results']['executionTime']; ?></span></div>
 </div>
 <hr/>
 <div class="row text-danger">
