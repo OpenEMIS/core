@@ -15,15 +15,16 @@ class ImportInstitutionsTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        // $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Institutions']);
 	    $this->addBehavior('Import.Import');
+
+	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	}
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.custom.onImportCheckUnique' => 'onImportCheckUnique',
-			'Model.custom.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
+			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -39,14 +40,14 @@ class ImportInstitutionsTable extends AppTable {
 
 		if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
 			$tempRow['duplicates'] = true;
+			$tempRow['entity'] = $this->Institutions->newEntity();
 			return true;
 		}
 
 		// $tempRow['entity'] must be assigned!!!
-		$model = TableRegistry::get('Institution.Institutions');
-		$institution = $model->find()->where(['code'=>$code])->first();
+		$institution = $this->Institutions->find()->where(['code'=>$code])->first();
 		if (!$institution) {
-			$tempRow['entity'] = $model->newEntity();
+			$tempRow['entity'] = $this->Institutions->newEntity();
 		} else {
 			$tempRow['entity'] = $institution;
 		}

@@ -8,6 +8,7 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
 
 /**
  * ImportExcelTrait is to be used with import_mapping table
@@ -19,6 +20,9 @@ use Cake\ORM\TableRegistry;
  */
 trait ImportExcelTrait {
 
+	public $labels = [];
+	public $directTables = [];
+	
 	/**
 	 * Check if all the columns in the row is not empty
 	 * @param  WorkSheet $sheet      The worksheet object
@@ -30,7 +34,8 @@ trait ImportExcelTrait {
 		$cellsState = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
-			if (empty($cell->getValue())) {
+			$value = $cell->getValue();
+			if (empty($value)) {
 				$cellsState[] = false;
 			} else {
 				$cellsState[] = true;
@@ -57,7 +62,8 @@ trait ImportExcelTrait {
 		return $header === $cellsValue;
 	}
 	
-	protected function getMapping(Table $model) {
+	protected function getMapping() {
+		$model = $this->_table;
 		$mapping = $model->find('all')
 			->where([
 				$model->aliasField('model') => $this->config('model')
@@ -67,9 +73,12 @@ trait ImportExcelTrait {
 		return $mapping;
 	}
 	
-	protected function getHeader(Table $model) {
+	protected function getHeader($mapping=[]) {
+		$model = $this->_table;
 		$header = [];
-		$mapping = $this->getMapping($model);
+		if (empty($mapping)) {
+			$mapping = $this->getMapping($model);
+		}
 		
 		foreach ($mapping as $key => $value) {
 			$column = $value->column_name;
@@ -90,9 +99,11 @@ trait ImportExcelTrait {
 		return $header;
 	}
 	
-	protected function getColumns(Table $model) {
+	protected function getColumns($mapping=[]) {
 		$columns = [];
-		$mapping = $this->getMapping($model);
+		if (empty($mapping)) {
+			$mapping = $this->getMapping($model);
+		}
 		
 		foreach($mapping as $key => $value) {
 			$column = $value->column_name;
@@ -181,7 +192,7 @@ trait ImportExcelTrait {
 				}
 			}
 		}
-		
+
 		return $data;
 	}
 	
@@ -238,11 +249,19 @@ trait ImportExcelTrait {
 		if ($module=='Import') {
 			$translatedCol = $this->_table->getMessage($module.'.'.$columnName);
 		} else {
-			/**
-			 * $language should provide the current selected locale language
-			 */
-			$language = '';
-			$translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
+			if (!empty($this->labels) && isset($this->labels[$module]) && isset($this->labels[$module][$columnName])) {
+				$translatedCol = $this->labels[$module][$columnName];
+			} else {
+				/**
+				 * $language should provide the current selected locale language
+				 */
+				$language = '';
+				$translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
+				if (empty($translatedCol)) {
+					$translatedCol = Inflector::humanize(substr($columnName, 0, strpos($columnName, '_id')));
+				}
+				$this->labels[$module][$columnName] = $translatedCol;
+			}
 		}
 
 		return __($translatedCol);
@@ -257,6 +276,8 @@ trait ImportExcelTrait {
 		$totalColumns = $references['totalColumns'];
 		$row = $references['row'];
 		$activeModel = $references['activeModel'];
+		$systemDateFormat = $references['systemDateFormat'];
+		$references = null;
 
 		$rowPass = true;
 		for ($col = 0; $col < $totalColumns; ++$col) {
@@ -287,19 +308,19 @@ trait ImportExcelTrait {
 					// will actually converts the non-numeric value to today's date
 					if (is_numeric($val)) {
 						$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
-						// converts val to DateTime object so that this field will pass 'validDate' check since
+						// converts val to Time object so that this field will pass 'validDate' check since
 						// different model has different date format checking. Example; user->date_of_birth
 						// so it is best to convert the date here instead of adjusting individual model's date validation format
 						try {
-							$val = new DateTime($val);
-							$originalRow[$col] = $val->format(TableRegistry::get('ConfigItems')->value('date_format'));
+							$val = new Time($val);
+							$originalRow[$col] = $val->format($systemDateFormat);
 						} catch (Exception $e) {
 						    $originalRow[$col] = $val;
 						}
 					}
 				}
 			}
-			$translatedCol = $this->getExcelLabel($this->config('model'), $columnName);
+			$translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
 			if ($foreignKey == self::FIELD_OPTION) {
 				if (!empty($cellValue)) {
 					if (array_key_exists($cellValue, $lookup[$col])) {
@@ -313,7 +334,14 @@ trait ImportExcelTrait {
 					$rowInvalidCodeCols[] = $translatedCol;
 				}
 			} else if ($foreignKey == self::DIRECT_TABLE) {
-				$excelLookupModel = TableRegistry::get($excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model);
+				// $activeModel->log('ImportExcelTrait: extracting from direct table at line '.__LINE__, 'debug');
+				$registryAlias = $excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model;
+				if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
+					$excelLookupModel = $this->directTables[$registryAlias];
+				} else {
+					$excelLookupModel = TableRegistry::get($registryAlias);
+					$this->directTables[$registryAlias] = $excelLookupModel;
+				}
 				if (!empty($cellValue)) {
 					$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
 				} else {
