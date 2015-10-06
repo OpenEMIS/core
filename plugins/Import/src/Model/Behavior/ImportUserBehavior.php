@@ -13,7 +13,8 @@ class ImportUserBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'prefix_key' => ''
+		'prefix_key' => '',
+		'prefix' => ''
 	];
 
 	public function initialize(array $config) {
@@ -29,27 +30,36 @@ class ImportUserBehavior extends Behavior {
 		if (empty($this->config('prefix_key'))) {
 			$this->config('prefix_key', strtolower(Inflector::singularize($this->config('model'))).'_prefix');
 		}
+
+		$prefix = TableRegistry::get('ConfigItems')->value($this->config('prefix_key'));
+		$prefix = explode(",", $prefix);
+		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
+
+		$this->config('prefix', $prefix);
 	}
 	
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->openemis_no;
 	}
 
-	public function getNewOpenEmisNo($importedUniqueCodes, $generatedId=null, $prefix='') {
-		if (!is_null($generatedId)) {
-			$val = $generatedId;
+	public function getNewOpenEmisNo($importedUniqueCodes, $row) {
+		$prefix = $this->config('prefix');
+
+		$importedCodes = $importedUniqueCodes->getArrayCopy();
+		if (count($importedCodes)>0) {
+			$val = reset($importedCodes);
+			$val = $prefix . (intval(substr($val, strlen($prefix))) + $row);
+			// usleep(10000);
 		} else {
-			$prefix = ($prefix=='') ? TableRegistry::get('ConfigItems')->value($this->config('prefix_key')) : $prefix;
-			$prefix = explode(",", $prefix);
-			$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 			$val = TableRegistry::get('User.Users')->getUniqueOpenemisId(['model' => $this->config('plugin')]);
 		}
-		if (in_array($val, $importedUniqueCodes->getArrayCopy())) {
-			// minimum pause time needed to allow this upload script to run without http request timeout error
-			usleep(35000);
-			$generatedId = $prefix . (intval(substr($val, strlen($prefix))) + rand());
-			$val = $this->getNewOpenEmisNo($importedUniqueCodes, $generatedId, $prefix);
-		}
+
+		// if (in_array($val, $importedUniqueCodes->getArrayCopy())) {
+		// 	// minimum pause time needed to allow this upload script to run without http request timeout error
+		// 	usleep(35000);
+		// 	$generatedId = $prefix . (intval(substr($val, strlen($prefix))) + rand());
+		// 	$val = $this->getNewOpenEmisNo($importedUniqueCodes, $generatedId, $prefix);
+		// }
 		return $val;
 	}
 

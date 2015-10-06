@@ -71,6 +71,7 @@ class ImportBehavior extends Behavior {
 	const DIRECT_TABLE = 2;
 
 	const RECORD_HEADER = 1;
+	const FIRST_RECORD = 2;
 
 	protected $_defaultConfig = [
 		'plugin' => '',
@@ -279,7 +280,6 @@ class ImportBehavior extends Behavior {
 						}
 						continue;
 					}
-
 					if ($row == $highestRow) {
 						if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
 							break;
@@ -368,6 +368,16 @@ class ImportBehavior extends Behavior {
 						];
 						$model->log($tableEntity->errors(), 'debug');
 					}
+	
+					if ($row == self::FIRST_RECORD) { // if the operation for the first row is completed, sleep for one second to allow the record to be saved properly
+						sleep(1);
+					} else if (($row % 10) == 0) { // after every 50 rows, sleep for 15000 micro seconds to avoid http connection reset
+						$model->log('resting after importing '.$row.' records', 'info');
+						usleep(15000);
+					} else {
+						$model->log($row.' records imported', 'info');
+					}
+
 				} // for ($row = 1; $row <= $highestRow; ++$row)
 
 				break; // only process first sheet
@@ -391,7 +401,8 @@ class ImportBehavior extends Behavior {
 				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
 				foreach($dataFailed as $record) {
 					$record['data'][] = $record['error'];
-					$writer->writeSheetRow($dataSheetName, array_values($record['data']));
+					// pr($record);die;
+					$writer->writeSheetRow($dataSheetName, array_values($record['data']->getArrayCopy()));
 				}
 				
 				$codesData = $this->excelGetCodesData($this->_table);
@@ -415,6 +426,7 @@ class ImportBehavior extends Behavior {
 				'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
 				'header' => $header,
 				'excelFile' => $excelFile,
+				'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
 			];
 			$session->write($this->sessionKey, $completedData);
 			return $model->controller->redirect($this->_table->ControllerAction->url('results'));
@@ -467,6 +479,11 @@ class ImportBehavior extends Behavior {
 			]);
 			$session->delete($this->sessionKey);
 			// define data as empty entity so that the view file will not throw an undefined notice
+			if ($completedData['excelFile']) {
+				$this->_table->Alert->success('general.edit.success', ['reset' => true]);
+			} else {
+				$this->_table->Alert->success('general.edit.failed', ['reset' => true]);
+			}
 			$this->_table->controller->set('data', $this->_table->newEntity());
 			$this->_table->ControllerAction->renderView('/ControllerAction/view');
 		} else {
