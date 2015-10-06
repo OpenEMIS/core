@@ -28,7 +28,11 @@ class InstitutionsTable extends AppTable  {
 		
 		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'institution_site_type_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.CustomFieldList');
+		$this->addBehavior('Report.CustomFieldList', [
+			'model' => 'Institution.Institutions',
+			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -44,46 +48,5 @@ class InstitutionsTable extends AppTable  {
 
 	public function onGetReportName(Event $event, ArrayObject $data) {
 		return __('Overview');
-	}
-
-	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		$filter = $this->getFilter('Institution.Institutions');
-		$institutionSiteTypes = $this->getInstitutionType($filter);
-		$InstitutionCustomFormFiltersTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFormsFilters');
-		$InstitutionCustomFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
-		$filterKey = $this->getFilterKey($filter);
-		// Get the custom fields columns
-		foreach ($institutionSiteTypes as $key => $name) {
-
-			// Getting the header
-			$fields = $this->getCustomFields($InstitutionCustomFormFiltersTable, $key);
-			$header = $fields['header'];
-			$customField = $fields['customField'];
-
-			// Getting the custom field values
-			$query = $this->find()->where([$this->aliasField($filterKey) => $key]);
-			$data = $this->getCustomFieldValues($this, $InstitutionCustomFieldValueTable, $customField, $filterKey, $key);
-
-			// The excel spreadsheets
-			$sheets[] = [
-	    		'name' => __($name),
-				'table' => $this,
-				'query' => $this->find()->where([$this->aliasField($filterKey) => $key]),
-				'additionalHeader' => $header,
-				'additionalData' => $data,
-	    	];
-		}
-	}
-
-	/**
-	 *	Function to get the institution site type base on the custom field filter specified
-	 *
-	 *	@param string $filter custom field filter
-	 *	@return array The list of institution site types
-	 */
-	public function getInstitutionType($filter) {
-		// Getting the institution type as the sheet name
-		$types = TableRegistry::get($filter)->getList()->toArray();
-		return $types;
 	}
 }
