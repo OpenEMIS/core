@@ -101,14 +101,17 @@ class ImportBehavior extends Behavior {
 		}
 		$this->config('allowable_file_types', $allowableFileTypes);
 
-		if (empty($this->config('plugin'))) {
+		$plugin = $this->config('plugin');
+		if (empty($plugin)) {
 			$exploded = explode('.', $this->_table->registryAlias());
 			if (count($exploded)==2) {
 				$this->config('plugin', $exploded[0]);
 			}
 		}
-		if (empty($this->config('model'))) {
-			$this->config('model', Inflector::pluralize($this->config('plugin')));
+		$plugin = $this->config('plugin');
+		$model = $this->config('model');
+		if (empty($model)) {
+			$this->config('model', Inflector::pluralize($plugin));
 		}
 	}
 	
