@@ -126,20 +126,21 @@ class CustomFieldListBehavior extends Behavior {
 				->where($condition)
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->first();
-		$customField = [];
+		$customFields = [];
 		$header = null;
 		if (isset($customFormFilters['custom_form']['custom_fields'])) {
-			$customField = $customFormFilters['custom_form']['custom_fields'];
-			foreach ($customField as $field) {
+			foreach ($customFormFilters['custom_form']['custom_fields'] as $field) {
 				if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
 					$header[$field->id] = $field->name;
+					$customFields[$field->id] = $field;
 				}	
 			}
 			if (!empty($header)) {
 				ksort($header);
+				ksort($customFields);
 			}
 		}
-		return ['header' => $header, 'customField' => $customField];
+		return ['header' => $header, 'customField' => $customFields];
 	}
 
 	/**
