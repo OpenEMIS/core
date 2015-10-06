@@ -76,7 +76,7 @@ class ImportBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'max_rows' => 3000,
+		'max_rows' => 2000,
 		'max_size' => 524288
 	];
 	protected $rootFolder = 'import';
@@ -227,13 +227,20 @@ class ImportBehavior extends Behavior {
 		if (!in_array($fileFormat, $supportedFormats)) {
 			if (!empty($fileFormat)) {
 				$entity->errors('select_file', [$model->getMessage('Import.not_supported_format')]);				
+				$options['validate'] = true;
 			}
-		} else if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
+		} 
+		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
 			$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
-		} else if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
+			$options['validate'] = true;
+		} 
+		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
 			$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
-		} else if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
+			$options['validate'] = true;
+		} 
+		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
 			$entity->errors('select_file', [$model->getMessage('Import.over_max')]);
+			$options['validate'] = true;
 		}
 	}
 
@@ -246,16 +253,19 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		return function ($model, $entity) {
-			if (!empty($entity->errors())) {
+			$errors = $entity->errors();
+			if (!empty($errors)) {
 				return false;
 			}
+
+			$systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
 
 			$controller = $model->controller;
 			$controller->loadComponent('PhpExcel');
 
-			$header = $this->getHeader($model);
-			$columns = $this->getColumns($model);
-			$mapping = $this->getMapping($model);
+			$mapping = $this->getMapping();
+			$header = $this->getHeader($mapping);
+			$columns = $this->getColumns($mapping);
 			$totalColumns = count($columns);
 			$lookup = $this->getCodesByMapping($mapping);
 
@@ -272,8 +282,14 @@ class ImportBehavior extends Behavior {
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 
+			$maxRows = $this->config('max_rows');
+			$maxRows = $maxRows + 2;
 			foreach ($worksheets as $sheet) {
 				$highestRow = $sheet->getHighestRow();
+				if ($highestRow > $maxRows) {
+					$entity->errors('select_file', [$model->getMessage('Import.over_max_rows')]);
+					return false;
+				}
 
 				for ($row = 1; $row <= $highestRow; ++$row) {
 					if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
@@ -289,12 +305,15 @@ class ImportBehavior extends Behavior {
 						}
 					}
 					
+// $model->log('===============================================================================================', 'info');
+					// $model->log('start ImportBehavior: '.__LINE__, 'info');
 					// check for unique record
 					$tempRow = new ArrayObject;
 					$tempRow['duplicates'] = false;
 					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
-					$event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
-
+					$this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
+					// $model->log('ImportBehavior after checking Unique: '.__LINE__, 'info');
+					
 					// for each columns
 					$references = [
 						'sheet'=>$sheet, 
@@ -303,15 +322,29 @@ class ImportBehavior extends Behavior {
 						'lookup'=>$lookup,
 						'totalColumns'=>$totalColumns, 
 						'row'=>$row, 
-						'activeModel'=>$activeModel
+						'activeModel'=>$activeModel,
+						'systemDateFormat'=>$systemDateFormat,
 					];
 					$rowInvalidCodeCols = new ArrayObject;
 					$originalRow = new ArrayObject;
 					$rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
-					if (!$rowPass || $tempRow['duplicates']) { // row contains error or record is a duplicate based on unique key(s)
+
+					// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
+					if (!isset($tempRow['entity'])) {
+						pr($tempRow);die;
+					}
+					$tableEntity = $tempRow['entity'];
+					$tempRow = $tempRow->getArrayCopy();
+					$duplicates = $tempRow['duplicates'];
+					unset($tempRow['duplicates']);
+					unset($tempRow['entity']);
+					$activeModel->patchEntity($tableEntity, $tempRow);
+					$errors = $tableEntity->errors();
+
+					if (!$rowPass || $duplicates || $errors) { // row contains error or record is a duplicate based on unique key(s)
 
 						$rowCodeError = '';
-						if ($tempRow['duplicates']) {
+						if ($duplicates) {
 							$rowCodeError .= $this->getExcelLabel('Import', 'duplicate_unique_key');
 						}
 						if (!$rowPass) {
@@ -322,24 +355,35 @@ class ImportBehavior extends Behavior {
 							$rowCodeError .= $this->getExcelLabel('Import', 'invalid_code').': ';
 							$rowCodeError .= implode(', ', $rowInvalidCodeCols->getArrayCopy());
 						}
-
+						if (!empty($errors)) {
+							$rowCodeError = (!empty($rowCodeError)) ? $rowCodeError.'; ' : '';
+							$rowCodeError .= $this->getExcelLabel('Import', 'validation_failed').': ';
+							$count = 1;
+							foreach($errors as $field => $arr) {
+								$fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+								if ($count === 1) {
+									$rowCodeError .= $fieldName . ' => ' . $arr[key($arr)];
+								} else {
+									$rowCodeError .= ', ' . $fieldName . ' => ' . $arr[key($arr)];
+								}
+								$count ++;
+							}
+						}
 						$dataFailed[] = array(
 							'row_number' => $row,
 							'error' => $rowCodeError,
 							'data' => $originalRow
 						);
 
+						$model->log($tableEntity->errors(), 'debug');
+
 						continue;
 					}
 
-					// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
-					$tableEntity = $tempRow['entity'];
-					$tempRow = $tempRow->getArrayCopy();
-					unset($tempRow['duplicates']);
-					unset($tempRow['entity']);
-					$activeModel->patchEntity($tableEntity, $tempRow);
+					// $model->log('ImportBehavior after patch entity: '.__LINE__, 'info');
 					$isNew = $tableEntity->isNew();
 					if ($activeModel->save($tableEntity)) {
+						// $model->log('ImportBehavior able to save: '.__LINE__, 'info');
 						if ($isNew) {
 							$totalImported++;
 						} else {
@@ -347,39 +391,13 @@ class ImportBehavior extends Behavior {
 						}
 
 						// update importedUniqueCodes either a single key or composite primary keys
-						$event = $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
-
-					} else {
-						$errorStr = $this->getExcelLabel('Import', 'validation_failed');
-						$count = 1;
-						foreach($tableEntity->errors() as $field => $arr) {
-							$fieldName = $this->getExcelLabel($this->config('plugin').'.'.$this->config('model'), $field);
-							if (empty($fieldName)) {
-								$fieldName = __($field);
-							}
-							if ($count === 1) {
-								$errorStr .= ': ' . $fieldName . ' => ' . $arr[key($arr)];
-							} else {
-								$errorStr .= ', ' . $fieldName . ' => ' . $arr[key($arr)];
-							}
-							$count ++;
-						}
-						$dataFailed[] = [
-							'row_number' => $row,
-							'error' => $errorStr,
-							'data' => $originalRow
-						];
-						$model->log($tableEntity->errors(), 'debug');
+						$this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+						// $model->log('ImportBehavior: '.__LINE__, 'info');
+					
+					// } else {
 					}
 	
-					if ($row == self::FIRST_RECORD) { // if the operation for the first row is completed, sleep for one second to allow the record to be saved properly
-						sleep(1);
-					} else if (($row % 10) == 0) { // after every 50 rows, sleep for 15000 micro seconds to avoid http connection reset
-						$model->log('resting after importing '.$row.' records', 'info');
-						usleep(15000);
-					} else {
-						$model->log($row.' records imported', 'info');
-					}
+					// $model->log('ImportBehavior: '.$row.' records imported', 'info');
 
 				} // for ($row = 1; $row <= $highestRow; ++$row)
 
@@ -450,7 +468,7 @@ class ImportBehavior extends Behavior {
 
 		$writer = new \XLSXWriter();
 		
-		$header = $this->getHeader($this->_table);
+		$header = $this->getHeader();
 		$writer->writeSheetRow(__('Data'), array_values($header));
 		
 		$codesData = $this->excelGetCodesData($this->_table);
@@ -462,10 +480,12 @@ class ImportBehavior extends Behavior {
 		
 		$writer->writeToFile($excelPath);
 		$this->performDownload($excelFile);
+		die;
 	}
 
 	public function downloadFailed($excelFile) {
 		$this->performDownload($excelFile);
+		die;
 	}
 
 	public function results() {
@@ -483,9 +503,13 @@ class ImportBehavior extends Behavior {
 			$session->delete($this->sessionKey);
 			// define data as empty entity so that the view file will not throw an undefined notice
 			if ($completedData['excelFile']) {
-				$this->_table->Alert->success('general.edit.success', ['reset' => true]);
+				if (count($completedData['totalImported'])>0 || count($completedData['totalUpdated'])>0) {
+					$this->_table->Alert->warning('Import.has_failure', ['reset' => true]);
+				} else {
+					$this->_table->Alert->error('general.edit.failed', ['reset' => true]);
+				}
 			} else {
-				$this->_table->Alert->success('general.edit.failed', ['reset' => true]);
+				$this->_table->Alert->success('general.edit.success', ['reset' => true]);
 			}
 			$this->_table->controller->set('data', $this->_table->newEntity());
 			$this->_table->ControllerAction->renderView('/ControllerAction/view');

@@ -13,53 +13,55 @@ class ImportUserBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'prefix_key' => '',
 		'prefix' => ''
 	];
 
 	public function initialize(array $config) {
-		if (empty($this->config('plugin'))) {
+		$plugin = $this->config('plugin');
+		if (empty($plugin)) {
 			$exploded = explode('.', $this->_table->registryAlias());
 			if (count($exploded)==2) {
 				$this->config('plugin', $exploded[0]);
 			}
 		}
-		if (empty($this->config('model'))) {
-			$this->config('model', Inflector::pluralize($this->config('plugin')));
+		$plugin = $this->config('plugin');
+		$model = $this->config('model');
+		if (empty($model)) {
+			$this->config('model', Inflector::pluralize($plugin));
 		}
-		if (empty($this->config('prefix_key'))) {
-			$this->config('prefix_key', strtolower(Inflector::singularize($this->config('model'))).'_prefix');
-		}
-
-		$prefix = TableRegistry::get('ConfigItems')->value($this->config('prefix_key'));
+		$model = $this->config('model');
+		
+		$prefix_key = strtolower(Inflector::singularize($model)).'_prefix';
+		$prefix = TableRegistry::get('ConfigItems')->value($prefix_key);
 		$prefix = explode(",", $prefix);
 		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
-
 		$this->config('prefix', $prefix);
+
+		$this->Users = TableRegistry::get('User.Users');
 	}
 	
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->openemis_no;
+		// $this->_table->log('ImportUserBehavior onImportUpdateUniqueKeys: ', 'info');
 	}
 
 	public function getNewOpenEmisNo($importedUniqueCodes, $row) {
-		$prefix = $this->config('prefix');
+		// $this->_table->log('ImportUserBehavior getNewOpenEmisNo: '.$row, 'info');
 
 		$importedCodes = $importedUniqueCodes->getArrayCopy();
 		if (count($importedCodes)>0) {
+			$prefix = $this->config('prefix');
 			$val = reset($importedCodes);
 			$val = $prefix . (intval(substr($val, strlen($prefix))) + $row);
-			// usleep(10000);
 		} else {
-			$val = TableRegistry::get('User.Users')->getUniqueOpenemisId(['model' => $this->config('plugin')]);
+			// $this->_table->log('ImportUserBehavior getNewOpenEmisNo get from table: '.$row, 'info');
+			$model = $this->config('plugin');
+			$val = $this->Users->getUniqueOpenemisId(['model' => $model]);
+			// if (empty($val)) {
+			// 	sleep(1);
+			// 	$val = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
+			// }
 		}
-
-		// if (in_array($val, $importedUniqueCodes->getArrayCopy())) {
-		// 	// minimum pause time needed to allow this upload script to run without http request timeout error
-		// 	usleep(35000);
-		// 	$generatedId = $prefix . (intval(substr($val, strlen($prefix))) + rand());
-		// 	$val = $this->getNewOpenEmisNo($importedUniqueCodes, $generatedId, $prefix);
-		// }
 		return $val;
 	}
 
