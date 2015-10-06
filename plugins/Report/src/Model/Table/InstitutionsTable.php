@@ -50,6 +50,7 @@ class InstitutionsTable extends AppTable  {
 		$filter = $this->getFilter('Institution.Institutions');
 		$institutionSiteTypes = $this->getInstitutionType($filter);
 		$InstitutionCustomFormFiltersTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFormsFilters');
+		$InstitutionCustomFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
 		$filterKey = $this->getFilterKey($filter);
 		// Get the custom fields columns
 		foreach ($institutionSiteTypes as $key => $name) {
@@ -60,9 +61,8 @@ class InstitutionsTable extends AppTable  {
 			$customField = $fields['customField'];
 
 			// Getting the custom field values
-			$customFieldValueTable = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
 			$query = $this->find()->where([$this->aliasField($filterKey) => $key]);
-			$data = $this->getCustomFieldValues($this, $customFieldValueTable, $customField, $filterKey, $key);
+			$data = $this->getCustomFieldValues($this, $InstitutionCustomFieldValueTable, $customField, $filterKey, $key);
 
 			// The excel spreadsheets
 			$sheets[] = [
