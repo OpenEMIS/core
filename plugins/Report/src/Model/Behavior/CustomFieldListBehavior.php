@@ -53,10 +53,14 @@ class CustomFieldListBehavior extends Behavior {
 	 *	@param int $filterValue The id value of the filterKey
 	 *	@return array The value of the header and the custom fields
 	 */	
-	public function getCustomFields($customFormFilterTable, $filterValue) {
-		$customFilterKey = $customFormFilterTable->CustomFilters->foreignKey();
+	public function getCustomFields($customFormFilterTable, $filterValue=null) {
+		$condition = [];
+		if ($filterValue != null) {
+			$customFilterKey = $customFormFilterTable->CustomFilters->foreignKey();
+			$condition = [$customFormFilterTable->aliasField($customFilterKey) => $filterValue];
+		}
 		$customFormFilters = $customFormFilterTable->find()
-				->where([$customFormFilterTable->aliasField($customFilterKey) => $filterValue])
+				->where($condition)
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->first();
 		$customField = [];
@@ -86,20 +90,28 @@ class CustomFieldListBehavior extends Behavior {
 	 *	@param int $filterValue The id value of the filterKey
 	 *	@return array The values of each of the custom fields value base on the filter value specified
 	 */
-	public function getCustomFieldValues(Table $table, Table $customFieldValueTable, $customField, $filterKey, $filterValue) {
+	public function getCustomFieldValues(Table $table, Table $customFieldValueTable, $customField, $filterKey=null, $filterValue=null) {
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
 		$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
+		$condition = [];
+
+		if ($filterKey != null) {
+			$condition = [
+				$table->aliasField($filterKey) => $filterValue	
+			];
+		}
+
 		$ids = $table
 			->find('list', [
 				'keyField' => 'id',
-				'valueField' => $filterKey
+				'valueField' => 'id'
 			])
-			->where([$table->aliasField($filterKey) => $filterValue])
+			->where($condition)
 			->toArray();
 
 		$consolidatedValues = [];
-		foreach ($ids as $id => $key) {
+		foreach ($ids as $id) {
 			$fields = $customField;
 			$answer = [];
 			foreach ($fields as $field) {
