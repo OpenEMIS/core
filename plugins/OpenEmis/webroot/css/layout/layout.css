@@ -61,10 +61,20 @@ select,
 
 .left-pane {
     overflow-y: auto;
+    background-color: #FFF;
+    position: absolute;
+    left: 0 !important;
+    width: 10%;
 }
 
 .right-pane {
     overflow-y: auto;
+    right: 0 !important;
+    position: absolute;
+    background-color: #FFF;
+    border-left: 1px solid #DDD;
+    height: 100%;
+    width: 90%;
 }
 
 .container-fluid {
