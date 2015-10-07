@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -366,9 +367,39 @@ class InstitutionSurveysTable extends AppTable {
 			$this->Alert->success('InstitutionSurveys.save.draft', ['reset' => true]);
 		} else if ($entity->status == self::COMPLETED) {
 			// add logic to insert workflow_records and workflow_transitions to Submit For Approval
-			$workflowRecord = $this->getRecord($entity);
-			pr($entity);
-			pr($workflowRecord);die;
+			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
+
+			if ($workflowRecord->workflow_step->stage == 0) {	// Open
+				$workflowStepId = $workflowRecord->workflow_step_id;
+
+				$WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
+				$WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+				$workflowAction = $WorkflowActions
+					->find()
+					->where([
+						$WorkflowActions->aliasField('workflow_step_id') => $workflowStepId,
+						$WorkflowActions->aliasField('action') => 0	// Approve
+					])
+					->first();
+				$nextWorkflowStepId = $workflowAction->next_workflow_step_id;
+
+				$transitionData = [
+					'prev_workflow_step_id' => $workflowStepId,
+					'workflow_step_id' => $nextWorkflowStepId,
+					'workflow_action_id' => $workflowAction->id,
+					'workflow_record_id' => $workflowRecord->id
+				];
+				$transitionEntity = $WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
+				if ($WorkflowTransitions->save($transitionEntity)) {
+					$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
+					$WorkflowRecords->updateAll(
+						['workflow_step_id' => $nextWorkflowStepId],
+						['id' => $workflowRecord->id]
+					);
+				} else {
+					$WorkflowTransitions->log($transitionEntity->errors(), 'debug');
+				}
+			}
 			// End
 
 			$url = $this->ControllerAction->url('index');

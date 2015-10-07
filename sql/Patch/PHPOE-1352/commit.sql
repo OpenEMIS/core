@@ -14,6 +14,9 @@ ALTER TABLE `workflow_actions` ADD `event_key` VARCHAR(200) CHARACTER SET utf8 C
 -- workflow_records
 ALTER TABLE `workflow_records` ADD INDEX(`model_reference`), ADD INDEX(`workflow_model_id`), ADD INDEX(`workflow_step_id`);
 
+-- workflow_transitions
+ALTER TABLE `workflow_transitions` CHANGE `comment` `comment` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'WorkflowSteps', 'is_editable', 'Workflow -> Steps', 'Editable', 1, 1, NOW());
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'WorkflowSteps', 'is_removable', 'Workflow -> Steps', 'Removable', 1, 1, NOW());

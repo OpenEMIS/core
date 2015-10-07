@@ -10,6 +10,9 @@ ALTER TABLE `workflow_actions` DROP `event_key`;
 -- workflow_records
 ALTER TABLE workflow_records DROP INDEX `model_reference`, DROP INDEX `workflow_model_id`, DROP INDEX `workflow_step_id`;
 
+-- workflow_transitions
+ALTER TABLE `workflow_transitions` CHANGE `comment` `comment` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+
 -- labels
 DELETE FROM `labels` WHERE `module` = 'WorkflowSteps' AND `field` = 'is_editable';
 DELETE FROM `labels` WHERE `module` = 'WorkflowSteps' AND `field` = 'is_removable';

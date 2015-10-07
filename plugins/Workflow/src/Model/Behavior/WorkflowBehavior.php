@@ -29,6 +29,7 @@ class WorkflowBehavior extends Behavior {
 	private $model = null;
 	private $currentAction;
 
+	private $initWorkflow = false;
 	private $workflowSetup = null;
 	private $workflowRecord = null;
 
@@ -71,19 +72,14 @@ class WorkflowBehavior extends Behavior {
 		$attachWorkflow = $this->controller->Workflow->attachWorkflow;
 
 		if ($attachWorkflow && !is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'processWorkflow'])) {
-			$this->workflowSetup = $this->WorkflowModels
-				->find()
-				->where([
-					$this->WorkflowModels->aliasField('model') => $this->config('model')
-				])
-				->first();
+			$this->initWorkflow = true;
 		}
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// setup workflow
-		if (!empty($this->workflowSetup)) {
-			$this->workflowRecord = $this->getRecord($entity);
+		if ($this->initWorkflow) {
+			$this->workflowRecord = $this->getRecord($this->config('model'), $entity);
 			if (!empty($this->workflowRecord)) {
 				// Workflow Status - extra field
 				$status = isset($this->workflowRecord->workflow_step->name) ? $this->workflowRecord->workflow_step->name : __('Open');
@@ -160,7 +156,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		// Unset edit buttons and add action buttons
-		if (!empty($this->workflowSetup)) {
+		if ($this->initWorkflow) {
 			$isEditable = false;
 
 			if (!is_null($this->workflowRecord)) {
@@ -273,10 +269,11 @@ class WorkflowBehavior extends Behavior {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		// check line by line, whether to show / hide the action buttons
-		if (!empty($this->workflowSetup)) {
+		if ($this->initWorkflow) {
+			// pr('initWorkflow: ' . $this->initWorkflow);die;
 			$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 
-			$workflowRecord = $this->getRecord($entity);
+			$workflowRecord = $this->getRecord($this->config('model'), $entity);
 			if (!empty($workflowRecord)) {
 				$isEditable = false;
 				$isRemovable = false;
@@ -300,66 +297,82 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function getWorkflow($workflowModel=null, $entity=null) {
-		// Find all Workflow setup for the model
-		$workflowIds = $this->Workflows
-			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-			->where([
-				$this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
-			])
-			->toArray();
-
-		$workflowQuery = $this->Workflows
-			->find()
-			->contain(['WorkflowSteps.WorkflowActions']);
-
-		if (empty($workflowModel->filter)) {
-			$workflowQuery->where([
-				$this->Workflows->aliasField('id IN') => $workflowIds
-			]);
-		} else {
-			// Filter key
-			list(, $base) = pluginSplit($workflowModel->filter);
-			$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
-
-			$workflowId = 0;
-			if ($entity->has($filterKey)) {
-				$filterId = $entity->$filterKey;
-				$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
-
-				$filterQuery = $this->WorkflowsFilters
+	public function getWorkflow($registryAlias, $entity=null) {
+		if (is_null($this->workflowSetup)) {
+			$workflowModel = $this->WorkflowModels
 					->find()
-					->where($conditions)
-					->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
-
-				$workflowFilterResults = $filterQuery->all();
-					
-				// Use Workflow with filter if found otherwise use Workflow that Apply To All
-				if ($workflowFilterResults->isEmpty()) {
-					$filterQuery
-					->where($conditions, [], true)
-					->where([$this->WorkflowsFilters->aliasField('filter_id') => 0]);
-
-					$workflowResults = $filterQuery->all();
-				} else {
-					$workflowResults = $workflowFilterResults;
-				}
-
-				if (!$workflowResults->isEmpty()) {
-					$workflowId = $workflowResults->first()->workflow_id;
-				}
-
-				$workflowQuery->where([
-					$this->Workflows->aliasField('id') => $workflowId
-				]);
-			}
+					->where([
+						$this->WorkflowModels->aliasField('model') => $registryAlias
+					])
+					->first();
+			$this->workflowSetup = $workflowModel;
+		} else {
+			$workflowModel = $this->workflowSetup;
 		}
 
-		return $workflowQuery->first();
+		if (!empty($workflowModel)) {
+			// Find all Workflow setup for the model
+			$workflowIds = $this->Workflows
+				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+				->where([
+					$this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
+				])
+				->toArray();
+
+			$workflowQuery = $this->Workflows
+				->find()
+				->contain(['WorkflowSteps.WorkflowActions']);
+
+			if (empty($workflowModel->filter)) {
+				$workflowQuery->where([
+					$this->Workflows->aliasField('id IN') => $workflowIds
+				]);
+			} else {
+				// Filter key
+				list(, $base) = pluginSplit($workflowModel->filter);
+				$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+
+				$workflowId = 0;
+				if ($entity->has($filterKey)) {
+					$filterId = $entity->$filterKey;
+					$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
+
+					$filterQuery = $this->WorkflowsFilters
+						->find()
+						->where($conditions)
+						->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
+
+					$workflowFilterResults = $filterQuery->all();
+						
+					// Use Workflow with filter if found otherwise use Workflow that Apply To All
+					if ($workflowFilterResults->isEmpty()) {
+						$filterQuery
+						->where($conditions, [], true)
+						->where([$this->WorkflowsFilters->aliasField('filter_id') => 0]);
+
+						$workflowResults = $filterQuery->all();
+					} else {
+						$workflowResults = $workflowFilterResults;
+					}
+
+					if (!$workflowResults->isEmpty()) {
+						$workflowId = $workflowResults->first()->workflow_id;
+					}
+
+					$workflowQuery->where([
+						$this->Workflows->aliasField('id') => $workflowId
+					]);
+				}
+			}
+
+			return $workflowQuery->first();
+		} else {
+			return null;
+		}
 	}
 
-	public function getRecord($entity=null) {
-		$workflow = $this->getWorkflow($this->workflowSetup, $entity);
+	public function getRecord($registryAlias, $entity=null) {
+		$workflow = $this->getWorkflow($registryAlias, $entity);
 		if (!empty($workflow)) {
 			$workflowId = $workflow->id;
 			$workflowModelId = $workflow->workflow_model_id;
