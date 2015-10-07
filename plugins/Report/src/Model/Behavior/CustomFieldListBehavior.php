@@ -12,7 +12,7 @@ use Cake\ORM\Table;
 class CustomFieldListBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
-			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
+			'Model.excel.onExcelBeforeStart' => 'onExcelBeforeStart',
 		],
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
@@ -118,7 +118,7 @@ class CustomFieldListBehavior extends Behavior {
 	 */	
 	public function getCustomFields($customFormFilterTable, $filterValue=null) {
 		$condition = [];
-		if ($filterValue != null) {
+		if (!(is_null($filterValue))) {
 			$customFilterKey = $customFormFilterTable->CustomFilters->foreignKey();
 			$condition = [$customFormFilterTable->aliasField($customFilterKey) => $filterValue];
 		}
@@ -160,7 +160,7 @@ class CustomFieldListBehavior extends Behavior {
 		$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
 		$condition = [];
 
-		if ($filterKey != null) {
+		if (!(is_null($filterKey))) {
 			$condition = [
 				$table->aliasField($filterKey) => $filterValue	
 			];
@@ -173,81 +173,131 @@ class CustomFieldListBehavior extends Behavior {
 			])
 			->where($condition)
 			->toArray();
+			
+		$customFieldsTable = $customFieldValueTable->CustomFields;
+		$fieldValue = $customFieldsTable
+					->find('list', [
+						'keyField' => $customFieldValueTable->aliasField($customFieldsForeignKey),
+						'valueField' => 'field_value',
+						'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey)
+					])
+					->innerJoin(
+						[$customFieldValueTable->alias() => $customFieldValueTable->table()],
+						[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
+					)
+					->select([
+						$customFieldValueTable->aliasField($customRecordsForeignKey),
+						$customFieldValueTable->aliasField($customFieldsForeignKey),
+						'field_value' => '(GROUP_CONCAT((CASE 
+							WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
+							.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+							.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
+							.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
+							.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
+							.' END) SEPARATOR \',\'))'
+					])
+					->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
+					->hydrate(false)
+					->toArray();
+
+		// List of options
+		$optionsValues = $CustomFieldOptionsTable->find('list')->toArray();
 
 		$consolidatedValues = [];
 		foreach ($ids as $id) {
 			$fields = $customField;
 			$answer = [];
 			foreach ($fields as $field) {
-				$fieldValue = $customFieldValueTable->find()
-							->where([
-								$customFieldValueTable->aliasField($customRecordsForeignKey) => $id,
-								$customFieldValueTable->aliasField($customFieldsForeignKey) => $field->id,
-							]);
-				$fieldType = $field->field_type;
-				switch ($fieldType) {
-					case 'CHECKBOX':
-					case 'DROPDOWN':
-						$fieldValue->innerJoin(
-								[$CustomFieldOptionsTable->alias() => $CustomFieldOptionsTable->table()],
-								[$CustomFieldOptionsTable->aliasField('id').'='.$customFieldValueTable->aliasField('number_value')]
-							)
-							->select([$CustomFieldOptionsTable->aliasField('name')]);
-						$tmpAnswer = '';
-						$alias = $CustomFieldOptionsTable->alias();
-						foreach ($fieldValue->toArray() as $value) {
-							if (empty($tmpAnswer)) {
-								$tmpAnswer = $value[$alias]['name'];
-							} else {
-								$tmpAnswer = $tmpAnswer.', '.$value[$alias]['name'];
-							}
-						}
-						$answer[] = $tmpAnswer;
-						break;
-
-					default:
-						$value = $fieldValue->first();
-						if (!empty($value)) {
-							switch ($fieldType) {
-								case 'TABLE':
-								case 'STUDENT_LIST':
-									break;
-
-								case 'DATE':
-									$answer[] = $value->date_value;
-									break;
-
-								case 'TIME':
-									$answer[] = $value->time_value;
-									break;
-
-								case 'TEXTAREA':
-									$answer[] = $value->textarea_value;
-									break;
-
-								case 'NUMBER':
-									$answer[] = $value->number_value;
-									break;
-
-								case 'TEXT':
-									$answer[] = $value->text_value;
-									break;
-							}
-						} else {
-							switch ($fieldType) {
-								case 'TABLE':
-								case 'STUDENT_LIST':
-									break;
-								default:
-									$answer[] = '';
-									break;
-							}
-						}
-						break;
+				$type = strtolower($field->field_type);
+				if (method_exists($this, $type)) {
+					$ans = $this->$type($fieldValue, $id, $field->id, $optionsValues);
+					if (!(is_null($ans))) {
+						$answer[] = $ans;
+					}
 				}
 			}
 			$consolidatedValues[] = $answer;
 		}
 		return $consolidatedValues;
 	}
+
+	public function text($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			return $data[$recordId][$fieldId];
+		} else {
+			return '';
+		}
+	}
+
+	public function number($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			return $data[$recordId][$fieldId];
+		} else {
+			return '';
+		}
+	}
+	
+	public function textarea($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			return $data[$recordId][$fieldId];
+		} else {
+			return '';
+		}
+	}
+
+	public function dropdown($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			if (isset($options[$data[$recordId][$fieldId]])) {
+				return $options[$data[$recordId][$fieldId]];
+			} else {
+				return '';
+			}
+		} else {
+			return '';
+		}
+	}
+	
+	public function checkbox($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			$values = explode(",", $data[$recordId][$fieldId]);
+			$returnValue = '';
+			foreach ($values as $value) {
+				if (isset($options[$value])) {
+					if (empty($returnValue)) {
+						$returnValue = $options[$value];
+					} else {
+						$returnValue = $returnValue.', '.$options[$value];						
+					}
+				}
+			}
+			return $returnValue;
+		} else {
+			return '';
+		}
+	}
+
+	public function date($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			return $data[$recordId][$fieldId];
+		} else {
+			return '';
+		}
+	}
+
+	public function time($data, $recordId, $fieldId, $options=[]) {
+		if (isset($data[$recordId][$fieldId])) {
+			return $data[$recordId][$fieldId];
+		} else {
+			return '';
+		}
+	}
+
+	public function student_list($data, $recordId, $fieldId, $options=[]) {
+		return null;
+	}
+
+	public function table($data, $recordId, $fieldId, $options=[]) {
+		return null;
+	}
+
 }
