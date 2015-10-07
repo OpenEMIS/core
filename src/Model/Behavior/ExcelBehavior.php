@@ -164,7 +164,13 @@ class ExcelBehavior extends Behavior {
 			$percentCount = intval($count / 100);
 			$pages = ceil($count / $this->config('limit'));
 
-			if ($count == 1 && count($sheet) == 1) {
+			if (isset($sheet['orientation'])) {
+				if ($sheet['orientation'] == 'landscape') {
+					$this->config('orientation', 'landscape');
+				} else {
+					$this->config('orientation', 'portrait');
+				}
+			} elseif ($count == 1) {
 				$this->config('orientation', 'portrait');
 			}
 
