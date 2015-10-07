@@ -297,6 +297,17 @@ class StaffTable extends AppTable {
 				$newEntity = $this->newEntity($entity->toArray());
 				if (!$this->save($newEntity)) {
 						
+				} else {
+					$url = [
+						'plugin' => 'Institution', 
+						'controller' => 'Institutions', 
+						'action' => 'Staff', 
+						'0' => 'view', 
+						'1' => $newEntity->id
+					];
+					$url = array_merge($url, $this->ControllerAction->params());
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
 				}
 			}
 		}
