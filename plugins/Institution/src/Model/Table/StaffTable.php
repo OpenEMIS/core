@@ -71,7 +71,7 @@ class StaffTable extends AppTable {
 			->add('institution_site_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
-			->notEmpty('role');
+			->requirePresence('role');
 		;
 	}
 
@@ -175,7 +175,7 @@ class StaffTable extends AppTable {
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_site_position_id');
-		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
+		$this->ControllerAction->field('role');
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 
@@ -438,28 +438,16 @@ class StaffTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$error = false;
-
-		// Validation position
-		if (empty($data[$this->alias()]['institution_site_position_id'])) {
-			$this->Alert->error('Institution.InstitutionSiteStaff.noInstitutionSitePosition');
-			$error = true;
-		} elseif (!$this->checkFTE($data[$this->alias()])) {
-			$this->Alert->error('Institution.InstitutionSiteStaff.noFTEAddOnNew');
-			$error = true;
-		} 
-
-		// Validate role
-		if (empty($data[$this->alias()]['role'])) {
-			$this->Alert->error('Institution.InstitutionSiteStaff.noSecurityRole');
-			$error = true;
-		}
-
-		if (!$error) {
+		$options['validate'] = true;
+		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+		$errorCount = count($patch->errors());
+		if ($errorCount == 0) {
 			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
 			$event->stopPropagation();
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
 			return $this->controller->redirect($action);
+		} else {
+			$this->Alert->error('general.add.failed', ['reset' => true]);
 		}
 	}
 
