@@ -29,7 +29,6 @@ class WorkflowBehavior extends Behavior {
 	private $model = null;
 	private $currentAction;
 
-	// private $setupWorkflow = false;
 	private $workflowSetup = null;
 	private $workflowRecord = null;
 
@@ -49,15 +48,23 @@ class WorkflowBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		// priority has to be set at 100 so that method(s) in model will be triggered first
-		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
-		$events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 100];
-		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
-		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 100];
+		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 100];
+		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 100];
+		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
+		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 100];
 		return $events;
 	}
 
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// to delete from workflow_records and workflow_transitions table
+	}
+
+	public function onGetWorkflowStatus(Event $event, Entity $entity) {
+		return '<span class="status highlight">' . $entity->workflow_status . '</span>';
+	}
+
 	public function beforeAction(Event $event) {
-		// initialize workflow
+		// Initialize workflow
 		$this->controller = $this->_table->controller;
 		$this->model = $this->controller->ControllerAction->model();
 		$this->currentAction = $this->controller->ControllerAction->action();
@@ -145,12 +152,14 @@ class WorkflowBehavior extends Behavior {
 				$fieldOrder[] = 'workflow_transitions';  // Set workflow_transitions to last
 				$this->_table->ControllerAction->setFieldOrder($fieldOrder);
 				// End
+			} else {
+				// Workflow is not configured
 			}
 		}
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		// unset edit buttons and add more actions buttons
+		// Unset edit buttons and add action buttons
 		if (!empty($this->workflowSetup)) {
 			$isEditable = false;
 
@@ -160,7 +169,7 @@ class WorkflowBehavior extends Behavior {
 				$actionButtons = [];
 				if (!empty($workflowStep)) {
 					// Enabled edit button only when login user in approval role for the step and that step is editable
-					if ($workflowStep->is_editable) {
+					if ($workflowStep->is_editable == 1) {
 						$isEditable = true;
 					}
 					// End
@@ -222,11 +231,42 @@ class WorkflowBehavior extends Behavior {
 					}
 				}
 
-				if (!$isEditable) {
-					if ($toolbarButtons->offsetExists('edit')) {
-						unset($toolbarButtons['edit']);
-					}
+				if ($toolbarButtons->offsetExists('edit') && !$isEditable) {
+					unset($toolbarButtons['edit']);
 				}
+
+				// More Actions
+				$moreButtonLink = [];
+				if (!empty($actionButtons)) {
+					$moreButtonLink = [
+						'title' => __('More Actions') . '<span class="caret-down"></span>',
+						'url' => '#',
+						'options' => [
+							'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
+							'id' => 'action-menu',
+							'class' => 'btn btn-default action-toggle outline-btn',
+							'data-toggle' => 'dropdown',
+							'aria-expanded' => true
+						]
+					];
+
+					$moreButton = [];
+					$moreButton['type'] = 'element';
+					$moreButton['element'] = 'Workflow.buttons';
+					$moreButton['data'] = [
+						'buttons' => $actionButtons
+					];
+					$moreButton['options'] = [];
+
+					$toolbarButtons['more'] = $moreButton;
+				}
+				$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
+				// End
+
+				// Modal
+				$modal = $this->getModalOptions();
+				$this->_table->controller->set('modal', $modal);
+				// End
 			}
 		}
 	}
@@ -238,15 +278,22 @@ class WorkflowBehavior extends Behavior {
 
 			$workflowRecord = $this->getRecord($entity);
 			if (!empty($workflowRecord)) {
+				$isEditable = false;
+				$isRemovable = false;
 				$workflowStep = $this->getWorkflowStep($workflowRecord);
 				if (!empty($workflowStep)) {
-					if (array_key_exists('edit', $buttons) || $workflowStep->is_editable == 0) {
-						unset($buttons['edit']);
-					}
-					if (array_key_exists('remove', $buttons) || $workflowStep->is_removable == 0) {
-						unset($buttons['remove']);
-					}
+					$isEditable = $workflowStep->is_editable == 1 ? true : false;
+					$isRemovable = $workflowStep->is_removable == 1 ? true : false;
 				}
+
+				if (array_key_exists('edit', $buttons) && !$isEditable) {
+					unset($buttons['edit']);
+				}
+				if (array_key_exists('remove', $buttons) && !$isRemovable) {
+					unset($buttons['remove']);
+				}
+			} else {
+				// Workflow is not configured
 			}
 
 			return $buttons;
@@ -396,6 +443,112 @@ class WorkflowBehavior extends Behavior {
 			return $query->first();
 		} else {
 			return null;
+		}
+	}
+
+	public function getModalOptions() {
+		$workflowRecordId = $this->workflowRecord->id;  // Current Workflow Record
+		$workflowStepId = $this->workflowRecord->workflow_step->id; // Latest Workflow Step
+
+		$alias = $this->WorkflowTransitions->alias();
+		$fields = [
+			$alias.'.prev_workflow_step_id' => [
+				'type' => 'hidden',
+				'value' => $workflowStepId,
+			],
+			$alias.'.workflow_step_id' => [
+				'type' => 'hidden',
+				'value' => 0,
+				'class' => 'workflowtransition-step-id'
+			],
+			$alias.'.workflow_action_id' => [
+				'type' => 'hidden',
+				'value' => 0,
+				'class' => 'workflowtransition-action-id'
+			],
+			$alias.'.workflow_record_id' => [
+				'type' => 'hidden',
+				'value' => $workflowRecordId
+			],
+			$alias.'.comment_required' => [
+				'type' => 'hidden',
+				'value' => 0,
+				'class' => 'workflowtransition-comment-required'
+			]
+		];
+
+		$content = '';
+		$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+		$content .= '<div class="input string"><label>'.__('Action').'</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
+		$content .= '<BR><BR>';
+		$content .= '<div class="input string"><label>'.__('Next Step').'</label><input name="WorkflowTransitions[step_name]" maxlength="250" value="" type="string" class="workflowtransition-step-name" readonly="readonly" disabled="disabled"></div>';
+		$content .= '<BR><BR>';
+		$content .= '<div class="input textarea"><label>'.__('Comment').'</label><textarea name="WorkflowTransitions[comment]" rows="5" class="workflowtransition-comment"></textarea></div>';
+		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
+
+		$buttons = [
+			'<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
+		];
+
+		$modal = [
+			'id' => 'workflowTansition',
+			'fields' => $fields,
+			'title' => __('Add Comment'),
+			'content' => $content,
+			'formOptions' => [
+				'class' => 'form-horizontal',
+				'url' => $this->_table->ControllerAction->url('processWorkflow')
+			],
+			'buttons' => $buttons
+		];
+
+		return $modal;
+	}
+
+	public function processWorkflow() {
+		$request = $this->_table->controller->request;
+		if ($request->is(['post', 'put'])) {
+			$requestData = $request->data;
+
+			// Insert into workflow_transitions.
+			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
+			if ($this->WorkflowTransitions->save($entity)) {
+				// Trigger event here
+				$workflowAction = $this->WorkflowActions
+					->find()
+					->where([
+						$this->WorkflowActions->aliasField('id') => $entity->workflow_action_id
+					])
+					->first();
+
+				if (!empty($workflowAction->event_key)) {
+					$eventKey = $workflowAction->event_key;
+					$subject = $this->_table;
+
+					$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
+					$id = $workflowRecord->model_reference;
+
+					$event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
+					if ($event->isStopped()) { return $event->result; }
+				}
+			} else {
+				$this->log($entity->errors(), 'debug');
+			}
+			// End
+
+			// Update workflow_step_id in workflow_records.
+			$workflowStepId = $entity->workflow_step_id;
+			$workflowRecordId = $entity->workflow_record_id;
+			$this->WorkflowRecords->updateAll(
+				['workflow_step_id' => $workflowStepId],
+				['id' => $workflowRecordId]
+			);
+			// End
+
+			// Redirect
+			$action = $this->_table->ControllerAction->url('view');
+			return $this->_table->controller->redirect($action);
+			// End
 		}
 	}
 }
