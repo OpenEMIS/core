@@ -245,6 +245,13 @@ class ImportBehavior extends Behavior {
 	 * @return Response       		Response object
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		/**
+		 * to be reviewed...
+		 */
+		ini_set('max_execution_time', 90);
+		/**
+		 */
+
 		return function ($model, $entity) {
 			$errors = $entity->errors();
 			if (!empty($errors)) {
@@ -385,7 +392,7 @@ class ImportBehavior extends Behavior {
 					// } else {
 					}
 	
-					// $model->log('ImportBehavior: '.$row.' records imported', 'info');
+					$model->log('ImportBehavior: '.$row.' records imported', 'info');
 
 				} // for ($row = 1; $row <= $highestRow; ++$row)
 
