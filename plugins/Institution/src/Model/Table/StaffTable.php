@@ -441,7 +441,7 @@ class StaffTable extends AppTable {
 		$options['validate'] = true;
 		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($patch->errors());
-		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('security_user_id', $patch->errors))) {
+		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('security_user_id', $patch->errors()))) {
 			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
 			$event->stopPropagation();
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
