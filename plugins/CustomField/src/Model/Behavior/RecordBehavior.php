@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\ORM\Table;
 
 class RecordBehavior extends Behavior {
 	protected $_contain = ['CustomFieldValues', 'CustomTableCells'];
@@ -15,7 +16,8 @@ class RecordBehavior extends Behavior {
 			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
 			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
 			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction',
-			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave'
+			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave',
+			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
 		],
 		'model' => null,
 		'behavior' => null,
@@ -56,6 +58,7 @@ class RecordBehavior extends Behavior {
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 
 		$this->CustomFields = $this->CustomFieldValues->CustomFields;
+		$this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
 		$this->CustomForms = $this->CustomFields->CustomForms;
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
@@ -76,6 +79,29 @@ class RecordBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
+    }
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    	$recordId = $settings['id'];
+    	$entity = $this->_table->get($recordId);
+    	$spreadSheetValues = $this->buildExcelCustomFieldsValues($entity);
+
+    	// The table answers will be place on different spreadsheet
+    	foreach ($spreadSheetValues as $headerValues) {
+	    	$header = [];
+	    	$values = [];
+	    	foreach ($headerValues  as $value) {
+	    		$header[] = $value['label'];
+	    		$values[] = $value['value'];
+	    	}
+	    	$sheets[] = [
+	    		'name' => $this->_table->alias(),
+				'table' => $this->_table,
+				'query' => $this->_table->find(),
+				'additionalHeader' => $header,
+				'additionalData' => $values,
+	    	];
+    	}
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -273,11 +299,11 @@ class RecordBehavior extends Behavior {
 				->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
 
 			if (!empty($filter)) {
-				$modelAlias = $this->_table->ControllerAction->getModel($filter)['model'];
+				$modelAlias = $this->getModel($filter)['model'];
 				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 
 				$filterId = $entity->$filterKey;
-				$filterModelAlias = $this->_table->ControllerAction->getModel($this->CustomFormsFilters->registryAlias())['model'];
+				$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
 				$customFormQuery
 					->join([
 						'table' => Inflector::tableize($filterModelAlias),
@@ -329,6 +355,78 @@ class RecordBehavior extends Behavior {
 			]);
 
 		return $customFieldQuery;
+	}
+
+	public function getModel($model) {
+		$split = explode('.', $model);
+		$plugin = null;
+		$modelClass = $model;
+		if (count($split) > 1) {
+			$plugin = $split[0];
+			$modelClass = $split[1];
+		}
+		return ['plugin' => $plugin, 'model' => $modelClass];
+	}
+
+	public function buildExcelCustomFieldsValues($entity) {
+		$customFieldQuery = $this->getCustomFieldQuery($entity);
+		$labelValueArray = [];
+		if (isset($customFieldQuery)) {
+
+			$customFields = $customFieldQuery
+				->toArray();
+
+			$sheetCount = 0;
+			foreach ($customFields as $customFieldOrder => $customField) {
+				$_customField = $customField->custom_field;
+				$_field_type = $_customField->field_type;
+				$_name = $_customField->name;
+				$_value = null;
+				if (isset($entity->id)) {
+					$fieldValueData = $this->CustomFieldTypes
+						->find('all')
+						->select([$this->CustomFieldTypes->aliasField('value')])
+						->where([$this->CustomFieldTypes->aliasField('code') => $_field_type])
+						->first();
+					$fieldValue = $fieldValueData->value;
+
+					$results = $this->CustomFieldValues
+						->find('all')
+						->select([
+							$this->CustomFieldValues->aliasField('id'),
+							$this->CustomFieldValues->aliasField($fieldValue),
+						])
+						->where([
+							$this->CustomFieldValues->aliasField($this->config('fieldKey')) => $_customField->id,
+							$this->CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id
+						])
+						->all();
+
+					if (!$results->isEmpty()) {
+						switch ($_field_type) {
+							case 'CHECKBOX':
+							case 'DROPDOWN':
+								$data = $results->toArray();
+								foreach ($data as $obj) {
+									$name = $this->CustomFieldOptions->get($obj->$fieldValue)->name;
+									if (empty($_value)) {
+										$_value = $name;
+									} else {
+										$_value = $_value.','.$name;									
+									}
+								}
+								break;
+							default:
+								$data = $results->first();
+								$_value = $data->$fieldValue;
+								break;
+						}
+						$labelValueArray[0][] = ['label'=> $_name, 'value' => $_value];
+					}
+				}
+			}
+		}
+		return $labelValueArray;
 	}
 
 	public function buildCustomFields($entity) {
