@@ -39,18 +39,14 @@ class ImportStudentsTable extends AppTable {
 
 		if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
 			$tempRow['duplicates'] = true;
-			$tempRow['entity'] = $this->Students->newEntity();
 			return true;
 		}
 
-		// $tempRow['entity'] must be assigned!!!
 		$user = $this->Students->find()->where(['openemis_no'=>$code])->first();
 		if (!$user) {
 			$tempRow['entity'] = $this->Students->newEntity();
 			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
 			$tempRow['is_student'] = 1;
-		} else {
-			$tempRow['entity'] = $user;
 		}
 	}
 

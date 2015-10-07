@@ -40,16 +40,12 @@ class ImportInstitutionsTable extends AppTable {
 
 		if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
 			$tempRow['duplicates'] = true;
-			$tempRow['entity'] = $this->Institutions->newEntity();
 			return true;
 		}
 
-		// $tempRow['entity'] must be assigned!!!
 		$institution = $this->Institutions->find()->where(['code'=>$code])->first();
 		if (!$institution) {
 			$tempRow['entity'] = $this->Institutions->newEntity();
-		} else {
-			$tempRow['entity'] = $institution;
 		}
 	}
 
