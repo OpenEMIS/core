@@ -636,6 +636,70 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkFTE($field, array $globalData) {
-		return TableRegistry::get('Institution.Staff')->checkFTE($globalData['data']);
+		if (!empty($globalData['data']['start_date'])) {
+			$date = new DateTime($globalData['data']['start_date']);
+			$startDate = date_format($date, 'Y-m-d');
+		} else {
+			$startDate = null;
+		}
+
+		if (!empty($globalData['data']['end_date'])) {
+			$date = new DateTime($globalData['data']['end_date']);
+			$endDate = date_format($date, 'Y-m-d');
+		} else {
+			$endDate = null;
+		}
+
+
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$identicalPositionHolders = $InstitutionStaff->find()
+			->where(
+				[
+					$InstitutionStaff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id']
+					
+				]
+			)
+			;
+
+		// no id this is NOT a add method
+		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
+			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['id']]);
+		}
+
+		$dateCondition = [];
+		// start and end date is of the new entry
+		$dateCondition['OR'] = [];
+		if (empty($endDate)) {
+			// current position has no end date
+			$dateCondition['OR'][] = 'end_date IS NULL';
+			$dateCondition['OR'][] = [
+				'end_date IS NOT NULL',
+				'end_date >= ' => $startDate
+			];
+		} else {
+			// current position HAS end date
+			$dateCondition['OR'][] = [
+				'end_date IS NULL',
+				'start_date'.' <= ' => $endDate
+			];
+			$dateCondition['OR']['OR'] = [];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' >= ' => $startDate, 'start_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
+		}
+
+		$identicalPositionHolders->where($dateCondition);
+
+		$FTEused = 0;
+		if ($identicalPositionHolders->count()>0) {
+			// need to tally all the FTE
+			foreach ($identicalPositionHolders->toArray() as $key => $value) {
+				$FTEused += $value->FTE;
+			}
+		}
+
+		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
+
+		return $validationResult;
 	}
 }
