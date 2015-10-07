@@ -13,6 +13,7 @@ use Cake\Controller\Controller;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Inflector;
+use DateTime;
 
 
 class StaffTable extends AppTable {
@@ -70,6 +71,7 @@ class StaffTable extends AppTable {
 			->add('institution_site_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
+			->notEmpty('role');
 		;
 	}
 
@@ -173,7 +175,7 @@ class StaffTable extends AppTable {
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_site_position_id');
-		$this->ControllerAction->field('role');
+		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 
@@ -343,7 +345,7 @@ class StaffTable extends AppTable {
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
 			}
-			$roleOptions = [0 => '-- ' . __('Select Role') . ' --'];
+			$roleOptions = ['' => '-- ' . __('Select Role') . ' --'];
 			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
 			$attr['options'] = $roleOptions;
 		}
@@ -436,14 +438,96 @@ class StaffTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$error = false;
+
+		// Validation position
 		if (empty($data[$this->alias()]['institution_site_position_id'])) {
 			$this->Alert->error('Institution.InstitutionSiteStaff.noInstitutionSitePosition');
-		} else {
+			$error = true;
+		} elseif (!$this->checkFTE($data[$this->alias()])) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.noFTEAddOnNew');
+			$error = true;
+		} 
+
+		// Validate role
+		if (empty($data[$this->alias()]['role'])) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.noSecurityRole');
+			$error = true;
+		}
+
+		if (!$error) {
 			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
 			$event->stopPropagation();
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
 			return $this->controller->redirect($action);
 		}
+	}
+
+	public function checkFTE(array $globalData) {
+		if (!empty($globalData['start_date'])) {
+			$date = new DateTime($globalData['start_date']);
+			$startDate = date_format($date, 'Y-m-d');
+		} else {
+			$startDate = null;
+		}
+
+		if (!empty($globalData['end_date'])) {
+			$date = new DateTime($globalData['end_date']);
+			$endDate = date_format($date, 'Y-m-d');
+		} else {
+			$endDate = null;
+		}
+		
+		$InstitutionStaff = $this;
+		$identicalPositionHolders = $InstitutionStaff->find()
+			->where(
+				[
+					$InstitutionStaff->aliasField('institution_site_position_id') => $globalData['institution_site_position_id']
+					
+				]
+			)
+			;
+
+		// no id this is NOT a add method
+		if (array_key_exists('id', $globalData) && !empty($globalData['id'])) {
+			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['id']]);
+		}
+
+		$dateCondition = [];
+		// start and end date is of the new entry
+		$dateCondition['OR'] = [];
+		if (empty($endDate)) {
+			// current position has no end date
+			$dateCondition['OR'][] = 'end_date IS NULL';
+			$dateCondition['OR'][] = [
+				'end_date IS NOT NULL',
+				'end_date >= ' => $startDate
+			];
+		} else {
+			// current position HAS end date
+			$dateCondition['OR'][] = [
+				'end_date IS NULL',
+				'start_date'.' <= ' => $endDate
+			];
+			$dateCondition['OR']['OR'] = [];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' >= ' => $startDate, 'start_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
+			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
+		}
+
+		$identicalPositionHolders->where($dateCondition);
+
+		$FTEused = 0;
+		if ($identicalPositionHolders->count()>0) {
+			// need to tally all the FTE
+			foreach ($identicalPositionHolders->toArray() as $key => $value) {
+				$FTEused += $value->FTE;
+			}
+		}
+
+		$validationResult = (($FTEused+$globalData['FTE']) <= 1);
+
+		return $validationResult;
 	}
 
 	public function afterAction(Event $event) {
