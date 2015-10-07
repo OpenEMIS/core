@@ -184,15 +184,12 @@ class AppTable extends Table {
 				$label = str_replace(' Id', '', $label);
 			}
 		}
-		if (substr($label, -1) == ')') {
-			$label = $label.' ';
-		}
 		return $label;
 	}
 
 	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return __($this->getFieldLabel($module, $col, $language));
+		return $this->getFieldLabel($module, $col, $language);
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
