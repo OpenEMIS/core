@@ -21,8 +21,16 @@ class InstitutionSurveysTable extends AppTable {
 	const COMPLETED = 2;
 
 	private $workflowEvents = [
-		'Workflow.onApprove' => 'OnApprove',
-		'Workflow.onReject' => 'OnReject'
+		[
+			'value' => 'Workflow.onApprove',
+			'text' => 'On Approve, update Survey Status from Draft to Completed.',
+			'method' => 'OnApprove'
+		],
+		[
+			'value' => 'Workflow.OnReject',
+			'text' => 'On OnReject, update Survey Status from Completed to Draft.',
+			'method' => 'OnReject'
+		]
 	];
 
 	public function initialize(array $config) {
@@ -49,15 +57,14 @@ class InstitutionSurveysTable extends AppTable {
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-
 	}
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	$events['Workflow.getEvents'] = 'getWorkflowEvents';
-    	foreach ($this->workflowEvents as $eventKey => $name) {
-    		$events[$eventKey] = $name;
+    	foreach ($this->workflowEvents as $event) {
+    		$events[$event['value']] = $event['method'];
     	}
     	return $events;
     }
@@ -224,9 +231,6 @@ class InstitutionSurveysTable extends AppTable {
 		}
 
 		if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
-			// if (empty($tabElements)) {
-			// 	$selectedStatus = self::COMPLETED;
-			// }
 			$tabElements['Completed'] = [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status='.self::COMPLETED],
 				'text' => __('Completed')
@@ -300,7 +304,7 @@ class InstitutionSurveysTable extends AppTable {
 		$surveyRecord = $this->get($id);
 
 		if ($surveyRecord->status == self::COMPLETED) {
-			$entity = $this->newEntity(['id' => $id, 'status' => self::NEW_SURVEY], ['validate' => false]);
+			$entity = $this->newEntity(['id' => $id, 'status' => self::DRAFT], ['validate' => false]);
 			if ($this->save($entity)) {
 				$this->Alert->success('InstitutionSurveys.reject.success');
 			} else {
@@ -356,16 +360,25 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$url = null;
 		if ($entity->status == self::DRAFT) {
-			$this->Alert->success('InstitutionSurveys.save.draft');
+			$url = $this->ControllerAction->url('edit');
+			$this->Alert->success('InstitutionSurveys.save.draft', ['reset' => true]);
 		} else if ($entity->status == self::COMPLETED) {
-			$this->Alert->success('InstitutionSurveys.save.final');
+			// add logic to insert workflow_records and workflow_transitions to Submit For Approval
+			$workflowRecord = $this->getRecord($entity);
+			pr($entity);
+			pr($workflowRecord);die;
+			// End
+
+			$url = $this->ControllerAction->url('index');
+			$this->Alert->success('InstitutionSurveys.save.final', ['reset' => true]);
 		}
 
-		$event->stopPropagation();
-		// $action = $this->ControllerAction->buttons['index']['url'];
-		$action = $this->ControllerAction->url('index');
-		return $this->controller->redirect($action);
+		if (!is_null($url)) {
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+		}
 	}
 
 	public function onApprove(Event $event, $id=null) {
@@ -373,6 +386,8 @@ class InstitutionSurveysTable extends AppTable {
 			['status' => self::COMPLETED],
 			['id' => $id]
 		);
+
+		$this->Alert->success('InstitutionSurveys.save.final');
 	}
 
 	public function OnReject(Event $event, $id=null) {
@@ -380,6 +395,8 @@ class InstitutionSurveysTable extends AppTable {
 			['status' => self::DRAFT],
 			['id' => $id]
 		);
+
+		$this->Alert->success('InstitutionSurveys.reject.success');
 	}
 
 	public function _getSelectOptions() {
