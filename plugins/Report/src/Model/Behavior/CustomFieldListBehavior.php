@@ -57,6 +57,7 @@ class CustomFieldListBehavior extends Behavior {
 	    		'name' => __($name),
 				'table' => $this->_table,
 				'query' => $this->_table->find()->where([$this->_table->aliasField($filterKey) => $key]),
+				'orientation' => 'landscape',
 				'additionalHeader' => $header,
 				'additionalData' => $data,
 	    	];
