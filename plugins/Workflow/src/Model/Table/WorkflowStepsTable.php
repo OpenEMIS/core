@@ -29,6 +29,7 @@ class WorkflowStepsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'joinTable' => 'workflow_steps_roles',
@@ -224,7 +225,7 @@ class WorkflowStepsTable extends AppTable {
 		// End
 
 		// Build Event Options
-		$eventOptions = $this->getEvents($entity);
+		$eventOptions = $this->getEvents($entity, false);
 		$this->controller->set('eventOptions', $eventOptions);
 		// End
 	}
@@ -281,7 +282,7 @@ class WorkflowStepsTable extends AppTable {
 		return $buttons;
 	}
 
-	public function getEvents(Entity $entity) {
+	public function getEvents(Entity $entity, $listOnly=true) {
 		$eventOptions = [];
 
 		// trigger Workflow.getEvents to retrieve the list of available events for the model
@@ -302,14 +303,29 @@ class WorkflowStepsTable extends AppTable {
 			$events = $subjectEvent->result;
 			if (empty($events)) {
 				$eventOptions = [
-					0 => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
+					0 => [
+						'value' => '',
+						'text' => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
+					]
 				];
 			} else {
-				$eventOptions = [
-					0 => __('-- Select Event --')
-				];
-				foreach ($events as $key => $event) {
-					$eventOptions[$key] = $event;
+				if ($listOnly) {
+					$eventOptions = [
+						0 => __('-- Select Event --')
+					];
+					foreach ($events as $event) {
+						$eventOptions[$event['value']] = $event['text'];
+					}
+				} else {
+					$eventOptions = [
+						0 => [
+							'value' => '',
+							'text' => __('-- Select Event --')
+						]
+					];
+					foreach ($events as $event) {
+						$eventOptions[] = $event;
+					}
 				}
 			}
 		}
