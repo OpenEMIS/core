@@ -122,10 +122,11 @@ class CustomFieldListBehavior extends Behavior {
 			$customFilterKey = $customFormFilterTable->CustomFilters->foreignKey();
 			$condition = [$customFormFilterTable->aliasField($customFilterKey) => $filterValue];
 		}
-		$customFormFilters = $customFormFilterTable->find()
-				->where($condition)
-				->contain(['CustomForms', 'CustomForms.CustomFields'])
-				->first();
+		$customFormFilters = $customFormFilterTable
+			->find()
+			->where($condition)
+			->contain(['CustomForms', 'CustomForms.CustomFields'])
+			->first();
 		$customFields = [];
 		$header = null;
 		if (isset($customFormFilters['custom_form']['custom_fields'])) {
@@ -166,6 +167,7 @@ class CustomFieldListBehavior extends Behavior {
 			];
 		}
 
+		// List of record ids
 		$ids = $table
 			->find('list', [
 				'keyField' => 'id',
@@ -173,32 +175,38 @@ class CustomFieldListBehavior extends Behavior {
 			])
 			->where($condition)
 			->toArray();
-			
+
+		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
+
+		// Getting the custom field values group by the record id, and then group by the field ids
+		// Record with similar record id and field ids will be group concat together
+		// For example: for checkbox, record id: 1, field id: 1, value: 1 and record id: 1, field id: 1, value: 2 will be
+		// group as record id: 1, field id: 1, value: 1,2
 		$fieldValue = $customFieldsTable
-					->find('list', [
-						'keyField' => $customFieldValueTable->aliasField($customFieldsForeignKey),
-						'valueField' => 'field_value',
-						'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey)
-					])
-					->innerJoin(
-						[$customFieldValueTable->alias() => $customFieldValueTable->table()],
-						[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
-					)
-					->select([
-						$customFieldValueTable->aliasField($customRecordsForeignKey),
-						$customFieldValueTable->aliasField($customFieldsForeignKey),
-						'field_value' => '(GROUP_CONCAT((CASE 
-							WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
-							.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
-							.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
-							.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
-							.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
-							.' END) SEPARATOR \',\'))'
-					])
-					->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
-					->hydrate(false)
-					->toArray();
+			->find('list', [
+				'keyField' => $customFieldValueTable->aliasField($customFieldsForeignKey),
+				'valueField' => 'field_value',
+				'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey)
+			])
+			->innerJoin(
+				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
+				[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
+			)
+			->select([
+				$customFieldValueTable->aliasField($customRecordsForeignKey),
+				$customFieldValueTable->aliasField($customFieldsForeignKey),
+				'field_value' => '(GROUP_CONCAT((CASE 
+					WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
+					.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+					.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
+					.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
+					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
+					.' END) SEPARATOR \',\'))'
+			])
+			->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
+			->hydrate(false)
+			->toArray();
 
 		// List of options
 		$optionsValues = $CustomFieldOptionsTable->find('list')->toArray();
@@ -208,6 +216,7 @@ class CustomFieldListBehavior extends Behavior {
 			$fields = $customField;
 			$answer = [];
 			foreach ($fields as $field) {
+				// Handle existing field types, if there are new field types please add another function for it
 				$type = strtolower($field->field_type);
 				if (method_exists($this, $type)) {
 					$ans = $this->$type($fieldValue, $id, $field->id, $optionsValues);
