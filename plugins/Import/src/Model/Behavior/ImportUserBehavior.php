@@ -42,25 +42,17 @@ class ImportUserBehavior extends Behavior {
 	
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->openemis_no;
-		// $this->_table->log('ImportUserBehavior onImportUpdateUniqueKeys: ', 'info');
 	}
 
 	public function getNewOpenEmisNo($importedUniqueCodes, $row) {
-		// $this->_table->log('ImportUserBehavior getNewOpenEmisNo: '.$row, 'info');
-
 		$importedCodes = $importedUniqueCodes->getArrayCopy();
 		if (count($importedCodes)>0) {
 			$prefix = $this->config('prefix');
 			$val = reset($importedCodes);
 			$val = $prefix . (intval(substr($val, strlen($prefix))) + $row);
 		} else {
-			// $this->_table->log('ImportUserBehavior getNewOpenEmisNo get from table: '.$row, 'info');
 			$model = $this->config('plugin');
 			$val = $this->Users->getUniqueOpenemisId(['model' => $model]);
-			// if (empty($val)) {
-			// 	sleep(1);
-			// 	$val = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
-			// }
 		}
 		return $val;
 	}
