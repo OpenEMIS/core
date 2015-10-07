@@ -4,8 +4,8 @@ INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VAL
  ('StudentFees', 'openemis_no', 'OpenEMIS ID', '1', '2015-08-21 12:48:18'),
  ('InstitutionFees', 'total', 'Total Fee', '1', '2015-08-21 12:48:18');
 
-UPDATE `labels` set `field`='amount_paid', `en`='Amount Paid' WHERE `module`='StudentFees' AND `field`='paid';
-UPDATE `labels` set `field`='outstanding_fee', `en`='Outstanding Fee' WHERE `module`='StudentFees' AND `field`='outstanding';
+UPDATE `labels` set `field`='amount_paid', `field_name`='Amount Paid' WHERE `module`='StudentFees' AND `field`='paid';
+UPDATE `labels` set `field`='outstanding_fee', `field_name`='Outstanding Fee' WHERE `module`='StudentFees' AND `field`='outstanding';
 
 ALTER TABLE `student_fees` 	CHANGE `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users', 
 							CHANGE `institution_site_fee_id` `institution_fee_id` INT(11) NOT NULL;
