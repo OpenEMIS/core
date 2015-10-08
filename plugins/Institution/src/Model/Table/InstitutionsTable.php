@@ -86,28 +86,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
+        $this->addBehavior('Import.ImportLink');
 
-
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		switch ($action) {
-			case 'index':
-				$toolbarButtons['import'] = $toolbarButtons['add'];
-				$toolbarButtons['import']['url']['action'] = 'Import';
-				$toolbarButtons['import']['attr']['title'] = __('Import');
-				$toolbarButtons['import']['label'] = '<i class="fa kd-import"></i>';
-				break;
-		}
 	}
 
 	public function onExcelGenerate(Event $event, $writer, $settings) {
