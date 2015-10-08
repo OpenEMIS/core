@@ -22,6 +22,12 @@ class StaffTable extends AppTable  {
 			'pages' => false
 		]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.CustomFieldList', [
+			'model' => 'Staff.Staff',
+			'formFilterClass' => null,
+			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'condition' => [$this->aliasField('is_staff') => 1]
+		]);
 	}
 
 	public function beforeAction(Event $event) {
