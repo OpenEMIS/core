@@ -29,7 +29,7 @@ class SurveyComponent extends Component {
 
 		$status = self::COMPLETED;
 		if ($currentAction == 'index') {
-			$status = $this->controller->request->query('status');
+			$status = !is_null($this->controller->request->query('status')) ? $this->controller->request->query('status') : $status;
 		} else if ($currentAction == 'view') {
 			$recordId = next($paramsPass);
 			$Surveys = TableRegistry::get($this->config('model'));

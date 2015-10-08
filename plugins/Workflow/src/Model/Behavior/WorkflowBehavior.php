@@ -57,7 +57,11 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		// to delete from workflow_records and workflow_transitions table
+		// To delete from records and transitions table
+		if ($this->initWorkflow) {
+			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
+			$this->WorkflowRecords->delete($workflowRecord);
+		}
 	}
 
 	public function onGetWorkflowStatus(Event $event, Entity $entity) {
@@ -71,7 +75,7 @@ class WorkflowBehavior extends Behavior {
 		$this->currentAction = $this->controller->ControllerAction->action();
 		$attachWorkflow = $this->controller->Workflow->attachWorkflow;
 
-		if ($attachWorkflow && !is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'processWorkflow'])) {
+		if ($attachWorkflow && !is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
 			$this->initWorkflow = true;
 		}
 	}
@@ -227,7 +231,7 @@ class WorkflowBehavior extends Behavior {
 					}
 				}
 
-				if ($toolbarButtons->offsetExists('edit') && !$isEditable) {
+				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
 					unset($toolbarButtons['edit']);
 				}
 
@@ -270,30 +274,31 @@ class WorkflowBehavior extends Behavior {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		// check line by line, whether to show / hide the action buttons
 		if ($this->initWorkflow) {
-			// pr('initWorkflow: ' . $this->initWorkflow);die;
-			$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+			if (!$this->_table->AccessControl->isAdmin()) {
+				$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 
-			$workflowRecord = $this->getRecord($this->config('model'), $entity);
-			if (!empty($workflowRecord)) {
-				$isEditable = false;
-				$isRemovable = false;
-				$workflowStep = $this->getWorkflowStep($workflowRecord);
-				if (!empty($workflowStep)) {
-					$isEditable = $workflowStep->is_editable == 1 ? true : false;
-					$isRemovable = $workflowStep->is_removable == 1 ? true : false;
+				$workflowRecord = $this->getRecord($this->config('model'), $entity);
+				if (!empty($workflowRecord)) {
+					$isEditable = false;
+					$isRemovable = false;
+					$workflowStep = $this->getWorkflowStep($workflowRecord);
+					if (!empty($workflowStep)) {
+						$isEditable = $workflowStep->is_editable == 1 ? true : false;
+						$isRemovable = $workflowStep->is_removable == 1 ? true : false;
+					}
+
+					if (array_key_exists('edit', $buttons) && !$isEditable) {
+						unset($buttons['edit']);
+					}
+					if (array_key_exists('remove', $buttons) && !$isRemovable) {
+						unset($buttons['remove']);
+					}
+				} else {
+					// Workflow is not configured
 				}
 
-				if (array_key_exists('edit', $buttons) && !$isEditable) {
-					unset($buttons['edit']);
-				}
-				if (array_key_exists('remove', $buttons) && !$isRemovable) {
-					unset($buttons['remove']);
-				}
-			} else {
-				// Workflow is not configured
+				return $buttons;
 			}
-
-			return $buttons;
 		}
 	}
 
@@ -518,6 +523,38 @@ class WorkflowBehavior extends Behavior {
 		return $modal;
 	}
 
+	public function setNextTransitions(Entity $entity) {
+		$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
+
+		if ($workflowRecord->workflow_step->stage == 0) {	// Open
+			$workflowStepId = $workflowRecord->workflow_step_id;
+
+			$workflowAction = $this->WorkflowActions
+				->find()
+				->where([
+					$this->WorkflowActions->aliasField('workflow_step_id') => $workflowStepId,
+					$this->WorkflowActions->aliasField('action') => 0	// Approve
+				])
+				->first();
+
+			$nextWorkflowStepId = $workflowAction->next_workflow_step_id;
+
+			$transitionData = [
+				'prev_workflow_step_id' => $workflowStepId,
+				'workflow_step_id' => $nextWorkflowStepId,
+				'workflow_action_id' => $workflowAction->id,
+				'workflow_record_id' => $workflowRecord->id,
+				'comment' => ''
+			];
+			$transitionEntity = $this->WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
+
+			if ($this->WorkflowTransitions->save($transitionEntity)) {
+			} else {
+				$this->_table->controller->log($transitionEntity->errors(), 'debug');
+			}
+		}
+	}
+
 	public function processWorkflow() {
 		$request = $this->_table->controller->request;
 		if ($request->is(['post', 'put'])) {
@@ -526,13 +563,10 @@ class WorkflowBehavior extends Behavior {
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
 			if ($this->WorkflowTransitions->save($entity)) {
+				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
+
 				// Trigger event here
-				$workflowAction = $this->WorkflowActions
-					->find()
-					->where([
-						$this->WorkflowActions->aliasField('id') => $entity->workflow_action_id
-					])
-					->first();
+				$workflowAction = $this->WorkflowActions->get($entity->workflow_action_id);
 
 				if (!empty($workflowAction->event_key)) {
 					$eventKey = $workflowAction->event_key;
@@ -545,17 +579,9 @@ class WorkflowBehavior extends Behavior {
 					if ($event->isStopped()) { return $event->result; }
 				}
 			} else {
-				$this->log($entity->errors(), 'debug');
+				$this->_table->controller->log($entity->errors(), 'debug');
+				$this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
 			}
-			// End
-
-			// Update workflow_step_id in workflow_records.
-			$workflowStepId = $entity->workflow_step_id;
-			$workflowRecordId = $entity->workflow_record_id;
-			$this->WorkflowRecords->updateAll(
-				['workflow_step_id' => $workflowStepId],
-				['id' => $workflowRecordId]
-			);
 			// End
 
 			// Redirect

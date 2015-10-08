@@ -24,12 +24,12 @@ class InstitutionSurveysTable extends AppTable {
 	private $workflowEvents = [
 		[
 			'value' => 'Workflow.onApprove',
-			'text' => 'On Approve, update Survey Status from Draft to Completed.',
+			'text' => 'On approve, update Survey Status from Draft to Completed.',
 			'method' => 'OnApprove'
 		],
 		[
 			'value' => 'Workflow.OnReject',
-			'text' => 'On OnReject, update Survey Status from Completed to Draft.',
+			'text' => 'On reject, update Survey Status from Completed to Draft.',
 			'method' => 'OnReject'
 		]
 	];
@@ -217,7 +217,6 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
-		
 		$tabElements = [];
 
 		if ($this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
@@ -366,40 +365,8 @@ class InstitutionSurveysTable extends AppTable {
 			$url = $this->ControllerAction->url('edit');
 			$this->Alert->success('InstitutionSurveys.save.draft', ['reset' => true]);
 		} else if ($entity->status == self::COMPLETED) {
-			// add logic to insert workflow_records and workflow_transitions to Submit For Approval
-			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-
-			if ($workflowRecord->workflow_step->stage == 0) {	// Open
-				$workflowStepId = $workflowRecord->workflow_step_id;
-
-				$WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
-				$WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
-				$workflowAction = $WorkflowActions
-					->find()
-					->where([
-						$WorkflowActions->aliasField('workflow_step_id') => $workflowStepId,
-						$WorkflowActions->aliasField('action') => 0	// Approve
-					])
-					->first();
-				$nextWorkflowStepId = $workflowAction->next_workflow_step_id;
-
-				$transitionData = [
-					'prev_workflow_step_id' => $workflowStepId,
-					'workflow_step_id' => $nextWorkflowStepId,
-					'workflow_action_id' => $workflowAction->id,
-					'workflow_record_id' => $workflowRecord->id
-				];
-				$transitionEntity = $WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
-				if ($WorkflowTransitions->save($transitionEntity)) {
-					$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
-					$WorkflowRecords->updateAll(
-						['workflow_step_id' => $nextWorkflowStepId],
-						['id' => $workflowRecord->id]
-					);
-				} else {
-					$WorkflowTransitions->log($transitionEntity->errors(), 'debug');
-				}
-			}
+			// To trigger from Open to Pending For Approval
+			$this->setNextTransitions($entity);
 			// End
 
 			$url = $this->ControllerAction->url('index');
@@ -418,7 +385,7 @@ class InstitutionSurveysTable extends AppTable {
 			['id' => $id]
 		);
 
-		$this->Alert->success('InstitutionSurveys.save.final');
+		$this->Alert->success('InstitutionSurveys.save.final', ['reset' => true]);
 	}
 
 	public function OnReject(Event $event, $id=null) {
@@ -427,7 +394,7 @@ class InstitutionSurveysTable extends AppTable {
 			['id' => $id]
 		);
 
-		$this->Alert->success('InstitutionSurveys.reject.success');
+		$this->Alert->success('InstitutionSurveys.reject.success', ['reset' => true]);
 	}
 
 	public function _getSelectOptions() {
@@ -439,6 +406,7 @@ class InstitutionSurveysTable extends AppTable {
 		if (!$this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
 			if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
 				$selectedStatus = self::COMPLETED;
+				$this->request->query['status'] = $selectedStatus;
 			}
 		}
 
