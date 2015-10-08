@@ -22,6 +22,7 @@ class CustomFieldListBehavior extends Behavior {
 	public function initialize(array $config) {
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 		$this->CustomFieldValues = TableRegistry::get($this->config('fieldValueClass.className'));
+		$this->CustomForms = $this->CustomFieldValues->CustomFields->CustomForms;
 		$model = $this->config('model');
 		if (empty($model)) {
 			$this->config('model', $this->_table->registryAlias());
@@ -113,29 +114,48 @@ class CustomFieldListBehavior extends Behavior {
 	/**
 	 *	Function to get the custom headers for each type of the filter
 	 *
-	 *	@param Table $customFormFilterTable The custom form filter table to use to get the headers
-	 *	@param int $filterValue The id value of the filterKey
+	 *	@param Table $table The custom form filter table if there is a filter or the custom form table 
+	 *				if the filter is null or not specified
+	 *	@param int | null $filterValue The id value of the filterKey
 	 *	@return array The value of the header and the custom fields
 	 */	
-	public function getCustomFields($customFormFilterTable, $filterValue=null) {
-		$condition = [];
-		if (!(is_null($filterValue))) {
-			$customFilterKey = $customFormFilterTable->CustomFilters->foreignKey();
-			$condition = [$customFormFilterTable->aliasField($customFilterKey) => $filterValue];
-		}
-		$customFormFilters = $customFormFilterTable
-			->find()
-			->where($condition)
-			->contain(['CustomForms', 'CustomForms.CustomFields'])
-			->first();
+	public function getCustomFields($table, $filterValue=null) {
 		$customFields = [];
 		$header = null;
-		if (isset($customFormFilters['custom_form']['custom_fields'])) {
-			foreach ($customFormFilters['custom_form']['custom_fields'] as $field) {
-				if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
-					$header[$field->id] = $field->name;
-					$customFields[$field->id] = $field;
-				}	
+		if (!(is_null($filterValue))) {
+			// If there is a filter specified, the table input will be the custom field form filter table
+			$customFilterKey = $table->CustomFilters->foreignKey();
+			$customFormFields = $table
+				->find()
+				->where([$table->aliasField($customFilterKey) => $filterValue])
+				->contain(['CustomForms', 'CustomForms.CustomFields'])
+				->toArray();	
+		} else {
+			// If there is no filter specified
+			$customFormFields = $table
+				->find()
+				->contain(['CustomFields'])
+				->toArray();
+		}
+
+		// Process each of the custom fields
+		foreach ($customFormFields as $customFormField) {
+			$fields = null;
+
+			if (isset($customFormField['custom_fields'])) {
+				$fields = $customFormField['custom_fields'];
+			}
+			if (isset($customFormField['custom_form']['custom_fields'])) {
+				$fields = $customFormField['custom_form']['custom_fields'];
+			}
+
+			if (!(is_null($fields))) {
+				foreach ($fields as $field) {
+					if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
+						$header[$field->id] = $field->name;
+						$customFields[$field->id] = $field;
+					}	
+				}
 			}
 			if (!empty($header)) {
 				ksort($header);
