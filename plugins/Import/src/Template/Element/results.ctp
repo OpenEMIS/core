@@ -1,29 +1,42 @@
 <?php //pr($attr['results']);?>
-<div class="btn btn-info"><i class="fa fa-check-circle"></i> <?= $attr['results']['uploadedName']; ?></div>
-<div class="clearfix">&nbsp;</div>
-<div class="row">
-	<div class="col-sm-2"><label><?= $this->Label->get('Import.total_rows'); ?></label>: <span><?= $attr['results']['totalRows']; ?></span></div> 
-	<div class="col-sm-2"><label><?= $this->Label->get('Import.rows_imported'); ?></label>: <span><?= $attr['results']['totalImported']; ?></span></div>
-	<div class="col-sm-2"><label><?= $this->Label->get('Import.rows_updated'); ?></label>: <span><?= $attr['results']['totalUpdated']; ?></span></div>
-	<div class="col-sm-2"><label><?= $this->Label->get('Import.execution_time'); ?></label>: <span><?= $attr['results']['executionTime']; ?></span></div>
+<div class="overview-box alert">
+	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
+	<div class="data-section">
+		<i class="kd-rows icon"></i>
+		<div class="data-field">
+			<h4><?= $this->Label->get('Import.total_rows') ?></h4>
+			<h1 class="data-header"><?= $attr['results']['totalRows']; ?></h1>
+		</div>
+	</div>
+
+	<div class="data-section">
+		<div class="data-field">
+			<h4><?= $this->Label->get('Import.rows_imported') ?></h4>	
+			<h1 class="data-header"><?= $attr['results']['totalImported']; ?></h1>
+		</div>
+	</div>
+
+	<div class="data-section">
+		<div class="data-field">	
+			<h4><?= $this->Label->get('Import.rows_updated') ?></h4>
+			<h1 class="data-header"><?= $attr['results']['totalUpdated']; ?></h1>
+		</div>		
+	</div>
+
+	<div class="data-section">
+		<div class="data-field">	
+			<h4><?= $this->Label->get('Import.rows_failed') ?></h4>
+			<h1 class="data-header"><?= count($attr['results']['dataFailed']); ?></h1>
+		</div>		
+	</div>
 </div>
-<hr/>
-<div class="row text-danger">
-	<i class="fa fa-exclamation-circle"></i> <label><?= $this->Label->get('Import.rows_failed'); ?></label>: <span><?= count($attr['results']['dataFailed']); ?></span> 
-	<?php 
-	if(!empty($attr['results']['dataFailed'])):
-	?>
-	<span><?= __('(Hover on the icon(s) to view errors.)') ?></span>
-	<span><?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), ['action' => 'Import', 'downloadFailed', $attr['results']['excelFile']], ['class'=>"btn btn-default", 'escape'=>false]); ?></span>
-	<?php
-	endif;
-	?>
-</div>
+
 <?php 
-if(!empty($attr['results']['dataFailed'])):
+if(!empty($attr['results']['excelFile'])):
 ?>
-<div class="table-responsive import">
-	<table class="table table-striped table-hover table-bordered table-sortable">
+
+<div class="table-responsive">
+	<table class="table">
 		<thead>
 			<tr>
 				<th></th>
@@ -33,6 +46,7 @@ if(!empty($attr['results']['dataFailed'])):
 					echo sprintf('<th>%s</th>', $col);
 				endforeach;
 				?>
+				<th><?= $this->Label->get('Import.error_message'); ?></th>
 			</tr>
 		</thead>
 		
@@ -41,7 +55,9 @@ if(!empty($attr['results']['dataFailed'])):
 			foreach ($attr['results']['dataFailed'] as $row):
 			?>
 			<tr>
-				<td><i class="fa fa-exclamation-circle red-tooltip red-exclamation" data-toggle="tooltip" title="<?= $row['error']; ?>"></i></td>
+				<td class="tooltip-red">
+					<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
+				</td>
 				<td>
 					<?= $row['row_number']; ?>
 				</td>
@@ -57,5 +73,10 @@ if(!empty($attr['results']['dataFailed'])):
 		</tbody>
 	</table>
 </div>
+
+<div class="form-buttons">
+	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), ['action' => 'Import', 'downloadFailed', $attr['results']['excelFile']], ['class'=>"btn btn-default", 'escape'=>false]); ?>
+</div>
 <?php
 endif;
+?>
