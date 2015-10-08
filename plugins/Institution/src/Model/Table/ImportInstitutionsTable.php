@@ -3,27 +3,28 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use PHPExcel_Worksheet;
-use App\Model\Table\AppTable;
 use Cake\Event\Event;
-use Cake\Collection\Collection;
-use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
+use App\Model\Table\AppTable;
 
 class ImportInstitutionsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        // $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Institutions']);
 	    $this->addBehavior('Import.Import');
+
+	    // register the target table once
+	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	}
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.custom.onImportCheckUnique' => 'onImportCheckUnique',
-			'Model.custom.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
+			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -42,13 +43,9 @@ class ImportInstitutionsTable extends AppTable {
 			return true;
 		}
 
-		// $tempRow['entity'] must be assigned!!!
-		$model = TableRegistry::get('Institution.Institutions');
-		$institution = $model->find()->where(['code'=>$code])->first();
+		$institution = $this->Institutions->find()->where(['code'=>$code])->first();
 		if (!$institution) {
-			$tempRow['entity'] = $model->newEntity();
-		} else {
-			$tempRow['entity'] = $institution;
+			$tempRow['entity'] = $this->Institutions->newEntity();
 		}
 	}
 

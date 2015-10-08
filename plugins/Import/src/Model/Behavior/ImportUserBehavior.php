@@ -13,42 +13,47 @@ class ImportUserBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'prefix_key' => ''
+		'prefix' => ''
 	];
 
 	public function initialize(array $config) {
-		if (empty($this->config('plugin'))) {
+		$plugin = $this->config('plugin');
+		if (empty($plugin)) {
 			$exploded = explode('.', $this->_table->registryAlias());
 			if (count($exploded)==2) {
 				$this->config('plugin', $exploded[0]);
 			}
 		}
-		if (empty($this->config('model'))) {
-			$this->config('model', Inflector::pluralize($this->config('plugin')));
+		$plugin = $this->config('plugin');
+		$model = $this->config('model');
+		if (empty($model)) {
+			$this->config('model', Inflector::pluralize($plugin));
 		}
-		if (empty($this->config('prefix_key'))) {
-			$this->config('prefix_key', strtolower(Inflector::singularize($this->config('model'))).'_prefix');
-		}
+		$model = $this->config('model');
+		
+		$prefix_key = strtolower(Inflector::singularize($model)).'_prefix';
+		$prefix = TableRegistry::get('ConfigItems')->value($prefix_key);
+		$prefix = explode(",", $prefix);
+		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
+		$this->config('prefix', $prefix);
+
+	    // register the Users table once
+		$this->Users = TableRegistry::get('User.Users');
 	}
 	
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->openemis_no;
 	}
 
-	public function getNewOpenEmisNo($importedUniqueCodes, $generatedId=null, $prefix='') {
-		if (!is_null($generatedId)) {
-			$val = $generatedId;
+	public function getNewOpenEmisNo($importedUniqueCodes, $row) {
+		$importedCodes = $importedUniqueCodes->getArrayCopy();
+		if (count($importedCodes)>0) {
+			$prefix = $this->config('prefix');
+			$val = reset($importedCodes);
+			$val = $prefix . (intval(substr($val, strlen($prefix))) + $row);
 		} else {
-			$prefix = ($prefix=='') ? TableRegistry::get('ConfigItems')->value($this->config('prefix_key')) : $prefix;
-			$prefix = explode(",", $prefix);
-			$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
-			$val = TableRegistry::get('User.Users')->getUniqueOpenemisId(['model' => $this->config('plugin')]);
-		}
-		if (in_array($val, $importedUniqueCodes->getArrayCopy())) {
-			// minimum pause time needed to allow this upload script to run without http request timeout error
-			usleep(35000);
-			$generatedId = $prefix . (intval(substr($val, strlen($prefix))) + rand());
-			$val = $this->getNewOpenEmisNo($importedUniqueCodes, $generatedId, $prefix);
+			$model = $this->config('plugin');
+			$val = $this->Users->getUniqueOpenemisId(['model' => $model]);
 		}
 		return $val;
 	}
