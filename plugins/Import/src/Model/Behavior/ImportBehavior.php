@@ -143,7 +143,8 @@ class ImportBehavior extends Behavior {
 				unset($toolbarButtons['back']['url'][0]);
 				break;
 
-			case 'view':
+			// 'sample' can be removed once https://kordit.atlassian.net/browse/PHPOE-2186 has been merged to tst
+			case 'results':case 'sample':
 				$toolbarButtons['back']['url']['action'] = 'index';
 				unset($toolbarButtons['back']['url'][0]);
 				break;
@@ -246,6 +247,8 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		/**
+		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 90 seconds
+		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
 		ini_set('max_execution_time', 90);
@@ -373,6 +376,7 @@ class ImportBehavior extends Behavior {
 							'data' => $originalRow
 						);
 
+						$model->log('ImportBehavior @ line '.__LINE__, 'debug');
 						$model->log($tableEntity->errors(), 'debug');
 
 						continue;
@@ -389,10 +393,9 @@ class ImportBehavior extends Behavior {
 						// update importedUniqueCodes either a single key or composite primary keys
 						$this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
 					
-					// } else {
 					}
 	
-					$model->log('ImportBehavior: '.$row.' records imported', 'info');
+					// $model->log('ImportBehavior: '.$row.' records imported', 'info');
 
 				} // for ($row = 1; $row <= $highestRow; ++$row)
 
@@ -496,21 +499,135 @@ class ImportBehavior extends Behavior {
 				'results' => $completedData
 			]);
 			$session->delete($this->sessionKey);
-			// define data as empty entity so that the view file will not throw an undefined notice
-			if ($completedData['excelFile']) {
-				if (count($completedData['totalImported'])>0 || count($completedData['totalUpdated'])>0) {
-					$this->_table->Alert->warning('Import.has_failure', ['reset' => true]);
-				} else {
-					$this->_table->Alert->error('general.edit.failed', ['reset' => true]);
-				}
+			if (!empty($completedData['excelFile'])) {
+				$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
+				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			} else {
-				$this->_table->Alert->success('general.edit.success', ['reset' => true]);
+				$message = '<i class="fa fa-check-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'success');
+				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			}
+			// define data as empty entity so that the view file will not throw an undefined notice
 			$this->_table->controller->set('data', $this->_table->newEntity());
 			$this->_table->ControllerAction->renderView('/ControllerAction/view');
 		} else {
 			return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
 		}
+	}
+
+	// this action can be removed once https://kordit.atlassian.net/browse/PHPOE-2186 has been merged to tst
+	public function sample() {
+		$completedData = [
+			'uploadedName' => 'Import_Institution_Template-test.xlsx',
+			'dataFailed' => [
+			    [
+			        'row_number' => 11,
+			        'error' => 'Failed Validation: Date Of Birth => You have entered an invalid date.',
+			        'data' => [
+			            '', 
+			            'Import',
+			            'staff',
+			            'test',
+			            'three',
+			            '',
+			            'f',
+			            '',
+			            'srw werv wevf efvwerv',
+			            '234',
+			            '3006',
+			            '3004',
+			            '',
+			            'Failed Validation: Date Of Birth => You have entered an invalid date.'
+			        ]
+			    ],
+			    [
+			        'row_number' => 26,
+			        'error' => 'Failed Validation: Date Of Birth => You have entered an invalid date.',
+			        'data' => [
+			            '', 
+			            'Import',
+			            'staff',
+			            'test',
+			            'three',
+			            '',
+			            'f',
+			            '',
+			            'srw werv wevf efvwerv',
+			            '234',
+			            '3006',
+			            '3004',
+			            '',
+			            'Failed Validation: Date Of Birth => You have entered an invalid date.'
+			        ]
+			    ],
+			    [
+			        'row_number' => 43,
+			        'error' => 'Failed Validation: Date Of Birth => This field cannot be left empty',
+			        'data' => [
+			            '', 
+			            'Import',
+			            'staff',
+			            'test',
+			            'three',
+			            '',
+			            'f',
+			            '',
+			            'srw werv wevf efvwerv',
+			            '234',
+			            '3006',
+			            '3004',
+			            '',
+			            'Failed Validation: Date Of Birth => This field cannot be left empty'
+			        ]
+			    ],
+			    [
+			        'row_number' => 61,
+			        'error' => 'Failed Validation: Date Of Birth => You have entered an invalid date.',
+			        'data' => [
+			            '', 
+			            'Import',
+			            'staff',
+			            'test',
+			            'three',
+			            '',
+			            'f',
+			            '',
+			            'srw werv wevf efvwerv',
+			            '234',
+			            '3006',
+			            '3004',
+			            '',
+			            'Failed Validation: Date Of Birth => You have entered an invalid date.'
+			        ]
+			    ]
+			],
+			'totalImported' => 993,
+			'totalUpdated' => 23,
+			'totalRows' => 1000,
+			'header' => $this->getHeader(),
+			'excelFile' => 'Import_Staff_Staff_Failed_1444275769.xlsx',
+			// 'excelFile' => '',
+			'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
+		];
+		$this->_table->ControllerAction->field('select_file', ['visible' => false]);
+		$this->_table->ControllerAction->field('results', [
+			'type' => 'element',
+			'override' => true,
+			'visible' => true,
+			'element' => 'Import./results',
+			'rowClass' => 'import-row',
+			'results' => $completedData
+		]);
+
+		if (!empty($completedData['excelFile'])) {
+			$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
+			$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
+		} else {
+			$message = '<i class="fa fa-check-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'success');
+			$this->_table->Alert->success($message, ['type' => 'string', 'reset' => true]);
+		}
+		// define data as empty entity so that the view file will not throw an undefined notice
+		$this->_table->controller->set('data', $this->_table->newEntity());
+		$this->_table->ControllerAction->renderView('/ControllerAction/view');
 	}
 
 

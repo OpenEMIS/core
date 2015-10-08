@@ -364,12 +364,13 @@ trait MessagesTrait {
 			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
 		'Import' => [
-			'total_rows' => 'Total Rows',
-			'rows_imported' => 'Rows Imported',
-			'rows_updated' => 'Rows Updated',
-			'rows_failed' => 'Rows Failed',
+			'total_rows' => 'Total Rows:',
+			'rows_imported' => 'Rows Imported:',
+			'rows_updated' => 'Rows Updated:',
+			'rows_failed' => 'Rows Failed:',
 			'download_failed_records' => 'Download Failed Records',
 			'row_number' => 'Row Number',
+			'error_message' => 'Error Message',
 			'invalid_code' => 'Invalid Code',
 			'duplicate_code' => 'Duplicate Code Identified',
 			'duplicate_openemis_no' => 'Duplicate OpenEMIS ID Identified',
@@ -381,7 +382,9 @@ trait MessagesTrait {
 			'wrong_template' => 'Wrong template file',
 			'execution_time' => 'Execution Time',
 			'over_max_rows' => 'File records exceeds maximum rows allowed',
-			'has_failure' => 'Some record(s) were not imported. Please check the table below.',
+			'the_file' => 'The file',
+			'success' => 'is successfully imported.',
+			'failed' => 'failed to import.',
 		],
 
 		// Validation Messages
