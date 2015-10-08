@@ -16,7 +16,6 @@ class ImportStaffAttendancesTable extends AppTable {
 
         // $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Institutions']);
 	    $this->addBehavior('Import.Import');
-
 	    
 	}
 
@@ -31,28 +30,28 @@ class ImportStaffAttendancesTable extends AppTable {
 	}
 
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
-		$columns = new Collection($columns);
-		$filtered = $columns->filter(function ($value, $key, $iterator) {
-		    return $value == 'code';
-		});
-		$codeIndex = key($filtered->toArray());
-		$code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
+		// $columns = new Collection($columns);
+		// $filtered = $columns->filter(function ($value, $key, $iterator) {
+		//     return $value == 'code';
+		// });
+		// $codeIndex = key($filtered->toArray());
+		// $code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
 
-		if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
-			$tempRow['duplicates'] = true;
-			return true;
-		}
+		// if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
+		// 	$tempRow['duplicates'] = true;
+		// 	return true;
+		// }
 
-		// $tempRow['entity'] must be assigned!!!
-		$model = TableRegistry::get('Institution.Institutions');
-		$institution = $model->find()->where(['code'=>$code])->first();
-		if (!$institution) {
-			$tempRow['entity'] = $model->newEntity();
-		}
+		// // $tempRow['entity'] must be assigned!!!
+		// $model = TableRegistry::get('Institution.Institutions');
+		// $institution = $model->find()->where(['code'=>$code])->first();
+		// if (!$institution) {
+		// 	$tempRow['entity'] = $model->newEntity();
+		// }
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
-		$importedUniqueCodes[] = $entity->code;
+		// $importedUniqueCodes[] = $entity->code;
 	}
 
 }
