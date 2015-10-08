@@ -496,6 +496,7 @@ class ImportBehavior extends Behavior {
 				'override' => true,
 				'visible' => true,
 				'element' => 'Import./results',
+				'rowClass' => 'row-reset',
 				'results' => $completedData
 			]);
 			$session->delete($this->sessionKey);
@@ -614,7 +615,7 @@ class ImportBehavior extends Behavior {
 			'override' => true,
 			'visible' => true,
 			'element' => 'Import./results',
-			'rowClass' => 'import-row',
+			'rowClass' => 'row-reset',
 			'results' => $completedData
 		]);
 

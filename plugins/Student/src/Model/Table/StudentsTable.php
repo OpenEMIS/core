@@ -70,6 +70,7 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByGender'
 			]
 		]);
+        $this->addBehavior('Import.ImportLink');
 
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
@@ -198,12 +199,6 @@ class StudentsTable extends AppTable {
 						}
 					}
 				}
-				break;
-			case 'index':
-				$toolbarButtons['import'] = $toolbarButtons['add'];
-				$toolbarButtons['import']['url']['action'] = 'Import';
-				$toolbarButtons['import']['attr']['title'] = __('Import');
-				$toolbarButtons['import']['label'] = '<i class="fa kd-import"></i>';	
 				break;
 		}
 	}
