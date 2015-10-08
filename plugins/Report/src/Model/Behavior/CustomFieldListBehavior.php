@@ -176,8 +176,7 @@ class CustomFieldListBehavior extends Behavior {
 
 			if (isset($customFormField['custom_fields'])) {
 				$fields = $customFormField['custom_fields'];
-			}
-			if (isset($customFormField['custom_form']['custom_fields'])) {
+			} elseif (isset($customFormField['custom_form']['custom_fields'])) {
 				$fields = $customFormField['custom_form']['custom_fields'];
 			}
 
