@@ -22,6 +22,12 @@ class StudentsTable extends AppTable  {
 			'pages' => false
 		]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.CustomFieldList', [
+			'model' => 'Student.Student',
+			'formFilterClass' => null,
+			'fieldValueClass' => ['className' => 'StudentCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'condition' => [$this->aliasField('is_student') => 1]
+		]);
 	}
 
 	public function beforeAction(Event $event) {
