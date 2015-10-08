@@ -39,7 +39,7 @@ class StaffController extends AppController {
 			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
-			'Import' 			=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 		];
 
 		$this->set('contentHeader', 'Staff');
