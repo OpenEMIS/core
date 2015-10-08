@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
+use Cake\I18n\I18n;
 
 class StudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -106,10 +107,58 @@ class StudentsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
+		$query->leftJoin(
+			['Identities' => 'user_identities'],
+			['Identities.security_user_id = '.$this->aliasField('student_id')]
+		);
+		$query->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number']);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
 		}
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+		$identity = $IdentityType
+		   ->find()
+		   ->contain(['FieldOptions'])
+		   ->where([
+		   		'FieldOptions.code' => 'IdentityTypes',
+		   		$IdentityType->aliasField('default') => 1
+		   ])
+		   ->order(['IdentityTypes.default DESC'])
+		   ->first();
+
+		$extraField[] = [
+			'key' => 'Identities.number',
+			'field' => 'number',
+			'type' => 'string',
+			'label' => $identity->name
+		];
+
+		$extraField[] = [
+			'key' => 'Users.openemis_no',
+			'field' => 'openemis_no',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$language = I18n::locale();
+
+		// Find the label
+		foreach($extraField as $extra) {
+			list($module, $field) = explode(".", $extra['key']);
+			if (empty($extra['label'])) {
+				$label = $this->onGetFieldLabel($event, $module, $field, $language);
+				$extra['label'] = $label;
+			}
+			$newArray = null;
+			$newArray[] = $extra;
+			$fields = array_merge($newArray, $fields);
+		}
+
+		return $fields;
 	}
 
 	public function implementedEvents() {
