@@ -46,7 +46,7 @@ class AcademicPeriodsTable extends AppTable {
 		}
 	}
 
-	public function beforeAction(Event $event) {
+	public function afterAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->ControllerAction->field('current');
 		$this->ControllerAction->field('editable');
@@ -56,10 +56,12 @@ class AcademicPeriodsTable extends AppTable {
 		$this->fields['school_days']['visible'] = false;
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['current'] = $entity->current;
+		$this->ControllerAction->field('visible');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -133,7 +135,6 @@ class AcademicPeriodsTable extends AppTable {
 			array_unshift($this->_fieldOrder, "parent");
 		}
 	}
-
 	
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
@@ -191,10 +192,26 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
+		$attr['onChangeReload'] = true;
 		return $attr;
 	}
 
 	public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['current'])) {
+			if ($request->data[$this->alias()]['current'] == 1) {
+				$attr['type'] = 'hidden';
+			}
+		}
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
+	}
+
+	public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['current'])) {
+			if ($request->data[$this->alias()]['current'] == 1) {
+				$attr['type'] = 'hidden';
+			}
+		}
 		$attr['options'] = $this->getSelectOptions('general.yesno');
 		return $attr;
 	}
