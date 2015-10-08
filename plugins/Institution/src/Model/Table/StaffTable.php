@@ -71,8 +71,16 @@ class StaffTable extends AppTable {
 			->add('institution_site_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
-			->requirePresence('role');
+			// Added in add before patch and add on new as it is only use by the add action
+			// ->requirePresence('role');
 		;
+	}
+
+	// Dynamic adding of role validation
+	public function validationRole (Validator $validator) {
+		$validator = $this->validationDefault($validator);
+		$validator->requirePresence('role');
+		return $validator;
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
@@ -448,8 +456,12 @@ class StaffTable extends AppTable {
 		$this->Session->delete('Institution.Staff.new');
 	}
 
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$options['validate'] = 'Role';
+	}
+
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = true;
+		$options['validate'] = 'Role';
 		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($patch->errors());
 		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('security_user_id', $patch->errors()))) {
