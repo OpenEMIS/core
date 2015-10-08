@@ -1,6 +1,7 @@
+-- PHPOE-1414
 INSERT INTO `db_patches` VALUES ('PHPOE-1414');
 
-INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES
+INSERT INTO `labels` (`module`, `field`, `field_name`, `created_user_id`, `created`) VALUES
  ('StudentFees', 'openemis_no', 'OpenEMIS ID', '1', '2015-08-21 12:48:18'),
  ('InstitutionFees', 'total', 'Total Fee', '1', '2015-08-21 12:48:18');
 
@@ -20,4 +21,3 @@ INSERT INTO `z_1414_institution_site_fees` SELECT * FROM `institution_site_fees`
 ALTER TABLE `institution_site_fees` CHANGE `institution_site_id` `institution_id` INT(11) NOT NULL;
 ALTER TABLE `institution_site_fees` CHANGE `total` `total` DECIMAL(20,2) NULL DEFAULT NULL;
 ALTER TABLE `institution_site_fees` RENAME `institution_fees`;
-
