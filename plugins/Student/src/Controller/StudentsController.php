@@ -37,7 +37,7 @@ class StudentsController extends AppController {
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
-			'Import' 			=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
+			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 		];
 
 		$this->set('contentHeader', 'Students');
