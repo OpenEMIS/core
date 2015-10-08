@@ -15,13 +15,16 @@ class ImportStaffTable extends AppTable {
 
         $this->addBehavior('Import.Import', ['model'=>'Staff']);
 	    $this->addBehavior('Import.ImportUser', ['model'=>'Staff']);
+
+	    // register the target table once
+	    $this->Staff = TableRegistry::get('Staff.Staff');
 	}
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.custom.onImportCheckUnique' => 'onImportCheckUnique',
-			'Model.custom.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
+			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -40,15 +43,11 @@ class ImportStaffTable extends AppTable {
 			return true;
 		}
 
-		// $tempRow['entity'] must be assigned!!!
-		$model = TableRegistry::get('Staff.Staff');
-		$user = $model->find()->where(['openemis_no'=>$code])->first();
+		$user = $this->Staff->find()->where(['openemis_no'=>$code])->first();
 		if (!$user) {
-			$tempRow['entity'] = $model->newEntity();
-			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes);
+			$tempRow['entity'] = $this->Staff->newEntity();
+			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
 			$tempRow['is_staff'] = 1;
-		} else {
-			$tempRow['entity'] = $user;
 		}
 	}
 
