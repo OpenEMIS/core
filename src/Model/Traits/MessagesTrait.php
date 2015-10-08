@@ -364,12 +364,13 @@ trait MessagesTrait {
 			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
 		'Import' => [
-			'total_rows' => 'Total Rows',
-			'rows_imported' => 'Rows Imported',
-			'rows_updated' => 'Rows Updated',
-			'rows_failed' => 'Rows Failed',
+			'total_rows' => 'Total Rows:',
+			'rows_imported' => 'Rows Imported:',
+			'rows_updated' => 'Rows Updated:',
+			'rows_failed' => 'Rows Failed:',
 			'download_failed_records' => 'Download Failed Records',
 			'row_number' => 'Row Number',
+			'error_message' => 'Error Message',
 			'invalid_code' => 'Invalid Code',
 			'duplicate_code' => 'Duplicate Code Identified',
 			'duplicate_openemis_no' => 'Duplicate OpenEMIS ID Identified',
@@ -377,8 +378,13 @@ trait MessagesTrait {
 			'validation_failed' => 'Failed Validation',
 			'file_required' => 'File is required',
 			'not_supported_format' => 'File format not supported',
-			'over_max' => 'File records exceeds maximum allowed',
+			'over_max' => 'File records exceeds maximum size allowed',
 			'wrong_template' => 'Wrong template file',
+			'execution_time' => 'Execution Time',
+			'over_max_rows' => 'File records exceeds maximum rows allowed',
+			'the_file' => 'The file',
+			'success' => 'is successfully imported.',
+			'failed' => 'failed to import.',
 		],
 
 		// Validation Messages
@@ -694,6 +700,11 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
 				],
+				'date_of_birth' => [
+					'ruleNotBlank' => 'Please select a Date of Birth',
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
+				],
 			],
 		],
 		'Staff' => [
@@ -720,6 +731,11 @@ trait MessagesTrait {
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
+				'date_of_birth' => [
+					'ruleNotBlank' => 'Please select a Date of Birth',
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
 				],
 			],
 			'Leaves' => [
