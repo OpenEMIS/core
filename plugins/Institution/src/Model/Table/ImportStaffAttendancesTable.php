@@ -9,13 +9,15 @@ use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 
-class ImportStudentAttendancesTable extends AppTable {
+class ImportStaffAttendancesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
         // $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Institutions']);
 	    $this->addBehavior('Import.Import');
+
+	    
 	}
 
 	public function implementedEvents() {
