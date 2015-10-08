@@ -45,17 +45,18 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
-
-	public function afterAction(Event $event) {
+	public function beforeAction (Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
-		$this->ControllerAction->field('current');
-		$this->ControllerAction->field('editable');
-
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['school_days']['visible'] = false;
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
+	}
+
+	public function afterAction(Event $event) {
+		$this->ControllerAction->field('current');
+		$this->ControllerAction->field('editable');
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
