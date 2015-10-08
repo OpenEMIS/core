@@ -17,10 +17,15 @@ class CustomFieldListBehavior extends Behavior {
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
+		'condition' => null,
 	];
 
 	public function initialize(array $config) {
-		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
+		$this->CustomFormsFilters = null;
+		$formFilterClass = $this->config('formFilterClass');
+		if (!empty($formFilterClass)) {
+			$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
+		}
 		$this->CustomFieldValues = TableRegistry::get($this->config('fieldValueClass.className'));
 		$this->CustomForms = $this->CustomFieldValues->CustomFields->CustomForms;
 		$model = $this->config('model');
@@ -37,32 +42,52 @@ class CustomFieldListBehavior extends Behavior {
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$filter = $this->getFilter($this->config('model'));
-		$institutionSiteTypes = $this->getType($filter);
-		$InstitutionCustomFormFiltersTable = $this->CustomFormsFilters;
-		$InstitutionCustomFieldValueTable = $this->CustomFieldValues;
+		$types = $this->getType($filter);
 		$filterKey = $this->getFilterKey($filter);
-		// Get the custom fields columns
-		foreach ($institutionSiteTypes as $key => $name) {
 
-			// Getting the header
-			$fields = $this->getCustomFields($InstitutionCustomFormFiltersTable, $key);
-			$header = $fields['header'];
-			$customField = $fields['customField'];
-
-			// Getting the custom field values
-			$query = $this->_table->find()->where([$this->_table->aliasField($filterKey) => $key]);
-			$data = $this->getCustomFieldValues($this->_table, $InstitutionCustomFieldValueTable, $customField, $filterKey, $key);
-
-			// The excel spreadsheets
-			$sheets[] = [
-	    		'name' => __($name),
-				'table' => $this->_table,
-				'query' => $this->_table->find()->where([$this->_table->aliasField($filterKey) => $key]),
-				'orientation' => 'landscape',
-				'additionalHeader' => $header,
-				'additionalData' => $data,
-	    	];
+		if (!empty($types)) {
+			foreach ($types as $key => $name) {
+				$this->excelContent($sheets, $name, $filterKey, $key);
+			}
+		} else {
+			$name = $this->_table->alias();
+			$this->excelContent($sheets, $name);
 		}
+
+	}
+
+	// Function to generate the excel content
+	private function excelContent(ArrayObject $sheets, $name, $filterKey=null, $key=null) {
+		// Getting the header
+		$fields = $this->getCustomFields($key);
+		$header = $fields['header'];
+		$customField = $fields['customField'];
+
+		// Getting the custom field values
+		$data = $this->getCustomFieldValues($customField, $filterKey, $key);
+
+		$query = $this->_table->find();
+
+		// If the filter is present
+		if (!(is_null($filterKey))) {
+			$query->where([$this->_table->aliasField($filterKey) => $key]);
+		}
+
+		// If there is any specified query condition
+		$condition = $this->config('condition');
+		if (!(is_null($condition))) {
+			$query->where($condition);
+		}
+
+		// The excel spreadsheets
+		$sheets[] = [
+    		'name' => __($name),
+			'table' => $this->_table,
+			'query' => $query,
+			'orientation' => 'landscape',
+			'additionalHeader' => $header,
+			'additionalData' => $data,
+    	];
 	}
 
 	/**
@@ -76,9 +101,14 @@ class CustomFieldListBehavior extends Behavior {
 		$filter = $CustomModuleTable
 			->find()
 			->where([$CustomModuleTable->aliasField('model')=>$model])
-			->first()
-			->filter
-			;
+			->first();
+
+		if (empty($filter)) {
+			$filter = null;
+		} else {
+			$filter = $filter->filter;
+		}
+
 		return $filter;
 	}
 
@@ -107,32 +137,34 @@ class CustomFieldListBehavior extends Behavior {
 	 *	@return array The list of institution site types
 	 */
 	public function getType($filter) {
-		$types = TableRegistry::get($filter)->getList()->toArray();
-		return $types;
+		if (!(is_null($filter))) {
+			$types = TableRegistry::get($filter)->getList()->toArray();
+			return $types;
+		} else {
+			return null;
+		}
 	}
 
 	/**
 	 *	Function to get the custom headers for each type of the filter
 	 *
-	 *	@param Table $table The custom form filter table if there is a filter or the custom form table 
-	 *				if the filter is null or not specified
 	 *	@param int | null $filterValue The id value of the filterKey
 	 *	@return array The value of the header and the custom fields
 	 */	
-	public function getCustomFields($table, $filterValue=null) {
+	public function getCustomFields($filterValue=null) {
 		$customFields = [];
 		$header = null;
-		if (!(is_null($filterValue))) {
-			// If there is a filter specified, the table input will be the custom field form filter table
-			$customFilterKey = $table->CustomFilters->foreignKey();
-			$customFormFields = $table
+		if (!(empty($filterValue))) {
+			// If there is a filter specified
+			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
+			$customFormFields = $this->CustomFormsFilters
 				->find()
-				->where([$table->aliasField($customFilterKey) => $filterValue])
+				->where([$this->CustomFormsFilters->aliasField($customFilterKey) => $filterValue])
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->toArray();	
 		} else {
 			// If there is no filter specified
-			$customFormFields = $table
+			$customFormFields = $this->CustomForms
 				->find()
 				->contain(['CustomFields'])
 				->toArray();
@@ -168,33 +200,39 @@ class CustomFieldListBehavior extends Behavior {
 	/**
 	 *	Function to get the custom values for each type of the filter
 	 *
-	 *	@param Table $table The model for which the custom field values is tagged to
-	 *	@param Table $customFieldValueTable The table of the customFieldValue for the specified report. 
-	 *			E.g. Institution will use InstitutionCustomFieldValue table
 	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
 	 *	@param string $filterKey The filter column name
 	 *	@param int $filterValue The id value of the filterKey
 	 *	@return array The values of each of the custom fields value base on the filter value specified
 	 */
-	public function getCustomFieldValues(Table $table, Table $customFieldValueTable, $customField, $filterKey=null, $filterValue=null) {
+	public function getCustomFieldValues($customField, $filterKey=null, $filterValue=null) {
+		$customFieldValueTable = $this->CustomFieldValues;
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
 		$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
 		$condition = [];
 
-		if (!(is_null($filterKey))) {
+		// If there is any specified filter key
+		if (!(empty($filterKey))) {
 			$condition = [
-				$table->aliasField($filterKey) => $filterValue	
+				$this->_table->aliasField($filterKey) => $filterValue	
 			];
 		}
 
+		// If there is any specified query condition
+		$configCondition = $this->config('condition');
+		if (is_null($configCondition)) {
+			$configCondition = [];
+		}
+
 		// List of record ids
-		$ids = $table
+		$ids = $this->_table
 			->find('list', [
 				'keyField' => 'id',
 				'valueField' => 'id'
 			])
 			->where($condition)
+			->where($configCondition)
 			->toArray();
 
 		// Getting the custom field table
