@@ -37,6 +37,7 @@ class ImportUserBehavior extends Behavior {
 		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 		$this->config('prefix', $prefix);
 
+	    // register the Users table once
 		$this->Users = TableRegistry::get('User.Users');
 	}
 	

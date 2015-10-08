@@ -3,12 +3,11 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use PHPExcel_Worksheet;
-use App\Model\Table\AppTable;
 use Cake\Event\Event;
-use Cake\Collection\Collection;
-use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
+use App\Model\Table\AppTable;
 
 class ImportInstitutionsTable extends AppTable {
 	public function initialize(array $config) {
@@ -17,6 +16,7 @@ class ImportInstitutionsTable extends AppTable {
 
 	    $this->addBehavior('Import.Import');
 
+	    // register the target table once
 	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	}
 

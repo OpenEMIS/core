@@ -16,6 +16,7 @@ class ImportStudentsTable extends AppTable {
 	    $this->addBehavior('Import.Import');
 	    $this->addBehavior('Import.ImportUser');
 
+	    // register the target table once
 	    $this->Students = TableRegistry::get('Student.Students');
 	}
 
