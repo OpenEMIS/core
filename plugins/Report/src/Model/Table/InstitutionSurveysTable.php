@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 
 class InstitutionSurveysTable extends AppTable  {
 	public function initialize(array $config) {
@@ -31,63 +32,80 @@ class InstitutionSurveysTable extends AppTable  {
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
-		$attr['onChangeReload'] = true;
-		return $attr;
+		if ($action == 'add') {
+			$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+			$attr['onChangeReload'] = true;
+			if (!(isset($this->request->data[$this->alias()]['feature']))) {
+				$option = $attr['options'];
+				reset($option);
+				$this->request->data[$this->alias()]['feature'] = key($option);
+			}
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request) {
-		if (isset($this->request->data[$this->alias()]['feature'])) {
-			$feature = $this->request->data[$this->alias()]['feature'];
-			if ($feature == 'Report.InstitutionSurveys') {
-				$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
-				$surveyFormOptions = $InstitutionSurveyTable
-					->find('list', [
-						'keyField' => 'id',
-						'valueField' => 'name'
-					])
-					->contain(['SurveyForms'])
-					->select(['id' => 'SurveyForms.id', 'name' => 'SurveyForms.name'])
-					->group([ 
-						$InstitutionSurveyTable->aliasField('survey_form_id')
-					])
-					->where([
-						$InstitutionSurveyTable->aliasField('status') => 2,
-					])
-					->toArray();
-				$attr['options'] = $surveyFormOptions;
-				$attr['type'] = 'select';
-				return $attr;
+		if ($action == 'add') {
+			if (isset($this->request->data[$this->alias()]['feature'])) {
+				$feature = $this->request->data[$this->alias()]['feature'];
+				if ($feature == 'Report.InstitutionSurveys') {
+					$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
+					$surveyFormOptions = $InstitutionSurveyTable
+						->find('list', [
+							'keyField' => 'id',
+							'valueField' => 'name'
+						])
+						->contain(['SurveyForms'])
+						->select(['id' => 'SurveyForms.id', 'name' => 'SurveyForms.name'])
+						->group([ 
+							$InstitutionSurveyTable->aliasField('survey_form_id')
+						])
+						->where([
+							$InstitutionSurveyTable->aliasField('status') => 2,
+						])
+						->toArray();
+					$attr['options'] = $surveyFormOptions;
+					$attr['onChangeReload'] = true;
+					$attr['type'] = 'select';
+					if (empty($this->request->data[$this->alias()]['survey_form'])) {
+						$option = $attr['options'];
+						reset($option);
+						$this->request->data[$this->alias()]['survey_form'] = key($option);
+					}
+					return $attr;
+				}
 			}
 		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-		if (isset($this->request->data[$this->alias()]['feature']) && isset($this->request->data[$this->alias()]['survey_form'])) {
-			$feature = $this->request->data[$this->alias()]['feature'];
-			$surveyForm = $this->request->data[$this->alias()]['survey_form'];
-			if ($feature == 'Report.InstitutionSurveys' && !empty($surveyForm)) {
-				$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
-				$academicPeriodOptions = $InstitutionSurveyTable
-					->find('list', [
-						'keyField' => 'id',
-						'valueField' => 'name'
-					])
-					->contain(['AcademicPeriods'])
-					->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
-					->where([
-						$InstitutionSurveyTable->aliasField('status') => 2,
-						$InstitutionSurveyTable->aliasField('survey_form_id') => $surveyForm
-					])
-					->group([
-						$InstitutionSurveyTable->aliasField('survey_form_id'), 
-						$InstitutionSurveyTable->aliasField('academic_period_id')
-					])
-					->toArray();
-				$attr['options'] = ['' => '-- ' . __('Select Academic Period') . ' --'] + $academicPeriodOptions;
-				$attr['onChangeReload'] = true;
-				$attr['type'] = 'select';
-				return $attr;
+		if ($action == 'add') {
+			if (isset($this->request->data[$this->alias()]['feature']) && isset($this->request->data[$this->alias()]['survey_form'])) {
+				$feature = $this->request->data[$this->alias()]['feature'];
+				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
+				if ($feature == 'Report.InstitutionSurveys' && !empty($surveyForm)) {
+					$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
+					$academicPeriodOptions = $InstitutionSurveyTable
+						->find('list', [
+							'keyField' => 'id',
+							'valueField' => 'name'
+						])
+						->contain(['AcademicPeriods'])
+						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
+						->where([
+							$InstitutionSurveyTable->aliasField('status') => 2,
+							$InstitutionSurveyTable->aliasField('survey_form_id') => $surveyForm
+						])
+						->group([
+							$InstitutionSurveyTable->aliasField('survey_form_id'), 
+							$InstitutionSurveyTable->aliasField('academic_period_id')
+						])
+						->order(['AcademicPeriods.order'])
+						->toArray();
+					$attr['options'] = $academicPeriodOptions;
+					$attr['type'] = 'select';
+					return $attr;
+				}
 			}
 		}
 	}
