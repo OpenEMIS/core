@@ -23,9 +23,9 @@ class StudentsTable extends AppTable  {
 		]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.CustomFieldList', [
-			'model' => 'Student.Student',
+			'model' => 'Student.Students',
 			'formFilterClass' => null,
-			'fieldValueClass' => ['className' => 'StudentCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'condition' => [$this->aliasField('is_student') => 1]
 		]);
 	}
