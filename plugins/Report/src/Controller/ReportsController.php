@@ -53,7 +53,7 @@ class ReportsController extends AppController {
 				'Report.StaffIdentities' => __('Identities'),
 				'Report.StaffContacts' => __('Contacts')
 			];
-		} else if ($module == 'Surveys') {
+		} else if ($module == 'InstitutionSurveys') {
 			$options = [
 				'Report.InstitutionSurveys' => __('Institutions')
 			];
