@@ -14,11 +14,14 @@ class CustomFieldListBehavior extends Behavior {
 		'events' => [
 			'Model.excel.onExcelBeforeStart' => 'onExcelBeforeStart',
 		],
+		'moduleKey' => 'custom_module_id',
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		'condition' => null,
 	];
+
+	private $_condition = [];
 
 	public function initialize(array $config) {
 		$this->CustomFormsFilters = null;
@@ -32,6 +35,7 @@ class CustomFieldListBehavior extends Behavior {
 		if (empty($model)) {
 			$this->config('model', $this->_table->registryAlias());
 		}
+		$this->_condition = $this->config('condition');
 	}
 
 	public function implementedEvents() {
@@ -40,11 +44,19 @@ class CustomFieldListBehavior extends Behavior {
     	return $events;
 	}
 
+	public function getCondition() {
+		return $this->_condition;
+	}
+
+	public function setCondition(array $condition) {
+		$this->_condition = $condition;
+		return $this->_condition;
+	}
+
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$filter = $this->getFilter($this->config('model'));
 		$types = $this->getType($filter);
 		$filterKey = $this->getFilterKey($filter);
-
 		if (!empty($types)) {
 			foreach ($types as $key => $name) {
 				$this->excelContent($sheets, $name, $filterKey, $key);
@@ -57,7 +69,7 @@ class CustomFieldListBehavior extends Behavior {
 	}
 
 	// Function to generate the excel content
-	private function excelContent(ArrayObject $sheets, $name, $filterKey=null, $key=null) {
+	public function excelContent(ArrayObject $sheets, $name, $filterKey=null, $key=null) {
 		// Getting the header
 		$fields = $this->getCustomFields($key);
 		$header = $fields['header'];
@@ -74,7 +86,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 
 		// If there is any specified query condition
-		$condition = $this->config('condition');
+		$condition = $this->_condition;
 		if (!(is_null($condition))) {
 			$query->where($condition);
 		}
@@ -153,8 +165,13 @@ class CustomFieldListBehavior extends Behavior {
 	 */	
 	public function getCustomFields($filterValue=null) {
 		$customFields = [];
+		$customFormFields = [];
 		$header = null;
-		if (!(empty($filterValue))) {
+		$customModuleKey = $this->config('moduleKey');
+		if (is_null($customModuleKey)) {
+			// If the module is null then it must be a survey
+			$customRecordsForeignKey = $this->CustomFieldValues->CustomRecords->SurveyForms->foreignKey();
+		} elseif (!(empty($filterValue))) {
 			// If there is a filter specified
 			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
 			$customFormFields = $this->CustomFormsFilters
@@ -219,7 +236,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 
 		// If there is any specified query condition
-		$configCondition = $this->config('condition');
+		$configCondition = $this->_condition;
 		if (is_null($configCondition)) {
 			$configCondition = [];
 		}
