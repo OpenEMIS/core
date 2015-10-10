@@ -9,18 +9,28 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
-class InstitutionSurveysTable extends AppTable  {
+class SurveysTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
 		parent::initialize($config);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
-		
 		$this->addBehavior('Excel', [
 			'pages' => false
 		]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.CustomFieldList', [
+			'moduleKey' => null,
+			'model' => 'Institution.InstitutionSurveys',
+			'fieldKey' => 'survey_question_id',
+			'formKey' => 'survey_form_id',
+			'recordKey' => 'institution_site_survey_id',
+			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
+			'formFilterClass' => null,
+			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'condition' => [$this->aliasField('status') => 2],
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -44,11 +54,15 @@ class InstitutionSurveysTable extends AppTable  {
 		}
 	}
 
+	public function indexBeforeAction(Event $event) {
+		// pr($this->getCustomFields());die;
+	}
+
 	public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			if (isset($this->request->data[$this->alias()]['feature'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
-				if ($feature == 'Report.InstitutionSurveys') {
+				if ($feature == $this->registryAlias()) {
 					$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
 					$surveyFormOptions = $InstitutionSurveyTable
 						->find('list', [
@@ -83,7 +97,7 @@ class InstitutionSurveysTable extends AppTable  {
 			if (isset($this->request->data[$this->alias()]['feature']) && isset($this->request->data[$this->alias()]['survey_form'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
-				if ($feature == 'Report.InstitutionSurveys' && !empty($surveyForm)) {
+				if ($feature == $this->registryAlias() && !empty($surveyForm)) {
 					$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
 					$academicPeriodOptions = $InstitutionSurveyTable
 						->find('list', [
