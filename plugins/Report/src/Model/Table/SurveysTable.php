@@ -10,6 +10,11 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class SurveysTable extends AppTable  {
+	const EXPIRED = -1;
+	const NEW_SURVEY = 0;
+	const DRAFT = 1;
+	const COMPLETED = 2;
+
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
 		parent::initialize($config);
@@ -29,7 +34,7 @@ class SurveysTable extends AppTable  {
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'condition' => [$this->aliasField('status') => 2],
+			'condition' => [$this->aliasField('status') => self::COMPLETED],
 		]);
 	}
 
@@ -54,8 +59,26 @@ class SurveysTable extends AppTable  {
 		}
 	}
 
-	public function indexBeforeAction(Event $event) {
-		// pr($this->getCustomFields());die;
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		// Setting request data and modifying fetch condition
+		$requestData = json_decode($settings['process']['params']);
+		$surveyFormId = $requestData->survey_form;
+		$academicPeriodId = $requestData->academic_period_id;
+		$configCondition = $this->getCondition();
+		$condition = [
+			$this->aliasField('academic_period_id') => $academicPeriodId
+		];
+		$condition = array_merge($configCondition, $condition);
+		$this->setCondition($condition);
+
+		// For Surveys only
+		$forms = $this->getForms($surveyFormId);
+		foreach ($forms as $formId => $formName) {
+			$this->excelContent($sheets, $formName, null, $formId);
+		}
+
+		// Stop the customfieldlist behavior onExcelBeforeStart function
+		$event->stopPropagation();
 	}
 
 	public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request) {
@@ -75,7 +98,7 @@ class SurveysTable extends AppTable  {
 							$InstitutionSurveyTable->aliasField('survey_form_id')
 						])
 						->where([
-							$InstitutionSurveyTable->aliasField('status') => 2,
+							$InstitutionSurveyTable->aliasField('status') => self::COMPLETED,
 						])
 						->toArray();
 					$attr['options'] = $surveyFormOptions;
@@ -107,7 +130,7 @@ class SurveysTable extends AppTable  {
 						->contain(['AcademicPeriods'])
 						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
 						->where([
-							$InstitutionSurveyTable->aliasField('status') => 2,
+							$InstitutionSurveyTable->aliasField('status') => self::COMPLETED,
 							$InstitutionSurveyTable->aliasField('survey_form_id') => $surveyForm
 						])
 						->group([
@@ -121,6 +144,24 @@ class SurveysTable extends AppTable  {
 					return $attr;
 				}
 			}
+		}
+	}
+
+	public function onExcelGetStatus(Event $event, Entity $entity) {
+		$status = $entity->status;
+		switch ($status) {
+			case self::EXPIRED:
+				return 'Expired';
+				break;
+			case self::NEW_SURVEY:
+				return 'New';
+				break;
+			case self::DRAFT:
+				return 'Draft';
+				break;
+			case self::COMPLETED:
+				return 'Completed';
+				break;
 		}
 	}
 }
