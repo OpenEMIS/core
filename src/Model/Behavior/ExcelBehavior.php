@@ -210,6 +210,11 @@ class ExcelBehavior extends Behavior {
 							$row[] = $this->getValue($entity, $table, $attr);
 						}
 
+						$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateRow'), 'onExcelUpdateRow', [$settings, $entity]);
+						if ($event->result) {
+							$row = array_merge($row, $event->result);
+						}
+
 						// For custom data to be appended on the right side of the spreadsheet
 						if (!empty ($additionalRows)) {
 							$row = array_merge($row, array_shift($additionalRows));
