@@ -12,9 +12,10 @@ use Cake\ORM\Table;
 class CustomFieldListBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
-			'Model.excel.onExcelBeforeStart' => 'onExcelBeforeStart',
+			'Model.excel.onExcelBeforeStart' => ['callable' => 'onExcelBeforeStart', 'priority' => 100],
 		],
 		'moduleKey' => 'custom_module_id',
+		'formKey' => 'custom_form_id',
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
@@ -54,18 +55,55 @@ class CustomFieldListBehavior extends Behavior {
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		$filter = $this->getFilter($this->config('model'));
-		$types = $this->getType($filter);
-		$filterKey = $this->getFilterKey($filter);
-		if (!empty($types)) {
-			foreach ($types as $key => $name) {
-				$this->excelContent($sheets, $name, $filterKey, $key);
+		if (!(is_null($this->config('moduleKey')))) {
+			$filter = $this->getFilter($this->config('model'));
+			$types = $this->getType($filter);
+			$filterKey = $this->getFilterKey($filter);
+			if (!empty($types)) {
+				foreach ($types as $key => $name) {
+					$this->excelContent($sheets, $name, $filterKey, $key);
+				}
+			} else {
+				$name = $this->_table->alias();
+				$this->excelContent($sheets, $name);
 			}
 		} else {
-			$name = $this->_table->alias();
-			$this->excelContent($sheets, $name);
+			// For Surveys only
+			$forms = $this->getForms();
+			foreach ($forms as $formId => $formName) {
+				$this->excelContent($sheets, $formName, null, $formId);
+			}
 		}
+	}
 
+	/**
+	 *	Function to get the form ids. Use for surveys only.
+	 *
+	 *	@param int $formId | null The form id if required to get a specific form
+	 *	@return array Form ID of Form Names
+	 */
+	public function getForms($formId=null) {
+		$condition = [];
+		$formKeyAlias = $this->_table->aliasField($this->config('formKey'));
+		if (!(is_null($formId))) {
+			$condition = [$formKeyAlias => $formId];
+			$configCondition = $this->getCondition();
+			$this->setCondition(array_merge($configCondition, $condition));
+		}
+		
+		return $this->_table
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'name'
+			])
+			->contain(['SurveyForms'])
+			->select([
+				'id' => $formKeyAlias,
+				'name' => 'SurveyForms.name'
+			])
+			->where($condition)
+			->group($formKeyAlias)
+			->toArray();
 	}
 
 	// Function to generate the excel content
@@ -89,6 +127,11 @@ class CustomFieldListBehavior extends Behavior {
 		$condition = $this->_condition;
 		if (!(is_null($condition))) {
 			$query->where($condition);
+		}
+		
+		// If it is a survey
+		if (is_null($this->config('moduleKey'))) {
+			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
 		}
 
 		// The excel spreadsheets
@@ -146,7 +189,7 @@ class CustomFieldListBehavior extends Behavior {
 	 *	Function to get the filter type list
 	 *
 	 *	@param string $filter custom field filter
-	 *	@return array The list of institution site types
+	 *	@return array The list of filter types
 	 */
 	public function getType($filter) {
 		if (!(is_null($filter))) {
@@ -169,14 +212,19 @@ class CustomFieldListBehavior extends Behavior {
 		$header = null;
 		$customModuleKey = $this->config('moduleKey');
 		if (is_null($customModuleKey)) {
-			// If the module is null then it must be a survey
-			$customRecordsForeignKey = $this->CustomFieldValues->CustomRecords->SurveyForms->foreignKey();
+			// Use for surveys
+			$SurveyFormsTable = $this->CustomFieldValues->CustomRecords->SurveyForms;
+			$customFormFields = $SurveyFormsTable
+				->find()
+				->contain(['CustomFields'])
+				->where([$SurveyFormsTable->aliasField('id') => $filterValue])
+				->toArray();
 		} elseif (!(empty($filterValue))) {
 			// If there is a filter specified
 			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
 			$customFormFields = $this->CustomFormsFilters
 				->find()
-				->where([$this->CustomFormsFilters->aliasField($customFilterKey) => $filterValue])
+				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->toArray();	
 		} else {
@@ -231,7 +279,14 @@ class CustomFieldListBehavior extends Behavior {
 		// If there is any specified filter key
 		if (!(empty($filterKey))) {
 			$condition = [
-				$this->_table->aliasField($filterKey) => $filterValue	
+				$this->_table->aliasField($filterKey).' IN' => [$filterValue, 0]	
+			];
+		}
+
+		// If it is a survey
+		if (is_null($this->config('moduleKey'))) {
+			$condition = [
+				$this->_table->aliasField($this->config('formKey')) => $filterValue
 			];
 		}
 
