@@ -12,7 +12,7 @@ use Cake\ORM\Table;
 class CustomFieldListBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
-			'Model.excel.onExcelBeforeStart' => 'onExcelBeforeStart',
+			'Model.excel.onExcelBeforeStart' => ['callable' => 'onExcelBeforeStart', 'priority' => 100],
 		],
 		'moduleKey' => 'custom_module_id',
 		'formKey' => 'custom_form_id',
@@ -76,12 +76,19 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	// Use for Surveys only
+	/**
+	 *	Function to get the form ids. Use for surveys only.
+	 *
+	 *	@param int $formId | null The form id if required to get a specific form
+	 *	@return array Form ID of Form Names
+	 */
 	public function getForms($formId=null) {
 		$condition = [];
 		$formKeyAlias = $this->_table->aliasField($this->config('formKey'));
 		if (!(is_null($formId))) {
 			$condition = [$formKeyAlias => $formId];
+			$configCondition = $this->getCondition();
+			$this->setCondition(array_merge($configCondition, $condition));
 		}
 		
 		return $this->_table
@@ -182,7 +189,7 @@ class CustomFieldListBehavior extends Behavior {
 	 *	Function to get the filter type list
 	 *
 	 *	@param string $filter custom field filter
-	 *	@return array The list of institution site types
+	 *	@return array The list of filter types
 	 */
 	public function getType($filter) {
 		if (!(is_null($filter))) {
@@ -217,7 +224,7 @@ class CustomFieldListBehavior extends Behavior {
 			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
 			$customFormFields = $this->CustomFormsFilters
 				->find()
-				->where([$this->CustomFormsFilters->aliasField($customFilterKey) => $filterValue])
+				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
 				->contain(['CustomForms', 'CustomForms.CustomFields'])
 				->toArray();	
 		} else {
@@ -272,7 +279,7 @@ class CustomFieldListBehavior extends Behavior {
 		// If there is any specified filter key
 		if (!(empty($filterKey))) {
 			$condition = [
-				$this->_table->aliasField($filterKey) => $filterValue	
+				$this->_table->aliasField($filterKey).' IN' => [$filterValue, 0]	
 			];
 		}
 
