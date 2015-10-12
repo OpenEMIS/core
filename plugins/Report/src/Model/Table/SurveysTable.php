@@ -34,7 +34,6 @@ class SurveysTable extends AppTable  {
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'condition' => [$this->aliasField('status') => self::COMPLETED],
 		]);
 	}
 
@@ -44,6 +43,7 @@ class SurveysTable extends AppTable  {
 		$this->ControllerAction->field('format');
 		$this->ControllerAction->field('survey_form', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('status', ['type' => 'hidden']);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -64,11 +64,23 @@ class SurveysTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$surveyFormId = $requestData->survey_form;
 		$academicPeriodId = $requestData->academic_period_id;
+		$status = $requestData->status;
 		$configCondition = $this->getCondition();
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$condition = array_merge($configCondition, $condition);
+		$statusCondition = [];
+		if ($status == self::COMPLETED) {
+			$statusCondition = [
+				$this->aliasField('status') => self::COMPLETED
+			];
+		} else {
+			$statusCondition = [
+				$this->aliasField('status').' IS NOT' => self::COMPLETED
+			];
+		}
+		$condition = array_merge($condition, $statusCondition);
+		$condition = array_merge($condition, $configCondition);
 		$this->setCondition($condition);
 
 		// For Surveys only
@@ -96,9 +108,6 @@ class SurveysTable extends AppTable  {
 						->select(['id' => 'SurveyForms.id', 'name' => 'SurveyForms.name'])
 						->group([ 
 							$InstitutionSurveyTable->aliasField('survey_form_id')
-						])
-						->where([
-							$InstitutionSurveyTable->aliasField('status') => self::COMPLETED,
 						])
 						->toArray();
 					$attr['options'] = $surveyFormOptions;
@@ -130,7 +139,6 @@ class SurveysTable extends AppTable  {
 						->contain(['AcademicPeriods'])
 						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
 						->where([
-							$InstitutionSurveyTable->aliasField('status') => self::COMPLETED,
 							$InstitutionSurveyTable->aliasField('survey_form_id') => $surveyForm
 						])
 						->group([
@@ -140,6 +148,31 @@ class SurveysTable extends AppTable  {
 						->order(['AcademicPeriods.order'])
 						->toArray();
 					$attr['options'] = $academicPeriodOptions;
+					$attr['onChangeReload'] = true;
+					$attr['type'] = 'select';
+					if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
+						$option = $attr['options'];
+						reset($option);
+						$this->request->data[$this->alias()]['academic_period_id'] = key($option);
+					}
+					return $attr;
+				}
+			}
+		}
+	}
+
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			if (isset($this->request->data[$this->alias()]['feature']) 
+				&& isset($this->request->data[$this->alias()]['survey_form'])
+				&& isset($this->request->data[$this->alias()]['academic_period_id'])) {
+				$feature = $this->request->data[$this->alias()]['feature'];
+				$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
+					$attr['options'] = [
+						self::COMPLETED => __('Completed'),
+						'0' => __('Not Completed'),
+					];
 					$attr['type'] = 'select';
 					return $attr;
 				}
@@ -150,17 +183,11 @@ class SurveysTable extends AppTable  {
 	public function onExcelGetStatus(Event $event, Entity $entity) {
 		$status = $entity->status;
 		switch ($status) {
-			case self::EXPIRED:
-				return 'Expired';
-				break;
-			case self::NEW_SURVEY:
-				return 'New';
-				break;
-			case self::DRAFT:
-				return 'Draft';
-				break;
 			case self::COMPLETED:
-				return 'Completed';
+				return __('Completed');
+				break;
+			default:
+				return __('Not Completed');
 				break;
 		}
 	}
