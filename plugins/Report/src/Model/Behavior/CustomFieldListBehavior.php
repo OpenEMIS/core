@@ -21,7 +21,7 @@ class CustomFieldListBehavior extends Behavior {
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
-		'condition' => null,
+		'condition' => [],
 	];
 
 	private $_condition = [];
@@ -144,9 +144,7 @@ class CustomFieldListBehavior extends Behavior {
 
 		// If there is any specified query condition
 		$condition = $this->_condition;
-		if (!(is_null($condition))) {
-			$query->where($condition);
-		}
+		$query->where($condition);
 		
 		// If it is a survey
 		if (is_null($this->config('moduleKey'))) {
