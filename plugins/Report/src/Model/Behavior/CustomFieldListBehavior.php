@@ -13,7 +13,6 @@ class CustomFieldListBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
 			'Model.excel.onExcelBeforeStart' => ['callable' => 'onExcelBeforeStart', 'priority' => 100],
-			'Model.excel.onExcelUpdateRow' => ['callable' => 'onExcelUpdateRow', 'priority' => 100],
 		],
 		'moduleKey' => 'custom_module_id',
 		'formKey' => 'custom_form_id',
@@ -24,7 +23,6 @@ class CustomFieldListBehavior extends Behavior {
 	];
 
 	private $_condition = [];
-	private $_customField = [];
 
 	public function initialize(array $config) {
 		$this->CustomFormsFilters = null;
@@ -54,14 +52,6 @@ class CustomFieldListBehavior extends Behavior {
 	public function setCondition(array $condition) {
 		$this->_condition = $condition;
 		return $this->_condition;
-	}
-
-	public function getHeaderFields() {
-		return $this->_customField;
-	}
-
-	public function setHeaderFields(array $customField) {
-		$this->_customField = $customField;
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -119,7 +109,12 @@ class CustomFieldListBehavior extends Behavior {
 	// Function to generate the excel content
 	public function excelContent(ArrayObject $sheets, $name, $filterKey=null, $key=null) {
 		// Getting the header
-		$header = $this->getCustomFields($key);
+		$fields = $this->getCustomFields($key);
+		$header = $fields['header'];
+		$customField = $fields['customField'];
+
+		// Getting the custom field values
+		$data = $this->getCustomFieldValues($customField, $filterKey, $key);
 
 		$query = $this->_table->find();
 
@@ -146,6 +141,7 @@ class CustomFieldListBehavior extends Behavior {
 			'query' => $query,
 			'orientation' => 'landscape',
 			'additionalHeader' => $header,
+			'additionalData' => $data,
     	];
 	}
 
@@ -262,16 +258,54 @@ class CustomFieldListBehavior extends Behavior {
 				ksort($customFields);
 			}
 		}
-		$this->setHeaderFields($customFields);
-		return $header;
+		return ['header' => $header, 'customField' => $customFields];
 	}
 
-	public function onExcelUpdateRow(Event $event, ArrayObject $settings, Entity $entity) {
+	/**
+	 *	Function to get the custom values for each type of the filter
+	 *
+	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
+	 *	@param string $filterKey The filter column name
+	 *	@param int $filterValue The id value of the filterKey
+	 *	@return array The values of each of the custom fields value base on the filter value specified
+	 */
+	public function getCustomFieldValues($customField, $filterKey=null, $filterValue=null) {
 		$customFieldValueTable = $this->CustomFieldValues;
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
 		$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
-		
+		$condition = [];
+
+		// If there is any specified filter key
+		if (!(empty($filterKey))) {
+			$condition = [
+				$this->_table->aliasField($filterKey).' IN' => [$filterValue, 0]	
+			];
+		}
+
+		// If it is a survey
+		if (is_null($this->config('moduleKey'))) {
+			$condition = [
+				$this->_table->aliasField($this->config('formKey')) => $filterValue
+			];
+		}
+
+		// If there is any specified query condition
+		$configCondition = $this->_condition;
+		if (is_null($configCondition)) {
+			$configCondition = [];
+		}
+
+		// List of record ids
+		$ids = $this->_table
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->where($condition)
+			->where($configCondition)
+			->toArray();
+
 		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
 
@@ -300,27 +334,30 @@ class CustomFieldListBehavior extends Behavior {
 					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 					.' END) SEPARATOR \',\'))'
 			])
-			->where([$customFieldsTable->aliasField('id') => $entity->id])
 			->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
-			->bufferResults(false)
+			->hydrate(false)
 			->toArray();
 
 		// List of options
 		$optionsValues = $CustomFieldOptionsTable->find('list')->toArray();
 
-		$fields = $this->getHeaderFields();
-		$answer = [];
-		foreach ($fields as $field) {
-			// Handle existing field types, if there are new field types please add another function for it
-			$type = strtolower($field->field_type);
-			if (method_exists($this, $type)) {
-				$ans = $this->$type($fieldValue, $entity->id, $field->id, $optionsValues);
-				if (!(is_null($ans))) {
-					$answer[] = $ans;
+		$consolidatedValues = [];
+		foreach ($ids as $id) {
+			$fields = $customField;
+			$answer = [];
+			foreach ($fields as $field) {
+				// Handle existing field types, if there are new field types please add another function for it
+				$type = strtolower($field->field_type);
+				if (method_exists($this, $type)) {
+					$ans = $this->$type($fieldValue, $id, $field->id, $optionsValues);
+					if (!(is_null($ans))) {
+						$answer[] = $ans;
+					}
 				}
 			}
+			$consolidatedValues[] = $answer;
 		}
-		return $answer;
+		return $consolidatedValues;
 	}
 
 	public function text($data, $recordId, $fieldId, $options=[]) {
