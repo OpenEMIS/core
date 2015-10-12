@@ -99,7 +99,7 @@ class CustomFieldListBehavior extends Behavior {
 		if (isset($settings['customFields'])) {
 			$customFields = $settings['customFields'];
 		}
-		$this->getCustomFieldValues($id, $customFields);
+		return $this->getCustomFieldValues($id, $customFields);
 	}
 
 	/**
