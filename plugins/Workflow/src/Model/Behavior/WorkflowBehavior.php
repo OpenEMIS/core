@@ -60,7 +60,10 @@ class WorkflowBehavior extends Behavior {
 		// To delete from records and transitions table
 		if ($this->initWorkflow) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
-			$this->WorkflowRecords->delete($workflowRecord);
+			if (!empty($workflowRecord)) {
+				$workflowRecord = $this->WorkflowRecords->get($workflowRecord->id);
+				$this->WorkflowRecords->delete($workflowRecord);
+			}
 		}
 	}
 
