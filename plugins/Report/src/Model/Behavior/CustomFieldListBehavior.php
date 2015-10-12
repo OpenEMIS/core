@@ -319,8 +319,9 @@ class CustomFieldListBehavior extends Behavior {
 					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 					.' END) SEPARATOR \',\'))'
 			])
-			->where([$customFieldValueTable->aliasField($customRecordsForeignKey).'='.$customRecordId])
-			->group([$customFieldValueTable->aliasField($customFieldsForeignKey)]);
+			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $customRecordId])
+			->group([$customFieldValueTable->aliasField($customFieldsForeignKey)])
+			->toArray();
 
 		// List of options
 		$optionsValues = $CustomFieldOptionsTable->find('list')->toArray();
@@ -334,7 +335,7 @@ class CustomFieldListBehavior extends Behavior {
 			// Handle existing field types, if there are new field types please add another function for it
 			$type = strtolower($field->field_type);
 			if (method_exists($this, $type)) {
-				$ans = $this->$type($fieldValue->toArray(), $field->id, $optionsValues);
+				$ans = $this->$type($fieldValue, $field->id, $optionsValues);
 				if (!(is_null($ans))) {
 					$answer[] = $ans;
 				}
