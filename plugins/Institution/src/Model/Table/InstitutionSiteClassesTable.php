@@ -28,7 +28,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
 		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses']);
-		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents', 'dependant' => true]);
 		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
 
 		$this->belongsToMany('InstitutionSiteSections', [
@@ -44,6 +44,14 @@ class InstitutionSiteClassesTable extends AppTable {
 			'conditions' => ['InstitutionSiteClassStaff.status' => 1],
 			'foreignKey' => 'institution_site_class_id',
 			'targetForeignKey' => 'security_user_id'
+		]);
+
+		$this->belongsToMany('Students', [
+			'className' => 'User.Users',
+			'through' => 'InstitutionSiteClassStudents',
+			'foreignKey' => 'institution_site_class_id',
+			'targetForeignKey' => 'student_id',
+			'dependant' => true
 		]);
 
 		// this behavior restricts current user to see All Subjects or My Subjects
