@@ -321,7 +321,7 @@ class CustomFieldListBehavior extends Behavior {
 					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 					.' END) SEPARATOR \',\'))'
 			])
-			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $entity->id])
+			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $customRecordId])
 			->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
 			->bufferResults(false)
 			->toArray();
@@ -338,7 +338,7 @@ class CustomFieldListBehavior extends Behavior {
 			// Handle existing field types, if there are new field types please add another function for it
 			$type = strtolower($field->field_type);
 			if (method_exists($this, $type)) {
-				$ans = $this->$type($fieldValue, $entity->id, $field->id, $optionsValues);
+				$ans = $this->$type($fieldValue, $customRecordId, $field->id, $optionsValues);
 				if (!(is_null($ans))) {
 					$answer[] = $ans;
 				}
