@@ -530,7 +530,9 @@ class InstitutionSiteSectionsTable extends AppTable {
 							}
 						}
 						unset($value);
-						$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage);
+						if ($errorMessage != 'AcademicPeriodId') {
+							$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage, ['reset' => true]);
+						}
 						$model->fields['single_grade_field']['data']['sections'] = $classes;
 						$model->request->data['MultiClasses'] = $data['MultiClasses'];
 						return false;
@@ -1009,30 +1011,33 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	protected function getStaffOptions($action='edit') {
-		
-		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
-		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
-        $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
-
-        $Staff = $this->Institutions->InstitutionSiteStaff;
-		$query = $Staff->find('all')
-						->find('withBelongsTo')
-						->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
-						->find('byInstitution', ['Institutions.id'=>$this->institutionId])
-						->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodObj->id])
-						;
-
 		if (in_array($action, ['edit', 'add'])) {
 			$options = [0=>'-- Select Teacher or Leave Blank --'];
 		} else {
 			$options = [0=>'No Teacher Assigned'];
 		}
-		
-		foreach ($query->toArray() as $key => $value) {
-			if ($value->has('user')) {
-				$options[$value->user->id] = $value->user->name;
+
+		if (!empty($this->_selectedAcademicPeriodId)) {
+
+			$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
+			$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
+	        $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
+
+	        $Staff = $this->Institutions->InstitutionSiteStaff;
+			$query = $Staff->find('all')
+							->find('withBelongsTo')
+							->find('byPositions', ['Institutions.id' => $this->institutionId, 'type' => 1]) // refer to OptionsTrait for type options
+							->find('byInstitution', ['Institutions.id'=>$this->institutionId])
+							->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodObj->id])
+							;
+
+			foreach ($query->toArray() as $key => $value) {
+				if ($value->has('user')) {
+					$options[$value->user->id] = $value->user->name;
+				}
 			}
 		}
+
 		return $options;
 	}
 
