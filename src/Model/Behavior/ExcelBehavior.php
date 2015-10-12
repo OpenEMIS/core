@@ -134,7 +134,7 @@ class ExcelBehavior extends Behavior {
 			$fields = $this->getFields($table);
 
 			// Event to add or modify the fields to fetch from the table
-			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields, $table]);
+			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields, $sheet]);
 			if ($event->result) {
 				$fields = $event->result;
 			}
@@ -181,7 +181,12 @@ class ExcelBehavior extends Behavior {
 				foreach ($fields as $attr) {
 					$row[] = $attr['label'];
 				}
-				
+
+				$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateHeader'), 'onExcelUpdateHeader', [$settings, $sheet]);
+				if ($event->result) {
+					$row = array_merge($row, $event->result);
+				}
+
 				// Any additional custom headers that require to be appended on the right side of the sheet
 				// Header column count must be more than the additional data columns
 				if(isset($sheet['additionalHeader'])) {
@@ -210,7 +215,7 @@ class ExcelBehavior extends Behavior {
 							$row[] = $this->getValue($entity, $table, $attr);
 						}
 
-						$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateRow'), 'onExcelUpdateRow', [$settings, $entity]);
+						$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateRow'), 'onExcelUpdateRow', [$settings, $entity, $sheet]);
 						if ($event->result) {
 							$row = array_merge($row, $event->result);
 						}
