@@ -47,15 +47,6 @@ class CustomFieldListBehavior extends Behavior {
     	return $events;
 	}
 
-	public function getCondition() {
-		return $this->_condition;
-	}
-
-	public function setCondition(array $condition) {
-		$this->_condition = $condition;
-		return $this->_condition;
-	}
-
 	// Model.excel.onExcelBeforeStart
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		if (!(is_null($this->config('moduleKey')))) {
@@ -93,13 +84,34 @@ class CustomFieldListBehavior extends Behavior {
 	}
 
 	// Model.excel.onExcelUpdateRow
-	public function onExcelUpdateRow(Event $event, ArrayObject $settings, Entity $entity) {
+	public function onExcelUpdateRow(Event $event, ArrayObject $settings, Entity $entity, ArrayObject $sheet) {
 		$id = $entity->id;
 		$customFields = null;
 		if (isset($settings['customFields'])) {
 			$customFields = $settings['customFields'];
 		}
-		return $this->getCustomFieldValues($id, $customFields);
+		$customFieldOptions = $sheet['customFieldOptions'];
+		return $this->getCustomFieldValues($id, $customFields, $customFieldOptions);
+	}
+
+	/**
+	 *	Function to get the query condition
+	 *
+	 *	@return array The current condition
+	 */
+	public function getCondition() {
+		return $this->_condition;
+	}
+
+	/**
+	 *	Function to set the query condition
+	 *
+	 *	@param array The new query condition
+	 *	@return array The current condition
+	 */
+	public function setCondition(array $condition) {
+		$this->_condition = $condition;
+		return $this->_condition;
 	}
 
 	/**
@@ -151,6 +163,9 @@ class CustomFieldListBehavior extends Behavior {
 			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
 		}
 
+		// Getting the list of available custom field options
+		$optionsValues = $this->CustomFieldValues->CustomFields->CustomFieldOptions->find('list')->toArray();
+
 		// The excel spreadsheets
 		$sheets[] = [
     		'name' => __($name),
@@ -159,6 +174,7 @@ class CustomFieldListBehavior extends Behavior {
 			'orientation' => 'landscape',
 			'filterKey' => $filterKey,
 			'key' => $key,
+			'customFieldOptions' => $optionsValues,
     	];
 	}
 
@@ -283,13 +299,13 @@ class CustomFieldListBehavior extends Behavior {
 	 *
 	 *	@param int $customRecordId The entity record id (e.g. institution_site_survey_id)
 	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
+	 *	@param array $customFieldOptionList The list of the available custom field options for dropdown and checkbox answers
 	 *	@return array The value base on the custom field and the record id specified
 	 */
-	public function getCustomFieldValues($customRecordId, $customFields) {
+	public function getCustomFieldValues($customRecordId, $customFields, $customFieldOptionsList) {
 		$customFieldValueTable = $this->CustomFieldValues;
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
-		$CustomFieldOptionsTable = $customFieldValueTable->CustomFields->CustomFieldOptions;
 		
 		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
@@ -322,7 +338,7 @@ class CustomFieldListBehavior extends Behavior {
 			->toArray();
 
 		// List of options
-		$optionsValues = $CustomFieldOptionsTable->find('list')->toArray();
+		$optionsValues = $customFieldOptionsList;
 
 		$fields = [];
 		if (!(is_null($customFields))) {
@@ -342,7 +358,7 @@ class CustomFieldListBehavior extends Behavior {
 		return $answer;
 	}
 
-	public function text($data, $fieldId, $options=[]) {
+	private function text($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			return $data[$fieldId];
 		} else {
@@ -350,7 +366,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	public function number($data, $fieldId, $options=[]) {
+	private function number($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			return $data[$fieldId];
 		} else {
@@ -358,7 +374,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 	
-	public function textarea($data, $fieldId, $options=[]) {
+	private function textarea($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			return $data[$fieldId];
 		} else {
@@ -366,7 +382,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	public function dropdown($data, $fieldId, $options=[]) {
+	private function dropdown($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			if (isset($options[$data[$fieldId]])) {
 				return $options[$data[$fieldId]];
@@ -378,7 +394,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 	
-	public function checkbox($data, $fieldId, $options=[]) {
+	private function checkbox($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			$values = explode(",", $data[$fieldId]);
 			$returnValue = '';
@@ -397,27 +413,29 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	public function date($data, $fieldId, $options=[]) {
+	private function date($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+			$date = date_create_from_format('Y-m-d', $data[$fieldId]);
+			return date_format($date, 'Y-m-d');
 		} else {
 			return '';
 		}
 	}
 
-	public function time($data, $fieldId, $options=[]) {
+	private function time($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+			$time = date_create_from_format('G:i:s', $data[$fieldId]);
+			return date_format($time, 'g:i a');
 		} else {
 			return '';
 		}
 	}
 
-	public function student_list($data, $fieldId, $options=[]) {
+	private function student_list($data, $fieldId, $options=[]) {
 		return null;
 	}
 
-	public function table($data, $fieldId, $options=[]) {
+	private function table($data, $fieldId, $options=[]) {
 		return null;
 	}
 
