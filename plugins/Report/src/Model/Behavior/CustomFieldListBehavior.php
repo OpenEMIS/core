@@ -303,8 +303,7 @@ class CustomFieldListBehavior extends Behavior {
 		$fieldValue = $customFieldsTable
 			->find('list', [
 				'keyField' => $customFieldValueTable->aliasField($customFieldsForeignKey),
-				'valueField' => 'field_value',
-				'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey)
+				'valueField' => 'field_value'
 			])
 			->innerJoin(
 				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
@@ -313,18 +312,15 @@ class CustomFieldListBehavior extends Behavior {
 			->select([
 				$customFieldValueTable->aliasField($customRecordsForeignKey),
 				$customFieldValueTable->aliasField($customFieldsForeignKey),
-				'field_value' => '(GROUP_CONCAT((CASE 
-					WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
+				'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
 					.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
 					.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
 					.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
 					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 					.' END) SEPARATOR \',\'))'
 			])
-			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $customRecordId])
-			->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
-			->bufferResults(false)
-			->toArray();
+			->where([$customFieldValueTable->aliasField($customRecordsForeignKey).'='.$customRecordId])
+			->group([$customFieldValueTable->aliasField($customFieldsForeignKey)]);
 
 		// List of options
 		$optionsValues = $CustomFieldOptionsTable->find('list')->toArray();
@@ -338,7 +334,7 @@ class CustomFieldListBehavior extends Behavior {
 			// Handle existing field types, if there are new field types please add another function for it
 			$type = strtolower($field->field_type);
 			if (method_exists($this, $type)) {
-				$ans = $this->$type($fieldValue, $customRecordId, $field->id, $optionsValues);
+				$ans = $this->$type($fieldValue->toArray(), $field->id, $optionsValues);
 				if (!(is_null($ans))) {
 					$answer[] = $ans;
 				}
@@ -347,34 +343,34 @@ class CustomFieldListBehavior extends Behavior {
 		return $answer;
 	}
 
-	public function text($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			return $data[$recordId][$fieldId];
+	public function text($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
 		} else {
 			return '';
 		}
 	}
 
-	public function number($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			return $data[$recordId][$fieldId];
+	public function number($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
 		} else {
 			return '';
 		}
 	}
 	
-	public function textarea($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			return $data[$recordId][$fieldId];
+	public function textarea($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
 		} else {
 			return '';
 		}
 	}
 
-	public function dropdown($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			if (isset($options[$data[$recordId][$fieldId]])) {
-				return $options[$data[$recordId][$fieldId]];
+	public function dropdown($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			if (isset($options[$data[$fieldId]])) {
+				return $options[$data[$fieldId]];
 			} else {
 				return '';
 			}
@@ -383,9 +379,9 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 	
-	public function checkbox($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			$values = explode(",", $data[$recordId][$fieldId]);
+	public function checkbox($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			$values = explode(",", $data[$fieldId]);
 			$returnValue = '';
 			foreach ($values as $value) {
 				if (isset($options[$value])) {
@@ -402,27 +398,27 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	public function date($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			return $data[$recordId][$fieldId];
+	public function date($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
 		} else {
 			return '';
 		}
 	}
 
-	public function time($data, $recordId, $fieldId, $options=[]) {
-		if (isset($data[$recordId][$fieldId])) {
-			return $data[$recordId][$fieldId];
+	public function time($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
 		} else {
 			return '';
 		}
 	}
 
-	public function student_list($data, $recordId, $fieldId, $options=[]) {
+	public function student_list($data, $fieldId, $options=[]) {
 		return null;
 	}
 
-	public function table($data, $recordId, $fieldId, $options=[]) {
+	public function table($data, $fieldId, $options=[]) {
 		return null;
 	}
 
