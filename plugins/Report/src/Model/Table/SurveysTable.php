@@ -28,10 +28,7 @@ class SurveysTable extends AppTable  {
 		$this->addBehavior('Report.CustomFieldList', [
 			'moduleKey' => null,
 			'model' => 'Institution.InstitutionSurveys',
-			'fieldKey' => 'survey_question_id',
 			'formKey' => 'survey_form_id',
-			'recordKey' => 'institution_site_survey_id',
-			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		]);
