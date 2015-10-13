@@ -1,4 +1,4 @@
-/* GENERAL STYLE v.1.0.0 */
+/* GENERAL STYLE v.1.0.2 */
 
 body,
 div {
@@ -11,7 +11,20 @@ body {
 }
 
 pre {
-    margin-top: 80px;
+    margin: 15px 10px;
+    position: relative;
+    z-index: 9999;
+    border: 1px solid #BBB;
+    color: #333;
+    background: #F9F9F9;
+}
+
+pre a {
+    color: #CC5C5C;
+}
+
+pre a:hover {
+    color: #f00;
 }
 
 body,
@@ -48,10 +61,20 @@ select,
 
 .left-pane {
     overflow-y: auto;
+    background-color: #FFF;
+    position: absolute;
+    left: 0 !important;
+    width: 10%;
 }
 
 .right-pane {
     overflow-y: auto;
+    right: 0 !important;
+    position: absolute;
+    background-color: #FFF;
+    border-left: 1px solid #DDD;
+    height: 100%;
+    width: 90%;
 }
 
 .container-fluid {
@@ -323,6 +346,14 @@ hr {
     top: 47px !important;
 }
 
+.more-menu-item li {
+    margin: 0 !important;
+}
+
+.more-menu-item .divider {
+    margin: 5px 0 !important;
+}
+
 .more-menu .dropdown-arrow {
     right: 12px;
     top: -20px;
@@ -552,18 +583,23 @@ body.large {
 /* View with Sections and Map */
 
 .section-header {
-    display: block;
-    background-color: #E2E2E2;
-    border: 1px solid #CCC;
-    color: #333;
-    font-weight: bold;
-    padding: 10px;
-    margin: 20px 0 0;
-    -webkit-border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    clear: both;
+    display: block !important;
+    background-color: #E2E2E2 !important;
+    border: 1px solid #CCC !important;
+    color: #333 !important;
+    font-weight: bold !important;
+    padding: 10px !important;
+    margin: 10px 0 0 !important;
+    -webkit-border-top-left-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    clear: both !important;
+    font-size: 13px !important;
+}
+
+.section-header:first-child {
+    margin-top: 0 !important;
 }
 
 #googlemap iframe {
@@ -680,6 +716,7 @@ label + select {
     background: #EFEFEF;
 }
 
+
 /* FORM v.1.0.0 */
 
 .form-horizontal {
@@ -748,7 +785,6 @@ label + select {
     background-color: #FFF;
     border-left: 2px solid #FFF;
 }
-
 
 
 /* Time picker */
@@ -1117,126 +1153,6 @@ tags-input .tags {
 }
 
 
-/* TABLE DROPDOWN; ACTION & REORDER */
-
-.btn-dropdown,
-.btn-single-action {
-    position: relative;
-    padding: 4px 4px 4px 10px;
-    display: inline-block;
-    color: #333;
-    border-color: #CCC;
-    background: rgb(255, 255, 255);
-    /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 34%, rgba(239, 239, 239, 1) 100%);
-    /* FF3.6+ */
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(34%, rgba(255, 255, 255, 1)), color-stop(100%, rgba(239, 239, 239, 1)));
-    /* Chrome,Safari4+ */
-    background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 34%, rgba(239, 239, 239, 1) 100%);
-    /* Chrome10+,Safari5.1+ */
-    background: -o-linear-gradient(top, rgba(255, 255, 255, 1) 34%, rgba(239, 239, 239, 1) 100%);
-    /* Opera 11.10+ */
-    background: -ms-linear-gradient(top, rgba(255, 255, 255, 1) 34%, rgba(239, 239, 239, 1) 100%);
-    /* IE10+ */
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 34%, rgba(239, 239, 239, 1) 100%);
-    /* W3C */
-    filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#efefef', GradientType=0);
-    /* IE6-9 */
-}
-
-.btn-dropdown:hover,
-.btn-dropdown:focus,
-.btn-dropdown:active,
-.btn-single-action:hover {
-    background-color: #999;
-    outline: 0;
-    transition: all 0.3s ease;
-}
-
-.btn-single-action {
-    padding: 4px 10px;
-}
-
-.btn-single-action span {
-    vertical-align: middle;
-    display: inline-block;
-}
-
-.caret-down:after {
-    font-family: 'FontAwesome';
-    content: "\f078";
-    font-size: 8px;
-    padding: 5px;
-}
-
-.btn-dropdown:hover {
-    background: #999;
-    color: #FFF;
-}
-
-.btn-dropdown > li > a:hover {
-    background-color: #999;
-}
-
-.action-dropdown i {
-    margin: 5px 5px 0 0;
-}
-
-.action-dropdown .kd-download {
-    font-size: 10px;
-    margin-left: -1px;
-}
-
-.action-dropdown > li > a {
-    color: #555;
-}
-
-.action-dropdown > li > a:hover {
-    color: #FFF;
-    background-color: #6B6B6B;
-    transition: all 0.3s ease;
-}
-
-.action-dropdown {
-    left: -85px;
-    top: 85%;
-    width: 160px;
-}
-
-.dropdown-menu > li > a {
-    white-space: pre-wrap;
-}
-
-.action-dropdown .dropdown-arrow {
-    color: #FFF;
-    text-shadow: 0 -3px 2px rgba(0, 0, 0, 0.2);
-    top: -20px;
-    right: 6px;
-}
-
-table .action-dropdown .dropdown-arrow {
-    right: 8px;
-}
-
-.reorder-icon {
-    -ms-transform: rotate(45deg);
-    /* IE 9 */
-    -webkit-transform: rotate(45deg);
-    /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
-    display: inline-block;
-    margin: 0 15px;
-}
-
-.reorder-icon a {
-    color: #333;
-}
-
-.reorder-icon a:hover {
-    color: #000;
-}
-
-
 /* IMAGES */
 
 .circle {
@@ -1247,92 +1163,6 @@ a.thumbnail.active,
 a.thumbnail:focus,
 a.thumbnail:hover {
     border-color: #999;
-}
-
-
-/* PAGINATIONS */
-
-.ellipsis {
-    float: left;
-    padding: 5px 8px;
-    background-color: #fff;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-}
-
-.pagination-wrapper {
-    overflow: hidden;
-    color: #666;
-    font-size: 12px !important;
-    font-weight: normal;
-}
-
-.pagination {
-    float: left;
-    font-size: 11px;
-    margin-top: 10px;
-    margin-right: 15px;
-}
-
-.pagination > li > a,
-.pagination > li > span {
-    padding: 4px 8px;
-}
-
-.pagination-wrapper .counter {
-    float: left;
-    margin: 14px 0;
-}
-
-.display-limit {
-    float: right;
-    margin: 14px 0;
-    width: 140px !important;
-    height: 30px;
-    text-align: right;
-}
-
-.display-limit span,
-.display-limit p {
-    width: auto;
-    margin-right: 5px;
-    padding: 6px 0;
-}
-
-.display-limit span {
-    float: left;
-}
-
-.display-limit .input-select-wrapper {
-    width: 45px;
-}
-
-.display-limit .input-select-wrapper:after {
-    right: -6px;
-}
-
-.display-limit form {
-    width: 102px !important;
-}
-
-.display-limit select {
-    width: 100% !important;
-    padding: 5px 14px 5px 5px !important;
-    float: left;
-}
-
-.pagination li a:hover,
-.pagination > .active > a,
-.pagination > .active > a:hover {
-    z-index: 1;
-    background-color: #999;
-    color: #FFF;
-    border: 1px solid #6B6B6B;
-}
-
-.pagination li a {
-    z-index: 0;
-    color: #999;
 }
 
 
