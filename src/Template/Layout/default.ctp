@@ -38,9 +38,16 @@
 <body class='default'>
 
 	<?=  $this->element('OpenEmis.header'); ?>
-	  
-	<div id="main-splitter">
-		<div class="left-pane">
+
+	<?php
+	$baseUrl = $this->Url->build([
+		'plugin' => $this->request->params['plugin'],
+		'controller' => $this->request->params['controller'],
+		'action' => 'setJqxSpliterSize'
+	]);
+	?>
+	<div id="main-splitter" url="<?= $baseUrl ?>">
+		<div class="left-pane" style="<?= $SystemLayout_leftPanel; ?>">
 			<?php 
         		if($htmlLangDir != 'rtl'){
         			echo $this->element('OpenEmis.navigation');
@@ -54,7 +61,7 @@
 				}
 			?>
 		</div>
-        <div class="right-pane">
+        <div class="right-pane" style="<?= $SystemLayout_rightPanel; ?>">
         	<?php 
         		if($htmlLangDir != 'rtl'){
 					echo $this->element('OpenEmis.header');
@@ -73,9 +80,6 @@
 		<i class="fa fa-angle-double-left"></i>
 		<span class="menu-text"><?= __('Menu') ?></span>
 	</div>
-	<script type="text/javascript">
-	initNavigation();
-	</script>
 	
 	<?= $this->element('OpenEmis.footer') ?>
 	<?= $this->fetch('scriptBottom'); ?>
