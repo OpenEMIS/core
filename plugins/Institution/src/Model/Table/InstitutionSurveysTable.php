@@ -25,12 +25,12 @@ class InstitutionSurveysTable extends AppTable {
 		[
 			'value' => 'Workflow.onApprove',
 			'text' => 'Update Survey Status from Draft to Completed.',
-			'method' => 'OnApprove'
+			'method' => 'onApprove'
 		],
 		[
-			'value' => 'Workflow.OnReject',
+			'value' => 'Workflow.onReject',
 			'text' => 'Update Survey Status from Completed to Draft.',
-			'method' => 'OnReject'
+			'method' => 'onReject'
 		]
 	];
 
@@ -67,6 +67,7 @@ class InstitutionSurveysTable extends AppTable {
     	foreach ($this->workflowEvents as $event) {
     		$events[$event['value']] = $event['method'];
     	}
+
     	return $events;
     }
 
@@ -369,7 +370,10 @@ class InstitutionSurveysTable extends AppTable {
 			$this->Alert->success('InstitutionSurveys.save.draft', ['reset' => true]);
 		} else if ($entity->status == self::COMPLETED) {
 			// To trigger from Open to Pending For Approval
-			$this->setNextTransitions($entity);
+			$attachWorkflow = $this->controller->Workflow->attachWorkflow;
+			if ($this->controller->Workflow->attachWorkflow) {
+				$this->setNextTransitions($entity);
+			}
 			// End
 
 			$url = $this->ControllerAction->url('index');
@@ -391,7 +395,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->Alert->success('InstitutionSurveys.save.final', ['reset' => true]);
 	}
 
-	public function OnReject(Event $event, $id=null) {
+	public function onReject(Event $event, $id=null) {
 		$this->updateAll(
 			['status' => self::DRAFT],
 			['id' => $id]

@@ -529,31 +529,33 @@ class WorkflowBehavior extends Behavior {
 	public function setNextTransitions(Entity $entity) {
 		$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
 
-		if ($workflowRecord->workflow_step->stage == 0) {	// Open
-			$workflowStepId = $workflowRecord->workflow_step_id;
+		if (!empty($workflowRecord)) {
+			if ($workflowRecord->workflow_step->stage == 0) {	// Open
+				$workflowStepId = $workflowRecord->workflow_step_id;
 
-			$workflowAction = $this->WorkflowActions
-				->find()
-				->where([
-					$this->WorkflowActions->aliasField('workflow_step_id') => $workflowStepId,
-					$this->WorkflowActions->aliasField('action') => 0	// Approve
-				])
-				->first();
+				$workflowAction = $this->WorkflowActions
+					->find()
+					->where([
+						$this->WorkflowActions->aliasField('workflow_step_id') => $workflowStepId,
+						$this->WorkflowActions->aliasField('action') => 0	// Approve
+					])
+					->first();
 
-			$nextWorkflowStepId = $workflowAction->next_workflow_step_id;
+				$nextWorkflowStepId = $workflowAction->next_workflow_step_id;
 
-			$transitionData = [
-				'prev_workflow_step_id' => $workflowStepId,
-				'workflow_step_id' => $nextWorkflowStepId,
-				'workflow_action_id' => $workflowAction->id,
-				'workflow_record_id' => $workflowRecord->id,
-				'comment' => ''
-			];
-			$transitionEntity = $this->WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
+				$transitionData = [
+					'prev_workflow_step_id' => $workflowStepId,
+					'workflow_step_id' => $nextWorkflowStepId,
+					'workflow_action_id' => $workflowAction->id,
+					'workflow_record_id' => $workflowRecord->id,
+					'comment' => ''
+				];
+				$transitionEntity = $this->WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
 
-			if ($this->WorkflowTransitions->save($transitionEntity)) {
-			} else {
-				$this->_table->controller->log($transitionEntity->errors(), 'debug');
+				if ($this->WorkflowTransitions->save($transitionEntity)) {
+				} else {
+					$this->_table->controller->log($transitionEntity->errors(), 'debug');
+				}
 			}
 		}
 	}
@@ -568,19 +570,25 @@ class WorkflowBehavior extends Behavior {
 			if ($this->WorkflowTransitions->save($entity)) {
 				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
 
+				$subject = $this->_table;
+				$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
+				$id = $workflowRecord->model_reference;
+
+				// Trigger workflow after save event here
+				$event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $entity], $subject);
+				if ($event->isStopped()) { return $event->result; }
+				// End
+
 				// Trigger event here
 				$workflowAction = $this->WorkflowActions->get($entity->workflow_action_id);
 
 				if (!empty($workflowAction->event_key)) {
 					$eventKey = $workflowAction->event_key;
-					$subject = $this->_table;
-
-					$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
-					$id = $workflowRecord->model_reference;
 
 					$event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
 					if ($event->isStopped()) { return $event->result; }
 				}
+				// End
 			} else {
 				$this->_table->controller->log($entity->errors(), 'debug');
 				$this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
