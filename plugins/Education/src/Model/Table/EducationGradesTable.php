@@ -16,6 +16,17 @@ class EducationGradesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades']);
+		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
+		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
+		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
+		$this->hasMany('Visits', ['className' => 'Institution.InstitutionQualityVisits']);
+		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrades']);
+		$this->hasMany('InstitutionSiteSectionStudents', ['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
+		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
+		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
+
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
 			'joinTable' => 'education_grades_subjects',
@@ -72,14 +83,6 @@ class EducationGradesTable extends AppTable {
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		if (empty($this->request->data['transfer_to'])) {
-			$this->Alert->error('general.deleteTransfer.restrictDelete');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('remove'));
-		}
 	}
 
 	public function beforeAction(Event $event) {
