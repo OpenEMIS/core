@@ -13,8 +13,9 @@ class CustomFieldListBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
 			'Model.excel.onExcelBeforeStart' => ['callable' => 'onExcelBeforeStart', 'priority' => 100],
-			'Model.excel.onExcelUpdateHeader' => ['callable' => 'onExcelUpdateHeader', 'priority' => 110],
-			'Model.excel.onExcelUpdateRow' => ['callable' => 'onExcelUpdateRow', 'priority' => 120],
+			'Model.excel.onExcelUpdateFields' => ['callable' => 'onExcelUpdateFields', 'priority' => 110],
+			'Model.excel.onExcelRenderCustomField' => ['callable' => 'onExcelRenderCustomField', 'priority' => 120],
+			// 'Model.excel.onExcelUpdateRow' => ['callable' => 'onExcelUpdateRow', 'priority' => 120],
 		],
 		'moduleKey' => 'custom_module_id',
 		'formKey' => 'custom_form_id',
@@ -25,6 +26,8 @@ class CustomFieldListBehavior extends Behavior {
 	];
 
 	private $_condition = [];
+	private $_tmpFieldValues = [];
+	private $_customFieldOptionsList = [];
 
 	public function initialize(array $config) {
 		$this->CustomFormsFilters = null;
@@ -70,28 +73,38 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	// Model.excel.onExcelUpdateHeader
-	public function onExcelUpdateHeader(Event $event, ArrayObject $settings, ArrayObject $sheet) {
+	// Model.excel.onExcelUpdateFields
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, array $fields) {
 		$filterValue = null;
-		if (isset($sheet['key'])) {
-			$filterValue = $sheet['key'];
+		if (isset($settings['sheet']['key'])) {
+			$filterValue = $settings['sheet']['key'];
 		}
-		$fields = $this->getCustomFields($filterValue);
-		$customFields = $fields['customFields'];
-		$settings['customFields'] = $customFields;
-		$header = $fields['header'];
-		return $header;
+		$customFields = $this->getCustomFields($filterValue);
+
+		foreach ($customFields as $customField) {
+			$field['key'] = 'CustomField';
+			$field['field'] = 'custom_field';
+			$field['type'] = 'custom_field';
+			$field['label'] = $customField['name'];
+			$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type']];
+			$fields[] = $field;
+		}
+		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
+
+		return $fields;
 	}
 
-	// Model.excel.onExcelUpdateRow
-	public function onExcelUpdateRow(Event $event, ArrayObject $settings, Entity $entity, ArrayObject $sheet) {
-		$id = $entity->id;
-		$customFields = null;
-		if (isset($settings['customFields'])) {
-			$customFields = $settings['customFields'];
+	// Model.excel.onExcelRenderCustomField
+	public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr) {
+		$tmpFieldValues = $this->getTmpFieldValues();
+		if (!array_key_exists($entity->id, $tmpFieldValues)) {
+			$tmpFieldValues = $this->setTmpFieldValues($this->getFieldValue($entity->id));
 		}
-		$customFieldOptions = $sheet['customFieldOptions'];
-		return $this->getCustomFieldValues($id, $customFields, $customFieldOptions);
+		if (isset($tmpFieldValues[$entity->id])) {
+			return $this->getCustomFieldValue($tmpFieldValues[$entity->id], $attr['customField'], $this->getCustomFieldOptionsList());
+		} else {
+			return '';
+		}
 	}
 
 	/**
@@ -112,6 +125,44 @@ class CustomFieldListBehavior extends Behavior {
 	public function setCondition(array $condition) {
 		$this->_condition = $condition;
 		return $this->_condition;
+	}
+
+	/**
+	 *	Function to set the customFieldOptions
+	 *
+	 *	@param array The custom field option list
+	 */
+	public function setCustomFieldOptionsList(array $customFieldOptions) {
+		$this->_customFieldOptionsList = $customFieldOptions;
+	}
+
+	/**
+	 *	Function to get the customFieldOptions
+	 *
+	 *	@return array The custom field option list
+	 */
+	public function getCustomFieldOptionsList() {
+		return $this->_customFieldOptionsList;
+	}
+
+	/**
+	 *	Function to set the temporary field values
+	 *
+	 *	@param array The field values to be stored
+	 *	@return array The field values to be stored
+	 */
+	public function setTmpFieldValues(array $tmpFieldValues) {
+		$this->_tmpFieldValues = $tmpFieldValues;
+		return $tmpFieldValues;
+	}
+
+	/**
+	 *	Function to get the temporary field values
+	 *
+	 *	@return array The stored temporary field values
+	 */
+	public function getTmpFieldValues() {
+		return $this->_tmpFieldValues;
 	}
 
 	/**
@@ -242,7 +293,6 @@ class CustomFieldListBehavior extends Behavior {
 	public function getCustomFields($filterValue=null) {
 		$customFields = [];
 		$customFormFields = [];
-		$header = null;
 		$customModuleKey = $this->config('moduleKey');
 		if (is_null($customModuleKey)) {
 			// Use for surveys
@@ -281,28 +331,24 @@ class CustomFieldListBehavior extends Behavior {
 			if (!(is_null($fields))) {
 				foreach ($fields as $field) {
 					if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
-						$header[$field->id] = $field->name;
 						$customFields[$field->id] = $field;
 					}	
 				}
 			}
-			if (!empty($header)) {
-				ksort($header);
+			if (!empty($customFields)) {
 				ksort($customFields);
 			}
 		}
-		return ['header' => $header, 'customFields' => $customFields];
+		return $customFields;
 	}
 
 	/**
-	 *	Function to get the custom values for each type of the filter
+	 *	Function to get the field values base on a given record id
 	 *
-	 *	@param int $customRecordId The entity record id (e.g. institution_site_survey_id)
-	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
-	 *	@param array $customFieldOptionList The list of the available custom field options for dropdown and checkbox answers
-	 *	@return array The value base on the custom field and the record id specified
+	 *	@param int $recordId The record id of the entity
+	 *	@return array The field values of that given record id
 	 */
-	public function getCustomFieldValues($customRecordId, $customFields, $customFieldOptionsList) {
+	public function getFieldValue($recordId) {
 		$customFieldValueTable = $this->CustomFieldValues;
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
@@ -317,7 +363,8 @@ class CustomFieldListBehavior extends Behavior {
 		$fieldValue = $customFieldsTable
 			->find('list', [
 				'keyField' => $customFieldValueTable->aliasField($customFieldsForeignKey),
-				'valueField' => 'field_value'
+				'valueField' => 'field_value',
+				'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey),
 			])
 			->innerJoin(
 				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
@@ -333,26 +380,31 @@ class CustomFieldListBehavior extends Behavior {
 					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 					.' END) SEPARATOR \',\'))'
 			])
-			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $customRecordId])
-			->group([$customFieldValueTable->aliasField($customFieldsForeignKey)])
+			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $recordId])
+			->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
 			->toArray();
 
+		return $fieldValue;
+	}
+
+	/**
+	 *	Function to get the custom values for each field values specified
+	 *
+	 *	@param int $fieldValue List of field values
+	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
+	 *	@param array $customFieldOptionList The list of the available custom field options for dropdown and checkbox answers
+	 *	@return array The value base on the custom field and the field values specified
+	 */
+	public function getCustomFieldValue($fieldValue, $customField, $customFieldOptionsList) {
 		// List of options
 		$optionsValues = $customFieldOptionsList;
-
-		$fields = [];
-		if (!(is_null($customFields))) {
-			$fields = $customFields;
-		}
-		$answer = [];
-		foreach ($fields as $field) {
-			// Handle existing field types, if there are new field types please add another function for it
-			$type = strtolower($field->field_type);
-			if (method_exists($this, $type)) {
-				$ans = $this->$type($fieldValue, $field->id, $optionsValues);
-				if (!(is_null($ans))) {
-					$answer[] = $ans;
-				}
+		$answer = '';
+		// Handle existing field types, if there are new field types please add another function for it
+		$type = strtolower($customField['field_type']);
+		if (method_exists($this, $type)) {
+			$ans = $this->$type($fieldValue, $customField['id'], $optionsValues);
+			if (!(is_null($ans))) {
+				$answer = $ans;
 			}
 		}
 		return $answer;
@@ -416,7 +468,7 @@ class CustomFieldListBehavior extends Behavior {
 	private function date($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			$date = date_create_from_format('Y-m-d', $data[$fieldId]);
-			return date_format($date, 'Y-m-d');
+			return $this->_table->formatDate($date);
 		} else {
 			return '';
 		}
@@ -425,7 +477,7 @@ class CustomFieldListBehavior extends Behavior {
 	private function time($data, $fieldId, $options=[]) {
 		if (isset($data[$fieldId])) {
 			$time = date_create_from_format('G:i:s', $data[$fieldId]);
-			return date_format($time, 'g:i a');
+			return $this->_table->formatTime($date);
 		} else {
 			return '';
 		}
