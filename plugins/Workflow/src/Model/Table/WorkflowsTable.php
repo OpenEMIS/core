@@ -137,10 +137,10 @@ class WorkflowsTable extends AppTable {
 				'id' => $stepClosed->id,
 				'workflow_actions' => [
 					[
-						'name' => __('Reopen'),
+						'name' => __('Approve'),
 						'action' => self::APPROVE,
-						'visible' => 1,
-						'next_workflow_step_id' => $stepOpen->id,
+						'visible' => 0,
+						'next_workflow_step_id' => 0,
 						'comment_required' => 0
 					],
 					[
@@ -148,6 +148,13 @@ class WorkflowsTable extends AppTable {
 						'action' => self::REJECT,
 						'visible' => 0,
 						'next_workflow_step_id' => 0,
+						'comment_required' => 0
+					],
+					[
+						'name' => __('Reopen'),
+						'action' => null,
+						'visible' => 1,
+						'next_workflow_step_id' => $stepOpen->id,
 						'comment_required' => 0
 					]
 				]
