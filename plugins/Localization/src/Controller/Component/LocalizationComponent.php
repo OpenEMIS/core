@@ -27,12 +27,12 @@ class LocalizationComponent extends Component {
 	public $showLanguage = true;
 	public $language = 'en';
 	private $languages = [
-		'ar' => ['name' => 'العربية', 'direction' => 'rtl'],
-		'zh' => ['name' => '中文', 'direction' => 'ltr'],
-		'en' => ['name' => 'English', 'direction' => 'ltr'],
-		'fr' => ['name' => 'Français', 'direction' => 'ltr'],
-		'ru' => ['name' => 'русский', 'direction' => 'ltr'],
-		'es' => ['name' => 'español', 'direction' => 'ltr']
+		'ar' => ['name' => 'العربية', 'direction' => 'rtl', 'locale' => 'ar_SA'],
+		'zh' => ['name' => '中文', 'direction' => 'ltr', 'locale' => 'zh_CN'],
+		'en' => ['name' => 'English', 'direction' => 'ltr', 'locale' => 'en_US'],
+		'fr' => ['name' => 'Français', 'direction' => 'ltr', 'locale' => 'fr_FR'],
+		'ru' => ['name' => 'русский', 'direction' => 'ltr', 'locale' => 'ru_RU'],
+		'es' => ['name' => 'español', 'direction' => 'ltr', 'locale' => 'es_ES']
 	];
 	public $components = ['Cookie'];
 
@@ -57,6 +57,8 @@ class LocalizationComponent extends Component {
 			$lang = $session->read('System.language');
 
 		}
+		// $locale = isset($this->languages[$lang]) ? $this->languages[$lang]['locale'] : 'en_US';
+		// I18n::locale($locale);
 		I18n::locale($lang);
 		$this->language = $lang;
 		$this->Session = $session;
