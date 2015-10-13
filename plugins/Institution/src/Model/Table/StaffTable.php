@@ -13,6 +13,7 @@ use Cake\Controller\Controller;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Inflector;
+use DateTime;
 
 
 class StaffTable extends AppTable {
@@ -70,7 +71,16 @@ class StaffTable extends AppTable {
 			->add('institution_site_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
+			// Added in add before patch and add on new as it is only use by the add action
+			// ->requirePresence('role');
 		;
+	}
+
+	// Dynamic adding of role validation
+	public function validationRole (Validator $validator) {
+		$validator = $this->validationDefault($validator);
+		$validator->requirePresence('role');
+		return $validator;
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
@@ -173,7 +183,7 @@ class StaffTable extends AppTable {
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_site_position_id');
-		$this->ControllerAction->field('role');
+		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 
@@ -295,6 +305,17 @@ class StaffTable extends AppTable {
 				$newEntity = $this->newEntity($entity->toArray());
 				if (!$this->save($newEntity)) {
 						
+				} else {
+					$url = [
+						'plugin' => 'Institution', 
+						'controller' => 'Institutions', 
+						'action' => 'Staff', 
+						'0' => 'view', 
+						'1' => $newEntity->id
+					];
+					$url = array_merge($url, $this->ControllerAction->params());
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
 				}
 			}
 		}
@@ -343,7 +364,7 @@ class StaffTable extends AppTable {
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
 			}
-			$roleOptions = [0 => '-- ' . __('Select Role') . ' --'];
+			$roleOptions = ['' => '-- ' . __('Select Role') . ' --'];
 			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
 			$attr['options'] = $roleOptions;
 		}
@@ -435,14 +456,21 @@ class StaffTable extends AppTable {
 		$this->Session->delete('Institution.Staff.new');
 	}
 
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$options['validate'] = 'Role';
+	}
+
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (empty($data[$this->alias()]['institution_site_position_id'])) {
-			$this->Alert->error('Institution.InstitutionSiteStaff.noInstitutionSitePosition');
-		} else {
+		$options['validate'] = 'Role';
+		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+		$errorCount = count($patch->errors());
+		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('security_user_id', $patch->errors()))) {
 			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
 			$event->stopPropagation();
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
 			return $this->controller->redirect($action);
+		} else {
+			$this->Alert->error('general.add.failed', ['reset' => true]);
 		}
 	}
 

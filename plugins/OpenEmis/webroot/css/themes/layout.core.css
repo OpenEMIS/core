@@ -11,14 +11,14 @@
 	background-color: #6699CC;
 }
 
-.panel-breadcrumb .active,
-.panel-breadcrumb a:hover,
-.panel-breadcrumb i:hover {
+a,
+a:active,
+a:focus,
+.panel-breadcrumb li a,
+.panel-breadcrumb i {
 	color: #6699CC;
 }
 
-.pagination > .active > a,
-.pagination > .active > a:hover,
 .toggle-btn i,
 .input-group-addon,
 .selected {
@@ -29,7 +29,9 @@
 
 .btn-default,
 .pagination > .active > a:focus,
-.pagination > li > a:hover {
+.pagination > li > a:hover,
+.pagination > .active > a,
+.pagination > .active > a:hover {
 	background-color: #6699CC !important;
 	color: #FFF !important;
 	border: 1px solid #6699CC;
@@ -37,9 +39,11 @@
 
 /* DARK SHADES */
 
+a:hover,
 .pagination > li > a,
-.panel-breadcrumb li a,
-.panel-breadcrumb i {
+.panel-breadcrumb .active,
+.panel-breadcrumb a:hover,
+.panel-breadcrumb i:hover {
 	color: #476B8F;
 }
 
@@ -57,7 +61,8 @@
 .input-group-addon,
 .selected,
 .btn-single-action:hover,
-.ui-menu-item:hover {
+.ui-menu-item:hover,
+.btn-outline:hover {
 	border: 1px solid #476B8F !important;
 }
 
@@ -107,8 +112,15 @@
 .chosen-container .chosen-results li.active-result:hover,
 .ui-state-focus,
 .ui-widget-content .ui-state-focus,
-.ui-widget-header .ui-state-focus {
+.ui-widget-header .ui-state-focus,
+.pagination > li > a:hover,
+.btn-dropdown:hover {
 	background-color: #476B8F !important;
 	color: #FFF !important;
 	background-image: none !important;	
+}
+
+.horizontal-tabs span a:hover,
+.btn-dropdown:hover {
+	border-color: #476B8F;
 }

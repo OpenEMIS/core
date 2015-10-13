@@ -1,4 +1,4 @@
-/* RTL v1.0.0 */
+/* RTL v1.0.1 */
 
 .rtl html {
     overflow: hidden !important;
@@ -14,6 +14,25 @@
     direction: rtl;
 }
 
+/* LAYOUT */
+
+.rtl .right-pane {
+    overflow-y: auto;
+    background-color: #FFF;
+    width: 10%;
+    right: 0 !important;
+    position: absolute;    
+}
+
+.rtl .left-pane {
+    overflow-y: auto;
+    background-color: #FFF;
+    position: absolute;
+    left: 0 !important;
+    border-right: 1px solid #DDD;
+    height: 100%;
+    width: 90%;
+}
 
 /* LOGO */
 
