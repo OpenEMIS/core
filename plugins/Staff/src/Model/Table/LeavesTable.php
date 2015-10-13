@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Network\Request;
 use Cake\Event\Event;
 
 class LeavesTable extends AppTable {
@@ -11,30 +12,50 @@ class LeavesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('StaffLeaveTypes', ['className' => 'FieldOption.StaffLeaveTypes']);
-		$this->belongsTo('LeaveStatuses', ['className' => 'FieldOption.LeaveStatuses']);	
-	}
-
-	public function beforeAction(Event $event) {
-		$this->fields['staff_leave_type_id']['type'] = 'select';
-		$this->fields['leave_status_id']['type'] = 'select';
-
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('staff_leave_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('leave_status_id', $order++);
-		$this->ControllerAction->setFieldOrder('date_from', $order++);
-		$this->ControllerAction->setFieldOrder('date_to', $order++);
-		$this->ControllerAction->setFieldOrder('number_of_days', $order++);
-		$this->ControllerAction->setFieldOrder('comments', $order++);
+		$this->belongsTo('LeaveStatuses', ['className' => 'FieldOption.LeaveStatuses']);
+		$this->addBehavior('ControllerAction.FileUpload', [
+			// 'name' => 'file_name',
+			// 'content' => 'file_content',
+			'size' => '10MB',
+			'contentEditable' => true,
+			'allowable_file_types' => 'all'
+		]);
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		
-		return $validator->add('date_from', 'ruleCompareDate', [
-				'rule' => ['compareDate', 'date_to', false]
+		return $validator
+			->add('date_to', 'ruleCompareDateReverse', [
+				'rule' => ['compareDateReverse', 'date_from', true]
 			])
-			->add('date_to', [
-			])
+			->allowEmpty('file_content')
 		;
+	}
+
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('staff_leave_type_id', [
+			'type' => 'select'
+		]);
+		$this->ControllerAction->field('leave_status_id', [
+			'type' => 'select'
+		]);
+		$this->ControllerAction->field('file_name', [
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
+		$this->ControllerAction->field('file_content', [
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
+		$this->ControllerAction->setFieldOrder(['staff_leave_type_id', 'leave_status_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
+	}
+
+	public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'view') {
+			$attr['type'] = 'hidden';
+		} else if ($action == 'add' || $action == 'edit') {
+			$attr['type'] = 'hidden';
+		}
+
+		return $attr;
 	}
 }
