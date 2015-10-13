@@ -133,8 +133,11 @@ class ExcelBehavior extends Behavior {
 			$table = $sheet['table'];
 			$fields = $this->getFields($table);
 
+			// sheet info added to settings to avoid adding more parameters to event
+			$settings['sheet'] = $sheet;
+
 			// Event to add or modify the fields to fetch from the table
-			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields, $sheet]);
+			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields]);
 			if ($event->result) {
 				$fields = $event->result;
 			}
@@ -182,11 +185,6 @@ class ExcelBehavior extends Behavior {
 					$row[] = $attr['label'];
 				}
 
-				$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateHeader'), 'onExcelUpdateHeader', [$settings, $sheet]);
-				if ($event->result) {
-					$row = array_merge($row, $event->result);
-				}
-
 				// Any additional custom headers that require to be appended on the right side of the sheet
 				// Header column count must be more than the additional data columns
 				if(isset($sheet['additionalHeader'])) {
@@ -213,11 +211,6 @@ class ExcelBehavior extends Behavior {
 						$row = [];
 						foreach ($fields as $attr) {
 							$row[] = $this->getValue($entity, $table, $attr);
-						}
-
-						$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateRow'), 'onExcelUpdateRow', [$settings, $entity, $sheet]);
-						if ($event->result) {
-							$row = array_merge($row, $event->result);
 						}
 
 						// For custom data to be appended on the right side of the spreadsheet
@@ -296,10 +289,6 @@ class ExcelBehavior extends Behavior {
 		return $fields;
 	}
 
-	private function getHeader($fields) {
-		return $fields;
-	}
-
 	private function getFooter() {
 		$footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
 		return $footer;
@@ -314,9 +303,9 @@ class ExcelBehavior extends Behavior {
 			if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
 				$method = 'onExcelRender' . Inflector::camelize($type);
 				if (!$this->eventMap($method)) {
-					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $field]);
+					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $attr]);
 				} else {
-					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), null, [$entity, $field]);
+					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), null, [$entity, $attr]);
 				}
 				if ($event->result) {
 					$value = $event->result;
