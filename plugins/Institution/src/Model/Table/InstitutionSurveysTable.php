@@ -24,12 +24,12 @@ class InstitutionSurveysTable extends AppTable {
 	private $workflowEvents = [
 		[
 			'value' => 'Workflow.onApprove',
-			'text' => 'On approve, update Survey Status from Draft to Completed.',
+			'text' => 'Update Survey Status from Draft to Completed.',
 			'method' => 'OnApprove'
 		],
 		[
 			'value' => 'Workflow.OnReject',
-			'text' => 'On reject, update Survey Status from Completed to Draft.',
+			'text' => 'Update Survey Status from Completed to Draft.',
 			'method' => 'OnReject'
 		]
 	];
@@ -71,6 +71,9 @@ class InstitutionSurveysTable extends AppTable {
     }
 
     public function getWorkflowEvents(Event $event) {
+    	foreach ($this->workflowEvents as $key => $attr) {
+    		$this->workflowEvents[$key]['text'] = __($attr['text']);
+    	}
     	return $this->workflowEvents;
     }
 
