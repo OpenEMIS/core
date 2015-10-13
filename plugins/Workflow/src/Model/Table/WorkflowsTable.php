@@ -15,6 +15,15 @@ use App\Model\Traits\OptionsTrait;
 class WorkflowsTable extends AppTable {
 	use OptionsTrait;
 
+	// Workflow Steps - stage
+	const OPEN = 0;
+	const PENDING = 1;
+	const CLOSED = 2;
+
+	// Workflow Actions - action
+	const APPROVE = 0;
+	const REJECT = 1;
+
 	private $_fieldOrder = ['workflow_model_id', 'code', 'name'];
 	private $_contain = ['Filters'];
 
@@ -38,8 +47,9 @@ class WorkflowsTable extends AppTable {
 		if ($entity->isNew()) {
 			$data = [
 				'workflow_steps' => [
-					['name' => __('Open'), 'stage' => 0],
-					['name' => __('Closed'), 'stage' => 1]
+					['name' => __('Open'), 'stage' => self::OPEN, 'is_editable' => 1, 'is_removable' => 1],
+					['name' => __('Pending For Approval'), 'stage' => self::PENDING],
+					['name' => __('Closed'), 'stage' => self::CLOSED]
 				]
 			];
 
@@ -48,6 +58,108 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->isNew()) {
+			$stepOpen = null;
+			$stepPending = null;
+			$stepClosed = null;
+			foreach ($entity->workflow_steps as $key => $step) {
+				switch ($step->stage) {
+					case self::OPEN:
+						$stepOpen = $step;
+						break;
+					case self::PENDING:
+						$stepPending = $step;
+						break;
+					case self::CLOSED:
+						$stepClosed = $step;
+						break;
+					default:
+						break;
+				}
+			}
+
+			// Step - Open
+			$dataOpen = [
+				'id' => $stepOpen->id,
+				'workflow_actions' => [
+					[
+						'name' => __('Submit For Approval'),
+						'action' => self::APPROVE,
+						'visible' => 1,
+						'next_workflow_step_id' => $stepPending->id,
+						'comment_required' => 0
+					],
+					[
+						'name' => __('Cancel'),
+						'action' => self::REJECT,
+						'visible' => 1,
+						'next_workflow_step_id' => $stepClosed->id,
+						'comment_required' => 0
+					]
+				]
+			];
+			$entityOpen = $this->WorkflowSteps->newEntity($dataOpen);
+			if ($this->WorkflowSteps->save($entityOpen)) {
+			} else {
+				$this->WorkflowSteps->log($entityOpen->errors(), 'debug');
+			}
+			// End
+
+			// Step - Pending
+			$dataPending = [
+				'id' => $stepPending->id,
+				'workflow_actions' => [
+					[
+						'name' => __('Approve'),
+						'action' => self::APPROVE,
+						'visible' => 1,
+						'next_workflow_step_id' => $stepClosed->id,
+						'comment_required' => 0
+					],
+					[
+						'name' => __('Reject'),
+						'action' => self::REJECT,
+						'visible' => 1,
+						'next_workflow_step_id' => $stepOpen->id,
+						'comment_required' => 0
+					]
+				]
+			];
+			$entityPending = $this->WorkflowSteps->newEntity($dataPending);
+			if ($this->WorkflowSteps->save($entityPending)) {
+			} else {
+				$this->WorkflowSteps->log($entityPending->errors(), 'debug');
+			}
+			// End
+
+			// Step - Closed
+			$dataClosed = [
+				'id' => $stepClosed->id,
+				'workflow_actions' => [
+					[
+						'name' => __('Reopen'),
+						'action' => self::APPROVE,
+						'visible' => 1,
+						'next_workflow_step_id' => $stepOpen->id,
+						'comment_required' => 0
+					],
+					[
+						'name' => __('Reject'),
+						'action' => self::REJECT,
+						'visible' => 0,
+						'next_workflow_step_id' => 0,
+						'comment_required' => 0
+					]
+				]
+			];
+			$entityClosed = $this->WorkflowSteps->newEntity($dataClosed);
+			if ($this->WorkflowSteps->save($entityClosed)) {
+			} else {
+				$this->WorkflowSteps->log($entityClosed->errors(), 'debug');
+			}
+			// End
+		}
+
 		if (isset($entity->apply_to_all) && $entity->apply_to_all == 1) {
 			$workflowIds = $this
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -162,13 +274,34 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
-		if ($action == 'add' || $action == 'edit') {
+		if ($action == 'add') {
+			$Workflows = TableRegistry::get('Workflow.Workflows');
 			$modelOptions = $attr['options'];
+
+			// Loop through modelOptions and unset it if the model do not have filter and already created workflow.
+			foreach ($modelOptions as $key => $value) {
+				$filter = $this->WorkflowModels->get($key)->filter;
+				if (empty($filter)) {
+					$workflowResults = $Workflows
+						->find()
+						->where([
+							$Workflows->aliasField('workflow_model_id') => $key
+						])
+						->all();
+					if (!$workflowResults->isEmpty()) {
+						unset($modelOptions[$key]);
+					}
+				}
+			}
+			// End
+
 			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
 			$this->advancedSelectOptions($modelOptions, $selectedModel);
 
 			$attr['options'] = $modelOptions;
 			$attr['onChangeReload'] = 'changeModel';
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
 		}
 
 		return $attr;
