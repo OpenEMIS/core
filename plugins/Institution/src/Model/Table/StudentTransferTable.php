@@ -141,10 +141,10 @@ class StudentTransferTable extends AppTable {
 							$entity = $TransferRequests->newEntity($studentObj);
 							if ($TransferRequests->save($entity)) {
 								$tranferCount++;
-								$this->Alert->success($this->aliasField('success'));
+								$this->Alert->success($this->aliasField('success'), ['reset' => true]);
 							} else {
 								$this->log($entity->errors(), 'debug');
-								$this->Alert->error('general.add.failed');
+								$this->Alert->error('general.add.failed', ['reset' => true]);
 							}
 						}
 					}
