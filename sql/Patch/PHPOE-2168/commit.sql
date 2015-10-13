@@ -25,7 +25,6 @@ insert into z2168_institution_site_class_students (
 	from 
 	institution_site_class_students
 	left join institution_site_sections on (institution_site_class_students.institution_site_section_id = institution_site_sections.id)
-	left join institution_sites on (institution_site_sections.institution_site_id = institution_sites.id)
 	where institution_site_sections.id IS NULL
 ); 
 
@@ -38,3 +37,5 @@ where institution_site_class_students.id in
 		from 
 		z2168_institution_site_class_students
 	);
+
+drop table z2168_institution_site_class_students;
