@@ -23,6 +23,9 @@ class StudentTransferTable extends AppTable {
 
 	private $Grades = null;
 	private $GradeStudents = null;
+	private $StudentAdmission = null;
+	private $Students = null;
+
 	private $institutionId = null;
 	private $currentPeriod = null;
 	private $statuses = [];	// Student Status
@@ -62,6 +65,9 @@ class StudentTransferTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$this->Grades = TableRegistry::get('Institution.InstitutionGrades');
 		$this->GradeStudents = TableRegistry::get('Institution.StudentTransfer');
+		$this->StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+	    $this->Students = TableRegistry::get('Institution.Students');
+
 		$this->institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->AcademicPeriods->getCurrent();
     	$this->currentPeriod = $this->AcademicPeriods->get($selectedPeriod);
@@ -176,6 +182,9 @@ class StudentTransferTable extends AppTable {
 		if (!is_null($this->currentPeriod)) {
 			$Grades = $this->Grades;
 			$GradeStudents = $this->GradeStudents;
+			$StudentAdmission = $this->StudentAdmission;
+			$Students = $this->Students;
+
 	    	$institutionId = $this->institutionId;
 	    	$selectedPeriod = $this->currentPeriod->id;
 			$statuses = $this->statuses;
@@ -190,22 +199,31 @@ class StudentTransferTable extends AppTable {
 			$selectedGrade = $this->queryString('education_grade_id', $gradeOptions);
 			$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-				'callable' => function($id) use ($GradeStudents, $institutionId, $selectedPeriod, $statuses) {
+				'callable' => function($id) use ($GradeStudents, $StudentAdmission, $Students, $institutionId, $selectedPeriod, $statuses) {
 					return $GradeStudents
 						->find()
+						->leftJoin(
+							[$StudentAdmission->alias() => $StudentAdmission->table()],
+							[
+								$StudentAdmission->aliasField('student_id = ') . $GradeStudents->aliasField('student_id'),
+								$StudentAdmission->aliasField('status') => self::NEW_REQUEST
+							]
+						)
+						->leftJoin(
+							[$Students->alias() => $Students->table()],
+							[
+								$Students->aliasField('student_id = ') . $GradeStudents->aliasField('student_id'),
+								$Students->aliasField('student_status_id') => $statuses['CURRENT']
+							]
+						)
 						->where([
 							$this->aliasField('institution_id') => $institutionId,
 							$this->aliasField('academic_period_id') => $selectedPeriod,
 							$this->aliasField('education_grade_id') => $id,
-							$this->aliasField('student_status_id IN') => [$statuses['PROMOTED'], $statuses['GRADUATED']]
+							$this->aliasField('student_status_id IN') => [$statuses['PROMOTED'], $statuses['GRADUATED']],
+							$StudentAdmission->aliasField('student_id IS') => NULL,
+							$Students->aliasField('student_id IS') => NULL
 						])
-						->where([
-			  				'NOT EXISTS (
-			  					SELECT `id` 
-			  					FROM `institution_student_admission` 
-			  					WHERE `institution_student_admission`.`student_id` = `StudentTransfer`.`student_id` 
-			  					AND `institution_student_admission`.`status` = ' . self::NEW_REQUEST . ')'
-			  			])
 						->count();
 				}
 			]);
@@ -403,35 +421,36 @@ class StudentTransferTable extends AppTable {
     	$students = [];
     	if (!is_null($selectedGrade)) {
 	    	$GradeStudents = $this->GradeStudents;
-	    	$StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+	    	$StudentAdmission = $this->StudentAdmission;
+			$Students = $this->Students;
 	    	$statuses = $this->statuses;
 
 	    	$studentQuery = $this
 	    		->find()
 	    		->matching('Users')
+				->leftJoin(
+					[$StudentAdmission->alias() => $StudentAdmission->table()],
+					[
+						$StudentAdmission->aliasField('student_id = ') . $this->aliasField('student_id'),
+						$StudentAdmission->aliasField('status') => self::NEW_REQUEST
+					]
+				)
+				->leftJoin(
+					[$Students->alias() => $Students->table()],
+					[
+						$Students->aliasField('student_id = ') . $this->aliasField('student_id'),
+						$Students->aliasField('student_status_id') => $statuses['CURRENT']
+					]
+				)
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
 					$this->aliasField('academic_period_id') => $selectedPeriod,
 					$this->aliasField('education_grade_id') => $selectedGrade,
-					$this->aliasField('student_status_id IN') => [$statuses['PROMOTED'], $statuses['GRADUATED']]
+					$this->aliasField('student_status_id IN') => [$statuses['PROMOTED'], $statuses['GRADUATED']],
+					$StudentAdmission->aliasField('student_id IS') => NULL,
+					$Students->aliasField('student_id IS') => NULL
 				])
-				->where([
-	  				'NOT EXISTS (
-	  					SELECT `id` 
-	  					FROM `institution_student_admission` 
-	  					WHERE `institution_student_admission`.`student_id` = `StudentTransfer`.`student_id` 
-	  					AND `institution_student_admission`.`status` = ' . self::NEW_REQUEST . ')'
-	  			])
-	  			// ->where([
-	  			// 	'NOT EXISTS (
-	  			// 		SELECT `id` 
-	  			// 		FROM `institution_students` 
-	  			// 		WHERE `institution_students`.`student_id` = `StudentTransfer`.`student_id` 
-	  			// 		AND `institution_students`.`institution_id` <> `StudentTransfer`.`institution_id`
-	  			// 		AND `institution_students`.`student_status_id` = ' . $statuses['CURRENT'] . '
-	  			// 	)'
-	  			// ])
-	  			;
+				->group($this->aliasField('student_id'));
 
 	  		$students = $studentQuery->toArray();
 	  	}
