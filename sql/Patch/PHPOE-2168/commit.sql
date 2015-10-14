@@ -1,3 +1,5 @@
+INSERT INTO `db_patches` VALUES ('PHPOE-2168');
+
 -- SELECT * FROM institution_site_section_classes WHERE institution_site_section_id NOT IN (SELECT id FROM institution_site_sections);
 DELETE FROM institution_site_section_classes WHERE NOT EXISTS (SELECT id FROM institution_site_sections WHERE institution_site_sections.id = institution_site_section_classes.institution_site_section_id);
 
