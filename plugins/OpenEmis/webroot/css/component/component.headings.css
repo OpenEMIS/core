@@ -1,4 +1,4 @@
-/* HEADINGS v.1.0.0 */
+/* HEADINGS v.1.0.1 */
 
 h1,
 h2,
@@ -45,6 +45,7 @@ p {
     font-size: 12px;
     font-weight: 400;
     width: 100%;
+    line-height: 1.4em;
 }
 
 p.error {

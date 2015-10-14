@@ -1,6 +1,7 @@
 @import url('layout/layout.css');
 @import url('layout/layout.navigation.css');
 @import url('layout/layout.rtl.css');
+@import url('component/component.about.css');
 @import url('component/component.accordion.css');
 @import url('component/component.advancedsearch.css');
 @import url('component/component.alerts.css');
@@ -10,7 +11,10 @@
 @import url('component/component.checkbox.css');
 @import url('component/component.dashboard.css');
 @import url('component/component.headings.css');
+@import url('component/component.hyperlink.css');
+@import url('component/component.lists.css');
 @import url('component/component.pageheader.css');
+@import url('component/component.pagination.css');
 @import url('component/component.panelaccordion.css');
 @import url('component/component.search.css');
 @import url('component/component.sortable.css');
@@ -18,4 +22,5 @@
 @import url('component/component.table.css');
 @import url('component/component.tableinview.css');
 @import url('component/component.toolbar.css');
+@import url('component/component.toolbarinput.css');
 @import url('component/component.wizard.css');
