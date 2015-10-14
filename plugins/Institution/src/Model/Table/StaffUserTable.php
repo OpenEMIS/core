@@ -18,10 +18,6 @@ class StaffUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Staff.new';
 		if ($this->Session->check($sessionKey)) {
@@ -31,7 +27,8 @@ class StaffUserTable extends UserTable {
 			$institutionId = $positionData['institution_site_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
-			if ($Staff->save($Staff->newEntity($positionData))) {
+			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
+			if ($Staff->save($staffEntity)) {
 				if ($role > 0) {
 					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
 					$obj = [
@@ -42,6 +39,13 @@ class StaffUserTable extends UserTable {
 					];
 					$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 					$GroupUsers->save($GroupUsers->newEntity($obj));
+				}
+			} else {
+				$errors = $staffEntity->errors();
+				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
+					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
+				} else {
+					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -60,16 +64,16 @@ class StaffUserTable extends UserTable {
 	}
 
 	private function setupTabElements($entity) {
-		$tabElements = $this->controller->getUserTabElements(['userRole' => 'Staff']);
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
 
-		if ($this->action != 'add') {
-			$id = $this->request->query['id'];
-			$tabElements['Staff']['url'] = array_merge($tabElements['Staff']['url'], [$id]);
-			foreach ($tabElements as $key => $value) {
-				if ($key == 'Staff') continue;
-				$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], [$entity->id, 'id' => $id]);
-			}
-		}
+		$options = [
+			'userRole' => 'Staff',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $entity->id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
@@ -82,8 +86,13 @@ class StaffUserTable extends UserTable {
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view' || $action == 'add') {
+		if ($action == 'view') {
 			unset($toolbarButtons['back']);
+			if ($toolbarButtons->offsetExists('export')) {
+				unset($toolbarButtons['export']);
+			}
+		} else if ($action == 'add') {
+			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
