@@ -507,6 +507,11 @@ class InstitutionAssessmentsTable extends AppTable {
     	$selectedGrade = $request->query('education_grade_id');
 
 		$classOptions = [];
+		$_conditions = [
+			$this->Classes->aliasField('institution_site_id') => $institutionId,
+			$this->Classes->aliasField('academic_period_id') => $selectedPeriod
+		];
+
 		$query = $this->Classes
 			->find('list')
 			->innerJoin(
@@ -529,25 +534,56 @@ class InstitutionAssessmentsTable extends AppTable {
 					$this->Subjects->aliasField('education_subject_id IN') => $this->educationSubjectIds
 				]
 			)
-			->where([
-				$this->Classes->aliasField('institution_site_id') => $institutionId,
-				$this->Classes->aliasField('academic_period_id') => $selectedPeriod
+			->where($_conditions);
+
+		if ($this->AccessControl->check(['Institutions', 'Sections', 'index'])) {
+			$conditions = array_merge($_conditions, [
+				$this->Classes->aliasField('security_user_id') => $this->userId // homeroom teacher
 			]);
 
-		if ($this->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
-			// User has access to AllClasses
-			$classOptions = $query->toArray();
-		} else {
-			if ($this->AccessControl->check(['Institutions', 'Sections', 'index'])) {
-				// User has access to MyClasses
-		    	$query->where([
-					$this->Classes->aliasField('security_user_id') => $this->userId
-    			]);
+			$query->where($conditions, [], true);
 
-    			$classOptions = $query->toArray();
-	    	} else {
-	    		// User do not have access to AllClasses and MyClasses, return empty
-	    	}
+			if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+				// User has access to My Classes and My Subjects
+				$classOptions = $query->toArray();
+
+				$attr['homeroom_classes'] = $classOptions;
+
+				// Find Classes where the user is the subject teacher
+				$query->where($_conditions, [], true);
+				$query->innerJoin(
+					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
+					[
+						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+						$this->SubjectStaff->aliasField('status') => 1
+					]
+				);
+				$subjectClassOptions = $query->toArray();
+				// End
+
+				$classOptions = $classOptions + $subjectClassOptions;
+			} else {
+				// User has access to My Classes but don't have access to My Subjects
+				$classOptions = $query->toArray();
+			}
+		} else {
+			if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+				// User don't have access to My Classes but has access to My Subjects
+				$query->innerJoin(
+					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
+					[
+						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+						$this->SubjectStaff->aliasField('status') => 1
+					]
+				);
+
+				$classOptions = $query->toArray();
+			} else {
+				// User don't have access to My Classes and My Subjects
+				$classOptions = $query->toArray();
+			}
 		}
 
 		if (empty($classOptions )) {
@@ -592,25 +628,45 @@ class InstitutionAssessmentsTable extends AppTable {
 				$this->Subjects->aliasField('education_subject_id IN') => $this->educationSubjectIds
 			]);
 
-		if ($this->AccessControl->check(['Institutions', 'AllSubjects', 'index'])) {
-			// User has access to AllSubjects
-			$subjectOptions = $query->toArray();
+		if ($this->AccessControl->check(['Institutions', 'Sections', 'index'])) {
+			if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+				// User has access to My Classes and My Subjects
+				// Check if the login user is not the Homeroom teacher then filter by Subject teacher
+
+				$homeroomClasses = $this->fields['class']['homeroom_classes'];
+				if (!array_key_exists($selectedClass, $homeroomClasses)) {
+					$query->innerJoin(
+						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
+						[
+							$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+							$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+							$this->SubjectStaff->aliasField('status') => 1
+						]
+					);
+				}
+
+				$subjectOptions = $query->toArray();
+			} else {
+				// User has access to My Classes but don't have access to My Subjects
+				$subjectOptions = $query->toArray();
+			}
 		} else {
 			if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
-				// User has access to MySubjects
+				// User don't have access to My Classes but has access to My Subjects
 				$query->innerJoin(
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
 						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
-						$this->SubjectStaff->aliasField('security_user_id') => $this->userId,
+						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
 				);
 
-    			$subjectOptions = $query->toArray();
-	    	} else {
-	    		// User do not have access to AllSubjects and MySubjects, return empty
-	    	}
+				$subjectOptions = $query->toArray();
+			} else {
+				// User don't have access to My Classes and My Subjects
+				$subjectOptions = $query->toArray();
+			}
 		}
 
 		if (empty($subjectOptions)) {
