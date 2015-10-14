@@ -12,6 +12,9 @@ echo $this->Html->css('highchart-override');
 
 echo $this->Html->css('OpenEmis.master.min');
 echo $this->Html->css('OpenEmis.kordit/kordit');
+
+echo $this->Html->css('master-override');
+
 if (isset($theme)) {
 	echo $this->Html->css($theme);
 }
