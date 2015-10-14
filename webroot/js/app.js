@@ -307,9 +307,6 @@ var jsList = {
 			success: function(data) {
 				var i = new Image();
 				i.src = "data:image/jpg;base64," + data;
-
-				
-
 				i.onload = function(){
 					var imageWidth = obj.attr('data-image-width');
 					if (typeof imageWidth !== typeof undefined && imageWidth !== false) {
