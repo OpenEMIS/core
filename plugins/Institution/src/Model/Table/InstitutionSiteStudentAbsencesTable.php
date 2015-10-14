@@ -3,11 +3,13 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\I18n;
 
 class InstitutionSiteStudentAbsencesTable extends AppTable {
 	use OptionsTrait;
@@ -24,6 +26,66 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('Excel', [
+			'excludes' => [
+				'start_year',
+				'end_year',
+				'institution_site_id',
+				'security_user_id',
+				'full_day', 
+				'start_date', 
+				'start_time', 
+				'end_time',
+				'end_date'
+			],
+			'pages' => ['index']
+		]);
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$query
+			->where([$this->aliasField('institution_site_id') => $institutionId])
+			->select(['openemis_no' => 'Users.openemis_no']);
+	}
+
+
+	// To select another one more field from the containable data
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$extraField[] = [
+			'key' => 'Users.openemis_no',
+			'field' => 'openemis_no',
+			'type' => 'string',
+			'label' => ''
+		];
+		$extraField[] = [
+			'key' => 'InstitutionSiteStudentAbsences.security_user_id',
+			'field' => 'security_user_id',
+			'type' => 'integer',
+			'label' => ''
+		];
+
+		$language = I18n::locale();
+		$newArray = [];
+		// Find the label
+		foreach($extraField as $extra) {
+			list($module, $field) = explode(".", $extra['key']);
+			$label = $this->onGetFieldLabel($event, $module, $field, $language);
+			$extra['label'] = $label;
+			$newArray[] = $extra;
+
+		}
+
+		$newArray[] = [
+			'key' => 'InstitutionSiteStudentAbsences.absences',
+			'field' => 'absences',
+			'type' => 'string',
+			'label' => __('Absences')
+		];
+
+		$fields = array_merge($newArray, $fields);
+
+		return $fields;
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -44,6 +106,32 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 				'rule' => ['compareDateReverse', 'start_date', true]
 			]);
 		return $validator;
+	}
+
+	public function onExcelGetAbsences(Event $event, Entity $entity) {
+
+		$startDate = "";
+		$endDate = "";
+
+		if (!empty($entity->start_date)) {
+			$startDate = $this->formatDate($entity->start_date);
+		} else {
+			$startDate = $entity->start_date;
+		}
+
+		if (!empty($entity->end_date)) {
+			$endDate = $this->formatDate($entity->end_date);
+		} else {
+			$endDate = $entity->end_date;
+		}
+		
+		if ($entity->full_day) {
+			return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
+		} else {
+			$startTime = $entity->start_time;
+			$endTime = $entity->end_time;
+			return sprintf('%s (%s - %s) %s (%s - %s)', __('Non Full Day'), $startDate, $endDate, __('Time'), $startTime, $endTime);
+		}
 	}
 
 	public function onGetDate(Event $event, Entity $entity) {
@@ -143,6 +231,19 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		if ($entity->full_day == 1) {
 			$this->fields['start_time']['visible'] = false;
 			$this->fields['end_time']['visible'] = false;
+		}
+	}
+
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$StudentTable = TableRegistry::get('Institution.Students');
+		$studentId = $entity->security_user_id;
+		$institutionId = $entity->institution_site_id;
+		if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+			$process = function ($model, $entity) {
+				return false;
+			};
+			$this->Alert->error('InstitutionSiteStudentAbsences.notEnrolled');
+			return $process;
 		}
 	}
 
