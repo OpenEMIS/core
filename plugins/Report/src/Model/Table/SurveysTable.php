@@ -167,39 +167,45 @@ class SurveysTable extends AppTable  {
 				$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
 
 				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
-					$query = $this->find('list', [
-						'keyField' => 'surveyStatus',
-						'valueField' => 'statusCount'
+
+					$attr['options'] = [
+						self::COMPLETED => __('Completed'),
+						'-1' => __('Not Completed')
+					];
+
+					$attr['type'] = 'select';
+
+					$surveyTable = $this;
+					$selected = self::COMPLETED;
+
+					$this->advancedSelectOptions($attr['options'], $selected, [
+						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
+						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId) {
+
+							$query = $surveyTable->find('list', [
+								'keyField' => 'surveyStatus',
+								'valueField' => 'statusCount'
+							]);
+
+							// Add a case to check if the survey is completed or not
+							$completedSurvey = $query->newExpr()->addCase(
+								[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)], 
+								[self::COMPLETED, -1], 
+								['integer', 'integer']);
+
+							$query->select([
+									'surveyStatus' => $completedSurvey,
+									'statusCount' => $query->func()->count($this->aliasField('id'))
+								])
+								->group(['surveyStatus'])
+								->where([
+									$surveyTable->aliasField('survey_form_id') => $surveyForm,
+									$surveyTable->aliasField('academic_period_id') => $academicPeriodId
+								]);
+
+							return $query->having(['surveyStatus' => $id])->count();
+						}
 					]);
-
-					// Add a case to check if the survey is completed or not
-					$completedSurvey = $query->newExpr()->addCase(
-						[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)], 
-						['COMPLETED', 'NOT COMPLETED'], 
-						['string', 'string']);
-
-					$query->select([
-							'surveyStatus' => $completedSurvey,
-							'statusCount' => $query->func()->count($this->aliasField('id'))
-						])
-						->group(['surveyStatus'])
-						->where([
-							$this->aliasField('survey_form_id') => $surveyForm,
-							$this->aliasField('academic_period_id') => $academicPeriodId
-						]);
-					$surveyStatus = $query->toArray();
-
-					// If there is completed survey add the option
-					if (isset($surveyStatus['COMPLETED'])) {
-						$attr['options'][self::COMPLETED] = __('Completed');
-						$attr['type'] = 'select';
-					}
-
-					// If there is not completed survey add the option
-					if (isset($surveyStatus['NOT COMPLETED'])) {
-						$attr['options'][0] = __('Not Completed');
-						$attr['type'] = 'select';
-					}
 					return $attr;
 				}
 			}
