@@ -306,7 +306,8 @@ trait MessagesTrait {
 		],
 		'WorkflowActions' => [
 			'next_step' => 'Next Step',
-			'comment_required' => 'Comment Required'
+			'comment_required' => 'Comment Required',
+			'event' => 'Event'
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
@@ -781,6 +782,13 @@ trait MessagesTrait {
 		'Labels' => [
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
+			]
+		],
+		'Workflow' => [
+			'Workflows' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
 			]
 		]
 	];
