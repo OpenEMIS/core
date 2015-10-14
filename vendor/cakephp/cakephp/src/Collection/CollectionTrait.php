@@ -158,11 +158,19 @@ trait CollectionTrait
     /**
      * {@inheritDoc}
      *
-     * @return \Cake\Collection\Iterator\ExtractIterator
      */
     public function extract($matcher)
     {
-        return new ExtractIterator($this->unwrap(), $matcher);
+        $extractor = new ExtractIterator($this->unwrap(), $matcher);
+        if (is_string($matcher) && strpos($matcher, '{*}') !== false) {
+            $extractor = $extractor
+                ->filter(function ($data) {
+                    return $data !== null && ($data instanceof \Traversable || is_array($data));
+                })
+                ->unfold();
+        }
+
+        return $extractor;
     }
 
     /**
@@ -242,8 +250,12 @@ trait CollectionTrait
      * {@inheritDoc}
      *
      */
-    public function sumOf($matcher)
+    public function sumOf($matcher = null)
     {
+        if ($matcher === null) {
+            return array_sum($this->toList());
+        }
+
         $callback = $this->_propertyExtractor($matcher);
         $sum = 0;
         foreach ($this as $k => $v) {
@@ -330,6 +342,11 @@ trait CollectionTrait
         $count = $iterator instanceof Countable ?
             count($iterator) :
             iterator_count($iterator);
+
+        if ($count === 0) {
+            return null;
+        }
+
         foreach ($this->take(1, $count - 1) as $last) {
             return $last;
         }
@@ -570,10 +587,11 @@ trait CollectionTrait
      */
     public function zipWith($items, $callable)
     {
-        $items = [$items];
         if (func_num_args() > 2) {
             $items = func_get_args();
             $callable = array_pop($items);
+        } else {
+            $items = [$items];
         }
         return new ZipIterator(array_merge([$this], $items), $callable);
     }

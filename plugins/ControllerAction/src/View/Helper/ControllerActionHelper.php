@@ -7,9 +7,10 @@ use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\I18n\I18n;
 
 class ControllerActionHelper extends Helper {
-	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label'];
+	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
 	public function getColumnLetter($columnNumber) {
         if ($columnNumber > 26) {
@@ -72,7 +73,7 @@ class ControllerActionHelper extends Helper {
 		// save button
 		$buttons[] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save']
+			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
 		];
 
 		// cancel button
@@ -135,6 +136,14 @@ class ControllerActionHelper extends Helper {
 		return $visible;
 	}
 
+	public function locale($locale = null) {
+		if (!empty($locale)) {
+			return I18n::locale($locale);
+		} else {
+			return I18n::locale();
+		}
+	}
+
 	public function getTableHeaders($fields, $model, &$dataKeys) {
 		$excludedTypes = array('hidden', 'file', 'file_upload');
 		$attrDefaults = array(
@@ -172,8 +181,17 @@ class ControllerActionHelper extends Helper {
 					}
 
 					if ($attr['sort']) {
-						$title = ($label!='') ? $label : __($field);
-						$label = $this->Paginator->sort($field, $title);
+						$sortField = $field;
+						$sortTitle = ($label!='') ? $label : __($field);
+						if (is_array($attr['sort'])) {
+							if (array_key_exists('field', $attr['sort'])) {
+								$sortField = $attr['sort']['field'];
+							}
+							if (array_key_exists('title', $attr['sort'])) {
+								$sortTitle = $attr['sort']['title'];
+							}
+						}
+						$label = $this->Paginator->sort($sortField, $sortTitle);
 					}
 					
 					$method = 'onGet' . Inflector::camelize($field);
@@ -225,7 +243,7 @@ class ControllerActionHelper extends Helper {
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-				$value = $event->result;
+				$value = __($event->result);
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
@@ -379,9 +397,6 @@ class ControllerActionHelper extends Helper {
 
 		$html = '';
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
-		$_rowClass = array('row');
-		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-		$_valueClass = array('form-input'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosenSelect');
 
@@ -416,6 +431,10 @@ class ControllerActionHelper extends Helper {
 		$language = $session->read('System.language');
 
 		foreach ($displayFields as $_field => $attr) {
+			$_rowClass = array('row');
+			$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
+			$_valueClass = array('form-input'); // default bootstrap class for values
+
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$_type = $_fieldAttr['type'];
 			$visible = $this->isFieldVisible($_fieldAttr, 'view');
@@ -492,7 +511,7 @@ class ControllerActionHelper extends Helper {
 				if (!array_key_exists('override', $_fieldAttr)) {
 					$html .= sprintf($row, $rowClass, $rowContent);
 				} else {
-					$html .= '<div class="row">' . $value . '</div>';
+					$html .= sprintf($row, $rowClass, $value);
 				}
 			}
 		}

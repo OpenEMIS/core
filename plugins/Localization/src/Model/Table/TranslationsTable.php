@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\I18n\I18n;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 
 class TranslationsTable extends AppTable {
 
@@ -64,18 +65,20 @@ class TranslationsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		// Append the condition to the existing condition in the options
-		$searchField = $request->data['Search']['searchField'];
+		$options['auto_search'] = false;
+		$options['auto_contain'] = false;
+		
+		$search = $this->ControllerAction->getSearchKey();
 
-		if (!empty($searchField)) {
-			$query->orWhere([$this->aliasField('en')." LIKE '%" . $searchField . "%'"]);
+		if (!empty($search)) {
+			$query->where([$this->aliasField('en')." LIKE '%" . $search . "%'"]);
 		}
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if($action == "index"){
 			$toolbarButtons['download']['type'] = 'button';
-			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+			$toolbarButtons['download']['label'] = '<span class="icon-big"><i class="fa kd-compile"></i></span>';
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Compile');
 			$toolbarButtons['download']['attr']['onclick'] = 'Translations.compile(this);';
@@ -87,6 +90,13 @@ class TranslationsTable extends AppTable {
 			$toolbarButtons['download']['url'] = $url;
 		}
     }
-}
 
-?>
+    public function validationDefault(Validator $validator) {
+		$validator
+			->add('en', 'ruleUnique', [
+  				'rule' => 'checkUniqueEnglishField'
+  			])
+  			;
+		return $validator;
+	}
+}

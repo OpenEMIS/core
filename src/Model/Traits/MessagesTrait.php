@@ -1,5 +1,7 @@
 <?php
 namespace App\Model\Traits;
+use Cake\Cache\Cache;
+use Cake\ORM\TableRegistry;
 
 trait MessagesTrait {
 	public $messages = [
@@ -28,6 +30,7 @@ trait MessagesTrait {
 			'notEditable' => 'This record is not editable',
 			'exists' => 'The record is exists in the system.',
 			'noData' => 'There are no records.',
+			'noRecords' => 'No Record',
 			'select' => [
 				'noOptions' => 'No configured options'
 			],
@@ -47,6 +50,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
 			],
+			'deleteTransfer' =>[
+				'restrictDelete' => 'The record cannot be deleted as there are still records associated with it.'
+			],
 			'view' => [
 				'label' => 'View',
 			],
@@ -54,9 +60,13 @@ trait MessagesTrait {
 				'success' => 'The record has been duplicated successfully.',
 				'failed' => 'The record is not duplicated due to errors encountered.',
 			],
+			'academicPeriod' => [
+				'notEditable' => 'The chosen academic period is not editable',
+			],
+			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
-			'notSelected' => 'No Record has been selected/saved.',
+			'notSelected' => 'No Record has been selected / saved.',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
@@ -84,8 +94,10 @@ trait MessagesTrait {
 		'Institutions' => [
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
+			'noSections' => 'No Available Classes'
 		],
 		'InstitutionSiteStaff' => [
+			'title' => 'Staff',
 			'start_date' => 'Start Date',
 			'fte' => 'FTE',
 			'total_fte' => 'Total FTE',
@@ -94,10 +106,12 @@ trait MessagesTrait {
 			'current_staff_list' => 'Current Staff List',
 			'past_staff_list' => 'Past Staff List',
 		],
-		'InstitutionSiteProgrammes' => [
+		'InstitutionGrades' => [
 			'noEducationLevels' => 'There are no available Education Level.',
 			'noEducationProgrammes' => 'There are no available Education Programme.',
 			'noEducationGrades' => 'There are no available Education Grade.',
+			'noGradeSelected' => 'No Education Grade was selected.',
+			'failedSavingGrades' => 'Failed to save grades',
 			'start_date' => 'Start Date',
 			'end_date' => 'End Date',
 			'education_grade' => 'Education Grades'
@@ -111,10 +125,10 @@ trait MessagesTrait {
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
-			'security_user_id' => 'Home Room Teacher',
+			// 'security_user_id' => 'Home Room Teacher',
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
-			'multi_grade_field' => 'Multi-Grades Class',
+			'multi_grade_field' => 'Class Grades',
 			
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
@@ -126,62 +140,101 @@ trait MessagesTrait {
 			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
-			'classes' => 'Subjects',
+			'subjects' => 'Subjects',
 			'education_subject' => 'Subject',
 			'class' => 'Subject',
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
 		],
-		'InstitutionSiteFees' => [
+		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+			'fee_payments_exists' => 'Unable to delete this record due to payments by students already exists'
+		],
+		'Students' => [
+			'noGrades' => 'No Grades',
+			'noStudents' => 'No Student found'
 		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+			'payment_date' => 'Payment Date',
+			'created_user_id' => 'Created By',
+			'comments' => 'Comments',
+			'amount' => 'Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
+			'noSubjects' => 'There are no available Education Subjects.',
+			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Subjects',
+			'noStudents' => 'No Available Students',
+			'mark' => 'Mark',
+			'grading' => 'Grading',
+			'save' => [
+				'draft' => 'Assessment record has been saved to draft successfully.',
+				'final' => 'Assessment record has been submitted successfully.',
+				'failed' => 'The record is not saved due to errors encountered.',
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
-		],
-		'InstitutionAssessmentResults' => [
-			'noSubjects' => 'There are no available Subjects.',
-			'noSections' => 'There are no available Classes.',
-			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
+			],
 			'reject' => [
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
+			'section' => 'Class',
+			'noAccess' => 'You do not have access to this Class.'
+		],
+		'InstitutionRubricAnswers' => [
+			'rubric_template' => 'Rubric Template',
+			'rubric_section_id' => 'Section',
+			'noSection' => 'There is no rubric section selected',
+			'save' => [
+				'draft' => 'Rubric record has been saved to draft successfully.',
+				'final' => 'Rubric record has been submitted successfully.',
+				'failed' => 'This rubric record is not submitted due to criteria answers is not complete.'
+			],
+			'reject' => [
+				'success' => 'The record has been rejected successfully.',
+				'failed' => 'The record is not rejected due to errors encountered.'
+			]
+		],
+		'StudentSurveys' => [
+			'noSurveys' => 'No Surveys',
+			'save' => [
+				'draft' => 'Survey record has been saved to draft successfully.',
+				'final' => 'Survey record has been submitted successfully.'
+			]
 		],
 		'password'=> [
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
 		],
 		'EducationGrades' => [
-			'add_subject' => 'Add Subject'
-		],
-		'RubricSections' => [
-			'rubric_template_id' => 'Rubric Template'
+			'add_subject' => 'Add Subject',
 		],
 		'RubricCriterias' => [
-			'rubric_section_id' => 'Rubric Section',
+			//'rubric_section_id' => 'Rubric Section',
 			'criterias' => 'Criterias'
 		],
 		'RubricTemplateOptions' => [
-			'rubric_template_id' => 'Rubric Template',
 			'weighting' => 'Weighting'
 		],
 		'security' => [
 			'login' => [
-				'fail' => 'You have entered an invalid username or password.'
+				'fail' => 'You have entered an invalid username or password.',
+				'inactive' => 'Your account has been disabled.'
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
@@ -194,7 +247,8 @@ trait MessagesTrait {
 		],
 		'InstitutionSiteStudentAbsences' => [
 			'noSections' => 'No Available Classes',
-			'noStudents' => 'No Available Students'
+			'noStudents' => 'No Available Students',
+			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
 			'noStaff' => 'No Available Staff'
@@ -204,7 +258,7 @@ trait MessagesTrait {
 		],
 		'StaffBehaviours' => [
 			'date_of_behaviour' => 'Date',
-			'time_of_behaviour' => 'Time',
+			'time_of_behaviour' => 'Time'
 		],
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
@@ -221,6 +275,11 @@ trait MessagesTrait {
 		'SurveyStatuses' => [
 			'survey_template_id' => 'Survey Template'
 		],
+		'SurveyForms' => [
+			'add_question' => 'Add Question',
+			'add_to_section' => 'Add to Section',
+			'notSupport' => 'Not supported in this form.'
+		],
 		'time' => [
 			'start' => 'Start Time',
 			'end' => 'End Time',
@@ -228,15 +287,11 @@ trait MessagesTrait {
 			'to' => 'To'
 		],
 		'Users' => [
-			'photo_content' => 'Photo Image',
-			'start_date' => 'Start Date',
-			'openemis_no' => 'OpenEMIS ID',
-			'name' => 'Name',
-			'gender' => 'Gender',
-			'date_of_birth' => 'Date Of Birth',
 			'student_category' => 'Category',
 			'status' => 'Status',
 			'select_student' => 'Select Student',
+			'select_student_empty' => 'No Other Student Available',
+			'add_all_student' => 'Add All Students',
 			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
 			'add_staff' => 'Add Staff',
@@ -259,14 +314,55 @@ trait MessagesTrait {
 			'noClasses' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
+		'StudentBehaviours' => [
+			'noClasses' => 'No Classes',
+			'noStudents' => 'No Students'
+		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
+			'enrolled' => 'This student has already been enrolled in an institution.',
+			'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 		],
 		'TransferApprovals' => [
+			'exists' => 'Student is already exists in the new school',
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
-
+		'StudentPromotion' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
+			'noData' => 'There are no available Students for Promotion / Graduation.',
+			'current_period' => 'Current Academic Period',
+			'next_period' => 'Next Academic Period',
+			'success' => 'Students have been promoted.',
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
+		],
+		'StudentTransfer' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noInstitutions' => 'No Available Institutions',
+			'noData' => 'There are no available Students for Transfer.',
+			'success' => 'Students have been transferred.'
+		],
+		'EducationProgrammes' => [
+			'add_next_programme' => 'Add Next Programme'
+		],
+		'StudentAdmission' => [
+			'exists' => 'Student exists in the school',
+			'existsInRecord' => 'Student has already been added to admission list',
+			'approve' => 'Student admission has been approved successfully.',
+			'reject' => 'Student admission has been rejected successfully.'
+		],
+		'DropoutRequests' => [
+			'request' => 'Dropout request hsa been submitted successfully.',
+		],
+		'StudentDropout' => [
+			'exists' => 'Student has already dropped out from the school.',
+			'approve' => 'Dropout request has been approved successfully.',
+			'reject' => 'Dropout request has been rejected successfully.',
+			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -287,6 +383,9 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
+				],
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
 				]
 			],
 			
@@ -306,31 +405,45 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
-			'InstitutionSiteShifts' => [
-				'start_time' => [
-					'ruleCompareDate' => 'Start Time should not be later than End Time'
-				],
-				'end_time' => [
-					'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
-				]
-			],
-			'InstitutionSiteStudentAbsences' => [
+			'InstitutionGrades' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+				'start_date' => [
+					'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
 				]
 			],
+			'Absences' => [
+				'start_date' => [
+					'ruleNoOverlappingAbsenceDate' => 'Absence is already added for this date and time.',
+					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				],
+			],
+			// 'InstitutionSiteStudentAbsences' => [
+			// 	'end_date' => [
+			// 		'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+			// 	]
+			// ],
 			'InstitutionSiteStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
 				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
 				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
+				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.'
 			],
 			'InstitutionSiteStaff' => [
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
-				'staffTypeId' => 'You need to configure Staff Types first.'
+				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
+				'noInstitutionSitePosition' => 'There are no position available.',
+				'staffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+				'staffTypeId' => 'You need to configure Staff Types first.',
+				'error' => 'New staff is not added to the institutition, due to an error',
 			],
 			'StudentGuardians' => [
 				'guardianRelationId' => 'You need to configure Guardian Relations first.',
@@ -346,6 +459,24 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			],
+			'Students' => [
+				'student_name' => [
+					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleCheckAdmissionAgeWithEducationCycle' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
+				]
+			],
+			'Staff' => [
+				'staff_name' => [
+					'ruleInstitutionStaffId' => 'Staff has already been added.'
+				],
+				'institution_site_position_id' => [
+					'ruleCheckFTE' => 'No available FTE.'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
 			]
 		],
 		'User' => [
@@ -380,7 +511,8 @@ trait MessagesTrait {
 				'date_of_birth' => [
 					'ruleNotBlank' => 'Please select a Date of Birth',
 					'ruleCompare' => 'Please select a Date of Birth',
-					'ruleCompare' => 'Date of Birth cannot be future date'
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
 				],
 				'username' => [
 					'ruleNotBlank' => 'Please enter a valid username',
@@ -534,6 +666,11 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Start Date cannot be later than End Date',
 				]
 			],
+			'Guardians' => [
+				'guardian_id' => [
+					'ruleStudentGuardianId' => 'This guardian has already added.'
+				]
+			]
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',
@@ -556,12 +693,8 @@ trait MessagesTrait {
 				]
 			],
 			'Leaves' => [
-				'date_from' => [
-					'ruleCompareDate' => 'Date From cannot be later than Date To',
-					'ruleNoOverlap' => 'Leave have been selected for this date. Please choose a different date'
-				],
-				'number_of_days' => [
-					'ruleNotBlank' => 'Please enter the number of days'
+				'date_to' => [
+					'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
 				]
 			],
 			'Extracurriculars' => [
@@ -627,6 +760,13 @@ trait MessagesTrait {
 				]
 			]
 		],
+		'Localization' => [
+			'Translations' => [
+				'en' => [
+					'ruleUnique' => 'This translation is already exists'
+				]
+			]
+		],
 		'Translations' => [
 			'success' => 'The language has been successfully compiled.',
 			'failed' => 'The language has not been compiled due to errors encountered.',
@@ -636,6 +776,11 @@ trait MessagesTrait {
 				'username' => [
 					'ruleUnique' => 'This username is already in use'
 				]
+			]
+		],
+		'Labels' => [
+			'code' => [
+				'ruleUnique' => 'This code already exists in the system'
 			]
 		]
 	];
@@ -648,8 +793,13 @@ trait MessagesTrait {
 			if (isset($message[$i])) {
 				$message = $message[$i];
 			} else {
-				$message = '[Message Not Found]';
-				break;
+				//check whether label exists in cache
+				$Labels = TableRegistry::get('Labels');
+				$message = Cache::read($code, $Labels->getDefaultConfig());
+				if($message === false) {
+					$message = '[Message Not Found]';
+					break;
+				}
 			}
 		}
 		return !is_array($message) ? __($message) : $message;

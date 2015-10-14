@@ -26,6 +26,22 @@ trait ViewVarsTrait
 {
 
     /**
+     * The name of default View class.
+     *
+     * @var string
+     */
+    public $viewClass = null;
+
+    /**
+     * View instance.
+     *
+     * Won't be set until after ViewVarsTrait::createView() is called.
+     *
+     * @var \Cake\View\View
+     */
+    public $_view;
+
+    /**
      * Variables for the view
      *
      * @var array
@@ -41,8 +57,9 @@ trait ViewVarsTrait
      */
     public function getView($viewClass = null)
     {
-        if ($viewClass === null && $this->View) {
-            return $this->View;
+        if ($viewClass === null && $this->_view) {
+            $this->_view->viewVars = $this->viewVars;
+            return $this->_view;
         }
 
         if ($viewClass === null) {
@@ -64,11 +81,12 @@ trait ViewVarsTrait
             throw new Exception\MissingViewException(['class' => $viewClass]);
         }
 
-        if ($this->View && $this->View instanceof $className) {
-            return $this->View;
+        if ($this->_view && $this->_view instanceof $className) {
+            $this->_view->viewVars = $this->viewVars;
+            return $this->_view;
         }
 
-        return $this->View = $this->createView();
+        return $this->_view = $this->createView();
     }
 
     /**
@@ -92,10 +110,26 @@ trait ViewVarsTrait
             throw new Exception\MissingViewException([$viewClass]);
         }
 
+        $validViewOptions = $this->viewOptions();
         $viewOptions = [];
-        foreach ($this->_validViewOptions as $option) {
+        foreach ($validViewOptions as $option) {
             if (property_exists($this, $option)) {
                 $viewOptions[$option] = $this->{$option};
+            }
+        }
+        $deprecatedOptions = array_diff(
+            ['layout', 'view', 'theme', 'autoLayout', 'viewPath', 'layoutPath'],
+            $validViewOptions
+        );
+        foreach ($deprecatedOptions as $option) {
+            if (property_exists($this, $option)) {
+                $viewOptions[$option] = $this->{$option};
+                unset($this->{$option});
+                trigger_error(sprintf(
+                    'Property $%s is deprecated. Use $this->getView()->%s() instead in beforeRender().',
+                    $option,
+                    $option
+                ), E_USER_DEPRECATED);
             }
         }
         return new $className($this->request, $this->response, $this->eventManager(), $viewOptions);

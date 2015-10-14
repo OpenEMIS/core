@@ -5,3 +5,8 @@
 	width: 16px;
 	margin: 7px 0 0 5px;
 }
+
+.rtl .autocomplete-loader {
+	float: right;
+	margin-right: 5px;
+}
