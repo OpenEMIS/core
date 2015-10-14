@@ -152,8 +152,8 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($workflowOptions, $selectedWorkflow) = array_values($this->_getSelectOptions());
-		$this->controller->set(compact('workflowOptions', 'selectedWorkflow'));
+		list($modelOptions, $selectedModel, $workflowOptions, $selectedWorkflow) = array_values($this->_getSelectOptions());
+		$this->controller->set(compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow'));
 
 		$query
 			->contain($this->_contain)
@@ -173,7 +173,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
-		list($workflowOptions, , $securityRoleOptions) = array_values($this->_getSelectOptions());
+		list(, , $workflowOptions, , $securityRoleOptions) = array_values($this->_getSelectOptions());
 
 		$this->fields['workflow_id']['options'] = $workflowOptions;
 		$this->fields['workflow_id']['onChangeReload'] = true;
@@ -253,7 +253,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		//Initialize field values
-		list(, $selectedWorkflow) = array_values($this->_getSelectOptions());
+		list(, , , $selectedWorkflow) = array_values($this->_getSelectOptions());
 		$entity->workflow_id = $selectedWorkflow;
 	}
 
@@ -335,10 +335,17 @@ class WorkflowStepsTable extends AppTable {
 
 	public function _getSelectOptions() {
 		//Return all required options and their key
+		$modelOptions = $this->Workflows->WorkflowModels
+			->find('list')
+			->toArray();
+		$selectedModel = !is_null($this->request->query('model')) ? $this->request->query('model') : key($modelOptions);
+
 		$workflowOptions = $this->Workflows
 			->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+			->where([
+				$this->Workflows->aliasField('workflow_model_id') => $selectedModel
+			])
 			->order([
-				$this->Workflows->aliasField('workflow_model_id'),
 				$this->Workflows->aliasField('code')
 			])
 			->toArray();
@@ -350,6 +357,6 @@ class WorkflowStepsTable extends AppTable {
         	->toArray();
         $selectedSecurityRole = key($securityRoleOptions);
 
-		return compact('workflowOptions', 'selectedWorkflow', 'securityRoleOptions', 'selectedSecurityRole');
+		return compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow', 'securityRoleOptions', 'selectedSecurityRole');
 	}
 }
