@@ -110,11 +110,11 @@ class AppTable extends Table {
 		}
 	}
 
-	public function onExcelRenderDateTime(Event $event, Entity $entity, $field) {
-		if (!empty($entity->$field)) {
-			return $this->formatDateTime($entity->$field);
+	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			return $this->formatDateTime($entity->$attr['field']);
 		} else {
-			return $entity->$field;
+			return $entity->$attr['field'];
 		}
 	}
 
