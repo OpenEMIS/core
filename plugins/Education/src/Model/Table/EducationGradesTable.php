@@ -16,13 +16,24 @@ class EducationGradesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades']);
+		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
+		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
+		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
+		$this->hasMany('Visits', ['className' => 'Institution.InstitutionQualityVisits']);
+		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrades']);
+		$this->hasMany('InstitutionSiteSectionStudents', ['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
+		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
+		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
+
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
 			'joinTable' => 'education_grades_subjects',
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => true,
+			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
 	}
@@ -38,6 +49,40 @@ class EducationGradesTable extends AppTable {
 				// );
 			}
 		}
+	}
+
+	 /**
+     * Method to get the education system id for the particular grade given
+     *
+     * @param integer $gradeId The grade id to check for
+     * @return integer Education system id that the grade belongs to
+     */
+	public function getEducationSystemId($gradeId) {
+		$educationSystemId = $this->find()
+			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+			->where([$this->aliasField('id') => $gradeId])
+			->first();
+		return $educationSystemId->education_programme->education_cycle->education_level->education_system->id;
+	}
+
+	 /**
+     * Method to check the list of the grades that belongs to the education system
+     *
+     * @param integer $systemId The education system id to check for
+     * @return array A list of the education system grades belonging to that particular education system
+     */
+	public function getEducationGradesBySystem($systemId) {
+		$educationSystemId = $this->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+			->where(['EducationSystems.id' => $systemId])->toArray();
+		return $educationSystemId;
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
 	}
 
 	public function beforeAction(Event $event) {
