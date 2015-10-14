@@ -65,7 +65,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ******************************************************************************************************************/
     public function viewAfterAction(Event $event, Entity $entity) {
 		$this->fields['name']['type'] = 'download';
-		$this->fields['name']['attr']['url'] = $this->ControllerAction->buttons['download']['url'];
+		$this->fields['name']['attr']['url'] = $this->ControllerAction->url('download');//$this->ControllerAction->buttons['download']['url'];
     	
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
@@ -124,7 +124,10 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$toolbarButtons['download']['url']['action'] = $this->alias.'/download';
+			$url = $this->ControllerAction->url('download');
+			if(!empty($url['action'])){
+				$toolbarButtons['download']['url'] = $url;
+			}
 		}
 	}
 }

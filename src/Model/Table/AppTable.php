@@ -35,19 +35,11 @@ class AppTable extends Table {
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
-			$this->belongsTo('ModifiedUser', [
-				'className' => 'User.Users',
-				'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
-				'foreignKey' => 'modified_user_id'
-			]);
+			$this->belongsTo('ModifiedUser', ['className' => 'User.Users', 'foreignKey' => 'modified_user_id']);
 		}
 
 		if (in_array('created_user_id', $columns) && $_config['Created']) {
-			$this->belongsTo('CreatedUser', [
-				'className' => 'User.Users',
-				'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
-				'foreignKey' => 'created_user_id'
-			]);
+			$this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey' => 'created_user_id']);
 		}
 
 		if (in_array('visible', $columns)) {
@@ -107,6 +99,15 @@ class AppTable extends Table {
 			}
 		}
 		return $query;
+	}
+
+	// Event: 'Model.excel.onFormatDate' ExcelBehavior
+	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
+		if (!empty($entity->$field)) {
+			return $this->formatDate($entity->$field);
+		} else {
+			return $entity->$field;
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
@@ -171,9 +172,12 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onGetFieldLabel'
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		return $this->getFieldLabel($module, $field, $language, $autoHumanize);
+	}
+
+	public function getFieldLabel($module, $field, $language, $autoHumanize=true) {
 		$Labels = TableRegistry::get('Labels');
 		$label = $Labels->getLabel($module, $field, $language);
-
 		if ($label === false && $autoHumanize) {
 			$label = Inflector::humanize($field);
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
@@ -181,6 +185,11 @@ class AppTable extends Table {
 			}
 		}
 		return $label;
+	}
+
+	// Event: 'Model.excel.onExcelGetLabel'
+	public function onExcelGetLabel(Event $event, $module, $col, $language) {
+		return $this->getFieldLabel($module, $col, $language);
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
@@ -200,6 +209,21 @@ class AppTable extends Table {
 		];
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
+		if ($action != 'index') {
+			$toolbarButtons['back'] = $buttons['back'];
+			$toolbarButtons['back']['type'] = 'button';
+			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+			$toolbarButtons['back']['attr'] = $toolbarAttr;
+			$toolbarButtons['back']['attr']['title'] = __('Back');
+
+			if ($action == 'remove' && $buttons['remove']['strategy'] == 'transfer') {
+				$toolbarButtons['list'] = $buttons['index'];
+				$toolbarButtons['list']['type'] = 'button';
+				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
+				$toolbarButtons['list']['attr'] = $toolbarAttr;
+				$toolbarButtons['list']['attr']['title'] = __('List');
+			}
+		}
 		if ($action == 'index') {
 			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
 				$toolbarButtons['add'] = $buttons['add'];
@@ -217,12 +241,6 @@ class AppTable extends Table {
 				];
 			}
 		} else if ($action == 'add' || $action == 'edit') {
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = 'button';
-			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-			$toolbarButtons['back']['attr'] = $toolbarAttr;
-			$toolbarButtons['back']['attr']['title'] = __('Back');
-
 			if ($action == 'edit' && $buttons->offsetExists('index')) {
 				$toolbarButtons['list'] = $buttons['index'];
 				$toolbarButtons['list']['type'] = 'button';
@@ -231,13 +249,6 @@ class AppTable extends Table {
 				$toolbarButtons['list']['attr']['title'] = __('List');
 			}
 		} else if ($action == 'view') {
-			// back button
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = 'button';
-			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-			$toolbarButtons['back']['attr'] = $toolbarAttr;
-			$toolbarButtons['back']['attr']['title'] = __('Back');
-
 			// edit button
 			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
 				$toolbarButtons['edit'] = $buttons['edit'];
@@ -308,12 +319,14 @@ class AppTable extends Table {
 			$buttons['edit']['url'][1] = $id;
 		}
 		if (array_key_exists('remove', $buttons)) {
-			if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
+			if ($buttons['remove']['strategy'] == 'cascade') {
 				$buttons['remove']['attr']['data-toggle'] = 'modal';
 				$buttons['remove']['attr']['data-target'] = '#delete-modal';
 				$buttons['remove']['attr']['field-target'] = '#recordId';
 				$buttons['remove']['attr']['field-value'] = $id;
 				$buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+			} else {
+				$buttons['remove']['url'][1] = $id;
 			}
 		}
 		return $buttons;
@@ -334,7 +347,7 @@ class AppTable extends Table {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
-
+		
 		$userId = null;
 		if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
 			$userId = $_SESSION['Auth']['User']['id'];
@@ -363,15 +376,11 @@ class AppTable extends Table {
 		return $key;
 	}
 
-	public function postString($key, $options=[]) {
+	public function postString($key) {
 		$request = $this->request;
+		$selectedId = null;
 		if ($request->data($this->aliasField($key))) {
 			$selectedId = $request->data($this->aliasField($key));
-			if (!array_key_exists($selectedId, $options)) {
-				$selectedId = key($options);
-			}
-		} else {
-			$selectedId = key($options);
 		}
 		return $selectedId;
 	}

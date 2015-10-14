@@ -57,11 +57,22 @@ class <%= $name %> extends AbstractMigration
             $constraintColumns = $constraint['columns'];
             sort($constraintColumns);
             if ($constraint['type'] !== 'unique'):
-                $foreignKeys[] = $constraint['columns'][0]; %>
+                $foreignKeys += $constraint['columns'];
+
+                $columnsList = '\'' . $constraint['columns'][0] . '\'';
+                if (count($constraint['columns']) > 1):
+                    $columnsList = '[' . $this->Migration->stringifyList($constraint['columns'], ['indent' => 5]) . ']';
+                endif;
+
+                if (is_array($constraint['references'][1])):
+                    $columnsReference = '[' . $this->Migration->stringifyList($constraint['references'][1], ['indent' => 5]) . ']';
+                else:
+                    $columnsReference = '\'' . $constraint['references'][1] . '\'';
+                endif; %>
             ->addForeignKey(
-                '<%= $constraint['columns'][0] %>',
+                <%= $columnsList %>,
                 '<%= $constraint['references'][0] %>',
-                '<%= $constraint['references'][1] %>',
+                <%= $columnsReference %>,
                 [
                     'update' => '<%= $constraint['update'] %>',
                     'delete' => '<%= $constraint['delete'] %>'
@@ -95,7 +106,8 @@ class <%= $name %> extends AbstractMigration
 
     public function down()
     {
-        <%- foreach ($tables as $table): %>
+        <%- $tables = array_reverse($tables);
+            foreach ($tables as $table): %>
         $this->dropTable('<%= $table%>');
         <%- endforeach; %>
     }

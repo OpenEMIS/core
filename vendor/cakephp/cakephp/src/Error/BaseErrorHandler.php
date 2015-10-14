@@ -18,6 +18,7 @@ use Cake\Core\Configure;
 use Cake\Error\Debugger;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+use Exception;
 
 /**
  * Base error handler that provides logic common to the CLI + web
@@ -150,7 +151,7 @@ abstract class BaseErrorHandler
      * @throws \Exception When renderer class not found
      * @see http://php.net/manual/en/function.set-exception-handler.php
      */
-    public function handleException(\Exception $exception)
+    public function handleException(Exception $exception)
     {
         $this->_displayException($exception);
         $this->_logException($exception);
@@ -228,7 +229,7 @@ abstract class BaseErrorHandler
      * @param \Exception $exception Exception instance.
      * @return bool
      */
-    protected function _logException(\Exception $exception)
+    protected function _logException(Exception $exception)
     {
         $config = $this->_options;
         if (empty($config['log'])) {
@@ -251,7 +252,7 @@ abstract class BaseErrorHandler
      * @param \Exception $exception Exception instance
      * @return string Formatted message
      */
-    protected function _getMessage(\Exception $exception)
+    protected function _getMessage(Exception $exception)
     {
         $config = $this->_options;
         $message = sprintf(
@@ -259,7 +260,9 @@ abstract class BaseErrorHandler
             get_class($exception),
             $exception->getMessage()
         );
-        if (method_exists($exception, 'getAttributes')) {
+        $debug = Configure::read('debug');
+
+        if ($debug && method_exists($exception, 'getAttributes')) {
             $attributes = $exception->getAttributes();
             if ($attributes) {
                 $message .= "\nException Attributes: " . var_export($exception->getAttributes(), true);

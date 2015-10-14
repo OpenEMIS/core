@@ -25,7 +25,7 @@ trait ControllerActionTrait {
 		// public function beforeAction(Event $event) {}
 
 		'ControllerAction.Model.afterAction'				=> 'afterAction', // called after any actions
-		// public function afterAction(Event $event) {}
+		// public function afterAction(Event $event, $config) {}
 
 		'ControllerAction.Model.onFormatDate'				=> 'onFormatDate', // called before displaying date fields
 		// public function onFormatDate(Event $event, Time $dateObject) {}
@@ -49,19 +49,22 @@ trait ControllerActionTrait {
 		// public function indexAfterPaginate(Event $event, $data) {}
 
 		'ControllerAction.Model.index.afterAction'			=> 'indexAfterAction',
-		// 
+		// public function indexAfterAction(Event $event, $data) {}
 
 		'ControllerAction.Model.view.beforeAction'			=> 'viewBeforeAction',
 		// public function viewBeforeAction(Event $event) {}
 
 		'ControllerAction.Model.view.beforeQuery'			=> 'viewBeforeQuery',
-		// public function viewBeforeAction(Event $event, Query $query) {}
+		// public function viewBeforeQuery(Event $event, Query $query) {}
+
+		//'ControllerAction.Model.view.onReload'			=> 'viewOnReload',
+		// public function viewOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
 		'ControllerAction.Model.view.afterAction'			=> 'viewAfterAction',
-		// public function viewBeforeAction(Event $event, Entity $entity) {}
+		// public function viewAfterAction(Event $event, Entity $entity) {}
 
 		'ControllerAction.Model.add.beforeAction'			=> 'addBeforeAction', // called before any add logic is executed
-		// public function viewBeforeAction(Event $event)
+		// public function addBeforeAction(Event $event) {}
 
 		'ControllerAction.Model.add.onInitialize'			=> 'addOnInitialize', // called on http get
 		// public function addOnInitialize(Event $event, Entity $entity) {}
@@ -76,7 +79,7 @@ trait ControllerActionTrait {
 		// public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }
 
 		'ControllerAction.Model.add.afterSave'				=> 'addAfterSave', // changes redirect url after a successful save
-		// public function addAfterSave(Event $event, Controller $controller, Entity $entity) {}
+		// public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {}
 
 		//'ControllerAction.Model.add.onReload'				=> 'addOnReload', // called on http post
 		// public function addOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
@@ -95,6 +98,9 @@ trait ControllerActionTrait {
 
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
+
+		'ControllerAction.Model.edit.beforeSave'			=> 'editBeforeSave', // you can overwrite this function to implement your own saving logic
+		// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }
 
 		'ControllerAction.Model.edit.afterSave'				=> 'editAfterSave', // extra processing after saving
 		// public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
@@ -116,6 +122,12 @@ trait ControllerActionTrait {
 
 		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction',
 		// public function addEditAfterAction(Event $event, Entity $entity) {}
+
+		'ControllerAction.Model.delete.beforeAction'		=> 'deleteBeforeAction',
+		// public function deleteBeforeAction(Event $event, ArrayObject $settings) {}
+
+		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
+		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {}
 
 		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete'
 		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}

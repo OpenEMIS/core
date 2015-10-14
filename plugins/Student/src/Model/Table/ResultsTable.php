@@ -25,6 +25,13 @@ class ResultsTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}
+	public function onGetInstitutionSiteId(Event $event, Entity $entity) {
+		return $this->Institutions->get($entity->institution_site_id)->name;
+	}
+
+	public function onGetAcademicPeriodId(Event $event, Entity $entity) {
+		return $this->AcademicPeriods->get($entity->academic_period_id)->name;
+	}
 
 	public function onGetAssessmentItemId(Event $event, Entity $entity) {
 		return $entity->assessment_item->education_subject->name;
@@ -46,10 +53,21 @@ class ResultsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain([], true);
+		$options['auto_contain'] = false;
 		$query->contain([
 			'AssessmentItems.EducationSubjects',
 			'AssessmentItems.Assessments'
-		]);
+		])
+		->join(
+			[	'table'=> 'institution_site_assessments',
+				'alias' => 'InstitutionSiteAssessments',
+				'conditions' => [
+					'InstitutionSiteAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
+					'InstitutionSiteAssessments.institution_site_id = '. $this->aliasField('institution_site_id')
+				]
+			]
+		)
+		->where(['InstitutionSiteAssessments.status' => 2])
+		;
 	}
 }

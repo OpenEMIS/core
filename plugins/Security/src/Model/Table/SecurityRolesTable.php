@@ -69,7 +69,8 @@ class SecurityRolesTable extends AppTable {
 
 		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
 
-		if ($selectedAction == 'user') {
+		$action = $this->ControllerAction->action();
+		if ($action == 'index' && $selectedAction == 'user') {
 			$toolbarElements = [
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
@@ -202,7 +203,6 @@ class SecurityRolesTable extends AppTable {
 				// this will show only roles of the user by group
 				$query = $GroupRoles
 					->find()
-					->find('visible')
 					->contain('SecurityRoles')
 					->order(['SecurityRoles.order'])
 					->where([
@@ -237,5 +237,10 @@ class SecurityRolesTable extends AppTable {
 			;
 		}
 		return $roleOptions;
+	}
+
+	public function onGetName(Event $event, Entity $entity) {
+		//Transalation is only for security roles
+		return ($entity->security_group_id == -1) ? __($entity->name) : $entity->name;
 	}
 }

@@ -11,6 +11,9 @@ trait OptionsTrait {
 			'Staff' => [
 				'position_types' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
 			],
+			'Position' => [
+				'types' => ['FULL_TIME' => __('Full-Time'), 'PART_TIME' => __('Part-Time')]
+			],
 			'Absence' => [
 				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
 			],
@@ -37,5 +40,15 @@ trait OptionsTrait {
 			}
 		}
 		return $options;
+	}
+
+	public function selectEmpty($code) {
+		$codes = [
+			'period' => 'Period',
+			'class' => 'Class',
+			'student' => 'Student',
+			'staff' => 'Staff'
+		];
+		return '-- ' . __('Select ' . $codes[$code]) . ' --';
 	}
 }

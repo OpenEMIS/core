@@ -42,6 +42,8 @@ class UsersTable extends AppTable {
 		$this->table('security_users');
 		parent::initialize($config);
 
+		self::handleAssociations($this);
+
 		$this->fieldOrder1 = new ArrayObject(['photo_content', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'address', 'postal_code']);
 		$this->fieldOrder2 = new ArrayObject(['status','modified_user_id','modified','created_user_id','created']);
 
@@ -54,30 +56,33 @@ class UsersTable extends AppTable {
 		]);
 
 		$this->addBehavior('Area.Areapicker');
+		$this->addBehavior('User.AdvancedNameSearch');
 
-		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		
+	}
 
-		$this->hasMany('InstitutionSiteStaff', 		['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteStudents', 	['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StudentGuardians', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'student_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('GuardianStudents', 			['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StudentActivities', 		['className' => 'Student.StudentActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('GuardianActivities', 			['className' => 'Guardian.GuardianActivities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+	public static function handleAssociations($model) {
+		$model->belongsTo('Genders', ['className' => 'User.Genders']);
+		$model->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
-		$this->belongsToMany('SecurityRoles', [
+		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('BankAccounts', 		['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
+
+		$model->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'foreignKey' => 'security_role_id',
 			'targetForeignKey' => 'security_user_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
-		]);	
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -123,7 +128,9 @@ class UsersTable extends AppTable {
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
 
-		$id = $this->ControllerAction->buttons['view']['url'][0];
+		// $id = $this->ControllerAction->buttons['view']['url'][0];
+		$action = $this->ControllerAction->url('view');
+		$id = $action[0];
 
 		if ($id=='view' || $id=='edit') {
 			if (isset($this->ControllerAction->buttons['view']['url'][1])) {
@@ -381,6 +388,57 @@ class UsersTable extends AppTable {
 		return $validator;
 	}
 
+	// this is the method to call for user validation - currently in use by Student Staff.. 
+	public function setUserValidation(Validator $validator) {
+		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->allowEmpty('photo_content')
+			->add('date_of_birth', [
+					'ruleValidDate' => [
+						'rule' => ['date', 'dmy']
+					]
+				])
+			;
+
+		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleUnique', 'User.Users');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$this->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
+		return $validator;
+	}
+
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		$fileContent = $entity->photo_content;
 		$value = "";
@@ -475,5 +533,32 @@ class UsersTable extends AppTable {
 		}
 		
 		return $buttons;
+	}
+
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this
+			->find()
+			->where([
+				'OR' => [
+					$this->aliasField('openemis_no') . ' LIKE' => $search,
+					$this->aliasField('first_name') . ' LIKE' => $search,
+					$this->aliasField('middle_name') . ' LIKE' => $search,
+					$this->aliasField('third_name') . ' LIKE' => $search,
+					$this->aliasField('last_name') . ' LIKE' => $search
+				]
+			])
+			->order([$this->aliasField('first_name')])
+			->all();
+		
+		$data = array();
+		foreach($list as $obj) {
+			$data[] = [
+				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+				'value' => $obj->id
+			];
+		}
+		return $data;
 	}
 }

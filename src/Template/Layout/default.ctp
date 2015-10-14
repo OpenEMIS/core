@@ -30,24 +30,59 @@
 
 	echo $this->element('scripts');
 	echo $this->fetch('script');
+		
 	?>
+
 </head>
 
-<body>
-	<div id="wrapper">
-		<div id="sidebar-wrapper">
-			<?= $this->element('OpenEmis.navigation'); ?>
-		</div>	
-		<?php 
-		echo $this->element('OpenEmis.header');
-		echo $this->fetch('content');
-		if (isset($modal)) {
-			echo $this->element('ControllerAction.modal');
-		}
-		?>
+<body class='default'>
+
+	<?=  $this->element('OpenEmis.header'); ?>
+
+	<?php
+	$baseUrl = $this->Url->build([
+		'plugin' => $this->request->params['plugin'],
+		'controller' => $this->request->params['controller'],
+		'action' => 'setJqxSpliterSize'
+	]);
+	?>
+	<div id="main-splitter" url="<?= $baseUrl ?>">
+		<div class="left-pane" style="<?= $SystemLayout_leftPanel; ?>">
+			<?php 
+        		if($htmlLangDir != 'rtl'){
+        			echo $this->element('OpenEmis.navigation');
+        		}
+				else{
+					echo $this->element('OpenEmis.header');
+					echo $this->fetch('content');
+					if (isset($modal)) {
+						echo $this->element('ControllerAction.modal');
+					}
+				}
+			?>
+		</div>
+        <div class="right-pane" style="<?= $SystemLayout_rightPanel; ?>">
+        	<?php 
+        		if($htmlLangDir != 'rtl'){
+					echo $this->element('OpenEmis.header');
+					echo $this->fetch('content');
+					if (isset($modal)) {
+						echo $this->element('ControllerAction.modal');
+					}
+        		}
+				else{
+					echo $this->element('OpenEmis.navigation');
+				}
+			?>
+        </div>
 	</div>
+	<div id="jqxButton" class="menu-toggle">
+		<i class="fa fa-angle-double-left"></i>
+		<span class="menu-text"><?= __('Menu') ?></span>
+	</div>
+	
 	<?= $this->element('OpenEmis.footer') ?>
-	<?= $this->fetch('scriptBottom') ?>
+	<?= $this->fetch('scriptBottom'); ?>
 	<?= $this->element('OpenEmis.scriptBottom') ?>
 </body>
 </html>

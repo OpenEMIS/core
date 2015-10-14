@@ -16,6 +16,7 @@ namespace Cake\Database\Schema;
 
 use Cake\Database\Connection;
 use Cake\Database\Exception;
+use Cake\Database\Type;
 
 /**
  * Represents a single table in a database schema.
@@ -81,6 +82,7 @@ class Table
      */
     protected static $_columnKeys = [
         'type' => null,
+        'baseType' => null,
         'length' => null,
         'precision' => null,
         'null' => null,
@@ -319,7 +321,9 @@ class Table
         if (!isset($this->_columns[$name])) {
             return null;
         }
-        return $this->_columns[$name];
+        $column = $this->_columns[$name];
+        unset($column['baseType']);
+        return $column;
     }
 
     /**
@@ -339,6 +343,32 @@ class Table
             $this->_columns[$name]['type'] = $type;
         }
         return $this->_columns[$name]['type'];
+    }
+
+    /**
+     * Returns the base type name for the provided column.
+     * This represent the database type a more complex class is
+     * based upon.
+     *
+     * @param string $column The column name to get the base type from
+     * @return string The base type name
+     */
+    public function baseColumnType($column)
+    {
+        if (isset($this->_columns[$column]['baseType'])) {
+            return $this->_columns[$column]['baseType'];
+        }
+
+        $type = $this->columnType($column);
+
+        if ($type === null) {
+            return null;
+        }
+
+        if (Type::map($type)) {
+            $type = Type::build($type)->getBaseType();
+        }
+        return $this->_columns[$column]['baseType'] = $type;
     }
 
     /**
@@ -403,17 +433,19 @@ class Table
         unset($attrs['references'], $attrs['update'], $attrs['delete']);
 
         if (!in_array($attrs['type'], static::$_validIndexTypes, true)) {
-            throw new Exception(sprintf('Invalid index type "%s"', $attrs['type']));
+            throw new Exception(sprintf('Invalid index type "%s" in index "%s" in table "%s".', $attrs['type'], $name, $this->_table));
         }
         if (empty($attrs['columns'])) {
-            throw new Exception('Indexes must have at least one column.');
+            throw new Exception(sprintf('Index "%s" in table "%s" must have at least one column.', $name, $this->_table));
         }
         $attrs['columns'] = (array)$attrs['columns'];
         foreach ($attrs['columns'] as $field) {
             if (empty($this->_columns[$field])) {
                 $msg = sprintf(
-                    'Columns used in indexes must be added to the Table schema first. ' .
+                    'Columns used in index "%s" in table "%s" must be added to the Table schema first. ' .
                     'The column "%s" was not found.',
+                    $name,
+                    $this->_table,
                     $field
                 );
                 throw new Exception($msg);
@@ -492,29 +524,60 @@ class Table
         $attrs = array_intersect_key($attrs, static::$_indexKeys);
         $attrs = $attrs + static::$_indexKeys;
         if (!in_array($attrs['type'], static::$_validConstraintTypes, true)) {
-            throw new Exception(sprintf('Invalid constraint type "%s"', $attrs['type']));
+            throw new Exception(sprintf('Invalid constraint type "%s" in table "%s".', $attrs['type'], $this->_table));
         }
         if (empty($attrs['columns'])) {
-            throw new Exception('Constraints must have at least one column.');
+            throw new Exception(sprintf('Constraints in table "%s" must have at least one column.', $this->_table));
         }
         $attrs['columns'] = (array)$attrs['columns'];
         foreach ($attrs['columns'] as $field) {
             if (empty($this->_columns[$field])) {
                 $msg = sprintf(
                     'Columns used in constraints must be added to the Table schema first. ' .
-                    'The column "%s" was not found.',
-                    $field
+                    'The column "%s" was not found in table "%s".',
+                    $field,
+                    $this->_table
                 );
                 throw new Exception($msg);
             }
         }
+
         if ($attrs['type'] === static::CONSTRAINT_FOREIGN) {
             $attrs = $this->_checkForeignKey($attrs);
+
+            if (isset($this->_constraints[$name])) {
+                $this->_constraints[$name]['columns'] = array_merge(
+                    $this->_constraints[$name]['columns'],
+                    $attrs['columns']
+                );
+
+                $this->_constraints[$name]['references'][1] = array_merge(
+                    (array)$this->_constraints[$name]['references'][1],
+                    [$attrs['references'][1]]
+                );
+                return $this;
+            }
         } else {
             unset($attrs['references'], $attrs['update'], $attrs['delete']);
         }
+
         $this->_constraints[$name] = $attrs;
         return $this;
+    }
+
+    /**
+     * Check whether or not a table has an autoIncrement column defined.
+     *
+     * @return bool
+     */
+    public function hasAutoincrement()
+    {
+        foreach ($this->_columns as $column) {
+            if (isset($column['autoIncrement']) && $column['autoIncrement']) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

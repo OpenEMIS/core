@@ -13,12 +13,25 @@ use App\Model\Traits\OptionsTrait;
 
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
+	private $fieldOption = null;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
 
 		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
+	}
+
+	public function onGetFieldOptionId(Event $event, Entity $entity) {
+		$value = '';
+		if ($entity->has('field_option')) {
+			$value = $entity->field_option->parent . ' - ' . $entity->field_option->name;
+		} else {
+			$selectedOption = $this->request->query('field_option_id');
+			$fieldOption = $this->FieldOptions->get($selectedOption);
+			$value = $fieldOption->parent . ' - ' . $fieldOption->name;
+		}
+		return $value;
 	}
 
 	public function onGetEditable(Event $event, Entity $entity) {
@@ -62,6 +75,8 @@ class FieldOptionValuesTable extends AppTable {
 
 		$selectedOption = $this->queryString('field_option_id', $fieldOptions);
 		$this->controller->set('selectedOption', $selectedOption);
+		$this->fieldOption = $this->FieldOptions->get($selectedOption);
+		$this->fieldOption->name = $this->fieldOption->parent . ' - ' . $this->fieldOption->name;
 
 		if ($this->action == 'index') {
 			$toolbarElements = [
@@ -74,6 +89,7 @@ class FieldOptionValuesTable extends AppTable {
 		$this->ControllerAction->field('field_option_id', [
 			'type' => 'readonly', 
 			'options' => $fieldOptionList,
+			'attr' => ['value' => $this->fieldOption->name],
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
@@ -104,10 +120,75 @@ class FieldOptionValuesTable extends AppTable {
 		return $query->find('order');
 	}
 
+	public function getFieldOption() {
+		return $this->fieldOption;
+	}
+
+	public function viewBeforeAction(Event $event) {
+		if (!empty($this->fieldOption->params)) {
+			$params = json_decode($this->fieldOption->params);
+			$table = TableRegistry::get($params->model);
+			return $table;
+		}
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		if (!empty($this->fieldOption->params)) {
+			$params = json_decode($this->fieldOption->params);
+			$table = TableRegistry::get($params->model);
+			foreach ($this->fields as $key => $attr) {
+				$this->fields[$key]['model'] = $table->alias();
+				$this->fields[$key]['className'] = $params->model;
+			}
+			return $table;
+		}
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$fieldOption = $this->fieldOption;
+		if (!empty($fieldOption->params)) {
+			$process = function($model, $id, $options) use ($fieldOption) {
+				$params = json_decode($this->fieldOption->params);
+				$table = TableRegistry::get($params->model);
+				$entity = $table->get($id);
+				return $table->delete($entity);
+			};
+			return $process;
+		}
+	}
+
 	public function addOnInitialize(Event $event, Entity $entity) {
 		// set field option value for add page
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
 		$entity->field_option_id = $selectedOption;
+	}
+
+	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
+		$codes = ['Providers'];
+
+		$fieldOption = $this->fieldOption;
+		if (in_array($fieldOption->code, $codes)) {
+			$settings['deleteStrategy'] = 'transfer';
+			if (empty($fieldOption->params)) {
+				$model = $fieldOption->code;
+				if (!is_null($fieldOption->plugin)) {
+					$model = $fieldOption->plugin . '.' . $model;
+				}
+				$settings['model'] = $model;
+			} else {
+
+			}
+		}
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$fieldOption = $this->fieldOption;
+		$codes = ['Providers'];
+		if (in_array($fieldOption->code, $codes)) {
+			if (empty($fieldOption->params)) {
+				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
+			}
+		}
 	}
 
 	public function getList($customOptions=[]) {
