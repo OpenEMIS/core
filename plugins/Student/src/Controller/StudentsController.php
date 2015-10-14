@@ -39,6 +39,8 @@ class StudentsController extends AppController {
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
 
+		$this->loadComponent('User.Image');
+
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -184,5 +186,11 @@ class StudentsController extends AppController {
 		];
 
 		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }
