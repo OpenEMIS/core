@@ -16,7 +16,7 @@ class StudentsController extends AppController {
 
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
-			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -35,9 +35,10 @@ class StudentsController extends AppController {
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
+
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -79,6 +80,24 @@ class StudentsController extends AppController {
 		if ($session->check('Student.Students.id')) {
 			$header = '';
 			$userId = $session->read('Student.Students.id');
+
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $session->read('AccessControl.Institutions.ids');
+				$studentId = $session->read('Student.Students.id');
+				$enrolledStatus = false;
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				foreach ($institutionIds as $id) {
+					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+					if ($enrolledStatus) {
+						break;
+					}
+				}
+				if (! $enrolledStatus) {
+					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
+						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
+					}
+				}
+			}
 
 			if ($session->check('Student.Students.name')) {
 				$header = $session->read('Student.Students.name');
@@ -145,5 +164,25 @@ class StudentsController extends AppController {
 	public function excel($id=0) {
 		$this->Students->excel($id);
 		$this->autoRender = false;
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
 	}
 }

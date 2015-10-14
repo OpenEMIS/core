@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
+use User\Model\Table\UsersTable AS BaseUsers;
 
 use App\Model\Traits\OptionsTrait;
 
@@ -129,6 +130,15 @@ class UsersTable extends AppTable {
 		]);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements(['id' => $entity->id]);
+	}
+
+	private function setupTabElements($options) {
+		$this->controller->set('selectedAction', 'Securities');
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
+	}
+
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->find('notSuperAdmin');
 	}
@@ -202,41 +212,6 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('address')
-			->allowEmpty('postal_code')
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->allowEmpty('photo_content')
-			;
-		return $validator;
+		return BaseUsers::setUserValidation($validator);
 	}
 }
