@@ -95,8 +95,7 @@ class SurveysTable extends AppTable  {
 			if (isset($this->request->data[$this->alias()]['feature'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				if ($feature == $this->registryAlias()) {
-					$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
-					$surveyFormOptions = $InstitutionSurveyTable
+					$surveyFormOptions = $this
 						->find('list', [
 							'keyField' => 'id',
 							'valueField' => 'name'
@@ -104,7 +103,7 @@ class SurveysTable extends AppTable  {
 						->contain(['SurveyForms'])
 						->select(['id' => 'SurveyForms.id', 'name' => 'SurveyForms.name'])
 						->group([ 
-							$InstitutionSurveyTable->aliasField('survey_form_id')
+							$this->aliasField('survey_form_id')
 						])
 						->toArray();
 					$attr['options'] = $surveyFormOptions;
@@ -127,8 +126,7 @@ class SurveysTable extends AppTable  {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
 				if ($feature == $this->registryAlias() && !empty($surveyForm)) {
-					$InstitutionSurveyTable = TableRegistry::get('Institution.InstitutionSurveys');
-					$academicPeriodOptions = $InstitutionSurveyTable
+					$academicPeriodOptions = $this
 						->find('list', [
 							'keyField' => 'id',
 							'valueField' => 'name'
@@ -136,11 +134,11 @@ class SurveysTable extends AppTable  {
 						->contain(['AcademicPeriods'])
 						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
 						->where([
-							$InstitutionSurveyTable->aliasField('survey_form_id') => $surveyForm
+							$this->aliasField('survey_form_id') => $surveyForm
 						])
 						->group([
-							$InstitutionSurveyTable->aliasField('survey_form_id'), 
-							$InstitutionSurveyTable->aliasField('academic_period_id')
+							$this->aliasField('survey_form_id'), 
+							$this->aliasField('academic_period_id')
 						])
 						->order(['AcademicPeriods.order'])
 						->toArray();
@@ -163,14 +161,45 @@ class SurveysTable extends AppTable  {
 			if (isset($this->request->data[$this->alias()]['feature']) 
 				&& isset($this->request->data[$this->alias()]['survey_form'])
 				&& isset($this->request->data[$this->alias()]['academic_period_id'])) {
+
 				$feature = $this->request->data[$this->alias()]['feature'];
+				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
 				$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+
 				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
-					$attr['options'] = [
-						self::COMPLETED => __('Completed'),
-						'0' => __('Not Completed'),
-					];
-					$attr['type'] = 'select';
+					$query = $this->find('list', [
+						'keyField' => 'surveyStatus',
+						'valueField' => 'statusCount'
+					]);
+
+					// Add a case to check if the survey is completed or not
+					$completedSurvey = $query->newExpr()->addCase(
+						[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)], 
+						['COMPLETED', 'NOT COMPLETED'], 
+						['string', 'string']);
+
+					$query->select([
+							'surveyStatus' => $completedSurvey,
+							'statusCount' => $query->func()->count($this->aliasField('id'))
+						])
+						->group(['surveyStatus'])
+						->where([
+							$this->aliasField('survey_form_id') => $surveyForm,
+							$this->aliasField('academic_period_id') => $academicPeriodId
+						]);
+					$surveyStatus = $query->toArray();
+
+					// If there is completed survey add the option
+					if (isset($surveyStatus['COMPLETED'])) {
+						$attr['options'][self::COMPLETED] = __('Completed');
+						$attr['type'] = 'select';
+					}
+
+					// If there is not completed survey add the option
+					if (isset($surveyStatus['NOT COMPLETED'])) {
+						$attr['options'][0] = __('Not Completed');
+						$attr['type'] = 'select';
+					}
 					return $attr;
 				}
 			}
