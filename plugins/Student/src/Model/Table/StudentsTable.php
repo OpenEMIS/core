@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use User\Model\Table\UsersTable AS BaseUsers;
 
 class StudentsTable extends AppTable {
 	public $InstitutionStudent;
@@ -76,58 +77,26 @@ class StudentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->allowEmpty('photo_content')
-			;
-
-		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
-		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
-		return $validator;
+		return BaseUsers::setUserValidation($validator);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
 		$this->Session->write('Student.Students.name', $entity->name);
+		$this->request->data[$this->alias()]['student_id'] = $entity->id;
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
+
+		//find out current academic period and store it in session
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
+		if(!empty($AcademicPeriod)) {
+			$session = $this->request->session();
+			$session->write('Student.AcademicPeriod.Current.id', $AcademicPeriod);
+		}
 
 		$this->ControllerAction->field('institution', ['order' => 50]);
 		$this->ControllerAction->field('status', ['order' => 51, 'sort' => false]);
@@ -145,6 +114,7 @@ class StudentsTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			$query->innerJoin(
 				['InstitutionStudent' => 'institution_students'],
 				[
@@ -159,11 +129,21 @@ class StudentsTable extends AppTable {
 
 	public function onGetInstitution(Event $event, Entity $entity) {
 		$userId = $entity->id;
+
+		$session = $this->request->session();
+		$currentAcademicPeriod = $session->read('Student.AcademicPeriod.Current.id');
+
+		$selectedStudentStatusId = 1; //Related to task PHPOE-1872
+
 		$query = $this->InstitutionStudent->find()
-		->contain(['Institutions', 'StudentStatuses'])
-		->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
-		->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
-		;
+						 ->contain(['Institutions'])
+						 ->matching('StudentStatuses', function ($q) use ($selectedStudentStatusId) {
+						    return $q->where(['StudentStatuses.id' => $selectedStudentStatusId]);
+						 })	
+						 ->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
+						 ->andWhere([$this->InstitutionStudent->aliasField('academic_period_id') => $currentAcademicPeriod])
+						 ->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
+						 ;	
 
 		$value = '';
 		if ($query->count() > 0) {
@@ -176,8 +156,9 @@ class StudentsTable extends AppTable {
 				$institutionArr[$obj->institution->id] = $obj->institution->name;
 			}
 			$value = implode('<BR>', $institutionArr);
-
-			$entity->student_status = $query->first()->student_status->name;
+			$studentStatus = $query->first()->_matchingData['StudentStatuses'];
+			$entity->student_status = $studentStatus->name;
+			$entity->status_code = $studentStatus->code;
 		}
 		return $value;
 	}
@@ -188,6 +169,49 @@ class StudentsTable extends AppTable {
 			$value = $entity->student_status;
 		}
 		return $value;
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$studentId = $this->request->data[$this->alias()]['student_id'];
+				$enrolledStatus = false;
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				foreach ($institutionIds as $id) {
+					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+					if ($enrolledStatus) {
+						break;
+					}
+				}
+				if (! $enrolledStatus) {
+					if (isset($toolbarButtons['edit'])) {
+						unset($toolbarButtons['edit']);
+					}
+				}
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (!$this->AccessControl->isAdmin()) {
+			if ($entity->status_code != 'CURRENT') {
+				if (isset($buttons['edit'])) {
+					unset($buttons['edit']);
+				}
+				if (isset($buttons['remove'])) {
+					unset($buttons['remove']);
+				}
+			}
+		}
+		return $buttons;
 	}
 
 	public function addBeforeAction(Event $event) {

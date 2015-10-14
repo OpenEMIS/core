@@ -1,4 +1,4 @@
-/* TABS v.1.0.0 */
+/* TABS v.1.0.1 */
 
 .tab-content {
     margin-top: -1px;
@@ -165,11 +165,14 @@
     transition: all 0.5s ease;
     opacity: 1;
     padding: 5px 10px;
+    text-decoration: none;
 }
 
 .horizontal-tabs span a:hover {
-    background: #999;
+    background: #6B6B6B;
     color: #FFF;
+    text-decoration: none;
+    border-color: #6B6B6B;
 }
 
 .horizontal-tabs span a,
@@ -182,6 +185,7 @@
 .nav-tabs {
     clear: both;
     float: none;
+    margin: 0 !important;
 }
 
 .nav-tabs > li > a {
@@ -203,8 +207,15 @@
     margin-top: -1px;
     padding: 7px 10px 6px !important;
     color: #555 !important;
+    text-decoration: none;
 }
 
 .nav-tabs > li.active > a:focus {
     border-left: 1px solid #DDD !important;
+}
+
+@media (max-width: 765px) {
+    .scroll_tabs_container div.scroll_tab_inner span {
+        line-height: 32px;
+    }
 }

@@ -103,7 +103,11 @@ class AppTable extends Table {
 
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
-		return $this->formatDate($entity->$field);
+		if (!empty($entity->$field)) {
+			return $this->formatDate($entity->$field);
+		} else {
+			return $entity->$field;
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
@@ -168,9 +172,12 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onGetFieldLabel'
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		return $this->getFieldLabel($module, $field, $language, $autoHumanize);
+	}
+
+	public function getFieldLabel($module, $field, $language, $autoHumanize=true) {
 		$Labels = TableRegistry::get('Labels');
 		$label = $Labels->getLabel($module, $field, $language);
-
 		if ($label === false && $autoHumanize) {
 			$label = Inflector::humanize($field);
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
@@ -178,6 +185,11 @@ class AppTable extends Table {
 			}
 		}
 		return $label;
+	}
+
+	// Event: 'Model.excel.onExcelGetLabel'
+	public function onExcelGetLabel(Event $event, $module, $col, $language) {
+		return $this->getFieldLabel($module, $col, $language);
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
@@ -364,15 +376,11 @@ class AppTable extends Table {
 		return $key;
 	}
 
-	public function postString($key, $options=[]) {
+	public function postString($key) {
 		$request = $this->request;
+		$selectedId = null;
 		if ($request->data($this->aliasField($key))) {
 			$selectedId = $request->data($this->aliasField($key));
-			if (!array_key_exists($selectedId, $options)) {
-				$selectedId = key($options);
-			}
-		} else {
-			$selectedId = key($options);
 		}
 		return $selectedId;
 	}
