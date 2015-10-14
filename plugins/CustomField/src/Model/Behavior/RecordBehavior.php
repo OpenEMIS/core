@@ -382,9 +382,11 @@ class RecordBehavior extends Behavior {
 			$fields[] = $field;
 		}
 
+		// Set the available options for dropdown and checkbox type
 		$this->_customFieldOptions = $settings['sheet']['customFieldOptions'];
+
+		// Set the fetched field values to avoid multiple call to the database
 		$this->_fieldValues = $this->getFieldValue($entity->id);
-		return $fields;
 	}
 
 	// Model.excel.onExcelRenderCustomField
@@ -414,6 +416,16 @@ class RecordBehavior extends Behavior {
 		$customFieldValueTable = $this->CustomFieldValues;
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+
+		$selectedColumns = [
+			$customFieldValueTable->aliasField($customFieldsForeignKey),
+			'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
+				.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+				.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
+				.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
+				.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
+				.' END) SEPARATOR \',\'))'
+		];
 		
 		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
@@ -431,16 +443,7 @@ class RecordBehavior extends Behavior {
 				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
 				[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
 			)
-			->select([
-				$customFieldValueTable->aliasField($customRecordsForeignKey),
-				$customFieldValueTable->aliasField($customFieldsForeignKey),
-				'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
-					.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
-					.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
-					.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
-					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
-					.' END) SEPARATOR \',\'))'
-			])
+			->select($selectedColumns)
 			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $recordId])
 			->group([$customFieldValueTable->aliasField($customFieldsForeignKey)])
 			->toArray();
