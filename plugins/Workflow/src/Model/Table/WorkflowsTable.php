@@ -41,6 +41,17 @@ class WorkflowsTable extends AppTable {
 		]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator->add('code', [
+			'ruleUnique' => [
+				'rule' => ['validateUnique', ['scope' => 'workflow_model_id']],
+				'provider' => 'table'
+			]
+		]);
+
+		return $validator;
+	}
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		parent::beforeSave($event, $entity, $options);
 		// Auto insert default workflow_steps when add
@@ -227,6 +238,13 @@ class WorkflowsTable extends AppTable {
     }
 
 	public function indexBeforeAction(Event $event) {
+		//Add controls filter to index page
+		$toolbarElements = [
+            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
+        ];
+		$this->controller->set('toolbarElements', $toolbarElements);
+		// End
+
 		$this->ControllerAction->field('apply_to_all');
 		$this->ControllerAction->field('filters', [
 			'type' => 'chosenSelect'
@@ -236,7 +254,12 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->contain($this->_contain);
+		list($modelOptions, $selectedModel) = array_values($this->_getSelectOptions());
+		$this->controller->set(compact('modelOptions', 'selectedModel'));
+
+		$query
+			->contain($this->_contain)
+			->where([$this->aliasField('workflow_model_id') => $selectedModel]);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
@@ -354,6 +377,37 @@ class WorkflowsTable extends AppTable {
 					$modelAlias = $this->ControllerAction->getModel($filter)['model'];
 					$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
 					$filterOptions = TableRegistry::get($filter)->getList()->toArray();
+					
+					// Logic to remove filter from the list if already in used
+					$Workflows = TableRegistry::get('Workflow.Workflows');
+					$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+
+					$filterQuery = $WorkflowsFilters
+						->find('list', ['keyField' => 'filter_id', 'valueField' => 'filter_id'])
+						->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {
+							return $q->where([
+									$Workflows->aliasField('workflow_model_id') => $selectedModel
+								]);
+						})
+						->where([
+							$WorkflowsFilters->aliasField('filter_id <> ') => 0
+						]);
+
+					if ($action == 'edit') {
+						$paramsPass = $this->ControllerAction->paramsPass();
+						$workflowId = current($paramsPass);
+						$filterQuery->where([
+							$WorkflowsFilters->aliasField('workflow_id <> ') => $workflowId
+						]);
+					}
+					$filterIds = $filterQuery->toArray();
+
+					foreach ($filterOptions as $key => $value) {
+						if (array_key_exists($key, $filterIds)) {
+							unset($filterOptions[$key]);
+						}
+					}
+					// End
 
 					$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
 					$attr['options'] = $filterOptions;

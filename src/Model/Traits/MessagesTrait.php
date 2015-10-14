@@ -783,6 +783,13 @@ trait MessagesTrait {
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
 			]
+		],
+		'Workflow' => [
+			'Workflows' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
+			]
 		]
 	];
 
