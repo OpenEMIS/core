@@ -90,6 +90,27 @@ class SurveysTable extends AppTable  {
 		$event->stopPropagation();
 	}
 
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+		$query->select(['area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
+		$fields[] = [
+			'key' => 'Institutions.area_id',
+			'field' => 'area_id',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'Institutions.area_administrative_id',
+			'field' => 'area_administrative_id',
+			'type' => 'string',
+			'label' => '',
+		];
+	}
+
 	public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			if (isset($this->request->data[$this->alias()]['feature'])) {
