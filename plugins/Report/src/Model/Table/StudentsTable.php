@@ -26,7 +26,6 @@ class StudentsTable extends AppTable  {
 			'model' => 'Student.Students',
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'condition' => [$this->aliasField('is_student') => 1]
 		]);
 	}
 

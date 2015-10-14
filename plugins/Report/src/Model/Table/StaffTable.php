@@ -26,7 +26,6 @@ class StaffTable extends AppTable  {
 			'model' => 'Staff.Staff',
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'condition' => [$this->aliasField('is_staff') => 1]
 		]);
 	}
 
