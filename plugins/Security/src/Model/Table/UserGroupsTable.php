@@ -399,9 +399,71 @@ class UserGroupsTable extends AppTable {
 
 		$query->find('notInInstitutions');
 
+		// filter groups by users permission
+		if ($this->Auth->user('super_admin') != 1) {
+			$userId = $this->Auth->user('id');
+			$query->where([
+				'OR' => [
+					'EXISTS (SELECT `id` FROM `security_group_users` WHERE `security_group_users`.`security_group_id` = `UserGroups`.`id` AND `security_group_users`.`security_user_id` = ' . $userId . ')',
+					'UserGroups.created_user_id' => $userId
+				]
+			]);
+		}
+
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}
+
+		$search = $this->ControllerAction->getSearchKey();
+
+		// CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
+		$options['auto_search'] = false; // it will append an AND
+		if (!empty($search)) {
+			$query->find('byInstitutionAreaNameCode', ['search' => $search]);
+		}
+	}
+
+	public function findByInstitutionAreaNameCode(Query $query, array $options) {
+		if (array_key_exists('search', $options)) {
+			$search = $options['search'];
+			$query
+			->join([
+				[
+					'table' => 'security_group_institution_sites', 'alias' => 'SecurityGroupInstitutions', 'type' => 'LEFT',
+					'conditions' => ['SecurityGroupInstitutions.security_group_id = ' . $this->aliasField('id')]
+				],
+				[
+					'table' => 'institution_sites', 'alias' => 'Institutions', 'type' => 'LEFT',
+					'conditions' => [
+						'Institutions.id = ' . 'SecurityGroupInstitutions.institution_site_id',
+					]
+				],
+				[
+					'table' => 'security_group_areas', 'alias' => 'SecurityGroupAreas', 'type' => 'LEFT',
+					'conditions' => ['SecurityGroupAreas.security_group_id = ' . $this->aliasField('id')]
+				],
+				[
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'LEFT',
+					'conditions' => [
+						'Areas.id = ' . 'SecurityGroupAreas.area_id',
+					]
+				],
+			])
+			->where([
+					'OR' => [
+						['Institutions.code LIKE' => '%' . $search . '%'],
+						['Institutions.name LIKE' => '%' . $search . '%'],
+						['Areas.code LIKE' => '%' . $search . '%'],
+						['Areas.name LIKE' => '%' . $search . '%'],
+						[$this->aliasField('name').' LIKE' => '%'.$search.'%']
+					]
+				]
+			)
+			->group($this->aliasField('id'))
+			;
+		}
+
+		return $query;
 	}
 
 	public function findNotInInstitutions(Query $query, array $options) {

@@ -29,26 +29,13 @@ class StaffBehavior extends Behavior {
 		$query->contain(['Users', 'Institutions', 'StaffStatuses']);
 
 		$search = $this->_table->ControllerAction->getSearchKey();
-		$searchParams = explode(' ', $search);
-		foreach ($searchParams as $key => $value) {
-			if (empty($searchParams[$key])) {
-				unset($searchParams[$key]);
-			}
-		}
 
 		if (!empty($search)) {
-			$query->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-			foreach ($searchParams as $key => $value) {
-				$searchString = '%' . $value . '%';
-				$query->orWhere(['Users.first_name LIKE' => $searchString]);
-				$query->orWhere(['Users.middle_name LIKE' => $searchString]);
-				$query->orWhere(['Users.third_name LIKE' => $searchString]);
-				$query->orWhere(['Users.last_name LIKE' => $searchString]);
-			}
+			$query = $this->_table->addSearchConditions($query, ['searchTerm' => $search]);
 
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $event->subject()->request->session();
-				$institutionId = $session->read('Institutions.id');
+				$institutionId = $session->read('Institution.Institutions.id');
 				$query->andWhere(['InstitutionSiteStaff.institution_site_id' => $institutionId]);
 			}
 		}
@@ -83,7 +70,7 @@ class StaffBehavior extends Behavior {
 		$name = '';
 		if ($entity instanceof User) {
 			$session = $event->subject()->request->session();
-			$institutionId = $session->read('Institutions.id');
+			$institutionId = $session->read('Institution.Institutions.id');
 
 			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
 			$obj = $InstitutionSiteStaff->find()
@@ -112,7 +99,7 @@ class StaffBehavior extends Behavior {
 			// For Institution Staff
 			case "Staff":
 				$session = $this->_table->Session;
-				$institutionId = $session->read('Institutions.id');
+				$institutionId = $session->read('Institution.Institutions.id');
 				// Total Students: number
 
 				// Get Number of staff in an institution

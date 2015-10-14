@@ -1,10 +1,16 @@
+/* 
+Version: v.1.0.1
+Created: 18/8/2015
+Modified: 27/8/2015
+*/
+
 @font-face {
 	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?mqij0d');
-	src:url('fonts/kordit-fonts.eot?#iefixmqij0d') format('embedded-opentype'),
-		url('fonts/kordit-fonts.ttf?mqij0d') format('truetype'),
-		url('fonts/kordit-fonts.woff?mqij0d') format('woff'),
-		url('fonts/kordit-fonts.svg?mqij0d#kordit-fonts') format('svg');
+	src:url('fonts/kordit-fonts.eot?-7stnl6');
+	src:url('fonts/kordit-fonts.eot?#iefix-7stnl6') format('embedded-opentype'),
+		url('fonts/kordit-fonts.ttf?-7stnl6') format('truetype'),
+		url('fonts/kordit-fonts.woff?-7stnl6') format('woff'),
+		url('fonts/kordit-fonts.svg?-7stnl6#kordit-fonts') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,8 +29,35 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.kd-compile:before {
+.kd-draggable-line:before {
+	content: "\e641";
+}
+.kd-draggable:before {
+	content: "\e640";
+}
+.kd-reorder:before {
+	content: "\e63f";
+}
+.kd-guardian:before {
+	content: "\e63d";
+}
+.kd-dropout:before {
+	content: "\e63a";
+}
+.kd-transfer:before {
+	content: "\e63b";
+}
+.kd-graduate:before {
+	content: "\e63c";
+}
+.kd-reject:before {
 	content: "\e638";
+}
+.kd-approve:before {
+	content: "\e639";
+}
+.kd-compile:before {
+	content: "\e63e";
 }
 .kd-404-error:before {
 	content: "\e600";

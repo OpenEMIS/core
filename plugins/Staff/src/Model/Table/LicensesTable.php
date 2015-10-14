@@ -37,9 +37,16 @@ class LicensesTable extends AppTable {
 	// Use for Mini dashboard (Institution Staff)
 	public function getNumberOfStaffByLicenses($params=[]){
 		$institutionId = 0;
-		if(!empty ($params['institution_site_id'])){
-			$institutionId = $params['institution_site_id'];
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		$innerJoinArray = [
+					'InstitutionStaff.security_user_id = ' . $this->aliasField('security_user_id'),
+				];
+		$innerJoinArraySize = count($innerJoinArray);
+		foreach ($conditions as $key => $value) {
+			 $_conditions[$innerJoinArraySize++] = 'InstitutionStaff.'.$key.' = '.$value;
 		}
+		$innerJoinArray = array_merge($innerJoinArray, $_conditions);
 
 		$licenseRecord = $this->find();
 		$licenseCount = $licenseRecord
@@ -48,11 +55,8 @@ class LicensesTable extends AppTable {
 				'license' => 'LicenseTypes.name',
 				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
 			])
-			->innerJoin(['InstitutionSiteStaff' => 'institution_site_staff'],
-				[
-					'InstitutionSiteStaff.security_user_id = ' . $this->aliasField('security_user_id'),
-					'InstitutionSiteStaff.institution_site_id = ' . $institutionId
-				]
+			->innerJoin(['InstitutionStaff' => 'institution_site_staff'],
+				$innerJoinArray
 			)
 			->group('license')
 			->toArray();

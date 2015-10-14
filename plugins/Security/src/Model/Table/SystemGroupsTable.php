@@ -82,6 +82,19 @@ class SystemGroupsTable extends AppTable {
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}
+
+		// filter groups by users permission
+		if ($this->Auth->user('super_admin') != 1) {
+			$userId = $this->Auth->user('id');
+			$query->innerJoin(
+				['GroupUsers' => 'security_group_users'],
+				[
+					'GroupUsers.security_group_id = ' . $this->aliasField('id'),
+					'GroupUsers.security_user_id = ' . $userId
+				]
+			);
+			$query->group([$this->aliasField('id')]);
+		}
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

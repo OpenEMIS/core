@@ -24,9 +24,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 
-		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff']);
+		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
+		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -34,8 +34,6 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-		$this->ControllerAction->field('position_no', ['visible' => true]);
-		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('staff_position_title_id', [
 			'visible' => true,
@@ -70,16 +68,6 @@ class InstitutionSitePositionsTable extends AppTable {
 			'visible' => true
 		]);
 	}
-
-
-/******************************************************************************************************************
-**
-** delete action methods
-**
-******************************************************************************************************************/
-	// public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id) {
-	// 	$this->ControllerAction->removeStraightAway = false;
-	// }
 
 
 /******************************************************************************************************************
@@ -139,8 +127,8 @@ class InstitutionSitePositionsTable extends AppTable {
 			$id = $pass[1];
 		}
 		if (!isset($id)) {
-			if ($session->check($this->aliasField('id'))) {
-				$id = $session->read($this->aliasField('id'));
+			if ($session->check($this->registryAlias() . '.id')) {
+				$id = $session->read($this->registryAlias() . '.id');
 			}
 		}
 
@@ -150,7 +138,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->InstitutionSiteStaff;
-		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
+		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institution.Institutions.id'), $id)
 							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo');
@@ -166,7 +154,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		// end Current Staff List field
 
 		// start PAST Staff List field
-		$pastStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institutions.id'), $id)
+		$pastStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institution.Institutions.id'), $id)
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
 							->andWhere([$Staff->aliasField('end_date').' < DATE(NOW())'])
 							->order([$Staff->aliasField('start_date')])
@@ -228,6 +216,11 @@ class InstitutionSitePositionsTable extends AppTable {
 			}
 		}
 		return $list;
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
 	}
 
 

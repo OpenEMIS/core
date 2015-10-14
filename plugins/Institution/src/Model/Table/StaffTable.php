@@ -7,364 +7,792 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use User\Model\Table\UsersTable as BaseTable;
+use Cake\Controller\Controller;
+use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
+use Cake\Utility\Inflector;
+use DateTime;
 
-class StaffTable extends BaseTable {
-	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
-	
+
+class StaffTable extends AppTable {
+	use OptionsTrait;
+
 	public function initialize(array $config) {
+		$this->table('institution_site_staff');
 		parent::initialize($config);
-		$this->entityClass('User.User');
-		$this->addBehavior('Staff.Staff');
-		$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
-		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStaff]);
-		$this->addBehavior('AdvanceSearch');
+
+		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionSitePositions', 'foreignKey' => 'institution_site_position_id']);
+		$this->belongsTo('Institutions',	['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+
+		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('AcademicPeriod.Period');
+		// to handle field type (autocomplete)
+		$this->addBehavior('OpenEmis.Autocomplete');
+		$this->addBehavior('User.User');
+		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+
+		$this->addBehavior('Excel', [
+			'excludes' => ['start_year', 'end_year'], 
+			'pages' => ['index']
+		]);
+
+		$this->addBehavior('HighChart', [
+	      	'number_of_staff' => [
+        		'_function' => 'getNumberOfStaff',
+				'chart' => ['type' => 'column', 'borderWidth' => 1],
+				'xAxis' => ['title' => ['text' => 'Position Type']],
+				'yAxis' => ['title' => ['text' => 'Total']]
+			],
+			'institution_staff_gender' => [
+				'_function' => 'getNumberOfStaffsByGender'
+			],
+			'institution_staff_qualification' => [
+				'_function' => 'getNumberOfStaffsByQualification'
+			],
+		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		parent::indexBeforePaginate($event, $request, $query, $options);
-		$query->contain(['Positions.StaffPositionTitles']);
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->allowEmpty('end_date')
+			->add('end_date', 'ruleCompareDateReverse', [
+		        'rule' => ['compareDateReverse', 'start_date', true]
+	    	])
+			->add('staff_name', 'ruleInstitutionStaffId', [
+				'rule' => ['institutionStaffId'],
+				'on' => 'create'
+			])
+			->add('institution_site_position_id', 'ruleCheckFTE', [
+				'rule' => ['checkFTE'],
+			])
+			// Added in add before patch and add on new as it is only use by the add action
+			// ->requirePresence('role');
+		;
+	}
+
+	// Dynamic adding of role validation
+	public function validationRole (Validator $validator) {
+		$validator = $this->validationDefault($validator);
+		$validator->requirePresence('role');
+		return $validator;
+	}
+
+	public function validationAllowEmptyName(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+        $validator->remove('staff_name');
+        return $validator;
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
+		$periodId = $this->request->query['academic_period_id'];
+		if ($periodId > 0) {
+			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
+		}
+	}
+
+	public function onExcelGetFTE(Event $event, Entity $entity) {
+		return ($entity->FTE * 100) . '%';
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		parent::indexBeforeAction($event, $query, $settings);
-
-		$this->ControllerAction->field('position');
-		$this->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
-			'name', 'default_identity_type', 'position', 'staff_status']);
+		$this->fields['security_user_id']['order'] = 5;
+		$this->fields['institution_site_position_id']['order'] = 6;
+		$this->fields['FTE']['visible'] = false;
 	}
 
-	public function onGetPosition(Event $event, Entity $entity) {
-		return $entity->position->staff_position_title->name;
-	}
-
-	public function onGetStaffStatus(Event $event, Entity $entity) {
-		return $entity->staff_status->name;
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$InstitutionStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
-		$session = $this->request->session();
-		$institutionId = $session->read('Institutions.id');
-		$securityUserId = $InstitutionStaff->get($id)->security_user_id;
-
-		$count = $InstitutionStaff->find()
-		->where(['institution_site_id' => $institutionId, 'security_user_id' => $securityUserId])
-		->count();
-
-		if ($count <= 1) { // retain the last record because we need it to get the student record
-			$process = function($model, $id, $options) use ($InstitutionStaff) {
-				return $InstitutionStaff->updateAll(
-					['institution_site_id' => 0, 'FTE' => 0],
-					['id' => $id]
-				);
-			};
-		} else {
-			$process = function($model, $id, $options) use ($InstitutionStaff) {
-				return $InstitutionStaff->deleteAll(['id' => $id]);
-			};
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain(['Positions']);
+		$sortList = ['start_date', 'end_date'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
 		}
-		return $process;
+		$options['sortWhitelist'] = $sortList;
+
+		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		// Academic Periods
+		$periodOptions = $AcademicPeriodTable->getList();
+
+		if (empty($request->query['academic_period_id'])) {
+			$request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
+		}
+
+		// Positions
+		$session = $request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+		$positionData = $this->Positions
+		->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+		->contain(['StaffPositionTitles'])
+		->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+		->toArray();
+
+		$positionOptions = [0 => __('All Positions')] + $positionData;
+
+		// Query Strings
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+		$selectedPosition = $this->queryString('position', $positionOptions);
+
+		$Staff = $this;
+
+		// Advanced Select Options
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->findByInstitutionSiteId($institutionId)
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
+		$this->advancedSelectOptions($positionOptions, $selectedPosition);
+
+		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
+		if ($selectedPosition != 0) {
+			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
+		}
+		
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+		}
+
+		$this->controller->set(compact('periodOptions', 'positionOptions'));
 	}
 
-	public function addBeforeAction(Event $event) {
-		if (array_key_exists('new', $this->request->query)) {
-
-		} else {
-			$session = $this->request->session();
-			$institutionSiteId = $session->read('Institutions.id');
-			$associationString = $this->alias().'.'.$this->InstitutionSiteStaff->table().'.0.';
-			$this->ControllerAction->field('institution_site_id', ['type' => 'hidden', 'value' => $institutionSiteId, 'fieldName' => $associationString.'institution_site_id']);			
-
-			$this->ControllerAction->field('institution_site_position_id', ['fieldName' => $associationString.'institution_site_position_id']);
-			$this->ControllerAction->field('security_role_id', ['fieldName' => $associationString.'security_role_id']);
-			$this->ControllerAction->field('start_date', ['fieldName' => $associationString.'start_date']);
-			$this->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
-			$this->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
-			$this->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
-			$this->ControllerAction->field('staff_status_id', ['fieldName' => $associationString.'staff_status_id']);
-			$this->ControllerAction->field('search',['type' => 'autocomplete', 
-														     'placeholder' => 'openEMIS ID or Name',
-														     'url' => '/Institutions/Staff/autoCompleteUserList',
-														     'length' => 3 ]);
-			$this->ControllerAction->setFieldOrder([
-				'institution_site_position_id', 'security_role_id', 'start_date', 'FTE', 'staff_type_id', 'staff_status_id'
-				, 'search'
-				]);
-
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+		if ($entity->role > 0) {
+			$obj = [
+				'id' => Text::uuid(),
+				'security_group_id' => $entity->group_id, 
+				'security_role_id' => $entity->role, 
+				'security_user_id' => $entity->security_user_id
+			];
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$GroupUsers->save($GroupUsers->newEntity($obj));
 		}
 	}
 
-	public function autoCompleteUserList() {
-		if ($this->request->is('ajax')) {
-			$this->layout = 'ajax';
-			$this->autoRender = false;
-			$this->ControllerAction->autoRender = false;
-			$term = $this->ControllerAction->request->query('term');
-			$search = $term;
-			$searchParams = explode(' ', $search);
+	public function addAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('staff_name');
+		$this->ControllerAction->field('institution_site_position_id');
+		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
+		$this->ControllerAction->field('FTE');
+		$this->ControllerAction->field('end_date', ['visible' => false]);
 
-			$list = $this->InstitutionSiteStaff
-					->find('all')
-					->contain(['Users'])
-					;
+		$this->ControllerAction->setFieldOrder([
+			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
+		]);
+	}
 
-			$searchParams = explode(' ', $search);
-			foreach ($searchParams as $key => $value) {
-				if (empty($searchParams[$key])) {
-					unset($searchParams[$key]);
-				}
-			}
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements($entity);
+	}
 
-			if (!empty($search)) {
-				$list->where(['Users.openemis_no LIKE' => '%' . trim($search) . '%']);
-				foreach ($searchParams as $key => $value) {
-					$searchString = '%' . $value . '%';
-					$list->orWhere(['Users.first_name LIKE' => $searchString]);
-					$list->orWhere(['Users.middle_name LIKE' => $searchString]);
-					$list->orWhere(['Users.third_name LIKE' => $searchString]);
-					$list->orWhere(['Users.last_name LIKE' => $searchString]);
-				}
-			}
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'add') {
+			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+			$buttons[0]['attr']['value'] = 'new';
+		}
+	}
 
-			$session = $this->request->session();
-			if ($session->check($this->controller->name.'.'.$this->alias)) {
-				$filterData = $session->read($this->controller->name.'.'.$this->alias);
-				// need to form an exclude list
-				$excludeQuery = $this->InstitutionSiteStaff
-					->find()
-					->select(['security_user_id'])
-					->where(
-						[
-							'AND' => $filterData
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+		$recordId = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$newEndDate = strtotime($data[$this->alias()]['end_date']);
+		$newStartDate = strtotime($data[$this->alias()]['start_date']);
+		$staffId = $data[$this->alias()]['security_user_id'];
+		$positionId = $data[$this->alias()]['institution_site_position_id'];
+		$condition = [
+			$this->aliasField('security_user_id') => $staffId,
+			$this->aliasField('institution_site_position_id') => $positionId,
+			$this->aliasField('id').' IS NOT' => $recordId,
+			$this->aliasField('institution_site_id') => $institutionId
+		];
+		$count = 0;
+		if (empty($newEndDate)) {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[
+								$this->aliasField('start_date').' >=' => $newStartDate, 
+							]
 						]
-					)
-					->group('security_user_id')
-				;
-				$excludeList = [];
-				foreach ($excludeQuery as $key => $value) {
-					$excludeList[] = $value->security_user_id;
-				}
-				
-				if(!empty($excludeList)) {
-					$list->where([$this->InstitutionSiteStaff->aliasField('security_user_id').' NOT IN' => $excludeList]);
-				}
-			}
-			
-			$list
-				->group('Users.id')
-				->order(['Users.first_name asc']);
+					]);
+		} else {
+			$count = $this->find()
+				->where($condition)
+				->where([
+						'OR' => [
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' IS NULL'
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newEndDate,
+								$this->aliasField('end_date').' >=' => $newEndDate,
+							],
+							[
+								$this->aliasField('start_date').' <=' => $newStartDate,
+								$this->aliasField('end_date').' >=' => $newStartDate,
+							],
+						]
+					]);
+		}
+		if ($count->count() > 0) {
+			$this->Alert->error('Institution.InstitutionSiteStaff.staffExistWithinPeriod');
+			$urlParams = $this->ControllerAction->url('edit');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		} else {
+			if (array_key_exists('FTE', $data[$alias])) {
+				$newFTE = $data[$alias]['FTE'];
+				$newEndDate = $data[$alias]['end_date'];
 
-			$data = array();
-			foreach ($list as $obj) {
-				$data[] = array(
-					'label' => $obj->user->nameWithId,
-					'value' =>  $obj->user->id
-				);
+				if ($newFTE != $entity->FTE) {
+					$data[$alias]['FTE'] = $entity->FTE;
+					$entity->newFTE = $newFTE;
+
+					if (empty($newEndDate)) {
+						if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+							$data[$alias]['end_date'] = date('Y-m-d');
+						} else {
+							$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
+						}
+					} else {
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
+					}
+				}
+			}
+		}
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew()) { // edit operation
+			if ($entity->has('newFTE')) {
+				unset($entity->id);
+				$entity->FTE = $entity->newFTE;
+				$entity->start_date = $entity->end_date;
+				if ($entity->start_date instanceof Date) {
+					$entity->start_date->modify('+1 days');
+				} else {
+					$startDate = $entity->start_date->format('Y-m-d');
+					$date = date_create($startDate);
+					date_add($date, date_interval_create_from_date_string('1 day'));
+					$entity->start_date = $date->format('Y-m-d');
+				}
+				$entity->end_date = null;
+				$entity->end_year = null;
+				unset($entity->staff_type);
+				unset($entity->staff_status);
+				unset($entity->position);
+				unset($entity->user);
+				
+				$newEntity = $this->newEntity($entity->toArray());
+				if (!$this->save($newEntity)) {
+						
+				} else {
+					$url = [
+						'plugin' => 'Institution', 
+						'controller' => 'Institutions', 
+						'action' => 'Staff', 
+						'0' => 'view', 
+						'1' => $newEntity->id
+					];
+					$url = array_merge($url, $this->ControllerAction->params());
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
+				}
+			}
+		}
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+		
+	}
+
+	private function setupTabElements($entity) {
+		$options = [
+			'userRole' => 'Staff',
+			'action' => $this->action,
+			'id' => $entity->id,
+			'userId' => $entity->security_user_id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$positionOptions = $this->Positions
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->contain(['StaffPositionTitles'])
+			->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+			->toArray();
+			$attr['options'] = $positionOptions;
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldRole(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$Roles = TableRegistry::get('Security.SecurityRoles');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$institutionEntity = $this->Institutions->get($institutionId);
+			$groupId = $institutionEntity->security_group_id;
+			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
+
+			$userId = $this->Auth->user('id');
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+			}
+			$roleOptions = ['' => '-- ' . __('Select Role') . ' --'];
+			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
+			$attr['options'] = $roleOptions;
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
+		$options = $this->getSelectOptions('Position.types');
+		if ($action == 'add') {
+			$attr['options'] = $options;
+			$attr['onChangeReload'] = true;
+			$this->fields['FTE']['type'] = 'hidden';
+			$this->fields['FTE']['value'] = 1;
+			if ($this->request->is(['post', 'put'])) {
+				$type = $this->request->data($this->aliasField('position_type'));
+				if ($type == 'PART_TIME') {
+					$this->fields['FTE']['type'] = 'select';
+					$this->fields['FTE']['options'] = [
+						['value' => '0.25', 'text' => '25%'],
+						['value' => '0.50', 'text' => '50%', 'selected'],
+						['value' => '0.75', 'text' => '75%']
+					];
+				}
+			}
+		} else if ($action == 'view') {
+			$this->fields['FTE']['type'] = 'string';
+		} else {
+			$attr['visible'] = false;
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['visible'] = false;	
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldStaffName(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['type'] = 'autocomplete';
+			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
+			$attr['noResults'] = __('No Staff found');
+			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Staff', 'ajaxUserAutocomplete'];
+			
+			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+		} else if ($action == 'index') {
+			$attr['sort'] = ['field' => 'Users.first_name'];
+		}
+		return $attr;
+	}
+
+	public function onGetSecurityUserId(Event $event, Entity $entity) {
+		$value = '';
+		if ($entity->has('user')) {
+			$value = $entity->user->name;
+		} else {
+			$value = $entity->_matchingData['Users']->name;
+		}
+		return $value;
+	}
+
+	public function onGetPositionType(Event $event, Entity $entity) {
+		$options = $this->getSelectOptions('Position.types');
+		$value = $options['FULL_TIME'];
+		if ($entity->FTE < 1) {
+			$value = $options['PART_TIME'];
+		}
+		return $value;
+	}
+
+	public function onGetFTE(Event $event, Entity $entity) {
+		$value = '100%';
+		if ($entity->FTE < 1) {
+			$value = ($entity->FTE * 100) . '%';
+		}
+		return $value;
+	}
+
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$this->Session->delete('Institution.Staff.new');
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$options['validate'] = 'Role';
+	}
+
+	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$options['validate'] = 'Role';
+		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+		$errorCount = count($patch->errors());
+		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('security_user_id', $patch->errors()))) {
+			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
+			$event->stopPropagation();
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
+			return $this->controller->redirect($action);
+		} else {
+			$this->Alert->error('general.add.failed', ['reset' => true]);
+		}
+	}
+
+	public function afterAction(Event $event) {
+		$this->ControllerAction->field('position_type');
+		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
+		$this->ControllerAction->field('security_user_id');
+		
+		if ($this->action == 'index') {
+			$institutionSiteArray = [];
+			
+
+			$session = $this->Session;
+			$institutionId = $session->read('Institution.Institutions.id');
+
+			$periodId = $this->request->query('academic_period_id');
+			$conditions = ['institution_site_id' => $institutionId];
+
+			$positionId = $this->request->query('position');
+
+			// Get Number of staff in an institution
+			$staffCount = $this->find()
+				->find('academicPeriod', ['academic_period_id' => $periodId])
+				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->distinct(['security_user_id']);
+
+			if ($positionId != 0) {
+				$staffCount->where([$this->aliasField('institution_site_position_id') => $positionId]);
+				$conditions = array_merge($conditions, ['institution_site_position_id' => $positionId])	;
+			}
+			// Get Gender
+			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
+				['conditions' => $conditions, 'key' => __('Gender')]);
+
+			// Get Staff Licenses
+			$table = TableRegistry::get('Staff.Licenses');
+			// Revisit here in awhile
+			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
+				['conditions' => $conditions, 'key' => __('Licenses')]);
+
+			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
+			$indexDashboard = 'dashboard';
+			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+	            'name' => $indexDashboard,
+	            'data' => [
+	            	'model' => 'staff',
+	            	'modelCount' => $staffCount->count(['security_user_id']),
+	            	'modelArray' => $institutionSiteArray,
+	            ],
+	            'options' => [],
+	            'order' => 1
+	        ];
+		}
+	}
+
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
+		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+		$i = 10;
+		$this->fields['security_user_id']['order'] = $i++;
+		$this->fields['institution_site_position_id']['order'] = $i++;
+		$this->fields['position_type']['order'] = $i++;
+		$this->fields['FTE']['order'] = $i++;
+	}
+
+	public function editBeforeQuery(Event $event, Query $query) {
+		$query->contain(['Users', 'Positions', 'StaffTypes', 'StaffStatuses']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('security_user_id', [
+			'type' => 'readonly', 
+			'order' => 10, 
+			'attr' => ['value' => $entity->user->name_with_id]
+		]);
+		$this->ControllerAction->field('institution_site_position_id', [
+			'type' => 'readonly', 
+			'order' => 11,
+			'attr' => ['value' => $entity->position->name]
+		]);
+
+		if (empty($entity->end_date)) {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'select', 
+				'order' => 12,
+				'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
+			]);
+		} else {
+			$this->ControllerAction->field('FTE', [
+				'type' => 'readonly', 
+				'order' => 12, 
+				'attr' => ['value' => $entity->FTE]
+			]);
+		}
+		
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// note that $this->table('institution_site_staff');
+		$id = $entity->id;
+		$institutionId = $entity->institution_site_id;
+		$securityUserId = $entity->security_user_id;
+
+		
+		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
+		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
+			
+
+		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
+		$sectionsInPosition = $InstitutionSiteSections->find()
+			->where(
+				['security_user_id' => $securityUserId, 'institution_site_id' => $institutionId]
+			)
+			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+				$overlapDateCondition = [];
+				if (empty($endDate)) {
+					$overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+				} else {
+					$overlapDateCondition['OR'] = [];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+				}
+				return $q->where($overlapDateCondition);
+			})
+			;
+			
+		$sectionArray = [];
+		foreach ($sectionsInPosition as $key => $value) {
+			$sectionArray[] = $value->id;
+		}
+		if (!empty($sectionArray)) {
+			$InstitutionSiteSections->updateAll(
+				['security_user_id' => 0],
+				['id IN ' => $sectionArray]
+			);
+		}
+
+		// delete the staff from subjects		
+		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+		$InstitutionSiteClasses = TableRegistry::get('Institution.InstitutionSiteClasses');	
+		$classesDuringStaffPeriod = $InstitutionSiteClasses->find()
+			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+				$overlapDateCondition = [];
+				if (empty($endDate)) {
+					$overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+				} else {
+					$overlapDateCondition['OR'] = [];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+					$overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+				}
+				return $q->where($overlapDateCondition);
+			})
+			;
+		$classIdsDuringStaffPeriod = [];
+		foreach ($classesDuringStaffPeriod as $key => $value) {
+			$classIdsDuringStaffPeriod[] = $value->id;
+		}
+
+		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+
+		$targetData = $InstitutionSiteClassStaff->find()
+			->where([$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
+			;
+
+		$InstitutionSiteClassStaff->deleteAll([
+			$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		]);
+
+
+		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
+
+
+
+
+
+		// this will be a problem as staff with more than one position will get all their roles deleted from groups
+		// solution is to link position to roles so only roles linked to that position will be deleted
+
+		// this logic here is to delete the roles from groups when the staff is deleted from the school
+		try {
+			$institutionEntity = $this->Institutions->get($institutionId);
+			$groupId = $institutionEntity->security_group_id;
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$GroupUsers->deleteAll([
+				'security_user_id' => $entity->security_user_id,
+				'security_group_id' => $groupId
+			]);
+		} catch (InvalidPrimaryKeyException $ex) {
+			Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+		}
+	}
+
+	public function ajaxUserAutocomplete() {
+		$this->controller->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$term = $this->request->query['term'];
+			// only search for staff
+			$query = $this->Users->find()->where([$this->Users->aliasField('is_staff') => 1]);
+
+			$term = trim($term);
+			if (!empty($term)) {
+				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
 			
+			$list = $query->all();
+
+			$data = [];
+			foreach($list as $obj) {
+				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+				$data[] = ['label' => $label, 'value' => $obj->id];
+			}
+
 			echo json_encode($data);
 			die;
 		}
-	}	
-	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
-		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institutions.id');
-
-		$InstitutionSitePositions = TableRegistry::get('Institution.InstitutionSitePositions');
-		$list = $InstitutionSitePositions->getInstitutionSitePositionList($institutionSiteId, true);
-
-		$attr['type'] = 'select';
-		$attr['options'] = $list;
-		if (empty($attr['options'])) {
-			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.institutionSitePositionId');
-		}
-		$attr['onChangeReload'] = true;
-
-		return $attr;
 	}
 
-	public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, $request) {
-		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institutions.id');
-
-		$attr['type'] = 'select';
-
-		$data = $this->SecurityRoles
-			->find('ByInstitution', ['id' => $institutionSiteId])
-			;
-
-		$optionsList = [];
-		foreach ($data as $key => $value) {
-			$optionsList[$value->id] = $value->name;
-		}
-		$attr['options'] = $optionsList;
-
-		if (empty($attr['options'])) {
-			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.securityRoleId');
-		}
-
-		return $attr;
-	}
-
-	public function onUpdateFieldFTE(Event $event, array $attr, $action, $request) {
-		if (array_key_exists('institution_site_position_id', $this->fields)) {
-			if (array_key_exists('options', $this->fields['institution_site_position_id'])) {
-				$positionId = key($this->fields['institution_site_position_id']['options']);
-				if (array_key_exists($this->alias(), $this->request->data)) {
-					if (array_key_exists('institution_site_position_id', $this->request->data[$this->alias()][$this->InstitutionSiteStaff->table()][0])) {
-						if ($this->request->data[$this->alias()][$this->InstitutionSiteStaff->table()][0]['institution_site_position_id']) {
-							$positionId = $this->request->data[$this->alias()][$this->InstitutionSiteStaff->table()][0]['institution_site_position_id'];
-						}
-					}
-				}
-			}
-		}
-
-		// this is used for staffTable autocomplete - for filtering of staff that are (in institution and of same position)
-		$session = $this->request->session();
-		$session->delete($this->controller->name.'.'.$this->alias);
-		if ($positionId) {
-			$institutionSiteId = $session->read('Institutions.id');
-			$session->write($this->controller->name.'.'.$this->alias.'.'.'institution_site_id', $institutionSiteId);
-			$session->write($this->controller->name.'.'.$this->alias.'.'.'institution_site_position_id', $positionId);
-		}
-
-		$startDate = null;
-		if (array_key_exists($this->alias(), $this->request->data)) {
-			if (array_key_exists('start_date', $this->request->data[$this->alias()][$this->InstitutionSiteStaff->table()][0])) {
-				if ($this->request->data[$this->alias()][$this->InstitutionSiteStaff->table()][0]['start_date']) {
-					$startDate = $this->request->data[$this->alias()][$this->InstitutionSiteStaff->table()][0]['start_date'];
-				}
-			}
-		}
-
-		$attr['type'] = 'select';
-		$attr['options'] = $this->getFTEOptions($positionId, ['startDate' => $startDate]);
-		if (empty($attr['options'])) {
-			$attr['attr']['empty'] = __('No available FTE');
-			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.FTE');
-		}
-		return $attr;
-	}
-
-	public function getFTEOptions($positionId, $options = []) {
-		$options['showAllFTE'] = !empty($options['showAllFTE']) ? $options['showAllFTE'] : false;
-		$options['includeSelfNum'] = !empty($options['includeSelfNum']) ? $options['includeSelfNum'] : false;
-		$options['FTE_value'] = !empty($options['FTE_value']) ? $options['FTE_value'] : 0;
-		$options['startDate'] = !empty($options['startDate']) ? date('Y-m-d', strtotime($options['startDate'])) : null;
-		$options['endDate'] = !empty($options['endDate']) ? date('Y-m-d', strtotime($options['endDate'])) : null;
-		$currentFTE = !empty($options['currentFTE']) ? $options['currentFTE'] : 0;
-
-		if ($options['showAllFTE']) {
-			foreach ($this->fteOptions as $obj) {
-				$filterFTEOptions[$obj] = $obj;
-			}
-		} else {
-			$query = $this->InstitutionSiteStaff->find();
-			$query->where(['AND' => ['institution_site_position_id' => $positionId]]);
-
-			if (!empty($options['startDate'])) {
-				$query->where(['AND' => ['OR' => [
-					'end_date >= ' => $options['startDate'],
-					'end_date is null'
-					]]]);
+	// Function used by the Mini-Dashboard (Institution Staff)
+	public function getNumberOfStaffsByGender($params=[]) {
+			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+			$_conditions = [];
+			foreach ($conditions as $key => $value) {
+				$_conditions[$this->alias().'.'.$key] = $value;
 			}
 
-			if (!empty($options['endDate'])) {
-				$query->where(['AND' => ['start_date <= ' => $options['endDate']]]);
-			}
-
-			$query->select([
-					// todo:mlee unable to implement 'COALESCE(SUM(FTE),0) as totalFTE'
-					'totalFTE' => $query->func()->sum('FTE'),
-					'institution_site_position_id'
+			$institutionSiteRecords = $this->find();
+			$institutionSiteStaffCount = $institutionSiteRecords
+				->contain(['Users', 'Users.Genders'])
+				->select([
+					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
+					'gender' => 'Genders.name'
 				])
-				->group('institution_site_position_id')
-			;
+				->where($_conditions)
+				->group('gender_id');
 
-			if (is_object($query)) {
-				$data = $query->toArray();
-				$totalFTE = empty($data[0]->totalFTE) ? 0 : $data[0]->totalFTE * 100;
-				$remainingFTE = 100 - intval($totalFTE);
-				$remainingFTE = ($remainingFTE < 0) ? 0 : $remainingFTE;
-
-				if ($options['includeSelfNum']) {
-					$remainingFTE +=  $options['FTE_value'];
-				}
-				$highestFTE = (($remainingFTE > $options['FTE_value']) ? $remainingFTE : $options['FTE_value']);
-
-				$filterFTEOptions = [];
-
-				foreach ($this->fteOptions as $obj) {
-					if ($highestFTE >= $obj) {
-						$objLabel = number_format($obj / 100, 2);
-						$filterFTEOptions[$obj] = $objLabel;
-					}
-				}
-
-				if(!empty($currentFTE) && !in_array($currentFTE, $filterFTEOptions)){
-					if($remainingFTE > 0) {
-						$newMaxFTE = $currentFTE + $remainingFTE;
-					}else{
-						$newMaxFTE = $currentFTE;
-					}
-					
-					foreach ($this->fteOptions as $obj) {
-						if ($obj <= $newMaxFTE) {
-							$objLabel = number_format($obj / 100, 2);
-							$filterFTEOptions[$obj] = $objLabel;
-						}
-					}
-				}
-
+			// Creating the data set		
+			$dataSet = [];
+			foreach ($institutionSiteStaffCount->toArray() as $value) {
+	            //Compile the dataset
+				$dataSet[] = [__($value['gender']), $value['count']];
 			}
+			$params['dataSet'] = $dataSet;
+		//}
+		return $params;
+	}
 
-			if (count($filterFTEOptions)==0) {
-				$filterFTEOptions = [];
+	// Function used by the Dashboard (For Institution Dashboard and Home Page)
+	public function getNumberOfStaff($params=[]) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
+		$_conditions = [];
+		foreach ($conditions as $key => $value) {
+			$_conditions[$this->alias().'.'.$key] = $value;
+		}
+
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+
+		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+
+		$query = $this->find('all');
+		$staffByPositions = $query
+			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
+			->contain(['Users.Genders','Positions'])
+			->select([
+				'Positions.type',
+				'Users.id',
+				'Genders.name',
+				'total' => $query->func()->count('DISTINCT '.$this->aliasField('security_user_id'))
+			])
+			->where($staffsByPositionConditions)
+			->group([
+				'Positions.type', 'Genders.name'
+			])
+			->order(
+				'Positions.type'
+			)
+			->toArray();
+
+		$positionTypes = array(
+			0 => __('Non-Teaching'),
+			1 => __('Teaching')
+		);
+
+		$genderOptions = $this->Users->Genders->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => []);
+		}
+		foreach ($dataSet as $key => $obj) {
+			foreach ($positionTypes as $id => $name) {
+				$dataSet[$key]['data'][$id] = 0;
 			}
 		}
-		return $filterFTEOptions;
-	}
+		foreach ($staffByPositions as $key => $staffByPosition) {
+			if ($staffByPosition->has('position')) {
+				$positionType = $staffByPosition->position->type;
+				$staffGender = $staffByPosition->user->gender->name;
+				$StaffTotal = $staffByPosition->total;
 
-	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
-		$attr['type'] = 'select';
-		$attr['options'] = $this->InstitutionSiteStaff->StaffTypes->getList();
-		if (empty($attr['options'])){
-			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
+				foreach ($dataSet as $dkey => $dvalue) {
+					if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+						$dataSet[$dkey]['data'][$positionType] = 0;
+					}
+				}
+				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+			}
 		}
-		
-		return $attr;
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($positionTypes);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
 	}
-
-	public function onUpdateFieldStaffStatusId(Event $event, array $attr, $action, $request) {
-		$attr['type'] = 'select';
-		$attr['options'] = $this->InstitutionSiteStaff->StaffStatuses->getList();
-		if (empty($attr['options'])){
-			$this->ControllerAction->Alert->warning('Institution.InstitutionSiteStaff.staffTypeId');
-		}
-		
-		return $attr;
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-		if (array_key_exists('remove', $buttons)) {
-			$buttons['remove']['attr']['field-value'] = $entity->id;
-		}
-		
-		return $buttons;
-	}
-
-	public function addOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$newOptions = [];
-		$options['associated'] = ['InstitutionSiteStaff' => ['validate' => false]];
-		
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
-	}
-
 }
