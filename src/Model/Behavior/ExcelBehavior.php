@@ -131,21 +131,14 @@ class ExcelBehavior extends Behavior {
 
 		foreach ($sheets as $sheet) {
 			$table = $sheet['table'];
-			$fields = $this->getFields($table);
-
 			// sheet info added to settings to avoid adding more parameters to event
 			$settings['sheet'] = $sheet;
-
-			// Event to add or modify the fields to fetch from the table
-			$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields]);
-			if ($event->result) {
-				$fields = $event->result;
-			}
+			$fields = $this->getFields($table, $settings);
 
 			$footer = $this->getFooter();
 			$query = $sheet['query'];
 
-			$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
+			$this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
 			$sheetName = $sheet['name'];
 
 			// if the primary key of the record is given, only generate that record
@@ -177,8 +170,8 @@ class ExcelBehavior extends Behavior {
 				$this->config('orientation', 'portrait');
 			}
 
-			$this->dispatchEvent($this->_table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
-			$this->onEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
+			$this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
+			$this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
 			if ($this->config('orientation') == 'landscape') {
 				$row = [];
 				foreach ($fields as $attr) {
@@ -219,7 +212,7 @@ class ExcelBehavior extends Behavior {
 						}
 
 						$rowCount++;
-						$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
+						$this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
 						$writer->writeSheetRow($sheetName, $row);
 					}
 				}
@@ -251,16 +244,16 @@ class ExcelBehavior extends Behavior {
 			}
 			$writer->writeSheetRow($sheetName, ['']);
 			$writer->writeSheetRow($sheetName, $footer);
-			$this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
+			$this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
 		}
 	}
 
-	private function getFields($table) {
+	private function getFields($table, $settings) {
 		$schema = $table->schema();
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
 		$excludes[] = $table->primaryKey();
-		$fields = [];
+		$fields = new ArrayObject();
 		$module = $table->alias();
 		$language = I18n::locale();
 		$excludedTypes = ['binary'];
@@ -286,6 +279,31 @@ class ExcelBehavior extends Behavior {
 				];
 			}
 		}
+
+		// Event to add or modify the fields to fetch from the table
+		$event = $this->dispatchEvent($table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields]);
+
+		$newFields = [];
+		foreach ($fields->getArrayCopy() as $field) {
+			if (empty($field['label'])) {
+				$key = explode('.', $field['key']);
+				$module = $key[0];
+
+				// Redispatch get label
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), null, [$module, $field['field'], $language]);
+				if (strlen($event->result)) {
+					$field['label'] = $event->result;
+				}
+			}
+			$newFields[] = $field;
+		}
+
+		// Replace the ArrayObject with the new fields
+		$fields->exchangeArray($newFields);
+
+		// Add the fields into the sheet
+		$settings['sheet']['fields'] = $fields;
+
 		return $fields;
 	}
 
@@ -303,16 +321,16 @@ class ExcelBehavior extends Behavior {
 			if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
 				$method = 'onExcelRender' . Inflector::camelize($type);
 				if (!$this->eventMap($method)) {
-					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $attr]);
+					$event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
 				} else {
-					$event = $this->dispatchEvent($this->_table, $this->eventKey($method), null, [$entity, $attr]);
+					$event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
 				}
 				if ($event->result) {
 					$value = $event->result;
 				}
 			} else {
 				$method = 'onExcelGet' . Inflector::camelize($field);
-				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity]);
+				$event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity]);
 				if ($event->result) {
 					$value = $event->result;
 				} else if ($entity->has($field)) {

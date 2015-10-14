@@ -89,17 +89,24 @@ class CustomFieldListBehavior extends Behavior {
 			$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type']];
 			$fields[] = $field;
 		}
-		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
 
-		return $fields;
+		// Setting the list of options into the sheet for easier fetching
+		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
 	}
 
 	// Model.excel.onExcelRenderCustomField
 	public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr) {
+		// Getting the temporary field values that is set
 		$tmpFieldValues = $this->getTmpFieldValues();
+
+		// If the field value is not for the particular record, refetch the field values and set
+		// the temporary field values
+		// This is to avoid multiple fetch to the database
 		if (!array_key_exists($entity->id, $tmpFieldValues)) {
 			$tmpFieldValues = $this->setTmpFieldValues($this->getFieldValue($entity->id));
 		}
+
+		// Check if the temporary field value has this record information.
 		if (isset($tmpFieldValues[$entity->id])) {
 			return $this->getCustomFieldValue($tmpFieldValues[$entity->id], $attr['customField'], $this->getCustomFieldOptionsList());
 		} else {
@@ -352,6 +359,17 @@ class CustomFieldListBehavior extends Behavior {
 		$customFieldValueTable = $this->CustomFieldValues;
 		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
 		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+
+		$selectedColumns = [
+			$customFieldValueTable->aliasField($customRecordsForeignKey),
+			$customFieldValueTable->aliasField($customFieldsForeignKey),
+			'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
+				.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+				.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
+				.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
+				.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
+				.' END) SEPARATOR \',\'))'
+		];
 		
 		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
@@ -370,16 +388,7 @@ class CustomFieldListBehavior extends Behavior {
 				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
 				[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
 			)
-			->select([
-				$customFieldValueTable->aliasField($customRecordsForeignKey),
-				$customFieldValueTable->aliasField($customFieldsForeignKey),
-				'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
-					.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
-					.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
-					.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
-					.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
-					.' END) SEPARATOR \',\'))'
-			])
+			->select($selectedColumns)
 			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $recordId])
 			->group([$customFieldValueTable->aliasField($customRecordsForeignKey), $customFieldValueTable->aliasField($customFieldsForeignKey)])
 			->toArray();

@@ -9,7 +9,6 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\I18n\I18n;
 
 class InstitutionSiteStudentAbsencesTable extends AppTable {
 	use OptionsTrait;
@@ -52,40 +51,27 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 
 	// To select another one more field from the containable data
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-		$extraField[] = [
+		$newArray = [];
+		$newArray[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
 			'label' => ''
 		];
-		$extraField[] = [
+		$newArray[] = [
 			'key' => 'InstitutionSiteStudentAbsences.security_user_id',
 			'field' => 'security_user_id',
 			'type' => 'integer',
 			'label' => ''
 		];
-
-		$language = I18n::locale();
-		$newArray = [];
-		// Find the label
-		foreach($extraField as $extra) {
-			list($module, $field) = explode(".", $extra['key']);
-			$label = $this->onGetFieldLabel($event, $module, $field, $language);
-			$extra['label'] = $label;
-			$newArray[] = $extra;
-
-		}
-
 		$newArray[] = [
 			'key' => 'InstitutionSiteStudentAbsences.absences',
 			'field' => 'absences',
 			'type' => 'string',
 			'label' => __('Absences')
 		];
-
-		$fields = array_merge($newArray, $fields);
-
-		return $fields;
+		$newFields = array_merge($newArray, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 
 	public function validationDefault(Validator $validator) {
