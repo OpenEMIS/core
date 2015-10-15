@@ -319,3 +319,6 @@ DROP INDEX `institution_custom_field_id` ;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2144';
+
+UPDATE `config_items` SET `value` = '3.2.2' WHERE `code` = 'db_version';
+
