@@ -57,6 +57,7 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
@@ -326,11 +327,14 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
-
-		if ($selectedStatus == self::COMPLETED) {	//Completed
-			if ($action == 'view') {
+		if ($action == 'view') {
+			if ($selectedStatus == self::COMPLETED) {	//Completed
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
+				}
+			} else {
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
 				}
 			}
 		}
