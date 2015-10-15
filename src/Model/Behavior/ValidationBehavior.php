@@ -333,12 +333,15 @@ class ValidationBehavior extends Behavior {
 				$newEntity = TableRegistry::get($className);
 				$recordWithField = $newEntity->find()
 											->select([$fieldName])
-											->where([$fieldName => 1]);
+											->where([
+												$fieldName => 1,
+												$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']
+											]);
 
-				if(!empty($additionalParameters))
+				if(!empty($additionalParameters)) {
 					$recordWithField->andWhere($additionalParameters);
-													
-				$total = $recordWithField->count();				
+				}								
+				$total = $recordWithField->count();		
 				$flag = ($total > 0) ? true : false;
 			}
 		} else {
@@ -501,11 +504,18 @@ class ValidationBehavior extends Behavior {
 	}
 
 	// To allow case sensitive entry
-	public static function checkUniqueEnglishField($check) {
+	public static function checkUniqueEnglishField($check, array $globalData) {
+		$condition = [];
 		$englishField = trim($check);
 		$Translation = TableRegistry::get('Localization.Translations');
+		if(!empty($globalData['data']['id'])) {
+			$condition['NOT'] = [
+				$Translation->aliasField('id') => $globalData['data']['id']
+			];
+		}
       	$count = $Translation->find()
       		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->where($condition)
       		->count();
         return $count==0;
     }
