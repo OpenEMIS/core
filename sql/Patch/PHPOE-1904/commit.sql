@@ -26,7 +26,6 @@ UPDATE field_options SET plugin = 'Institution', code = 'Ownerships' WHERE code 
 UPDATE field_options SET plugin = 'Institution', code = 'Sectors' WHERE code = 'InstitutionSiteSectors';
 UPDATE field_options SET plugin = 'Institution', code = 'Statuses' WHERE code = 'InstitutionSiteStatuses';
 UPDATE field_options SET plugin = 'Institution', code = 'Types' WHERE code = 'InstitutionSiteTypes';
-UPDATE field_options SET plugin = 'Institution', code = 'Types' WHERE code = 'InstitutionSiteTypes';
 
 
 UPDATE field_options SET plugin = 'FieldOption' WHERE code = 'StudentAbsenceReasons';

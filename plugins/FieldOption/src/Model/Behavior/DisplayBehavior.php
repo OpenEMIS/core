@@ -43,7 +43,17 @@ class DisplayBehavior extends Behavior {
 		return $table;
 	}
 
-	public function displayFields($table){
+	public function displayFields($table) {
+		$table = TableRegistry::get($this->fieldOptionName);
+		/**
+		 * ugly hack
+		 */
+		$table->ControllerAction = $this->_table->ControllerAction;
+		// $this->_table->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
+		/**
+		 * ugly hack ends
+		 */
+
 		$columns = $table->schema()->columns();
 		foreach ($columns as $key => $attr) {
 			$this->_table->ControllerAction->field($attr, ['model' => $table->alias()]); 
