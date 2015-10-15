@@ -73,6 +73,9 @@ class AdvanceSearchBehavior extends Behavior {
 					}
 				}
 			}
+			if (! empty ($this->data['isSearch']) ) {
+				$advancedSearch = true;
+			}
 
 			$this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
@@ -111,7 +114,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$areaKeys[] = 'address_area_id';
 
 		foreach ($advancedSearch as $key=>$value) {
-			if (!empty($value)) {
+			if (!empty($value) && $value>0) {
 				if(in_array($key, $areaKeys)){
 					switch ($key) {
 						case 'area_id':

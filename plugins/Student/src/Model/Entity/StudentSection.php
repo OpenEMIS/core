@@ -4,6 +4,8 @@ namespace Student\Model\Entity;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\Log\Log;
 
 class StudentSection extends Entity
 {
@@ -33,9 +35,16 @@ class StudentSection extends Entity
 
 	protected function _getHomeroomTeacherName() {
     	$name = '';
-    	if ($this->has('user') && $this->user->has('name')) {
-    		$name = $this->user->name;
-    	}
+        $teacherId = $this->institution_site_section->security_user_id;
+        if (!empty($teacherId)) {
+            $Users = TableRegistry::get('Security.Users');
+            try {
+                $user = $Users->get($teacherId);
+                $name = $user->name;
+            } catch (InvalidPrimaryKeyException $ex) {
+                Log::write('error', $ex->getMessage());
+            }
+        }
     	return $name;
 	}
 

@@ -13,6 +13,7 @@ class SurveyFormsTable extends CustomFormsTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		// The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
 		$this->belongsToMany('CustomFields', [
 			'className' => 'Survey.SurveyQuestions',
 			'joinTable' => 'survey_forms_questions',
@@ -21,8 +22,6 @@ class SurveyFormsTable extends CustomFormsTable {
 			'through' => 'Survey.SurveyFormsQuestions',
 			'dependent' => true,
 		]);
-
-		//$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -37,6 +36,12 @@ class SurveyFormsTable extends CustomFormsTable {
 
 		return $validator;
 	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
 
 	public function beforeAction(Event $event){
 		parent::beforeAction($event);
@@ -84,6 +89,68 @@ class SurveyFormsTable extends CustomFormsTable {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$surveyForm = $this->get($id);
+		$customModule = $this->CustomModules
+			->find()
+			->where([
+				$this->CustomModules->aliasField('id') => $surveyForm->custom_module_id
+			])
+			->first();
+
+		$model = $customModule->model;
+		if ($model == 'Institution.Institutions') {
+			$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+		} else if ($model == 'Student.Students') {
+			$this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+		}
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
+				$id = $buttons['download']['url'][1];
+				$toolbarButtons['download'] = $buttons['download'];
+				$toolbarButtons['download']['url'] = [
+					'plugin' => 'Restful',
+					'controller' => 'Rest',
+					'action' => 'survey',
+					'download',
+					'xform',
+					$id,
+					0
+				];
+				$toolbarButtons['download']['type'] = 'button';
+				$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+				$toolbarButtons['download']['attr'] = $attr;
+				$toolbarButtons['download']['attr']['title'] = __('Download');
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
+			if (array_key_exists('view', $buttons)) {
+				$downloadButton = $buttons['view'];
+				$downloadButton['url'] = [
+					'plugin' => 'Restful',
+					'controller' => 'Rest',
+					'action' => 'survey',
+					'download',
+					'xform',
+					$entity->id,
+					0
+				];
+				$downloadButton['label'] = '<i class="kd-download"></i>' . __('Download');
+				$buttons['download'] = $downloadButton;
+			}
+		}
+
+		return $buttons;
 	}
 
     /**
@@ -153,10 +220,15 @@ class SurveyFormsTable extends CustomFormsTable {
 				$cellCount = 0;
 				$form = $event->subject()->Form;
 				// Build Questions options
+				list($moduleOptions, $selectedModule) = array_values($this->_getSelectOptions());
+				$customModule = $this->CustomModules->get($selectedModule);
+				$supportedFieldTypes = explode(",", $customModule->supported_field_types);
+
+				$SurveyQuestions = TableRegistry::get('Survey.SurveyQuestions');
 				$questionOptions = $this->CustomFields
 					->find('list')
 					->toArray();
-				
+
 				$arrayQuestions = [];
 				// Showing the list of the questions that are already added
 				if ($this->request->is(['get'])) {
@@ -289,6 +361,24 @@ class SurveyFormsTable extends CustomFormsTable {
 	    		$attr['reorder'] = true;
 
 				$questionOptions[-1] = "-- ".__('Add Question') ." --";
+				$selectedQuestion = -1;	// Set selected question to -1
+				$this->advancedSelectOptions($questionOptions, $selectedQuestion, [
+					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('notSupport')),
+					'callable' => function($id) use ($SurveyQuestions, $supportedFieldTypes) {
+						if ($id == -1) {
+							// Skip checking for -- Add Question --
+							return 1;
+						} else {
+							$fieldType = $SurveyQuestions->get($id)->field_type;
+							if (in_array($fieldType, $supportedFieldTypes)) {
+								return 1;
+							} else {
+								// field type not support for this module
+								return 0;
+							}
+						}
+					}
+				]);
 	    		ksort($questionOptions);
 	    		$attr['options'] = $questionOptions;
 				break;
@@ -296,7 +386,6 @@ class SurveyFormsTable extends CustomFormsTable {
 		}
 		return $event->subject()->renderElement('Survey.formquestions', ['attr' => $attr]);
 	}
-
 
 	public function _getSelectOptions() {
 		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::_getSelectOptions());

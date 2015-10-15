@@ -1,8 +1,12 @@
 <?php ?>
 
 <div class="input clearfix">
+	<?php if ($this->ControllerAction->locale() == 'ar'): ?>
+	<label class="pull-right" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
+	<?php else: ?>
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
-	<div class="table-in-view col-md-5 table-responsive">
+	<?php endif; ?>
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
@@ -13,10 +17,25 @@
 			
 			<tbody>
 				<?php 
-				$startingSectionNumber = $attr['data']['startingSectionNumber'];
+				$startingSectionNumber = count($attr['data']['existedSections']) + 1;
 				for ($i=0; $i<$attr['data']['numberOfSections']; $i++) :
-					$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
-					$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
+					$nameIsAvailable = false;
+					do {
+						/**
+						 * In case in the future, a specific arabic locale such as "ar_JO" or "ar_SA" is being used.
+						 */
+						if ($this->ControllerAction->locale() == 'ar' || substr_count($this->ControllerAction->locale(), 'ar_') > 0) {
+							$letter = $this->Label->getArabicLetter($startingSectionNumber);
+						} else {
+							$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+						}
+						$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
+						if (!in_array($defaultName, $attr['data']['existedSections'])) {
+						    $nameIsAvailable = true;
+						} else {
+							$startingSectionNumber++;
+						}
+					} while (!$nameIsAvailable);
 				?>
 				<tr>
 	    			<?php 
@@ -26,18 +45,18 @@
 	    				$attrValue = $defaultName;
 	    			} else {
 	    				if ($this->request->data['submit'] == 'save') {
-	    					$attrValue = $this->request->data['MultiSections'][$i]['name'];
-	    					$attrErrors = $this->request->data['MultiSections'][$i]['errors'];
+	    					$attrValue = $this->request->data['MultiClasses'][$i]['name'];
+	    					$attrErrors = $this->request->data['MultiClasses'][$i]['errors'];
 	    				} else {
 		    				$attrValue = $defaultName;
 	    				}
 	    			}
 	    			$field = [
-	    				'fieldName' => 'MultiSections['.$i.'][name]',
+	    				'fieldName' => 'MultiClasses['.$i.'][name]',
 	    				'attr' => [
-	    					'id' => 'multisections-'.$i.'-name',
+	    					'id' => 'multiclasses-'.$i.'-name',
 	    					'label' => false, 
-	    					'name' => 'MultiSections['.$i.'][name]',
+	    					'name' => 'MultiClasses['.$i.'][name]',
 	    					'value' => $attrValue
 	    				],
 	    			];
@@ -59,13 +78,13 @@
 							<?php endforeach ?>
 							</ul>
 						<?php endif; ?>
-						<?= $this->Form->hidden(sprintf('MultiSections.%d.section_number', $i), array(
+						<?= $this->Form->hidden(sprintf('MultiClasses.%d.section_number', $i), array(
 							'value' => $startingSectionNumber
 						));?>
 					</td>
 
 					<td><?php 
-					echo $this->Form->input(sprintf('MultiSections.%d.security_user_id', $i), array(
+					echo $this->Form->input(sprintf('MultiClasses.%d.security_user_id', $i), array(
 						'options' => $attr['data']['staffOptions'], 
 						'label' => false,
 						'div' => false,
