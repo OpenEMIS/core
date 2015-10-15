@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -14,6 +15,25 @@ class InstitutionSurveysTable extends AppTable {
 	use OptionsTrait;
 	use MessagesTrait;
 
+	// Survey Status
+	const EXPIRED = -1;
+	const NEW_SURVEY = 0;
+	const DRAFT = 1;
+	const COMPLETED = 2;
+
+	private $workflowEvents = [
+		[
+			'value' => 'Workflow.onApprove',
+			'text' => 'Update Survey Status from Draft to Completed.',
+			'method' => 'onApprove'
+		],
+		[
+			'value' => 'Workflow.onReject',
+			'text' => 'Update Survey Status from Completed to Draft.',
+			'method' => 'onReject'
+		]
+	];
+
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
 		parent::initialize($config);
@@ -21,6 +41,9 @@ class InstitutionSurveysTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->addBehavior('Survey.Survey', [
+			'module' => 'Institution.Institutions'
+		]);
 		$this->addBehavior('CustomField.Record', [
 			'moduleKey' => null,
 			'fieldKey' => 'survey_question_id',
@@ -34,50 +57,50 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['Workflow.getEvents'] = 'getWorkflowEvents';
+    	foreach ($this->workflowEvents as $event) {
+    		$events[$event['value']] = $event['method'];
+    	}
+
     	return $events;
     }
 
-	public function buildSurveyRecords() {
-		$CustomModules = $this->SurveyForms->CustomModules;
-		$customModuleResults = $CustomModules
-			->find('all')
-			->select([
-				$CustomModules->aliasField('id'),
-				$CustomModules->aliasField('filter')
-			])
-			->where([
-				$CustomModules->aliasField('model') => $this->request->params['plugin'] .'.'. $this->request->params['controller']
-			])
-			->first();
-		$customModuleId = $customModuleResults->id;
-		$todayDate = date("Y-m-d");
+    public function getWorkflowEvents(Event $event) {
+    	foreach ($this->workflowEvents as $key => $attr) {
+    		$this->workflowEvents[$key]['text'] = __($attr['text']);
+    	}
+    	return $this->workflowEvents;
+    }
 
-		$institutionId = null;
-		$session = $this->controller->request->session();
-		if ($session->check('Institutions.id')) {
-			$institutionId = $session->read('Institutions.id');
+	public function buildSurveyRecords($institutionId=null) {
+		if (is_null($institutionId)) {
+			$session = $this->controller->request->session();
+			if ($session->check('Institution.Institutions.id')) {
+				$institutionId = $session->read('Institution.Institutions.id');
+			}
 		}
+
+		$surveyForms = $this->getForms();
+		$todayDate = date("Y-m-d");
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
 
-		$surveyForms = $this->SurveyForms
-			->find('list')
-			->where([$this->SurveyForms->aliasField('custom_module_id') => $customModuleId])
-			->toArray();
-
-		//delete all New Survey by Institution Id and reinsert
-		$this->deleteAll([
-			$this->aliasField('institution_site_id') => $institutionId,
-			$this->aliasField('status') => 0
-		]);
+		// Update all New Survey to Expired by Institution Id
+		$this->updateAll(['status' => self::EXPIRED],
+			[
+				'institution_site_id' => $institutionId,
+				'status' => self::NEW_SURVEY
+			]
+		);
 
 		foreach ($surveyForms as $surveyFormId => $surveyForm) {
-			$surveyStatuesIds = $SurveyStatuses
+			$surveyStatusIds = $SurveyStatuses
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 				->where([
 					$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
@@ -87,7 +110,7 @@ class InstitutionSurveysTable extends AppTable {
 
 			$academicPeriodIds = $SurveyStatusPeriods
 				->find('list', ['keyField' => 'academic_period_id', 'valueField' => 'academic_period_id'])
-				->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatuesIds])
+				->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatusIds])
 				->toArray();
 
 			foreach ($academicPeriodIds as $key => $academicPeriodId) {
@@ -102,8 +125,9 @@ class InstitutionSurveysTable extends AppTable {
 						->all();
 
 					if ($results->isEmpty()) {
+						// Insert New Survey if not found
 						$InstitutionSurvey = $this->newEntity();
-						$InstitutionSurvey->status = 0;
+						$InstitutionSurvey->status = self::NEW_SURVEY;
 						$InstitutionSurvey->academic_period_id = $academicPeriodId;
 						$InstitutionSurvey->survey_form_id = $surveyFormId;
 						$InstitutionSurvey->institution_site_id = $institutionId;
@@ -112,6 +136,16 @@ class InstitutionSurveysTable extends AppTable {
 						} else {
 							$this->log($InstitutionSurvey->errors(), 'debug');
 						}
+					} else {
+						// Update Expired Survey back to New
+						$this->updateAll(['status' => self::NEW_SURVEY],
+							[
+								'academic_period_id' => $academicPeriodId,
+								'survey_form_id' => $surveyFormId,
+								'institution_site_id' => $institutionId,
+								'status' => self::EXPIRED
+							]
+						);
 					}
 				}
 			}
@@ -126,7 +160,7 @@ class InstitutionSurveysTable extends AppTable {
 	public function onGetSurveyFormId(Event $event, Entity $entity) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
-		if ($selectedStatus != 2) {
+		if ($selectedStatus != self::COMPLETED) {
 			if ($this->AccessControl->check([$this->controller->name, 'Surveys', 'edit'])) {
 				return $event->subject()->Html->link($entity->survey_form->name, [
 					'plugin' => $this->controller->plugin,
@@ -141,11 +175,12 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
-		return $entity->survey_form->description;
+		$surveyFormId = $entity->survey_form->id;
+		return $this->SurveyForms->get($surveyFormId)->description;
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -169,43 +204,47 @@ class InstitutionSurveysTable extends AppTable {
 					'SurveyStatusPeriods.academic_period_id' => $academicPeriodId
 				]
 			])
-			->first();
+			->all();
 
-		$dateDisabled = null;
-		if (!is_null($results)) {
-			$data = $results->toArray();
-			$dateDisabled = $data['date_disabled'];
+		$value = '<i class="fa fa-minus"></i>';
+		if (!$results->isEmpty()) {
+			$dateDisabled = $results->first()->date_disabled;
+			$value = $this->formatDate($dateDisabled);
 		}
 
-		return $dateDisabled;
+		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
+		$tabElements = [];
 
-		$tabElements = [
-			'New' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=0'],
+		if ($this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			$tabElements['New'] = [
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status='.self::NEW_SURVEY],
 				'text' => __('New')
-			],
-			'Draft' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=1'],
+			];
+			$tabElements['Draft'] = [
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status='.self::DRAFT],
 				'text' => __('Draft')
-			],
-			'Completed' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status=2'],
+			];
+		}
+
+		if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+			$tabElements['Completed'] = [
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys?status='.self::COMPLETED],
 				'text' => __('Completed')
-			]
-		];
+			];
+		}
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
 
-        if ($selectedStatus == 0) {	//New
+        if ($selectedStatus == self::NEW_SURVEY) {	//New
         	$this->ControllerAction->field('description');
 			$this->ControllerAction->field('to_be_completed_by');
 
@@ -214,7 +253,7 @@ class InstitutionSurveysTable extends AppTable {
 			]);
 
 			$this->buildSurveyRecords();
-        } else if ($selectedStatus == 1) {	//Draft
+        } else if ($selectedStatus == self::DRAFT) {	//Draft
 			$this->ControllerAction->field('description');
 			$this->ControllerAction->field('last_modified');
 			$this->ControllerAction->field('to_be_completed_by');
@@ -222,7 +261,7 @@ class InstitutionSurveysTable extends AppTable {
 			$this->ControllerAction->setFieldOrder([
 				'survey_form_id', 'description', 'academic_period_id', 'last_modified', 'to_be_completed_by'
 			]);
-        } else if ($selectedStatus == 2) {	//Completed
+        } else if ($selectedStatus == self::COMPLETED) {	//Completed
 			$this->ControllerAction->field('description');
 			$this->ControllerAction->field('completed_on');
 
@@ -237,9 +276,19 @@ class InstitutionSurveysTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
+		$options['auto_contain'] = false;
+		$query->contain(['AcademicPeriods', 'SurveyForms']);
+
 		$query
 			->where([$this->aliasField('status') => $selectedStatus])
 			->order([$this->AcademicPeriods->aliasField('order')]);
+	}
+
+	public function viewBeforeAction(Event $event) {
+		// Do not show Survey Status if Workflow is applied
+		if ($this->hasBehavior('Workflow')) {
+			$this->ControllerAction->field('status', ['visible' => false]);
+		}
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -258,8 +307,8 @@ class InstitutionSurveysTable extends AppTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$surveyRecord = $this->get($id);
 
-		if ($surveyRecord->status == 2) {
-			$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
+		if ($surveyRecord->status == self::COMPLETED) {
+			$entity = $this->newEntity(['id' => $id, 'status' => self::DRAFT], ['validate' => false]);
 			if ($this->save($entity)) {
 				$this->Alert->success('InstitutionSurveys.reject.success');
 			} else {
@@ -270,7 +319,7 @@ class InstitutionSurveysTable extends AppTable {
 			$event->stopPropagation();
 			// $action = $this->ControllerAction->buttons['index']['url'];
 			$action = $this->ControllerAction->url('index');
-			$action['status'] = 2;
+			$action['status'] = self::COMPLETED;
 			return $this->controller->redirect($action);
 		}
 	}
@@ -278,7 +327,7 @@ class InstitutionSurveysTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
-		if ($selectedStatus == 2) {	//Completed
+		if ($selectedStatus == self::COMPLETED) {	//Completed
 			if ($action == 'view') {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
@@ -291,10 +340,10 @@ class InstitutionSurveysTable extends AppTable {
 		list(, $selectedStatus) = array_values($this->_getSelectOptions());
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		if ($selectedStatus == 0) {	// New
-			unset($buttons['view']);
+		if ($selectedStatus == self::NEW_SURVEY) {	// New
+			// unset($buttons['view']);
 			unset($buttons['remove']);
-		} else if ($selectedStatus == 2) {	// Completed
+		} else if ($selectedStatus == self::COMPLETED) {	// Completed
 			unset($buttons['edit']);
 		}
 
@@ -305,32 +354,68 @@ class InstitutionSurveysTable extends AppTable {
 		$cancelButton = $buttons[1];
 		$buttons[0] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(1);']
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status='.self::DRAFT.']\').val('.self::DRAFT.');']
 		];
 		$buttons[1] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(2);']
+			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status='.self::DRAFT.']\').val('.self::COMPLETED.');']
 		];
 		$buttons[2] = $cancelButton;
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if ($entity->status == 1) {
-			$this->Alert->success('InstitutionSurveys.save.draft');
-		} else if ($entity->status == 2) {
-			$this->Alert->success('InstitutionSurveys.save.final');
+		$url = null;
+		if ($entity->status == self::DRAFT) {
+			$url = $this->ControllerAction->url('edit');
+			$this->Alert->success('InstitutionSurveys.save.draft', ['reset' => true]);
+		} else if ($entity->status == self::COMPLETED) {
+			// To trigger from Open to Pending For Approval
+			$attachWorkflow = $this->controller->Workflow->attachWorkflow;
+			if ($this->controller->Workflow->attachWorkflow) {
+				$this->setNextTransitions($entity);
+			}
+			// End
+
+			$url = $this->ControllerAction->url('index');
+			$this->Alert->success('InstitutionSurveys.save.final', ['reset' => true]);
 		}
 
-		$event->stopPropagation();
-		// $action = $this->ControllerAction->buttons['index']['url'];
-		$action = $this->ControllerAction->url('index');
-		return $this->controller->redirect($action);
+		if (!is_null($url)) {
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+		}
+	}
+
+	public function onApprove(Event $event, $id=null) {
+		$this->updateAll(
+			['status' => self::COMPLETED],
+			['id' => $id]
+		);
+
+		$this->Alert->success('InstitutionSurveys.save.final', ['reset' => true]);
+	}
+
+	public function onReject(Event $event, $id=null) {
+		$this->updateAll(
+			['status' => self::DRAFT],
+			['id' => $id]
+		);
+
+		$this->Alert->success('InstitutionSurveys.reject.success', ['reset' => true]);
 	}
 
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$statusOptions = $this->getSelectOptions('Surveys.status');
 		$selectedStatus = $this->queryString('status', $statusOptions);
+
+		// If do not have access to Survey - New but have access to Survey - Completed, then set selectedStatus to COMPLETED
+		if (!$this->AccessControl->check([$this->controller->name, 'NewSurveys', 'view'])) {
+			if ($this->AccessControl->check([$this->controller->name, 'CompletedSurveys', 'view'])) {
+				$selectedStatus = self::COMPLETED;
+				$this->request->query['status'] = $selectedStatus;
+			}
+		}
 
 		return compact('statusOptions', 'selectedStatus');
 	}

@@ -12,6 +12,8 @@ class QualificationsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
+
+		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
@@ -40,15 +42,15 @@ class QualificationsTable extends AppTable {
 		$this->ControllerAction->field('qualification_institution_id');
 
 		// temporary disable
-		$this->fields['file_name']['visible'] = false;
-		$this->fields['file_content']['visible'] = false;
+		$this->ControllerAction->field('file_name', 			['visible' => false]);
+		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
+
+		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$this->fields['qualification_specialisation_id']['visible'] = false;
 		$this->fields['qualification_institution_country']['visible'] = false;
-		$this->fields['file_name']['visible'] = false;
-		$this->fields['file_content']['visible'] = false;
 		$this->fields['gpa']['visible'] = false;
 
 		$order = 0;
@@ -60,7 +62,6 @@ class QualificationsTable extends AppTable {
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		$this->fields['file_name']['visible'] = false;
 		$this->fields['graduate_year']['type'] = 'string';
 
 		$order = 0;
@@ -93,6 +94,23 @@ class QualificationsTable extends AppTable {
 
 	public function editBeforeAction(Event $event) {
 		$this->fields['qualification_institution_id']['type'] = 'select';
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->fields['document_no']['type'] = 'download';
+		$this->fields['document_no']['attr']['url'] = $action = $this->ControllerAction->url('download');//$this->ControllerAction->buttons['download']['url'];
+
+		$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
+		if (!empty($entity->modified_user_id)) {
+			$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
+		}
+
+		$viewVars = $this->ControllerAction->vars();
+		if(!is_null($viewVars['toolbarButtons']['download'])) {
+			$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
+		}
+
+		return $entity;
 	}
 
 	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, Request $request) {
@@ -139,5 +157,9 @@ class QualificationsTable extends AppTable {
 			echo json_encode($data);
 			die;
 		}
+	}
+
+	public function onGetFileType(Event $event, Entity $entity) {
+		return $this->getFileTypeForView($entity->file_name);
 	}
 }
