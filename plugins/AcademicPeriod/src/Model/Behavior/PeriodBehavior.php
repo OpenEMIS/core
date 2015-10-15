@@ -28,6 +28,32 @@ class PeriodBehavior extends Behavior {
 				$endDate = date('Y-m-d', strtotime($periodObj->end_date));
 			}
 
+			return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+		} else {
+			return $query;
+		}
+	}
+
+	public function findInDateRange(Query $query, array $options) {
+		$table = $this->_table;
+
+		if (array_key_exists('start_date', $options) && array_key_exists('end_date', $options)) {
+
+			$startDate = $options['start_date'];
+			$endDate = $options['end_date'];
+
+			if ($startDate instanceof Time) {
+				$startDate = $startDate->format('Y-m-d');
+			} else {
+				$startDate = date('Y-m-d', strtotime($startDate));
+			}
+
+			if ($endDate instanceof Time) {
+				$endDate = $endDate->format('Y-m-d');
+			} else {
+				$endDate = date('Y-m-d', strtotime($endDate));
+			}
+
 			$conditions = [];
 			$conditions['OR'] = [
 				'OR' => [
