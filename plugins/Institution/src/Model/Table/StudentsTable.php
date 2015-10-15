@@ -108,7 +108,10 @@ class StudentsTable extends AppTable {
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
 		$query->leftJoin(
 			['Identities' => 'user_identities'],
-			['Identities.security_user_id = '.$this->aliasField('student_id')]
+			[
+				'Identities.security_user_id = '.$this->aliasField('student_id'),
+				'Identities.identity_type_id' => $settings['identity']->id
+			]
 		);
 		$query->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number']);
 		$periodId = $this->request->query['academic_period_id'];
@@ -123,11 +126,12 @@ class StudentsTable extends AppTable {
 		   ->find()
 		   ->contain(['FieldOptions'])
 		   ->where([
-		   		'FieldOptions.code' => 'IdentityTypes',
-		   		$IdentityType->aliasField('default') => 1
+		   		'FieldOptions.code' => 'IdentityTypes'
 		   ])
 		   ->order(['IdentityTypes.default DESC'])
 		   ->first();
+
+		$settings['identity'] = $identity;
 		
 		$extraField[] = [
 			'key' => 'Users.openemis_no',
