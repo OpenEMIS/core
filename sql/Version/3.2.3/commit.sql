@@ -78,6 +78,20 @@ ALTER TABLE `api_authorizations`
 INSERT INTO `api_authorizations` (`id`, `name`, `security_token`) values 
 ('00e588d8-6293-42ef-a0fe-395a63adf979', 'External Application Tester', 'acd87adcas9d8cad');
 
+INSERT INTO `db_patches` VALUES ('PHPOE-2103', NOW());
+
+-- staff_leave_attachments
+DROP TABLE IF EXISTS `staff_leave_attachments`;
+
+-- staff_leaves
+ALTER TABLE `staff_leaves` ADD `file_name` VARCHAR(250) NULL AFTER `number_of_days`, ADD `file_content` LONGBLOB NULL AFTER `file_name`;
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Leaves', 'file_content', 'Staff -> Career -> Leave','Attachment', 1, 1, NOW());
+
+-- security_functions
+UPDATE `security_functions` SET `_execute` = 'Leaves.download' WHERE `id` = 3016;
+
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-2078', NOW());
 
@@ -297,20 +311,6 @@ SELECT `id` INTO @parentId FROM `field_options` WHERE `code` = 'LeaveStatuses';
 DELETE FROM `field_option_values` WHERE `field_option_id` = @parentId;
 DELETE FROM `field_options` WHERE `id` = @parentId;
 
-INSERT INTO `db_patches` VALUES ('PHPOE-2103', NOW());
-
--- staff_leave_attachments
-DROP TABLE IF EXISTS `staff_leave_attachments`;
-
--- staff_leaves
-ALTER TABLE `staff_leaves` ADD `file_name` VARCHAR(250) NULL AFTER `number_of_days`, ADD `file_content` LONGBLOB NULL AFTER `file_name`;
-
--- labels
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Leaves', 'file_content', 'Staff -> Career -> Leave','Attachment', 1, 1, NOW());
-
--- security_functions
-UPDATE `security_functions` SET `_execute` = 'Leaves.download' WHERE `id` = 3016;
-
 INSERT INTO `db_patches` VALUES ('PHPOE-2124', NOW());
 
 -- security_functions
@@ -332,5 +332,36 @@ ADD INDEX `institution_custom_field_id` (`institution_custom_field_id`);
 ALTER TABLE `institution_custom_field_values` 
 ADD INDEX `institution_site_id` (`institution_site_id`);
 
+DROP TABLE IF EXISTS `z1407_assessment_item_results`;
+DROP TABLE IF EXISTS `z1407_assessment_results`;
+DROP TABLE IF EXISTS `z1407_institution_site_class_staff`;
+DROP TABLE IF EXISTS `z1407_institution_site_class_students`;
+DROP TABLE IF EXISTS `z1407_institution_site_quality_rubrics`;
+DROP TABLE IF EXISTS `z1407_institution_site_quality_visits`;
+DROP TABLE IF EXISTS `z1407_institution_site_sections`;
+DROP TABLE IF EXISTS `z1407_institution_site_section_staff`;
+DROP TABLE IF EXISTS `z1407_institution_site_section_students`;
+DROP TABLE IF EXISTS `z1407_institution_site_staff`;
+DROP TABLE IF EXISTS `z1407_institution_site_staff_absences`;
+DROP TABLE IF EXISTS `z1407_institution_site_students`;
+DROP TABLE IF EXISTS `z1407_institution_site_student_absences`;
+DROP TABLE IF EXISTS `z1407_staff_activities`;
+DROP TABLE IF EXISTS `z1407_staff_attachments`;
+DROP TABLE IF EXISTS `z1407_staff_attendances`;
+DROP TABLE IF EXISTS `z1407_staff_bank_accounts`;
+DROP TABLE IF EXISTS `z1407_staff_behaviours`;
+DROP TABLE IF EXISTS `z1407_staff_custom_values`;
+DROP TABLE IF EXISTS `z1407_staff_custom_value_history`;
+DROP TABLE IF EXISTS `z1407_staff_details_custom_values`;
+DROP TABLE IF EXISTS `z1407_staff_employments`;
+DROP TABLE IF EXISTS `z1407_staff_extracurriculars`;
+DROP TABLE IF EXISTS `z1407_staff_healths`;
+DROP TABLE IF EXISTS `z1407_staff_health_allergies`;
+DROP TABLE IF EXISTS `z1407_staff_health_consultations`;
+DROP TABLE IF EXISTS `z1407_staff_health_families`;
+DROP TABLE IF EXISTS `z1407_staff_health_histories`;
+DROP TABLE IF EXISTS `z1407_staff_health_immunizations`;
+DROP TABLE IF EXISTS `z1407_staff_health_medications`;
+DROP TABLE IF EXISTS `z1407_staff_health_tests`;
 
 
