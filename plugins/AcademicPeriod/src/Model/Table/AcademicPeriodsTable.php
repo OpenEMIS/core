@@ -279,6 +279,28 @@ class AcademicPeriodsTable extends AppTable {
 		return false;
 	}
 
+	public function getWorkingDaysOfWeek() {
+		$weekdays = [
+			0 => 'Sunday',
+			1 => 'Monday',
+			2 => 'Tuesday',
+			3 => 'Wednesday',
+			4 => 'Thursday',
+			5 => 'Friday',
+			6 => 'Saturday',
+		];
+		$ConfigItems = TableRegistry::get('ConfigItems');
+		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+		$daysPerWeek = $ConfigItems->value('days_per_week');
+		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
+		$week = [];
+		for ($i=0; $i<$daysPerWeek; $i++) {
+			$week[] = $weekdays[$firstDayOfWeek++];
+			$firstDayOfWeek = $firstDayOfWeek % 7;
+		}
+		return $week;
+	}
+
 	public function getAttendanceWeeks($id) {
 		// $weekdays = array(
 		// 	0 => 'sunday',
