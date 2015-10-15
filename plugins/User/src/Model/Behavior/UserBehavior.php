@@ -152,6 +152,8 @@ class UserBehavior extends Behavior {
 				$pluginName = 'Student';
 			} else if ($model == 'Staff') {
 				$pluginName = 'Staff';
+			} else if ($model == 'Guardians') {
+				$pluginName = 'Guardian';
 			}
 
 			if (($action == 'view') ) {
