@@ -9,6 +9,8 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
@@ -29,6 +31,7 @@ class TrackActivityBehavior extends Behavior {
 		$this->_session = new Session;
 		$this->_table->trackActivity = true;
 	}
+
 
 	
 /******************************************************************************************************************
@@ -107,6 +110,10 @@ class TrackActivityBehavior extends Behavior {
 											Log::write('debug', $ex->getMessage());
 											Log::write('debug', $allDataKey);
 											break;
+										} catch (InvalidPrimaryKeyException $ex) {
+											$track = false;
+											Log::write('debug', $ex->getMessage());
+											Log::write('debug', $allDataKey);
 										}
 									} else {
 										$obj[$allDataKey.'_value'] = ($allDataValue) ? $allDataValue : ' ';
