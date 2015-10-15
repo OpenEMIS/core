@@ -12,7 +12,6 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
-use Cake\I18n\I18n;
 
 class StudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -118,7 +117,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 		$identity = $IdentityType
 		   ->find()
@@ -129,6 +128,13 @@ class StudentsTable extends AppTable {
 		   ])
 		   ->order(['IdentityTypes.default DESC'])
 		   ->first();
+		
+		$extraField[] = [
+			'key' => 'Users.openemis_no',
+			'field' => 'openemis_no',
+			'type' => 'string',
+			'label' => ''
+		];
 
 		$extraField[] = [
 			'key' => 'Identities.number',
@@ -137,28 +143,8 @@ class StudentsTable extends AppTable {
 			'label' => $identity->name
 		];
 
-		$extraField[] = [
-			'key' => 'Users.openemis_no',
-			'field' => 'openemis_no',
-			'type' => 'string',
-			'label' => ''
-		];
-
-		$language = I18n::locale();
-
-		// Find the label
-		foreach($extraField as $extra) {
-			list($module, $field) = explode(".", $extra['key']);
-			if (empty($extra['label'])) {
-				$label = $this->onGetFieldLabel($event, $module, $field, $language);
-				$extra['label'] = $label;
-			}
-			$newArray = null;
-			$newArray[] = $extra;
-			$fields = array_merge($newArray, $fields);
-		}
-
-		return $fields;
+		$newFields = array_merge($extraField, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 
 	public function implementedEvents() {
