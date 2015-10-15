@@ -104,6 +104,9 @@
         padding: 0;
         margin: 0;
     }
+    .button-responsive .btn {
+        margin-top: 5px;
+    }
     .button-responsive .action-dropdown {
         left: 0;
         top: 26px;
