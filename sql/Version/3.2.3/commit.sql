@@ -364,4 +364,5 @@ DROP TABLE IF EXISTS `z1407_staff_health_immunizations`;
 DROP TABLE IF EXISTS `z1407_staff_health_medications`;
 DROP TABLE IF EXISTS `z1407_staff_health_tests`;
 
+UPDATE `config_items` SET `value` = '3.2.3' WHERE `code` = 'db_version';
 
