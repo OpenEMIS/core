@@ -30,6 +30,7 @@ class WorkflowBehavior extends Behavior {
 	private $currentAction;
 
 	private $initWorkflow = false;
+	private $hasWorkflow = false;
 	private $workflowSetup = null;
 	private $workflowRecord = null;
 
@@ -77,6 +78,26 @@ class WorkflowBehavior extends Behavior {
 		$this->model = $this->controller->ControllerAction->model();
 		$this->currentAction = $this->controller->ControllerAction->action();
 		$attachWorkflow = $this->controller->Workflow->attachWorkflow;
+
+		if ($this->currentAction == 'index') {
+			$WorkflowModels = $this->WorkflowModels;
+			$registryAlias = $this->_table->registryAlias();
+			$results = $this->Workflows
+				->find()
+				->matching('WorkflowModels', function($q) use ($WorkflowModels, $registryAlias) {
+					return $q->where([
+						$WorkflowModels->aliasField('model') => $registryAlias
+					]);
+				})
+				->all();
+
+			if ($results->isEmpty()) {
+				$this->controller->Alert->warning('Workflows.noWorkflows');
+				$this->controller->Workflow->attachWorkflow = false;
+			} else {
+				$this->hasWorkflow = true;
+			}
+		}
 
 		if ($attachWorkflow && !is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
 			$this->initWorkflow = true;
@@ -166,7 +187,14 @@ class WorkflowBehavior extends Behavior {
 		if ($this->initWorkflow) {
 			$isEditable = false;
 
-			if (!is_null($this->workflowRecord)) {
+			if (is_null($this->workflowRecord)) {
+				// In index page, unset add buttons if Workflows is not configured
+				if ($action == 'index') {
+					if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
+						unset($toolbarButtons['add']);
+					}
+				}
+			} else {
 				$workflowStep = $this->getWorkflowStep($this->workflowRecord);
 
 				$actionButtons = [];
@@ -271,6 +299,8 @@ class WorkflowBehavior extends Behavior {
 				$this->_table->controller->set('modal', $modal);
 				// End
 			}
+		} else {
+
 		}
 	}
 
@@ -341,7 +371,7 @@ class WorkflowBehavior extends Behavior {
 				$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
 
 				$workflowId = 0;
-				if ($entity->has($filterKey)) {
+				if (!is_null($entity) && $entity->has($filterKey)) {
 					$filterId = $entity->$filterKey;
 					$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
 
@@ -366,11 +396,11 @@ class WorkflowBehavior extends Behavior {
 					if (!$workflowResults->isEmpty()) {
 						$workflowId = $workflowResults->first()->workflow_id;
 					}
-
-					$workflowQuery->where([
-						$this->Workflows->aliasField('id') => $workflowId
-					]);
 				}
+
+				$workflowQuery->where([
+					$this->Workflows->aliasField('id') => $workflowId
+				]);
 			}
 
 			return $workflowQuery->first();
