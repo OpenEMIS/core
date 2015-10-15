@@ -32,9 +32,22 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionSitePositions', ['className' => 'Institution.InstitutionSitePositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
-
-		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('Excel', [
+			'excludes' => [
+				'start_date', 
+				'end_date',
+				'start_year',
+				'end_year',
+				'FTE',
+				'staff_type_id',
+				'staff_status_id',
+				'institution_site_id',
+				'institution_site_position_id'
+			],
+			'pages' => ['index']
+		]);
 	}
 
 	public function implementedEvents() {
@@ -42,6 +55,153 @@ class StaffAttendancesTable extends AppTable {
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$academicPeriodId = $this->request->query['academic_period_id'];
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$query
+			->where([$this->aliasField('institution_site_id') => $institutionId])
+			->distinct([$this->aliasField('security_user_id')])
+			->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
+	}
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$startDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->start_date->format('Y-m-d');
+		$endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
+		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
+		// $sectionId = $this->request->query['section_id'];
+
+		foreach ($months as $month) {
+			$sheetName = $month['month']['inString'];
+			$monthInNumber = $month['month']['inNumber'];
+			$year = $month['year'];
+			$days = $AcademicPeriodTable->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
+			$headerDays = [];
+			$daysIndex = [];
+			foreach($days as $item){
+				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
+				$daysIndex[] = $item['date'];
+			}
+
+			
+			$monthStartDay = $daysIndex[0];
+			$monthEndDay = $daysIndex[count($days) - 1];
+
+			$sheets[] = [
+				'name' => $month['month']['inString'],
+				'table' => $this,
+				'query' => $this
+					->find()
+					->select(['openemis_no' => 'Users.openemis_no'])
+					->find('InDateRange', ['start_date' => $monthStartDay, 'end_date' => $monthEndDay])
+					,
+				'additionalHeader' => $headerDays,
+				'additionalData' => $this->getData($daysIndex),
+			];
+		}
+	}
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+    	$newArray = [];
+		$newArray[] = [
+			'key' => 'Users.openemis_no',
+			'field' => 'openemis_no',
+			'type' => 'string',
+			'label' => ''
+		];
+		$newFields = array_merge($newArray, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
+	}
+
+	public function getData($days) {
+		if(count($days) == 0){
+			return null;
+		}else{
+			$monthStartDay = $days[0];
+			$monthEndDay = $days[count($days) - 1];
+		}
+		
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		
+		$StaffTable = TableRegistry::get('Institution.Staff');
+		$staffList = $this->find()
+			->distinct(['security_user_id'])
+			->where([
+				$this->aliasField('institution_site_id') => $institutionId
+			])
+			->find('InDateRange', ['start_date' => $monthStartDay, 'end_date' => $monthEndDay])
+			->select(['id' => $this->aliasField('security_user_id')])
+			->toArray()
+			;
+
+		$StaffAbsencesTable = TableRegistry::get('Institution.StaffAbsences');
+		$absenceData = $StaffAbsencesTable->find('all')
+				->matching('StaffAbsenceReasons')
+				->where([
+					$StaffAbsencesTable->aliasField('institution_site_id') => $institutionId,
+					$StaffAbsencesTable->aliasField('start_date').' >= ' => $monthStartDay,
+					$StaffAbsencesTable->aliasField('end_date').' <= ' => $monthEndDay,
+				])
+				->select([
+					'security_user_id' => $StaffAbsencesTable->aliasField('security_user_id'),
+					'start_date' => $StaffAbsencesTable->aliasField('start_date'),
+					'end_date' => $StaffAbsencesTable->aliasField('end_date'),
+					'full_day' => $StaffAbsencesTable->aliasField('full_day'),
+					'start_time' => $StaffAbsencesTable->aliasField('start_time'),
+					'end_time' => $StaffAbsencesTable->aliasField('end_time'),
+					'absence_type' => 'StaffAbsenceReasons.name'
+				])
+				->toArray();
+		
+		$data = [];
+		$absenceCheckList = [];
+		foreach($absenceData AS $absenceUnit){
+			$staffId = $absenceUnit['security_user_id'];
+			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
+
+			$absenceCheckList[$staffId][$indexAbsenceDate] = $absenceUnit;
+
+			if($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']){
+				$tempStartDate = date("Y-m-d", strtotime($absenceUnit['start_date']));
+				$formatedLastDate = date("Y-m-d", strtotime($absenceUnit['end_date']));
+				
+				while($tempStartDate <= $formatedLastDate){
+					$stampTempDate = strtotime($tempStartDate);
+					$tempIndex = date('Y-m-d', $stampTempDate);
+
+					$absenceCheckList[$staffId][$tempIndex] = $absenceUnit;
+
+					$stampTempDateNew = strtotime('+1 day', $stampTempDate);
+					$tempStartDate = date("Y-m-d", $stampTempDateNew);
+				}
+			}
+		}
+
+		foreach ($staffList as $staff){
+			$staffId = $staff['id'];
+			$row = [];
+			foreach ($days as $index){
+				if (isset($absenceCheckList[$staffId][$index])) {
+					$absenceObj = $absenceCheckList[$staffId][$index];
+					if (! $absenceObj['full_day']) {
+						$startTimeAbsent = $absenceObj['start_time'];
+						$endTimeAbsent = $absenceObj['end_time'];
+						$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+						$row[] = $timeStr;
+					}else{
+						$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
+					}
+				}else{
+					$row[] = __('');
+				}
+			}	
+			$data[] = $row;
+		}
+		return $data;
+	}
 
 	public function beforeAction(Event $event) {
 		$tabElements = [
@@ -500,7 +660,7 @@ class StaffAttendancesTable extends AppTable {
 			;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     	if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
 	    	if ($this->request->query('day') != -1) {
 	    		if (!is_null($this->request->query('mode'))) {
@@ -512,13 +672,17 @@ class StaffAttendancesTable extends AppTable {
 					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 					$toolbarButtons['back']['attr'] = $attr;
 					$toolbarButtons['back']['attr']['title'] = __('Back');
+
+					if (isset($toolbarButtons['export'])) {
+						unset($toolbarButtons['export']);
+					}
 				} else {
 					$toolbarButtons['back'] = $buttons['back'];
 					$toolbarButtons['back']['type'] = null;
 				}
 			}
 		}
-    }
+	}
 
 	public function indexEdit() {
 		if ($this->request->is(['post', 'put'])) {

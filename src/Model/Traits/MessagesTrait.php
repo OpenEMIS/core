@@ -51,7 +51,7 @@ trait MessagesTrait {
 				'label' => 'Delete',
 			],
 			'deleteTransfer' =>[
-				'restrictDelete' => 'The transfer cannot be performed as there is no options to transfer to.'
+				'restrictDelete' => 'The record cannot be deleted as there are still records associated with it.'
 			],
 			'view' => [
 				'label' => 'View',
@@ -66,7 +66,7 @@ trait MessagesTrait {
 			'invalidTime' => 'You have entered an invalid time.',
 			'invalidDate' => 'You have entered an invalid date.',
 			'invalidUrl' => 'You have entered an invalid url.',
-			'notSelected' => 'No Record has been selected/saved.',
+			'notSelected' => 'No Record has been selected / saved.',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'name' => 'Name',
@@ -105,14 +105,6 @@ trait MessagesTrait {
 		'InstitutionSitePositions' => [
 			'current_staff_list' => 'Current Staff List',
 			'past_staff_list' => 'Past Staff List',
-		],
-		'InstitutionSiteProgrammes' => [
-			'noEducationLevels' => 'There are no available Education Level.',
-			'noEducationProgrammes' => 'There are no available Education Programme.',
-			'noEducationGrades' => 'There are no available Education Grade.',
-			'start_date' => 'Start Date',
-			'end_date' => 'End Date',
-			'education_grade' => 'Education Grades'
 		],
 		'InstitutionGrades' => [
 			'noEducationLevels' => 'There are no available Education Level.',
@@ -155,9 +147,10 @@ trait MessagesTrait {
 			'students' => 'Students',
 			'teachers' => 'Teachers',
 		],
-		'InstitutionSiteFees' => [
+		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+			'fee_payments_exists' => 'Unable to delete this record due to payments by students already exists'
 		],
 		'Students' => [
 			'noGrades' => 'No Grades',
@@ -165,12 +158,22 @@ trait MessagesTrait {
 		],
 		'StudentFees' => [
 			'totalAmountExceeded' => 'Total Amount Exceeded Outstanding Amount',
+			'payment_date' => 'Payment Date',
+			'created_user_id' => 'Created By',
+			'comments' => 'Comments',
+			'amount' => 'Amount',
 		],
 		// 'InstitutionSiteStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
+			'noSubjects' => 'There are no available Education Subjects.',
+			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Subjects',
+			'noStudents' => 'No Available Students',
+			'mark' => 'Mark',
+			'grading' => 'Grading',
 			'save' => [
 				'draft' => 'Assessment record has been saved to draft successfully.',
 				'final' => 'Assessment record has been submitted successfully.',
@@ -180,11 +183,6 @@ trait MessagesTrait {
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
-		],
-		'InstitutionAssessmentResults' => [
-			'noSubjects' => 'There are no available Subjects.',
-			'noSections' => 'There are no available Classes.',
-			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
 			'save' => [
@@ -212,6 +210,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not rejected due to errors encountered.'
 			]
 		],
+		'Surveys' => [
+			'noSurveys' => 'No Available Surveys',
+		],
 		'StudentSurveys' => [
 			'noSurveys' => 'No Surveys',
 			'save' => [
@@ -224,7 +225,7 @@ trait MessagesTrait {
 			'retypePassword' => 'Retype New Password',
 		],
 		'EducationGrades' => [
-			'add_subject' => 'Add Subject'
+			'add_subject' => 'Add Subject',
 		],
 		'RubricCriterias' => [
 			//'rubric_section_id' => 'Rubric Section',
@@ -249,7 +250,8 @@ trait MessagesTrait {
 		],
 		'InstitutionSiteStudentAbsences' => [
 			'noSections' => 'No Available Classes',
-			'noStudents' => 'No Available Students'
+			'noStudents' => 'No Available Students',
+			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
 			'noStaff' => 'No Available Staff'
@@ -307,7 +309,8 @@ trait MessagesTrait {
 		],
 		'WorkflowActions' => [
 			'next_step' => 'Next Step',
-			'comment_required' => 'Comment Required'
+			'comment_required' => 'Comment Required',
+			'event' => 'Event'
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
@@ -321,6 +324,8 @@ trait MessagesTrait {
 		],
 		'TransferRequests' => [
 			'request' => 'Transfer request has been submitted successfully.',
+			'enrolled' => 'This student has already been enrolled in an institution.',
+			'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 		],
 		'TransferApprovals' => [
 			'exists' => 'Student is already exists in the new school',
@@ -337,6 +342,13 @@ trait MessagesTrait {
 			'success' => 'Students have been promoted.',
 			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
 		],
+		'StudentTransfer' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noInstitutions' => 'No Available Institutions',
+			'noData' => 'There are no available Students for Transfer.',
+			'success' => 'Students have been transferred.'
+		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
 		],
@@ -345,6 +357,15 @@ trait MessagesTrait {
 			'existsInRecord' => 'Student has already been added to admission list',
 			'approve' => 'Student admission has been approved successfully.',
 			'reject' => 'Student admission has been rejected successfully.'
+		],
+		'DropoutRequests' => [
+			'request' => 'Dropout request hsa been submitted successfully.',
+		],
+		'StudentDropout' => [
+			'exists' => 'Student has already dropped out from the school.',
+			'approve' => 'Dropout request has been approved successfully.',
+			'reject' => 'Dropout request has been rejected successfully.',
+			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
 
 		// Validation Messages
@@ -416,12 +437,17 @@ trait MessagesTrait {
 				'institutionSiteGrades' => 'You need to configure Institution Grades first.',
 				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
+				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.'
 			],
 			'InstitutionSiteStaff' => [
 				'institutionSitePositionId' => 'You need to configure Institution Site Positions first.',
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
-				'staffTypeId' => 'You need to configure Staff Types first.'
+				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
+				'noInstitutionSitePosition' => 'There are no position available.',
+				'staffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+				'staffTypeId' => 'You need to configure Staff Types first.',
+				'error' => 'New staff is not added to the institutition, due to an error',
 			],
 			'StudentGuardians' => [
 				'guardianRelationId' => 'You need to configure Guardian Relations first.',
@@ -440,13 +466,21 @@ trait MessagesTrait {
 			],
 			'Students' => [
 				'student_name' => [
-					'ruleInstitutionStudentId' => 'Student has already been added.'
+					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleCheckAdmissionAgeWithEducationCycle' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				]
 			],
 			'Staff' => [
 				'staff_name' => [
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
-				]
+				],
+				'institution_site_position_id' => [
+					'ruleCheckFTE' => 'No available FTE.'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
 			]
 		],
 		'User' => [
@@ -481,7 +515,8 @@ trait MessagesTrait {
 				'date_of_birth' => [
 					'ruleNotBlank' => 'Please select a Date of Birth',
 					'ruleCompare' => 'Please select a Date of Birth',
-					'ruleCompare' => 'Date of Birth cannot be future date'
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
 				],
 				'username' => [
 					'ruleNotBlank' => 'Please enter a valid username',
@@ -662,12 +697,8 @@ trait MessagesTrait {
 				]
 			],
 			'Leaves' => [
-				'date_from' => [
-					'ruleCompareDate' => 'Date From cannot be later than Date To',
-					'ruleNoOverlap' => 'Leave have been selected for this date. Please choose a different date'
-				],
-				'number_of_days' => [
-					'ruleNotBlank' => 'Please enter the number of days'
+				'date_to' => [
+					'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
 				]
 			],
 			'Extracurriculars' => [
@@ -754,6 +785,13 @@ trait MessagesTrait {
 		'Labels' => [
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
+			]
+		],
+		'Workflow' => [
+			'Workflows' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
 			]
 		]
 	];
