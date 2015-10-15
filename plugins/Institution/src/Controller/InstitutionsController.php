@@ -43,17 +43,20 @@ class InstitutionsController extends AppController  {
 			'StudentSurveys' 	=> ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
+			'AttendanceExport'	=> ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'remove']],
-			'Results' 			=> ['className' => 'Institution.InstitutionAssessmentResults', 'actions' => ['index']],
+			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'edit', 'remove']],
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['index']],
+			'Transfer' 			=> ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
 			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
-			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['add', 'edit', 'remove']],
+			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['index', 'edit', 'view']],
+			'DropoutRequests' 	=> ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
+			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
-			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
-			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'edit']],
+			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
+			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'add']],
 
 			// Surveys
 			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
@@ -75,13 +78,30 @@ class InstitutionsController extends AppController  {
 
 		// this is to cater for back links
 		$query = $this->request->query;
-		if (array_key_exists('institution_id', $query)) {
-			$session->write('Institution.Institutions.id', $query['institution_id']);
 
+		if (array_key_exists('institution_id', $query)) {
+			//check for permission
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->AccessControl->getInstitutionsByUser();
+
+				if (!array_key_exists($query['institution_id'], $institutionIds)) {
+					$this->Alert->error('security.noAccess');
+					$refererUrl = $this->request->referer();
+					$event->stopPropagation();
+					return $this->redirect($refererUrl);
+				}
+			}
+			$session->write('Institution.Institutions.id', $query['institution_id']);
 		}
 
 		if ($action == 'index') {
 			$session->delete('Institution.Institutions.id');
+		} else if ($action == 'Surveys') {
+			// This is to turn off workflow for New and Draft Survey
+			$this->loadComponent('Survey.Survey', [
+				'model' => 'Institution.InstitutionSurveys'
+			]);
+			$this->Workflow->attachWorkflow = $this->Survey->getAttachWorkflow();
 		}
 
 		if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
@@ -155,7 +175,7 @@ class InstitutionsController extends AppController  {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
-			if ($model->hasField('institution_id')) {
+			if ($model->hasField('institution_id') && !in_array($model->alias(), ['TransferRequests'])) {
 				$model->fields['institution_id']['type'] = 'hidden';
 				$model->fields['institution_id']['value'] = $session->read('Institution.Institutions.id');
 			}
