@@ -104,11 +104,15 @@ class StudentAttendancesTable extends AppTable {
 		}
 		$startDate = $dayIndex[0];
 		$endDate = $dayIndex[count($dayIndex)-1];
+
+		// Set data into a temporary variable
 		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId'], $sheet['sectionId']);
 	}
 
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
+		// Get the data from the temporary variable
 		$absenceData = $this->_absenceData;
+		
 		if (isset($absenceData[$entity->student_id][$attr['date']])) {
 			$absenceObj = $absenceData[$entity->student_id][$attr['date']];
 			if (! $absenceObj['full_day']) {
