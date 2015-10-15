@@ -55,8 +55,11 @@ class DisplayBehavior extends Behavior {
 		 */
 
 		$columns = $table->schema()->columns();
+		$defaultFieldOrder = [];
+		$fieldOrder = 1000;
+		$fieldOrderExcluded = 9999;
 		foreach ($columns as $key => $attr) {
-			$this->_table->ControllerAction->field($attr, ['model' => $table->alias()]); 
+			$this->_table->ControllerAction->field($attr, ['model' => $table->alias()]);
 			$defaultFieldOrder[] = $attr;
 			
 			if(!in_array($attr, $this->excludeFieldList)) {
