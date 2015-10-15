@@ -11,7 +11,6 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
-use Cake\I18n\I18n;
 
 class StudentAttendancesTable extends AppTable {
 	use OptionsTrait;
@@ -79,24 +78,14 @@ class StudentAttendancesTable extends AppTable {
 
 	// To select another one more field from the containable data
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-		$extraField[] = [
+		$newArray[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
 			'label' => ''
 		];
-		$language = I18n::locale();
-
-		// Find the label
-		foreach($extraField as $extra) {
-			list($module, $field) = explode(".", $extra['key']);
-			$label = $this->onGetFieldLabel($event, $module, $field, $language);
-			$extra['label'] = $label;
-			$newArray[] = $extra;
-			$fields = array_merge($newArray, $fields);
-		}
-
-		return $fields;
+		$newFields = array_merge($newArray, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 
 	public function getData($days, $sectionId) {
