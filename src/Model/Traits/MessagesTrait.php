@@ -168,6 +168,12 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
+			'noSubjects' => 'There are no available Education Subjects.',
+			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Subjects',
+			'noStudents' => 'No Available Students',
+			'mark' => 'Mark',
+			'grading' => 'Grading',
 			'save' => [
 				'draft' => 'Assessment record has been saved to draft successfully.',
 				'final' => 'Assessment record has been submitted successfully.',
@@ -177,11 +183,6 @@ trait MessagesTrait {
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
-		],
-		'InstitutionAssessmentResults' => [
-			'noSubjects' => 'There are no available Subjects.',
-			'noSections' => 'There are no available Classes.',
-			'noClasses' => 'There are no available Subjects.',
 		],
 		'InstitutionSurveys' => [
 			'save' => [
@@ -208,6 +209,9 @@ trait MessagesTrait {
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			]
+		],
+		'Surveys' => [
+			'noSurveys' => 'No Available Surveys',
 		],
 		'StudentSurveys' => [
 			'noSurveys' => 'No Surveys',
@@ -305,7 +309,8 @@ trait MessagesTrait {
 		],
 		'WorkflowActions' => [
 			'next_step' => 'Next Step',
-			'comment_required' => 'Comment Required'
+			'comment_required' => 'Comment Required',
+			'event' => 'Event'
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
@@ -510,7 +515,8 @@ trait MessagesTrait {
 				'date_of_birth' => [
 					'ruleNotBlank' => 'Please select a Date of Birth',
 					'ruleCompare' => 'Please select a Date of Birth',
-					'ruleCompare' => 'Date of Birth cannot be future date'
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
 				],
 				'username' => [
 					'ruleNotBlank' => 'Please enter a valid username',
@@ -691,12 +697,8 @@ trait MessagesTrait {
 				]
 			],
 			'Leaves' => [
-				'date_from' => [
-					'ruleCompareDate' => 'Date From cannot be later than Date To',
-					'ruleNoOverlap' => 'Leave have been selected for this date. Please choose a different date'
-				],
-				'number_of_days' => [
-					'ruleNotBlank' => 'Please enter the number of days'
+				'date_to' => [
+					'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
 				]
 			],
 			'Extracurriculars' => [
@@ -783,6 +785,13 @@ trait MessagesTrait {
 		'Labels' => [
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
+			]
+		],
+		'Workflow' => [
+			'Workflows' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
 			]
 		]
 	];
