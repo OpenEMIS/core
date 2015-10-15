@@ -10,7 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\I18n;
 
 class ControllerActionHelper extends Helper {
-	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label'];
+	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
 	public function getColumnLetter($columnNumber) {
         if ($columnNumber > 26) {
@@ -397,9 +397,6 @@ class ControllerActionHelper extends Helper {
 
 		$html = '';
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
-		$_rowClass = array('row');
-		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-		$_valueClass = array('form-input'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosenSelect');
 
@@ -434,6 +431,10 @@ class ControllerActionHelper extends Helper {
 		$language = $session->read('System.language');
 
 		foreach ($displayFields as $_field => $attr) {
+			$_rowClass = array('row');
+			$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
+			$_valueClass = array('form-input'); // default bootstrap class for values
+
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$_type = $_fieldAttr['type'];
 			$visible = $this->isFieldVisible($_fieldAttr, 'view');
@@ -510,7 +511,7 @@ class ControllerActionHelper extends Helper {
 				if (!array_key_exists('override', $_fieldAttr)) {
 					$html .= sprintf($row, $rowClass, $rowContent);
 				} else {
-					$html .= '<div class="row">' . $value . '</div>';
+					$html .= sprintf($row, $rowClass, $value);
 				}
 			}
 		}

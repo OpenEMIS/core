@@ -18,7 +18,7 @@ $this->start('panelBody');
 	echo $this->Form->create($data, $formOptions);
 	echo $this->Form->hidden('id');
 	echo $this->Form->input('name', ['label' => __('Convert From'), 'readonly']);
-	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions]);
+	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
 
 	$tableData = [];
 	foreach ($associations as $row) {
@@ -28,7 +28,7 @@ $this->start('panelBody');
 
 <div class="input clearfix">
 	<label class="pull-left"><?= __('Apply To') ?></label>
-	<div class="table-in-view col-md-4 table-responsive">
+	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
 			<thead><?= $this->Html->tableHeaders([__('Feature'), __('No of records')]) ?></thead>
 			<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>

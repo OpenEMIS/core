@@ -13,7 +13,6 @@ class AutocompleteBehavior extends Behavior {
 
 	public function onGetAutocompleteElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
-		// pr($attr);
 		if ($action == 'edit') {
 			$subject = $event->subject();
 			$Form = $subject->Form;
@@ -46,6 +45,10 @@ class AutocompleteBehavior extends Behavior {
 			// action before search happens
 			if (array_key_exists('onBeforeSearch', $attr)) {
 				$options['autocomplete-before-search'] = $attr['onBeforeSearch'];
+			}
+			// action when selected
+			if (array_key_exists('onSelect', $attr)) {
+				$options['autocomplete-submit'] = $attr['onSelect'];
 			}
 			$options['autocomplete-class'] = 'error-message';
 			$options['autocomplete-target'] = $target['key'];
