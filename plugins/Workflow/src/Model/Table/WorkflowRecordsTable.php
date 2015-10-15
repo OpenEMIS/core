@@ -8,5 +8,6 @@ class WorkflowRecordsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 		$this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps']);
+		$this->hasMany('WorkflowTransitions', ['className' => 'Workflow.WorkflowTransitions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

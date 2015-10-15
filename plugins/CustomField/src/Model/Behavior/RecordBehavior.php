@@ -234,7 +234,7 @@ class RecordBehavior extends Behavior {
 
     			if ($entity->status == 1 && !is_null($redirectUrl)) {
 					$event->stopPropagation();
-					return $this->_table->controller->redirect($url);
+					return $this->_table->controller->redirect($redirectUrl);
     			}
     		}
     	}
