@@ -111,9 +111,7 @@ class TrackActivityBehavior extends Behavior {
 											Log::write('debug', $allDataKey);
 											break;
 										} catch (InvalidPrimaryKeyException $ex) {
-											$track = false;
-											Log::write('debug', $ex->getMessage());
-											Log::write('debug', $allDataKey);
+											$obj[$allDataKey.'_value'] = null;
 										}
 									} else {
 										$obj[$allDataKey.'_value'] = ($allDataValue) ? $allDataValue : ' ';
