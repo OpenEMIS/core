@@ -63,13 +63,13 @@
 			<tbody>
 			<?php foreach ($data->assessment_items as $i => $obj) : ?>
 				<tr>
-					<td><?= $obj->visible == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>'; ?></td>
-					<td><?= $obj->education_subject->code ?></td>
-					<td><?= $obj->education_subject->name ?></td>
-					<td><?= isset($markTypeOptions[$obj->result_type]) ? $markTypeOptions[$obj->result_type] : current($markTypeOptions) ?></td>
-					<td><?= $obj->pass_mark ?></td>
-					<td><?= $obj->max ?></td>
-					<td><?= isset($gradingTypeOptions[$obj->assessment_grading_type_id]) ? $gradingTypeOptions[$obj->assessment_grading_type_id] : current($gradingTypeOptions) ?></td>
+					<td><?= $obj['visible'] == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>'; ?></td>
+					<td><?= $obj['education_subject']->code ?></td>
+					<td><?= $obj['education_subject']->name ?></td>
+					<td><?= isset($markTypeOptions[$obj['result_type']]) ? $markTypeOptions[$obj['result_type']] : current($markTypeOptions) ?></td>
+					<td><?= $obj['pass_mark'] ?></td>
+					<td><?= $obj['max'] ?></td>
+					<td><?= isset($gradingTypeOptions[$obj['assessment_grading_type_id']]) ? $gradingTypeOptions[$obj['assessment_grading_type_id']] : current($gradingTypeOptions) ?></td>
 				</tr>
 			<?php endforeach ?>
 			</tbody>
