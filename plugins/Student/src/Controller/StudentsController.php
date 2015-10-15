@@ -16,7 +16,7 @@ class StudentsController extends AppController {
 
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
-			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -27,17 +27,18 @@ class StudentsController extends AppController {
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
-			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index']],
-			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index']],
-			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index']],
-			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index']],
-			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
+			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
+			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index', 'view']],
+			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
+			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
 		];
+
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -49,15 +50,15 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Students.id');
-			$session->delete('Students.name');
-		} else if ($session->check('Students.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Student.Students.id');
+			$session->delete('Student.Students.name');
+		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Students.id')) {
-				$id = $session->read('Students.id');
+			} else if ($session->check('Student.Students.id')) {
+				$id = $session->read('Student.Students.id');
 			}
 
 			if (!empty($id)) {
@@ -76,12 +77,30 @@ class StudentsController extends AppController {
 		 */
 		
 		$session = $this->request->session();
-		if ($session->check('Students.id')) {
+		if ($session->check('Student.Students.id')) {
 			$header = '';
-			$userId = $session->read('Students.id');
+			$userId = $session->read('Student.Students.id');
 
-			if ($session->check('Students.name')) {
-				$header = $session->read('Students.name');
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $session->read('AccessControl.Institutions.ids');
+				$studentId = $session->read('Student.Students.id');
+				$enrolledStatus = false;
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				foreach ($institutionIds as $id) {
+					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+					if ($enrolledStatus) {
+						break;
+					}
+				}
+				if (! $enrolledStatus) {
+					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
+						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
+					}
+				}
+			}
+
+			if ($session->check('Student.Students.name')) {
+				$header = $session->read('Student.Students.name');
 			}
 
 			$alias = $model->alias;
@@ -126,12 +145,12 @@ class StudentsController extends AppController {
 		$session = $this->request->session();
 		
 		if ($model->alias() != 'Students') {
-			if ($session->check('Students.id')) {
+			if ($session->check('Student.Students.id')) {
 				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
-					$userId = $session->read('Students.id');
+					$userId = $session->read('Student.Students.id');
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('student_id')) {
-					$userId = $session->read('Students.id');
+					$userId = $session->read('Student.Students.id');
 					$query->where([$model->aliasField('student_id') => $userId]);
 				}
 			} else {
@@ -145,5 +164,25 @@ class StudentsController extends AppController {
 	public function excel($id=0) {
 		$this->Students->excel($id);
 		$this->autoRender = false;
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
 	}
 }
