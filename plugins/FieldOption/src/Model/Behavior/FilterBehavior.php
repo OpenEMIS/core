@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Cake\Utility\Inflector;
@@ -77,53 +78,28 @@ class FilterBehavior extends DisplayBehavior {
 
 	public function viewBeforeAction(Event $event) {
 		parent::viewBeforeAction($event);
-
+		
+		$this->_table->fields['field_option_id']['value'] = $this->_table->fields['field_option_id']['attr']['value'];
 		$table = TableRegistry::get($this->fieldOptionName);
-		
-		//pr($this->_table->fields); die;
-
-		if(!empty($this->parentFieldOptionInfo['foreignKey'])) {
-			$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
-			$selectedParentFieldOptionValue = $this->parentFieldOptions[$selectedParentFieldOption];
-
-			if(array_key_exists($this->parentFieldOptionInfo['foreignKey'], $this->_table->fields)){
-				$fieldsArray = $this->_table->fields;
-            	unset($fieldsArray[$this->parentFieldOptionInfo['foreignKey']]);
-            	$this->_table->fields = $fieldsArray;	
-			}
-
-			$foreignKeyLabel = Inflector::humanize($this->parentFieldOptionInfo['foreignKey']);
-			if ($this->endsWith($this->parentFieldOptionInfo['foreignKey'], '_id') && $this->endsWith($foreignKeyLabel, ' Id')) {
-				$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
-			}
-
-			$this->_table->ControllerAction->field($foreignKeyLabel,
-                                                        ['type' => 'readonly',
-                                                        'model' => $table->alias(),
-                                                        'value' => $selectedParentFieldOptionValue,
-                                                        'className' => $this->fieldOptionName,
-                                                        'order' => -1
-                                                         ]);
-
-            $this->_table->ControllerAction->setFieldOrder($foreignKeyLabel); 
-		}
-		
+		$this->displayParentFields($table);
 		return $table;
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		parent::viewBeforeAction($event);
+		parent::addEditBeforeAction($event);
 
 		$table = TableRegistry::get($this->fieldOptionName);
 		$this->displayParentFields($table);
 		return $table;
 	}
 
-	public function displayParentFields($table){
+	public function displayParentFields($table) {
 		$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
 		$selectedParentFieldOptionValue = $this->parentFieldOptions[$selectedParentFieldOption];
-
-		if(!empty($this->parentFieldOptionInfo['foreignKey'])){
+	
+		if (!empty($this->parentFieldOptionInfo['foreignKey'])) {
+			$model = $this->_table->ControllerAction->getModel($this->parentFieldOptionInfo['parentModel']);
+			$this->_table->belongsTo($model['model'], ['className' => $this->parentFieldOptionInfo['parentModel'], 'foreignKey' => $this->parentFieldOptionInfo['foreignKey']]);
 			$this->_table->ControllerAction->field($this->parentFieldOptionInfo['foreignKey'], 
 														['type' => 'readonly', 
 														'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
@@ -132,9 +108,11 @@ class FilterBehavior extends DisplayBehavior {
 														'className' => $this->fieldOptionName, 
 														'attr' => ['value' => $selectedParentFieldOptionValue],
 														'order' => -1
+														// 'order' => 0
 														 ]);
-			
-			$this->_table->ControllerAction->setFieldOrder($this->parentFieldOptionInfo['foreignKey']); 
+			// pr($this->_table->fields);die;
+			// $this->_table->ControllerAction->setFieldOrder($this->parentFieldOptionInfo['foreignKey']); 
+			// $this->_table->ControllerAction->setFieldOrder($this->_table->fields); 
 		}
 		
 	}

@@ -111,6 +111,7 @@ class FieldOptionValuesTable extends AppTable {
 		$currentFieldOptionName = $currentFieldOption->plugin.'.'.$currentFieldOption->code;
 		if(array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
 			$behavior = $this->parentFieldOptionList[$currentFieldOptionName]['behavior'];
+			// pr($behavior);die;
 			if(!empty($behavior)){	
 				$this->addBehavior('FieldOption.'.$behavior, [
 								  'fieldOptionName' => $currentFieldOptionName,
@@ -130,13 +131,14 @@ class FieldOptionValuesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
 		$settings['pagination'] = false;
-
+// die('here');
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
 		$query->where([$this->aliasField('field_option_id') => $selectedOption]);
 			$this->ControllerAction->setFieldOrder([
 				'visible', 'default', 'editable', 'name', 'national_code'
 			]);
-
+			// pr('FieldOptionsTable.php');
+// pr($query->sql());die('FieldOptionsTable');
 		return $query->find('order');
 	}
 
