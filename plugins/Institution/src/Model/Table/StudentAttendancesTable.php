@@ -45,40 +45,29 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodId = $this->request->query['academic_period_id'];
 		$startDate = $AcademicPeriodTable->get($academicPeriodId)->start_date->format('Y-m-d');
 		$endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$sectionId = $this->request->query['section_id'];
 
 		foreach ($months as $month) {
-			$sheetName = $month['month']['inString'];
-			$monthInNumber = $month['month']['inNumber'];
 			$year = $month['year'];
-			$days = $AcademicPeriodTable->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
-			$headerDays = [];
-			$daysIndex = [];
-			foreach($days as $item){
-				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
-				$daysIndex[] = $item['date'];
-			}
-			pr($sheetName);
-			pr($this->getData($daysIndex, $sectionId));
+			$sheetName = $month['month']['inString'].' '.$year;
+			$monthInNumber = $month['month']['inNumber'];
  			$sheets[] = [
- 				'name' => $month['month']['inString'],
+ 				'name' => $sheetName,
  				'table' => $this,
  				'query' => $this
  					->find()
  					->select(['openemis_no' => 'Users.openemis_no']),
-				'additionalHeader' => $headerDays,
-				'additionalData' => $this->getData($daysIndex, $sectionId),
 				'month' => $monthInNumber,
 				'year' => $year,
 				'startDate' => $startDate,
 				'endDate' => $endDate,
+				'institutionId' => $institutionId,
 				'sectionId' => $sectionId,
  			];
 		}
@@ -107,46 +96,37 @@ class StudentAttendancesTable extends AppTable {
 			$dayIndex[] = $item['date'];
 			$fields[] = [
 				'key' => 'AcademicPeriod.days',
-				'field' => $item['day'],
+				'field' => 'attendance_field',
 				'type' => 'attendance',
 				'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
 				'date' => $item['date']
 			];
 		}
-		$this->_absenceData = $this->getData($dayIndex, $sheet['sectionId']);
+		$startDate = $dayIndex[0];
+		$endDate = $dayIndex[count($dayIndex)-1];
+		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId'], $sheet['sectionId']);
 	}
 
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
 		$absenceData = $this->_absenceData;
-
 		if (isset($absenceData[$entity->student_id][$attr['date']])) {
-			$absenceData[$entity->student_id][$attr['date']];
+			$absenceObj = $absenceData[$entity->student_id][$attr['date']];
 			if (! $absenceObj['full_day']) {
 				$startTimeAbsent = $absenceObj['start_time'];
 				$endTimeAbsent = $absenceObj['end_time'];
 				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
-				$row[] = $timeStr;
+				return $timeStr;
 			} else{
-				$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
+				return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
 			}
 		}else{
-			$row[] = __('');
+			return '';
 		}
 	}
 
-	public function getData($days) {
-		if(count($days) == 0){
-			return null;
-		}else{
-			$monthStartDay = $days[0];
-			$monthEndDay = $days[count($days) - 1];
-		}
-		
+	public function getData($monthStartDay, $monthEndDay, $institutionId, $sectionId) {		
 		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$academicPeriodId = $this->request->query['academic_period_id'];
 
-		// Need to link to section
 		$absenceData = $StudentAbsenceTable->find('all')
 			->contain(['StudentAbsenceReasons'])
 			->where([
@@ -154,6 +134,13 @@ class StudentAttendancesTable extends AppTable {
 				$StudentAbsenceTable->aliasField('start_date').' >= ' => $monthStartDay,
 				$StudentAbsenceTable->aliasField('end_date').' <= ' => $monthEndDay,
 			])
+			->innerJoin(
+				['InstitutionSiteSectionStudents' => 'institution_site_section_students'],
+				[
+					'InstitutionSiteSectionStudents.student_id = '.$StudentAbsenceTable->aliasField('security_user_id'),
+					'InstitutionSiteSectionStudents.institution_site_section_id' => $sectionId
+				]
+			)
 			->select([
 					'security_user_id' => $StudentAbsenceTable->aliasField('security_user_id'),
 					'start_date' => $StudentAbsenceTable->aliasField('start_date'),
@@ -164,30 +151,26 @@ class StudentAttendancesTable extends AppTable {
 					'absence_type' => 'StudentAbsenceReasons.name'
 				])
 			->toArray();
-			
 		$absenceCheckList = [];
-		foreach($absenceData AS $absenceUnit){
+		foreach ($absenceData AS $absenceUnit) {
 			$studentId = $absenceUnit['security_user_id'];
 			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
 
 			$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
 
-			if($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']){
+			if ($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']) {
 				$tempStartDate = date("Y-m-d", strtotime($absenceUnit['start_date']));
 				$formatedLastDate = date("Y-m-d", strtotime($absenceUnit['end_date']));
 				
-				while($tempStartDate <= $formatedLastDate){
+				while ($tempStartDate <= $formatedLastDate) {
 					$stampTempDate = strtotime($tempStartDate);
 					$tempIndex = date('Y-m-d', $stampTempDate);
-
 					$absenceCheckList[$studentId][$tempIndex] = $absenceUnit;
-
 					$stampTempDateNew = strtotime('+1 day', $stampTempDate);
 					$tempStartDate = date("Y-m-d", $stampTempDateNew);
 				}
 			}
 		}
-
 		return $absenceCheckList;
 	}
 

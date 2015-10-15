@@ -247,7 +247,6 @@ class ExcelBehavior extends Behavior {
 			$writer->writeSheetRow($sheetName, $footer);
 			$this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount], true);
 		}
-		pr('done');die;
 	}
 
 	private function getFields($table, $settings) {
@@ -320,9 +319,9 @@ class ExcelBehavior extends Behavior {
 			if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
 				$method = 'onExcelRender' . Inflector::camelize($type);
 				if (!$this->eventMap($method)) {
-					$event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr], true);
+					$event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
 				} else {
-					$event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr], true);
+					$event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
 				}
 				if ($event->result) {
 					$value = $event->result;
