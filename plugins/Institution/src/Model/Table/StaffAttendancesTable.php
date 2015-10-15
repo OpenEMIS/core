@@ -119,16 +119,19 @@ class StaffAttendancesTable extends AppTable {
 		$endDate = $sheet['endDate'];
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$days = $AcademicPeriodTable->generateDaysOfMonth($year, $month, $startDate, $endDate);
+		$workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
 		$dayIndex = [];
 		foreach($days as $item) {
 			$dayIndex[] = $item['date'];
-			$fields[] = [
-				'key' => 'AcademicPeriod.days',
-				'field' => 'attendance_field',
-				'type' => 'attendance',
-				'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
-				'date' => $item['date']
-			];
+			if (in_array($item['weekDay'], $workingDays)) {
+				$fields[] = [
+					'key' => 'AcademicPeriod.days',
+					'field' => 'attendance_field',
+					'type' => 'attendance',
+					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
+					'date' => $item['date']
+				];
+			}
 		}
 		// Set the data into the temporary variable
 		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId']);

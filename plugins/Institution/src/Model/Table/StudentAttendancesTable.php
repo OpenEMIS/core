@@ -92,15 +92,18 @@ class StudentAttendancesTable extends AppTable {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$days = $AcademicPeriodTable->generateDaysOfMonth($year, $month, $startDate, $endDate);
 		$dayIndex = [];
+		$workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
 		foreach($days as $item) {
 			$dayIndex[] = $item['date'];
-			$fields[] = [
-				'key' => 'AcademicPeriod.days',
-				'field' => 'attendance_field',
-				'type' => 'attendance',
-				'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
-				'date' => $item['date']
-			];
+			if (in_array($item['weekDay'], $workingDays)) {
+				$fields[] = [
+					'key' => 'AcademicPeriod.days',
+					'field' => 'attendance_field',
+					'type' => 'attendance',
+					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
+					'date' => $item['date']
+				];
+			}
 		}
 		$startDate = $dayIndex[0];
 		$endDate = $dayIndex[count($dayIndex)-1];
@@ -112,7 +115,7 @@ class StudentAttendancesTable extends AppTable {
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
 		// Get the data from the temporary variable
 		$absenceData = $this->_absenceData;
-		
+
 		if (isset($absenceData[$entity->student_id][$attr['date']])) {
 			$absenceObj = $absenceData[$entity->student_id][$attr['date']];
 			if (! $absenceObj['full_day']) {
