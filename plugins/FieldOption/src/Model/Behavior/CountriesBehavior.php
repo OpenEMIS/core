@@ -15,14 +15,11 @@ class CountriesBehavior extends DisplayBehavior {
 	private $fieldOptionName;
 	private $associations = ['identity_type_id' => ['plugin' => 'FieldOption', 'code' => 'IdentityTypes', 'contain' => 'IdentityTypes']];
 
-
-
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
 		$events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
-		
 		return $events;
 	}
 
@@ -36,18 +33,17 @@ class CountriesBehavior extends DisplayBehavior {
 		
 		$table = TableRegistry::get($this->fieldOptionName);
 		$query = $table->find();
-		
-		$containsArray = [];
-		foreach($this->associations as $contains){
-			$containsArray[] = $contains['contain'];
-		}
-		
-		$query->contain(['IdentityTypes']);
-	
-		//$this->displayAssociatedFields($table);
-
-		//return $query;
+		$this->displayAssociatedFields($table);
+		return $query;
 	}	
+
+	public function viewBeforeAction(Event $event) {
+		parent::viewBeforeAction($event);
+
+		$table = TableRegistry::get($this->fieldOptionName);
+		$this->displayAssociatedFields($table);		
+		return $table;
+	}
 
 	public function addEditBeforeAction(Event $event) {
 		parent::indexBeforeAction($event);
@@ -57,44 +53,56 @@ class CountriesBehavior extends DisplayBehavior {
 		return $table;
 	}
 
-	public function displayAssociatedFields($table){
-		$columns = $table->schema()->columns();
+	public function displayAssociatedFields($table) {
+		/**
+		 * ugly hack
+		 */
+		$table->ControllerAction = $this->_table->ControllerAction;
+		$associations = ['security_users'];
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') {
+				if (!in_array($assoc->table(), $associations)) {
+					$this->_table->belongsTo($assoc->target()->alias(), ['className' => $assoc->target()->registryAlias(), 'foreignKey' => $assoc->foreignKey()]);
+				}
+			}
+		}
+		/**
+		 * ugly hack ends
+		 */
+		$schema = $table->schema();
+		$columns = $schema->columns();
 		foreach ($columns as $key => $attr) {
 			//check whether column has another set of values to be retrieved
-			if(array_key_exists($attr, $this->associations)){
+			if(array_key_exists($attr, $this->associations)) {
 				
 				$attrFieldOptionPluginName = $this->associations[$attr]['plugin']; 
 				$attrFieldOptionCodeName = $this->associations[$attr]['code']; 
-				
-
 				$attrFieldOptionId = TableRegistry::get('FieldOption.FieldOptions')->find()
 										->where(['plugin' => $attrFieldOptionPluginName])
 										->andWhere(['code' => $attrFieldOptionCodeName])
 										->first();
-								
 				$options = TableRegistry::get('FieldOption.FieldOptionValues')->find('list')->where(['field_option_id' => $attrFieldOptionId->id])->toArray();
 				
-				// if(array_key_exists($attr, $this->_table->fields)){
-				// 	$fieldsArray = $this->_table->fields;
-	   //          	unset($fieldsArray[$attr]);
-	   //          	$this->_table->fields = $fieldsArray;	
-				// }
-
-
-				// $foreignKeyLabel = Inflector::humanize($attr);
-				// if ($this->endsWith($attr, '_id') && $this->endsWith($foreignKeyLabel, ' Id')) {
-				// 	$foreignKeyLabel = str_replace(' Id', '', $foreignKeyLabel);
-				// }
-
+				switch ($this->_table->action) {
+				 	case 'index':case 'view':
+				 		$options = [0 => '']+$options;
+				 		break;
+				 	
+				 	case 'edit':case 'add':
+				 		$options = [0 => '-- Select Option --']+$options;
+				 		break;
+				 	
+				 	default:
+				 		$options = [0 => '-- Select Option --']+$options;
+				 		break;
+				}
 				$this->_table->ControllerAction->field($attr, ['type' => 'select', 
-															   'options' => [0 => '-- Select Option --']+$options, 
+															   'options' => $options, 
 															   'visible' => true, 
-															   'order' => 6000,
+															   'order' => $key,
 															   'model' => $table->alias(),
 															   'className' => $this->fieldOptionName
 															   ]);
-			
-				$this->_table->ControllerAction->setFieldOrder($attr); 
 			}
 			
 		}	
