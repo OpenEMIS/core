@@ -66,6 +66,18 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
+		$this->attachWorkflow();
+	}
+
+	public function attachWorkflow() {
+		// check for session and attach workflow behavior
+		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
+			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
+				$this->addBehavior('Workflow.Workflow', [
+					'model' => $this->registryAlias()
+				]);
+			}
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
@@ -102,8 +114,12 @@ class AppTable extends Table {
 	}
 
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
-	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
-		return $this->formatDate($entity->$field);
+	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			return $this->formatDate($entity->$attr['field']);
+		} else {
+			return $entity->$attr['field'];
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
@@ -168,9 +184,12 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onGetFieldLabel'
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		return $this->getFieldLabel($module, $field, $language, $autoHumanize);
+	}
+
+	public function getFieldLabel($module, $field, $language, $autoHumanize=true) {
 		$Labels = TableRegistry::get('Labels');
 		$label = $Labels->getLabel($module, $field, $language);
-
 		if ($label === false && $autoHumanize) {
 			$label = Inflector::humanize($field);
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
@@ -178,6 +197,11 @@ class AppTable extends Table {
 			}
 		}
 		return $label;
+	}
+
+	// Event: 'Model.excel.onExcelGetLabel'
+	public function onExcelGetLabel(Event $event, $module, $col, $language) {
+		return $this->getFieldLabel($module, $col, $language);
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
