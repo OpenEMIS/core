@@ -210,6 +210,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not rejected due to errors encountered.'
 			]
 		],
+		'Surveys' => [
+			'noSurveys' => 'No Available Surveys',
+		],
 		'StudentSurveys' => [
 			'noSurveys' => 'No Surveys',
 			'save' => [
