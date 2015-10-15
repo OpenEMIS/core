@@ -139,7 +139,7 @@ class StaffAttendancesTable extends AppTable {
 
 		$StaffAbsencesTable = TableRegistry::get('Institution.StaffAbsences');
 		$absenceData = $StaffAbsencesTable->find('all')
-				->matching('StaffAbsenceReasons')
+				->contain(['StaffAbsenceReasons'])
 				->where([
 					$StaffAbsencesTable->aliasField('institution_site_id') => $institutionId,
 					$StaffAbsencesTable->aliasField('start_date').' >= ' => $monthStartDay,
