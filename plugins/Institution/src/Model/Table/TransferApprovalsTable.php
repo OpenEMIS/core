@@ -285,7 +285,7 @@ class TransferApprovalsTable extends AppTable {
 				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
 				->where($where)
 				->order([
-					$this->aliasField('created')
+					$this->aliasField('modified') => 'DESC'
 				])
 				->toArray();
 
