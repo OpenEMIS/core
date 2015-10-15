@@ -130,11 +130,12 @@ class StaffAttendancesTable extends AppTable {
 				'date' => $item['date']
 			];
 		}
-
+		// Set the data into the temporary variable
 		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId']);
 	}
 
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
+		// get the data from the temporary variable
 		$absenceData = $this->_absenceData;
 		if (isset($absenceData[$entity->security_user_id][$attr['date']])) {
 			$absenceObj = $absenceData[$entity->security_user_id][$attr['date']];
