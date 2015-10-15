@@ -333,12 +333,15 @@ class ValidationBehavior extends Behavior {
 				$newEntity = TableRegistry::get($className);
 				$recordWithField = $newEntity->find()
 											->select([$fieldName])
-											->where([$fieldName => 1]);
+											->where([
+												$fieldName => 1,
+												$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']
+											]);
 
-				if(!empty($additionalParameters))
+				if(!empty($additionalParameters)) {
 					$recordWithField->andWhere($additionalParameters);
-													
-				$total = $recordWithField->count();				
+				}								
+				$total = $recordWithField->count();		
 				$flag = ($total > 0) ? true : false;
 			}
 		} else {
@@ -434,13 +437,14 @@ class ValidationBehavior extends Behavior {
 				[
 					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
 					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id']
-				]
-				
-			)
-			->count();
-			;
-		return ($existingRecords <= 0);
+					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					'OR' => [
+						[$Staff->aliasField('end_date').' IS NULL'],
+						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
+					],
+				]	
+			);
+		return ($existingRecords->count() <= 0);
 	}
 
 	public static function studentGuardianId($field, array $globalData) {
@@ -500,11 +504,18 @@ class ValidationBehavior extends Behavior {
 	}
 
 	// To allow case sensitive entry
-	public static function checkUniqueEnglishField($check) {
+	public static function checkUniqueEnglishField($check, array $globalData) {
+		$condition = [];
 		$englishField = trim($check);
 		$Translation = TableRegistry::get('Localization.Translations');
+		if(!empty($globalData['data']['id'])) {
+			$condition['NOT'] = [
+				$Translation->aliasField('id') => $globalData['data']['id']
+			];
+		}
       	$count = $Translation->find()
       		->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
+      		->where($condition)
       		->count();
         return $count==0;
     }
@@ -688,11 +699,6 @@ class ValidationBehavior extends Behavior {
 		}
 
 		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
-		// got id this is a add method
-		if (!(array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) && (!$validationResult)) {
-			$model = $globalData['providers']['table'];
-			$model->Alert->error(__('No available FTE.'), ['type' => 'text']);
-		}
 
 		return $validationResult;
 	}
