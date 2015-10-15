@@ -60,6 +60,7 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('parent_field_option_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
 		$this->ControllerAction->field('editable', ['options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
@@ -131,14 +132,11 @@ class FieldOptionValuesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
 		$settings['pagination'] = false;
-// die('here');
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
 		$query->where([$this->aliasField('field_option_id') => $selectedOption]);
 			$this->ControllerAction->setFieldOrder([
 				'visible', 'default', 'editable', 'name', 'national_code'
 			]);
-			// pr('FieldOptionsTable.php');
-// pr($query->sql());die('FieldOptionsTable');
 		return $query->find('order');
 	}
 
@@ -166,10 +164,11 @@ class FieldOptionValuesTable extends AppTable {
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$fieldOption = $this->fieldOption;
 	
+		$availFieldOptions = false;
 		if (empty($fieldOption->params)) {
 			$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
 			$availFieldOptions = $this->find()->where([$this->aliasField('field_option_id')	 => $fieldOption->id])->count();
-		} 
+		}
 	
 		if($availFieldOptions == 1) {
 			$this->Alert->warning('general.notTransferrable');

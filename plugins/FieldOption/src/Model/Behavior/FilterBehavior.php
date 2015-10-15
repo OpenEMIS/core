@@ -24,7 +24,6 @@ class FilterBehavior extends DisplayBehavior {
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.addEdit.beforeAction'] = 'addEditBeforeAction';
 		$events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
-		$events['ControllerAction.Model.onBeforeDelete'] = 'onBeforeDelete';
 		$events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
 		$events['ControllerAction.Model.delete.onInitialize'] = 'deleteOnInitialize';
 		return $events;
@@ -117,12 +116,6 @@ class FilterBehavior extends DisplayBehavior {
 		
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$table = TableRegistry::get($this->fieldOptionName);
-		$entity = $table->get($id);
-		return $table->delete($entity);
-	}
-
 	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
 		$settings['deleteStrategy'] = 'transfer';
 		$settings['model'] = $this->fieldOptionName;
@@ -144,8 +137,8 @@ class FilterBehavior extends DisplayBehavior {
 
 		if($availFieldOptions == 1) {
 			$this->_table->Alert->warning('general.notTransferrable');
-			$event->_table->stopPropagation();
-			return $this->_table->controller->redirect($this->ControllerAction->url('index'));
+			$event->stopPropagation();
+			return $this->_table->controller->redirect($this->_table->ControllerAction->url('index'));
 		}
 
 		return $query;
