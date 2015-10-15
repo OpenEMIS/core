@@ -66,6 +66,18 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
+		$this->attachWorkflow();
+	}
+
+	public function attachWorkflow() {
+		// check for session and attach workflow behavior
+		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
+			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
+				$this->addBehavior('Workflow.Workflow', [
+					'model' => $this->registryAlias()
+				]);
+			}
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
@@ -102,11 +114,11 @@ class AppTable extends Table {
 	}
 
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
-	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
-		if (!empty($entity->$field)) {
-			return $this->formatDate($entity->$field);
+	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			return $this->formatDate($entity->$attr['field']);
 		} else {
-			return $entity->$field;
+			return $entity->$attr['field'];
 		}
 	}
 

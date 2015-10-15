@@ -11,7 +11,6 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
-use Cake\I18n\I18n;
 
 class StaffAttendancesTable extends AppTable {
 	use OptionsTrait;
@@ -106,23 +105,15 @@ class StaffAttendancesTable extends AppTable {
 	}
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-		$extraField[] = [
+    	$newArray = [];
+		$newArray[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
 			'label' => ''
 		];
-		$language = I18n::locale();
-
-		foreach($extraField as $extra) {
-			list($module, $field) = explode(".", $extra['key']);
-			$label = $this->onGetFieldLabel($event, $module, $field, $language);
-			$extra['label'] = $label;
-			$newArray[] = $extra;
-			$fields = array_merge($newArray, $fields);
-		}
-
-		return $fields;
+		$newFields = array_merge($newArray, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 
 	public function getData($days) {
