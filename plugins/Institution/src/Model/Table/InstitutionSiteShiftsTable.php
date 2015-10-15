@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
@@ -22,16 +23,15 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
 	
 		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
 		$this->addBehavior('OpenEmis.Autocomplete');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator
  	        ->add('start_time', 'ruleCompareDate', [
-		            'rule' => ['compareDate', 'end_time', false]
-	    	    ])
- 	        ->add('end_time', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'start_time', false]
+		            'rule' => ['compareDate', 'end_time', true]
 	    	    ])
  	        ->notEmpty('institution_name', 'Search for Institution for OTHER school selection', function ($context) {
  	        		$data = $this->request->data[$this->alias()];
@@ -99,7 +99,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 		return $entity;
     }
 
-
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -118,7 +117,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		]);
 
 	}
-
+	
 	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		unset($data[$this->alias()]['location_institution_site_id']);
 	}
@@ -137,6 +136,13 @@ class InstitutionSiteShiftsTable extends AppTable {
 					} 
 				}
 			}
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['attr']['value'] = $this->AcademicPeriods->getCurrent();
 		}
 		return $attr;
 	}
@@ -181,7 +187,8 @@ class InstitutionSiteShiftsTable extends AppTable {
 			}
 		}
 		return $attr;
-	}	
+	}
+
 /******************************************************************************************************************
 **
 ** field specific methods
