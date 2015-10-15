@@ -18,10 +18,6 @@ class StaffUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Staff.new';
 		if ($this->Session->check($sessionKey)) {
@@ -31,7 +27,7 @@ class StaffUserTable extends UserTable {
 			$institutionId = $positionData['institution_site_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
-			$staffEntity = $Staff->newEntity($positionData);
+			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
 			if ($Staff->save($staffEntity)) {
 				if ($role > 0) {
 					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
@@ -47,9 +43,9 @@ class StaffUserTable extends UserTable {
 			} else {
 				$errors = $staffEntity->errors();
 				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
-					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE');
+					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
 				} else {
-					$this->Alert->error('Institution.InstitutionSiteStaff.error');
+					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -90,8 +86,13 @@ class StaffUserTable extends UserTable {
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view' || $action == 'add') {
+		if ($action == 'view') {
 			unset($toolbarButtons['back']);
+			if ($toolbarButtons->offsetExists('export')) {
+				unset($toolbarButtons['export']);
+			}
+		} else if ($action == 'add') {
+			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
