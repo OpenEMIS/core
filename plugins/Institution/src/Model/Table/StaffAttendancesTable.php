@@ -175,7 +175,7 @@ class StaffAttendancesTable extends AppTable {
 				])
 				->toArray();
 		$absenceCheckList = [];
-		foreach ($absenceData AS $absenceUnit) {
+		foreach ($absenceData as $absenceUnit) {
 			$staffId = $absenceUnit['security_user_id'];
 			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
 			$absenceCheckList[$staffId][$indexAbsenceDate] = $absenceUnit;
