@@ -757,7 +757,8 @@ class ImportBehavior extends Behavior {
 			->toArray()
 			;
 		
-		$data = [];
+		// $data = [];
+		$data = new ArrayObject;
 		foreach($mapping as $row) {
 			$foreignKey = $row->foreign_key;
 			$lookupPlugin = $row->lookup_plugin;
@@ -783,25 +784,10 @@ class ImportBehavior extends Behavior {
 					}
 				}
 			} else if ($foreignKey == self::DIRECT_TABLE) {
-				if ($lookupModel == 'Areas') {
-					$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
-				} else if ($lookupModel == 'AreaAdministratives') {
-					$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
-				} else {
-					$order = [$lookupModel.'.order'];
-				}
-				$query = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-				$modelData = $query->find('all')
-					->select(['name', $lookupColumn])
-					->order($order)
-					->toArray()
-					;
-				$data[$sheetName][] = [__('Name'), $translatedCol];
-				if (!empty($modelData)) {
-					foreach($modelData as $row) {
-						$data[$sheetName][] = [$row->name, $row->$lookupColumn];
-					}
-				}
+
+				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, $data];
+				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulateDirectTableData'), 'onImportPopulateDirectTableData', $params);
+
 			}
 		}
 
@@ -853,7 +839,7 @@ class ImportBehavior extends Behavior {
 		echo file_get_contents($excelPath);
 	}
 
-	protected function getExcelLabel($module, $columnName) {
+	public function getExcelLabel($module, $columnName) {
 		$translatedCol = '';
 		if ($module instanceof Table) {
 			$module = $module->alias();
