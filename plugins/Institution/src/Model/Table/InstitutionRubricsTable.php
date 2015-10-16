@@ -30,6 +30,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('Excel', ['excludes' => ['status', 'comment'], 'pages' => ['view']]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -40,6 +41,127 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$sheets[] = [
+			'name' => $this->alias(),
+			'table' => $this,
+			'query' => $this->find(),
+		];
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+		$recordId = $settings['id'];
+
+		// Getting the institution site rubrics
+		$entity = $this->get($recordId);
+
+		// Getting the sections and criterias
+		$RubricSectionTable = $this->RubricTemplates->RubricSections;
+		$rubricSection = $RubricSectionTable
+			->find()
+			->find('order')
+			->contain(['RubricCriterias'])
+			->where([$RubricSectionTable->aliasField('rubric_template_id') => $entity->rubric_template_id])
+			->hydrate(false)
+			->toArray();
+
+		// Get the maxium point of the template options
+		$RubricTemplateOptionTable = $this->RubricTemplates->RubricTemplateOptions;
+		$rubricTemplateOptionQuery = $RubricTemplateOptionTable->find();
+		$maximumPoint = $rubricTemplateOptionQuery
+			->select(['maxpoint' => $rubricTemplateOptionQuery->func()->max($RubricTemplateOptionTable->aliasField('weighting'))])
+			->where([$RubricTemplateOptionTable->aliasField('rubric_template_id') => $entity->rubric_template_id])
+			->first()
+			->toArray();
+		
+		$maximumPoint = $maximumPoint['maxpoint'];
+		
+		$totalPoints = 0;
+		foreach ($rubricSection as $section) {
+			$fields[] = [
+				'key' => 'Rubric.RubricSections',
+				'field' => 'rubric_section_id',
+				'type' => 'section',
+				'label' => $section['name']
+			];
+			$sectionPoint = 0;
+			foreach ($section['rubric_criterias'] as $criteria) {
+				$type = 'string';
+
+				if ($criteria['type'] == 2) {
+					$type = 'criteria';
+					$sectionPoint += $maximumPoint;
+				} elseif ($criteria['type'] == 1) {
+					$type = 'section_break';
+				}
+
+				$fields[] = [
+					'key' => 'Rubric.RubricCriterias',
+					'field' => 'rubric_criteria_id',
+					'type' => $type,
+					'label' => $criteria['name']
+				];
+			}
+
+			$fields[] = [
+				'key' => 'Rubric.SectionSubTotal',
+				'field' => 'section_subtotal',
+				'type' => 'section_points',
+				'label' => __('Sub Total').' ('.$sectionPoint.')',
+				'points' => $sectionPoint
+			];
+
+			$totalPoints += $sectionPoint;
+		}
+
+		$fields[] = [
+			'key' => 'Rubric.TotalPoints',
+			'field' => 'total_points',
+			'type' => 'total_points',
+			'label' => __('Sub Total').' ('.$totalPoints.')',
+			'points' => $totalPoints
+		];
+
+		$fields[] = [
+			'key' => 'Rubric.TotalPercentage',
+			'field' => 'total_percentage',
+			'type' => 'total_percentage',
+			'label' => __('Total').' (%)',
+			'points' => $totalPoints
+		];
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+		$query
+			->contain(['InstitutionRubricAnswers']);
+	}
+
+	private $_totalPoints = 0;
+	private $_sectionPoints = 0;
+
+	public function onExcelRenderRubric(Event $event, Entity $entity, array $attr) {
+
+	}
+
+	private function section($data, $sectionId) {
+		$this->_totalPoints = 0;
+	}
+
+	private function criteria($data, $criteriaId) {
+		// Points for the criteria
+		$points = 0;
+		$this->_sectionPoints += $points;
+		$this->_totalPoints += $points;
+	}
+
+	private function sectionPoints($data, $points=null) {
+		return $this->_sectionPoints;
+	}
+
+	private function totalPoints($data, $points=null) {
+		return $this->_totalPoints;
 	}
 
 	public function onGetCustomRubricSectionsElement(Event $event, $action, $entity, $attr, $options=[]) {
