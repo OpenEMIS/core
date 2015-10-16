@@ -78,7 +78,8 @@ trait MessagesTrait {
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
 			'amount' => 'Amount',
-			'total' => 'Total'
+			'total' => 'Total',
+			'notTransferrable' => 'No other alternative options available to convert records.'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
