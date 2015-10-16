@@ -29,8 +29,10 @@ class WorkflowBehavior extends Behavior {
 	private $model = null;
 	private $currentAction;
 
-	private $initWorkflow = false;
-	private $hasWorkflow = false;
+	private $attachWorkflow = false;	// indicate whether which action require workflow
+	private $hasWorkflow = false;	// indicate whether workflow is setup
+	private $workflowIds = null;
+
 	private $workflowSetup = null;
 	private $workflowRecord = null;
 
@@ -49,17 +51,17 @@ class WorkflowBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		// priority has to be set at 100 so that method(s) in model will be triggered first
-		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 100];
-		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 100];
-		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
-		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 100];
+		// priority has to be set at 1000 so that method(s) in model will be triggered first
+		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 1000];
+		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
+		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
+		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
 		return $events;
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		// To delete from records and transitions table
-		if ($this->initWorkflow) {
+		if ($this->attachWorkflow) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
 			if (!empty($workflowRecord)) {
 				$workflowRecord = $this->WorkflowRecords->get($workflowRecord->id);
@@ -77,13 +79,19 @@ class WorkflowBehavior extends Behavior {
 		$this->controller = $this->_table->controller;
 		$this->model = $this->controller->ControllerAction->model();
 		$this->currentAction = $this->controller->ControllerAction->action();
-		$attachWorkflow = $this->controller->Workflow->attachWorkflow;
+
+		if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
+			$this->attachWorkflow = true;
+			$this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
+		}
 
 		if ($this->currentAction == 'index') {
 			$WorkflowModels = $this->WorkflowModels;
 			$registryAlias = $this->_table->registryAlias();
+
+			// Find from workflows table
 			$results = $this->Workflows
-				->find()
+				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 				->matching('WorkflowModels', function($q) use ($WorkflowModels, $registryAlias) {
 					return $q->where([
 						$WorkflowModels->aliasField('model') => $registryAlias
@@ -93,20 +101,18 @@ class WorkflowBehavior extends Behavior {
 
 			if ($results->isEmpty()) {
 				$this->controller->Alert->warning('Workflows.noWorkflows');
-				$this->controller->Workflow->attachWorkflow = false;
 			} else {
+				$this->workflowIds = $results->toArray();
 				$this->hasWorkflow = true;
+				$this->controller->Workflow->hasWorkflow = $this->hasWorkflow;
 			}
 		}
-
-		if ($attachWorkflow && !is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
-			$this->initWorkflow = true;
-		}
+		// pr('attachWorkflow: ' . $this->attachWorkflow . ' hasWorkflow: ' . $this->hasWorkflow);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// setup workflow
-		if ($this->initWorkflow) {
+		if ($this->attachWorkflow) {
 			$this->workflowRecord = $this->getRecord($this->config('model'), $entity);
 			if (!empty($this->workflowRecord)) {
 				// Workflow Status - extra field
@@ -166,14 +172,16 @@ class WorkflowBehavior extends Behavior {
 				// End
 
 				// Reorder fields
+				$fieldOrder = [];
 				$fields = $this->_table->fields;
-				$fieldOrder = ['workflow_status'];  // Set workflow_status to first
 				foreach ($fields as $fieldKey => $fieldAttr) {
 					if (!in_array($fieldKey, ['workflow_status', 'workflow_transitions'])) {
-						$fieldOrder[] = $fieldKey;
+						$fieldOrder[$fieldAttr['order']] = $fieldKey;
 					}
 				}
-				$fieldOrder[] = 'workflow_transitions';  // Set workflow_transitions to last
+				ksort($fieldOrder);
+				array_unshift($fieldOrder, 'workflow_status');	// Set workflow_status to first
+				$fieldOrder[] = 'workflow_transitions';	// Set workflow_transitions to last
 				$this->_table->ControllerAction->setFieldOrder($fieldOrder);
 				// End
 			} else {
@@ -184,7 +192,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		// Unset edit buttons and add action buttons
-		if ($this->initWorkflow) {
+		if ($this->attachWorkflow) {
 			$isEditable = false;
 
 			if (is_null($this->workflowRecord)) {
@@ -306,7 +314,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		// check line by line, whether to show / hide the action buttons
-		if ($this->initWorkflow) {
+		if ($this->attachWorkflow) {
 			if (!$this->_table->AccessControl->isAdmin()) {
 				$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 
@@ -554,6 +562,23 @@ class WorkflowBehavior extends Behavior {
 		];
 
 		return $modal;
+	}
+
+	public function getWorkflowStepList() {
+		$steps = [];
+
+		$query = $this->WorkflowSteps
+			->find('list');
+
+		if (!empty($this->workflowIds)) {
+			$query->where([
+				$this->WorkflowSteps->aliasField('workflow_id IN') => $this->workflowIds
+			]);
+		}
+
+		$steps = $query->toArray();
+
+		return $steps;
 	}
 
 	public function setNextTransitions(Entity $entity) {

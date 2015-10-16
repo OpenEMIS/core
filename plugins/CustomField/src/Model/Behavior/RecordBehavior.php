@@ -12,10 +12,10 @@ class RecordBehavior extends Behavior {
 	protected $_contain = ['CustomFieldValues', 'CustomTableCells'];
 	protected $_defaultConfig = [
 		'events' => [
-			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
-			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
-			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction',
-			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave'
+			'ControllerAction.Model.view.afterAction'		=> ['callable' => 'viewAfterAction', 'priority' => 100],
+			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
+			'ControllerAction.Model.addEdit.afterAction' 	=> ['callable' => 'addEditAfterAction', 'priority' => 100],
+			'ControllerAction.Model.edit.afterSave' 		=> ['callable' => 'editAfterSave', 'priority' => 100]
 		],
 		'model' => null,
 		'behavior' => null,
