@@ -25,6 +25,7 @@ class ImportStaffTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
