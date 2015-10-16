@@ -129,12 +129,7 @@ class AdvanceSearchBehavior extends Behavior {
 							$tableName = 'area_administratives';
 							$id = $advancedSearch[$key];
 							$AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
-							$world = $AreaAdministrativeTable->find('list')
-								->where([$AreaAdministrativeTable->aliasField('parent_id') => -1])
-								->first();
-							if (!array_key_exists($id, $world)) {
-								$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
-							};
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 					}
 				}
