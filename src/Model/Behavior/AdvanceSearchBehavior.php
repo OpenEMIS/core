@@ -118,7 +118,6 @@ class AdvanceSearchBehavior extends Behavior {
 				if(in_array($key, $areaKeys)){
 					switch ($key) {
 						case 'area_id':
-						case 'address_area_id':
 							$tableName = 'areas';
 							$id = $advancedSearch[$key];
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
@@ -126,9 +125,16 @@ class AdvanceSearchBehavior extends Behavior {
 
 						case 'area_administrative_id':
 						case 'birthplace_area_id':
+						case 'address_area_id':
 							$tableName = 'area_administratives';
 							$id = $advancedSearch[$key];
-							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+							$AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
+							$world = $AreaAdministrativeTable->find('list')
+								->where([$AreaAdministrativeTable->aliasField('parent_id') => -1])
+								->first();
+							if (!array_key_exists($id, $world)) {
+								$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+							};
 							break;
 					}
 				}
