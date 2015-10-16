@@ -24,7 +24,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-			'Model.import.onImportDirectTableData' => 'onImportDirectTableData',
+			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -55,7 +55,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		// $importedUniqueCodes[] = $entity->code;
 	}
 
-	public function onImportDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
 		$session = $this->request->session();
 		if ($session->check('Institution.Institutions.id')) {
 			$institutionId = $session->read('Institution.Institutions.id');
