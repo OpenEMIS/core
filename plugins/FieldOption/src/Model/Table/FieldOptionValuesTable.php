@@ -10,10 +10,20 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Utility\Inflector;
 
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
 	private $fieldOption = null;
+	private $parentFieldOptionList = [
+		'FieldOption.BankBranches' => 	['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
+		'User.ContactTypes' => 			['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
+		'FieldOption.Banks' => 		['behavior' => 'Display'],
+		'FieldOption.Countries' => 	['behavior' => 'Countries']
+	];
+
+	public $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
+	
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -42,19 +52,20 @@ class FieldOptionValuesTable extends AppTable {
 		return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		parent::beforeSave($event, $entity, $options);
+
 		if ($entity->default == 1) {
 			$this->updateAll(['default' => 0], ['field_option_id' => $entity->field_option_id]);
 		}
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('parent_field_option_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
 		$this->ControllerAction->field('editable', ['options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
 		
-
 		$fieldOptions = [];
 		$data = $this->FieldOptions
 			->find()
@@ -75,12 +86,15 @@ class FieldOptionValuesTable extends AppTable {
 
 		$selectedOption = $this->queryString('field_option_id', $fieldOptions);
 		$this->controller->set('selectedOption', $selectedOption);
+
 		$this->fieldOption = $this->FieldOptions->get($selectedOption);
 		$this->fieldOption->name = $this->fieldOption->parent . ' - ' . $this->fieldOption->name;
 
+		$defaultFieldOrder = $this->defaultFieldOrder;
+
 		if ($this->action == 'index') {
 			$toolbarElements = [
-				['name' => 'FieldOption.controls', 'data' => [], 'options' => []]
+				['name' => 'FieldOption.controls', 'data' => [], 'options' => []],
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
 		}
@@ -93,68 +107,40 @@ class FieldOptionValuesTable extends AppTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
-		$this->ControllerAction->setFieldOrder([
-			'field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'
-		]);
+		//try to get the list of values from selected options
+		$currentFieldOption = $this->FieldOptions->get($selectedOption);
+		$currentFieldOptionName = $currentFieldOption->plugin.'.'.$currentFieldOption->code;
+		if (array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
+			$behavior = $this->parentFieldOptionList[$currentFieldOptionName]['behavior'];
+			if (!empty($behavior)) {	
+				$this->addBehavior('FieldOption.'.$behavior, [
+									'fieldOptionName' => $currentFieldOptionName,
+									'parentFieldOptionList' => $this->parentFieldOptionList
+								]);
+			}
+
+			foreach ($defaultFieldOrder as $field) {
+				if (array_key_exists($field, $this->fields) && $field != 'field_option_id' && $field != 'parent_field_option_id') {
+					$this->ControllerAction->field($field, ['visible' => false]);
+				}
+			}
+		}		
+	
+		$this->ControllerAction->setFieldOrder($defaultFieldOrder); 
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
-		$this->ControllerAction->setFieldOrder([
-			'visible', 'default', 'editable', 'name', 'national_code'
-		]);
-
 		$settings['pagination'] = false;
-
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
-
-		$fieldOption = $this->FieldOptions->get($selectedOption);
-		if (!empty($fieldOption->params)) {
-			$params = json_decode($fieldOption->params);
-			$table = TableRegistry::get($params->model);
-
-			$query = $table->find();
-		} else {
-			$query->where([$this->aliasField('field_option_id') => $selectedOption]);
-		}
-
+		$query->where([$this->aliasField('field_option_id') => $selectedOption]);
+			$this->ControllerAction->setFieldOrder([
+				'visible', 'default', 'editable', 'name', 'national_code'
+			]);
 		return $query->find('order');
 	}
 
 	public function getFieldOption() {
 		return $this->fieldOption;
-	}
-
-	public function viewBeforeAction(Event $event) {
-		if (!empty($this->fieldOption->params)) {
-			$params = json_decode($this->fieldOption->params);
-			$table = TableRegistry::get($params->model);
-			return $table;
-		}
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		if (!empty($this->fieldOption->params)) {
-			$params = json_decode($this->fieldOption->params);
-			$table = TableRegistry::get($params->model);
-			foreach ($this->fields as $key => $attr) {
-				$this->fields[$key]['model'] = $table->alias();
-				$this->fields[$key]['className'] = $params->model;
-			}
-			return $table;
-		}
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$fieldOption = $this->fieldOption;
-		if (!empty($fieldOption->params)) {
-			$process = function($model, $id, $options) use ($fieldOption) {
-				$params = json_decode($this->fieldOption->params);
-				$table = TableRegistry::get($params->model);
-				$entity = $table->get($id);
-				return $table->delete($entity);
-			};
-			return $process;
-		}
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -164,30 +150,29 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
-		$codes = ['Providers'];
-
 		$fieldOption = $this->fieldOption;
-		if (in_array($fieldOption->code, $codes)) {
-			$settings['deleteStrategy'] = 'transfer';
-			if (empty($fieldOption->params)) {
-				$model = $fieldOption->code;
-				if (!is_null($fieldOption->plugin)) {
-					$model = $fieldOption->plugin . '.' . $model;
-				}
-				$settings['model'] = $model;
-			} else {
-
-			}
+		$settings['deleteStrategy'] = 'transfer';
+		
+		$model = $fieldOption->code;
+		if (!is_null($fieldOption->plugin)) {
+			$model = $fieldOption->plugin . '.' . $model;
 		}
+		$settings['model'] = $model;
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$fieldOption = $this->fieldOption;
-		$codes = ['Providers'];
-		if (in_array($fieldOption->code, $codes)) {
-			if (empty($fieldOption->params)) {
-				$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
-			}
+	
+		$availFieldOptions = false;
+		if (empty($fieldOption->params)) {
+			$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
+			$availFieldOptions = $this->find()->where([$this->aliasField('field_option_id')	 => $fieldOption->id])->count();
+		}
+	
+		if($availFieldOptions == 1) {
+			$this->Alert->warning('general.notTransferrable');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
 		}
 	}
 
@@ -268,7 +253,7 @@ class FieldOptionValuesTable extends AppTable {
 				}
 			}
 		}
-		// pr($result);
 		return $result;
 	}
+
 }
