@@ -208,4 +208,16 @@ class LabelHelper extends Helper {
 	public function get($code) {
 		return $this->getMessage($code);
 	}
+
+	public function getArabicLetter($columnNumber) {
+		$letters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ'];
+		$columnNumber--;
+        if ($columnNumber > count($letters)) {
+            $columnLetter = $letters[intval(($columnNumber - 1) / count($letters))]  . $letters[(($columnNumber - 1) % count($letters))];
+        } else {
+            $columnLetter = $letters[$columnNumber];
+        }
+        return $columnLetter;
+    }
+
 }

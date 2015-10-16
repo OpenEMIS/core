@@ -1,3 +1,5 @@
+<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
+
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
 		<table class="table table-striped table-hover table-bordered">
@@ -6,7 +8,8 @@
 					<th><?= $this->Label->get('general.visible'); ?></th>
 					<th><?= $this->Label->get('general.name'); ?></th>
 					<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
-					<th><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
+					<th class="center"><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
+					<th><?= $this->Label->get('WorkflowActions.event'); ?></th>
 				</tr>
 			</thead>
 			<?php if (!empty($data->workflow_actions)) : ?>
@@ -28,12 +31,15 @@
 								}
 							?>
 						</td>
-						<td>
+						<td class="center">
 							<?php if ($obj->comment_required == 1) : ?>
 								<i class="fa fa-check"></i>
 							<?php else : ?>
 								<i class="fa fa-close"></i>
 							<?php endif ?>
+						</td>
+						<td>
+							<?= !empty($obj->event_key) ? $eventOptions[$obj->event_key] : ''; ?>
 						</td>
 					</tr>
 					<?php endforeach ?>
@@ -55,11 +61,12 @@
 				<thead>
 					<tr>
 						<?php if ($action == 'edit') : ?>
-							<th><?= $this->Label->get('general.visible'); ?></th>
+							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
 						<th class="center"><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
+						<th><?= $this->Label->get('WorkflowActions.event'); ?></th>
 						<th></th>
 					</tr>
 					<?php if (!empty($data->workflow_actions)) : ?>
@@ -86,6 +93,9 @@
 										</td>
 										<td class="center">
 											<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
+										</td>
+										<td>
+											<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.event_key", ['label' => false, 'options' => $eventOptions]); ?>											
 										</td>
 										<td>
 											<?php if (is_null($obj->action)) : ?>
