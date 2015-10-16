@@ -1,6 +1,9 @@
 -- workflow_models
 DELETE FROM `workflow_models` WHERE `model` = 'Institution.InstitutionSurveys';
 
+-- workflow_steps
+ALTER TABLE `workflow_steps` CHANGE `stage` `stage` INT(1) NULL DEFAULT NULL COMMENT '0 -> Open, 1 -> Closed';
+
 -- staff_leaves
 ALTER TABLE `staff_leaves` CHANGE `status_id` `status_id` INT(11) NOT NULL;
 
