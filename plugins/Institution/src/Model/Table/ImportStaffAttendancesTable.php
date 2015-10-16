@@ -14,8 +14,8 @@ class ImportStaffAttendancesTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        // $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Institutions']);
-	    $this->addBehavior('Import.Import');
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StaffAbsences']);
+	    // $this->addBehavior('Import.Import');
 	    
 	}
 
@@ -24,6 +24,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+			'Model.import.onImportDirectTableData' => 'onImportDirectTableData',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -52,6 +53,56 @@ class ImportStaffAttendancesTable extends AppTable {
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		// $importedUniqueCodes[] = $entity->code;
+	}
+
+	public function onImportDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+		$session = $this->request->session();
+		if ($session->check('Institution.Institutions.id')) {
+			$institutionId = $session->read('Institution.Institutions.id');
+		} else {
+			$institutionId = false;
+		}
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		if ($lookedUpTable->hasField('name')) {
+			$selectFields = ['name', $lookupColumn];
+		} else {
+			$selectFields = ['first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn];
+		}
+
+		$modelData = $lookedUpTable->find('all')
+			->select($selectFields)
+			;
+
+		if ($institutionId) {
+			if ($lookupModel == 'Institutions') {
+				$modelData->where(['id'=>$institutionId]);
+			} else if ($lookupModel == 'Users') {
+				$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+				$activeStaff = $Staff->find('all')
+									->find('byInstitution', ['Institutions.id'=>$institutionId])
+									;
+				$activeStaffIds = new Collection($activeStaff->toArray());
+				$modelData->where([
+					'id IN' => $activeStaffIds->extract('security_user_id')->toArray()
+				]);
+			}
+		}
+		
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			try {
+				$modelData = $modelData->toArray();
+			} catch (\Exception $e) {
+				pr($modelData->sql());die;
+			}
+			foreach($modelData as $row) {
+				$data[$sheetName][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
 	}
 
 }
