@@ -94,6 +94,12 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		return $validator;
 	}
 
+	public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity) {
+		if ($entity->student_absence_reason_id == 0) {
+			return __('Unexcused');
+		}
+	}
+
 	public function onExcelGetAbsences(Event $event, Entity $entity) {
 
 		$startDate = "";
