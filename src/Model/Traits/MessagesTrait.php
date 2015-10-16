@@ -210,6 +210,9 @@ trait MessagesTrait {
 				'failed' => 'The record is not rejected due to errors encountered.'
 			]
 		],
+		'Surveys' => [
+			'noSurveys' => 'No Available Surveys',
+		],
 		'StudentSurveys' => [
 			'noSurveys' => 'No Surveys',
 			'save' => [
@@ -306,7 +309,8 @@ trait MessagesTrait {
 		],
 		'WorkflowActions' => [
 			'next_step' => 'Next Step',
-			'comment_required' => 'Comment Required'
+			'comment_required' => 'Comment Required',
+			'event' => 'Event'
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
@@ -739,12 +743,8 @@ trait MessagesTrait {
 				],
 			],
 			'Leaves' => [
-				'date_from' => [
-					'ruleCompareDate' => 'Date From cannot be later than Date To',
-					'ruleNoOverlap' => 'Leave have been selected for this date. Please choose a different date'
-				],
-				'number_of_days' => [
-					'ruleNotBlank' => 'Please enter the number of days'
+				'date_to' => [
+					'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
 				]
 			],
 			'Extracurriculars' => [
@@ -831,6 +831,13 @@ trait MessagesTrait {
 		'Labels' => [
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
+			]
+		],
+		'Workflow' => [
+			'Workflows' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
 			]
 		]
 	];
