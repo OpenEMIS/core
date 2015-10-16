@@ -36,6 +36,7 @@ class StudentAttendancesTable extends AppTable {
 			'excludes' => ['status', 'education_grade_id'],
 			'pages' => ['index']
 		]);
+		$this->addBehavior('Import.ImportLink');
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
