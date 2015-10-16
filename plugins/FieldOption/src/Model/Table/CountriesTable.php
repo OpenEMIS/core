@@ -9,6 +9,15 @@ class CountriesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('countries');
 		parent::initialize($config);
-		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
+		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'country_id']);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->notEmpty('name', 'Please enter a name.');
+
+		return $validator;
 	}
 }
