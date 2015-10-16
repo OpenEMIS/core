@@ -279,6 +279,28 @@ class AcademicPeriodsTable extends AppTable {
 		return false;
 	}
 
+	public function getWorkingDaysOfWeek() {
+		$weekdays = [
+			0 => 'Sunday',
+			1 => 'Monday',
+			2 => 'Tuesday',
+			3 => 'Wednesday',
+			4 => 'Thursday',
+			5 => 'Friday',
+			6 => 'Saturday',
+		];
+		$ConfigItems = TableRegistry::get('ConfigItems');
+		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+		$daysPerWeek = $ConfigItems->value('days_per_week');
+		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
+		$week = [];
+		for ($i=0; $i<$daysPerWeek; $i++) {
+			$week[] = $weekdays[$firstDayOfWeek++];
+			$firstDayOfWeek = $firstDayOfWeek % 7;
+		}
+		return $week;
+	}
+
 	public function getAttendanceWeeks($id) {
 		// $weekdays = array(
 		// 	0 => 'sunday',
@@ -379,16 +401,17 @@ class AcademicPeriodsTable extends AppTable {
 		$result = [];
 		$stampStartDay = strtotime($startDate);
 		$stampEndDay = strtotime($endDate);
-		$stampToday = strtotime(date('Y-m-d'));
+		// $stampToday = strtotime(date('Y-m-d'));
 		
 		$stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
-		while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
+		// while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
+		while($stampFirstDayOfMonth <= $stampEndDay){
 			$monthString = date('F', $stampFirstDayOfMonth);
 			$monthNumber = date('m', $stampFirstDayOfMonth);
 			$year = date('Y', $stampFirstDayOfMonth);
 			
 			$result[] = [
-				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString.' '.$year],
+				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString],
 				'year' => $year
 			];
 			
@@ -402,7 +425,7 @@ class AcademicPeriodsTable extends AppTable {
 		$days = [];
 		$stampStartDay = strtotime($startDate);
 		$stampEndDay = strtotime($endDate);
-		$stampToday = strtotime(date('Y-m-d'));
+		// $stampToday = strtotime(date('Y-m-d'));
 		
 		$stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
 		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);	
@@ -413,7 +436,8 @@ class AcademicPeriodsTable extends AppTable {
 			$tempStamp = $stampFirstDayOfMonth;
 		}
 		
-		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
+		// while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
+		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth){
 			$weekDay = date('l', $tempStamp);
 			$date = date('Y-m-d', $tempStamp);
 			$day = date('d', $tempStamp);
