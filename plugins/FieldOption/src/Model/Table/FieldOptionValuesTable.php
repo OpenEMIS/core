@@ -15,13 +15,14 @@ use Cake\Utility\Inflector;
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
 	private $fieldOption = null;
-	private $parentFieldOptionList = ['FieldOption.BankBranches' => ['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
-									  'User.ContactTypes' => ['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
-									  'FieldOption.Banks' => ['behavior' => 'Display'],
-									  'FieldOption.Countries' => ['behavior' => 'Countries']
-									  ];
+	private $parentFieldOptionList = [
+		'FieldOption.BankBranches' => 	['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
+		'User.ContactTypes' => 			['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
+		'FieldOption.Banks' => 		['behavior' => 'Display'],
+		'FieldOption.Countries' => 	['behavior' => 'Countries']
+	];
 
-	private $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
+	public $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
 	
 
 	public function initialize(array $config) {
@@ -106,22 +107,20 @@ class FieldOptionValuesTable extends AppTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
-
 		//try to get the list of values from selected options
 		$currentFieldOption = $this->FieldOptions->get($selectedOption);
 		$currentFieldOptionName = $currentFieldOption->plugin.'.'.$currentFieldOption->code;
-		if(array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
+		if (array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
 			$behavior = $this->parentFieldOptionList[$currentFieldOptionName]['behavior'];
-			// pr($behavior);die;
-			if(!empty($behavior)){	
+			if (!empty($behavior)) {	
 				$this->addBehavior('FieldOption.'.$behavior, [
-								  'fieldOptionName' => $currentFieldOptionName,
-								  'parentFieldOptionList' => $this->parentFieldOptionList
-								  ]);
+									'fieldOptionName' => $currentFieldOptionName,
+									'parentFieldOptionList' => $this->parentFieldOptionList
+								]);
 			}
 
-			foreach($defaultFieldOrder as $field){
-				if(array_key_exists($field, $this->fields) && ($field != 'field_option_id')){
+			foreach ($defaultFieldOrder as $field) {
+				if (array_key_exists($field, $this->fields) && $field != 'field_option_id' && $field != 'parent_field_option_id') {
 					$this->ControllerAction->field($field, ['visible' => false]);
 				}
 			}

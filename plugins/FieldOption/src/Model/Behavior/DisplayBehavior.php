@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 class DisplayBehavior extends Behavior {
 	private $excludeFieldList = ['modified_user_id', 'modified', 'created_user_id', 'created'];
 	private $fieldOptionName;
+	protected $defaultFieldOrder;
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -22,6 +23,7 @@ class DisplayBehavior extends Behavior {
 
 	public function initialize(array $config) {
 		$this->fieldOptionName = $config['fieldOptionName'];
+		$this->defaultFieldOrder = $this->_table->defaultFieldOrder;
 	}	
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {	
@@ -49,29 +51,28 @@ class DisplayBehavior extends Behavior {
 		 * ugly hack
 		 */
 		$table->ControllerAction = $this->_table->ControllerAction;
-		// $this->_table->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
 		/**
 		 * ugly hack ends
 		 */
 
 		$columns = $table->schema()->columns();
-		$defaultFieldOrder = [];
 		$fieldOrder = 1000;
 		$fieldOrderExcluded = 9999;
 		foreach ($columns as $key => $attr) {
 			$this->_table->ControllerAction->field($attr, ['model' => $table->alias()]);
-			$defaultFieldOrder[] = $attr;
+			$this->defaultFieldOrder[] = $attr;
 			
 			if(!in_array($attr, $this->excludeFieldList)) {
-				$this->_table->ControllerAction->field($attr, ['visible' => true, 'order' => $fieldOrder, 'model' => $table->alias(), 'className' => $this->fieldOptionName]);
+				$this->_table->ControllerAction->field($attr, ['visible' => true, 
+					'order' => $fieldOrder, 
+					'model' => $table->alias(), 'className' => $this->fieldOptionName]);
 				$fieldOrder++;
 			} else {
 				$this->_table->ControllerAction->field($attr, ['visible' => ['index' => false, 'edit' => false, 'add' => false, 'view' => true], 'order' => $fieldOrderExcluded, 'model' => $table->alias(), 'className' => $this->fieldOptionName]);
 				$fieldOrderExcluded++;
 			}
-		}
-			
-		$this->_table->ControllerAction->setFieldOrder($defaultFieldOrder); 
+		}		
+		$this->_table->ControllerAction->setFieldOrder($this->defaultFieldOrder); 
 	}
 
 }

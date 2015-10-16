@@ -98,20 +98,24 @@ class FilterBehavior extends DisplayBehavior {
 	
 		if (!empty($this->parentFieldOptionInfo['foreignKey'])) {
 			$model = $this->_table->ControllerAction->getModel($this->parentFieldOptionInfo['parentModel']);
+
+			/**
+			 * assign $table's associations to $this->_table, which is the FieldOptionValues
+			 */
 			$this->_table->belongsTo($model['model'], ['className' => $this->parentFieldOptionInfo['parentModel'], 'foreignKey' => $this->parentFieldOptionInfo['foreignKey']]);
-			$this->_table->ControllerAction->field($this->parentFieldOptionInfo['foreignKey'], 
-														['type' => 'readonly', 
+			/**
+			 * end assignment
+			 */
+
+			$this->_table->ControllerAction->field($this->parentFieldOptionInfo['foreignKey'], [
+														'type' => 'readonly', 
 														'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
 														'model' => $table->alias(), 
 														'value' => $selectedParentFieldOption,
 														'className' => $this->fieldOptionName, 
 														'attr' => ['value' => $selectedParentFieldOptionValue],
-														'order' => -1
-														// 'order' => 0
-														 ]);
-			// pr($this->_table->fields);die;
-			// $this->_table->ControllerAction->setFieldOrder($this->parentFieldOptionInfo['foreignKey']); 
-			// $this->_table->ControllerAction->setFieldOrder($this->_table->fields); 
+														'order' => array_search('parent_field_option_id', $this->defaultFieldOrder),
+													]);
 		}
 		
 	}
@@ -126,9 +130,9 @@ class FilterBehavior extends DisplayBehavior {
 		$foreignKey = $this->parentFieldOptionList[$this->fieldOptionName]['foreignKey'];
 		
 		if(!empty($foreignKey)) {
+
 			$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
 			$availFieldOptions = $table->find()->where([$foreignKey => $selectedParentFieldOption])->count();
-
 			$query->where([$foreignKey => $selectedParentFieldOption]);
 
 		} else {
