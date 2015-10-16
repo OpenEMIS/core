@@ -1,4 +1,4 @@
-/* BREADCRUMB v.1.0.0 */
+/* BREADCRUMB v.1.0.1 */
 
 .breadcrumb {
     clear: both;
@@ -23,29 +23,39 @@
 }
 
 .panel-breadcrumb i {
-    color: #6B6B6B;
-}
-
-.panel-breadcrumb i:hover {
     color: #999;
 }
 
-.panel-breadcrumb li a {
+.panel-breadcrumb i:hover {
     color: #6B6B6B;
+}
+
+.panel-breadcrumb li,
+.treemap-breadcrumb li {
+    margin: 0 !important;
+}
+
+.panel-breadcrumb li a {
+    color: #999;
     font-weight: normal;
 }
 
 .breadcrumb-active,
 .panel-breadcrumb a:hover,
 .treemap-breadcrumb li a:hover {
-    color: #999;
+    color: #6B6B6B;
     font-weight: normal;
+    text-decoration: none;
 }
 
 .treemap-breadcrumb {
     background: none;
     margin: 0;
-    padding: 5px 10px;
+    padding: 14px 10px;
+    height: 40px;
+    font-weight: normal;
+    font-size: 12px;
+    vertical-align: middle;
 }
 
 .treemap-breadcrumb li a,

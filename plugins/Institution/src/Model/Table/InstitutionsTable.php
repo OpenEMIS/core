@@ -36,24 +36,22 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSitePositions', 			['className' => 'Institution.InstitutionSitePositions', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteProgrammes', 		['className' => 'Institution.InstitutionSiteProgrammes', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteShifts', 			['className' => 'Institution.InstitutionSiteShifts', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteSections', 			['className' => 'Institution.InstitutionSiteSections', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSiteClasses', 			['className' => 'Institution.InstitutionSiteClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('InstitutionSiteStaff', 				['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true]);
-		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
+		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'foreignKey' => 'institution_id']);
 		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences', 'dependent' => true]);
 
 		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'foreignKey' => 'institution_id']);
-		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true]);
+		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'foreignKey' => 'institution_id']);
 		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
 
 		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees', 'dependent' => true]);
+		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true, 'foreignKey' => 'institution_id']);
 
-		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades', 'dependent' => true]);
 		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
 		
 		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'foreignKey' => 'institution_id', 'dependent' => true]);
@@ -85,25 +83,12 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
 
 
 	}
-
-	public function onExcelGenerate(Event $event, $writer, $settings) {
-		// pr($settings);
-		// $generate = function() { pr('dsa'); };
-		// return $generate;
-	}
-
-	public function onExcelBeforeQuery(Event $event, Query $query) {
-		// pr($this->Session->read($this->aliasField('id')));die;
-		// $query->where(['Institutions.id' => 2]);
-	}
-
-	// public function onExcelGetLabel(Event $event, $column) {
-	// 	return 'asd';
-	// }
 
 	public function validationDefault(Validator $validator) {
 		$validator
@@ -192,6 +177,14 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
+
+		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
+		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
+		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => __('Area')]);
+		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
+		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
+
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
@@ -249,16 +242,24 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		if ($this->action == 'index') {
-			$institutionRecords = $this->find();
+			$institutionCount = $this->find();
+			$conditions = [];
 
-			// Total Institutions: number
-			$institutionCount = $institutionRecords
-				->count();
+			if (! $this->AccessControl->isAdmin()) {
+
+				$institutionIds = $this->AccessControl->getInstitutionsByUser();
+
+				// Total Institutions: number
+				$institutionCount = $institutionCount
+					->where([$this->aliasField('id').' IN' => $institutionIds]);
+
+				$conditions['id IN'] = $institutionIds;
+			}
 
 			$models = [
-				['InstitutionSiteTypes', 'institution_site_type_id', 'Type'],
-				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector'],
-				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality'],
+				['InstitutionSiteTypes', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
+				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
+				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
 			];
 
 			foreach ($models as $key => $model) {
@@ -270,7 +271,7 @@ class InstitutionsTable extends AppTable  {
 	            'name' => $indexDashboard,
 	            'data' => [ 
 	            	'model' => 'institutions',
-	            	'modelCount' => $institutionCount,
+	            	'modelCount' => $institutionCount->count(),
 	            	'modelArray' => $institutionSiteArray,
 	            ],
 	            'options' => [],
@@ -292,8 +293,9 @@ class InstitutionsTable extends AppTable  {
 			$params['key'] = __($key);
 
 			foreach ($conditions as $key => $value) {
-				$_conditions[$modelName.'.'.$key] = $value;
+				$_conditions[$this->aliasField($key)] = $value;
 			}
+
 			$institutionRecords = $this->find();
 			
 			$selectString = $modelName.'.name';
@@ -304,6 +306,7 @@ class InstitutionsTable extends AppTable  {
 					'name' => $selectString
 				])
 				->group($modelId)
+				->where($_conditions)
 				->toArray();
 
 			// Creating the data set		
@@ -366,16 +369,16 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'area_id' && $this->action == 'index') {
-			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
-			$areaLevel = $ConfigItems->value('institution_area_level_id');
+			if ($field == 'area_id' && $this->action == 'index') {
+				// Getting the system value for the area
+				$ConfigItems = TableRegistry::get('ConfigItems');
+				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
-			$AreaTable = TableRegistry::get('Area.AreaLevels');
-			return $AreaTable->get($areaLevel)->name;
-		} else {
-			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-		}
+				$AreaTable = TableRegistry::get('Area.AreaLevels');
+				return $AreaTable->get($areaLevel)->name;
+			} else {
+				return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+			}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -426,14 +429,45 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
+			'information_section',
 			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
 			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
 			
+			'location_section',
 			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
 
+			'area_section',
 			'area_id', 'area_administrative_id',
 
-			'contact_person', 'telephone', 'fax', 'email', 'website'
+			'contact_section',
+			'contact_person', 'telephone', 'fax', 'email', 'website',
+
+			'map_section',
+			'map',
+
+		]);
+	}
+
+
+/******************************************************************************************************************
+**
+** addEdit action methods
+**
+******************************************************************************************************************/
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'information_section',
+			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
+			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
+			
+			'location_section',
+			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
+
+			'area_section',
+			'area_id', 'area_administrative_id',
+
+			'contact_section',
+			'contact_person', 'telephone', 'fax', 'email', 'website',
 		]);
 	}
 
