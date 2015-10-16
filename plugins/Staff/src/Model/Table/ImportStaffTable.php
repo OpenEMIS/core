@@ -16,7 +16,7 @@ class ImportStaffTable extends AppTable {
         $this->addBehavior('Import.Import', ['model'=>'Staff']);
 	    $this->addBehavior('Import.ImportUser', ['model'=>'Staff']);
 
-	    // register the target table once
+	    // register the target table once 
 	    $this->Staff = TableRegistry::get('Staff.Staff');
 	}
 
