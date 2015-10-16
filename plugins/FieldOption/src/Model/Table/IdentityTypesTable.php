@@ -9,7 +9,7 @@ class IdentityTypesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
 		
-		$this->hasMany('Identities', ['className' => 'User.Identities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOptions']);
 	}
 }

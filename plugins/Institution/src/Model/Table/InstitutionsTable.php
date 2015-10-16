@@ -21,13 +21,16 @@ class InstitutionsTable extends AppTable  {
 		/**
 		 * fieldOption tables
 		 */
-		$this->belongsTo('InstitutionSiteLocalities', 		['className' => 'Institution.Localities']);
-		$this->belongsTo('InstitutionSiteTypes', 			['className' => 'Institution.Types']);
-		$this->belongsTo('InstitutionSiteOwnerships', 		['className' => 'Institution.Ownerships']);
-		$this->belongsTo('InstitutionSiteStatuses', 		['className' => 'Institution.Statuses']);
-		$this->belongsTo('InstitutionSiteSectors', 			['className' => 'Institution.Sectors']);
+		$this->belongsTo('Localities', 						['className' => 'Institution.Localities', 'foreignKey' => 'institution_site_locality_id']);
+		$this->belongsTo('Types', 							['className' => 'Institution.Types', 'foreignKey' => 'institution_site_type_id']);
+		$this->belongsTo('Ownerships',				 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_site_ownership_id']);
+		$this->belongsTo('Statuses', 						['className' => 'Institution.Statuses', 'foreignKey' => 'institution_site_status_id']);
+		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_site_sector_id']);
 		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
-		$this->belongsTo('InstitutionSiteGenders', 			['className' => 'Institution.Genders']);
+		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_site_gender_id']);
+		/**
+		 * end fieldOption tables
+		 */
 
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
@@ -272,9 +275,9 @@ class InstitutionsTable extends AppTable  {
 			}
 
 			$models = [
-				['InstitutionSiteTypes', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
-				['InstitutionSiteSectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
-				['InstitutionSiteLocalities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
+				['Types', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
+				['Sectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
+				['Localities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
 			];
 
 			foreach ($models as $key => $model) {
@@ -399,10 +402,10 @@ class InstitutionsTable extends AppTable  {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		// the query options are setup so that Security.InstitutionBehavior can reuse it
 		$options['query'] = [
-			'contain' => ['InstitutionSiteTypes'],
+			'contain' => ['Types'],
 			'select' => [
 				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-				$this->aliasField('area_id'), 'Areas.name', 'InstitutionSiteTypes.name'
+				$this->aliasField('area_id'), 'Areas.name', 'Types.name'
 			],
 			'join' => [
 				[
