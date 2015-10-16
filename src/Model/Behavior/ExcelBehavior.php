@@ -260,14 +260,12 @@ class ExcelBehavior extends Behavior {
 		$excludedTypes = ['binary'];
 		$columns = array_diff($columns, $excludes);
 
-		$this->onEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel');
-
 		foreach ($columns as $col) {
 			$field = $schema->column($col);
 			if (!in_array($field['type'], $excludedTypes)) {
 				$label = $table->aliasField($col);
 
-				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), null, [$module, $col, $language], true);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
 				if (strlen($event->result)) {
 					$label = $event->result;
 				}
@@ -290,7 +288,7 @@ class ExcelBehavior extends Behavior {
 				$module = $key[0];
 
 				// Redispatch get label
-				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), null, [$module, $field['field'], $language], true);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $field['field'], $language], true);
 				if (strlen($event->result)) {
 					$field['label'] = $event->result;
 				}
