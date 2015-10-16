@@ -159,7 +159,7 @@ class StudentAttendancesTable extends AppTable {
 				])
 			->toArray();
 		$absenceCheckList = [];
-		foreach ($absenceData AS $absenceUnit) {
+		foreach ($absenceData as $absenceUnit) {
 			$studentId = $absenceUnit['security_user_id'];
 			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
 
