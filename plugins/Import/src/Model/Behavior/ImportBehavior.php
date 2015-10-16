@@ -22,12 +22,6 @@ use ControllerAction\Model\Traits\EventTrait;
  * Functions that require ControllerActionComponent events, CakePHP events,
  * and are controller actions functions, resides here.
  * Contains logics to import records through excel sheet.
- * Supported models:
- * #1 Institutions
- * #2 Students
- * #3 Staff 
- * Refer to @link(PHPOE-2083, https://kordit.atlassian.net/browse/PHPOE-2083) for the latest import_mapping table schema
- *
  * This behavior could not be attached to a table file that loads ExportBehavior as well. Currently, there is a conflict
  * since both ImportBehavior and ExcelBehavior uses EventTrait.
  *
@@ -73,11 +67,12 @@ class ImportBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'max_rows' => 3000,
+		'max_rows' => 5000,
 		'max_size' => 524288
 	];
 	protected $rootFolder = 'import';
 	private $_fileTypesMap = [
+		// 'csv' 	=> 'text/plain',
 		// 'csv' 	=> 'text/csv',
 		'xls' 	=> 'application/vnd.ms-excel',
 		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -97,6 +92,11 @@ class ImportBehavior extends Behavior {
 			$allowableFileTypes = array_keys($this->_fileTypesMap);
 		}
 		$this->config('allowable_file_types', $allowableFileTypes);
+
+		// testing using file size limit set in php.ini settings
+		// $this->config('max_size', $this->system_memory_limit());
+		// $this->config('max_rows', 50000);
+		//
 
 		$plugin = $this->config('plugin');
 		if (empty($plugin)) {
@@ -143,7 +143,8 @@ class ImportBehavior extends Behavior {
 				unset($toolbarButtons['back']['url'][0]);
 				break;
 
-			// 'sample' can be removed once https://kordit.atlassian.net/browse/PHPOE-2186 has been merged to tst
+			// 'sample' can be removed once https://kordit.atlassian.net/browse/PHPSG-110 has been merged to tst/prod.
+			// PHPOE specific issue for this design task is https://kordit.atlassian.net/browse/PHPOE-2186
 			case 'results':case 'sample':
 				$toolbarButtons['back']['url']['action'] = 'index';
 				unset($toolbarButtons['back']['url'][0]);
@@ -168,7 +169,6 @@ class ImportBehavior extends Behavior {
 		$this->_table->ControllerAction->field('description', ['visible' => false]);
 		$this->_table->ControllerAction->field('lookup_plugin', ['visible' => false]);
 		$this->_table->ControllerAction->field('lookup_model', ['visible' => false]);
-		$this->_table->ControllerAction->field('lookup_alias', ['visible' => false]);
 		$this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
 		$this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
 
@@ -247,11 +247,11 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		/**
-		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 90 seconds
+		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 60 seconds
 		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
-		ini_set('max_execution_time', 90);
+		ini_set('max_execution_time', 60);
 		/**
 		 */
 
@@ -734,9 +734,8 @@ class ImportBehavior extends Behavior {
 			if ($mappingRow->foreign_key == self::FIELD_OPTION) {
 				$lookupPlugin = $mappingRow->lookup_plugin;
 				$lookupModel = $mappingRow->lookup_model;
-				$lookupAlias = $mappingRow->lookup_alias;
 				$lookupColumn = $mappingRow->lookup_column;
-				$lookupModelObj = TableRegistry::get($lookupAlias, ['className' => $lookupPlugin . '.' . $lookupModel]);
+				$lookupModelObj = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '.' . $lookupModel]);
 				$lookupValues = $lookupModelObj->getList()->toArray();
 				$lookup[$key] = [];
 				foreach ($lookupValues as $valId => $valObj) {
@@ -763,7 +762,6 @@ class ImportBehavior extends Behavior {
 			$foreignKey = $row->foreign_key;
 			$lookupPlugin = $row->lookup_plugin;
 			$lookupModel = $row->lookup_model;
-			$lookupAlias = $row->lookup_alias;
 			$lookupColumn = $row->lookup_column;
 			
 			$translatedCol = $this->getExcelLabel($model, $lookupColumn);
@@ -772,10 +770,10 @@ class ImportBehavior extends Behavior {
 			$data[$sheetName] = [];
 			$modelData = [];
 			if ($foreignKey == self::FIELD_OPTION) {
-				if (TableRegistry::exists($lookupAlias)) {
-					$relatedModel = TableRegistry::get($lookupAlias);
+				if (TableRegistry::exists($lookupModel)) {
+					$relatedModel = TableRegistry::get($lookupModel);
 				} else {
-					$relatedModel = TableRegistry::get($lookupAlias, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
+					$relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
 				}
 				$modelData = $relatedModel->getList()->toArray();
 				$data[$sheetName][] = [__('Name'), $translatedCol];
