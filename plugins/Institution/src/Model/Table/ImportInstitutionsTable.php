@@ -25,6 +25,7 @@ class ImportInstitutionsTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
+			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -51,6 +52,41 @@ class ImportInstitutionsTable extends AppTable {
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->code;
+	}
+
+	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $lookupColumn, ArrayObject $data) {
+		if ($lookupModel == 'Areas') {
+			$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
+		} else if ($lookupModel == 'AreaAdministratives') {
+			$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
+		} else {
+			$order = [$lookupModel.'.order'];
+		}
+
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$selectFields = ['name', $lookupColumn];
+		$modelData = $lookedUpTable->find('all')
+			->select($selectFields)
+			;
+		if ($lookedUpTable->hasField('order')) {
+			$modelData->order($order);
+		}
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			try {
+				$modelData = $modelData->toArray();
+			} catch (\Exception $e) {
+				pr($modelData->sql());die;
+			}
+			foreach($modelData as $row) {
+				$data[$sheetName][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
 	}
 
 }
