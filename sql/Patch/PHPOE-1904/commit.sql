@@ -1,4 +1,4 @@
-INSERT INTO `db_patches` VALUES ('PHPOE-1904');
+INSERT INTO `db_patches` VALUES ('PHPOE-1904', NOW());
 
 DELETE from field_options where code = 'SanitationGenders' and name = 'Sanitation Gender' and parent = 'Infrastructure';
 DELETE from field_options where code = 'StaffPositionSteps' and name = 'Steps' and parent = 'Position';

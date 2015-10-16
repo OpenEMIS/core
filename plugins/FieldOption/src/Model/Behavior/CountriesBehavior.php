@@ -55,10 +55,11 @@ class CountriesBehavior extends DisplayBehavior {
 
 	public function displayAssociatedFields($table) {
 		/**
-		 * ugly hack
+		 * assign $table's associations to $this->_table, which is the FieldOptionValues
 		 */
 		$table->ControllerAction = $this->_table->ControllerAction;
-		$associations = ['security_users'];
+		// $associations = ['security_users'];
+		$associations = [];
 		foreach ($table->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') {
 				if (!in_array($assoc->table(), $associations)) {
@@ -67,8 +68,9 @@ class CountriesBehavior extends DisplayBehavior {
 			}
 		}
 		/**
-		 * ugly hack ends
+		 * end assignment
 		 */
+		
 		$schema = $table->schema();
 		$columns = $schema->columns();
 		foreach ($columns as $key => $attr) {
@@ -89,17 +91,16 @@ class CountriesBehavior extends DisplayBehavior {
 				 		break;
 				 	
 				 	case 'edit':case 'add':
-				 		$options = [0 => '-- Select Option --']+$options;
+				 		$options = [0 => __('-- Select Option --')]+$options;
 				 		break;
 				 	
 				 	default:
-				 		$options = [0 => '-- Select Option --']+$options;
+				 		$options = [0 => __('-- Select Option --')]+$options;
 				 		break;
 				}
 				$this->_table->ControllerAction->field($attr, ['type' => 'select', 
 															   'options' => $options, 
 															   'visible' => true, 
-															   'order' => $key,
 															   'model' => $table->alias(),
 															   'className' => $this->fieldOptionName
 															   ]);
