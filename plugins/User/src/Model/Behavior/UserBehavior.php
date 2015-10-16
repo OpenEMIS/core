@@ -52,6 +52,9 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_staff']['type'] = 'hidden';
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
 
+		$this->_table->fields['username']['visible'] = false;
+		$this->_table->fields['last_login']['visible'] = false;
+
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->fields['photo_name']['visible'] = false;
@@ -141,6 +144,22 @@ class UserBehavior extends Behavior {
 			$value = $entity->_matchingData['Users']->openemis_no;
 		} else if ($entity->has('user')) {
 			$value = $entity->user->openemis_no;
+			$action = $this->_table->ControllerAction->action();
+			$model = $this->_table->alias();
+
+			$pluginName = '';
+			if ($model == 'Students') {
+				$pluginName = 'Student';
+			} else if ($model == 'Staff') {
+				$pluginName = 'Staff';
+			} else if ($model == 'Guardians') {
+				$pluginName = 'Guardian';
+			}
+
+			if (($action == 'view') ) {
+				$url = ['plugin' => $pluginName, 'controller' => $model, 'action' => $action, $entity->user->id];
+				$value = $event->subject()->Html->link($value, $url);
+			}
 		}
 		return $value;
 	}

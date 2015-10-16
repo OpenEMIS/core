@@ -7,6 +7,9 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
@@ -20,12 +23,16 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('InstitutionSiteSectors', 			['className' => 'Institution.Sectors']);
 		$this->belongsTo('InstitutionSiteProviders', 		['className' => 'Institution.Providers']);
 		$this->belongsTo('InstitutionSiteGenders', 			['className' => 'Institution.Genders']);
-
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
+		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'institution_site_type_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.CustomFieldList', [
+			'model' => 'Institution.Institutions',
+			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
+		]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -41,16 +48,5 @@ class InstitutionsTable extends AppTable  {
 
 	public function onGetReportName(Event $event, ArrayObject $data) {
 		return __('Overview');
-	}
-
-	public function onExcelGenerate(Event $event, $writer, $settings) {
-		// pr($settings);
-		// $generate = function() { pr('dsa'); };
-		// return $generate;
-	}
-
-	public function onExcelBeforeQuery(Event $event, Query $query) {
-		// pr($this->Session->read($this->aliasField('id')));die;
-		// $query->where(['Institutions.id' => 2]);
 	}
 }

@@ -10,11 +10,11 @@ class EducationsController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Systems' => ['className' => 'Education.EducationSystems'],
-			'Levels' => ['className' => 'Education.EducationLevels'],
-			'Cycles' => ['className' => 'Education.EducationCycles'],
-			'Programmes' => ['className' => 'Education.EducationProgrammes'],
-			'Grades' => ['className' => 'Education.EducationGrades'],
+			'Systems' => ['className' => 'Education.EducationSystems', 'options' => ['deleteStrategy' => 'transfer']],
+			'Levels' => ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'transfer']],
+			'Cycles' => ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'transfer']],
+			'Programmes' => ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'transfer']],
+			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'transfer']],
 			'Subjects' => ['className' => 'Education.EducationSubjects'],
 			'Certifications' => ['className' => 'Education.EducationCertifications'],
 			'FieldOfStudies' => ['className' => 'Education.EducationFieldOfStudies'],
