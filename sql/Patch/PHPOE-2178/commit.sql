@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-2178');
+INSERT INTO `db_patches` VALUES ('PHPOE-2178', NOW());
 
 -- backup institution site data
 CREATE TABLE `z_2178_Institution_sites` (
@@ -17,14 +17,15 @@ FROM `institution_sites`;
 UPDATE `institution_sites`
 SET `institution_sites`.`date_opened` = 
 	(
-		SELECT `academic_periods`.`start_date` 
-        FROM `academic_periods` 
-        WHERE `current` = 1
+		SELECT MIN(`academic_periods`.`start_date`)
+    FROM `academic_periods`
+    WHERE NOT `academic_periods`.`start_date` = '0000-00-00'
 	)
 , `institution_sites`.`year_opened` =
 	(
-		SELECT `academic_periods`.`start_year` 
-        FROM `academic_periods` 
-        WHERE `current` = 1
-    )
+		SELECT `academic_periods`.`start_year`
+    FROM `academic_periods` 
+    WHERE NOT `academic_periods`.`start_year` = 0
+    HAVING MIN(`academic_periods`.`start_date`)
+  )
 WHERE `institution_sites`.`date_opened` = '0000-00-00';
