@@ -57,26 +57,11 @@ class InstitutionRubricsTable extends AppTable {
 		// Getting the institution site rubrics
 		$entity = $this->get($recordId);
 
-		// Getting the sections and criterias
-		$RubricSectionTable = $this->RubricTemplates->RubricSections;
-		$rubricSection = $RubricSectionTable
-			->find()
-			->find('order')
-			->contain(['RubricCriterias'])
-			->where([$RubricSectionTable->aliasField('rubric_template_id') => $entity->rubric_template_id])
-			->hydrate(false)
-			->toArray();
-
-		// Get the maxium point of the template options
-		$RubricTemplateOptionTable = $this->RubricTemplates->RubricTemplateOptions;
-		$rubricTemplateOptionQuery = $RubricTemplateOptionTable->find();
-		$maximumPoint = $rubricTemplateOptionQuery
-			->select(['maxpoint' => $rubricTemplateOptionQuery->func()->max($RubricTemplateOptionTable->aliasField('weighting'))])
-			->where([$RubricTemplateOptionTable->aliasField('rubric_template_id') => $entity->rubric_template_id])
-			->first()
-			->toArray();
+		// Getting the section and the critieras
+		$rubricSection = $this->getRubricTemplateSectionCriteria($entity->rubric_template_id);
 		
-		$maximumPoint = $maximumPoint['maxpoint'];
+		// Get Maxiumum point for the template
+		$maximumPoint = $this->getRubricTemplateOptionMaxWeighting($entity->rubric_template_id);
 		
 		$totalPoints = 0;
 		foreach ($rubricSection as $section) {
@@ -112,7 +97,6 @@ class InstitutionRubricsTable extends AppTable {
 				'label' => __('Sub Total').' ('.$sectionPoint.')',
 				'points' => $sectionPoint
 			];
-
 			$totalPoints += $sectionPoint;
 		}
 
@@ -131,6 +115,30 @@ class InstitutionRubricsTable extends AppTable {
 			'label' => __('Total').' (%)',
 			'points' => $totalPoints
 		];
+	}
+
+	// Function to get the rubric template section and criteria
+	public function getRubricTemplateSectionCriteria($templateId) {
+		$RubricSectionTable = $this->RubricTemplates->RubricSections;
+		$rubricSection = $RubricSectionTable
+			->find()
+			->find('order')
+			->contain(['RubricCriterias'])
+			->where([$RubricSectionTable->aliasField('rubric_template_id') => $templateId])
+			->hydrate(false)
+			->toArray();
+		return $templateId;
+	}
+
+	// Function to get the rubric template's maxmium weighting for each criteria
+	public function getRubricTemplateOptionMaxWeighting($templateId) {
+		$RubricTemplateOptionTable = $this->RubricTemplates->RubricTemplateOptions;
+		$rubricTemplateOptionQuery = $RubricTemplateOptionTable->find();
+		$maximumPoint = $rubricTemplateOptionQuery
+			->select(['maxpoint' => $rubricTemplateOptionQuery->func()->max($RubricTemplateOptionTable->aliasField('weighting'))])
+			->where([$RubricTemplateOptionTable->aliasField('rubric_template_id') => $entity->rubric_template_id])
+			->first();
+		return $maximumPoint['maxpoint'];
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
