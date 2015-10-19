@@ -26,6 +26,7 @@ class ImportInstitutionsTable extends AppTable {
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
+			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -54,7 +55,7 @@ class ImportInstitutionsTable extends AppTable {
 		$importedUniqueCodes[] = $entity->code;
 	}
 
-	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $lookupColumn, ArrayObject $data) {
+	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
 		if ($lookupModel == 'Areas') {
 			$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 		} else if ($lookupModel == 'AreaAdministratives') {
@@ -75,12 +76,7 @@ class ImportInstitutionsTable extends AppTable {
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
-			try {
-				$modelData = $modelData->toArray();
-			} catch (\Exception $e) {
-				pr($modelData->sql());die;
-			}
-			foreach($modelData as $row) {
+			foreach($modelData->toArray() as $row) {
 				$data[$sheetName][] = [
 					$row->name,
 					$row->$lookupColumn
@@ -89,4 +85,7 @@ class ImportInstitutionsTable extends AppTable {
 		}
 	}
 
+	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+		return true;
+	}
 }
