@@ -8,5 +8,6 @@ class StaffPositionTitlesTable extends AppTable {
 	public function initialize(array $config) {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
+        $this->hasMany('Titles', ['className' => 'Institution.InstitutionSitePositions', 'foreignKey' => 'staff_position_title_id']);
 	}
 }
