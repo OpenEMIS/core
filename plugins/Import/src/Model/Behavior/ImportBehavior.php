@@ -432,6 +432,9 @@ class ImportBehavior extends Behavior {
 				}
 				
 				$writer->writeToFile($excelPath);
+				$downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
+				$downloadUrl[] = 'excelFile';
+				$excelFile = $downloadUrl;
 			} else {
 				$excelFile = null;
 			}
