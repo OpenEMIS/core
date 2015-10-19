@@ -237,17 +237,53 @@ class WorkflowsTable extends AppTable {
 		return $value;
     }
 
+    public function onGetFilters(Event $event, Entity $entity) {
+    	$value = '';
+    	$filter = $this->WorkflowModels->get($entity->workflow_model_id)->filter;
+    	if (!empty($filter)) {
+			// pr($entity->workflow_model_id);
+			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+			$filterModel = TableRegistry::get($filter);
+    		$filterResults = $WorkflowsFilters
+    			->find()
+    			->select([
+    				$filterModel->aliasField('id'),
+    				$filterModel->aliasField('name'),
+    			])
+    			->innerJoin(
+    				[$filterModel->alias() => $filterModel->table()],
+    				[
+    					$filterModel->aliasField('id = ') . $WorkflowsFilters->aliasField('filter_id')
+    				]
+    			)
+    			->where([
+    				$WorkflowsFilters->aliasField('workflow_id') => $entity->id
+    			])
+    			->toArray();
+
+    		$list = [];
+    		if (!empty($filterResults)) {
+	    		foreach ($filterResults as $obj) {
+					$list[] = $obj[$filterModel->alias()]['name'];
+				}
+			}
+			$value = implode(', ', $list);
+    	}
+
+    	return $value;
+    }
+
 	public function indexBeforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
-            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
+            ['name' => 'Workflow.Workflows/controls', 'data' => [], 'options' => []]
         ];
 		$this->controller->set('toolbarElements', $toolbarElements);
 		// End
 
 		$this->ControllerAction->field('apply_to_all');
 		$this->ControllerAction->field('filters', [
-			'type' => 'chosenSelect'
+			'type' => 'select'
 		]);
 
 		$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
@@ -271,7 +307,7 @@ class WorkflowsTable extends AppTable {
 
 		$this->ControllerAction->field('apply_to_all');
 		$this->ControllerAction->field('filters', [
-			'type' => 'chosenSelect'
+			'type' => 'select'
 		]);
 	}
 
