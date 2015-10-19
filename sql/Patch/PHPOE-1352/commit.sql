@@ -3,7 +3,7 @@ INSERT INTO `db_patches` VALUES ('PHPOE-1352');
 
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `filter`, `created_user_id`, `created`) VALUES
-('Institutions > Survey > Forms', 'Institution.InstitutionSurveys', NULL, 1, '0000-00-00 00:00:00');
+('Institutions > Survey > Forms', 'Institution.InstitutionSurveys', 'Survey.SurveyForms', 1, '0000-00-00 00:00:00');
 
 -- workflow_steps
 ALTER TABLE `workflow_steps` CHANGE `stage` `stage` INT(1) NULL DEFAULT NULL COMMENT '0 -> Open, 1 -> Pending For Approval, 2 -> Closed';

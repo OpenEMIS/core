@@ -6,6 +6,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
@@ -52,7 +53,10 @@ class WorkflowBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		// priority has to be set at 1000 so that method(s) in model will be triggered first
+		// priority of indexBeforeAction and indexBeforePaginate is set to 1 for it to run first before the event in model
 		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 1000];
+		$events['ControllerAction.Model.index.beforeAction'] 	= ['callable' => 'indexBeforeAction', 'priority' => 1];
+		$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
 		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
@@ -84,30 +88,100 @@ class WorkflowBehavior extends Behavior {
 			$this->attachWorkflow = true;
 			$this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
 		}
+	}
 
-		if ($this->currentAction == 'index') {
-			$WorkflowModels = $this->WorkflowModels;
-			$registryAlias = $this->_table->registryAlias();
+	public function indexBeforeAction(Event $event) {
+		$WorkflowModels = $this->WorkflowModels;
+		$registryAlias = $this->_table->registryAlias();
 
-			// Find from workflows table
-			$results = $this->Workflows
-				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-				->matching('WorkflowModels', function($q) use ($WorkflowModels, $registryAlias) {
-					return $q->where([
-						$WorkflowModels->aliasField('model') => $registryAlias
+		// Find from workflows table
+		$results = $this->Workflows
+			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+			->matching('WorkflowModels', function($q) use ($WorkflowModels, $registryAlias) {
+				return $q->where([
+					$WorkflowModels->aliasField('model') => $registryAlias
+				]);
+			})
+			->all();
+
+		if ($results->isEmpty()) {
+			$this->controller->Alert->warning('Workflows.noWorkflows');
+		} else {
+			$this->workflowIds = $results->toArray();
+			$this->hasWorkflow = true;
+			$this->controller->Workflow->hasWorkflow = $this->hasWorkflow;
+
+			$toolbarElements = [
+	            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
+	        ];
+			$this->controller->set('toolbarElements', $toolbarElements);
+
+			$filterOptions = [];
+			$selectedFilter = null;
+			$workflowModel = $this->getWorkflowSetup($registryAlias);
+
+			$filter = $workflowModel->filter;
+			if (!empty($filter)) {
+				$filterOptions = TableRegistry::get($filter)->getList()->toArray();
+				$selectedFilter = $this->_table->queryString('filter', $filterOptions);
+				$this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
+				$this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
+			}
+
+			$workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
+			if (!empty($workflow)) {
+				$stepQuery = $this->WorkflowSteps
+					->find('list')
+					->where([
+						$this->WorkflowSteps->aliasField('workflow_id') => $workflow->id
 					]);
-				})
-				->all();
 
-			if ($results->isEmpty()) {
-				$this->controller->Alert->warning('Workflows.noWorkflows');
-			} else {
-				$this->workflowIds = $results->toArray();
-				$this->hasWorkflow = true;
-				$this->controller->Workflow->hasWorkflow = $this->hasWorkflow;
+				if (!$this->_table->AccessControl->isAdmin()) {
+					$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+					$roleIds = [];
+					foreach ($roles as $key => $role) {
+						$roleIds[$role->security_role_id] = $role->security_role_id;
+					}
+
+					$WorkflowStepsRoles = $this->WorkflowStepsRoles;
+					$stepQuery->innerJoin(
+						[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
+						[
+							$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
+							$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
+						]
+					);
+				}
+
+				$stepOptions = $stepQuery->toArray();
+				$selectedStep = $this->_table->queryString('step', $stepOptions);
+				$this->_table->advancedSelectOptions($stepOptions, $selectedStep);
+				$this->_table->controller->set(compact('stepOptions', 'selectedStep'));
 			}
 		}
-		// pr('attachWorkflow: ' . $this->attachWorkflow . ' hasWorkflow: ' . $this->hasWorkflow);
+
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$registryAlias = $this->_table->registryAlias();
+		$workflowModel = $this->getWorkflowSetup($registryAlias);
+
+		$filter = $workflowModel->filter;
+		if (!empty($filter)) {
+			$selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
+
+			// Filter key
+			list(, $base) = pluginSplit($filter);
+			$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+			$query->where([
+				$this->_table->aliasField($filterKey) => $selectedFilter
+			]);
+		}
+
+		$selectedStep = $this->_table->ControllerAction->getVar('selectedStep');
+		$query->where([
+			$this->_table->aliasField('status_id') => $selectedStep
+		]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -343,7 +417,7 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function getWorkflow($registryAlias, $entity=null) {
+	public function getWorkflowSetup($registryAlias) {
 		if (is_null($this->workflowSetup)) {
 			$workflowModel = $this->WorkflowModels
 					->find()
@@ -351,10 +425,17 @@ class WorkflowBehavior extends Behavior {
 						$this->WorkflowModels->aliasField('model') => $registryAlias
 					])
 					->first();
+
 			$this->workflowSetup = $workflowModel;
 		} else {
 			$workflowModel = $this->workflowSetup;
 		}
+
+		return $workflowModel;
+	}
+
+	public function getWorkflow($registryAlias, $entity=null, $filterId=null) {
+		$workflowModel = $this->getWorkflowSetup($registryAlias);
 
 		if (!empty($workflowModel)) {
 			// Find all Workflow setup for the model
@@ -379,8 +460,13 @@ class WorkflowBehavior extends Behavior {
 				$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
 
 				$workflowId = 0;
-				if (!is_null($entity) && $entity->has($filterKey)) {
-					$filterId = $entity->$filterKey;
+				if (empty($filterId)) {
+					if (!is_null($entity) && $entity->has($filterKey)) {
+						$filterId = $entity->$filterKey;
+					}
+				}
+
+				if (!is_null($filterId)) {
 					$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
 
 					$filterQuery = $this->WorkflowsFilters
@@ -667,9 +753,30 @@ class WorkflowBehavior extends Behavior {
 			}
 			// End
 
-			// Redirect
-			$action = $this->_table->ControllerAction->url('view');
-			return $this->_table->controller->redirect($action);
+			// If user do not have access to workflow_step, then redirect to index page else redirect to view page
+			$action = 'view';
+			if (!$this->_table->AccessControl->isAdmin()) {
+				$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+				$roleIds = [];
+				foreach ($roles as $key => $role) {
+					$roleIds[$role->security_role_id] = $role->security_role_id;
+				}
+
+				$results = $this->WorkflowStepsRoles
+					->find()
+					->where([
+						$this->WorkflowStepsRoles->aliasField('workflow_step_id') => $entity->workflow_step_id,
+						$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
+					])
+					->all();
+
+				if ($results->isEmpty()) {
+					$action = 'index';
+				}
+			}
+
+			$url = $this->_table->ControllerAction->url($action);
+			return $this->_table->controller->redirect($url);
 			// End
 		}
 	}

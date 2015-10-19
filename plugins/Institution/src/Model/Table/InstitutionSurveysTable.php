@@ -17,21 +17,12 @@ class InstitutionSurveysTable extends AppTable {
 
 	// Default Status
 	const EXPIRED = -1;
-	const NEW_SURVEY = 0;
-	const DRAFT = 1;
-	const COMPLETED = 2;
 
 	public $attachWorkflow = true;	// indicate whether the model require workflow
 	public $hasWorkflow = false;	// indicate whether workflow is setup
 
 	public $openStepId = null;
 	public $closedStepId = null;
-
-	private $statusOptions = [
-		self::NEW_SURVEY => 'New',
-		self::DRAFT => 'Draft',
-		self::COMPLETED => 'Completed'
-	];
 
 	private $workflowEvents = [];
 
@@ -91,42 +82,6 @@ class InstitutionSurveysTable extends AppTable {
     	return $this->workflowEvents;
     }
 
-    public function onGetStatusId(Event $event, Entity $entity) {
-    	return "<span class='status highlight'>" . $this->statusOptions[$entity->status_id] . "</span>";
-    }
-
-	public function onGetSurveyFormId(Event $event, Entity $entity) {
-		list(, $selectedStatus) = array_values($this->_getSelectOptions());
-
-		// Logic to control who can edit
-		if ($this->AccessControl->isAdmin()) {
-			$isEditable = true;
-		} else {
-			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-			$isEditable = false;
-			if (!empty($workflowRecord)) {
-				$workflowStep = $this->getWorkflowStep($workflowRecord);
-				if (!empty($workflowStep)) {
-					$isEditable = $workflowStep->is_editable == 1 ? true : false;
-				}
-			} else {
-				// Workflow is not configured
-			}
-		}
-
-		// If the user has permission to edit and the Workflow Step is configured to be editable
-		if ($this->AccessControl->check([$this->controller->name, 'Surveys', 'edit']) && $isEditable) {
-			return $event->subject()->Html->link($entity->survey_form->name, [
-				'plugin' => $this->controller->plugin,
-				'controller' => $this->controller->name,
-				'action' => $this->alias,
-				'edit',
-				$entity->id,
-				'status' => $selectedStatus
-			]);
-		}
-	}
-
 	public function onGetDescription(Event $event, Entity $entity) {
 		$surveyFormId = $entity->survey_form->id;
 		return $this->SurveyForms->get($surveyFormId)->description;
@@ -179,23 +134,16 @@ class InstitutionSurveysTable extends AppTable {
 		$this->hasWorkflow = $this->controller->Workflow->hasWorkflow;
 		// End
 
-		//Add controls filter to index page
-		$toolbarElements = [
-            ['name' => 'Institution.Surveys/controls', 'data' => [], 'options' => []]
-        ];
-		$this->controller->set('toolbarElements', $toolbarElements);
-		// End
-
 		if ($this->attachWorkflow) {
-			$statusOptions = [];
+			$stepOptions = [];
 			if ($this->hasWorkflow) {
-				$statusOptions = $this->getWorkflowStepList();
+				$stepOptions = $this->ControllerAction->getVar('stepOptions');
 				$WorkflowSteps = $this->Statuses;
 				if (is_null($this->openStepId)) {
 					$openStep = $WorkflowSteps
 						->find()
 						->where([
-							$WorkflowSteps->aliasField('id IN') => array_keys($statusOptions),
+							$WorkflowSteps->aliasField('id IN') => array_keys($stepOptions),
 							$WorkflowSteps->aliasField('stage') => 0	// Open
 						])
 						->first();
@@ -209,7 +157,7 @@ class InstitutionSurveysTable extends AppTable {
 					$closedStep = $WorkflowSteps
 						->find()
 						->where([
-							$WorkflowSteps->aliasField('id IN') => array_keys($statusOptions),
+							$WorkflowSteps->aliasField('id IN') => array_keys($stepOptions),
 							$WorkflowSteps->aliasField('stage') => 2	// Closed
 						])
 						->first();
@@ -220,15 +168,9 @@ class InstitutionSurveysTable extends AppTable {
 				}
 			}
 
-			if (empty($statusOptions)) {
-				$this->statusOptions = ['' => $this->ControllerAction->Alert->getMessage('general.select.noOptions')];
-			} else {
-				$this->statusOptions = $statusOptions;
+			if (empty($stepOptions)) {
+				$stepOptions = ['' => $this->ControllerAction->Alert->getMessage('general.select.noOptions')];
 			}
-		} else {
-			// Default New, Draft & Completed if workflow is not attached
-			$this->openStepId = self::NEW_SURVEY;
-			$this->closedStepId = self::COMPLETED;
 		}
 
 		$this->ControllerAction->field('status_id', [
@@ -236,17 +178,17 @@ class InstitutionSurveysTable extends AppTable {
 		]);
 		$this->ControllerAction->field('description');
 		$fieldOrder = ['survey_form_id', 'description', 'academic_period_id'];
-		$selectedStatus = $this->queryString('status', $this->statusOptions);
+		$selectedStep = $this->ControllerAction->getVar('selectedStep');
 
-		if (is_null($selectedStatus)) {
+		if (is_null($selectedStep)) {
 			$this->ControllerAction->field('to_be_completed_by');
 			$fieldOrder[] = 'to_be_completed_by';
 		} else {
-			if ($selectedStatus == $this->openStepId) {	// Open
+			if ($selectedStep == $this->openStepId) {	// Open
 				$this->buildSurveyRecords();
 				$this->ControllerAction->field('to_be_completed_by');
 				$fieldOrder[] = 'to_be_completed_by';
-			} else if ($selectedStatus == $this->closedStepId) {	// Closed
+			} else if ($selectedStep == $this->closedStepId) {	// Closed
 				$this->ControllerAction->field('completed_on');
 				$fieldOrder[] = 'completed_on';
 			} else {
@@ -257,20 +199,6 @@ class InstitutionSurveysTable extends AppTable {
 			}
 		}
 		$this->ControllerAction->setFieldOrder($fieldOrder);
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$statusOptions = $this->statusOptions;
-
-		$selectedStatus = $this->queryString('status', $statusOptions);
-		$this->advancedSelectOptions($statusOptions, $selectedStatus);
-		$this->controller->set('statusOptions', $statusOptions);
-
-		$options['auto_contain'] = false;
-		$query
-			->contain(['Statuses', 'SurveyForms', 'AcademicPeriods'])
-			->where([$this->aliasField('status_id') => $selectedStatus])
-			->order([$this->AcademicPeriods->aliasField('order')]);
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -293,15 +221,9 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
 		if ($action == 'view') {
-			if($this->hasBehavior('Workflow')) {
-				$attr['type'] = 'hidden';
-			}
+			$attr['type'] = 'hidden';
 		} else if ($action == 'edit') {
-			if($this->hasBehavior('Workflow')) {
-				$statusOptions = $this->getWorkflowStepList();
-			} else {
-				$statusOptions = $this->statusOptions;
-			}
+			$statusOptions = $this->getWorkflowStepList();
 			$statusId = $attr['attr']['value'];
 
 			$attr['type'] = 'readonly';
@@ -433,13 +355,5 @@ class InstitutionSurveysTable extends AppTable {
 				);
 			}
 		}
-	}
-
-	public function _getSelectOptions() {
-		//Return all required options and their key
-		$statusOptions = $this->statusOptions;
-		$selectedStatus = $this->queryString('status', $statusOptions);
-
-		return compact('statusOptions', 'selectedStatus');
 	}
 }
