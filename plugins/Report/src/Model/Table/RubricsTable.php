@@ -115,6 +115,8 @@ class RubricsTable extends InstitutionRubricsTable  {
 		];
 	}
 	public function onUpdateRubricTemplateId(Event $event, array $attr, $action, Request $request) {
+		$RubricTemplatesTable = $this->RubricTemplates;
+		
 		return $attr;
 	}
 
