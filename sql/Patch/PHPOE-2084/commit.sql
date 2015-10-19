@@ -12,7 +12,7 @@ values
 ('StaffAbsences', 'start_time', '', '4', '0', NULL, NULL, NULL),
 ('StaffAbsences', 'end_time', '', '5', '0', NULL, NULL, NULL),
 ('StaffAbsences', 'comment', '', '6', '0', NULL, NULL, NULL),
-('StaffAbsences', 'security_user_id', '', '7', '2', 'Security', 'Users', 'openemis_no'),
+('StaffAbsences', 'security_user_id', '(OpenEMIS No)', '7', '2', 'Security', 'Users', 'openemis_no'),
 ('StaffAbsences', 'institution_site_id', '(Leave blank)', '8', '2', 'Institution', 'Institutions', 'code'),
 ('StaffAbsences', 'staff_absence_reason_id', '', '9', '1', 'FieldOption', 'StaffAbsenceReasons', 'national_code')
 ;
@@ -25,7 +25,7 @@ values
 ('StudentAbsences', 'start_time', '', '4', '0', NULL, NULL, NULL),
 ('StudentAbsences', 'end_time', '', '5', '0', NULL, NULL, NULL),
 ('StudentAbsences', 'comment', '', '6', '0', NULL, NULL, NULL),
-('StudentAbsences', 'security_user_id', '', '7', '2', 'Security', 'Users', 'openemis_no'),
+('StudentAbsences', 'security_user_id', '(OpenEMIS No)', '7', '2', 'Security', 'Users', 'openemis_no'),
 ('StudentAbsences', 'institution_site_id', '(Leave blank)', '8', '2', 'Institution', 'Institutions', 'code'),
 ('StudentAbsences', 'student_absence_reason_id', '', '9', '1', 'FieldOption', 'StudentAbsenceReasons', 'national_code')
 ;

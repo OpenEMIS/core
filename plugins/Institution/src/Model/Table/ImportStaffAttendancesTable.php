@@ -91,12 +91,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
-			try {
-				$modelData = $modelData->toArray();
-			} catch (\Exception $e) {
-				pr($modelData->sql());die;
-			}
-			foreach($modelData as $row) {
+			foreach($modelData->toArray() as $row) {
 				$data[$sheetName][] = [
 					$row->name,
 					$row->$lookupColumn
