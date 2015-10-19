@@ -50,6 +50,8 @@ class ImportStaffTable extends AppTable {
 			$tempRow['entity'] = $this->Staff->newEntity();
 			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
 			$tempRow['is_staff'] = 1;
+		} else {
+			$tempRow['entity'] = $user;
 		}
 	}
 
