@@ -67,7 +67,7 @@ class ImportBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'max_rows' => 5000,
+		'max_rows' => 3000,
 		'max_size' => 524288
 	];
 	protected $rootFolder = 'import';
@@ -143,9 +143,7 @@ class ImportBehavior extends Behavior {
 				unset($toolbarButtons['back']['url'][0]);
 				break;
 
-			// 'sample' can be removed once https://kordit.atlassian.net/browse/PHPSG-110 has been merged to tst/prod.
-			// PHPOE specific issue for this design task is https://kordit.atlassian.net/browse/PHPOE-2186
-			case 'results':case 'sample':
+			case 'results':
 				$toolbarButtons['back']['url']['action'] = 'index';
 				unset($toolbarButtons['back']['url'][0]);
 				break;
@@ -251,7 +249,7 @@ class ImportBehavior extends Behavior {
 		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
-		ini_set('max_execution_time', 90);
+		ini_set('max_execution_time', 60);
 		/**
 		 */
 
@@ -516,125 +514,6 @@ class ImportBehavior extends Behavior {
 		} else {
 			return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
 		}
-	}
-
-	// this action can be removed once https://kordit.atlassian.net/browse/PHPOE-2186 has been merged to tst
-	public function sample() {
-		$completedData = [
-			'uploadedName' => 'Import_Institution_Template-test.xlsx',
-			'dataFailed' => [
-			    [
-			        'row_number' => 11,
-			        'error' => 'Failed Validation: Date Of Birth => You have entered an invalid date.',
-			        'data' => [
-			            '', 
-			            'Import',
-			            'staff',
-			            'test',
-			            'three',
-			            '',
-			            'f',
-			            '',
-			            'srw werv wevf efvwerv',
-			            '234',
-			            '3006',
-			            '3004',
-			            '',
-			            'Failed Validation: Date Of Birth => You have entered an invalid date.'
-			        ]
-			    ],
-			    [
-			        'row_number' => 26,
-			        'error' => 'Failed Validation: Date Of Birth => You have entered an invalid date.',
-			        'data' => [
-			            '', 
-			            'Import',
-			            'staff',
-			            'test',
-			            'three',
-			            '',
-			            'f',
-			            '',
-			            'srw werv wevf efvwerv',
-			            '234',
-			            '3006',
-			            '3004',
-			            '',
-			            'Failed Validation: Date Of Birth => You have entered an invalid date.'
-			        ]
-			    ],
-			    [
-			        'row_number' => 43,
-			        'error' => 'Failed Validation: Date Of Birth => This field cannot be left empty',
-			        'data' => [
-			            '', 
-			            'Import',
-			            'staff',
-			            'test',
-			            'three',
-			            '',
-			            'f',
-			            '',
-			            'srw werv wevf efvwerv',
-			            '234',
-			            '3006',
-			            '3004',
-			            '',
-			            'Failed Validation: Date Of Birth => This field cannot be left empty'
-			        ]
-			    ],
-			    [
-			        'row_number' => 61,
-			        'error' => 'Failed Validation: Date Of Birth => You have entered an invalid date.',
-			        'data' => [
-			            '', 
-			            'Import',
-			            'staff',
-			            'test',
-			            'three',
-			            '',
-			            'f',
-			            '',
-			            'srw werv wevf efvwerv',
-			            '234',
-			            '3006',
-			            '3004',
-			            '',
-			            'Failed Validation: Date Of Birth => You have entered an invalid date.'
-			        ]
-			    ]
-			],
-			'totalImported' => 993,
-			'totalUpdated' => 23,
-			'totalRows' => 1000,
-			'header' => $this->getHeader(),
-			'excelFile' => 'Import_Staff_Staff_Failed_1444275769.xlsx',
-			// 'excelFile' => '',
-			'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
-		];
-		$downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
-		$downloadUrl[] = $completedData['excelFile'];
-		$completedData['excelFile'] = $downloadUrl;
-		$this->_table->ControllerAction->field('select_file', ['visible' => false]);
-		$this->_table->ControllerAction->field('results', [
-			'type' => 'element',
-			'override' => true,
-			'visible' => true,
-			'element' => 'Import./results',
-			'rowClass' => 'row-reset',
-			'results' => $completedData
-		]);
-
-		if (!empty($completedData['excelFile'])) {
-			$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
-			$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
-		} else {
-			$message = '<i class="fa fa-check-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'success');
-			$this->_table->Alert->success($message, ['type' => 'string', 'reset' => true]);
-		}
-		// define data as empty entity so that the view file will not throw an undefined notice
-		$this->_table->controller->set('data', $this->_table->newEntity());
-		$this->_table->ControllerAction->renderView('/ControllerAction/view');
 	}
 
 
