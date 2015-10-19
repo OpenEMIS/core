@@ -75,7 +75,7 @@ if(!empty($attr['results']['excelFile'])):
 </div>
 
 <div class="form-buttons">
-	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), ['action' => 'Import', 'downloadFailed', $attr['results']['excelFile']], ['class'=>"btn btn-default", 'escape'=>false]); ?>
+	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['excelFile'], ['class'=>"btn btn-default", 'escape'=>false]); ?>
 </div>
 <?php
 endif;
