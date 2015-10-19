@@ -16,7 +16,7 @@ class ImportStudentsTable extends AppTable {
 	    $this->addBehavior('Import.Import');
 	    $this->addBehavior('Import.ImportUser');
 
-	    // register the target table once
+	    // register the target table once 
 	    $this->Students = TableRegistry::get('Student.Students');
 	}
 
@@ -26,6 +26,7 @@ class ImportStudentsTable extends AppTable {
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
+			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -52,4 +53,7 @@ class ImportStudentsTable extends AppTable {
 		}
 	}
 
+	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+		return true;
+	}
 }
