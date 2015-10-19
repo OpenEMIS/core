@@ -122,7 +122,7 @@ class InstitutionRubricsTable extends AppTable {
 				'key' => 'Rubric.SectionSubTotal',
 				'field' => 'sectionSubtotal',
 				'type' => 'rubrics',
-				'label' => __('Sub Total').' ('.$sectionPoint.')',
+				'label' => __('Section Sub Total').' ('.$sectionPoint.')',
 				'points' => $sectionPoint
 			];
 			$totalPoints += $sectionPoint;
@@ -192,14 +192,15 @@ class InstitutionRubricsTable extends AppTable {
 			->hydrate(false)
 			->toArray();
 
-		$data = [];
+		$newData = [];
 		foreach ($sectionAnswer as $answer) {
-			$data[$answer['rubric_criteria_id']] = [
+			$newData[$answer['rubric_criteria_id']] = [
 				'id' => $answer['rubric_criteria_option']['id'],
 				'name' => $answer['rubric_criteria_option']['name'],
 				'rubric_template_option_id' => $answer['rubric_criteria_option']['rubric_template_option_id']
 			];
 		}
+		$data[$rubricId] = $newData;
 
 		return $data;
 	}
@@ -209,8 +210,14 @@ class InstitutionRubricsTable extends AppTable {
 	private $_sectionPoints = 0;
 	private $_rubricCriteriaOptions = [];
 	public function onExcelRenderRubrics(Event $event, Entity $entity, array $attr) {
-		$rubricId = $entity->id;
+		$type = $attr['field'];
 		// To rewrite this part
+		if (method_exists($this, $type)) {
+			$ans = $this->$type($entity, $attr);
+			return (string)$ans;
+		} else {
+			return '';
+		}
 		// if ($attr['field'] != 'rubricSection') {
 		// 	if ($attr['field'] == 'rubricCriteria') {
 		// 		$criteriaId = $attr['id'];
@@ -239,14 +246,32 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	private function rubricCriteria($data, $attr) {
+		$rubricId = $data['id'];
+		$criteriaId = $attr['id'];
+		// Criteria options of the template
+		$criteriaOptions = $this->_rubricCriteriaOptions;
+
+		// Get Rubric answer
+		$criteriaOptions = $this->_rubricCriteriaOptions;
+		if (!isset($criteriaOptions[$rubricId])) {
+			$criteriaOptions = $this->getRubricCriteriaOptions($rubricId);
+			$this->_rubricCriteriaOptions = $this->getRubricCriteriaOptions($rubricId);
+		}
+		$templateOptions = $this->_rubricTemplateOptions;
+		
 		// Points for the criteria
-		$points = $data['points'];
-		$this->_sectionPoints += $points;
-		$this->_totalPoints += $points;
-		return $data['name'];
+		if (isset($criteriaOptions[$rubricId][$criteriaId]['rubric_template_option_id'])) {
+			$templateOptionId = $criteriaOptions[$rubricId][$criteriaId]['rubric_template_option_id'];
+			$points = $templateOptions[$templateOptionId];
+			$this->_sectionPoints += $points;
+			$this->_totalPoints += $points;
+			return $criteriaOptions[$rubricId][$criteriaId]['name'];
+		} else {
+			return '';
+		}
 	}
 
-	private function sectionPoints($data, $attr) {
+	private function sectionSubtotal($data, $attr) {
 		return $this->_sectionPoints;
 	}
 
@@ -257,7 +282,7 @@ class InstitutionRubricsTable extends AppTable {
 	private function totalPercentage($data, $attr) {
 		$maxiumPoint = $attr['points'];
 		$totalPoint = $this->_totalPoints;
-		$percentage = $totalPoint / $maximumPoint * 100;
+		$percentage = $totalPoint / $maxiumPoint * 100;
 		$this->_totalPoints = 0;
 		return $percentage.'%';
 	}
