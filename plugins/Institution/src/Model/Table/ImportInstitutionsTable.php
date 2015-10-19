@@ -48,6 +48,8 @@ class ImportInstitutionsTable extends AppTable {
 		$institution = $this->Institutions->find()->where(['code'=>$code])->first();
 		if (!$institution) {
 			$tempRow['entity'] = $this->Institutions->newEntity();
+		} else {
+			$tempRow['entity'] = $institution;
 		}
 	}
 
