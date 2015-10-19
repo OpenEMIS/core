@@ -570,6 +570,23 @@ class WorkflowBehavior extends Behavior {
 		$query = $this->WorkflowSteps
 			->find('list');
 
+		if (!$this->_table->AccessControl->isAdmin()) {
+			$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+			$roleIds = [];
+			foreach ($roles as $key => $role) {
+				$roleIds[$role->security_role_id] = $role->security_role_id;
+			}
+
+			$WorkflowStepsRoles = $this->WorkflowStepsRoles;
+			$query->innerJoin(
+				[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
+				[
+					$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
+					$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
+				]
+			);
+		}
+
 		if (!empty($this->workflowIds)) {
 			$query->where([
 				$this->WorkflowSteps->aliasField('workflow_id IN') => $this->workflowIds
