@@ -94,6 +94,12 @@ class StaffAbsencesTable extends AppTable {
 		$fields->exchangeArray($newFields);
 	}
 
+	public function onExcelGetStaffAbsenceReasonId(Event $event, Entity $entity) {
+		if ($entity->staff_absence_reason_id == 0) {
+			return __('Unexcused');
+		}
+	}
+
 	public function onExcelGetAbsences(Event $event, Entity $entity) {
 		$startDate = "";
 		$endDate = "";
