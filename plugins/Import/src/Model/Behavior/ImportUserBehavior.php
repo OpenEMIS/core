@@ -76,7 +76,7 @@ class ImportUserBehavior extends Behavior {
 			$modelData->order($order);
 		}
 
-		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$translatedReadableCol = $this->_table->getExcelLabel($lookedUpTable, 'name');
 		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			try {
