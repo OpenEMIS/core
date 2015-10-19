@@ -432,6 +432,9 @@ class ImportBehavior extends Behavior {
 				}
 				
 				$writer->writeToFile($excelPath);
+				$downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
+				$downloadUrl[] = 'excelFile';
+				$excelFile = $downloadUrl;
 			} else {
 				$excelFile = null;
 			}
@@ -919,7 +922,7 @@ class ImportBehavior extends Behavior {
 					if (is_numeric($val)) {
 						$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
 						// converts val to Time object so that this field will pass 'validDate' check since
-						// different model has different date format checking. Example; user->date_of_birth
+						// different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
 						// so it is best to convert the date here instead of adjusting individual model's date validation format
 						try {
 							$val = new Time($val);
@@ -964,6 +967,9 @@ class ImportBehavior extends Behavior {
 				}
 			}
 			$tempRow[$columnName] = $val;
+		}
+		if ($rowPass) {
+			$rowPass = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
 		}
 		return $rowPass;
 	}
