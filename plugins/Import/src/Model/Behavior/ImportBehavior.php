@@ -251,7 +251,7 @@ class ImportBehavior extends Behavior {
 		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
-		ini_set('max_execution_time', 60);
+		ini_set('max_execution_time', 90);
 		/**
 		 */
 
@@ -329,6 +329,7 @@ class ImportBehavior extends Behavior {
 					$originalRow = new ArrayObject;
 					$rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
 
+					$tempRow = $tempRow->getArrayCopy();
 					// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
 					if (!isset($tempRow['entity'])) {
 						$tableEntity = $activeModel->newEntity();
@@ -336,7 +337,6 @@ class ImportBehavior extends Behavior {
 						$tableEntity = $tempRow['entity'];
 						unset($tempRow['entity']);
 					}
-					$tempRow = $tempRow->getArrayCopy();
 					$duplicates = $tempRow['duplicates'];
 					unset($tempRow['duplicates']);
 					$activeModel->patchEntity($tableEntity, $tempRow);
@@ -377,7 +377,7 @@ class ImportBehavior extends Behavior {
 						);
 
 						$model->log('ImportBehavior @ line '.__LINE__, 'debug');
-						$model->log($tableEntity->errors(), 'debug');
+						$model->log($rowCodeError, 'debug');
 
 						continue;
 					}
@@ -612,6 +612,9 @@ class ImportBehavior extends Behavior {
 			// 'excelFile' => '',
 			'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
 		];
+		$downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
+		$downloadUrl[] = $completedData['excelFile'];
+		$completedData['excelFile'] = $downloadUrl;
 		$this->_table->ControllerAction->field('select_file', ['visible' => false]);
 		$this->_table->ControllerAction->field('results', [
 			'type' => 'element',
