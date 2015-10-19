@@ -50,6 +50,8 @@ class ImportStudentsTable extends AppTable {
 			$tempRow['entity'] = $this->Students->newEntity();
 			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
 			$tempRow['is_student'] = 1;
+		} else {
+			$tempRow['entity'] = $user;
 		}
 	}
 
