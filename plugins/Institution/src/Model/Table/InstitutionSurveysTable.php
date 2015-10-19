@@ -73,7 +73,14 @@ class InstitutionSurveysTable extends AppTable {
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$this->updateStatusId($entity);
+    	$this->updateStatusId($entity);
+
+    	$currentAction = $this->ControllerAction->action();
+    	if ($currentAction == 'edit') {
+			$url = $this->ControllerAction->url($currentAction);
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+    	}
 	}
 
     public function getWorkflowEvents(Event $event) {
@@ -82,6 +89,10 @@ class InstitutionSurveysTable extends AppTable {
     	}
 
     	return $this->workflowEvents;
+    }
+
+    public function onGetStatusId(Event $event, Entity $entity) {
+    	return "<span class='status highlight'>" . $this->statusOptions[$entity->status_id] . "</span>";
     }
 
 	public function onGetSurveyFormId(Event $event, Entity $entity) {
@@ -101,9 +112,9 @@ class InstitutionSurveysTable extends AppTable {
 			} else {
 				// Workflow is not configured
 			}
-			
 		}
 
+		// If the user has permission to edit and the Workflow Step is configured to be editable
 		if ($this->AccessControl->check([$this->controller->name, 'Surveys', 'edit']) && $isEditable) {
 			return $event->subject()->Html->link($entity->survey_form->name, [
 				'plugin' => $this->controller->plugin,
@@ -189,7 +200,9 @@ class InstitutionSurveysTable extends AppTable {
 						])
 						->first();
 
-					$this->openStepId = $openStep->id;
+					if (!empty($openStep)) {
+						$this->openStepId = $openStep->id;
+					}
 				}
 
 				if (is_null($this->closedStepId)) {
@@ -201,7 +214,9 @@ class InstitutionSurveysTable extends AppTable {
 						])
 						->first();
 
-					$this->closedStepId = $closedStep->id;
+					if (!empty($closedStep)) {
+						$this->closedStepId = $closedStep->id;
+					}
 				}
 			}
 
@@ -278,9 +293,15 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
 		if ($action == 'view') {
-			$attr['type'] = 'hidden';
+			if($this->hasBehavior('Workflow')) {
+				$attr['type'] = 'hidden';
+			}
 		} else if ($action == 'edit') {
-			$statusOptions = $this->getWorkflowStepList();
+			if($this->hasBehavior('Workflow')) {
+				$statusOptions = $this->getWorkflowStepList();
+			} else {
+				$statusOptions = $this->statusOptions;
+			}
 			$statusId = $attr['attr']['value'];
 
 			$attr['type'] = 'readonly';
@@ -403,12 +424,14 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function updateStatusId(Entity $entity) {
-		$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-		if (!empty($workflowRecord)) {
-			$this->updateAll(
-				['status_id' => $workflowRecord->workflow_step_id],
-				['id' => $entity->id]
-			);
+		if($this->hasBehavior('Workflow')) {
+			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
+			if (!empty($workflowRecord)) {
+				$this->updateAll(
+					['status_id' => $workflowRecord->workflow_step_id],
+					['id' => $entity->id]
+				);
+			}
 		}
 	}
 
