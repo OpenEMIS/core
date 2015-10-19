@@ -67,7 +67,7 @@ class ImportBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'plugin' => '',
 		'model' => '',
-		'max_rows' => 3000,
+		'max_rows' => 2000,
 		'max_size' => 524288
 	];
 	protected $rootFolder = 'import';
