@@ -1,4 +1,4 @@
-<?php if (!empty($filterOptions) || !empty($stepOptions)) : ?>
+<?php if (!empty($modelOptions) || !empty($workflowOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -10,31 +10,27 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
-				$dataNamedGroup = [];
-				if (!empty($filterOptions)) {
-					echo $this->Form->input('filter', [
+				if (!empty($modelOptions)) {
+					echo $this->Form->input('workflow', array(
 						'class' => 'form-control',
 						'label' => false,
-						'options' => $filterOptions,
+						'options' => $modelOptions,
+						'default' => $selectedModel,
 						'url' => $baseUrl,
-						'data-named-key' => 'filter'
-					]);
-					$dataNamedGroup[] = 'filter';
+						'data-named-key' => 'model'
+					));
 				}
 
-				if (!empty($stepOptions)) {
-					$inputOptions = [
+				if (!empty($workflowOptions)) {
+					echo $this->Form->input('workflow', array(
 						'class' => 'form-control',
 						'label' => false,
-						'options' => $stepOptions,
+						'options' => $workflowOptions,
+						'default' => $selectedWorkflow,
 						'url' => $baseUrl,
-						'data-named-key' => 'step'
-					];
-					if (!empty($dataNamedGroup)) {
-						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-						$dataNamedGroup[] = 'step';
-					}
-					echo $this->Form->input('step', $inputOptions);
+						'data-named-key' => 'workflow',
+						'data-named-group' => 'model'
+					));
 				}
 			?>
 		</div>

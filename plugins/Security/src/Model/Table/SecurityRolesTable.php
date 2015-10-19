@@ -189,13 +189,16 @@ class SecurityRolesTable extends AppTable {
 
 	// this function will return all roles (system roles & user roles) that has lower
 	// privileges than the current role of the user in a specific group
-	public function getPrivilegedRoleOptionsByGroup($groupId, $userId=null) {
+	public function getPrivilegedRoleOptionsByGroup($groupId=null, $userId=null) {
 		$roleOptions = [];
 
 		// -1 is system defined roles (not editable)
 		// 0 is system defined roles (editable)
 		// >1 is user defined roles in specific group
-		$groupIds = [-1, 0, $groupId];
+		$groupIds = [-1, 0];
+		if (!is_null($groupId)) {
+			$groupIds[] = $groupId;
+		}
 
 		if (!is_null($userId)) { // userId will be null if he/she is a super admin
 			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
