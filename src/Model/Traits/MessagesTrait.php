@@ -78,7 +78,8 @@ trait MessagesTrait {
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
 			'amount' => 'Amount',
-			'total' => 'Total'
+			'total' => 'Total',
+			'notTransferrable' => 'No other alternative options available to convert records.'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -92,6 +93,7 @@ trait MessagesTrait {
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'Institutions' => [
+			'noClassRecords' => 'There are no available Classes',
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
 			'noSections' => 'No Available Classes'
@@ -121,7 +123,7 @@ trait MessagesTrait {
 			'end_time' => 'End Time',
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Classes',
+			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
@@ -141,6 +143,7 @@ trait MessagesTrait {
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
 			'subjects' => 'Subjects',
+			'noPeriods' => 'No Available Periods',
 			'education_subject' => 'Subject',
 			'class' => 'Subject',
 			'teacher' => 'Teacher',
