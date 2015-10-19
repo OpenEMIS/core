@@ -26,6 +26,7 @@ class ImportStudentsTable extends AppTable {
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
+			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -52,4 +53,7 @@ class ImportStudentsTable extends AppTable {
 		}
 	}
 
+	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+		return true;
+	}
 }
