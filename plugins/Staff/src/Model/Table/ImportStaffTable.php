@@ -49,10 +49,10 @@ class ImportStaffTable extends AppTable {
 		if (!$user) {
 			$tempRow['entity'] = $this->Staff->newEntity();
 			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row);
-			$tempRow['is_staff'] = 1;
 		} else {
 			$tempRow['entity'] = $user;
 		}
+		$tempRow['is_staff'] = 1;
 	}
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
