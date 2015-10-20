@@ -10,6 +10,11 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 
 class RubricsReportBehavior extends Behavior {
+	const EXPIRED = -1;
+	const NEW_SURVEY = 0;
+	const DRAFT = 1;
+	const COMPLETED = 2;
+
 	protected $_defaultConfig = [
 		'events' => [
 			'Model.excel.onExcelBeforeStart' => ['callable' => 'onExcelBeforeStart', 'priority' => 100],
@@ -37,8 +42,20 @@ class RubricsReportBehavior extends Behavior {
 		$condition = [
 			$this->_table->aliasField('rubric_template_id') => $templateId,
 			$this->_table->aliasField('academic_period_id') => $academicPeriodId,
-			$this->_table->aliasField('status') => $status
 		];
+
+		$statusCondition = [];
+		if ($status == self::COMPLETED) {
+			$statusCondition = [
+				$this->aliasField('status') => self::COMPLETED
+			];
+		} else {
+			$statusCondition = [
+				$this->aliasField('status').' IS NOT' => self::COMPLETED
+			];
+		}
+		$condition = array_merge($condition, $statusCondition);
+
 		$sheets[] = [
     		'name' => $this->_table->alias(),
 			'table' => $this->_table,
