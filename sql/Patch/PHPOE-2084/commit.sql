@@ -6,7 +6,7 @@ INSERT INTO `z2084_import_mapping` SELECT * FROM `import_mapping`;
 
 INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) 
 values
-('StaffAbsences', 'academic_period_id', '', '1', '2', 'AcademicPeriod', 'AcademicPeriods', 'code'),
+('StaffAbsences', 'academic_period_id', 'Code', '1', '2', 'AcademicPeriod', 'AcademicPeriods', 'code'),
 ('StaffAbsences', 'start_date', '', '2', '0', NULL, NULL, NULL),
 ('StaffAbsences', 'end_date', '', '3', '0', NULL, NULL, NULL),
 ('StaffAbsences', 'comment', '', '4', '0', NULL, NULL, NULL),
@@ -17,7 +17,7 @@ values
 
 INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) 
 values
-('StudentAbsences', 'academic_period_id', '', '1', '2', 'AcademicPeriod', 'AcademicPeriods', 'code'),
+('StudentAbsences', 'academic_period_id', 'Code', '1', '2', 'AcademicPeriod', 'AcademicPeriods', 'code'),
 ('StudentAbsences', 'start_date', '', '2', '0', NULL, NULL, NULL),
 ('StudentAbsences', 'end_date', '', '3', '0', NULL, NULL, NULL),
 ('StudentAbsences', 'comment', '', '4', '0', NULL, NULL, NULL),
