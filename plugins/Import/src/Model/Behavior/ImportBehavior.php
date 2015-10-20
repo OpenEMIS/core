@@ -311,6 +311,8 @@ class ImportBehavior extends Behavior {
 					$tempRow['duplicates'] = false;
 					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
 					$this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
+			
+					// pr($tempRow);die;
 					
 					// for each columns
 					$references = [
@@ -798,7 +800,7 @@ class ImportBehavior extends Behavior {
 				continue;
 			}
 			if (!empty($val)) {
-				if($activeModel->fields[$columnName]['type'] == 'date') {// checking the main table schema data type
+				if($activeModel->schema()->column($columnName)['type'] == 'date') {// checking the main table schema data type
 					// if date value is not numeric, let it fail validation since using PHPExcel_Shared_Date::ExcelToPHP($val)
 					// will actually converts the non-numeric value to today's date
 					if (is_numeric($val)) {
