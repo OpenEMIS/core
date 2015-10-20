@@ -349,7 +349,7 @@ class NavigationComponent extends Component {
 			'Institution' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Institutions']],
 			'Student' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Students']],
 			'Staff' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Staff']],
-			'Quality' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Rubrics']],
+			'Quality' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'InstitutionRubrics']],
 		];
 		return $navigation;
 	}

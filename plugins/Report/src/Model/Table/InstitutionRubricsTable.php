@@ -37,10 +37,16 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->controller->set('contentHeader', __('Rubrics'));
+		$controllerName = $this->controller->name;
+		$reportName = __('Rubrics');
+		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+		$this->controller->set('contentHeader', $reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
+	}
+
+	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('rubric_template_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
@@ -57,10 +63,6 @@ class InstitutionRubricsTable extends AppTable {
 			}
 			return $attr;
 		}
-	}
-
-	public function onGetReportName(Event $event, ArrayObject $data) {
-		return __('Overview');
 	}
 
 	public function onUpdateFieldRubricTemplateId(Event $event, array $attr, $action, Request $request) {
