@@ -131,15 +131,15 @@ class RubricsReportBehavior extends Behavior {
 			$totalPoints += $sectionPoint;
 		}
 
-		$fields[] = [
-			'key' => 'Rubric.TemplateStatus',
-			'field' => 'rubricTemplateStatus',
-			'type' => 'rubrics',
-			'label' => __('Pass').'/'.__('Fail'),
-			'points' => $totalPoints,
-			'passMark' => $this->getTemplatePassingMark($templateId),
-			'weightingType' => $weightingType
-		];
+		// $fields[] = [
+		// 	'key' => 'Rubric.TemplateStatus',
+		// 	'field' => 'rubricTemplateStatus',
+		// 	'type' => 'rubrics',
+		// 	'label' => __('Pass').'/'.__('Fail'),
+		// 	'points' => $totalPoints,
+		// 	'passMark' => $this->getTemplatePassingMark($templateId),
+		// 	'weightingType' => $weightingType
+		// ];
 
 		$fields[] = [
 			'key' => 'Rubric.TotalPoints',
