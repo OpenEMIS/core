@@ -19,7 +19,7 @@ class ImportStaffAttendancesTable extends AppTable {
 
 	    $this->StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 	    $this->Institutions = TableRegistry::get('Institution.Institutions');
-	    $this->Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+	    $this->Staff = TableRegistry::get('Institution.Staff');
 	    $this->Users = TableRegistry::get('User.Users');
 	}
 
@@ -117,21 +117,43 @@ class ImportStaffAttendancesTable extends AppTable {
 		}
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		if ($lookedUpTable->hasField('name')) {
-			$selectFields = ['name', $lookupColumn];
+			if ($lookupModel == 'AcademicPeriods') {
+				$selectFields = ['name', 'academic_period_level_id', $lookupColumn];
+			} else {
+				$selectFields = ['name', $lookupColumn];
+			}
 		} else {
 			$selectFields = ['first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn];
 		}
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
 
 		$modelData = $lookedUpTable->find('all')
 			->select($selectFields)
 			;
 
+		if ($lookupModel == 'AcademicPeriods') {
+			
+			if (!empty($modelData)) {
+				foreach($modelData->toArray() as $row) {
+					$data[$sheetName][] = [
+						$row->name,
+						$row->$lookupColumn
+					];
+				}
+			}
+
+			return true;
+		}
+		
 		if ($institutionId) {
 			if ($lookupModel == 'Institutions') {
 				$modelData->where(['id'=>$institutionId]);
 			} else if ($lookupModel == 'Users') {
-				$activeStaff = $this->Staff->find('all')
-									->find('byInstitution', ['Institutions.id'=>$institutionId])
+				$activeStaff = $this->Staff
+									->find('all')
+									->where([$this->Staff->aliasField('institution_site_id') => $institutionId])
 									;
 				$activeStaffIds = new Collection($activeStaff->toArray());
 				$modelData->where([
@@ -139,9 +161,7 @@ class ImportStaffAttendancesTable extends AppTable {
 				]);
 			}
 		}
-		
-		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
 				$data[$sheetName][] = [
