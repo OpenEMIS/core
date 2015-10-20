@@ -16,7 +16,11 @@ class ImportStaffAttendancesTable extends AppTable {
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StaffAbsences']);
 	    // $this->addBehavior('Import.Import');
-	    
+
+	    $this->StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+	    $this->Institutions = TableRegistry::get('Institution.Institutions');
+	    $this->Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+	    $this->Users = TableRegistry::get('User.Users');
 	}
 
 	public function implementedEvents() {
@@ -31,24 +35,73 @@ class ImportStaffAttendancesTable extends AppTable {
 	}
 
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
-		// $columns = new Collection($columns);
-		// $filtered = $columns->filter(function ($value, $key, $iterator) {
-		//     return $value == 'code';
-		// });
-		// $codeIndex = key($filtered->toArray());
-		// $code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
+		$session = $this->request->session();
+		if ($session->check('Institution.Institutions.id')) {
+			$institutionId = $session->read('Institution.Institutions.id');
+		} else {
+			$institutionId = false;
+		}
 
-		// if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
-		// 	$tempRow['duplicates'] = true;
-		// 	return true;
-		// }
+		$columns = new Collection($columns);
+		$filtered = $columns->filter(function ($value, $key, $iterator) {
+		    return $value == 'institution_site_id';
+		});
+		$codeIndex = key($filtered->toArray());
+		$institutionCode = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
 
-		// // $tempRow['entity'] must be assigned!!!
-		// $model = TableRegistry::get('Institution.Institutions');
-		// $institution = $model->find()->where(['code'=>$code])->first();
-		// if (!$institution) {
-		// 	$tempRow['entity'] = $model->newEntity();
-		// }
+		$filtered = $columns->filter(function ($value, $key, $iterator) {
+		    return $value == 'security_user_id';
+		});
+		$idIndex = key($filtered->toArray());
+		$openemis_no = $sheet->getCellByColumnAndRow($idIndex, $row)->getValue();
+
+		if (empty($openemis_no)) {
+			return false;
+		}
+	
+		if ($institutionCode) {
+			$institution = $this->Institutions->find()->where(['code'=>$institutionCode])->first();
+			if (!$institution) {
+				$tempRow['duplicates'] = 'institutionCode exists but no such institution';
+				$tempRow['institution_site_id'] = false;
+				return false;
+			}
+
+			if ($institutionId && $institutionId!=$institution->id) {
+				$tempRow['duplicates'] = true;
+				$tempRow['institution_site_id'] = false;
+				return false;
+			}
+		}
+
+		if (!isset($institution) && !$institutionId) {
+			$tempRow['duplicates'] = true;
+			$tempRow['institution_site_id'] = false;
+			return false;
+		}
+
+		$user = $this->Users->find()->where(['openemis_no'=>$openemis_no])->first();
+		if (!$user) {
+			$tempRow['duplicates'] = true;
+			$tempRow['security_user_id'] = false;
+			return false;
+		}
+
+		$staff = $this->Staff->find()->where([
+			'institution_site_id' => $institutionId,
+			'security_user_id' => $user->id,
+		])->first();
+		if (!$staff) {
+			$tempRow['duplicates'] = true;
+			$tempRow['security_user_id'] = false;
+			return false;
+		}
+
+		$tempRow['full_day'] = 1;
+		$tempRow['institution_site_id'] = $institutionId;
+		$tempRow['security_user_id'] = $user->id;
+		$tempRow['entity'] = $this->StaffAbsences->newEntity();
+
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -77,8 +130,7 @@ class ImportStaffAttendancesTable extends AppTable {
 			if ($lookupModel == 'Institutions') {
 				$modelData->where(['id'=>$institutionId]);
 			} else if ($lookupModel == 'Users') {
-				$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
-				$activeStaff = $Staff->find('all')
+				$activeStaff = $this->Staff->find('all')
 									->find('byInstitution', ['Institutions.id'=>$institutionId])
 									;
 				$activeStaffIds = new Collection($activeStaff->toArray());
@@ -100,4 +152,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		}
 	}
 
+	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+		return true;
+	}
 }
