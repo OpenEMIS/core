@@ -30,7 +30,22 @@ class RubricsReportBehavior extends Behavior {
     	return $events;
 	}
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		
+		$requestData = json_decode($settings['process']['params']);
+		$templateId = $requestData->rubric_template_id;
+		$academicPeriodId = $requestData->academic_period_id;
+		$status = $requestData->status;
+		$condition = [
+			$this->_table->aliasField('rubric_template_id') => $templateId,
+			$this->_table->aliasField('academic_period_id') => $academicPeriodId,
+			$this->_table->aliasField('status') => $status
+		];
+		$sheets[] = [
+    		'name' => $this->_table->alias(),
+			'table' => $this->_table,
+			'query' => $this->_table->find()->where($condition),
+			'orientation' => 'landscape',
+			'templateId' => $templateId,
+    	];
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -291,6 +306,6 @@ class RubricsReportBehavior extends Behavior {
 		$totalPoint = $this->_totalPoints;
 		$percentage = $totalPoint / $maxiumPoint * 100;
 		$this->_totalPoints = 0;
-		return $percentage.'%';
+		return round($percentage, 2).'%';
 	}
 }
