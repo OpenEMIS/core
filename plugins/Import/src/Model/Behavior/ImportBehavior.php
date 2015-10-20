@@ -139,15 +139,18 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
 
-				$toolbarButtons['back']['url']['action'] = 'index';
-				unset($toolbarButtons['back']['url'][0]);
 				break;
 
-			case 'results':
-				$toolbarButtons['back']['url']['action'] = 'index';
-				unset($toolbarButtons['back']['url'][0]);
-				break;
+			// case 'results':
+			// 	$toolbarButtons['back']['url']['action'] = 'index';
+			// 	unset($toolbarButtons['back']['url'][0]);
+			// 	break;
 		}
+
+		// pr($this->_table->request->referer());die;
+		// $toolbarButtons['back']['url'] = $this->_table->request->referer();
+		$toolbarButtons['back']['url']['action'] = 'index';
+		unset($toolbarButtons['back']['url'][0]);
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -341,12 +344,14 @@ class ImportBehavior extends Behavior {
 					unset($tempRow['duplicates']);
 					$activeModel->patchEntity($tableEntity, $tempRow);
 					$errors = $tableEntity->errors();
-
+					// pr($errors);die;
 					if (!$rowPass || $duplicates || $errors) { // row contains error or record is a duplicate based on unique key(s)
 
 						$rowCodeError = '';
-						if ($duplicates) {
+						if (is_bool($duplicates) && $duplicates) {
 							$rowCodeError .= $this->getExcelLabel('Import', 'duplicate_unique_key');
+						} else if (!empty($duplicates)) {
+							$rowCodeError .= __($duplicates);
 						}
 						if (!$rowPass) {
 							if ($rowCodeError!='') {
@@ -508,7 +513,7 @@ class ImportBehavior extends Behavior {
 				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			} else {
 				$message = '<i class="fa fa-check-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'success');
-				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
+				$this->_table->Alert->ok($message, ['type' => 'string', 'reset' => true]);
 			}
 			// define data as empty entity so that the view file will not throw an undefined notice
 			$this->_table->controller->set('data', $this->_table->newEntity());
@@ -673,7 +678,9 @@ class ImportBehavior extends Behavior {
 			} else if ($foreignKey == self::DIRECT_TABLE) {
 
 				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, $data];
-				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulateDirectTableData'), 'onImportPopulateDirectTableData', $params);
+				// pr($lookupModel);die;
+				// $this->dispatchEvent($this->_table, $this->eventKey('onImportPopulateDirectTableData'), 'onImportPopulateDirectTableData', $params);
+				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
 
 			}
 		}
