@@ -7,12 +7,10 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
-use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
-use Institution\Model\Table\InstitutionRubricsTable;
 
-class RubricsTable extends AppTable {
+class InstitutionRubricsTable extends AppTable {
 	const EXPIRED = -1;
 	const NEW_SURVEY = 0;
 	const DRAFT = 1;
@@ -39,6 +37,7 @@ class RubricsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->controller->set('contentHeader', __('Rubrics'));
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
