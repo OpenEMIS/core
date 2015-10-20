@@ -121,45 +121,46 @@ class WorkflowBehavior extends Behavior {
 			$workflowModel = $this->getWorkflowSetup($registryAlias);
 
 			$filter = $workflowModel->filter;
+			$model = $workflowModel->model;
 			if (!empty($filter)) {
+				// Wofkflow Filter Options
 				$filterOptions = TableRegistry::get($filter)->getList()->toArray();
+
+				// Trigger event to get the correct wofkflow filter options
+				$subject = TableRegistry::get($model);
+				$newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
+				if ($newEvent->isStopped()) { return $newEvent->result; }
+				if (!empty($newEvent->result)) {
+					$filterOptions = $newEvent->result;
+				}
+				// End
+
+				$filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
 				$selectedFilter = $this->_table->queryString('filter', $filterOptions);
 				$this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
 				$this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
-			}
+				// End
 
-			$workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
-			if (!empty($workflow)) {
-				$stepQuery = $this->WorkflowSteps
-					->find('list')
-					->where([
-						$this->WorkflowSteps->aliasField('workflow_id') => $workflow->id
-					]);
+				// Status Options
+				if ($selectedFilter != -1) {
+					$workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
+					if (!empty($workflow)) {
+						$statusQuery = $this->WorkflowSteps
+							->find('list')
+							->where([
+								$this->WorkflowSteps->aliasField('workflow_id') => $workflow->id
+							]);
 
-				if (!$this->_table->AccessControl->isAdmin()) {
-					$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
-					$roleIds = [];
-					foreach ($roles as $key => $role) {
-						$roleIds[$role->security_role_id] = $role->security_role_id;
+						$statusOptions = $statusQuery->toArray();
+						$statusOptions = ['-1' => '-- ' . __('All Statuses') . ' --'] + $statusOptions;
+						$selectedStatus = $this->_table->queryString('status', $statusOptions);
+						$this->_table->advancedSelectOptions($statusOptions, $selectedStatus);
+						$this->_table->controller->set(compact('statusOptions', 'selectedStatus'));
 					}
-
-					$WorkflowStepsRoles = $this->WorkflowStepsRoles;
-					$stepQuery->innerJoin(
-						[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
-						[
-							$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
-							$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
-						]
-					);
 				}
-
-				$stepOptions = $stepQuery->toArray();
-				$selectedStep = $this->_table->queryString('step', $stepOptions);
-				$this->_table->advancedSelectOptions($stepOptions, $selectedStep);
-				$this->_table->controller->set(compact('stepOptions', 'selectedStep'));
+				// End
 			}
 		}
-
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -173,15 +174,19 @@ class WorkflowBehavior extends Behavior {
 			// Filter key
 			list(, $base) = pluginSplit($filter);
 			$filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
-			$query->where([
-				$this->_table->aliasField($filterKey) => $selectedFilter
-			]);
-		}
+			if ($selectedFilter != -1) {
+				$query->where([
+					$this->_table->aliasField($filterKey) => $selectedFilter
+				]);
 
-		$selectedStep = $this->_table->ControllerAction->getVar('selectedStep');
-		$query->where([
-			$this->_table->aliasField('status_id') => $selectedStep
-		]);
+				$selectedStatus = $this->_table->ControllerAction->getVar('selectedStatus');
+				if ($selectedStatus != -1) {
+					$query->where([
+						$this->_table->aliasField('status_id') => $selectedStatus
+					]);
+				}
+			}
+		}
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -753,29 +758,8 @@ class WorkflowBehavior extends Behavior {
 			}
 			// End
 
-			// If user do not have access to workflow_step, then redirect to index page else redirect to view page
-			$action = 'view';
-			if (!$this->_table->AccessControl->isAdmin()) {
-				$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
-				$roleIds = [];
-				foreach ($roles as $key => $role) {
-					$roleIds[$role->security_role_id] = $role->security_role_id;
-				}
-
-				$results = $this->WorkflowStepsRoles
-					->find()
-					->where([
-						$this->WorkflowStepsRoles->aliasField('workflow_step_id') => $entity->workflow_step_id,
-						$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
-					])
-					->all();
-
-				if ($results->isEmpty()) {
-					$action = 'index';
-				}
-			}
-
-			$url = $this->_table->ControllerAction->url($action);
+			// Redirect
+			$url = $this->_table->ControllerAction->url('view');
 			return $this->_table->controller->redirect($url);
 			// End
 		}
