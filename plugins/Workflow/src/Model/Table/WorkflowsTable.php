@@ -31,14 +31,6 @@ class WorkflowsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 		$this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->belongsToMany('Filters', [
-			'className' => 'FieldOption.FieldOptionValues',
-			'joinTable' => 'workflows_filters',
-			'foreignKey' => 'workflow_id',
-			'targetForeignKey' => 'filter_id',
-			'through' => 'Workflow.WorkflowsFilters',
-			'dependent' => true
-		]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -210,6 +202,29 @@ class WorkflowsTable extends AppTable {
 		}
 	}
 
+	public function beforeAction(Event $event) {
+		list($modelOptions, $selectedModel) = array_values($this->_getSelectOptions());
+		$this->controller->set(compact('modelOptions', 'selectedModel'));
+
+		$filter = null;
+		$filterClass = [
+			'className' => 'FieldOption.FieldOptionValues',
+			'joinTable' => 'workflows_filters',
+			'foreignKey' => 'workflow_id',
+			'targetForeignKey' => 'filter_id',
+			'through' => 'Workflow.WorkflowsFilters',
+			'dependent' => true
+		];
+		if (!is_null($selectedModel)) {
+			$filter = $this->WorkflowModels->get($selectedModel)->filter;
+			if (!is_null($filter)) {
+				$filterClass['className'] = $filter;
+			}
+		}
+		
+		$this->belongsToMany('Filters', $filterClass);
+	}
+
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
@@ -237,42 +252,6 @@ class WorkflowsTable extends AppTable {
 		return $value;
     }
 
-    public function onGetFilters(Event $event, Entity $entity) {
-    	$value = '';
-    	$filter = $this->WorkflowModels->get($entity->workflow_model_id)->filter;
-    	if (!empty($filter)) {
-			// pr($entity->workflow_model_id);
-			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-			$filterModel = TableRegistry::get($filter);
-    		$filterResults = $WorkflowsFilters
-    			->find()
-    			->select([
-    				$filterModel->aliasField('id'),
-    				$filterModel->aliasField('name'),
-    			])
-    			->innerJoin(
-    				[$filterModel->alias() => $filterModel->table()],
-    				[
-    					$filterModel->aliasField('id = ') . $WorkflowsFilters->aliasField('filter_id')
-    				]
-    			)
-    			->where([
-    				$WorkflowsFilters->aliasField('workflow_id') => $entity->id
-    			])
-    			->toArray();
-
-    		$list = [];
-    		if (!empty($filterResults)) {
-	    		foreach ($filterResults as $obj) {
-					$list[] = $obj[$filterModel->alias()]['name'];
-				}
-			}
-			$value = implode(', ', $list);
-    	}
-
-    	return $value;
-    }
-
 	public function indexBeforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
@@ -283,15 +262,14 @@ class WorkflowsTable extends AppTable {
 
 		$this->ControllerAction->field('apply_to_all');
 		$this->ControllerAction->field('filters', [
-			'type' => 'select'
+			'type' => 'chosenSelect'
 		]);
 
 		$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($modelOptions, $selectedModel) = array_values($this->_getSelectOptions());
-		$this->controller->set(compact('modelOptions', 'selectedModel'));
+		$selectedModel = $this->ControllerAction->getVar('selectedModel');
 
 		$query
 			->contain($this->_contain)
@@ -307,7 +285,7 @@ class WorkflowsTable extends AppTable {
 
 		$this->ControllerAction->field('apply_to_all');
 		$this->ControllerAction->field('filters', [
-			'type' => 'select'
+			'type' => 'chosenSelect'
 		]);
 	}
 
@@ -322,7 +300,9 @@ class WorkflowsTable extends AppTable {
 	}
 
     public function addEditAfterAction(Event $event, Entity $entity) {
-    	list($modelOptions, $selectedModel, $applyToAllOptions, $selectedApplyToAll) = array_values($this->_getSelectOptions());
+		$modelOptions = $this->ControllerAction->getVar('modelOptions');
+		$selectedModel = $this->ControllerAction->getVar('selectedModel');
+		$applyToAllOptions = $this->getSelectOptions('general.yesno');
 
     	$this->ControllerAction->field('workflow_model_id', [
     		'options' => $modelOptions
@@ -399,7 +379,9 @@ class WorkflowsTable extends AppTable {
 		}
 
 		if (isset($selectedModel) && !is_null($selectedModel)) {
-			$filter = $this->WorkflowModels->get($selectedModel)->filter;
+			$workflowModel = $this->WorkflowModels->get($selectedModel);
+			$filter = $workflowModel->filter;
+			$model = $workflowModel->model;
 			if (empty($filter)) {
 				$this->fields['apply_to_all']['visible'] = false;
 				$attr['visible'] = false;
@@ -413,7 +395,16 @@ class WorkflowsTable extends AppTable {
 					$modelAlias = $this->ControllerAction->getModel($filter)['model'];
 					$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
 					$filterOptions = TableRegistry::get($filter)->getList()->toArray();
-					
+
+					// Trigger event to get the correct wofkflow filter options
+					$subject = TableRegistry::get($model);
+					$newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
+					if ($newEvent->isStopped()) { return $newEvent->result; }
+					if (!empty($newEvent->result)) {
+						$filterOptions = $newEvent->result;
+					}
+					// End
+
 					// Logic to remove filter from the list if already in used
 					$Workflows = TableRegistry::get('Workflow.Workflows');
 					$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
@@ -519,11 +510,8 @@ class WorkflowsTable extends AppTable {
 		$modelOptions = $this->WorkflowModels
 			->find('list')
 			->toArray();
-		$selectedModel = !is_null($this->request->query('model')) ? $this->request->query('model') : key($modelOptions);
+		$selectedModel = $this->queryString('model', $modelOptions);
 
-		$applyToAllOptions = $this->getSelectOptions('general.yesno');
-		$selectedApplyToAll = !is_null($this->request->query('apply_all')) ? $this->request->query('apply_all') : key($applyToAllOptions);
-
-		return compact('modelOptions', 'selectedModel', 'applyToAllOptions', 'selectedApplyToAll');
+		return compact('modelOptions', 'selectedModel');
 	}
 }
