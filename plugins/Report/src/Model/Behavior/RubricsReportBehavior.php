@@ -47,11 +47,11 @@ class RubricsReportBehavior extends Behavior {
 		$statusCondition = [];
 		if ($status == self::COMPLETED) {
 			$statusCondition = [
-				$this->aliasField('status') => self::COMPLETED
+				$this->_table->aliasField('status') => self::COMPLETED
 			];
 		} else {
 			$statusCondition = [
-				$this->aliasField('status').' IS NOT' => self::COMPLETED
+				$this->_table->aliasField('status').' IS NOT' => self::COMPLETED
 			];
 		}
 		$condition = array_merge($condition, $statusCondition);
