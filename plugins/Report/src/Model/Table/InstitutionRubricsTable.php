@@ -150,7 +150,7 @@ class InstitutionRubricsTable extends AppTable {
 					$selected = self::COMPLETED;
 
 					$this->advancedSelectOptions($attr['options'], $selected, [
-						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
+						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRubrics')),
 						'callable' => function($id) use ($rubricsTable, $templateId, $academicPeriodId) {
 
 							$query = $rubricsTable->find('list', [
