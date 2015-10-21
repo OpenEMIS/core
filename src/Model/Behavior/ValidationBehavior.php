@@ -488,8 +488,8 @@ class ValidationBehavior extends Behavior {
 
 
 			$ConfigItems = TableRegistry::get('ConfigItems');
-			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value(admission_age_minus);
-			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value(admission_age_plus);
+			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
+			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
 			// pr('ageOfStudent: '.$ageOfStudent);
 			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
