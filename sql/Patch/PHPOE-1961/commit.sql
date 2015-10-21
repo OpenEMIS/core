@@ -1,7 +1,7 @@
 ALTER TABLE `institution_sites` ADD `network_connectivity_id` INT NOT NULL AFTER `institution_site_gender_id`;
 
 
-INSERT INTO `field_options` (`id`, `plugin`, `old_id`, `code`, `name`, `parent`, `params`, `order`, `visible`) VALUES (NULL, NULL, NULL, 'NetworkConnectivities', 'Network Connectivity', 'Institution', NULL, '1', '1');
+INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`) VALUES (NULL, NULL, 'NetworkConnectivities', 'Network Connectivity', 'Institution', NULL, '1', '1');
 
 SET @fieldOptionId := 0;
 SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'NetworkConnectivities';
