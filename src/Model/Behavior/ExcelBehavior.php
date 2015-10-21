@@ -442,8 +442,10 @@ class ExcelBehavior extends Behavior {
 			}
 
 			$pages = $this->config('pages');
-			if (in_array($action, $pages)) {
-				$toolbarButtons['export'] = $export;
+			if ($pages != false) {
+				if (in_array($action, $pages)) {
+					$toolbarButtons['export'] = $export;
+				}
 			}
 		}
 	}
