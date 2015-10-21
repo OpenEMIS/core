@@ -113,11 +113,11 @@ class AppTable extends Table {
 	}
 
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
-	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
-		if (!empty($entity->$field)) {
-			return $this->formatDate($entity->$field);
+	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			return $this->formatDate($entity->$attr['field']);
 		} else {
-			return $entity->$field;
+			return $entity->$attr['field'];
 		}
 	}
 
@@ -396,4 +396,46 @@ class AppTable extends Table {
 		return $selectedId;
 	}
 
+	public function isForeignKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public function getAssociatedTable($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$relatedModel = null;
+
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					$relatedModel = $assoc;
+					break;
+				}
+			}
+		}
+		return $relatedModel;
+	}
+
+	public function getAssociatedKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$tableObj = $this->getAssociatedTable($field, $table);
+		$key = null;
+		if (is_object($tableObj)) {
+			$key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+		}
+		return $key;
+	}
 }
