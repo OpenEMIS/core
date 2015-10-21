@@ -78,7 +78,8 @@ trait MessagesTrait {
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
 			'amount' => 'Amount',
-			'total' => 'Total'
+			'total' => 'Total',
+			'notTransferrable' => 'No other alternative options available to convert records.'
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -92,6 +93,7 @@ trait MessagesTrait {
 			'infrastructure_level_id' => 'Level Name'
 		],
 		'Institutions' => [
+			'noClassRecords' => 'There are no available Classes',
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
 			'noSections' => 'No Available Classes'
@@ -121,7 +123,7 @@ trait MessagesTrait {
 			'end_time' => 'End Time',
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Classes',
+			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
@@ -141,6 +143,7 @@ trait MessagesTrait {
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Subjects',
 			'subjects' => 'Subjects',
+			'noPeriods' => 'No Available Periods',
 			'education_subject' => 'Subject',
 			'class' => 'Subject',
 			'teacher' => 'Teacher',
@@ -209,6 +212,9 @@ trait MessagesTrait {
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			]
+		],
+		'Surveys' => [
+			'noSurveys' => 'No Available Surveys',
 		],
 		'StudentSurveys' => [
 			'noSurveys' => 'No Surveys',
@@ -365,6 +371,29 @@ trait MessagesTrait {
 			'reject' => 'Dropout request has been rejected successfully.',
 			'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
 		],
+		'Import' => [
+			'total_rows' => 'Total Rows:',
+			'rows_imported' => 'Rows Imported:',
+			'rows_updated' => 'Rows Updated:',
+			'rows_failed' => 'Rows Failed:',
+			'download_failed_records' => 'Download Failed Records',
+			'row_number' => 'Row Number',
+			'error_message' => 'Error Message',
+			'invalid_code' => 'Invalid Code',
+			'duplicate_code' => 'Duplicate Code Identified',
+			'duplicate_openemis_no' => 'Duplicate OpenEMIS ID Identified',
+			'duplicate_unique_key' => 'Duplicate Unique Key on the same sheet',
+			'validation_failed' => 'Failed Validation',
+			'file_required' => 'File is required',
+			'not_supported_format' => 'File format not supported',
+			'over_max' => 'File records exceeds maximum size allowed',
+			'wrong_template' => 'Wrong template file',
+			'execution_time' => 'Execution Time',
+			'over_max_rows' => 'File records exceeds maximum rows allowed',
+			'the_file' => 'The file',
+			'success' => 'is successfully imported.',
+			'failed' => 'failed to import.',
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -378,7 +407,8 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
 				],
 				'email' => [
-					'ruleValidEmail' => 'Please enter a valid Email'
+					'ruleValidEmail' => 'Please enter a valid Email',
+					'ruleUnique' => 'Email already exists in the system'
 				],
 				'longitude' => [
 					'ruleLongitude' => 'Please enter a valid Longitude'
@@ -672,7 +702,18 @@ trait MessagesTrait {
 				'guardian_id' => [
 					'ruleStudentGuardianId' => 'This guardian has already added.'
 				]
-			]
+			],
+			'Students' => [
+				'openemis_no' => [
+					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
+					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
+				'date_of_birth' => [
+					'ruleNotBlank' => 'Please select a Date of Birth',
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
+				],
+			],
 		],
 		'Staff' => [
 			'date_of_birth' => 'Date Of Birth',
@@ -693,6 +734,17 @@ trait MessagesTrait {
 				'qualification_institution_name' => [
 					'validHiddenId' => 'Please enter a valid Institution'
 				]
+			],
+			'Staff' => [
+				'openemis_no' => [
+					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
+					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+				],
+				'date_of_birth' => [
+					'ruleNotBlank' => 'Please select a Date of Birth',
+					'ruleCompare' => 'Date of Birth cannot be future date',
+					'ruleValidDate' => 'You have entered an invalid date.'
+				],
 			],
 			'Leaves' => [
 				'date_to' => [
@@ -796,7 +848,6 @@ trait MessagesTrait {
 
 	public function getMessage($code) {
 		$index = explode('.', $code);
-
 		$message = $this->messages;
 		foreach ($index as $i) {
 			if (isset($message[$i])) {
