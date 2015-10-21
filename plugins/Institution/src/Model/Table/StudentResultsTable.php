@@ -67,7 +67,7 @@ class StudentResultsTable extends AppTable {
 		$periodOptions = $AcademicPeriod->getList();
 		
 		$Sections = $this->Sections;
-		$institutionId = $this->Session->read('Institutions.id');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [

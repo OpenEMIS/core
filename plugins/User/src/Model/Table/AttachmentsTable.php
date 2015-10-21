@@ -124,7 +124,10 @@ class AttachmentsTable extends AppTable {
 			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$toolbarButtons['download']['url']['action'] = $this->alias.'/download';
+			$url = $this->ControllerAction->url('download');
+			if(!empty($url['action'])){
+				$toolbarButtons['download']['url'] = $url;
+			}
 		}
 	}
 

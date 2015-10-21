@@ -1,0 +1,92 @@
+/* PAGINATION v.1.0.0 */
+
+.ellipsis {
+    float: left;
+    padding: 5px 8px;
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+.pagination-wrapper {
+    overflow: hidden;
+    color: #666;
+    font-size: 12px !important;
+    font-weight: normal;
+}
+
+.pagination {
+    float: left;
+    font-size: 11px;
+    margin-top: 10px;
+    margin-right: 15px;
+}
+
+.pagination > li > a,
+.pagination > li > span {
+    padding: 4px 8px;
+}
+
+.pagination-wrapper .counter {
+    float: left;
+    margin: 14px 0;
+}
+
+.display-limit {
+    float: right;
+    margin: 14px 0;
+    width: 140px !important;
+    height: 30px;
+    text-align: right;
+}
+
+.display-limit span,
+.display-limit p {
+    width: auto;
+    margin-right: 5px;
+    padding: 6px 0;
+}
+
+.display-limit span {
+    float: left;
+}
+
+.display-limit .input-select-wrapper {
+    width: 45px;
+}
+
+.display-limit .input-select-wrapper:after {
+    right: -6px;
+}
+
+.display-limit form {
+    width: 102px !important;
+}
+
+.display-limit select {
+    width: 100% !important;
+    padding: 5px 14px 5px 5px !important;
+    float: left;
+}
+
+.pagination li a {
+    z-index: 0;
+    color: #999;
+}
+
+.pagination > .active > a,
+.pagination > .active > a:hover {
+    z-index: 1;
+    background-color: #999;
+    color: #FFF;
+    border: 1px solid #6B6B6B;
+    text-decoration: none;
+}
+
+.pagination li a:hover {
+    background-color: #6B6B6B;
+    color: #FFF;
+    border: 1px solid #6B6B6B;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
