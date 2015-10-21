@@ -78,6 +78,7 @@ class ImportBehavior extends Behavior {
 		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 		// 'zip' 	=> 'application/zip',
 	];
+	public $institutionId = false;
 
 	public function initialize(array $config) {
 		$fileTypes = $this->config('fileTypes');
@@ -110,6 +111,8 @@ class ImportBehavior extends Behavior {
 		if (empty($model)) {
 			$this->config('model', Inflector::pluralize($plugin));
 		}
+
+	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	}
 	
 
@@ -140,16 +143,14 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
 
 				break;
-
-			// case 'results':
-			// 	$toolbarButtons['back']['url']['action'] = 'index';
-			// 	unset($toolbarButtons['back']['url'][0]);
-			// 	break;
 		}
 
-		// pr($this->_table->request->referer());die;
-		// $toolbarButtons['back']['url'] = $this->_table->request->referer();
-		$toolbarButtons['back']['url']['action'] = 'index';
+		if ($this->institutionId) {
+			$back = str_replace('Import', '', $this->_table->alias());
+			$toolbarButtons['back']['url']['action'] = $back;
+		} else {
+			$toolbarButtons['back']['url']['action'] = 'index';
+		}
 		unset($toolbarButtons['back']['url'][0]);
 	}
 
@@ -158,6 +159,10 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function beforeAction($event) {
+		$session = $this->_table->controller->request->session();
+		if ($session->check('Institution.Institutions.id')) {
+			$this->institutionId = $session->read('Institution.Institutions.id');
+		}
 		$this->sessionKey = $this->config('plugin').'.'.$this->config('model').'.Import.data';
 		if (strtolower($this->_table->action) == 'index') {
 			$event->stopPropagation();
@@ -351,7 +356,7 @@ class ImportBehavior extends Behavior {
 						if (is_bool($duplicates) && $duplicates) {
 							$rowCodeError .= $this->getExcelLabel('Import', 'duplicate_unique_key');
 						} else if (!empty($duplicates)) {
-							$rowCodeError .= __($duplicates);
+							$rowCodeError .= $duplicates;
 						}
 						if (!$rowPass) {
 							if ($rowCodeError!='') {
@@ -469,7 +474,10 @@ class ImportBehavior extends Behavior {
 ******************************************************************************************************************/
 	public function template() {
 		$folder = $this->prepareDownload();
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', __('Import'), __($this->config('plugin')), __($this->config('model')), __('Template'));
+		$modelName = $this->config('model');
+		$modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
+		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this->config('plugin'), $modelName, 'Template');
+
 		$excelPath = $folder . DS . $excelFile;
 
 		$writer = new \XLSXWriter();
@@ -649,7 +657,6 @@ class ImportBehavior extends Behavior {
 			->toArray()
 			;
 		
-		// $data = [];
 		$data = new ArrayObject;
 		foreach($mapping as $row) {
 			$foreignKey = $row->foreign_key;
@@ -678,8 +685,6 @@ class ImportBehavior extends Behavior {
 			} else if ($foreignKey == self::DIRECT_TABLE) {
 
 				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, $data];
-				// pr($lookupModel);die;
-				// $this->dispatchEvent($this->_table, $this->eventKey('onImportPopulateDirectTableData'), 'onImportPopulateDirectTableData', $params);
 				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
 
 			}
@@ -871,6 +876,21 @@ class ImportBehavior extends Behavior {
 ** Miscelleneous Functions
 **
 ******************************************************************************************************************/
+	public function getAcademicPeriodByStartDate($date) {
+		if ($date instanceof DateTime) {
+			$date = $date->format('Y-m-d');
+		}
+		return $this->AcademicPeriods
+					->find()
+					->where([
+						"date(start_date) <= date '".$date."'",
+						"date(end_date) >= date '".$date."'",
+						'parent_id <> 0'
+					])
+					->first()
+					;
+	}
+
 	private function eventKey($key) {
 		return 'Model.import.' . $key;
 	}
