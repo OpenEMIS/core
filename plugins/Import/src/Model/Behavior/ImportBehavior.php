@@ -144,8 +144,7 @@ class ImportBehavior extends Behavior {
 
 				break;
 		}
-
-		if ($this->institutionId) {
+		if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
 			$back = str_replace('Import', '', $this->_table->alias());
 			$toolbarButtons['back']['url']['action'] = $back;
 		} else {
