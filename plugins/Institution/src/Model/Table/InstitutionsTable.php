@@ -449,7 +449,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
-			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
+			'institution_site_ownership_id', 'institution_site_gender_id', 'network_connectivity_id', 'institution_site_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
