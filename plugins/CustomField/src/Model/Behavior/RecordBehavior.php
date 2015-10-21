@@ -23,6 +23,7 @@ class RecordBehavior extends Behavior {
 		],
 		'model' => null,
 		'behavior' => null,
+		'tabSection' => false,
 		'moduleKey' => 'custom_module_id',
 		'fieldKey' => 'custom_field_id',
 		'fieldOptionKey' => 'custom_field_option_id',
@@ -249,7 +250,7 @@ class RecordBehavior extends Behavior {
     	}
     }
 
-	public function getCustomFieldQuery($entity, $withSection=false) {
+	public function getCustomFieldQuery($entity) {
 		$customFieldQuery = null;
 		//For Institution Survey
 		if (is_null($this->config('moduleKey'))) {
@@ -336,44 +337,6 @@ class RecordBehavior extends Behavior {
 			->group([
 				$this->CustomFormsFields->aliasField($this->config('fieldKey'))
 			]);
-
-		// Tab Element
-		if ($withSection) {
-			$customFields = $customFieldQuery
-				->toArray();
-
-			$tabElements = [];
-			$action = $this->_table->ControllerAction->action();
-			$url = $this->_table->ControllerAction->url($action);
-			$sectionName = null;
-			foreach ($customFields as $customFieldOrder => $customField) {
-				if (isset($customField->section)) {
-					if ($sectionName != $customField->section) {
-						$sectionName = $customField->section;
-						$tabName = Inflector::slug($sectionName);
-						if (empty($tabElements)) {
-							$selectedAction = $tabName;
-						}
-						$url['tab_section'] = $tabName;
-						$tabElements[$tabName] = [
-							'url' => $url,
-							'text' => $sectionName,
-						];
-					}
-				}
-			}
-
-			if (!empty($tabElements)) {
-				$selectedAction = !is_null($this->_table->controller->request->query('tab_section')) ? $this->_table->controller->request->query('tab_section') : $selectedAction;
-				$this->_table->controller->set('tabElements', $tabElements);
-				$this->_table->controller->set('selectedAction', $selectedAction);
-
-				$customFieldQuery->where([
-					$this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['text']
-				]);
-			}
-		}
-		// End
 
 		return $customFieldQuery;
 	}
@@ -491,6 +454,42 @@ class RecordBehavior extends Behavior {
 
 	public function buildCustomFields($entity) {
 		$customFieldQuery = $this->getCustomFieldQuery($entity, true);
+
+		if ($this->config('tabSection')) {
+			$customFields = $customFieldQuery
+				->toArray();
+
+			$tabElements = [];
+			$action = $this->_table->ControllerAction->action();
+			$url = $this->_table->ControllerAction->url($action);
+			$sectionName = null;
+			foreach ($customFields as $customFieldOrder => $customField) {
+				if (isset($customField->section)) {
+					if ($sectionName != $customField->section) {
+						$sectionName = $customField->section;
+						$tabName = Inflector::slug($sectionName);
+						if (empty($tabElements)) {
+							$selectedAction = $tabName;
+						}
+						$url['tab_section'] = $tabName;
+						$tabElements[$tabName] = [
+							'url' => $url,
+							'text' => $sectionName,
+						];
+					}
+				}
+			}
+
+			if (!empty($tabElements)) {
+				$selectedAction = !is_null($this->_table->controller->request->query('tab_section')) ? $this->_table->controller->request->query('tab_section') : $selectedAction;
+				$this->_table->controller->set('tabElements', $tabElements);
+				$this->_table->controller->set('selectedAction', $selectedAction);
+
+				$customFieldQuery->where([
+					$this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['text']
+				]);
+			}
+		}
 
 		if (isset($customFieldQuery)) {
 			$customFields = $customFieldQuery
