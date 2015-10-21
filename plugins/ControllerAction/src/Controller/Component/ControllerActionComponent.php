@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.7
+ControllerActionComponent - Current Version 3.1.8
+3.1.8 (Jeff) - session variable to store the primary key value of object includes the plugin name now
 3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
 3.1.6 (Jeff) - created function url($action) to return url with params
 3.1.5 (Jeff) - moved initButtons to afterAction so that query params can be passed to buttons
@@ -243,6 +244,30 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
+	public function action() {
+		return $this->currentAction;
+	}
+
+	public function removeDefaultActions(array $actions) {
+		$defaultActions = $this->defaultActions;
+		foreach ($actions as $action) {
+			if (array_search($action, $defaultActions)) {
+				unset($defaultActions[array_search($action, $defaultActions)]);
+			}
+		}
+		$this->defaultActions = $defaultActions;
+	}
+
+	public function addDefaultActions(array $actions) {
+		$defaultActions = $this->defaultActions;
+		foreach ($actions as $action) {
+			if (! array_search($action, $defaultActions)) {
+				$defaultActions[] = $action;
+			}
+		}
+		$this->defaultActions = $defaultActions;
+	}
+
 	public function vars() {
 		return $this->controller->viewVars;
 	}
@@ -383,13 +408,14 @@ class ControllerActionComponent extends Component {
 					$model = $this->model;
 					$primaryKey = $model->primaryKey();
 					$idKey = $model->aliasField($primaryKey);
+					$sessionKey = $model->registryAlias() . '.' . $primaryKey;
 					if (empty($pass)) {
-						if ($this->Session->check($idKey)) {
-							$pass = [$this->Session->read($idKey)];
+						if ($this->Session->check($sessionKey)) {
+							$pass = [$this->Session->read($sessionKey)];
 						}
 					} elseif (isset($pass[0]) && $pass[0]==$action) {
-						if ($this->Session->check($idKey)) {
-							$pass[1] = $this->Session->read($idKey);
+						if ($this->Session->check($sessionKey)) {
+							$pass[1] = $this->Session->read($sessionKey);
 						}		
 					}
 				}
@@ -755,7 +781,7 @@ class ControllerActionComponent extends Component {
 
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
-
+		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
 		$contain = [];
 
 		foreach ($model->associations() as $assoc) {
@@ -765,8 +791,8 @@ class ControllerActionComponent extends Component {
 		}
 
 		if (empty($id)) {
-			if ($this->Session->check($idKey)) {
-				$id = $this->Session->read($idKey);
+			if ($this->Session->check($sessionKey)) {
+				$id = $this->Session->read($sessionKey);
 			}
 		}
 		
@@ -798,7 +824,7 @@ class ControllerActionComponent extends Component {
 			if ($event->isStopped()) { return $event->result; }
 			// End Event
 
-			$this->Session->write($idKey, $id);
+			$this->Session->write($sessionKey, $id);
 			$modal = $this->getModalOptions('remove');
 			$this->controller->set('data', $entity);
 			$this->controller->set('modal', $modal);
@@ -1014,7 +1040,20 @@ class ControllerActionComponent extends Component {
 					$request->data = $requestData->getArrayCopy();
 					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
 
-					if ($model->save($entity)) {
+					$process = function ($model, $entity) {
+						return $model->save($entity);
+					};
+
+					// Event: onBeforeSave
+					$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeSave');
+					$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforeSave', null, [$entity, $requestData]);
+					if ($event->isStopped()) { return $event->result; }
+					if (is_callable($event->result)) {
+						$process = $event->result;
+					}
+					// End Event
+
+					if ($process($model, $entity)) {
 						// event: onSaveSuccess
 						$this->Alert->success('general.edit.success');
 
@@ -1126,16 +1165,26 @@ class ControllerActionComponent extends Component {
 
 				$associations = [];
 				foreach ($model->associations() as $assoc) {
-					if ($assoc->type() == 'oneToMany') {
-						if (!array_key_exists($assoc->table(), $associations)) {
-							$count = $assoc->find()
-							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-							->count();
-							$title = $this->Alert->getMessage($assoc->aliasField('title'));
-							if ($title == '[Message Not Found]') {
-								$title = $assoc->name();
+					if (!$assoc->dependent()) {
+						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+							if (!array_key_exists($assoc->table(), $associations)) {
+								$count = 0;
+								if($assoc->type() == 'oneToMany') {
+									$count = $assoc->find()
+									->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+									->count();
+								} else {
+									$modelAssociationTable = $assoc->junction();
+									$count = $modelAssociationTable->find()
+										->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+										->count();
+								}
+								$title = $this->Alert->getMessage($assoc->aliasField('title'));
+								if ($title == '[Message Not Found]') {
+									$title = $assoc->name();
+								}
+								$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
 							}
-							$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
 						}
 					}
 				}
@@ -1177,29 +1226,98 @@ class ControllerActionComponent extends Component {
 				$transferFrom = $this->request->data('id');
 				$transferTo = $this->request->data('transfer_to');
 
-				$associations = [];
-				foreach ($model->associations() as $assoc) {
-					if ($assoc->type() == 'oneToMany') {
-						if (!array_key_exists($assoc->table(), $associations)) {
-							// $assoc->dependent(false);
-							$associations[$assoc->table()] = $assoc;
+				// Checking of association for delete transfer, if the association count is 0,
+				// it means that no record is associated with it and it is safe to delete the record
+				$totalCount = 0;
+
+				if (empty($transferTo)) {
+					$associations = [];
+					foreach ($model->associations() as $assoc) {
+						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+							if (!in_array($assoc->table(), $associations)) {
+								$count = 0;
+								if($assoc->type() == 'oneToMany') {
+									$count = $assoc->find()
+									->where([$assoc->aliasField($assoc->foreignKey()) => $transferFrom])
+									->count();
+									$totalCount = $totalCount + $count;
+								} else {
+									$modelAssociationTable = $assoc->junction();
+									$count += $modelAssociationTable->find()
+										->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom])
+										->count();
+									$totalCount = $totalCount + $count;
+								}
+								$associations[] = $assoc->table();
+							}
 						}
 					}
 				}
-
-				if ($process($model, $transferFrom, $deleteOptions)) {
-					foreach ($associations as $assoc) {
-						$assoc->updateAll(
-							[$assoc->foreignKey() => $transferTo],
-							[$assoc->foreignKey() => $transferFrom]
-						);
-					}
-					$this->Alert->success('general.delete.success');
+				if ($totalCount > 0) {
+					$this->Alert->error('general.deleteTransfer.restrictDelete');
+					return $this->controller->redirect($this->url('remove'));
 				} else {
-					$this->Alert->error('general.delete.failed');
+					$associations = [];
+					foreach ($model->associations() as $assoc) {
+						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+							if (!array_key_exists($assoc->table(), $associations)) {
+								// $assoc->dependent(false);
+								$associations[$assoc->table()] = $assoc;
+							}
+						}
+					}
+					if ($process($model, $transferFrom, $deleteOptions)) {
+						foreach ($associations as $assoc) {
+							if ($assoc->type() == 'oneToMany') {
+								$assoc->updateAll(
+									[$assoc->foreignKey() => $transferTo],
+									[$assoc->foreignKey() => $transferFrom]
+								);
+
+							} else if ($assoc->type() == 'manyToMany') {
+								$modelAssociationTable = $assoc->junction();
+
+								// List of the target foreign keys for subqueries
+								$targetForeignKeys = $modelAssociationTable->find()
+									->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+									->where([
+										$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+									]);
+
+								// List of id in the junction table to be deleted
+								$idNotToUpdate = $modelAssociationTable->find('list',[
+										'keyField' => 'id',
+										'valueField' => 'id'
+									])
+									->where([
+										$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
+										$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
+									])
+									->toArray();
+
+								$condition = [];
+
+								if (empty($idNotToUpdate)) {
+									$condition = [$assoc->foreignKey() => $transferFrom];
+								} else {
+									$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+								}
+								
+								// Update all transfer records
+								$modelAssociationTable->updateAll(
+									[$assoc->foreignKey() => $transferTo],
+									$condition
+								);
+							}
+
+
+						}
+						$this->Alert->success('general.delete.success');
+					} else {
+						$this->Alert->error('general.delete.failed');
+					}
+					return $this->controller->redirect($this->url('index'));
 				}
-				
-				return $this->controller->redirect($this->url('index'));
 			}
 		} else {
 			$this->Alert->error('general.delete.failed');

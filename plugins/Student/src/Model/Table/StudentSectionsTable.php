@@ -4,6 +4,7 @@ namespace Student\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class StudentSectionsTable extends AppTable {
 	public function initialize(array $config) {
@@ -32,5 +33,22 @@ class StudentSectionsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('education_grade', $order++);
 		$this->ControllerAction->setFieldOrder('institution_site_section_id', $order++);
 		$this->ControllerAction->setFieldOrder('homeroom_teacher_name', $order++);
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		if (array_key_exists('view', $buttons)) {
+			$institutionId = $entity->institution_site_section->institution_site_id;
+			$url = [
+				'plugin' => 'Institution', 
+				'controller' => 'Institutions', 
+				'action' => 'Sections',
+				'view', $entity->institution_site_section->id,
+				'institution_id' => $institutionId,
+			];
+			$buttons['view']['url'] = $url;
+		}
+		return $buttons;
 	}
 }

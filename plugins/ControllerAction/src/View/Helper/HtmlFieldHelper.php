@@ -590,13 +590,14 @@ class HtmlFieldHelper extends Helper {
 
 	public function binary($action, Entity $data, $attr, $options=[]) {
 		$value = '';
+		$table = TableRegistry::get($attr['className']);
+		$fileUpload = $table->behaviors()->get('FileUpload');
+		$name = '&nbsp;';
+		if (!empty($fileUpload)) {
+			$name = $fileUpload->config('name');
+		}
+
 		if ($action == 'index' || $action == 'view') {
-			$table = TableRegistry::get($attr['className']);
-			$fileUpload = $table->behaviors()->get('FileUpload');
-			$name = '&nbsp;';
-			if (!empty($fileUpload)) {
-				$name = $fileUpload->config('name');
-			}
 			// $buttons = $this->_View->get('_buttons');
 			$buttons = $this->_View->get('ControllerAction');
 			$buttons = $buttons['buttons'];
@@ -604,6 +605,9 @@ class HtmlFieldHelper extends Helper {
 			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
+			if (isset($data->$name)) {
+				$attr['value'] = $data->$name;
+			}
 			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
 		}
 		return $value;

@@ -9,6 +9,7 @@ use Cake\ORM\Behavior;
 use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
+use Cake\I18n\I18n;
 
 // 3rd party xlsx writer library
 require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.php');
@@ -25,7 +26,7 @@ require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.
 class ExcelBehavior extends Behavior {
 	use EventTrait;
 
-	private $events;
+	private $events = [];
 
 	protected $_defaultConfig = [
 		'folder' => 'export',
@@ -115,113 +116,198 @@ class ExcelBehavior extends Behavior {
 	}
 
 	public function generate($writer, $settings=[]) {
-		$fields = $this->getFields();
-		// $header = $this->getHeader($fields);
-		$footer = $this->getFooter();
+		$sheets = new ArrayObject();
 
-		$query = $this->_table->find();
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query]);
-		$sheetName = $this->_table->alias();
+		// Event to get the sheets. If no sheet is specified, it will be by default one sheet
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets], true);
 
-		// if the primary key of the record is given, only generate that record
-		if (array_key_exists('id', $settings)) {
-			$id = $settings['id'];
-			if ($id != 0) {
-				$primaryKey = $this->_table->primaryKey();
-				$query->where([$this->_table->aliasField($primaryKey) => $id]);
-			}
+		if (count($sheets->getArrayCopy())==0) {
+			$sheets[] = [
+				'name' => $this->_table->alias(),
+				'table' => $this->_table,
+				'query' => $this->_table->find(),
+			];
 		}
 
-		$this->contain($query, $fields);
+		foreach ($sheets as $sheet) {
+			$table = $sheet['table'];
+			// sheet info added to settings to avoid adding more parameters to event
+			$settings['sheet'] = $sheet;
+			$this->getFields($table, $settings);
+			$fields = $settings['sheet']['fields'];
 
-		$count = $query->count();
-		$rowCount = 0;
-		$percentCount = intval($count / 100);
-		$pages = ceil($count / $this->config('limit'));
+			$footer = $this->getFooter();
+			$query = $sheet['query'];
 
-		if ($count == 1) {
-			$this->config('orientation', 'portrait');
-		}
+			$this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
+			$sheetName = $sheet['name'];
 
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count]);
-		$this->onEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-		if ($this->config('orientation') == 'landscape') {
-			$row = [];
-			foreach ($fields as $attr) {
-				$row[] = $attr['label'];
-			}
-			$writer->writeSheetRow($sheetName, $row);
-
-			// process every page based on the limit
-			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
-				$resultSet = $query
-				->limit($this->config('limit'))
-				->page($pageNo+1)
-				->all();
-
-				// process each row based on the result set
-				foreach ($resultSet as $entity) {
-					$row = [];
-					foreach ($fields as $attr) {
-						$row[] = $this->getValue($entity, $this->_table, $attr);
-					}
-					$rowCount++;
-					$this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-					$writer->writeSheetRow($sheetName, $row);
+			// if the primary key of the record is given, only generate that record
+			if (array_key_exists('id', $settings)) {
+				$id = $settings['id'];
+				if ($id != 0) {
+					$primaryKey = $table->primaryKey();
+					$query->where([$table->aliasField($primaryKey) => $id]);
 				}
 			}
-		} else {
-			$entity = $query->first();
-			foreach ($fields as $attr) {
-				$row = [$attr['label']];
-				$row[] = $this->getValue($entity, $this->_table, $attr);
-				$writer->writeSheetRow($sheetName, $row);
+
+			$this->contain($query, $fields, $table);
+			// To auto include the default fields. Using select will turn off autoFields by default
+			// This is set so that the containable data will still be in the array.
+			$query->autoFields(true);
+
+			$count = $query->count();
+			$rowCount = 0;
+			$percentCount = intval($count / 100);
+			$pages = ceil($count / $this->config('limit'));
+
+			if (isset($sheet['orientation'])) {
+				if ($sheet['orientation'] == 'landscape') {
+					$this->config('orientation', 'landscape');
+				} else {
+					$this->config('orientation', 'portrait');
+				}
+			} elseif ($count == 1) {
+				$this->config('orientation', 'portrait');
 			}
-			$rowCount++;
+
+			$this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
+			$this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
+			if ($this->config('orientation') == 'landscape') {
+				$row = [];
+				foreach ($fields as $attr) {
+					$row[] = $attr['label'];
+				}
+
+				// Any additional custom headers that require to be appended on the right side of the sheet
+				// Header column count must be more than the additional data columns
+				if(isset($sheet['additionalHeader'])) {
+					$row = array_merge($row, $sheet['additionalHeader']);
+				}
+
+				$writer->writeSheetRow($sheetName, $row);
+
+				// process every page based on the limit
+				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
+					$resultSet = $query
+					->limit($this->config('limit'))
+					->page($pageNo+1)
+					->all();
+
+					// Data to be appended on the right of spreadsheet
+					$additionalRows = [];
+					if (isset($sheet['additionalData'])) {
+						$additionalRows = $sheet['additionalData'];
+					}
+
+					// process each row based on the result set
+					foreach ($resultSet as $entity) {
+						$row = [];
+						foreach ($fields as $attr) {
+							$row[] = $this->getValue($entity, $table, $attr);
+						}
+
+						// For custom data to be appended on the right side of the spreadsheet
+						if (!empty ($additionalRows)) {
+							$row = array_merge($row, array_shift($additionalRows));
+						}
+
+						$rowCount++;
+						$this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount], true);
+						$writer->writeSheetRow($sheetName, $row);
+					}
+				}
+			} else {
+				$entity = $query->first();
+				foreach ($fields as $attr) {
+					$row = [$attr['label']];
+					$row[] = $this->getValue($entity, $table, $attr);
+					$writer->writeSheetRow($sheetName, $row);
+				}
+
+				// Any additional custom headers that require to be appended on the left column of the sheet
+				$additionalHeader = [];
+				if(isset($sheet['additionalHeader'])) {
+					$additionalHeader = $sheet['additionalHeader'];
+				}
+				// Data to be appended on the right column of spreadsheet
+				$additionalRows = [];
+				if (isset($sheet['additionalData'])) {
+					$additionalRows = $sheet['additionalData'];
+				}
+
+				for ($i = 0; $i < count($additionalHeader) ;$i++) {
+					$row = [$additionalHeader[$i]];
+					$row[] = $additionalRows[$i];
+					$writer->writeSheetRow($sheetName, $row);
+				}
+				$rowCount++;
+			}
+			$writer->writeSheetRow($sheetName, ['']);
+			$writer->writeSheetRow($sheetName, $footer);
+			$this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount], true);
 		}
-		$this->dispatchEvent($this->_table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount]);
 	}
 
-	private function getFields() {
-		$schema = $this->_table->schema();
+	private function getFields($table, $settings) {
+		$schema = $table->schema();
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
-		$excludes[] = $this->_table->primaryKey();
-		$fields = [];
-
+		$excludes[] = $table->primaryKey();
+		$fields = new ArrayObject();
+		$module = $table->alias();
+		$language = I18n::locale();
 		$excludedTypes = ['binary'];
-
 		$columns = array_diff($columns, $excludes);
 
-		$this->onEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel');
+		$this->onEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel');
 
 		foreach ($columns as $col) {
 			$field = $schema->column($col);
 			if (!in_array($field['type'], $excludedTypes)) {
-				$label = $this->_table->aliasField($col);
+				$label = $table->aliasField($col);
 
-				$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), null, [$col]);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), null, [$module, $col, $language], true);
 				if (strlen($event->result)) {
 					$label = $event->result;
 				}
 
 				$fields[] = [
-					'key' => $this->_table->aliasField($col),
+					'key' => $table->aliasField($col),
 					'field' => $col,
 					'type' => $field['type'],
 					'label' => $label
 				];
 			}
 		}
-		return $fields;
-	}
+		// Event to add or modify the fields to fetch from the table
+		$event = $this->dispatchEvent($table, $this->eventKey('onExcelUpdateFields'), 'onExcelUpdateFields', [$settings, $fields], true);
 
-	private function getHeader($fields) {
-		return $fields;
+		$newFields = [];
+		foreach ($fields->getArrayCopy() as $field) {
+			if (empty($field['label'])) {
+				$key = explode('.', $field['key']);
+				$module = $key[0];
+
+				// Redispatch get label
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), null, [$module, $field['field'], $language], true);
+				if (strlen($event->result)) {
+					$field['label'] = $event->result;
+				}
+			}
+			$newFields[] = $field;
+		}
+
+		// Replace the ArrayObject with the new fields
+		$fields->exchangeArray($newFields);
+
+		// Add the fields into the sheet
+		$settings['sheet']['fields'] = $fields;
 	}
 
 	private function getFooter() {
-		return 'footer';
+		$footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
+		return $footer;
 	}
 
 	private function getValue($entity, $table, $attr) {
@@ -229,36 +315,34 @@ class ExcelBehavior extends Behavior {
 		$field = $attr['field'];
 		$type = $attr['type'];
 
-		if (!in_array($type, ['string', 'integer', 'decimal'])) {
-			$method = 'onExcelRender' . Inflector::camelize($type);
-			if (!$this->eventMap($method)) {
-				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity, $field]);
-			} else {
-				$event = $this->dispatchEvent($this->_table, $this->eventKey($method), null, [$entity, $field]);
-			}
-			if ($event->result) {
-				$value = $event->result;
-			}
-		} else {
-			$method = 'onExcelGet' . Inflector::camelize($field);
-			$event = $this->dispatchEvent($this->_table, $this->eventKey($method), $method, [$entity]);
-			if ($event->result) {
-				$value = $event->result;
-			} else if ($entity->has($field)) {
-				if ($this->isForeignKey($table, $field)) {
-					$associatedField = $this->getAssociatedKey($table, $field);
-					if ($entity->has($associatedField)) {
-						$value = $entity->$associatedField->name;
-					}
+		if (!empty($entity)) {
+			if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
+				$method = 'onExcelRender' . Inflector::camelize($type);
+				if (!$this->eventMap($method)) {
+					$event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
 				} else {
-					$value = $entity->$field;
+					$event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
+				}
+				if ($event->result) {
+					$value = $event->result;
+				}
+			} else {
+				$method = 'onExcelGet' . Inflector::camelize($field);
+				$event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
+				if ($event->result) {
+					$value = $event->result;
+				} else if ($entity->has($field)) {
+					if ($this->isForeignKey($table, $field)) {
+						$associatedField = $this->getAssociatedKey($table, $field);
+						if ($entity->has($associatedField)) {
+							$value = $entity->$associatedField->name;
+						}
+					} else {
+						$value = $entity->$field;
+					}
 				}
 			}
-		}
-		
-		// if (!is_string($value)) {
-		// 	pr($value);
-		// }
+		}	
 		return $value;
 	}
 
@@ -296,12 +380,12 @@ class ExcelBehavior extends Behavior {
 		return $key;
 	}
 
-	private function contain(Query $query, $fields) {
+	private function contain(Query $query, $fields, $table) {
 		$contain = [];
 		foreach ($fields as $attr) {
 			$field = $attr['field'];
-			if ($this->isForeignKey($this->_table, $field)) {
-				$contain[] = $this->getAssociatedTable($this->_table, $field)->alias();
+			if ($this->isForeignKey($table, $field)) {
+				$contain[] = $this->getAssociatedTable($table, $field)->alias();
 			}
 		}
 		$query->contain($contain);
@@ -331,6 +415,23 @@ class ExcelBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($buttons->offsetExists('view')) {
 			$export = $buttons['view'];
+			$export['type'] = 'button';
+			$export['label'] = '<i class="fa kd-export"></i>';
+			$export['attr'] = $attr;
+			$export['attr']['title'] = __('Export');
+
+			if ($isFromModel) {
+				$export['url'][0] = 'excel';
+			} else {
+				$export['url']['action'] = 'excel';
+			}
+
+			$pages = $this->config('pages');
+			if (in_array($action, $pages)) {
+				$toolbarButtons['export'] = $export;
+			}
+		} else if ($buttons->offsetExists('back')) {
+			$export = $buttons['back'];
 			$export['type'] = 'button';
 			$export['label'] = '<i class="fa kd-export"></i>';
 			$export['attr'] = $attr;

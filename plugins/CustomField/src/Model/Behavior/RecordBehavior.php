@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\ORM\Table;
 
 class RecordBehavior extends Behavior {
 	protected $_contain = ['CustomFieldValues', 'CustomTableCells'];
@@ -14,7 +15,11 @@ class RecordBehavior extends Behavior {
 		'events' => [
 			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
 			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
-			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction'
+			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction',
+			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave',
+			'Model.excel.onExcelUpdateFields'				=> 'onExcelUpdateFields',
+			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
+			'Model.excel.onExcelRenderCustomField'			=> 'onExcelRenderCustomField',
 		],
 		'model' => null,
 		'behavior' => null,
@@ -43,6 +48,10 @@ class RecordBehavior extends Behavior {
 	private $CustomFormsFields = null;
 	private $CustomFormsFilters = null;
 
+	// Use for excel only
+	private $_fieldValues = [];
+	private $_customFieldOptions = [];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->_table->hasMany('CustomFieldValues', $this->config('fieldValueClass'));
@@ -55,6 +64,7 @@ class RecordBehavior extends Behavior {
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 
 		$this->CustomFields = $this->CustomFieldValues->CustomFields;
+		$this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
 		$this->CustomForms = $this->CustomFields->CustomForms;
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
@@ -63,6 +73,8 @@ class RecordBehavior extends Behavior {
 		if (empty($model)) {
 			$this->config('model', $this->_table->registryAlias());
 		}
+
+		$this->_table->addBehavior('CustomField.Table');
     }
 
     public function implementedEvents() {
@@ -77,7 +89,7 @@ class RecordBehavior extends Behavior {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     	// Checking : skip insert if value is empty
-    	if (array_key_exists('custom_field_values', $data[$this->_table->alias()]) || array_key_exists('custom_table_cells', $data[$this->_table->alias()])) {
+    	if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
 			$fieldTypes = $this->CustomFieldTypes
 				->find('list', ['keyField' => 'code', 'valueField' => 'value'])
 				->toArray();
@@ -110,9 +122,18 @@ class RecordBehavior extends Behavior {
 					$obj[$fieldValue] = '';
 				}
 
-				if (strlen($obj[$fieldValue]) == 0) {
+				// Will move the logic to StudentListBehavior eventually
+				if ($fieldType != 'STUDENT_LIST' && strlen($obj[$fieldValue]) == 0) {
 					unset($data[$this->_table->alias()]['custom_field_values'][$key]);
 				}
+
+				// Delete existing answer and reinsert
+				if (isset($obj['id'])) {
+					$this->CustomFieldValues->deleteAll([
+						'id' => $obj['id']
+					]);
+				}
+
 				$count++;
 			}
 
@@ -148,22 +169,6 @@ class RecordBehavior extends Behavior {
 			}
 		}
 
-		if (array_key_exists('custom_table_cells', $data[$this->_table->alias()])) {
-			foreach ($data[$this->_table->alias()]['custom_table_cells'] as $key => $obj) {
-				$fieldType = $this->CustomFields
-					->find('all')
-					->select([$this->CustomFields->aliasField('field_type')])
-					->where([$this->CustomFields->aliasField('id') => $obj[$this->config('fieldKey')]])
-					->first()
-					->field_type;
-
-				$fieldValue = $fieldTypes[$fieldType];
-
-				if (strlen($obj[$fieldValue]) == 0) {
-					unset($data[$this->_table->alias()]['custom_table_cells'][$key]);
-				}
-			}
-		}
 		// End Checking
 
     	$associatedOptions = $options->offsetExists('associated') ? $options->offsetGet('associated') : [];
@@ -174,6 +179,75 @@ class RecordBehavior extends Behavior {
     public function addEditAfterAction(Event $event, Entity $entity) {
     	$this->buildCustomFields($entity);
 	}
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	// Will move the logic to StudentListBehavior eventually
+    	if (array_key_exists($this->_table->alias(), $data)) {
+    		if (array_key_exists('custom_field_values', $data[$this->_table->alias()])) {
+    			$StudentSurveys = TableRegistry::get('Student.StudentSurveys');
+    			$fieldTypes = $this->CustomFieldTypes
+					->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+					->toArray();
+
+				$redirectUrl = null;
+    			foreach ($data[$this->_table->alias()]['custom_field_values'] as $key => $obj) {
+    				if (array_key_exists($StudentSurveys->alias(), $obj)) {
+    					$fieldId = $obj[$this->config('fieldKey')];
+    					// Student List field type no need to store
+    					$this->CustomFieldValues->deleteAll([
+							$this->CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id,
+							$this->CustomFieldValues->aliasField($this->config('fieldKey')) => $fieldId
+						]);
+
+    					foreach ($obj[$StudentSurveys->alias()] as $studentId => $surveyObj) {
+    						if (array_key_exists('custom_field_values', $surveyObj)) {
+    							$surveyObj['status'] = $entity->status;
+    							foreach ($surveyObj['custom_field_values'] as $fieldkey => $fieldObj) {
+		    						$fieldType = $this->CustomFields
+										->find('all')
+										->select([$this->CustomFields->aliasField('field_type')])
+										->where([$this->CustomFields->aliasField('id') => $fieldObj[$this->config('fieldKey')]])
+										->first()
+										->field_type;
+		    						$fieldValue = $fieldTypes[$fieldType];
+
+		    						if (!isset($fieldObj[$fieldValue])) {
+		    							$fieldObj[$fieldValue] = '';
+		    						}
+
+		    						if (strlen($fieldObj[$fieldValue]) == 0) {
+		    							unset($surveyObj['custom_field_values'][$fieldkey]);
+									}
+
+									// Delete existing answer and reinsert
+									if (isset($fieldObj['id'])) {
+										$StudentSurveys->CustomFieldValues->deleteAll([
+											'id' => $fieldObj['id']
+										]);
+									}
+    							}
+
+								$surveyEntity = $StudentSurveys->newEntity($surveyObj);
+								if ($StudentSurveys->save($surveyEntity)) {
+								} else {
+									$this->log($surveyEntity->errors(), 'debug');
+								}
+    						}
+    					}
+
+    					if (is_null($redirectUrl)) {
+    						$redirectUrl = $this->_table->ControllerAction->url('edit');
+    					}
+    				}
+    			}
+
+    			if ($entity->status == 1 && !is_null($redirectUrl)) {
+					$event->stopPropagation();
+					return $this->_table->controller->redirect($redirectUrl);
+    			}
+    		}
+    	}
+    }
 
 	public function getCustomFieldQuery($entity) {
 		$customFieldQuery = null;
@@ -208,11 +282,11 @@ class RecordBehavior extends Behavior {
 				->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
 
 			if (!empty($filter)) {
-				$modelAlias = $this->_table->ControllerAction->getModel($filter)['model'];
+				$modelAlias = $this->getModel($filter)['model'];
 				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 
 				$filterId = $entity->$filterKey;
-				$filterModelAlias = $this->_table->ControllerAction->getModel($this->CustomFormsFilters->registryAlias())['model'];
+				$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
 				$customFormQuery
 					->join([
 						'table' => Inflector::tableize($filterModelAlias),
@@ -264,6 +338,117 @@ class RecordBehavior extends Behavior {
 			]);
 
 		return $customFieldQuery;
+	}
+
+	public function getModel($model) {
+		$split = explode('.', $model);
+		$plugin = null;
+		$modelClass = $model;
+		if (count($split) > 1) {
+			$plugin = $split[0];
+			$modelClass = $split[1];
+		}
+		return ['plugin' => $plugin, 'model' => $modelClass];
+	}
+
+	// Model.excel.onExcelBeforeStart
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    	$optionsValues = $this->CustomFieldOptions->find('list')->toArray();
+    	$sheets[] = [
+    		'name' => $this->_table->alias(),
+			'table' => $this->_table,
+			'query' => $this->_table->find(),
+			'customFieldOptions' => $optionsValues,
+    	];
+    }
+
+	// Model.excel.onExcelUpdateFields
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$recordId = $settings['id'];
+    	$entity = $this->_table->get($recordId);
+
+		$customFields = $this->getCustomFieldQuery($entity)->toArray();
+		foreach ($customFields as $customField) {
+			$_customField = $customField->custom_field;
+			$_field_type = $_customField->field_type;
+			$_id = $_customField->id;
+			$_name = $_customField->name;
+
+			$field['key'] = 'CustomField';
+			$field['field'] = 'custom_field';
+			$field['type'] = 'custom_field';
+			$field['label'] = $_name;
+			$field['customField'] = ['id' => $_id, 'field_type' => $_field_type];
+			$fields[] = $field;
+		}
+
+		// Set the available options for dropdown and checkbox type
+		$this->_customFieldOptions = $settings['sheet']['customFieldOptions'];
+
+		// Set the fetched field values to avoid multiple call to the database
+		$this->_fieldValues = $this->getFieldValue($entity->id);
+	}
+
+	// Model.excel.onExcelRenderCustomField
+	public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr) {
+		if (!empty($this->_fieldValues)) {
+			$answer = '';
+			$type = strtolower($attr['customField']['field_type']);
+			if (method_exists($this, $type)) {
+				$ans = $this->$type($this->_fieldValues, $attr['customField']['id'], $this->_customFieldOptions);
+				if (!(is_null($ans))) {
+					$answer = $ans;
+				}
+			}
+			return $answer;
+		} else {
+			return '';
+		}
+	}
+
+	/**
+	 *	Function to get the field values base on a given record id
+	 *
+	 *	@param int $recordId The record id of the entity
+	 *	@return array The field values of that given record id
+	 */
+	public function getFieldValue($recordId) {
+		$customFieldValueTable = $this->CustomFieldValues;
+		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
+		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+
+		$selectedColumns = [
+			$customFieldValueTable->aliasField($customFieldsForeignKey),
+			'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
+				.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+				.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
+				.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
+				.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
+				.' END) SEPARATOR \',\'))'
+		];
+		
+		// Getting the custom field table
+		$customFieldsTable = $customFieldValueTable->CustomFields;
+
+		// Getting the custom field values group by the record id, and then group by the field ids
+		// Record with similar record id and field ids will be group concat together
+		// For example: for checkbox, record id: 1, field id: 1, value: 1 and record id: 1, field id: 1, value: 2 will be
+		// group as record id: 1, field id: 1, value: 1,2
+		$fieldValue = $customFieldsTable
+			->find('list', [
+				'keyField' => $customFieldValueTable->aliasField($customFieldsForeignKey),
+				'valueField' => 'field_value',
+			])
+			->innerJoin(
+				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
+				[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
+			)
+			->select($selectedColumns)
+			->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $recordId])
+			->group([$customFieldValueTable->aliasField($customFieldsForeignKey)])
+			->toArray();
+
+		return $fieldValue;
 	}
 
 	public function buildCustomFields($entity) {
@@ -367,5 +552,86 @@ class RecordBehavior extends Behavior {
 			ksort($fieldOrder);
 			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
 		}
+	}
+	
+	private function text($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
+		} else {
+			return '';
+		}
+	}
+
+	private function number($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
+		} else {
+			return '';
+		}
+	}
+	
+	private function textarea($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			return $data[$fieldId];
+		} else {
+			return '';
+		}
+	}
+
+	private function dropdown($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			if (isset($options[$data[$fieldId]])) {
+				return $options[$data[$fieldId]];
+			} else {
+				return '';
+			}
+		} else {
+			return '';
+		}
+	}
+	
+	private function checkbox($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			$values = explode(",", $data[$fieldId]);
+			$returnValue = '';
+			foreach ($values as $value) {
+				if (isset($options[$value])) {
+					if (empty($returnValue)) {
+						$returnValue = $options[$value];
+					} else {
+						$returnValue = $returnValue.', '.$options[$value];						
+					}
+				}
+			}
+			return $returnValue;
+		} else {
+			return '';
+		}
+	}
+
+	private function date($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			$date = date_create_from_format('Y-m-d', $data[$fieldId]);
+			return $this->_table->formatDate($date);
+		} else {
+			return '';
+		}
+	}
+
+	private function time($data, $fieldId, $options=[]) {
+		if (isset($data[$fieldId])) {
+			$time = date_create_from_format('G:i:s', $data[$fieldId]);
+			return $this->_table->formatTime($date);
+		} else {
+			return '';
+		}
+	}
+
+	private function student_list($data, $fieldId, $options=[]) {
+		return null;
+	}
+
+	private function table($data, $fieldId, $options=[]) {
+		return null;
 	}
 }
