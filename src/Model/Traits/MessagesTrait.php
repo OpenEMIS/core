@@ -703,6 +703,21 @@ trait MessagesTrait {
 				]
 			],
 			'Students' => [
+				'first_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid First Name'
+				],
+				'middle_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Middle Name'
+				],
+				'third_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Third Name'
+				],
+				'last_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Last Name'
+				],
+				'preferred_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Preferred Name'
+				],
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
@@ -735,6 +750,21 @@ trait MessagesTrait {
 				]
 			],
 			'Staff' => [
+				'first_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid First Name'
+				],
+				'middle_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Middle Name'
+				],
+				'third_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Third Name'
+				],
+				'last_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Last Name'
+				],
+				'preferred_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Preferred Name'
+				],
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
