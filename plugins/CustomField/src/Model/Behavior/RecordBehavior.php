@@ -17,6 +17,7 @@ class RecordBehavior extends Behavior {
 			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
 			'ControllerAction.Model.addEdit.afterAction' 	=> ['callable' => 'addEditAfterAction', 'priority' => 100],
 			'ControllerAction.Model.edit.afterSave' 		=> ['callable' => 'editAfterSave', 'priority' => 100],
+			'Model.custom.onUpdateToolbarButtons'			=> 'onUpdateToolbarButtons',
 			'Model.excel.onExcelUpdateFields'				=> 'onExcelUpdateFields',
 			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
 			'Model.excel.onExcelRenderCustomField'			=> 'onExcelRenderCustomField'
@@ -82,6 +83,19 @@ class RecordBehavior extends Behavior {
     	$events = parent::implementedEvents();
     	$events = array_merge($events, $this->config('events'));
     	return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($this->config('tabSection')) {
+			$currentAction = $this->_table->ControllerAction->action();
+			if ($currentAction == 'view') {
+				if ($toolbarButtons->offsetExists('back')) {
+					if (array_key_exists('tab_section', $toolbarButtons['back']['url'])) {
+						unset($toolbarButtons['back']['url']['tab_section']);
+					}
+				}
+			}
+		}
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
