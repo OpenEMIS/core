@@ -39,6 +39,7 @@ class InstitutionSurveysTable extends AppTable {
 			'module' => $this->module
 		]);
 		$this->addBehavior('CustomField.Record', [
+			'tabSection' => true,
 			'moduleKey' => null,
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
