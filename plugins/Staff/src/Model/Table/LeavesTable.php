@@ -42,6 +42,15 @@ class LeavesTable extends AppTable {
     	return $events;
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		$dateFrom = date_create($entity->date_from);
+		$dateTo = date_create($entity->date_to);
+		$diff = date_diff($dateFrom, $dateTo, true);
+		$numberOfDays = $diff->format("%a");
+		$entity->number_of_days = ++$numberOfDays;
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$this->updateStatusId($entity);
 	}
@@ -52,6 +61,9 @@ class LeavesTable extends AppTable {
 		]);
 		$this->ControllerAction->field('status_id', [
 			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
+		]);
+		$this->ControllerAction->field('number_of_days', [
+			'visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]
 		]);
 		$this->ControllerAction->field('file_name', [
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
