@@ -16,10 +16,4 @@ class ContactOptionsTable extends AppTable {
 		
 		return $validator;
 	}
-
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-	pr($options);
-		pr($entity); die;
-	}	
-
 }
