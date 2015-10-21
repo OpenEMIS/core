@@ -10,7 +10,6 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use User\Model\Table\UsersTable AS BaseUsers;
 
 class StudentsTable extends AppTable {
 	public $InstitutionStudent;
@@ -62,6 +61,7 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByGender'
 			]
 		]);
+        $this->addBehavior('Import.ImportLink');
 
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
@@ -100,7 +100,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return BaseUsers::setUserValidation($validator);
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -201,24 +202,26 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
-				$studentId = $this->request->data[$this->alias()]['student_id'];
-				$enrolledStatus = false;
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				foreach ($institutionIds as $id) {
-					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-					if ($enrolledStatus) {
-						break;
+		switch ($action) {
+			case 'view':
+				if (!$this->AccessControl->isAdmin()) {
+					$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+					$studentId = $this->request->data[$this->alias()]['student_id'];
+					$enrolledStatus = false;
+					$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+					foreach ($institutionIds as $id) {
+						$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+						if ($enrolledStatus) {
+							break;
+						}
+					}
+					if (! $enrolledStatus) {
+						if (isset($toolbarButtons['edit'])) {
+							unset($toolbarButtons['edit']);
+						}
 					}
 				}
-				if (! $enrolledStatus) {
-					if (isset($toolbarButtons['edit'])) {
-						unset($toolbarButtons['edit']);
-					}
-				}
-			}
+				break;
 		}
 	}
 

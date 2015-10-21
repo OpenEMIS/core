@@ -218,6 +218,7 @@ Plugin::load('InstitutionCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StudentCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('Error', ['routes' => true, 'autoload' => true]);
+Plugin::load('Import', ['routes' => true, 'autoload' => true]);
 Plugin::load('API', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode

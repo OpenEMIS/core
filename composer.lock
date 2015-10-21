@@ -448,6 +448,44 @@
             "time": "2014-11-20 16:49:30"
         },
         {
+            "name": "mk-j/php_xlsxwriter",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
+                "reference": "45a0c7e1ea034bef9a6e9d594c3e8dc00ec069ea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/45a0c7e1ea034bef9a6e9d594c3e8dc00ec069ea",
+                "reference": "45a0c7e1ea034bef9a6e9d594c3e8dc00ec069ea",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.3.*"
+            },
+            "type": "project",
+            "autoload": {
+                "classmap": [
+                    "xlsxwriter.class.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP Library to write XLSX files",
+            "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
+            "keywords": [
+                "excel",
+                "library",
+                "php",
+                "xls",
+                "xlsx"
+            ],
+            "time": "2015-07-28 16:24:47"
+        },
+        {
             "name": "mobiledetect/mobiledetectlib",
             "version": "2.8.13",
             "source": {
@@ -595,6 +633,63 @@
                 }
             ],
             "time": "2015-02-03 12:10:50"
+        },
+        {
+            "name": "phpoffice/phpexcel",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHPOffice/PHPExcel.git",
+                "reference": "049e85ae98a90869e1bc83087f755010e9223091"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHPOffice/PHPExcel/zipball/049e85ae98a90869e1bc83087f755010e9223091",
+                "reference": "049e85ae98a90869e1bc83087f755010e9223091",
+                "shasum": ""
+            },
+            "require": {
+                "ext-xml": "*",
+                "ext-xmlwriter": "*",
+                "php": ">=5.2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "PHPExcel": "Classes/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL"
+            ],
+            "authors": [
+                {
+                    "name": "Maarten Balliauw",
+                    "homepage": "http://blog.maartenballiauw.be"
+                },
+                {
+                    "name": "Mark Baker"
+                },
+                {
+                    "name": "Franck Lefevre",
+                    "homepage": "http://blog.rootslabs.net"
+                },
+                {
+                    "name": "Erik Tilt"
+                }
+            ],
+            "description": "PHPExcel - OpenXML - Read, Create and Write Spreadsheet documents in PHP - Spreadsheet engine",
+            "homepage": "http://phpexcel.codeplex.com",
+            "keywords": [
+                "OpenXML",
+                "excel",
+                "php",
+                "spreadsheet",
+                "xls",
+                "xlsx"
+            ],
+            "time": "2015-05-05 00:10:25"
         },
         {
             "name": "phpspec/prophecy",
@@ -1713,6 +1808,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "phpoffice/phpexcel": 20,
+        "mk-j/php_xlsxwriter": 20,
         "psy/psysh": 0
     },
     "prefer-stable": true,
