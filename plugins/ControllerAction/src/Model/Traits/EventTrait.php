@@ -13,9 +13,17 @@ trait EventTrait {
 		}
 	}
 
-	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
+	public function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
 		$this->onEvent($subject, $eventKey, $method);
 		$event = new Event($eventKey, $this, $params);
-		return $subject->eventManager()->dispatch($event);
+		$event = $subject->eventManager()->dispatch($event);
+		if(!is_null($method) && $autoOff) {
+			$this->offEvent($subject, $eventKey, $method);
+		}
+		return $event;
+	}
+
+	public function offEvent($subject, $eventKey, $method) {
+		$subject->eventManager()->off($eventKey, [$subject, $method]);
 	}
 }
