@@ -249,7 +249,7 @@ class RecordBehavior extends Behavior {
     	}
     }
 
-	public function getCustomFieldQuery($entity) {
+	public function getCustomFieldQuery($entity, $withSection=false) {
 		$customFieldQuery = null;
 		//For Institution Survey
 		if (is_null($this->config('moduleKey'))) {
@@ -338,38 +338,40 @@ class RecordBehavior extends Behavior {
 			]);
 
 		// Tab Element
-		$customFields = $customFieldQuery
-			->toArray();
+		if ($withSection) {
+			$customFields = $customFieldQuery
+				->toArray();
 
-		$tabElements = [];
-		$action = $this->_table->ControllerAction->action();
-		$url = $this->_table->ControllerAction->url($action);
-		$sectionName = null;
-		foreach ($customFields as $customFieldOrder => $customField) {
-			if (isset($customField->section)) {
-				if ($sectionName != $customField->section) {
-					$sectionName = $customField->section;
-					$tabName = Inflector::slug($sectionName);
-					if (empty($tabElements)) {
-						$selectedAction = $tabName;
+			$tabElements = [];
+			$action = $this->_table->ControllerAction->action();
+			$url = $this->_table->ControllerAction->url($action);
+			$sectionName = null;
+			foreach ($customFields as $customFieldOrder => $customField) {
+				if (isset($customField->section)) {
+					if ($sectionName != $customField->section) {
+						$sectionName = $customField->section;
+						$tabName = Inflector::slug($sectionName);
+						if (empty($tabElements)) {
+							$selectedAction = $tabName;
+						}
+						$url['tab_section'] = $tabName;
+						$tabElements[$tabName] = [
+							'url' => $url,
+							'text' => $sectionName,
+						];
 					}
-					$url['tab_section'] = $tabName;
-					$tabElements[$tabName] = [
-						'url' => $url,
-						'text' => $sectionName,
-					];
 				}
 			}
-		}
 
-		if (!empty($tabElements)) {
-			$selectedAction = !is_null($this->_table->controller->request->query('tab_section')) ? $this->_table->controller->request->query('tab_section') : $selectedAction;
-			$this->_table->controller->set('tabElements', $tabElements);
-			$this->_table->controller->set('selectedAction', $selectedAction);
+			if (!empty($tabElements)) {
+				$selectedAction = !is_null($this->_table->controller->request->query('tab_section')) ? $this->_table->controller->request->query('tab_section') : $selectedAction;
+				$this->_table->controller->set('tabElements', $tabElements);
+				$this->_table->controller->set('selectedAction', $selectedAction);
 
-			$customFieldQuery->where([
-				$this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['text']
-			]);
+				$customFieldQuery->where([
+					$this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['text']
+				]);
+			}
 		}
 		// End
 
@@ -488,7 +490,7 @@ class RecordBehavior extends Behavior {
 	}
 
 	public function buildCustomFields($entity) {
-		$customFieldQuery = $this->getCustomFieldQuery($entity);
+		$customFieldQuery = $this->getCustomFieldQuery($entity, true);
 
 		if (isset($customFieldQuery)) {
 			$customFields = $customFieldQuery
