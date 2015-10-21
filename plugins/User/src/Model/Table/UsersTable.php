@@ -330,7 +330,11 @@ class UsersTable extends AppTable {
 			->order($this->aliasField('id').' DESC')
 			->first();
 
-		$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+		if (is_array($latest)) {
+			$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+		} else {
+			$latestOpenemisNo = $latest->openemis_no;
+		}
 		if(empty($prefix)){
 			$latestDbStamp = $latestOpenemisNo;
 		}else{
