@@ -10,7 +10,6 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use User\Model\Table\UsersTable AS BaseUsers;
 
 class StaffTable extends AppTable {
 	public $InstitutionStaff;
@@ -56,6 +55,7 @@ class StaffTable extends AppTable {
 				'_function' => 'getNumberOfStaffByGender'
 			]
 		]);
+        $this->addBehavior('Import.ImportLink');
 
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
@@ -87,7 +87,8 @@ class StaffTable extends AppTable {
 
 
 	public function validationDefault(Validator $validator) {
-		return BaseUsers::setUserValidation($validator);
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -225,4 +226,5 @@ class StaffTable extends AppTable {
 		$params['dataSet'] = $dataSet;
 		return $params;
 	}
+
 }
