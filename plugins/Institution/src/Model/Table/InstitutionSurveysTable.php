@@ -287,6 +287,7 @@ class InstitutionSurveysTable extends AppTable {
 				$this->updateAll(['status_id' => self::EXPIRED],
 					[
 						'institution_site_id' => $institutionId,
+						'survey_form_id' => $surveyFormId,
 						'status_id' => $openStatusId
 					]
 				);
