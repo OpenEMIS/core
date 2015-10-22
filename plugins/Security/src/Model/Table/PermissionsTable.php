@@ -68,6 +68,11 @@ class PermissionsTable extends AppTable {
 			return $this->controller->redirect(['action' => 'Roles']);
 		}
 		$roleId = $this->request->pass[1];
+		if (! $this->checkRolesHierarchy($roleId)) {
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+			$event->stopPropagation();
+			return $this->controller->redirect($action);
+		}
 		$module = $this->request->query('module');
 		$settings['pagination'] = false;
 		
@@ -96,9 +101,7 @@ class PermissionsTable extends AppTable {
 		return $list;
 	}
 
-	public function edit($roleId=0) {
-		$request = $this->request;
-		$params = $this->ControllerAction->paramsQuery();
+	public function checkRolesHierarchy($roleId) {
 		$user = $this->Auth->user();
 		$userId = $user['id'];
 		if ($user['super_admin'] == 1) { // super admin will show all roles
@@ -117,12 +120,23 @@ class PermissionsTable extends AppTable {
 		$SecurityRolesTable = $this->SecurityRoles;
 		$roleOrder = $this->SecurityRoles->get($roleId)->order;
 
+		// Redirect the user out of the user is not allowed to edit the permission
 		if ($roleOrder > $userRole['security_role']['order']) {
-			pr('yes');
+			return true;
 		} else {
-			pr('no');
+			return false;
 		}
+	}
 
+	public function edit($roleId=0) {
+		$request = $this->request;
+		$params = $this->ControllerAction->paramsQuery();
+
+		if (! $this->checkRolesHierarchy($roleId)) {
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+			return $this->controller->redirect($action);
+		}
+		
 		if ($request->is(['post', 'put'])) {
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
