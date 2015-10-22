@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\ORM\TableRegistry;
 
 class PermissionsTable extends AppTable {
 	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
@@ -98,9 +99,31 @@ class PermissionsTable extends AppTable {
 	public function edit($roleId=0) {
 		$request = $this->request;
 		$params = $this->ControllerAction->paramsQuery();
+		$user = $this->Auth->user();
+		$userId = $user['id'];
+		if ($user['super_admin'] == 1) { // super admin will show all roles
+			$userId = null;
+		}
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+		$userRole = $GroupRoles
+			->find()
+			->contain('SecurityRoles')
+			->order(['SecurityRoles.order'])
+			->where([
+				$GroupRoles->aliasField('security_user_id') => $userId
+			])
+			->first();
+
+		$SecurityRolesTable = $this->SecurityRoles;
+		$roleOrder = $this->SecurityRoles->get($roleId)->order;
+
+		if ($roleOrder > $userRole['security_role']['order']) {
+			pr('yes');
+		} else {
+			pr('no');
+		}
 
 		if ($request->is(['post', 'put'])) {
-			// pr($request->data);die;
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
 				foreach ($permissions as $row) {
