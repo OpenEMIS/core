@@ -10,6 +10,7 @@ echo $this->Html->css('OpenEmis.../plugins/scrolltabs/css/scrolltabs.css');
 echo $this->Html->css('OpenEmis.../plugins/slider/css/bootstrap-slider');
 
 echo $this->Html->css('OpenEmis.master.min');
+echo $this->Html->css('master-override');
 
 if (isset($theme)) {
 	echo $this->Html->css($theme);
