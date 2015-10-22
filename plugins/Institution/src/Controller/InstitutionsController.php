@@ -99,12 +99,6 @@ class InstitutionsController extends AppController  {
 
 		if ($action == 'index') {
 			$session->delete('Institution.Institutions.id');
-		} else if ($action == 'Surveys') {
-			// This is to turn off workflow for New and Draft Survey
-			$this->loadComponent('Survey.Survey', [
-				'model' => 'Institution.InstitutionSurveys'
-			]);
-			$this->Workflow->attachWorkflow = $this->Survey->getAttachWorkflow();
 		}
 
 		if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {

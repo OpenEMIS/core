@@ -308,6 +308,7 @@ trait MessagesTrait {
 			'tabTitle' => 'User Groups'
 		],
 		'Workflows' => [
+			'noWorkflows' => 'You need to configure Workflows for this form.',
 			'workflow_model_id' => 'Form'
 		],
 		'WorkflowActions' => [
