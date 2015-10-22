@@ -124,3 +124,26 @@ a:hover,
 .btn-dropdown:hover {
 	border-color: #476B8F;
 }
+
+/* OVERWRITES MASTER.MIN.CSS -- To be updated in styleguide after v.2.1.1 */
+.left-menu li a {
+	height: 34px;
+}
+
+.left-menu li a b {
+	margin-left: 10px;
+}
+
+.left-menu li a span {
+	position: relative;
+}
+
+.page-header {
+	display: block;
+}
+
+.wrapper {
+	position: relative;
+	top: 0;
+	padding: 10px 0;
+}
