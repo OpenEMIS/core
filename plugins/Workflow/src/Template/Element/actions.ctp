@@ -2,7 +2,7 @@
 
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('general.visible'); ?></th>
@@ -57,7 +57,7 @@
 			</button>
 		</div>
 		<div class="table-in-view">
-			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
 						<?php if ($action == 'edit') : ?>
