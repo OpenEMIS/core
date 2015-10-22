@@ -122,15 +122,44 @@ class SecurityRolesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query('type');
-		
+		$user = $this->Auth->user();
+		$userId = $user['id'];
+		if ($user['super_admin'] == 1) { // super admin will show all roles
+			$userId = null;
+		}
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 		$selectedGroup = $request->query('security_group_id');
 		if ($type == 'system') {
-
 			$query
-			->where([$this->aliasField('security_group_id') => 0])		// custom system defined roles
-			->orWhere([$this->aliasField('security_group_id') => -1]);	// fixed system defined roles
+				->where([$this->aliasField('security_group_id') => 0]) // custom system defined roles
+				->orWhere([$this->aliasField('security_group_id') => -1]); // fixed system defined roles
+			
+			if (!is_null($userId)) {
+				$userRole = $GroupRoles
+				->find()
+				->contain('SecurityRoles')
+				->order(['SecurityRoles.order'])
+				->where([
+					$GroupRoles->aliasField('security_user_id') => $userId
+				])
+				->first();
+				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+			}				
 		} else {
-			$query->where([$this->aliasField('security_group_id') => $selectedGroup]);
+			$query
+				->where([$this->aliasField('security_group_id') => $selectedGroup]);
+			if (!is_null($userId)) {
+				$userRole = $GroupRoles
+				->find()
+				->contain('SecurityRoles')
+				->order(['SecurityRoles.order'])
+				->where([
+					$GroupRoles->aliasField('security_user_id') => $userId, 
+					'SecurityRoles.security_group_id' => $selectedGroup
+				])
+				->first();
+				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+			}
 		}
 	}
 
