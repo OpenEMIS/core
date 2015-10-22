@@ -149,12 +149,6 @@ class InstitutionsTable extends AppTable  {
 
 	        ->allowEmpty('email')
 			->add('email', [
-					'ruleUnique' => [
-		        		'rule' => 'validateUnique',
-		        		'provider' => 'table',
-		        		// 'message' => 'Email has to be unique',
-		        		'last' => true
-				    ],
 					'ruleValidEmail' => [
 						'rule' => 'email'
 					]
