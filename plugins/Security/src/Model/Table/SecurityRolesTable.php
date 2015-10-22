@@ -219,7 +219,8 @@ class SecurityRolesTable extends AppTable {
 				$roles = $this->find()
 					->matching('GroupUsers')
 					->where([
-						'SecurityGroupUsers.security_user_id' => $userId
+						'SecurityGroupUsers.security_user_id' => $userId,
+						$this->aliasField('security_group_id') . ' IN ' => $groupIds
 					])
 					->order(['Roles.order'])
 					->first();
