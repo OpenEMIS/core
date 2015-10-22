@@ -1,4 +1,3 @@
-
 /* CUSTOMIZED THEME */
 
 .body-wrapper {
@@ -55,6 +54,11 @@ a:focus,
 
 /* DARK SHADES */
 
+.btn-outline {
+    background: #FFF !important;
+    color: #476B8F !important;
+}
+
 a:hover,
 .pagination > li > a,
 .panel-breadcrumb .active,
@@ -88,8 +92,8 @@ a:hover,
     border-right: 1px solid #476B8F !important;
 }
 
-.header-navigation .btn-group .btn:hover,
-.input-slider .slider-handle {
+.input-slider .slider-handle,
+.header-navigation .btn-group .btn:hover {
     background-color: #476B8F;
 }
 
