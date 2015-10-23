@@ -316,6 +316,12 @@ class NavigationComponent extends Component {
 					'Bank Accounts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']],
 					'Salaries' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Salaries']]
 				]
+			],
+			'Training' => [
+				'collapse' => true,
+				'items' => [
+					'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']]
+				]
 			]
 		];
 
