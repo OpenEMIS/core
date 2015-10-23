@@ -10,10 +10,6 @@ class TrainingCoursesController extends AppController
         parent::initialize();
 
         $this->ControllerAction->model('Training.TrainingCourses');
-        $this->ControllerAction->models = [
-            'Courses' => ['className' => 'Training.TrainingCourses'],
-            // 'Steps' => ['className' => 'Workflow.WorkflowSteps']
-        ];
         $this->loadComponent('Paginator');
     }
 
