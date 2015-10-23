@@ -68,6 +68,35 @@ class InstitutionSurveysTable extends AppTable {
     	return $events;
     }
 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+		$query
+			->select(['code' => 'Institutions.code', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+		$fields[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'Institutions.area_id',
+			'field' => 'area_id',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'Institutions.area_administrative_id',
+			'field' => 'area_administrative_id',
+			'type' => 'string',
+			'label' => '',
+		];
+	}
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
     	$this->updateStatusId($entity);
 
