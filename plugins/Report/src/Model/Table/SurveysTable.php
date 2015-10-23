@@ -10,6 +10,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class SurveysTable extends AppTable  {
+	private $surveyStatuses = [];
 
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
@@ -64,6 +65,9 @@ class SurveysTable extends AppTable  {
 		];
 		$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
 		$surveyStatuses = $WorkflowStatusMappingsTable->getWorkflowSteps($status);
+
+		$WorkflowStatusesTable = $WorkflowStatusMappingsTable->WorkflowStatuses;
+		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
 		
 		$statusCondition = [
 			$this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
@@ -90,11 +94,28 @@ class SurveysTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 
+		// To update to this code when upgrade server to PHP 5.5 and above
+		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+
+		foreach ($fields as $key => $field) {
+			if ($field['field'] == 'institution_site_id') {
+				unset($fields[$key]);
+				break;
+			}
+		}
+
 		$fields[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',
 			'type' => 'string',
 			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'InstitutionSurveys.institution_site_id',
+            'field' => 'institution_site_id',
+            'type' => 'integer',
+            'label' => '',
 		];
 
 		$fields[] = [
@@ -220,15 +241,9 @@ class SurveysTable extends AppTable  {
 		}
 	}
 
-	public function onExcelGetStatus(Event $event, Entity $entity) {
-		$status = $entity->status;
-		switch ($status) {
-			case self::COMPLETED:
-				return __('Completed');
-				break;
-			default:
-				return __('Not Completed');
-				break;
-		}
+	public function onExcelGetStatusId(Event $event, Entity $entity) {
+		$surveyStatuses = $this->surveyStatuses;
+		$status = $entity->status_id;
+		return __($surveyStatuses[$status]);
 	}
 }
