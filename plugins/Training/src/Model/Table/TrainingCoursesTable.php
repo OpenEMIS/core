@@ -4,11 +4,20 @@ namespace Training\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
 class TrainingCoursesTable extends AppTable {
+	private $_contain = ['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'ResultTypes'];
+	private $_fieldOrder = [
+		'status_id', 'code', 'name', 'description', 'objective', 'credit_hours', 'duration',
+		'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
+		'file_name', 'file_content'
+	];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -18,6 +27,38 @@ class TrainingCoursesTable extends AppTable {
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingLevels', ['className' => 'Training.TrainingLevels', 'foreignKey' => 'training_level_id']);
 		$this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('TargetPopulations', [
+			'className' => 'Institution.StaffPositionTitles',
+			'joinTable' => 'training_courses_target_populations',
+			'foreignKey' => 'training_course_id',
+			'targetForeignKey' => 'target_population_id',
+			'through' => 'Training.TrainingCoursesTargetPopulations',
+			'dependent' => true
+		]);
+		$this->belongsToMany('TrainingProviders', [
+			'className' => 'Training.TrainingProviders',
+			'joinTable' => 'training_courses_providers',
+			'foreignKey' => 'training_course_id',
+			'targetForeignKey' => 'training_provider_id',
+			'through' => 'Training.TrainingCoursesProviders',
+			'dependent' => true
+		]);
+		$this->belongsToMany('CoursePrerequisites', [
+			'className' => 'Training.PrerequisiteTrainingCourses',
+			'joinTable' => 'training_courses_prerequisites',
+			'foreignKey' => 'training_course_id',
+			'targetForeignKey' => 'prerequisite_training_course_id',
+			'through' => 'Training.TrainingCoursesPrerequisites',
+			'dependent' => true
+		]);
+		$this->belongsToMany('ResultTypes', [
+			'className' => 'Training.TrainingResultTypes',
+			'joinTable' => 'training_courses_result_types',
+			'foreignKey' => 'training_course_id',
+			'targetForeignKey' => 'training_result_type_id',
+			'through' => 'Training.TrainingCoursesResultTypes',
+			'dependent' => true
+		]);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
@@ -91,13 +132,77 @@ class TrainingCoursesTable extends AppTable {
 		$this->ControllerAction->field('file_content', [
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
+	}
 
-		// Order
+	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
-			'status_id', 'code', 'title', 'description', 'objective', 'credit_hours', 'duration',
-			'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
-			'file_name', 'file_content'
+			'status_id', 'code', 'name', 'credit_hours'
 		]);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
+	}
+
+	// public function viewBeforeAction(Event $event) {
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupFields();
+	}
+
+	// public function addEditBeforeAction(Event $event) {
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->setupFields();
+	}
+
+	public function addOnInitialize(Event $event, Entity $entity) {
+		unset($this->request->query['course']);
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['course'] = $entity->id;
+	}
+
+	public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldTrainingProviders(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['options'] = TableRegistry::get('Training.TrainingProviders')->getList()->toArray();
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$Courses = TableRegistry::get('Training.PrerequisiteTrainingCourses');
+			$courseQuery = $Courses->find('list');
+
+			$id = $request->query('course');
+			if (!is_null($id)) {
+				$courseQuery->where([
+					$Courses->aliasField('id <> ') => $id
+				]);
+			}
+
+			$courseOptions = $courseQuery->toArray();
+			$attr['options'] = $courseOptions;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldResultTypes(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['options'] = TableRegistry::get('Training.TrainingResultTypes')->getList()->toArray();
+		}
+
+		return $attr;
 	}
 
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request) {
@@ -124,5 +229,35 @@ class TrainingCoursesTable extends AppTable {
 				['id' => $entity->id]
 			);
 		}
+	}
+
+	public function setupFields() {
+		$this->ControllerAction->field('target_populations', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Select Target Populations'),
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
+		$this->ControllerAction->field('training_providers', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Select Providers'),
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
+		$this->ControllerAction->field('course_prerequisites', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Select Courses'),
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
+		$this->ControllerAction->field('result_types', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Select Result Types'),
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
+
+		// Field order
+		$this->_fieldOrder[] = 'target_populations';
+		$this->_fieldOrder[] = 'training_providers';
+		$this->_fieldOrder[] = 'course_prerequisites';
+		$this->_fieldOrder[] = 'result_types';
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 }

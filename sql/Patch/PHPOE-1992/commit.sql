@@ -55,7 +55,7 @@ DROP TABLE IF EXISTS `training_courses`;
 CREATE TABLE IF NOT EXISTS `training_courses` (
   `id` int(11) NOT NULL,
   `code` varchar(60) NOT NULL,
-  `title` varchar(250) NOT NULL,
+  `name` varchar(250) NOT NULL,
   `description` text DEFAULT NULL,
   `objective` text DEFAULT NULL,
   `credit_hours` int(3) DEFAULT NULL,
@@ -89,6 +89,54 @@ ADD INDEX(`training_mode_of_delivery_id`),
 ADD INDEX(`training_requirement_id`),
 ADD INDEX(`training_level_id`),
 ADD INDEX(`status_id`);
+
+-- New table - training_courses_target_populations
+DROP TABLE IF EXISTS `training_courses_target_populations`;
+CREATE TABLE IF NOT EXISTS `training_courses_target_populations` (
+  `id` char(36) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  `target_population_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_courses_target_populations`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - training_courses_providers
+DROP TABLE IF EXISTS `training_courses_providers`;
+CREATE TABLE IF NOT EXISTS `training_courses_providers` (
+  `id` char(36) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  `training_provider_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_courses_providers`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - training_courses_prerequisites
+DROP TABLE IF EXISTS `training_courses_prerequisites`;
+CREATE TABLE IF NOT EXISTS `training_courses_prerequisites` (
+  `id` char(36) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  `prerequisite_training_course_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_courses_prerequisites`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - training_courses_result_types
+DROP TABLE IF EXISTS `training_courses_result_types`;
+CREATE TABLE IF NOT EXISTS `training_courses_result_types` (
+  `id` char(36) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  `training_result_type_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_courses_result_types`
+  ADD PRIMARY KEY (`id`);
 
 -- New table - training_sessions
 DROP TABLE IF EXISTS `training_sessions`;
