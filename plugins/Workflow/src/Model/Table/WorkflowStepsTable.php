@@ -130,7 +130,7 @@ class WorkflowStepsTable extends AppTable {
 		if ($this->action != 'add') {
 			$this->ControllerAction->field('actions', [
 				'type' => 'element',
-				'element' => 'Workflow.actions',
+				'element' => 'Workflow.WorkflowSteps/actions',
 				'valueClass' => 'table-full-width'
 			]);
 			$this->_fieldOrder[] = 'actions';
@@ -142,7 +142,7 @@ class WorkflowStepsTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
-            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
+            ['name' => 'Workflow.WorkflowSteps/controls', 'data' => [], 'options' => []]
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);

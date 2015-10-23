@@ -14,7 +14,8 @@ class WorkflowComponent extends Component {
 	private $action;
 
 	public $WorkflowModels;
-	public $attachWorkflow = true;
+	public $attachWorkflow = false;	// indicate whether the model require workflow
+	public $hasWorkflow = false;	// indicate whether workflow is setup
 	public $components = ['Auth', 'ControllerAction', 'AccessControl'];
 
 	public function initialize(array $config) {
