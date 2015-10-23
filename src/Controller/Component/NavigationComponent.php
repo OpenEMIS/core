@@ -493,13 +493,11 @@ class NavigationComponent extends Component {
 				'items' => [
 					'Courses' => [
 						'collapse' => true,
-						'url' => ['plugin' => 'Training', 'controller' => 'TrainingCourses', 'action' => 'index'],
-						'selected' => ['add', 'view', 'edit']
+						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Courses']
 					],
 					'Sessions' => [
 						'collapse' => true,
-						'url' => ['plugin' => 'Training', 'controller' => 'TrainingSessions', 'action' => 'index'],
-						'selected' => ['add', 'view', 'edit']
+						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Sessions']
 					]
 				],
 			],

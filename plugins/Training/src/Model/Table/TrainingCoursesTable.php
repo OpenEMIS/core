@@ -96,42 +96,35 @@ class TrainingCoursesTable extends AppTable {
 		$this->ControllerAction->field('status_id', [
 			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
 		]);
-		$this->ControllerAction->field('description', [
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-		]);
-		$this->ControllerAction->field('objective', [
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-		]);
-		$this->ControllerAction->field('duration', [
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-		]);
+		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
+		$this->ControllerAction->field('description', ['visible' => $visible]);
+		$this->ControllerAction->field('objective', ['visible' => $visible]);
+		$this->ControllerAction->field('duration', ['visible' => $visible]);
 		$this->ControllerAction->field('training_field_of_study_id', [
 			'type' => 'select',
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'visible' => $visible
 		]);
 		$this->ControllerAction->field('training_course_type_id', [
 			'type' => 'select',
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'visible' => $visible
 		]);
 		$this->ControllerAction->field('training_mode_of_delivery_id', [
 			'type' => 'select',
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'visible' => $visible
 		]);
 		$this->ControllerAction->field('training_requirement_id', [
 			'type' => 'select',
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'visible' => $visible
 		]);
 		$this->ControllerAction->field('training_level_id', [
 			'type' => 'select',
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'visible' => $visible
 		]);
 		$this->ControllerAction->field('file_name', [
 			'type' => 'hidden',
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'visible' => $visible
 		]);
-		$this->ControllerAction->field('file_content', [
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-		]);
+		$this->ControllerAction->field('file_content', ['visible' => $visible]);
 	}
 
 	public function indexBeforeAction(Event $event) {
