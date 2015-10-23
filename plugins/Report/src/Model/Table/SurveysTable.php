@@ -62,20 +62,11 @@ class SurveysTable extends AppTable  {
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-
-
 		$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
-		$statuses = $WorkflowStatusMappingsTable
-			->find('list', [
-				'keyField' => 'id',
-				'valueField' => 'id'
-			])
-			->where([$WorkflowStatusMappingsTable->aliasField('workflow_status_id') => $status])
-			->select(['id' => $WorkflowStatusMappingsTable->aliasField('workflow_step_id')])
-			->toArray();
-
+		$surveyStatuses = $WorkflowStatusMappingsTable->getWorkflowSteps($status);
+		
 		$statusCondition = [
-			$this->aliasField('status_id').' IN ' => $statuses
+			$this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
 		];
 
 		$condition = array_merge($condition, $statusCondition);
@@ -200,41 +191,23 @@ class SurveysTable extends AppTable  {
 				$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
 
 				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
-
-					$WorkflowModelTable = TableRegistry::get('Workflow.WorkflowModels');
-					$surveyStatuses = $WorkflowModelTable
-						->find('list')
-						->matching('WorkflowStatuses')
-						->where([$WorkflowModelTable->aliasField('model') => 'Institution.InstitutionSurveys'])
-						->select(['id' => 'WorkflowStatuses.id', 'name' => 'WorkflowStatuses.name'])
-						->toArray();
-
+					$surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
 					$attr['type'] = 'select';
 					$surveyTable = $this;
 					$arrayKeys = array_keys($surveyStatuses);
-					$selected = array_shift($arrayKeys);
-
-					$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
 		
-					$this->advancedSelectOptions($surveyStatuses, $selected, [
+					$this->advancedSelectOptions($surveyStatuses, $this->request->data[$this->alias()]['status'], [
 						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
-						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId, $WorkflowStatusMappingsTable) {
+						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId) {
 
-							$statuses = $WorkflowStatusMappingsTable
-								->find('list', [
-									'keyField' => 'id',
-									'valueField' => 'id'
-								])
-								->where([$WorkflowStatusMappingsTable->aliasField('workflow_status_id') => $id])
-								->select(['id' => $WorkflowStatusMappingsTable->aliasField('workflow_step_id')])
-								->toArray();
+							$statuses = $this->Workflow->getWorkflowSteps($id);
 
 							$query = $surveyTable
 								->find()
 								->where([
 									$surveyTable->aliasField('survey_form_id').'='.$surveyForm,
 									$surveyTable->aliasField('academic_period_id').'='.$academicPeriodId,
-									$surveyTable->aliasField('status_id').' IN ' => $statuses
+									$surveyTable->aliasField('status_id').' IN ' => array_keys($statuses)
 								])
 								->count();
 							return $query;
