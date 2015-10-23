@@ -1491,11 +1491,11 @@ class StudentsTable extends AppTable {
 			}
 
 		/* delete all fees paid by students to that specific grade (grade info can be found in institution_site_fees) */
-			$StudentFees = TableRegistry::get('Institution.StudentFees');
+			$StudentFees = TableRegistry::get('Institution.StudentFeesAbstract');
 			$studentFeeData = $StudentFees->find()
-				->contain(['InstitutionSiteFees' => function ($q) use ($educationGradeId) {
+				->contain(['InstitutionFees' => function ($q) use ($educationGradeId) {
 							return $q
-								->where(['InstitutionSiteFees.education_grade_id' => $educationGradeId]);
+								->where(['InstitutionFees.education_grade_id' => $educationGradeId]);
 						}
 					]
 				)
