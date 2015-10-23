@@ -140,12 +140,10 @@ class TrainingCoursesTable extends AppTable {
 		$query->contain($this->_contain);
 	}
 
-	// public function viewBeforeAction(Event $event) {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupFields();
 	}
 
-	// public function addEditBeforeAction(Event $event) {
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->setupFields();
 	}
