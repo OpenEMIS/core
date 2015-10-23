@@ -39,6 +39,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->_table->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$models = $this->config('models');
 		foreach ($models as $key => $model) {
 			if (!is_null($model)) {
@@ -122,6 +123,8 @@ class WorkflowBehavior extends Behavior {
 
 			$filter = $workflowModel->filter;
 			$model = $workflowModel->model;
+
+			$workflowId = 0;
 			if (!empty($filter)) {
 				// Wofkflow Filter Options
 				$filterOptions = TableRegistry::get($filter)->getList()->toArray();
@@ -141,25 +144,36 @@ class WorkflowBehavior extends Behavior {
 				$this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
 				// End
 
-				// Status Options
+				// Set Workflow Id
 				if ($selectedFilter != -1) {
 					$workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
 					if (!empty($workflow)) {
-						$statusQuery = $this->WorkflowSteps
-							->find('list')
-							->where([
-								$this->WorkflowSteps->aliasField('workflow_id') => $workflow->id
-							]);
-
-						$statusOptions = $statusQuery->toArray();
-						$statusOptions = ['-1' => '-- ' . __('All Statuses') . ' --'] + $statusOptions;
-						$selectedStatus = $this->_table->queryString('status', $statusOptions);
-						$this->_table->advancedSelectOptions($statusOptions, $selectedStatus);
-						$this->_table->controller->set(compact('statusOptions', 'selectedStatus'));
+						$workflowId = $workflow->id;
 					}
 				}
 				// End
+			} else {
+				$workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
+				if (!empty($workflow)) {
+					$workflowId = $workflow->id;
+				}
 			}
+
+			// Status Options
+			if (!empty($workflowId)) {
+				$statusQuery = $this->WorkflowSteps
+					->find('list')
+					->where([
+						$this->WorkflowSteps->aliasField('workflow_id') => $workflowId
+					]);
+
+				$statusOptions = $statusQuery->toArray();
+				$statusOptions = ['-1' => '-- ' . __('All Statuses') . ' --'] + $statusOptions;
+				$selectedStatus = $this->_table->queryString('status', $statusOptions);
+				$this->_table->advancedSelectOptions($statusOptions, $selectedStatus);
+				$this->_table->controller->set(compact('statusOptions', 'selectedStatus'));
+			}
+			// End
 		}
 	}
 
@@ -168,6 +182,8 @@ class WorkflowBehavior extends Behavior {
 		$workflowModel = $this->getWorkflowSetup($registryAlias);
 
 		$filter = $workflowModel->filter;
+
+		$selectedStatus = null;
 		if (!empty($filter)) {
 			$selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
 
@@ -180,12 +196,15 @@ class WorkflowBehavior extends Behavior {
 				]);
 
 				$selectedStatus = $this->_table->ControllerAction->getVar('selectedStatus');
-				if ($selectedStatus != -1) {
-					$query->where([
-						$this->_table->aliasField('status_id') => $selectedStatus
-					]);
-				}
 			}
+		} else {
+			$selectedStatus = $this->_table->ControllerAction->getVar('selectedStatus');
+		}
+
+		if (!is_null($selectedStatus) && $selectedStatus != -1) {
+			$query->where([
+				$this->_table->aliasField('status_id') => $selectedStatus
+			]);
 		}
 	}
 
