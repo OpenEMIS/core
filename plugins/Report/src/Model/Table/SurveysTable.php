@@ -136,6 +136,7 @@ class SurveysTable extends AppTable  {
 						->group([ 
 							$this->aliasField('survey_form_id')
 						])
+						->where([$this->aliasField('status_id').' IS NOT ' => -1])
 						->toArray();
 					$attr['options'] = $surveyFormOptions;
 					$attr['onChangeReload'] = true;
@@ -165,7 +166,8 @@ class SurveysTable extends AppTable  {
 						->contain(['AcademicPeriods'])
 						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
 						->where([
-							$this->aliasField('survey_form_id') => $surveyForm
+							$this->aliasField('survey_form_id') => $surveyForm,
+							$this->aliasField('status_id').' IS NOT ' => -1
 						])
 						->group([
 							$this->aliasField('survey_form_id'), 
@@ -207,13 +209,38 @@ class SurveysTable extends AppTable  {
 						->select(['id' => 'WorkflowStatuses.id', 'name' => 'WorkflowStatuses.name'])
 						->toArray();
 
-					$attr['options'] = $surveyStatuses;
-
 					$attr['type'] = 'select';
-
 					$surveyTable = $this;
-					$selected = '';
+					$arrayKeys = array_keys($surveyStatuses);
+					$selected = array_shift($arrayKeys);
 
+					$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
+		
+					$this->advancedSelectOptions($surveyStatuses, $selected, [
+						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
+						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId, $WorkflowStatusMappingsTable) {
+
+							$statuses = $WorkflowStatusMappingsTable
+								->find('list', [
+									'keyField' => 'id',
+									'valueField' => 'id'
+								])
+								->where([$WorkflowStatusMappingsTable->aliasField('workflow_status_id') => $id])
+								->select(['id' => $WorkflowStatusMappingsTable->aliasField('workflow_step_id')])
+								->toArray();
+
+							$query = $surveyTable
+								->find()
+								->where([
+									$surveyTable->aliasField('survey_form_id').'='.$surveyForm,
+									$surveyTable->aliasField('academic_period_id').'='.$academicPeriodId,
+									$surveyTable->aliasField('status_id').' IN ' => $statuses
+								])
+								->count();
+							return $query;
+						}
+					]);
+					$attr['options'] = $surveyStatuses;
 					return $attr;
 				}
 			}
