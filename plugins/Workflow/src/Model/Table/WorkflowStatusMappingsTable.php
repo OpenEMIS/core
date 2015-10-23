@@ -3,10 +3,21 @@ namespace Workflow\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class WorkflowStatusMappingTable extends AppTable {
+class WorkflowStatusMappingsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongTo('WorkflowStatuses', ['className' => 'Workflow.WorkflowStatuses']);
-		$this->belongTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps']);
+		$this->belongsTo('WorkflowStatuses', ['className' => 'Workflow.WorkflowStatuses']);
+		$this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps']);
+	}
+
+	public function getWorkflowSteps($workflowStatusId) {
+		return $this
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->where([$this->aliasField('workflow_status_id') => $workflowStatusId])
+			->select(['id' => $this->aliasField('workflow_step_id')])
+			->toArray();
 	}
 }
