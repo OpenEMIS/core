@@ -200,6 +200,13 @@ class InstitutionSurveysTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// Do not show expired records
+		$query->where([
+			$this->aliasField('status_id <> ') => self::EXPIRED
+		]);
+	}
+
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('status_id');
 		$this->ControllerAction->field('academic_period_id');
