@@ -119,7 +119,26 @@ ADD INDEX(`training_course_id`),
 ADD INDEX(`training_provider_id`),
 ADD INDEX(`status_id`);
 
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TrainingCourses', 'file_content', 'Administration -> Training -> Course','Attachment', 1, 1, NOW());
+
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `filter`, `created_user_id`, `created`) VALUES
 ('Administration > Training > Courses', 'Training.TrainingCourses', NULL, 1, NOW()),
 ('Administration > Training > Sessions', 'Training.TrainingSessions', NULL, 1, NOW());
+
+-- field_options
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingAchievementTypes';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingCourseTypes';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingFieldStudies';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingLevels';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingModeDeliveries';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingNeedCategories';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingPriorities';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingProviders';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingRequirements';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingResultTypes';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingStatuses';
+
+UPDATE `field_options` SET `visible` = 1 WHERE `parent` = 'Training';
+UPDATE `field_options` SET `visible` = 0 WHERE `code` = 'TrainingStatuses';

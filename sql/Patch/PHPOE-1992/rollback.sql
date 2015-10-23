@@ -2,6 +2,9 @@
 DROP TABLE IF EXISTS `training_courses`;
 DROP TABLE IF EXISTS `training_sessions`;
 
+-- labels
+DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'file_content';
+
 -- Restore Admin - training tables
 RENAME TABLE `z_1992_training_courses` TO `training_courses`;
 RENAME TABLE `z_1992_training_course_attachments` TO `training_course_attachments`;
@@ -22,6 +25,21 @@ RENAME TABLE `z_1992_training_session_trainers` TO `training_session_trainers`;
 -- workflow_models
 DELETE FROM `workflow_models` WHERE `model` = 'Training.TrainingCourses';
 DELETE FROM `workflow_models` WHERE `model` = 'Training.TrainingSessions';
+
+-- field_options
+UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'TrainingAchievementTypes';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingCourseTypes';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingFieldStudies';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingLevels';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingModeDeliveries';
+UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'TrainingNeedCategories';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingPriorities';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingProviders';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingRequirements';
+UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingResultTypes';
+UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingStatuses';
+
+UPDATE `field_options` SET `visible` = 0 WHERE parent = 'Training';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1992';
