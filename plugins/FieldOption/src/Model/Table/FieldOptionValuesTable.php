@@ -52,7 +52,7 @@ class FieldOptionValuesTable extends AppTable {
 		return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		parent::beforeSave($event, $entity, $options);
 
 		if ($entity->default == 1) {
