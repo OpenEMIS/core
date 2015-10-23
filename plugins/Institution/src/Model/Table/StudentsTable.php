@@ -1499,6 +1499,7 @@ class StudentsTable extends AppTable {
 						}
 					]
 				)
+				->where([$StudentFees->aliasField('student_id') => $studentId])
 				;
 
 
