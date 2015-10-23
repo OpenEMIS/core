@@ -179,6 +179,29 @@ ADD INDEX(`training_course_id`),
 ADD INDEX(`training_provider_id`),
 ADD INDEX(`status_id`);
 
+-- New table - training_session_trainers
+DROP TABLE IF EXISTS `training_session_trainers`;
+CREATE TABLE IF NOT EXISTS `training_session_trainers` (
+  `id` char(36) NOT NULL,
+  `type` varchar(20) NOT NULL,
+  `trainer_id` int(11) DEFAULT NULL,
+  `name` varchar(250) DEFAULT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `training_session_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_session_trainers`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `training_session_trainers`
+ADD INDEX(`trainer_id`),
+ADD INDEX(`training_session_id`);
+
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TrainingCourses', 'file_content', 'Administration -> Training -> Course','Attachment', 1, 1, NOW());
 

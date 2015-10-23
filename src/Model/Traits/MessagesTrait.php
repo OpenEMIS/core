@@ -394,6 +394,11 @@ trait MessagesTrait {
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
 		],
+		'TrainingSessions' => [
+			'trainer_type' => 'Type',
+			'internal_trainer' => 'Internal Trainer',
+			'external_trainer' => 'External Trainer'
+		],
 
 		// Validation Messages
 		'Institution' => [
