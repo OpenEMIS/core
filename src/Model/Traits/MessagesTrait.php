@@ -837,6 +837,13 @@ trait MessagesTrait {
 				'ruleUnique' => 'This code already exists in the system'
 			]
 		],
+		'Training' => [
+			'TrainingSessions' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
+		],
 		'Workflow' => [
 			'Workflows' => [
 				'code' => [
