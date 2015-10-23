@@ -17,6 +17,8 @@ class TrainingCoursesTable extends AppTable {
 		$this->belongsTo('TrainingModeDeliveries', ['className' => 'Training.TrainingModeDeliveries', 'foreignKey' => 'training_mode_of_delivery_id']);
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingLevels', ['className' => 'Training.TrainingLevels', 'foreignKey' => 'training_level_id']);
+		$this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',
@@ -49,14 +51,7 @@ class TrainingCoursesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		// Select
-		$this->ControllerAction->field('training_field_of_study_id', ['type' => 'select']);
-		$this->ControllerAction->field('training_course_type_id', ['type' => 'select']);
-		$this->ControllerAction->field('training_mode_of_delivery_id', ['type' => 'select']);
-		$this->ControllerAction->field('training_requirement_id', ['type' => 'select']);
-		$this->ControllerAction->field('training_level_id', ['type' => 'select']);
-
-		// Visible
+		// Type / Visible
 		$this->ControllerAction->field('status_id', [
 			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
 		]);
@@ -70,18 +65,23 @@ class TrainingCoursesTable extends AppTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->ControllerAction->field('training_field_of_study_id', [
+			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->ControllerAction->field('training_course_type_id', [
+			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->ControllerAction->field('training_mode_of_delivery_id', [
+			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->ControllerAction->field('training_requirement_id', [
+			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->ControllerAction->field('training_level_id', [
+			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->ControllerAction->field('file_name', [
