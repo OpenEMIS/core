@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS `training_courses` (
   `objective` text DEFAULT NULL,
   `credit_hours` int(3) DEFAULT NULL,
   `duration` int(3) DEFAULT NULL,
+  `number_of_months` int(3) NOT NULL,
   `file_name` varchar(250) DEFAULT NULL,
   `file_content` longblob DEFAULT NULL,
   `training_field_of_study_id` int(11) NOT NULL,
@@ -126,6 +127,17 @@ CREATE TABLE IF NOT EXISTS `training_courses_prerequisites` (
 ALTER TABLE `training_courses_prerequisites`
   ADD PRIMARY KEY (`id`);
 
+-- New table - training_courses_specialisations
+DROP TABLE IF EXISTS `training_courses_specialisations`;
+CREATE TABLE IF NOT EXISTS `training_courses_specialisations` (
+  `id` char(36) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  `training_specialisation_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE `training_courses_specialisations`
+  ADD PRIMARY KEY (`id`);
+
 -- New table - training_courses_result_types
 DROP TABLE IF EXISTS `training_courses_result_types`;
 CREATE TABLE IF NOT EXISTS `training_courses_result_types` (
@@ -187,6 +199,9 @@ UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingProvide
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingRequirements';
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingResultTypes';
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingStatuses';
+
+INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
+('Training', 'TrainingSpecialisations', 'Specialisations', 'Training', NULL, 0, 1, 1, NOW());
 
 UPDATE `field_options` SET `visible` = 1 WHERE `parent` = 'Training';
 UPDATE `field_options` SET `visible` = 0 WHERE `code` = 'TrainingStatuses';

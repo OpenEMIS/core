@@ -11,12 +11,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class TrainingCoursesTable extends AppTable {
-	private $_contain = ['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'ResultTypes'];
-	private $_fieldOrder = [
-		'status_id', 'code', 'name', 'description', 'objective', 'credit_hours', 'duration',
-		'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
-		'file_name', 'file_content'
-	];
+	private $_contain = ['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -49,6 +44,14 @@ class TrainingCoursesTable extends AppTable {
 			'foreignKey' => 'training_course_id',
 			'targetForeignKey' => 'prerequisite_training_course_id',
 			'through' => 'Training.TrainingCoursesPrerequisites',
+			'dependent' => true
+		]);
+		$this->belongsToMany('Specialisations', [
+			'className' => 'Training.TrainingSpecialisations',
+			'joinTable' => 'training_courses_specialisations',
+			'foreignKey' => 'training_course_id',
+			'targetForeignKey' => 'training_specialisation_id',
+			'through' => 'Training.TrainingCoursesSpecialisations',
 			'dependent' => true
 		]);
 		$this->belongsToMany('ResultTypes', [
@@ -190,6 +193,14 @@ class TrainingCoursesTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldSpecialisations(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['options'] = TableRegistry::get('Training.TrainingSpecialisations')->getList()->toArray();
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldResultTypes(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$attr['options'] = TableRegistry::get('Training.TrainingResultTypes')->getList()->toArray();
@@ -240,6 +251,11 @@ class TrainingCoursesTable extends AppTable {
 			'placeholder' => __('Select Courses'),
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
+		$this->ControllerAction->field('specialisations', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Select Specialisations'),
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
 		$this->ControllerAction->field('result_types', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Result Types'),
@@ -247,10 +263,11 @@ class TrainingCoursesTable extends AppTable {
 		]);
 
 		// Field order
-		$this->_fieldOrder[] = 'target_populations';
-		$this->_fieldOrder[] = 'training_providers';
-		$this->_fieldOrder[] = 'course_prerequisites';
-		$this->_fieldOrder[] = 'result_types';
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+		$this->ControllerAction->setFieldOrder([
+			'status_id', 'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
+			'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
+			'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types',
+			'file_name', 'file_content'
+		]);
 	}
 }
