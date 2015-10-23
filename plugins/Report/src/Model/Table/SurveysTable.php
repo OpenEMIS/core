@@ -10,10 +10,6 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class SurveysTable extends AppTable  {
-	const EXPIRED = -1;
-	const NEW_SURVEY = 0;
-	const DRAFT = 1;
-	const COMPLETED = 2;
 
 	public function initialize(array $config) {
 		$this->table('institution_site_surveys');
@@ -66,18 +62,25 @@ class SurveysTable extends AppTable  {
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$statusCondition = [];
-		if ($status == self::COMPLETED) {
-			$statusCondition = [
-				$this->aliasField('status') => self::COMPLETED
-			];
-		} else {
-			$statusCondition = [
-				$this->aliasField('status').' IS NOT' => self::COMPLETED
-			];
-		}
+
+
+		$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
+		$statuses = $WorkflowStatusMappingsTable
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->where([$WorkflowStatusMappingsTable->aliasField('workflow_status_id') => $status])
+			->select(['id' => $WorkflowStatusMappingsTable->aliasField('workflow_step_id')])
+			->toArray();
+
+		$statusCondition = [
+			$this->aliasField('status_id').' IN ' => $statuses
+		];
+
 		$condition = array_merge($condition, $statusCondition);
 		$condition = array_merge($condition, $configCondition);
+
 		$this->setCondition($condition);
 
 		// For Surveys only
@@ -196,44 +199,21 @@ class SurveysTable extends AppTable  {
 
 				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
 
-					$attr['options'] = [
-						self::COMPLETED => __('Completed'),
-						'-1' => __('Not Completed')
-					];
+					$WorkflowModelTable = TableRegistry::get('Workflow.WorkflowModels');
+					$surveyStatuses = $WorkflowModelTable
+						->find('list')
+						->matching('WorkflowStatuses')
+						->where([$WorkflowModelTable->aliasField('model') => 'Institution.InstitutionSurveys'])
+						->select(['id' => 'WorkflowStatuses.id', 'name' => 'WorkflowStatuses.name'])
+						->toArray();
+
+					$attr['options'] = $surveyStatuses;
 
 					$attr['type'] = 'select';
 
 					$surveyTable = $this;
-					$selected = self::COMPLETED;
+					$selected = '';
 
-					$this->advancedSelectOptions($attr['options'], $selected, [
-						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
-						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId) {
-
-							$query = $surveyTable->find('list', [
-								'keyField' => 'surveyStatus',
-								'valueField' => 'statusCount'
-							]);
-
-							// Add a case to check if the survey is completed or not
-							$completedSurvey = $query->newExpr()->addCase(
-								[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)], 
-								[self::COMPLETED, -1], 
-								['integer', 'integer']);
-
-							$query->select([
-									'surveyStatus' => $completedSurvey,
-									'statusCount' => $query->func()->count($this->aliasField('id'))
-								])
-								->group(['surveyStatus'])
-								->where([
-									$surveyTable->aliasField('survey_form_id') => $surveyForm,
-									$surveyTable->aliasField('academic_period_id') => $academicPeriodId
-								]);
-
-							return $query->having(['surveyStatus' => $id])->count();
-						}
-					]);
 					return $attr;
 				}
 			}
