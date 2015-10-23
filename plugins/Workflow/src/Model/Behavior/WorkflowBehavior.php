@@ -39,7 +39,6 @@ class WorkflowBehavior extends Behavior {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->_table->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$models = $this->config('models');
 		foreach ($models as $key => $model) {
 			if (!is_null($model)) {
