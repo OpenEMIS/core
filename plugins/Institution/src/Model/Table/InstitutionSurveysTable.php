@@ -75,11 +75,29 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
+		// To update to this code when upgrade server to PHP 5.5 and above
+		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+		
+		foreach ($fields as $key => $field) {
+			if ($field['field'] == 'institution_site_id') {
+				unset($fields[$key]);
+				break;
+			}
+		}
+
 		$fields[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',
 			'type' => 'string',
 			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'InstitutionSurveys.institution_site_id',
+            'field' => 'institution_site_id',
+            'type' => 'integer',
+            'label' => '',
 		];
 
 		$fields[] = [

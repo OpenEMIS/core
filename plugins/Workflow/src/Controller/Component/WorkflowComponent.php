@@ -70,4 +70,16 @@ class WorkflowComponent extends Component {
 		$WorkflowStatusMappingsTable = $this->WorkflowModels->WorkflowStatuses->WorkflowStatusMappings;
 		return $WorkflowStatusMappingsTable->getWorkflowSteps($workflowStatusId);
 	}
+
+	/**
+	 *	Function to get the list of the workflow steps and workflow status name mapping
+	 *	by a given model id 
+	 *
+	 *	@param string $modelName The name of the model e.g. Institution.InstitutionSurveys
+	 *	@return array The list of workflow steps status name mapping (key => workflow_step_id, value=>workflow_status_name)
+	 */
+	public function getWorkflowStepStatusNameMappings($modelName) {
+		$WorkflowStatusesTable = $this->WorkflowModels->WorkflowStatuses;
+		return $WorkflowStatusesTable->getWorkflowStepStatusNameMappings($modelName);
+	}
 }
