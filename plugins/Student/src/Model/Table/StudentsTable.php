@@ -266,11 +266,11 @@ class StudentsTable extends AppTable {
 						['class' => 'Institution.Students', 'foreignKey' => 'student_id'],
 						['class' => 'Institution.InstitutionSiteStudentAbsences', 'foreignKey' => 'security_user_id'],
 						['class' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_id'],
-						['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'security_user_id'],
+						['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'student_id'],
 						['class' => 'Institution.StudentAdmission', 'foreignKey' => 'student_id'],
 						['class' => 'CustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id'],
 						['class' => 'CustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id'],
-						['class' => 'Institution.StudentFees', 'foreignKey' => 'security_user_id'],
+						['class' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id'],
 						['class' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id'],
 						['class' => 'Student.Guardians', 'foreignKey' => 'student_id'],
 					];
