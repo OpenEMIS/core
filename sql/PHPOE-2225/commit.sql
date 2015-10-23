@@ -8,9 +8,9 @@ CREATE TABLE `workflow_statuses` (
   `name` VARCHAR(150) NOT NULL,
   PRIMARY KEY (`id`));
 
-INSERT INTO `workflow_status` (`workflow_model_id`, `name`)
+INSERT INTO `workflow_statuses` (`workflow_model_id`, `name`)
 VALUES (2, 'Completed');
-INSERT INTO `workflow_status` (`workflow_model_id`, `name`)
+INSERT INTO `workflow_statuses` (`workflow_model_id`, `name`)
 VALUES (2, 'Not Completed');
 
 -- workflow_status_mapping
@@ -20,9 +20,9 @@ CREATE TABLE `workflow_status_mappings` (
   `workflow_step_id` INT NOT NULL,
   PRIMARY KEY (`id`));
 
-INSERT INTO `workflow_status_mapping` (`id`, `workflow_status_id`, `workflow_step_id`)
+INSERT INTO `workflow_status_mappings` (`id`, `workflow_status_id`, `workflow_step_id`)
 VALUES (uuid(), 1, 6);
-INSERT INTO `workflow_status_mapping` (`id`, `workflow_status_id`, `workflow_step_id`)
+INSERT INTO `workflow_status_mappings` (`id`, `workflow_status_id`, `workflow_step_id`)
 VALUES (uuid(), 2, 4);
-INSERT INTO `workflow_status_mapping` (`id`, `workflow_status_id`, `workflow_step_id`)
+INSERT INTO `workflow_status_mappings` (`id`, `workflow_status_id`, `workflow_step_id`)
 VALUES (uuid(), 2, 5);
