@@ -1,5 +1,9 @@
 -- Drop New tables
 DROP TABLE IF EXISTS `training_courses`;
+DROP TABLE IF EXISTS `training_courses_target_populations`;
+DROP TABLE IF EXISTS `training_courses_providers`;
+DROP TABLE IF EXISTS `training_courses_prerequisites`;
+DROP TABLE IF EXISTS `training_courses_result_types`;
 DROP TABLE IF EXISTS `training_sessions`;
 
 -- labels
