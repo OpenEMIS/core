@@ -1,1 +1,4 @@
-changelog
+v3.2.6
+- Added workflows to institution's survey
+- Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
+
