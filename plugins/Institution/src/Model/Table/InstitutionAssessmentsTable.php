@@ -74,26 +74,51 @@ class InstitutionAssessmentsTable extends AppTable {
 			$institutionId = $session->read('Institution.Institutions.id');
 		}
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
-		$assessments = $this->getAssessments($institutionId, $academicPeriodId);
 
-		// foreach() {
+    	// Get list of classes in the institution
+		$classOptions = $this->Classes->getSectionOptions($academicPeriodId, $institutionId);
+		// Class assessments
+		$classAssessments = $this->getClassAssessments($institutionId, $academicPeriodId);
 
-		// }
-		pr($assessments);die;
+		foreach($classAssessments as $classId => $assessments) {
+	    	// Main sheet table
+	    	$sheetTable = $this->Classes->InstitutionSiteSectionStudents;
+	    	$sheets[] = [
+				'name' => $classOptions[$classId],
+				'table' => $sheetTable,
+				'query' => $sheetTable->find(),
+				'orientation' => 'landscape',
+				'institutionId' => $institutionId,
+				'academicPeriodId' => $academicPeriodId,
+				'assessments' => $assessments,
+			];
+		}
+    }
 
-		// pr($this->getClasses($institutionId, $assessmentGrades));die;
+    // Function to get the list of assessments to a class
+    public function getClassAssessments($institutionId, $academicPeriodId, $classId=null) {
+    	$results = $this
+    		->find()
+    		->matching('Assessments.EducationGrades.InstitutionSiteSectionStudents.InstitutionSiteSections')
+    		->where([
+    			$this->aliasField('institution_site_id') => $institutionId, 
+    			$this->aliasField('academic_period_id') => $academicPeriodId,
+    			'Assessments.education_grade_id = InstitutionSiteSectionStudents.education_grade_id',
+    			'InstitutionSiteSections.institution_site_id' => $institutionId, 
+    			'InstitutionSiteSections.academic_period_id' => $academicPeriodId, 
+    			$this->aliasField('status') => 0,
+    		])
+    		->select(['class' => 'InstitutionSiteSections.id', 'assessment' => 'Assessments.id'])
+    		->group(['class', 'assessment'])
+    		->hydrate(false)
+    		->toArray()
+    		;
 
-    	$ClassesTable = $this->Classes;
-    	$ClasssGradesTable = $this->ClassGrades;
-
-    	// $listOfClass = $ClassesTable->find()
-    	// 	->
-    	$sheets[] = [
-			'name' => $this->alias(),
-			'table' => $this,
-			'query' => $this->find(),
-			'orientation' => 'landscape'
-		];
+    	$returnArray = [];
+    	foreach ($results as $item) {
+    		$returnArray[$item['class']][] = $item['assessment'];
+    	}
+    	return $returnArray;
     }
 
     public function getAssessments($institutionId, $academicPeriodId) {
