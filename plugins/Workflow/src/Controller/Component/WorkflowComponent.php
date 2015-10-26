@@ -42,4 +42,44 @@ class WorkflowComponent extends Component {
 		$this->AccessControl->config('ignoreList', $ignoreList);
 		// End
 	}
+
+	/**
+	 *	Function to get the list of the workflow statuses base on the model name
+	 *
+	 *	@param $modelName The name of the model e.g. Institution.InstitutionSurveys
+	 *	@return array The list of the workflow statuses
+	 */
+	public function getWorkflowStatuses($modelName) {
+		$WorkflowModelTable = $this->WorkflowModels;
+		return $WorkflowModelTable
+			->find('list')
+			->matching('WorkflowStatuses')
+			->where([$WorkflowModelTable->aliasField('model') => 'Institution.InstitutionSurveys'])
+			->select(['id' => 'WorkflowStatuses.id', 'name' => 'WorkflowStatuses.name'])
+			->toArray();
+	}
+
+	/**
+	 *	Function to get the list of the workflow steps from the workflow status mappings table
+	 *	by a given workflow status
+	 *
+	 *	@param $workflowStatusId The workflow status id
+	 *	@return array The list of the workflow steps
+	 */
+	public function getWorkflowSteps($workflowStatusId) {
+		$WorkflowStatusMappingsTable = $this->WorkflowModels->WorkflowStatuses->WorkflowStatusMappings;
+		return $WorkflowStatusMappingsTable->getWorkflowSteps($workflowStatusId);
+	}
+
+	/**
+	 *	Function to get the list of the workflow steps and workflow status name mapping
+	 *	by a given model id 
+	 *
+	 *	@param string $modelName The name of the model e.g. Institution.InstitutionSurveys
+	 *	@return array The list of workflow steps status name mapping (key => workflow_step_id, value=>workflow_status_name)
+	 */
+	public function getWorkflowStepStatusNameMappings($modelName) {
+		$WorkflowStatusesTable = $this->WorkflowModels->WorkflowStatuses;
+		return $WorkflowStatusesTable->getWorkflowStepStatusNameMappings($modelName);
+	}
 }
