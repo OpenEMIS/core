@@ -76,6 +76,7 @@ class ImportBehavior extends Behavior {
 		// 'csv' 	=> 'text/csv',
 		'xls' 	=> 'application/vnd.ms-excel',
 		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		'ods' 	=> 'application/zip',
 		// 'zip' 	=> 'application/zip',
 	];
 	public $institutionId = false;
@@ -141,11 +142,17 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['import']['url'][0] = 'template';
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
-
+				if ($buttons['index']['url']['action']=='ImportInstitutionSurveys') {
+					$toolbarButtons['import']['url'][1] = $buttons['add']['url'][1];
+				}
+				
 				break;
 		}
 		if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
 			$back = str_replace('Import', '', $this->_table->alias());
+			if (!array_key_exists($back, $this->_table->ControllerAction->models)) {
+				$back = str_replace('Institution', '', $back);
+			}
 			$toolbarButtons['back']['url']['action'] = $back;
 		} else {
 			$toolbarButtons['back']['url']['action'] = 'index';
@@ -481,7 +488,8 @@ class ImportBehavior extends Behavior {
 
 		$writer = new \XLSXWriter();
 		
-		$header = $this->getHeader();
+		$mapping = $this->getMapping();
+		$header = $this->getHeader($mapping);
 		$writer->writeSheetRow(__('Data'), array_values($header));
 		
 		$codesData = $this->excelGetCodesData($this->_table);
@@ -543,7 +551,7 @@ class ImportBehavior extends Behavior {
 	 * @param  integer $row          Row number
 	 * @return boolean               the result to be return as true or false
 	 */
-	protected function checkRowCells($sheet, $totalColumns, $row) {
+	public function checkRowCells($sheet, $totalColumns, $row) {
 		$cellsState = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
@@ -575,7 +583,7 @@ class ImportBehavior extends Behavior {
 		return $header === $cellsValue;
 	}
 	
-	protected function getMapping() {
+	public function getMapping() {
 		$model = $this->_table;
 		$mapping = $model->find('all')
 			->where([
@@ -588,11 +596,11 @@ class ImportBehavior extends Behavior {
 	
 	protected function getHeader($mapping=[]) {
 		$model = $this->_table;
-		$header = [];
 		if (empty($mapping)) {
 			$mapping = $this->getMapping($model);
 		}
 		
+		$header = [];
 		foreach ($mapping as $key => $value) {
 			$column = $value->column_name;
 			$label = $this->getExcelLabel($value->model, $column);
@@ -646,7 +654,7 @@ class ImportBehavior extends Behavior {
 		return $lookup;
 	}
 
-	protected function excelGetCodesData(Table $model) {
+	public function excelGetCodesData(Table $model) {
 		$mapping = $model->find('all')
 			->where([
 				$model->aliasField('model') => $this->config('model'),
@@ -692,7 +700,7 @@ class ImportBehavior extends Behavior {
 		return $data;
 	}
 	
-	protected function prepareDownload() {
+	public function prepareDownload() {
 		$folder = WWW_ROOT . $this->rootFolder;
 		if (!file_exists($folder)) {
 			umask(0);
@@ -720,7 +728,7 @@ class ImportBehavior extends Behavior {
 		return $folder;
 	}
 	
-	protected function performDownload($excelFile) {
+	public function performDownload($excelFile) {
 		$folder = WWW_ROOT . $this->rootFolder;
 		$excelPath = $folder . DS . $excelFile;
 		$filename = basename($excelPath);
