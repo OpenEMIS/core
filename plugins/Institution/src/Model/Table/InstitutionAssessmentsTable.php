@@ -98,6 +98,11 @@ class InstitutionAssessmentsTable extends AppTable {
 
     // Function to get the list of assessments to a class
     public function getClassAssessments($institutionId, $academicPeriodId, $classId=null) {
+    	$condition = [];
+    	if (!(is_null($classId))) {
+    		$condition = ['InstitutionSiteSections.id' => $classId];
+    	}
+
     	$results = $this
     		->find()
     		->matching('Assessments.EducationGrades.InstitutionSiteSectionStudents.InstitutionSiteSections')
@@ -109,6 +114,7 @@ class InstitutionAssessmentsTable extends AppTable {
     			'InstitutionSiteSections.academic_period_id' => $academicPeriodId, 
     			$this->aliasField('status') => self::COMPLETED,
     		])
+    		->where($condition)
     		->select(['class' => 'InstitutionSiteSections.id', 'assessment' => 'Assessments.id'])
     		->group(['class', 'assessment'])
     		->hydrate(false)
