@@ -228,24 +228,35 @@ class ImportBehavior extends Behavior {
 		$finfo = finfo_open(FILEINFO_MIME_TYPE);
 		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
 		finfo_close($finfo);
+
+		$fileExt = $fileObj['name'];
+		$fileExt = explode('.', $fileExt);
+		$fileExt = $fileExt[count($fileExt)-1];
+
 		$model = $this->_table;
 
+		if (!array_key_exists($fileExt, $supportedFormats)) {
+			if (!empty($fileFormat)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
+				$options['validate'] = true;
+			}
+		} 
 		if (!in_array($fileFormat, $supportedFormats)) {
 			if (!empty($fileFormat)) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')]);				
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
 				$options['validate'] = true;
 			}
 		} 
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')]);
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
 		} 
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')]);
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
 		} 
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')]);
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
 		}
 	}
@@ -302,14 +313,14 @@ class ImportBehavior extends Behavior {
 			foreach ($worksheets as $sheet) {
 				$highestRow = $sheet->getHighestRow();
 				if ($highestRow > $maxRows) {
-					$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')]);
+					$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
 					return false;
 				}
 
 				for ($row = 1; $row <= $highestRow; ++$row) {
 					if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
 						if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-							$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')]);
+							$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
 							return false;
 						}
 						continue;
