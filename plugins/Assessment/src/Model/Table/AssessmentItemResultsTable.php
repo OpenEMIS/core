@@ -12,6 +12,15 @@ class AssessmentItemResultsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 	}
 
+	/**
+	 *	Function to get the assessment results base on the institution id and the academic period
+	 *
+	 *	@param integer $institutionId The institution id
+	 *	@param integer $academicPeriodId The academic period id
+	 *
+	 *	@return array The assessment results group field - institution id, key field - student id
+	 *		value field - assessment item id with array containing marks, grade name and grade code
+	 */
 	public function getAssessmentItemResults($institutionId, $academicPeriodId) {
 		$results = $this
 			->find()

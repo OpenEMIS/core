@@ -12,6 +12,13 @@ class AssessmentItemsTable extends AppTable {
 		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
+	/**
+	 *	Function to get the assessment items id and the subject name and the result type
+	 *
+	 *	@param integer $assessmentId The assessment ID
+	 *
+	 *	@return array The array containing the assessment item id, subject name and the result type
+	 */
 	public function getAssessmentItemSubjects($assessmentId) {
 		$subjectList = $this
 			->find()
