@@ -30,7 +30,14 @@ class SurveyFormsTable extends CustomFormsTable {
 	    		'unique' => [
 			        'rule' => ['validateUnique', ['scope' => 'custom_module_id']],
 			        'provider' => 'table',
-			        'message' => 'This name is already exists in the system'
+			        'message' => 'This name already exists in the system'
+			    ]
+		    ])
+	    	->add('code', [
+	    		'unique' => [
+			        'rule' => ['validateUnique'],
+			        'provider' => 'table',
+			        'message' => 'This code already exists in the system'
 			    ]
 		    ]);
 
@@ -56,7 +63,7 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function afterAction(Event $event){
 		unset($this->fields['custom_fields']);
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'name', 'description', 'survey_question']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'survey_question']);
 	}
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {

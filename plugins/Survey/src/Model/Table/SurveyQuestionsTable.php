@@ -5,6 +5,7 @@ use ArrayObject;
 use CustomField\Model\Table\CustomFieldsTable;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class SurveyQuestionsTable extends CustomFieldsTable {
 	protected $_fieldFormat = ['OpenEMIS', 'OpenEMIS_Institution'];
@@ -22,4 +23,22 @@ class SurveyQuestionsTable extends CustomFieldsTable {
 			'targetForeignKey' => 'survey_form_id'
 		]);
 	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+	    	->add('code', [
+	    		'unique' => [
+			        'rule' => ['validateUnique'],
+			        'provider' => 'table',
+			        'message' => 'This code already exists in the system'
+			    ]
+		    ]);
+
+		return $validator;
+	}
+
+	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'field_type', 'is_mandatory', 'is_unique']);
+	}
+
 }

@@ -393,6 +393,7 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
+			'survey_not_found' => 'No identifiable survey found',
 		],
 
 		// Validation Messages
