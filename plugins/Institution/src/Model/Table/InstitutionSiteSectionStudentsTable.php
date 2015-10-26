@@ -83,7 +83,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
     		$result = $assessmentItemResults[$institutionId][$studentId][$assessmentItemId];
     		switch($resultType) {
     			case 'MARKS':
-    				return $result['marks'];
+    				return '='.$result['marks'];
     				break;
     			case 'GRADES':
 					return $result['grade_code'];
