@@ -49,7 +49,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-		$this->addBehavior('Excel');
+		$this->addBehavior('Excel', ['excludes' => ['status', 'education_grade_id', 'institution_site_section_id']]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -86,10 +86,11 @@ class InstitutionAssessmentsTable extends AppTable {
 	    	$sheets[] = [
 				'name' => $classOptions[$classId],
 				'table' => $sheetTable,
-				'query' => $sheetTable->find(),
+				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_site_section_id') => $classId]),
 				'orientation' => 'landscape',
 				'institutionId' => $institutionId,
 				'academicPeriodId' => $academicPeriodId,
+				'classId' => $classId,
 				'assessments' => $assessments,
 			];
 		}
@@ -106,7 +107,7 @@ class InstitutionAssessmentsTable extends AppTable {
     			'Assessments.education_grade_id = InstitutionSiteSectionStudents.education_grade_id',
     			'InstitutionSiteSections.institution_site_id' => $institutionId, 
     			'InstitutionSiteSections.academic_period_id' => $academicPeriodId, 
-    			$this->aliasField('status') => 0,
+    			$this->aliasField('status') => self::COMPLETED,
     		])
     		->select(['class' => 'InstitutionSiteSections.id', 'assessment' => 'Assessments.id'])
     		->group(['class', 'assessment'])
@@ -121,22 +122,26 @@ class InstitutionAssessmentsTable extends AppTable {
     	return $returnArray;
     }
 
-    public function getAssessments($institutionId, $academicPeriodId) {
+    public function getAssessmentGrades($institutionId, $academicPeriodId) {
     	$results = $this
-    		->find()
+    		->find('list', [
+    			'keyField' => 'grade',
+    			'valueField' => 'grade'
+    		])
     		->matching('Assessments')
     		->where([
     			$this->aliasField('institution_site_id') => $institutionId, 
     			$this->aliasField('academic_period_id') => $academicPeriodId,
-    			$this->aliasField('status') => 2,
     		])
-    		;
-    	return $results->toArray();
+    		->select(['grade' => 'Assessments.education_grade_id'])
+    		->distinct(['grade'])
+    		->toArray();
+    	return $results;
     }
 
-    public function getClasses($institutionId, $educationGrades) {
+    public function getClasses($institutionId, $academicPeriodId, $educationGrades) {
     	$ClassesTable = $this->Classes;
-    	$listOfClass = $ClassesTable
+    	$listOfClasses = $ClassesTable
     		->find('list', [
     			'keyField' => 'id',
     			'valueField' => 'name'
@@ -144,11 +149,12 @@ class InstitutionAssessmentsTable extends AppTable {
     		->matching('InstitutionSiteSectionGrades')
     		->where([
     			'InstitutionSiteSectionGrades.education_grade_id IN ' => $educationGrades, 
-    			$ClassesTable->aliasField('institution_site_id') => $institutionId])
+    			$ClassesTable->aliasField('institution_site_id') => $institutionId,
+    			$ClassesTable->aliasField('academic_period_id') => $academicPeriodId
+    		])
     		->select(['id' => $this->Classes->aliasField('id'), 'name' => $this->Classes->aliasField('name')])
-    		;
-    	pr($listOfClass->sql());
-    	pr($listOfClass->toArray());
+    		->toArray();
+    	return $listOfClasses;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
