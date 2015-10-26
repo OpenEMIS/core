@@ -25,6 +25,21 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
+		$fields[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'InstitutionSiteSections.institution_site_id',
+			'field' => 'institution_site_id',
+			'type' => 'string',
+			'label' => '',
+		];
+
     	$sheet = $settings['sheet'];
     	$assessments = $sheet['assessments'];
     	foreach ($assessments as $assessment) {
@@ -44,6 +59,12 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	    		];
     		}
     	}
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    	$query
+    		->contain(['InstitutionSiteSections.Institutions'])
+    		->select(['code' => 'Institutions.code', 'institution_site_id' => 'Institutions.name']);
     }
 
     public function onExcelRenderAssessment(Event $event, Entity $entity, array $attr) {
