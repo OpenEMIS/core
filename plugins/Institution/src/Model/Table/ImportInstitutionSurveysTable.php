@@ -161,7 +161,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$maxRows = 2002;
 			$highestRow = $sheet->getHighestRow();
 			if ($highestRow > $maxRows) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')]);
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
 				return false;
 			}
 
@@ -176,8 +176,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			// preg_match("/(\([0-9a-zA-Z]{0,50}\))/", $sheetName, $output);
 			preg_match("/^\((\w{0,50})\)/", $sheetName, $output);
 			if (count($output)!=2) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_not_found')]);
-				// pr($output);die;
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_not_found')], true);
 				return false;
 			}
 
