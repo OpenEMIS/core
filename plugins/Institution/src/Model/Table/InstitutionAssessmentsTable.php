@@ -112,21 +112,13 @@ class InstitutionAssessmentsTable extends AppTable {
     		->select(['class' => 'InstitutionSiteSections.id', 'assessment' => 'Assessments.id'])
     		->group(['class', 'assessment'])
     		->hydrate(false)
-    		->toArray()
-    		;
+    		->toArray();
 
     	$returnArray = [];
     	foreach ($results as $item) {
     		$returnArray[$item['class']][] = $item['assessment'];
     	}
     	return $returnArray;
-    }
-
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
-    	$query->where([
-    		$this->aliasField('institution_site_id') => $this->institutionId,
-    		$this->aliasField('status') => self::COMPLETED
-    	]);
     }
 
 	public function onGetStatus(Event $event, Entity $entity) {
