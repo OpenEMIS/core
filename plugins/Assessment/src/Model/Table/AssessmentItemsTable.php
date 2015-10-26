@@ -11,4 +11,16 @@ class AssessmentItemsTable extends AppTable {
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
+
+	public function getAssessmentItemSubjects($assessmentId) {
+		$subjectList = $this
+			->find()
+			->matching('EducationSubjects')
+			->where([$this->aliasField('assessment_id') => $assessmentId])
+			->select(['id' => $this->aliasField('id'), 'name' => 'EducationSubjects.name', 'type' => $this->aliasField('result_type')])
+			->order(['EducationSubjects.order'])
+			->hydrate(false)
+			->toArray();
+		return $subjectList;
+	}
 }

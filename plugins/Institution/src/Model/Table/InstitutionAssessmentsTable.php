@@ -79,10 +79,10 @@ class InstitutionAssessmentsTable extends AppTable {
 		$classOptions = $this->Classes->getSectionOptions($academicPeriodId, $institutionId);
 		// Class assessments
 		$classAssessments = $this->getClassAssessments($institutionId, $academicPeriodId);
+		$sheetTable = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
 
 		foreach($classAssessments as $classId => $assessments) {
 	    	// Main sheet table
-	    	$sheetTable = $this->Classes->InstitutionSiteSectionStudents;
 	    	$sheets[] = [
 				'name' => $classOptions[$classId],
 				'table' => $sheetTable,
@@ -120,41 +120,6 @@ class InstitutionAssessmentsTable extends AppTable {
     		$returnArray[$item['class']][] = $item['assessment'];
     	}
     	return $returnArray;
-    }
-
-    public function getAssessmentGrades($institutionId, $academicPeriodId) {
-    	$results = $this
-    		->find('list', [
-    			'keyField' => 'grade',
-    			'valueField' => 'grade'
-    		])
-    		->matching('Assessments')
-    		->where([
-    			$this->aliasField('institution_site_id') => $institutionId, 
-    			$this->aliasField('academic_period_id') => $academicPeriodId,
-    		])
-    		->select(['grade' => 'Assessments.education_grade_id'])
-    		->distinct(['grade'])
-    		->toArray();
-    	return $results;
-    }
-
-    public function getClasses($institutionId, $academicPeriodId, $educationGrades) {
-    	$ClassesTable = $this->Classes;
-    	$listOfClasses = $ClassesTable
-    		->find('list', [
-    			'keyField' => 'id',
-    			'valueField' => 'name'
-    		])
-    		->matching('InstitutionSiteSectionGrades')
-    		->where([
-    			'InstitutionSiteSectionGrades.education_grade_id IN ' => $educationGrades, 
-    			$ClassesTable->aliasField('institution_site_id') => $institutionId,
-    			$ClassesTable->aliasField('academic_period_id') => $academicPeriodId
-    		])
-    		->select(['id' => $this->Classes->aliasField('id'), 'name' => $this->Classes->aliasField('name')])
-    		->toArray();
-    	return $listOfClasses;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
