@@ -199,6 +199,9 @@ trait MessagesTrait {
 			'section' => 'Class',
 			'noAccess' => 'You do not have access to this Class.'
 		],
+		'InstitutionRubrics' => [
+			'noRubrics' => 'No Available Rubrics'
+		],
 		'InstitutionRubricAnswers' => [
 			'rubric_template' => 'Rubric Template',
 			'rubric_section_id' => 'Section',
