@@ -30,7 +30,14 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('WorkflowStatusesSteps', ['className' => 'Workflow.WorkflowStatusesSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('WorkflowStatuses' , [
+			'className' => 'Workflow.WorkflowStatuses',
+			'joinTable' => 'workflow_statuses_steps',
+			'foreignKey' => 'workflow_step_id',
+			'targetForeignKey' => 'workflow_status_id',
+			'through' => 'Workflow.WorkflowStatusesSteps',
+			'dependent' => true
+		]);
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'joinTable' => 'workflow_steps_roles',
@@ -359,5 +366,16 @@ class WorkflowStepsTable extends AppTable {
         $selectedSecurityRole = key($securityRoleOptions);
 
 		return compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow', 'securityRoleOptions', 'selectedSecurityRole');
+	}
+
+	public function getWorkflowSteps($workflowStatusId) {
+		return $this
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->where([$this->aliasField('workflow_status_id') => $workflowStatusId])
+			->select(['id' => $this->aliasField('workflow_step_id')])
+			->toArray();
 	}
 }

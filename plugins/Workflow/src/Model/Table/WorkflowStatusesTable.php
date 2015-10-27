@@ -11,7 +11,14 @@ class WorkflowStatusesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
-		$this->hasMany('WorkflowStatusMappings', ['className' => 'Workflow.WorkflowStatusMappings', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('WorkflowSteps' , [
+			'className' => 'Workflow.WorkflowSteps',
+			'joinTable' => 'workflow_statuses_steps',
+			'foreignKey' => 'workflow_status_id',
+			'targetForeignKey' => 'workflow_step_id',
+			'through' => 'Workflow.WorkflowStatusesSteps',
+			'dependent' => true
+		]);
 	}
 
 	public function implementedEvents() {
@@ -57,6 +64,7 @@ class WorkflowStatusesTable extends AppTable {
 		$this->ControllerAction->field('name');
 		$this->ControllerAction->field('is_editable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
 		$this->ControllerAction->field('is_removable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
+		$this->ControllerAction->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
 	}
 	
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -84,13 +92,25 @@ class WorkflowStatusesTable extends AppTable {
 		}
 	}
 
-	public function getWorkflowStepStatusNameMappings($modelName) {
+	public function getWorkflowStepStatusNameMappings($model) {
 		return $this
 			->find('list')
-			->matching('WorkflowStatusMappings')
+			->matching('WorkflowSteps')
 			->matching('WorkflowModels')
-			->where(['WorkflowModels.model' => $modelName])
-			->select(['id' => 'WorkflowStatusMappings.workflow_step_id', 'name' => $this->aliasField('name')])
+			->where(['WorkflowModels.model' => $model])
+			->select(['id' => 'WorkflowSteps.id', 'name' => $this->aliasField('name')])
+			->toArray();
+	}
+
+	public function getWorkflowSteps($workflowStatusId) {
+		return $this
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->matching('WorkflowSteps')
+			->where([$this->aliasField('id') => $workflowStatusId])
+			->select(['id' => 'WorkflowSteps.id'])
 			->toArray();
 	}
 }
