@@ -33,7 +33,7 @@ $this->end();
 
 			<h3>Contact</h3>
 			<div class="table-responsive">
-				<table class="table table-striped table-hover table-bordered table-sortable">
+				<table class="table table-curved table-sortable">
 					<thead>
 						<th>Description</th>
 						<th>Value</th>
@@ -49,7 +49,7 @@ $this->end();
 
 			<h3>Groups</h3>
 			<div class="table-responsive">
-				<table class="table table-striped table-hover table-bordered table-sortable">
+				<table class="table table-curved table-sortable">
 					<thead>
 						<th>Group</th>
 						<th>Role</th>
