@@ -5,7 +5,8 @@ INSERT INTO `db_patches` VALUES ('PHPOE-2233', NOW());
 ALTER TABLE `workflow_statuses` 
 ADD COLUMN `code` VARCHAR(100) NOT NULL COMMENT '' AFTER `workflow_model_id`,
 ADD COLUMN `is_editable` INT(1) NOT NULL COMMENT '' AFTER `name`,
-ADD COLUMN `modified_user_id` INT(11) NULL DEFAULT NULL COMMENT '' AFTER `is_editable`,
+ADD COLUMN `is_removable` INT(1) NOT NULL COMMENT '' AFTER `is_editable`
+ADD COLUMN `modified_user_id` INT(11) NULL DEFAULT NULL COMMENT '' AFTER `is_removable`,
 ADD COLUMN `modified` DATETIME NULL DEFAULT NULL COMMENT '' AFTER `modified_user_id`,
 ADD COLUMN `created_user_id` INT(11) NOT NULL COMMENT '' AFTER `modified`,
 ADD COLUMN `created` DATETIME NOT NULL COMMENT '' AFTER `created_user_id`;
