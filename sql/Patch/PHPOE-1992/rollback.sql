@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS `training_courses_providers`;
 DROP TABLE IF EXISTS `training_courses_prerequisites`;
 DROP TABLE IF EXISTS `training_courses_result_types`;
 DROP TABLE IF EXISTS `training_sessions`;
+DROP TABLE IF EXISTS `training_session_trainers`;
+DROP TABLE IF EXISTS `training_sessions_trainees`;
 
 -- labels
 DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'file_content';
