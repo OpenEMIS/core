@@ -12,21 +12,21 @@
 			'plugin' => $this->request->params['plugin'],
 		    'controller' => $this->request->params['controller'],
 		    'action' => $this->request->params['action'],
-		    'ajaxUserAutocomplete'
+		    'ajaxTraineeAutocomplete'
 		]);
 		$table = $ControllerAction['table']->alias();
 
-		echo $this->Form->input('user_search', [
+		echo $this->Form->input('trainee_search', [
 			'label' => __('Add Trainee'),
 			'type' => 'text',
 			'class' => 'autocomplete',
 			'autocomplete-url' => $url,
 			'autocomplete-no-results' => __('No Trainee found.'),
 			'autocomplete-class' => 'error-message',
-			'autocomplete-target' => 'user_id',
+			'autocomplete-target' => 'trainee_id',
 			'autocomplete-submit' => "$('#reload').val('addTrainee').click();"
 		]);
-		echo $this->Form->hidden('user_id', ['autocomplete-value' => 'user_id']);
+		echo $this->Form->hidden('trainee_id', ['autocomplete-value' => 'trainee_id']);
 	?>
 	<div class="clearfix"></div>
 	<hr>
