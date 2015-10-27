@@ -110,7 +110,7 @@ class TrainingSessionsTable extends AppTable {
 					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.trainee_id", ['value' => $joinData['trainee_id']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-					$rowData[] = $joinData['openemis_no'];
+					$rowData[] = [$joinData['openemis_no'], ['autocomplete-exclude' => $joinData['trainee_id']]];
 					$rowData[] = $name;
 					$rowData[] = $this->getDeleteButton();
 					$tableCells[] = $rowData;
@@ -199,8 +199,8 @@ class TrainingSessionsTable extends AppTable {
 		$alias = $this->alias();
 		$key = 'trainees';
 
-		if ($data->offsetExists('user_id')) {
-			$id = $data['user_id'];
+		if ($data->offsetExists('trainee_id')) {
+			$id = $data['trainee_id'];
 			try {
 				$obj = $this->Trainees->get($id);
 
@@ -232,7 +232,7 @@ class TrainingSessionsTable extends AppTable {
 		}
 	}
 
-	public function ajaxUserAutocomplete() {
+	public function ajaxTraineeAutocomplete() {
 		$this->controller->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 
@@ -247,7 +247,7 @@ class TrainingSessionsTable extends AppTable {
 	public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$courseOptions = $this->Courses
-				->find('list')
+				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->toArray();
 			$courseId = $this->queryString('course', $courseOptions);
 
