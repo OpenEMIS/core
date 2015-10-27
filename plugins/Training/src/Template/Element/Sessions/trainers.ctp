@@ -26,7 +26,7 @@
 							<?php endif ?>
 						</td>
 						<td><?= $trainerTypeOptions[$obj->type]; ?></td>
-						<td><?= $obj->user->name_with_id; ?></td>
+						<td><?= isset($obj->user->name_with_id) ? $obj->user->name_with_id : ''; ?></td>
 						<td><?= $obj->name; ?></td>
 					</tr>
 					<?php endforeach ?>

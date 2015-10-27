@@ -103,6 +103,10 @@ CREATE TABLE IF NOT EXISTS `training_courses_target_populations` (
 ALTER TABLE `training_courses_target_populations`
   ADD PRIMARY KEY (`id`);
 
+ALTER TABLE `training_courses_target_populations`
+ADD INDEX(`training_course_id`),
+ADD INDEX(`target_population_id`);
+
 -- New table - training_courses_providers
 DROP TABLE IF EXISTS `training_courses_providers`;
 CREATE TABLE IF NOT EXISTS `training_courses_providers` (
@@ -114,6 +118,10 @@ CREATE TABLE IF NOT EXISTS `training_courses_providers` (
 
 ALTER TABLE `training_courses_providers`
   ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `training_courses_providers`
+ADD INDEX(`training_course_id`),
+ADD INDEX(`training_provider_id`);
 
 -- New table - training_courses_prerequisites
 DROP TABLE IF EXISTS `training_courses_prerequisites`;
@@ -127,6 +135,10 @@ CREATE TABLE IF NOT EXISTS `training_courses_prerequisites` (
 ALTER TABLE `training_courses_prerequisites`
   ADD PRIMARY KEY (`id`);
 
+ALTER TABLE `training_courses_prerequisites`
+ADD INDEX(`training_course_id`),
+ADD INDEX(`prerequisite_training_course_id`);
+
 -- New table - training_courses_specialisations
 DROP TABLE IF EXISTS `training_courses_specialisations`;
 CREATE TABLE IF NOT EXISTS `training_courses_specialisations` (
@@ -137,6 +149,10 @@ CREATE TABLE IF NOT EXISTS `training_courses_specialisations` (
 
 ALTER TABLE `training_courses_specialisations`
   ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `training_courses_specialisations`
+ADD INDEX(`training_course_id`),
+ADD INDEX(`training_specialisation_id`);
 
 -- New table - training_courses_result_types
 DROP TABLE IF EXISTS `training_courses_result_types`;
@@ -149,6 +165,10 @@ CREATE TABLE IF NOT EXISTS `training_courses_result_types` (
 
 ALTER TABLE `training_courses_result_types`
   ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `training_courses_result_types`
+ADD INDEX(`training_course_id`),
+ADD INDEX(`training_result_type_id`);
 
 -- New table - training_sessions
 DROP TABLE IF EXISTS `training_sessions`;
@@ -184,7 +204,7 @@ DROP TABLE IF EXISTS `training_session_trainers`;
 CREATE TABLE IF NOT EXISTS `training_session_trainers` (
   `id` char(36) NOT NULL,
   `type` varchar(20) NOT NULL,
-  `trainer_id` int(11) DEFAULT NULL,
+  `trainer_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `name` varchar(250) DEFAULT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `training_session_id` int(11) NOT NULL,
@@ -201,6 +221,22 @@ ALTER TABLE `training_session_trainers`
 ALTER TABLE `training_session_trainers`
 ADD INDEX(`trainer_id`),
 ADD INDEX(`training_session_id`);
+
+-- New table - training_sessions_trainees
+DROP TABLE IF EXISTS `training_sessions_trainees`;
+CREATE TABLE IF NOT EXISTS `training_sessions_trainees` (
+  `id` char(36) NOT NULL,
+  `training_session_id` int(11) NOT NULL,
+  `trainee_id` int(11) NOT NULL COMMENT 'links to security_users.id'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_sessions_trainees`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `training_sessions_trainees`
+ADD INDEX(`training_session_id`),
+ADD INDEX(`trainee_id`);
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TrainingCourses', 'file_content', 'Administration -> Training -> Course','Attachment', 1, 1, NOW());

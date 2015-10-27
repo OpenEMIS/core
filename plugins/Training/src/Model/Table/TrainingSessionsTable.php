@@ -10,11 +10,13 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\HtmlTrait;
 
 class TrainingSessionsTable extends AppTable {
 	use OptionsTrait;
+	use HtmlTrait;
 
-	private $_contain = ['Trainers.Users'];
+	private $_contain = ['Trainers.Users', 'Trainees'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -22,6 +24,14 @@ class TrainingSessionsTable extends AppTable {
 		$this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
 		$this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('Trainees', [
+			'className' => 'User.Users',
+			'joinTable' => 'training_sessions_trainees',
+			'foreignKey' => 'training_session_id',
+			'targetForeignKey' => 'trainee_id',
+			'through' => 'Training.TrainingSessionsTrainees',
+			'dependent' => true
+		]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -46,6 +56,72 @@ class TrainingSessionsTable extends AppTable {
 
 	public function onGetStatusId(Event $event, Entity $entity) {
 		return '<span class="status highlight">' . $entity->status->name . '</span>';
+	}
+
+	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$tableHeaders = [__('OpenEMIS No'), __('Name')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'trainees';
+
+		if ($action == 'index') {
+			// not showing
+		} else if ($action == 'view') {
+			$associated = $entity->extractOriginal([$key]);
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					$rowData = [];
+					$rowData[] = $obj->openemis_no;
+					$rowData[] = $obj->name;
+
+					$tableCells[] = $rowData;
+				}
+			}
+		} else if ($action == 'edit') {
+			$tableHeaders[] = ''; // for delete column
+			$Form = $event->subject()->Form;
+
+			if ($this->request->is(['get'])) {
+				if (!array_key_exists($alias, $this->request->data)) {
+					$this->request->data[$alias] = [$key => []];
+				} else {
+					$this->request->data[$alias][$key] = [];
+				}
+
+				$associated = $entity->extractOriginal([$key]);
+				if (!empty($associated[$key])) {
+					foreach ($associated[$key] as $i => $obj) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $obj->id,
+							'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name]
+						];
+					}
+				}
+			}
+			// refer to addEditOnAddUser for http post
+			if ($this->request->data("$alias.$key")) {
+				$associated = $this->request->data("$alias.$key");
+
+				foreach ($associated as $i => $obj) {
+					$joinData = $obj['_joinData'];
+					$rowData = [];
+					$name = $joinData['name'];
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['trainee_id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.trainee_id", ['value' => $joinData['trainee_id']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$rowData[] = $joinData['openemis_no'];
+					$rowData[] = $name;
+					$rowData[] = $this->getDeleteButton();
+					$tableCells[] = $rowData;
+				}
+			}
+		}
+
+		$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+		return $event->subject()->renderElement('Training.Sessions/' . $key, ['attr' => $attr]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -82,7 +158,9 @@ class TrainingSessionsTable extends AppTable {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		//Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = $this->_contain;
+		$newOptions['associated'] = [
+			'Trainers', 'Trainees._joinData'
+		];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
@@ -103,18 +181,67 @@ class TrainingSessionsTable extends AppTable {
 	}
 
 	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$trainerOptions = [
+		$dataOptions = [
 			'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
-			'trainer_id' => 0,
+			'trainer_id' => '',
 			'name' => '',
 			'visible' => 1
 		];
-		$data[$this->alias()]['trainers'][] = $trainerOptions;
+		$data[$this->alias()]['trainers'][] = $dataOptions;
 
 		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
 		$options['associated'] = [
 			'Trainers' => ['validate' => false]
 		];
+	}
+
+	public function addEditOnAddTrainee(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$alias = $this->alias();
+		$key = 'trainees';
+
+		if ($data->offsetExists('user_id')) {
+			$id = $data['user_id'];
+			try {
+				$obj = $this->Trainees->get($id);
+
+				if (!array_key_exists($key, $data[$alias])) {
+					$data[$alias][$key] = [];
+				}
+				$data[$alias][$key][] = [
+					'id' => $obj->id,
+					'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name]
+				];
+			} catch (RecordNotFoundException $ex) {
+				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
+			}
+		}
+
+		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+		$options['associated'] = [
+			'Trainees' => ['validate' => false]
+		];
+	}
+
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		if ($action == 'edit') {
+			$includes['autocomplete'] = [
+				'include' => true, 
+				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+			];
+		}
+	}
+
+	public function ajaxUserAutocomplete() {
+		$this->controller->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+			$term = $this->request->query['term'];
+			$data = $this->Trainees->autocomplete($term);
+			echo json_encode($data);
+			die;
+		}
 	}
 
 	public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request) {
@@ -156,7 +283,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$Users = TableRegistry::get('User.Users');
+			$Users = $this->Trainers->Users;
 			$trainerOptions = $Users
 				->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
 				->where([
@@ -165,6 +292,8 @@ class TrainingSessionsTable extends AppTable {
 					$Users->aliasField('is_guardian') => 0
 				])
 				->toArray();
+			$trainerOptions = ['' => '-- ' . __('Select Trainer') . ' --'] + $trainerOptions;
+
 			$attr['options'] = $trainerOptions;
 		}
 
@@ -207,17 +336,17 @@ class TrainingSessionsTable extends AppTable {
 		]);
 		$this->ControllerAction->field('trainers', [
 			'type' => 'element',
-			'element' => 'Training.TrainingSessions/trainers',
+			'element' => 'Training.Sessions/trainers',
 			'valueClass' => 'table-full-width'
 		]);
 		$this->ControllerAction->field('trainees', [
-			'type' => 'element',
-			'element' => 'Training.TrainingSessions/trainees',
+			'type' => 'trainee_table',
 			'valueClass' => 'table-full-width'
 		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'status_id', 'training_course_id', 'training_provider_id', 'start_date', 'end_date', 'comment'
+			'status_id', 'training_course_id', 'training_provider_id', 'start_date', 'end_date', 'comment',
+			'trainers', 'trainees'
 		]);
 	}
 }
