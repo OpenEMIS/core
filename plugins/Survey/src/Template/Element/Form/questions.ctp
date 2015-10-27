@@ -17,7 +17,7 @@
 	<?php endif;?>
 
 	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table table-curved">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('Users.openemis_no'); ?></th>

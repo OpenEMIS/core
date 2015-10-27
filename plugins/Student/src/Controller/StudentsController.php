@@ -40,6 +40,8 @@ class StudentsController extends AppController {
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 		];
 
+		$this->loadComponent('User.Image');
+
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -191,5 +193,11 @@ class StudentsController extends AppController {
 		];
 
 		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }
