@@ -1,6 +1,6 @@
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('general.name'); ?></th>
@@ -25,7 +25,7 @@
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-in-view">
-			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+			<table class="table table-checkable table-input">
 				<thead>	
 					<tr>
 						<th><?= $this->Label->get('general.name'); ?></th>
