@@ -67,8 +67,8 @@ class WorkflowComponent extends Component {
 	 *	@return array The list of the workflow steps
 	 */
 	public function getWorkflowSteps($workflowStatusId) {
-		$WorkflowStatusesStepsTable = $this->WorkflowModels->WorkflowStatuses->WorkflowStatusesSteps;
-		return $WorkflowStatusesStepsTable->getWorkflowSteps($workflowStatusId);
+		$WorkflowStepsTable = $this->WorkflowModels->WorkflowSteps;
+		return $WorkflowStepsTable->getWorkflowSteps($workflowStatusId);
 	}
 
 	/**
