@@ -4,6 +4,7 @@ DROP COLUMN `created`,
 DROP COLUMN `created_user_id`,
 DROP COLUMN `modified`,
 DROP COLUMN `modified_user_id`,
+DROP COLUMN `is_editable`,
 DROP COLUMN `code`;
 
 -- db_patches
