@@ -3,7 +3,7 @@ namespace Workflow\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class WorkflowStatusMappingsTable extends AppTable {
+class WorkflowStatusesStepsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowStatuses', ['className' => 'Workflow.WorkflowStatuses']);

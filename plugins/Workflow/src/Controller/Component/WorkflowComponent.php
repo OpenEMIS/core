@@ -54,7 +54,7 @@ class WorkflowComponent extends Component {
 		return $WorkflowModelTable
 			->find('list')
 			->matching('WorkflowStatuses')
-			->where([$WorkflowModelTable->aliasField('model') => 'Institution.InstitutionSurveys'])
+			->where([$WorkflowModelTable->aliasField('model') => $modelName])
 			->select(['id' => 'WorkflowStatuses.id', 'name' => 'WorkflowStatuses.name'])
 			->toArray();
 	}
@@ -67,8 +67,8 @@ class WorkflowComponent extends Component {
 	 *	@return array The list of the workflow steps
 	 */
 	public function getWorkflowSteps($workflowStatusId) {
-		$WorkflowStatusMappingsTable = $this->WorkflowModels->WorkflowStatuses->WorkflowStatusMappings;
-		return $WorkflowStatusMappingsTable->getWorkflowSteps($workflowStatusId);
+		$WorkflowStatusesStepsTable = $this->WorkflowModels->WorkflowStatuses->WorkflowStatusesSteps;
+		return $WorkflowStatusesStepsTable->getWorkflowSteps($workflowStatusId);
 	}
 
 	/**

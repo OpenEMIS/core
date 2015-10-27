@@ -14,6 +14,10 @@ ADD COLUMN `created` DATETIME NOT NULL COMMENT '' AFTER `created_user_id`;
 UPDATE `workflow_statuses` SET `code`='COMPLETED', `created_user_id`=1, `created`=NOW() WHERE `id`=1;
 UPDATE `workflow_statuses` SET `code`='NOT_COMPLETED', `created_user_id`=1, `created`=NOW() WHERE `id`=2;
 
+-- workflow_statuses_steps
+ALTER TABLE `workflow_status_mappings` 
+RENAME TO  `workflow_statuses_steps` ;
+
 -- security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
 VALUES (5038, 'Statuses', 'Workflows', 'Administration', 'Workflows', 5000, 'Statuses.index|Statuses.view', 'Statuses.edit', 'Statuses.add', 'Statuses.remove', 5038, 1, 1, NOW());
