@@ -24,7 +24,12 @@ class AssessmentItemsTable extends AppTable {
 			->find()
 			->matching('EducationSubjects')
 			->where([$this->aliasField('assessment_id') => $assessmentId])
-			->select(['id' => $this->aliasField('id'), 'name' => 'EducationSubjects.name', 'type' => $this->aliasField('result_type')])
+			->select([
+				'id' => $this->aliasField('id'), 
+				'name' => 'EducationSubjects.name', 
+				'type' => $this->aliasField('result_type'),
+				'max' => $this->aliasField('max')
+			])
 			->order(['EducationSubjects.order'])
 			->hydrate(false)
 			->toArray();

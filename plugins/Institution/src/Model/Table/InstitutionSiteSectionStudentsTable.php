@@ -47,11 +47,15 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
     		$assessmentSubjects = TableRegistry::get('Assessment.AssessmentItems')->getAssessmentItemSubjects($assessment);
 
     		foreach($assessmentSubjects as $subject) {
+    			$label = __($assessmentName).' - '.__($subject['name']);
+    			if ($subject['type'] == 'MARKS') {
+    				$label = $label.' ('.$subject['max'].')';
+    			}
     			$fields[] = [
 	    			'key' => $subject['id'],
 	    			'field' => 'assessment_item',
 	    			'type' => 'assessment',
-					'label' => __($assessmentName).' - '.__($subject['name']),
+					'label' => $label,
 					'institutionId' => $sheet['institutionId'],
 					'assessmentId' => $assessment,
 					'academicPeriodId' => $sheet['academicPeriodId'],
