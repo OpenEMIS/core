@@ -13,6 +13,8 @@ use App\Model\Traits\MessagesTrait;
 class SecurityRolesTable extends AppTable {
 	use MessagesTrait;
 
+	private $roleCount = 0;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
@@ -127,6 +129,7 @@ class SecurityRolesTable extends AppTable {
 		if ($user['super_admin'] == 1) { // super admin will show all roles
 			$userId = null;
 		}
+		$count = 0;
 		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 		$selectedGroup = $request->query('security_group_id');
 		if ($type == 'system') {
@@ -140,10 +143,13 @@ class SecurityRolesTable extends AppTable {
 				->contain('SecurityRoles')
 				->order(['SecurityRoles.order'])
 				->where([
-					$GroupRoles->aliasField('security_user_id') => $userId
+					$GroupRoles->aliasField('security_user_id') => $userId,
+					'SecurityRoles.security_group_id IN ' => [-1,0]
 				])
 				->first();
+				$count = $query->count();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+				$count = $count - ($query->count());
 			}				
 		} else {
 			$query
@@ -158,9 +164,13 @@ class SecurityRolesTable extends AppTable {
 					'SecurityRoles.security_group_id' => $selectedGroup
 				])
 				->first();
+				$count = $query->count();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+				$count = $count - ($query->count());
 			}
 		}
+
+		$this->roleCount = $count;
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -214,6 +224,11 @@ class SecurityRolesTable extends AppTable {
 		} 
 
 		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
+	}
+
+	public function reorderUpdateOrderValue(Event $event, $orderValue) {
+		$count = $this->roleCount;
+		return ($orderValue+$count);
 	}
 
 	// this function will return all roles (system roles & user roles) that has lower
@@ -289,7 +304,7 @@ class SecurityRolesTable extends AppTable {
 				->find('list')
 				->find('visible')
 				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
-				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+				->order([$this->aliasField('order')])
 				->toArray()
 			;
 		}
