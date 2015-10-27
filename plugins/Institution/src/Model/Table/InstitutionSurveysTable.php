@@ -68,6 +68,53 @@ class InstitutionSurveysTable extends AppTable {
     	return $events;
     }
 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+		$query
+			->select(['code' => 'Institutions.code', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
+		// To update to this code when upgrade server to PHP 5.5 and above
+		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+		
+		foreach ($fields as $key => $field) {
+			if ($field['field'] == 'institution_site_id') {
+				unset($fields[$key]);
+				break;
+			}
+		}
+
+		$fields[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'InstitutionSurveys.institution_site_id',
+            'field' => 'institution_site_id',
+            'type' => 'integer',
+            'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'Institutions.area_id',
+			'field' => 'area_id',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'Institutions.area_administrative_id',
+			'field' => 'area_administrative_id',
+			'type' => 'string',
+			'label' => '',
+		];
+	}
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
     	$this->updateStatusId($entity);
 
@@ -198,6 +245,13 @@ class InstitutionSurveysTable extends AppTable {
 			}
 		}
 		$this->ControllerAction->setFieldOrder($fieldOrder);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// Do not show expired records
+		$query->where([
+			$this->aliasField('status_id <> ') => self::EXPIRED
+		]);
 	}
 
 	public function viewBeforeAction(Event $event) {
