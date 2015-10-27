@@ -13,8 +13,6 @@ use App\Model\Traits\MessagesTrait;
 class SecurityRolesTable extends AppTable {
 	use MessagesTrait;
 
-	private $roleCount = 0;
-
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
@@ -147,9 +145,8 @@ class SecurityRolesTable extends AppTable {
 					'SecurityRoles.security_group_id IN ' => [-1,0]
 				])
 				->first();
-				$count = $query->count();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-				$count = $count - ($query->count());
+				$count = $userRole['security_role']['order'];
 			}				
 		} else {
 			$query
@@ -164,13 +161,12 @@ class SecurityRolesTable extends AppTable {
 					'SecurityRoles.security_group_id' => $selectedGroup
 				])
 				->first();
-				$count = $query->count();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-				$count = $count - ($query->count());
+				$count = $userRole['security_role']['order'];
 			}
 		}
 
-		$this->roleCount = $count;
+		$this->Session->write($this->registryAlias().'.roleOrder', $count);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -227,7 +223,7 @@ class SecurityRolesTable extends AppTable {
 	}
 
 	public function reorderUpdateOrderValue(Event $event, $orderValue) {
-		$count = $this->roleCount;
+		$count = $this->Session->read($this->registryAlias().'.roleOrder');
 		return ($orderValue+$count);
 	}
 
