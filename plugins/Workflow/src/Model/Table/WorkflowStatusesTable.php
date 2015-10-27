@@ -33,6 +33,7 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		// Remove the edit button and delete button if the status is not editable
 		if (! $entity->is_editable) {
 			if (isset($buttons['edit'])) {
@@ -48,9 +49,14 @@ class WorkflowStatusesTable extends AppTable {
 		return $buttons;
 	}
 
+	public function onGetStatusMappingElement(Event $event, $action, $entity, $attr, $options=[]) {
+
+	}
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('name');
 		$this->ControllerAction->field('is_editable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
+		$this->ControllerAction->field('is_removable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
 	}
 	
 	public function viewAfterAction(Event $event, Entity $entity) {

@@ -8,5 +8,8 @@ DROP COLUMN `is_removable`,
 DROP COLUMN `is_editable`,
 DROP COLUMN `code`;
 
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` = 5038;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2233';
