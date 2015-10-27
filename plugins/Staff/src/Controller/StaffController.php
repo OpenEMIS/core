@@ -39,6 +39,7 @@ class StaffController extends AppController {
 			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
+			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 		];
 
 		$this->set('contentHeader', 'Staff');
@@ -118,9 +119,15 @@ class StaffController extends AppController {
 				}
 			}
 		} else {
-			$this->Alert->warning('general.notExists');
-			$event->stopPropagation();
-			return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+			if ($model->alias() == 'ImportStaff') {
+				$this->Navigation->addCrumb($model->getHeader($model->alias()));
+				$header = __('Staff') . ' - ' . $model->getHeader($model->alias());
+				$this->set('contentHeader', $header);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$event->stopPropagation();
+				return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+			}
 		}
 	}
 

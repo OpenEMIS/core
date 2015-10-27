@@ -10,6 +10,7 @@ tmp/sessions/*
 tmp/tests/*
 logs/*.log*
 webroot/export/*
+webroot/import/*
 /build
 /dist
 /tags

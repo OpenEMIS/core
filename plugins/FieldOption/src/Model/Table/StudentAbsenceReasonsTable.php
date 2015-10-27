@@ -7,6 +7,7 @@ use Cake\Validation\Validator;
 class StudentAbsenceReasonsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
-		$this->hasMany('InstitutionSiteStudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
+		parent::initialize($config);
+		$this->hasMany('InstitutionSiteStudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences', 'foreignKey' => 'student_absence_reason_id']);
 	}
 }
