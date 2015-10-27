@@ -212,41 +212,25 @@ class ImportBehavior extends Behavior {
 		$options['validate'] = false;
 		if (!array_key_exists($this->_table->alias(), $data)) {
 			$options['validate'] = true;
+			return $event->response;
 		}
 		if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
 			$options['validate'] = true;
+			return $event->response;
 		}
 		if (empty($data[$this->_table->alias()]['select_file'])) {
 			$options['validate'] = true;
+			return $event->response;
 		}
 		if ($data[$this->_table->alias()]['select_file']['error']==4) {
 			$options['validate'] = true;
+			return $event->response;
 		}
-
-		$fileObj = $data[$this->_table->alias()]['select_file'];
-		$supportedFormats = $this->_fileTypesMap;
-		$finfo = finfo_open(FILEINFO_MIME_TYPE);
-		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
-		finfo_close($finfo);
-
-		$fileExt = $fileObj['name'];
-		$fileExt = explode('.', $fileExt);
-		$fileExt = $fileExt[count($fileExt)-1];
-
-		$model = $this->_table;
-
-		if (!array_key_exists($fileExt, $supportedFormats)) {
-			if (!empty($fileFormat)) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
-				$options['validate'] = true;
-			}
-		} 
-		if (!in_array($fileFormat, $supportedFormats)) {
-			if (!empty($fileFormat)) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
-				$options['validate'] = true;
-			}
-		} 
+		if ($data[$this->_table->alias()]['select_file']['error']>0) {
+			$options['validate'] = true;
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
+			return $event->response;
+		}
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
 			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
@@ -259,6 +243,30 @@ class ImportBehavior extends Behavior {
 			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
 		}
+
+		$fileObj = $data[$this->_table->alias()]['select_file'];
+		$supportedFormats = $this->_fileTypesMap;
+
+		$finfo = finfo_open(FILEINFO_MIME_TYPE);
+		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
+		finfo_close($finfo);
+		if (!in_array($fileFormat, $supportedFormats)) {
+			if (!empty($fileFormat)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
+				$options['validate'] = true;
+			}
+		} 
+
+		$fileExt = $fileObj['name'];
+		$fileExt = explode('.', $fileExt);
+		$fileExt = $fileExt[count($fileExt)-1];
+		if (!array_key_exists($fileExt, $supportedFormats)) {
+			if (!empty($fileFormat)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
+				$options['validate'] = true;
+			}
+		} 
+
 	}
 
 	/**
