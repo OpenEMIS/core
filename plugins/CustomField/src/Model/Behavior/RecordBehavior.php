@@ -18,7 +18,7 @@ class RecordBehavior extends Behavior {
 			'ControllerAction.Model.addEdit.afterAction' 	=> ['callable' => 'addEditAfterAction', 'priority' => 100],
 			'ControllerAction.Model.edit.afterSave' 		=> ['callable' => 'editAfterSave', 'priority' => 100],
 			'Model.custom.onUpdateToolbarButtons'			=> 'onUpdateToolbarButtons',
-			'Model.excel.onExcelUpdateFields'				=> 'onExcelUpdateFields',
+			'Model.excel.onExcelUpdateFields'				=> ['callable' => 'onExcelUpdateFields', 'priority' => 110],
 			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
 			'Model.excel.onExcelRenderCustomField'			=> 'onExcelRenderCustomField'
 		],
