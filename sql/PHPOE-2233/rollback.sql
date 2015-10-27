@@ -8,6 +8,10 @@ DROP COLUMN `is_removable`,
 DROP COLUMN `is_editable`,
 DROP COLUMN `code`;
 
+-- workflow_statuses_steps
+ALTER TABLE `workflow_statuses_steps`
+RENAME TO `workflow_status_mappings`;
+
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 5038;
 

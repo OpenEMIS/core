@@ -30,7 +30,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('WorkflowStatusMappings', ['className' => 'Workflow.WorkflowStatusMappings', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowStatusesSteps', ['className' => 'Workflow.WorkflowStatusesSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'joinTable' => 'workflow_steps_roles',
