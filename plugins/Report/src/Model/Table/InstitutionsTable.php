@@ -16,15 +16,15 @@ class InstitutionsTable extends AppTable  {
 		$this->table('institution_sites');
 		parent::initialize($config);
 		
-		$this->belongsTo('InstitutionSiteLocalities', 		['className' => 'Institution.Localities']);
-		$this->belongsTo('InstitutionSiteTypes', 			['className' => 'Institution.Types']);
-		$this->belongsTo('InstitutionSiteOwnerships', 		['className' => 'Institution.Ownerships']);
-		$this->belongsTo('InstitutionSiteStatuses', 		['className' => 'Institution.Statuses']);
-		$this->belongsTo('InstitutionSiteSectors', 			['className' => 'Institution.Sectors']);
-		$this->belongsTo('InstitutionSiteProviders', 		['className' => 'Institution.Providers']);
-		$this->belongsTo('InstitutionSiteGenders', 			['className' => 'Institution.Genders']);
-		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
-		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
+		$this->belongsTo('Localities', 			['className' => 'Institution.Localities', 'foreignKey' => 'institution_site_locality_id']);
+		$this->belongsTo('Types', 				['className' => 'Institution.Types', 'foreignKey' => 'institution_site_type_id']);
+		$this->belongsTo('Ownerships',			['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_site_ownership_id']);
+		$this->belongsTo('Statuses', 			['className' => 'Institution.Statuses', 'foreignKey' => 'institution_site_status_id']);
+		$this->belongsTo('Sectors',				['className' => 'Institution.Sectors', 'foreignKey' => 'institution_site_sector_id']);
+		$this->belongsTo('Providers',			['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
+		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_site_gender_id']);
+		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
+		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
 		
 		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'institution_site_type_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');

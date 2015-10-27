@@ -13,16 +13,18 @@ class RecordBehavior extends Behavior {
 	protected $_contain = ['CustomFieldValues', 'CustomTableCells'];
 	protected $_defaultConfig = [
 		'events' => [
-			'ControllerAction.Model.view.afterAction' 		=> 'viewAfterAction',
-			'ControllerAction.Model.addEdit.beforePatch' 	=> 'addEditBeforePatch',
-			'ControllerAction.Model.addEdit.afterAction' 	=> 'addEditAfterAction',
-			'ControllerAction.Model.edit.afterSave' 		=> 'editAfterSave',
-			'Model.excel.onExcelUpdateFields'				=> 'onExcelUpdateFields',
+			'ControllerAction.Model.view.afterAction'		=> ['callable' => 'viewAfterAction', 'priority' => 100],
+			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
+			'ControllerAction.Model.addEdit.afterAction' 	=> ['callable' => 'addEditAfterAction', 'priority' => 100],
+			'ControllerAction.Model.edit.afterSave' 		=> ['callable' => 'editAfterSave', 'priority' => 100],
+			'Model.custom.onUpdateToolbarButtons'			=> 'onUpdateToolbarButtons',
+			'Model.excel.onExcelUpdateFields'				=> ['callable' => 'onExcelUpdateFields', 'priority' => 110],
 			'Model.excel.onExcelBeforeStart'				=> 'onExcelBeforeStart',
-			'Model.excel.onExcelRenderCustomField'			=> 'onExcelRenderCustomField',
+			'Model.excel.onExcelRenderCustomField'			=> 'onExcelRenderCustomField'
 		],
 		'model' => null,
 		'behavior' => null,
+		'tabSection' => false,
 		'moduleKey' => 'custom_module_id',
 		'fieldKey' => 'custom_field_id',
 		'fieldOptionKey' => 'custom_field_option_id',
@@ -81,6 +83,19 @@ class RecordBehavior extends Behavior {
     	$events = parent::implementedEvents();
     	$events = array_merge($events, $this->config('events'));
     	return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($this->config('tabSection')) {
+			$currentAction = $this->_table->ControllerAction->action();
+			if ($currentAction == 'view') {
+				if ($toolbarButtons->offsetExists('back')) {
+					if (array_key_exists('tab_section', $toolbarButtons['back']['url'])) {
+						unset($toolbarButtons['back']['url']['tab_section']);
+					}
+				}
+			}
+		}
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
@@ -243,7 +258,7 @@ class RecordBehavior extends Behavior {
 
     			if ($entity->status == 1 && !is_null($redirectUrl)) {
 					$event->stopPropagation();
-					return $this->_table->controller->redirect($url);
+					return $this->_table->controller->redirect($redirectUrl);
     			}
     		}
     	}
@@ -452,7 +467,43 @@ class RecordBehavior extends Behavior {
 	}
 
 	public function buildCustomFields($entity) {
-		$customFieldQuery = $this->getCustomFieldQuery($entity);
+		$customFieldQuery = $this->getCustomFieldQuery($entity, true);
+
+		if ($this->config('tabSection')) {
+			$customFields = $customFieldQuery
+				->toArray();
+
+			$tabElements = [];
+			$action = $this->_table->ControllerAction->action();
+			$url = $this->_table->ControllerAction->url($action);
+			$sectionName = null;
+			foreach ($customFields as $customFieldOrder => $customField) {
+				if (isset($customField->section)) {
+					if ($sectionName != $customField->section) {
+						$sectionName = $customField->section;
+						$tabName = Inflector::slug($sectionName);
+						if (empty($tabElements)) {
+							$selectedAction = $tabName;
+						}
+						$url['tab_section'] = $tabName;
+						$tabElements[$tabName] = [
+							'url' => $url,
+							'text' => $sectionName,
+						];
+					}
+				}
+			}
+
+			if (!empty($tabElements)) {
+				$selectedAction = !is_null($this->_table->controller->request->query('tab_section')) ? $this->_table->controller->request->query('tab_section') : $selectedAction;
+				$this->_table->controller->set('tabElements', $tabElements);
+				$this->_table->controller->set('selectedAction', $selectedAction);
+
+				$customFieldQuery->where([
+					$this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['text']
+				]);
+			}
+		}
 
 		if (isset($customFieldQuery)) {
 			$customFields = $customFieldQuery

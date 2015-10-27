@@ -1,4 +1,4 @@
-<?php if (!empty($workflowOptions)) : ?>
+<?php if (!empty($filterOptions) || !empty($statusOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -10,15 +10,31 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
-				if (!empty($workflowOptions)) {
-					echo $this->Form->input('workflow', array(
+				$dataNamedGroup = [];
+				if (!empty($filterOptions)) {
+					echo $this->Form->input('filter', [
 						'class' => 'form-control',
 						'label' => false,
-						'options' => $workflowOptions,
-						'default' => $selectedWorkflow,
+						'options' => $filterOptions,
 						'url' => $baseUrl,
-						'data-named-key' => 'workflow'
-					));
+						'data-named-key' => 'filter'
+					]);
+					$dataNamedGroup[] = 'filter';
+				}
+
+				if (!empty($statusOptions)) {
+					$inputOptions = [
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $statusOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'status'
+					];
+					if (!empty($dataNamedGroup)) {
+						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+						$dataNamedGroup[] = 'status';
+					}
+					echo $this->Form->input('status', $inputOptions);
 				}
 			?>
 		</div>
