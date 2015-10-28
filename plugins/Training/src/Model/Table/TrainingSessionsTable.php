@@ -98,7 +98,7 @@ class TrainingSessionsTable extends AppTable {
 					}
 				}
 			}
-			// refer to addEditOnAddUser for http post
+			// refer to addEditOnAddTrainee for http post
 			if ($this->request->data("$alias.$key")) {
 				$associated = $this->request->data("$alias.$key");
 
@@ -148,16 +148,17 @@ class TrainingSessionsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setupFields();
+		$this->setupFields($entity);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->setupFields();
+		$this->setupFields($entity);
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		//Required by patchEntity for associated data
 		$newOptions = [];
+		// _joinData is required for 'saveStrategy' => 'replace' to work
 		$newOptions['associated'] = [
 			'Trainers', 'Trainees._joinData'
 		];
@@ -222,6 +223,10 @@ class TrainingSessionsTable extends AppTable {
 		];
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['course'] = $entity->training_course_id;
+	}
+
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
@@ -238,14 +243,73 @@ class TrainingSessionsTable extends AppTable {
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-			$data = $this->Trainees->autocomplete($term);
+			// $data = $this->Trainees->autocomplete($term);
+
+			// autocomplete
+			$session = $this->request->session();
+			$sessionKey = $this->registryAlias() . '.id';
+
+			$data = [];
+			if ($session->check($sessionKey)) {
+				$id = $session->read($sessionKey);
+				$entity = $this->get($id);
+
+				$TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+				$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+				$Users = TableRegistry::get('User.Users');
+				$Positions = TableRegistry::get('Institution.InstitutionSitePositions');
+				$search = sprintf('%%%s%%', $term);
+
+				$targetPopulationIds = $TargetPopulations
+					->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
+					->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
+					->toArray();
+
+				$list = $Staff
+					->find()
+					->matching('Users', function($q) use ($Users, $search) {
+						return $q
+							->find('all')
+							->where([
+								'OR' => [
+									$Users->aliasField('openemis_no') . ' LIKE' => $search,
+									$Users->aliasField('first_name') . ' LIKE' => $search,
+									$Users->aliasField('middle_name') . ' LIKE' => $search,
+									$Users->aliasField('third_name') . ' LIKE' => $search,
+									$Users->aliasField('last_name') . ' LIKE' => $search
+								]
+							]);
+					})
+					->matching('Positions', function($q) use ($Positions, $targetPopulationIds) {
+						return $q
+							->find('all')
+							->where([
+								'Positions.staff_position_title_id IN' => $targetPopulationIds
+							]);
+					})
+					->group([
+						$Staff->aliasField('security_user_id')
+					])
+					->order([$Users->aliasField('first_name')])
+					->all();
+
+				foreach($list as $obj) {
+					$_matchingData = $obj->_matchingData['Users'];
+					$data[] = [
+						'label' => sprintf('%s - %s', $_matchingData->openemis_no, $_matchingData->name),
+						'value' => $_matchingData->id
+					];
+				}
+			}
+			// End
+
 			echo json_encode($data);
 			die;
 		}
 	}
 
 	public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add' || $action == 'edit') {
+		if ($action == 'add') {
 			$courseOptions = $this->Courses
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->toArray();
@@ -253,6 +317,12 @@ class TrainingSessionsTable extends AppTable {
 
 			$attr['options'] = $courseOptions;
 			$attr['onChangeReload'] = 'changeCourse';
+		} else if ($action == 'edit') {
+			$courseId = $request->query('course');
+			$course = $this->Courses->get($courseId);
+
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $course->code_name;
 		}
 
 		return $attr;
@@ -326,7 +396,12 @@ class TrainingSessionsTable extends AppTable {
 		}
 	}
 
-	public function setupFields() {
+	public function setupFields(Entity $entity) {
+		$fieldOrder = [
+			'status_id', 'training_course_id', 'training_provider_id', 'start_date', 'end_date', 'comment',
+			'trainers'
+		];
+
 		$this->ControllerAction->field('training_course_id', [
 			'type' => 'select'
 		]);
@@ -339,14 +414,15 @@ class TrainingSessionsTable extends AppTable {
 			'element' => 'Training.Sessions/trainers',
 			'valueClass' => 'table-full-width'
 		]);
-		$this->ControllerAction->field('trainees', [
-			'type' => 'trainee_table',
-			'valueClass' => 'table-full-width'
-		]);
 
-		$this->ControllerAction->setFieldOrder([
-			'status_id', 'training_course_id', 'training_provider_id', 'start_date', 'end_date', 'comment',
-			'trainers', 'trainees'
-		]);
+		if (isset($entity->id)) {
+			$this->ControllerAction->field('trainees', [
+				'type' => 'trainee_table',
+				'valueClass' => 'table-full-width'
+			]);
+			$fieldOrder[] = 'trainees';
+		}
+
+		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 }
