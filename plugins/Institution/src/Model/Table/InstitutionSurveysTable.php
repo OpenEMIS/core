@@ -267,10 +267,12 @@ class InstitutionSurveysTable extends AppTable {
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			$statusOptions = $this->getWorkflowStepList();
-			$statusId = $attr['attr']['value'];
+			if (isset($attr['attr']['value'])) {
+				$statusId = $attr['attr']['value'];
 
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $statusOptions[$statusId];
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $statusOptions[$statusId];
+			}
 		}
 
 		return $attr;
