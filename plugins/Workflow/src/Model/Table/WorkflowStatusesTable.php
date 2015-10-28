@@ -101,16 +101,4 @@ class WorkflowStatusesTable extends AppTable {
 			->select(['id' => 'WorkflowSteps.id', 'name' => $this->aliasField('name')])
 			->toArray();
 	}
-
-	public function getWorkflowSteps($workflowStatusId) {
-		return $this
-			->find('list', [
-				'keyField' => 'id',
-				'valueField' => 'id'
-			])
-			->matching('WorkflowSteps')
-			->where([$this->aliasField('id') => $workflowStatusId])
-			->select(['id' => 'WorkflowSteps.id'])
-			->toArray();
-	}
 }
