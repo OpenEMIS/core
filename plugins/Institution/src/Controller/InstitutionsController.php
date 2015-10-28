@@ -281,7 +281,6 @@ class InstitutionsController extends AppController  {
 
 	//autocomplete used for InstitutionSiteShift
 	public function ajaxInstitutionAutocomplete() {
-		$this->controller->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 		$data = [];
 		$Institutions = TableRegistry::get('Institution.Institutions');
