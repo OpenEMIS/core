@@ -57,27 +57,92 @@ class WorkflowStatusesTable extends AppTable {
 		return $buttons;
 	}
 
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// To handle when delete all mappings
+		if (!array_key_exists('workflow_steps', $data[$this->alias()])) {
+			$data[$this->alias()]['workflow_steps'] = [];
+		}
+
+		// Required by patchEntity for associated data
+		$newOptions = [];
+		$newOptions['associated'] = ['WorkflowSteps._joinData'];
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
+	}
+
 	public function onGetStatusesStepsElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action) {
 			case 'view':
 				$tableHeaders = [__('Workflow Statuses Steps Mapping')];
 				$tableCells = [];
-
 				$workflowStatusId = $this->request->pass[1];
 				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
+				foreach ($workflowSteps as $key => $step) {
+					$rowData = [];
+					$rowData[] = $step;
+					$tableCells[] = $rowData;
+				}
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
 				break;
 
 			case 'edit':
-				$tableHeaders = [__('Workflow Statuses Steps Mapping')];
+				$tableHeaders = [__('Workflow Statuses Steps Mapping'),''];
+				$form = $event->subject()->Form;
 				$tableCells = [];
+				$arraySteps = [];
+				if ($this->request->is(['get'])) {
+					if(isset($this->request->pass[1])){
+						$modelId = $this->request->pass[1];
+						$steps = $this->getSteps($modelId);
+						foreach($steps as $step) {
+							$stepInfo = $step['_matchingData']['WorkflowSteps'];
+							$arraySteps[] = [
+								'status_id' => $step['id'],
+								'step_id' => $stepInfo['id'],
+								'name' => $stepInfo['name'],
+								'stage' => $stepInfo['stage']
+							];
+						}
+					}
+
+				} else if ($this->request->is(['post', 'put'])) {
+
+				}
+				$cellCount = 0;
+				foreach($arraySteps as $obj) {
+					$fieldPrefix = $attr['model'] . '.workflow_steps.' . $cellCount++;
+					$joinDataPrefix = $fieldPrefix . '._joinData';
+					$statusId = $obj['status_id'];
+					$stepId = $obj['step_id'];
+					$stepName = $obj['name'];
+
+					$cellData = "";
+					$cellData .= $form->hidden($fieldPrefix.".workflow_step_id", ['value' => $stepId]);
+					$cellData .= $form->hidden($fieldPrefix.".workflow_status_id", ['value' => $statusId]);
+
+					$rowData = [];
+					$rowData[] = $stepName.$cellData;
+					$rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					$tableCells[] = $rowData;
+				}
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
 				break;
 		}
 
 		return $event->subject()->renderElement('Workflow.mappings', ['attr' => $attr]);
+	}
+
+	public function getSteps($statusId) {
+		return $this
+			->find()
+			->matching('WorkflowSteps')
+			->where([$this->aliasField('id') => $statusId])
+			->hydrate(false)
+			->toArray();
 	}
 
 	public function beforeAction(Event $event) {
@@ -135,11 +200,11 @@ class WorkflowStatusesTable extends AppTable {
 		return $this
 			->find('list', [
 				'keyField' => 'id',
-				'valueField' => 'id'
+				'valueField' => 'name'
 			])
 			->matching('WorkflowSteps')
 			->where([$this->aliasField('id') => $workflowStatusId])
-			->select(['id' => 'WorkflowSteps.id'])
+			->select(['id' => 'WorkflowSteps.id', 'name' => 'WorkflowSteps.name'])
 			->toArray();
 	}
 }
