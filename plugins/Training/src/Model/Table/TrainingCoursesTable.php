@@ -79,30 +79,13 @@ class TrainingCoursesTable extends AppTable {
 			->allowEmpty('file_content');
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Workflow.afterTransition'] = 'workflowAfterTransition';
-
-    	return $events;
-    }
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$this->updateStatusId($entity);
-	}
-
-	public function onGetStatusId(Event $event, Entity $entity) {
-		return '<span class="status highlight">' . $entity->status->name . '</span>';
-	}
-
 	public function beforeAction(Event $event) {
 		// Type / Visible
-		$this->ControllerAction->field('status_id', [
-			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
-		]);
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
 		$this->ControllerAction->field('description', ['visible' => $visible]);
 		$this->ControllerAction->field('objective', ['visible' => $visible]);
 		$this->ControllerAction->field('duration', ['visible' => $visible]);
+		$this->ControllerAction->field('number_of_months', ['visible' => $visible]);
 		$this->ControllerAction->field('training_field_of_study_id', [
 			'type' => 'select',
 			'visible' => $visible
@@ -132,7 +115,7 @@ class TrainingCoursesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
-			'status_id', 'code', 'name', 'credit_hours'
+			'code', 'name', 'credit_hours'
 		]);
 	}
 
@@ -207,32 +190,6 @@ class TrainingCoursesTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'index') {
-			$attr['type'] = 'select';
-		} else {
-			$attr['type'] = 'hidden';
-			$attr['value'] = 0;
-		}
-
-		return $attr;
-	}
-
-	public function workflowAfterTransition(Event $event, $id=null) {
-		$entity = $this->get($id);
-		$this->updateStatusId($entity);
-	}
-
-	public function updateStatusId(Entity $entity) {
-		$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-		if (!empty($workflowRecord)) {
-			$this->updateAll(
-				['status_id' => $workflowRecord->workflow_step_id],
-				['id' => $entity->id]
-			);
-		}
-	}
-
 	public function setupFields() {
 		$this->ControllerAction->field('target_populations', [
 			'type' => 'chosenSelect',
@@ -262,7 +219,7 @@ class TrainingCoursesTable extends AppTable {
 
 		// Field order
 		$this->ControllerAction->setFieldOrder([
-			'status_id', 'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
+			'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
 			'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
 			'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types',
 			'file_name', 'file_content'

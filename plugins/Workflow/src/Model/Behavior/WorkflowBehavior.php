@@ -57,10 +57,16 @@ class WorkflowBehavior extends Behavior {
 		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 1000];
 		$events['ControllerAction.Model.index.beforeAction'] 	= ['callable' => 'indexBeforeAction', 'priority' => 1];
 		$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
+		$events['ControllerAction.Model.index.afterAction'] 	= ['callable' => 'indexAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
+		$events['Workflow.afterTransition'] = 'workflowAfterTransition';
 		return $events;
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$this->setStatusId($entity);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -72,6 +78,10 @@ class WorkflowBehavior extends Behavior {
 				$this->WorkflowRecords->delete($workflowRecord);
 			}
 		}
+	}
+
+	public function onGetStatusId(Event $event, Entity $entity) {
+		return '<span class="status highlight">' . $entity->status->name . '</span>';
 	}
 
 	public function onGetWorkflowStatus(Event $event, Entity $entity) {
@@ -88,6 +98,10 @@ class WorkflowBehavior extends Behavior {
 			$this->attachWorkflow = true;
 			$this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
 		}
+
+		$this->controller->ControllerAction->field('status_id', [
+			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -205,6 +219,21 @@ class WorkflowBehavior extends Behavior {
 				$this->_table->aliasField('status_id') => $selectedStatus
 			]);
 		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		// Reorder fields
+		$fieldOrder = [];
+		$fields = $this->_table->fields;
+		foreach ($fields as $fieldKey => $fieldAttr) {
+			if (!in_array($fieldKey, ['status_id'])) {
+				$fieldOrder[$fieldAttr['order']] = $fieldKey;
+			}
+		}
+		ksort($fieldOrder);
+		array_unshift($fieldOrder, 'status_id');	// Set Status to first
+		$this->_table->ControllerAction->setFieldOrder($fieldOrder);
+		// End
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -438,6 +467,17 @@ class WorkflowBehavior extends Behavior {
 				return $buttons;
 			}
 		}
+	}
+
+	public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'index') {
+			$attr['type'] = 'select';
+		} else {
+			$attr['type'] = 'hidden';
+			$attr['value'] = 0;
+		}
+
+		return $attr;
 	}
 
 	public function getWorkflowSetup($registryAlias) {
@@ -707,38 +747,23 @@ class WorkflowBehavior extends Behavior {
 		return $steps;
 	}
 
-	public function setNextTransitions(Entity $entity) {
-		$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
-
-		if (!empty($workflowRecord)) {
-			if ($workflowRecord->workflow_step->stage == 0) {	// Open
-				$workflowStepId = $workflowRecord->workflow_step_id;
-
-				$workflowAction = $this->WorkflowActions
-					->find()
-					->where([
-						$this->WorkflowActions->aliasField('workflow_step_id') => $workflowStepId,
-						$this->WorkflowActions->aliasField('action') => 0	// Approve
-					])
-					->first();
-
-				$nextWorkflowStepId = $workflowAction->next_workflow_step_id;
-
-				$transitionData = [
-					'prev_workflow_step_id' => $workflowStepId,
-					'workflow_step_id' => $nextWorkflowStepId,
-					'workflow_action_id' => $workflowAction->id,
-					'workflow_record_id' => $workflowRecord->id,
-					'comment' => ''
-				];
-				$transitionEntity = $this->WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
-
-				if ($this->WorkflowTransitions->save($transitionEntity)) {
-				} else {
-					$this->_table->controller->log($transitionEntity->errors(), 'debug');
+	public function setStatusId(Entity $entity) {
+		if($this->_table->hasBehavior('Workflow')) {
+			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
+			if (!empty($workflowRecord)) {
+				if ($entity->has('status_id')) {
+					$this->_table->updateAll(
+						['status_id' => $workflowRecord->workflow_step_id],
+						['id' => $entity->id]
+					);
 				}
 			}
 		}
+	}
+
+	public function workflowAfterTransition(Event $event, $id=null) {
+		$entity = $this->_table->get($id);
+		$this->setStatusId($entity);
 	}
 
 	public function processWorkflow() {
