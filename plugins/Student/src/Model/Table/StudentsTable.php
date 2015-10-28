@@ -70,6 +70,7 @@ class StudentsTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('User.Account', ['userRole' => $this->alias()]);
 
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
@@ -78,7 +79,7 @@ class StudentsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -224,8 +225,8 @@ class StudentsTable extends AppTable {
 			'value' => $openemisNo
 		]);
 
-		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('username', ['order' => 70, 'visible' => false]);
+		$this->ControllerAction->field('password', ['order' => 71, 'visible' => false, 'type' => 'password']);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
 	}
 
