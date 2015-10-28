@@ -35,7 +35,6 @@ class GuardiansTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AdvanceSearch');
-		$this->addBehavior('User.Account', ['userRole' => $this->alias()]);
 
 		// $this->addBehavior('Excel', [
 		// 	'excludes' => ['password', 'photo_name'],

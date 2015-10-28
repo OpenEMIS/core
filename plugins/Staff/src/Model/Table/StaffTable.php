@@ -56,7 +56,6 @@ class StaffTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
-        $this->addBehavior('User.Account', ['userRole' => $this->alias()]);
 
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
