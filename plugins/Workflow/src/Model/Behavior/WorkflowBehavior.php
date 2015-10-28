@@ -98,10 +98,6 @@ class WorkflowBehavior extends Behavior {
 			$this->attachWorkflow = true;
 			$this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
 		}
-
-		$this->controller->ControllerAction->field('status_id', [
-			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
-		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -241,6 +237,8 @@ class WorkflowBehavior extends Behavior {
 		if ($this->attachWorkflow) {
 			$this->workflowRecord = $this->getRecord($this->config('model'), $entity);
 			if (!empty($this->workflowRecord)) {
+				$this->controller->ControllerAction->field('status_id', ['visible' => false]);
+
 				// Workflow Status - extra field
 				$status = isset($this->workflowRecord->workflow_step->name) ? $this->workflowRecord->workflow_step->name : __('Open');
 				$entity->workflow_status = $status;
