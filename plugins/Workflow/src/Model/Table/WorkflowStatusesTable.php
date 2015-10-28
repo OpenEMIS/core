@@ -6,13 +6,17 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 
 class WorkflowStatusesTable extends AppTable {
+	private $_contain = ['WorkflowSteps'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
-		$this->belongsToMany('WorkflowSteps' , [
+		$this->belongsToMany('WorkflowSteps', [
 			'className' => 'Workflow.WorkflowSteps',
 			'joinTable' => 'workflow_statuses_steps',
 			'foreignKey' => 'workflow_status_id',
@@ -40,6 +44,14 @@ class WorkflowStatusesTable extends AppTable {
 		}
 	}
 
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$query->contain($this->_contain);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain($this->_contain);
+	}
+
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		// Remove the edit button and delete button if the status is not editable
@@ -65,7 +77,7 @@ class WorkflowStatusesTable extends AppTable {
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['WorkflowSteps._joinData'];
+		$newOptions['associated'] = ['WorkflowSteps'];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
@@ -93,6 +105,8 @@ class WorkflowStatusesTable extends AppTable {
 				$form = $event->subject()->Form;
 				$tableCells = [];
 				$arraySteps = [];
+				$workflowStepOptions = $this->WorkflowSteps->find('list')->toArray();
+				
 				if ($this->request->is(['get'])) {
 					if(isset($this->request->pass[1])){
 						$modelId = $this->request->pass[1];
@@ -100,6 +114,7 @@ class WorkflowStatusesTable extends AppTable {
 						foreach($steps as $step) {
 							$stepInfo = $step['_matchingData']['WorkflowSteps'];
 							$arraySteps[] = [
+								'id' => $step['_matchingData']['WorkflowStatusesSteps']['id'],
 								'status_id' => $step['id'],
 								'step_id' => $stepInfo['id'],
 								'name' => $stepInfo['name'],
@@ -107,32 +122,70 @@ class WorkflowStatusesTable extends AppTable {
 							];
 						}
 					}
-
-				} else if ($this->request->is(['post', 'put'])) {
-
+				} elseif ($this->request->is(['post', 'put'])) {
+					$requestData = $this->request->data;
+					if (array_key_exists('workflow_steps', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['temporary'] as $key => $obj) {
+							if(!empty($obj['temporary']['id'])){
+								$arraySteps[] = [
+									'name' => $obj['name'],
+									'status_id' => $obj['workflow_status_id'],
+									'step_id' => $obj['workflow_step_id'],
+									'id' => $obj['id'], 
+								];
+							}else{	
+								$arraySteps[] = [
+									'name' => $obj['name'],
+									'status_id' => $obj['workflow_status_id'],
+									'step_id' => $obj['workflow_step_id'],
+								];
+							}
+						}
+					}
+					if (array_key_exists('step', $requestData[$this->alias()])) {
+						$stepId = $requestData[$this->alias()]['step'];
+						if($stepId != -1){
+							$stepObj = $this->WorkflowSteps->get($stepId);
+							$arraySteps[] = [
+									'name' => $stepObj->name,
+									'step_id' => $stepObj->id,
+									'status_id' => $entity->id,
+								];
+						}
+					}
 				}
 				$cellCount = 0;
 				foreach($arraySteps as $obj) {
-					$fieldPrefix = $attr['model'] . '.workflow_steps.' . $cellCount++;
-					$joinDataPrefix = $fieldPrefix . '._joinData';
+					$fieldPrefix = $attr['model'] . '.workflow_steps';
+					$temporaryPrefix = $attr['model'] . '.temporary.'.$cellCount;
 					$statusId = $obj['status_id'];
 					$stepId = $obj['step_id'];
 					$stepName = $obj['name'];
 
 					$cellData = "";
-					$cellData .= $form->hidden($fieldPrefix.".workflow_step_id", ['value' => $stepId]);
-					$cellData .= $form->hidden($fieldPrefix.".workflow_status_id", ['value' => $statusId]);
+					$cellData .= $form->hidden($fieldPrefix."._ids.".$cellCount++, ['value' => $stepId]);
+					$cellData .= $form->hidden($temporaryPrefix.".workflow_step_id", ['value' => $stepId]);
+					$cellData .= $form->hidden($temporaryPrefix.".name", ['value' => $stepName]);
+					$cellData .= $form->hidden($temporaryPrefix.".workflow_status_id", ['value' => $statusId]);
+
+					if (isset($obj['id'])) {
+						$cellData .= $form->hidden($temporaryPrefix.".id", ['value' => $obj['id']]);
+					}
 
 					$rowData = [];
 					$rowData[] = $stepName.$cellData;
 					$rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$tableCells[] = $rowData;
+
+					unset($workflowStepOptions[$obj['step_id']]);
 				}
+				$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
+				ksort($workflowStepOptions);
+				$attr['options'] = $workflowStepOptions;
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
 				break;
 		}
-
 		return $event->subject()->renderElement('Workflow.mappings', ['attr' => $attr]);
 	}
 
