@@ -52,8 +52,15 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_staff']['type'] = 'hidden';
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
 
-		$this->_table->fields['username']['visible'] = false;
-		$this->_table->fields['last_login']['visible'] = false;
+		switch ($this->_table->table()) {
+			case 'institution_students':
+			case 'institution_site_staff':
+				break;
+			default:
+				$this->_table->fields['username']['visible'] = false;
+				$this->_table->fields['last_login']['visible'] = false;
+			break;
+		}	
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
