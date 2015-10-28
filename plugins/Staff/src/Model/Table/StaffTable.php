@@ -56,6 +56,7 @@ class StaffTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('User.Account', ['userRole' => $this->alias()]);
 
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
@@ -88,7 +89,7 @@ class StaffTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -150,8 +151,8 @@ class StaffTable extends AppTable {
 			'value' => $openemisNo
 		]);
 
-		$this->ControllerAction->field('username', ['order' => 100]);
-		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
+		$this->ControllerAction->field('username', ['order' => 100, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true, 'type' => 'password']);
 		$this->ControllerAction->field('is_staff', ['value' => 1]);
 	}
 
