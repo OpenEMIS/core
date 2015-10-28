@@ -1,4 +1,5 @@
-<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
+<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]); ?>
+<?= $this->Html->script('Training.training', ['block' => true]); ?>
 <?php
 	$model = $ControllerAction['table'];
 	$trainerOptions = isset($attr['options']) ? $attr['options'] : [];
