@@ -552,7 +552,8 @@ trait MessagesTrait {
 				'username' => [
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
-					'ruleUnique' => 'This username is already in use.'
+					'ruleUnique' => 'This username is already in use.',
+					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
