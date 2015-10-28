@@ -69,13 +69,12 @@ class AppTable extends Table {
 		$this->attachWorkflow();
 	}
 
-	public function attachWorkflow() {
+	public function attachWorkflow($config=[]) {
 		// check for session and attach workflow behavior
 		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
 			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
-				$this->addBehavior('Workflow.Workflow', [
-					'model' => $this->registryAlias()
-				]);
+				$config = array_merge($config, ['model' => $this->registryAlias()]);
+				$this->addBehavior('Workflow.Workflow', $config);
 			}
 		}
 	}
@@ -397,4 +396,46 @@ class AppTable extends Table {
 		return $selectedId;
 	}
 
+	public function isForeignKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public function getAssociatedTable($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$relatedModel = null;
+
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					$relatedModel = $assoc;
+					break;
+				}
+			}
+		}
+		return $relatedModel;
+	}
+
+	public function getAssociatedKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$tableObj = $this->getAssociatedTable($field, $table);
+		$key = null;
+		if (is_object($tableObj)) {
+			$key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+		}
+		return $key;
+	}
 }

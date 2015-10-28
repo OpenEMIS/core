@@ -30,6 +30,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowStatusMappings', ['className' => 'Workflow.WorkflowStatusMappings', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'joinTable' => 'workflow_steps_roles',
@@ -130,7 +131,7 @@ class WorkflowStepsTable extends AppTable {
 		if ($this->action != 'add') {
 			$this->ControllerAction->field('actions', [
 				'type' => 'element',
-				'element' => 'Workflow.actions',
+				'element' => 'Workflow.WorkflowSteps/actions',
 				'valueClass' => 'table-full-width'
 			]);
 			$this->_fieldOrder[] = 'actions';
@@ -142,7 +143,7 @@ class WorkflowStepsTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
-            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
+            ['name' => 'Workflow.WorkflowSteps/controls', 'data' => [], 'options' => []]
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
