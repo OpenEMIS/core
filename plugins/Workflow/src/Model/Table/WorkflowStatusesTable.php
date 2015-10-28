@@ -87,13 +87,23 @@ class WorkflowStatusesTable extends AppTable {
 	public function onGetStatusesStepsElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action) {
 			case 'view':
-				$tableHeaders = [__('Workflow Statuses Steps Mapping')];
+				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name')];
 				$tableCells = [];
 				$workflowStatusId = $this->request->pass[1];
 				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
-				foreach ($workflowSteps as $key => $step) {
+				$workflowStepOptions = $this->WorkflowSteps
+					->find()
+					->matching('Workflows')
+					->select([
+						'name' => $this->WorkflowSteps->aliasField('name'),
+						'group' => 'Workflows.name'
+					])
+					->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
+					->toArray();
+				foreach ($workflowStepOptions as $step) {
 					$rowData = [];
-					$rowData[] = $step;
+					$rowData[] = $step['name'];
+					$rowData[] = $step['group'];
 					$tableCells[] = $rowData;
 				}
 				$attr['tableHeaders'] = $tableHeaders;
@@ -101,11 +111,23 @@ class WorkflowStatusesTable extends AppTable {
 				break;
 
 			case 'edit':
-				$tableHeaders = [__('Workflow Statuses Steps Mapping'),''];
+				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name'),''];
 				$form = $event->subject()->Form;
 				$tableCells = [];
 				$arraySteps = [];
-				$workflowStepOptions = $this->WorkflowSteps->find('list')->toArray();
+				$workflowStepOptions = $this->WorkflowSteps
+					->find('list', [
+						'groupField' => 'group',
+						'keyField' => 'id',
+						'valueField' => 'name'
+					])
+					->matching('Workflows')
+					->select([
+						'id' => $this->WorkflowSteps->aliasField('id'), 
+						'name' => $this->WorkflowSteps->aliasField('name'),
+						'group' => 'Workflows.name'
+					])
+					->toArray();
 				
 				if ($this->request->is(['get'])) {
 					if(isset($this->request->pass[1])){
@@ -118,7 +140,7 @@ class WorkflowStatusesTable extends AppTable {
 								'status_id' => $step['id'],
 								'step_id' => $stepInfo['id'],
 								'name' => $stepInfo['name'],
-								'stage' => $stepInfo['stage']
+								'workflow_name' => $step['_matchingData']['Workflows']['name']
 							];
 						}
 					}
@@ -131,13 +153,15 @@ class WorkflowStatusesTable extends AppTable {
 									'name' => $obj['name'],
 									'status_id' => $obj['workflow_status_id'],
 									'step_id' => $obj['workflow_step_id'],
-									'id' => $obj['id'], 
+									'id' => $obj['id'],
+									'workflow_name' => $obj['workflow_name']
 								];
 							}else{	
 								$arraySteps[] = [
 									'name' => $obj['name'],
 									'status_id' => $obj['workflow_status_id'],
 									'step_id' => $obj['workflow_step_id'],
+									'workflow_name' => $obj['workflow_name']
 								];
 							}
 						}
@@ -145,11 +169,16 @@ class WorkflowStatusesTable extends AppTable {
 					if (array_key_exists('step', $requestData[$this->alias()])) {
 						$stepId = $requestData[$this->alias()]['step'];
 						if($stepId != -1){
-							$stepObj = $this->WorkflowSteps->get($stepId);
+							$stepObj = $this->WorkflowSteps
+								->find()
+								->matching('Workflows')
+								->where([$this->WorkflowSteps->aliasField('id') => $stepId])
+								->first();
 							$arraySteps[] = [
 									'name' => $stepObj->name,
 									'step_id' => $stepObj->id,
 									'status_id' => $entity->id,
+									'workflow_name' => $stepObj['_matchingData']['Workflows']['name']
 								];
 						}
 					}
@@ -161,12 +190,14 @@ class WorkflowStatusesTable extends AppTable {
 					$statusId = $obj['status_id'];
 					$stepId = $obj['step_id'];
 					$stepName = $obj['name'];
+					$workflowName = $obj['workflow_name'];
 
 					$cellData = "";
 					$cellData .= $form->hidden($fieldPrefix."._ids.".$cellCount++, ['value' => $stepId]);
 					$cellData .= $form->hidden($temporaryPrefix.".workflow_step_id", ['value' => $stepId]);
 					$cellData .= $form->hidden($temporaryPrefix.".name", ['value' => $stepName]);
 					$cellData .= $form->hidden($temporaryPrefix.".workflow_status_id", ['value' => $statusId]);
+					$cellData .= $form->hidden($temporaryPrefix.".workflow_name", ['value' => $workflowName]);
 
 					if (isset($obj['id'])) {
 						$cellData .= $form->hidden($temporaryPrefix.".id", ['value' => $obj['id']]);
@@ -174,10 +205,16 @@ class WorkflowStatusesTable extends AppTable {
 
 					$rowData = [];
 					$rowData[] = $stepName.$cellData;
+					$rowData[] = $workflowName;
 					$rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$tableCells[] = $rowData;
 
-					unset($workflowStepOptions[$obj['step_id']]);
+					foreach ($workflowStepOptions as $key => $workflowGroup) {
+						if(isset($workflowGroup[$stepId])) {
+							unset($workflowStepOptions[$key][$stepId]);
+						}
+					}
+					unset($workflowStepOptions[$stepId]);
 				}
 				$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
 				ksort($workflowStepOptions);
@@ -192,7 +229,7 @@ class WorkflowStatusesTable extends AppTable {
 	public function getSteps($statusId) {
 		return $this
 			->find()
-			->matching('WorkflowSteps')
+			->matching('WorkflowSteps.Workflows')
 			->where([$this->aliasField('id') => $statusId])
 			->hydrate(false)
 			->toArray();
