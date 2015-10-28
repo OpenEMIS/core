@@ -67,7 +67,7 @@ class WorkflowComponent extends Component {
 	 *	@return array The list of the workflow steps
 	 */
 	public function getWorkflowSteps($workflowStatusId) {
-		$WorkflowStepsTable = $this->WorkflowModels->WorkflowSteps;
+		$WorkflowStepsTable = $this->WorkflowModels->WorkflowStatuses;
 		return $WorkflowStepsTable->getWorkflowSteps($workflowStatusId);
 	}
 
@@ -81,5 +81,27 @@ class WorkflowComponent extends Component {
 	public function getWorkflowStepStatusNameMappings($modelName) {
 		$WorkflowStatusesTable = $this->WorkflowModels->WorkflowStatuses;
 		return $WorkflowStatusesTable->getWorkflowStepStatusNameMappings($modelName);
+	}
+
+	/**
+	 *	Function to get the list of the workflow steps by a given workflow model's model and the workflow status code 
+	 *
+	 *	@param string $modelName The name of the model e.g. Institution.InstitutionSurveys
+	 *	@param string $code The code of the workflow status
+	 *	@return array The list of workflow steps id
+	 */
+	public function getStepsByModelCode($modelName, $code) {
+		return $this->WorkflowModels
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->matching('WorkflowStatuses.WorkflowSteps')
+			->where([
+				$this->WorkflowModels->aliasField('model') => $model, 
+				'WorkflowStatuses.code' => $code
+			])
+			->select(['id' => 'WorkflowSteps.id'])
+			->toArray();
 	}
 }

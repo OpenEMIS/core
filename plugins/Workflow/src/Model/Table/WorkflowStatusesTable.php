@@ -6,6 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 
 class WorkflowStatusesTable extends AppTable {
 	public function initialize(array $config) {
@@ -56,19 +57,41 @@ class WorkflowStatusesTable extends AppTable {
 		return $buttons;
 	}
 
-	public function onGetStatusMappingElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetStatusesStepsElement(Event $event, $action, $entity, $attr, $options=[]) {
+		switch ($action) {
+			case 'view':
+				$tableHeaders = [__('Workflow Statuses Steps Mapping')];
+				$tableCells = [];
 
+				$workflowStatusId = $this->request->pass[1];
+				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
+				$attr['tableHeaders'] = $tableHeaders;
+				$attr['tableCells'] = $tableCells;
+				break;
+
+			case 'edit':
+				$tableHeaders = [__('Workflow Statuses Steps Mapping')];
+				$tableCells = [];
+				$attr['tableHeaders'] = $tableHeaders;
+				$attr['tableCells'] = $tableCells;
+				break;
+		}
+
+		return $event->subject()->renderElement('Workflow.mappings', ['attr' => $attr]);
 	}
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('name');
 		$this->ControllerAction->field('is_editable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
 		$this->ControllerAction->field('is_removable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
-		$this->ControllerAction->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
+		$this->ControllerAction->field('statuses_steps', ['type' => 'statuses_steps', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 	}
 	
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->request->data[$this->alias()]['is_editable'] = $entity->is_editable;
+		$this->ControllerAction->setFieldOrder([
+			'workflow_model_id', 'code', 'name', 'statuses_steps'
+		]);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -78,10 +101,16 @@ class WorkflowStatusesTable extends AppTable {
 		}
 		$this->request->data[$this->alias()]['workflow_model_id'] = $entity->workflow_model_id;
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'readonly', 'value' => $entity->workflow_model_id]);
+		$this->ControllerAction->setFieldOrder([
+			'workflow_model_id', 'code', 'name', 'statuses_steps'
+		]);
 	}
 
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'select']);
+		$this->ControllerAction->setFieldOrder([
+			'workflow_model_id', 'code', 'name', 'statuses_steps'
+		]);
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
@@ -99,6 +128,18 @@ class WorkflowStatusesTable extends AppTable {
 			->matching('WorkflowModels')
 			->where(['WorkflowModels.model' => $model])
 			->select(['id' => 'WorkflowSteps.id', 'name' => $this->aliasField('name')])
+			->toArray();
+	}
+
+	public function getWorkflowSteps($workflowStatusId) {
+		return $this
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->matching('WorkflowSteps')
+			->where([$this->aliasField('id') => $workflowStatusId])
+			->select(['id' => 'WorkflowSteps.id'])
 			->toArray();
 	}
 }
