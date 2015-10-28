@@ -51,20 +51,30 @@ a:focus,
     border-bottom: 6px solid #6699CC;
 }
 
+.fuelux .wizard > ul.steps li.active .chevron::before,
+.fuelux .wizard > .steps-container > ul.steps li.active .chevron::before {
+    border-left: 14px solid #6699CC;
+}
+
+.fuelux .wizard > ul.steps li.active,
+.fuelux .wizard > .steps-container > ul.steps li.active {
+    background-color: #6699CC;
+}
+
+.rtl .fuelux .wizard > ul.steps li.active .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.active .chevron:before {
+    border-right: 14px solid #6699CC;
+}
 
 /* DARK SHADES */
-
-.btn-outline {
-    background: #FFF !important;
-    color: #476B8F !important;
-}
 
 a:hover,
 .pagination > li > a,
 .panel-breadcrumb .active,
 .panel-breadcrumb a:hover,
 .panel-breadcrumb i:hover,
-.ellipsis {
+.ellipsis,
+.btn-outline {
     color: #476B8F;
 }
 
@@ -148,23 +158,10 @@ a:hover,
     border-color: #476B8F;
 }
 
-/* WIZARDS */
-
 .fuelux .wizard > ul.steps li.complete,
 .fuelux .wizard > .steps-container > ul.steps li.complete {
-    background: #FFF !important;
     border-color: #476B8F !important;
-}
-
-.fuelux .wizard > ul.steps li.complete .chevron::before,
-.fuelux .wizard > .steps-container > ul.steps li.complete .chevron::before {
-    border-left: 14px solid #FFF;
-}
-
-.rtl .fuelux .wizard > ul.steps li.complete .chevron::before,
-.rtl .fuelux .wizard > .steps-container > ul.steps li.complete .chevron::before {
-    border-right: 14px solid #FFF;
-    border-left: none;
+    color: #476B8F;
 }
 
 .rtl .fuelux .wizard > ul.steps li.complete:hover .chevron:before,
@@ -172,37 +169,12 @@ a:hover,
     border-right: 14px solid #476B8F;
 }
 
-.fuelux .wizard > ul.steps li.complete,
-.fuelux .wizard > .steps-container > ul.steps li.complete {
-    background-color: #FFF !important;
-    color: #476B8F;
-}
-
-.fuelux .wizard > ul.steps li.complete:hover,
-.fuelux .wizard > .steps-container > ul.steps li.complete:hover,
 .fuelux .wizard > ul.steps li.complete:hover,
 .fuelux .wizard > .steps-container > ul.steps li.complete:hover {
     background-color: #476B8F !important;
-    color: #FFF;
 }
 
 .fuelux .wizard > ul.steps li.complete:hover .chevron:before,
 .fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
     border-left: 14px solid #476B8F;
-}
-
-.fuelux .wizard > ul.steps li.active .chevron::before,
-.fuelux .wizard > .steps-container > ul.steps li.active .chevron::before {
-    border-left: 14px solid #6699CC;
-}
-
-.fuelux .wizard > ul.steps li.active,
-.fuelux .wizard > .steps-container > ul.steps li.active {
-    background-color: #6699CC;
-    color: #FFF;
-}
-
-.rtl .fuelux .wizard > ul.steps li.active .chevron:before,
-.rtl .fuelux .wizard > .steps-container > ul.steps li.active .chevron:before {
-    border-right: 14px solid #6699CC;
 }
