@@ -70,7 +70,6 @@ class StudentsTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
-        $this->addBehavior('User.Account', ['userRole' => $this->alias()]);
 
 		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 
