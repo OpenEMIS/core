@@ -374,8 +374,9 @@ class WorkflowStepsTable extends AppTable {
 				'keyField' => 'id',
 				'valueField' => 'id'
 			])
-			->where([$this->aliasField('workflow_status_id') => $workflowStatusId])
-			->select(['id' => $this->aliasField('workflow_step_id')])
+			->matching('WorkflowStatuses')
+			->where(['WorkflowStatuses.id' => $workflowStatusId])
+			->select(['id' => $this->aliasField('id')])
 			->toArray();
 	}
 }
