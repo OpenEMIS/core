@@ -367,16 +367,4 @@ class WorkflowStepsTable extends AppTable {
 
 		return compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow', 'securityRoleOptions', 'selectedSecurityRole');
 	}
-
-	public function getWorkflowSteps($workflowStatusId) {
-		return $this
-			->find('list', [
-				'keyField' => 'id',
-				'valueField' => 'id'
-			])
-			->matching('WorkflowStatuses')
-			->where(['WorkflowStatuses.id' => $workflowStatusId])
-			->select(['id' => $this->aliasField('id')])
-			->toArray();
-	}
 }
