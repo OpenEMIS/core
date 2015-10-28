@@ -3,10 +3,11 @@ INSERT INTO `db_patches` VALUES ('PHPOE-2233', NOW());
 
 -- workflow_statuses
 ALTER TABLE `workflow_statuses` 
-ADD COLUMN `code` VARCHAR(50) NOT NULL COMMENT '' AFTER `workflow_model_id`,
+ADD COLUMN `code` VARCHAR(50) NOT NULL COMMENT '' AFTER `id`,
+CHANGE COLUMN `name` `name` VARCHAR(150) NOT NULL COMMENT '' AFTER `code`,
 ADD COLUMN `is_editable` INT(1) NOT NULL COMMENT '' AFTER `name`,
-ADD COLUMN `is_removable` INT(1) NOT NULL COMMENT '' AFTER `is_editable`
-ADD COLUMN `modified_user_id` INT(11) NULL DEFAULT NULL COMMENT '' AFTER `is_removable`,
+ADD COLUMN `is_removable` INT(1) NOT NULL COMMENT '' AFTER `is_editable`,
+ADD COLUMN `modified_user_id` INT(11) NULL DEFAULT NULL COMMENT '' AFTER `workflow_model_id`,
 ADD COLUMN `modified` DATETIME NULL DEFAULT NULL COMMENT '' AFTER `modified_user_id`,
 ADD COLUMN `created_user_id` INT(11) NOT NULL COMMENT '' AFTER `modified`,
 ADD COLUMN `created` DATETIME NOT NULL COMMENT '' AFTER `created_user_id`;
