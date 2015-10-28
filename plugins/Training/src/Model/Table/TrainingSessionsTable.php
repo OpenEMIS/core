@@ -292,9 +292,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			$courseOptions = $this->Courses
-				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-				->toArray();
+			$courseOptions = $this->controller->getCourseList()->toArray();
 			$courseId = $this->queryString('course', $courseOptions);
 
 			$attr['options'] = $courseOptions;
