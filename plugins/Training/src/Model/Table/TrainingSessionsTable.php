@@ -43,21 +43,6 @@ class TrainingSessionsTable extends AppTable {
 			]);
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Workflow.afterTransition'] = 'workflowAfterTransition';
-
-    	return $events;
-    }
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$this->updateStatusId($entity);
-	}
-
-	public function onGetStatusId(Event $event, Entity $entity) {
-		return '<span class="status highlight">' . $entity->status->name . '</span>';
-	}
-
 	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$tableHeaders = [__('OpenEMIS No'), __('Name')];
 		$tableCells = [];
@@ -126,9 +111,6 @@ class TrainingSessionsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		// Type / Visible
-		$this->ControllerAction->field('status_id', [
-			'visible' => ['index' => true, 'view' => false, 'edit' => true, 'add' => true]
-		]);
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
 		$this->ControllerAction->field('end_date', ['visible' => $visible]);
 		$this->ControllerAction->field('comment', ['visible' => $visible]);
@@ -139,7 +121,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
-			'status_id', 'training_course_id', 'start_date'
+			'training_course_id', 'start_date', 'training_provider_id'
 		]);
 	}
 
@@ -368,32 +350,6 @@ class TrainingSessionsTable extends AppTable {
 		}
 
 		return $attr;
-	}
-
-	public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'index') {
-			$attr['type'] = 'select';
-		} else {
-			$attr['type'] = 'hidden';
-			$attr['value'] = 0;
-		}
-
-		return $attr;
-	}
-
-	public function workflowAfterTransition(Event $event, $id=null) {
-		$entity = $this->get($id);
-		$this->updateStatusId($entity);
-	}
-
-	public function updateStatusId(Entity $entity) {
-		$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-		if (!empty($workflowRecord)) {
-			$this->updateAll(
-				['status_id' => $workflowRecord->workflow_step_id],
-				['id' => $entity->id]
-			);
-		}
 	}
 
 	public function setupFields(Entity $entity) {
