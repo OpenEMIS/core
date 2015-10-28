@@ -59,6 +59,7 @@ class WorkflowBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
 		$events['ControllerAction.Model.index.afterAction'] 	= ['callable' => 'indexAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
+		$events['ControllerAction.Model.addEdit.beforeAction'] 		= ['callable' => 'addEditBeforeAction', 'priority' => 1];
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
 		$events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -314,6 +315,10 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
+	public function addEditBeforeAction(Event $event) {
+		$this->controller->ControllerAction->field('status_id');
+	}
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		// Unset edit buttons and add action buttons
 		if ($this->attachWorkflow) {
@@ -470,7 +475,7 @@ class WorkflowBehavior extends Behavior {
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'index') {
 			$attr['type'] = 'select';
-		} else {
+		} else if ($action == 'add' || $action == 'edit') {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
 		}

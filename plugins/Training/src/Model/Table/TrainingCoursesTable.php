@@ -157,8 +157,8 @@ class TrainingCoursesTable extends AppTable {
 
 	public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$Courses = TableRegistry::get('Training.PrerequisiteTrainingCourses');
-			$courseQuery = $Courses->find('list');
+			$Courses = TableRegistry::get('Training.TrainingCourses');
+			$courseQuery = $this->controller->getCourseList();
 
 			$id = $request->query('course');
 			if (!is_null($id)) {
