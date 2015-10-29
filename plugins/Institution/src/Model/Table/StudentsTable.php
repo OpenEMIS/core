@@ -106,10 +106,49 @@ class StudentsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
+		$query->leftJoin(
+			['Identities' => 'user_identities'],
+			[
+				'Identities.security_user_id = '.$this->aliasField('student_id'),
+				'Identities.identity_type_id' => $settings['identity']->id
+			]
+		);
+		$query->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number']);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
 		}
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+		$identity = $IdentityType
+		   ->find()
+		   ->contain(['FieldOptions'])
+		   ->where([
+		   		'FieldOptions.code' => 'IdentityTypes'
+		   ])
+		   ->order(['IdentityTypes.default DESC'])
+		   ->first();
+
+		$settings['identity'] = $identity;
+		
+		$extraField[] = [
+			'key' => 'Users.openemis_no',
+			'field' => 'openemis_no',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Identities.number',
+			'field' => 'number',
+			'type' => 'string',
+			'label' => $identity->name
+		];
+
+		$newFields = array_merge($extraField, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 
 	public function implementedEvents() {
