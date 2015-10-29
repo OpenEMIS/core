@@ -5,3 +5,7 @@ v3.2.6
 v3.2.7
 - Fixed Rubrics Report
 - Fixed some minor errors that appears when debug is turned on
+
+v3.2.8
+- Added Institution name and ID in Student report
+- Fixed a bug that caused wrong absence date to be saved in arabic language
