@@ -16,8 +16,6 @@ class InstitutionGradesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
-		// should not need to link to site programme anymore
-		$this->belongsTo('InstitutionSiteProgrammes',	['className' => 'Institution.InstitutionSiteProgrammes']);
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
@@ -38,7 +36,6 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('level');
 		$this->ControllerAction->field('programme');
 		$this->ControllerAction->field('education_grade_id');
@@ -85,17 +82,16 @@ class InstitutionGradesTable extends AppTable {
 		$process = function($model, $entity) use ($data) {
 			$errors = $entity->errors();
 			/**
-			 * institution_site_programme_id will always be empty
+			 * PHPOE-2117
+			 * Remove 		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
+			 * 
 			 * education_grade_id will always be empty
-			 * so if errors array is more than 2, other fields are having an error
+			 * so if errors array is more than 1, other fields are having an error
 			 */
-			if (empty($errors) || count($errors)==2) {
+			if (empty($errors) || count($errors)==1) {
 				$startDate = $entity->start_date;
 				$institutionId = $entity->institution_site_id;
 				if ($data->offsetExists('grades')) {
-					// will need to remove institution_site_programme_id soon
-					$programmeId = $entity->programme;
-					$programmeEntity = $this->getSiteProgrammeEntity($institutionId, $programmeId, $startDate);
 
 					$error = true;
 					$gradeEntities = [];
@@ -108,7 +104,6 @@ class InstitutionGradesTable extends AppTable {
 							if ($entity->has('end_date')) {
 								$grade['end_date'] = $entity->end_date;
 							}
-							$grade['institution_site_programme_id'] = $programmeEntity->id; // to be removed
 
 							$gradeEntities[$key] = $this->newEntity($grade);
 							if ($gradeEntities[$key]->errors()) {
@@ -256,27 +251,6 @@ class InstitutionGradesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	// remove this function when institution_site_programmes is dropped
-	private function getSiteProgrammeEntity($institutionId, $programmeId, $startDate) {
-		$InstitutionSiteProgrammes = TableRegistry::get('Institution.InstitutionSiteProgrammes');
-		$entity = $InstitutionSiteProgrammes->find()
-		->where([
-			$InstitutionSiteProgrammes->aliasField('institution_site_id') => $institutionId,
-			$InstitutionSiteProgrammes->aliasField('education_programme_id') => $programmeId
-		])
-		->first();
-
-		if (is_null($entity)) {
-			$newEntity = $InstitutionSiteProgrammes->newEntity([
-				'institution_site_id' => $institutionId,
-				'education_programme_id' => $programmeId,
-				'start_date' => $startDate
-			]);
-			$entity = $InstitutionSiteProgrammes->save($newEntity);
-		}
-		return $entity;
-	}
-
 	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$data[$this->alias()]['programme'] = 0;
 	}

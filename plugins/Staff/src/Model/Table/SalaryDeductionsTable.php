@@ -9,7 +9,7 @@ class SalaryDeductionsTable extends AppTable {
 		$this->table('staff_salary_deductions');
 		parent::initialize($config);
 		
-		$this->belongsTo('SalaryDeductionTypes', ['className' => 'Staff.SalaryDeductionTypes']);
+		$this->belongsTo('SalaryDeductionTypes', ['className' => 'Staff.SalaryDeductionTypes', 'foreignKey' => 'salary_deduction_type_id']);
 		$this->belongsTo('Salaries', ['className' => 'Staff.Salaries']);
 	}
 
