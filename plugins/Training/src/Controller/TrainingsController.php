@@ -28,21 +28,32 @@ class TrainingsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function getCourseList() {
+    public function getCourseList($params=[]) {
         $Courses = TableRegistry::get('Training.TrainingCourses');
+
         $query = $Courses->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
+        // excludes
+        $excludes = array_key_exists('excludes', $params) ? $params['excludes'] : false;
+        if ($excludes) {
+            $query->where([
+                $Courses->aliasField('id NOT IN') => $excludes
+            ]);
+        }
+        // End
+
+        // Filter by Approved
         $steps = $this->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
         if (!empty($steps)) {
             $query->where([
                 $Courses->aliasField('status_id IN') => $steps
             ]);
         } else {
-        $query->where([
-            $Courses->aliasField('status_id') => -1
-            ]);
+            // Return empty list if approved steps not found
+            return [];
         }
+        // End
 
-        return $query;
+        return $query->toArray();
     }
 }
