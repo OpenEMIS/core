@@ -505,6 +505,10 @@ class NavigationComponent extends Component {
 					'Sessions' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Sessions']
+					],
+					'Results' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Results']
 					]
 				],
 			],

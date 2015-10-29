@@ -4,12 +4,19 @@ DROP TABLE IF EXISTS `training_courses_target_populations`;
 DROP TABLE IF EXISTS `training_courses_providers`;
 DROP TABLE IF EXISTS `training_courses_prerequisites`;
 DROP TABLE IF EXISTS `training_courses_result_types`;
+
 DROP TABLE IF EXISTS `training_sessions`;
 DROP TABLE IF EXISTS `training_session_trainers`;
 DROP TABLE IF EXISTS `training_sessions_trainees`;
+DROP TABLE IF EXISTS `training_session_results`;
+DROP TABLE IF EXISTS `training_session_trainee_results`;
 
 -- labels
+DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'number_of_months';
 DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'file_content';
+DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'training_field_of_study_id';
+DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'training_course_type_id';
+DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'training_mode_of_delivery_id';
 
 -- Restore Admin - training tables
 RENAME TABLE `z_1992_training_courses` TO `training_courses`;

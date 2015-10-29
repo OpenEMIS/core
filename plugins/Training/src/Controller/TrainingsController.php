@@ -13,7 +13,8 @@ class TrainingsController extends AppController
 
         $this->ControllerAction->models = [
             'Courses' => ['className' => 'Training.TrainingCourses'],
-            'Sessions' => ['className' => 'Training.TrainingSessions']
+            'Sessions' => ['className' => 'Training.TrainingSessions'],
+            'Results' => ['className' => 'Training.TrainingSessionResults', 'actions' => ['index', 'view', 'edit', 'remove']]
         ];
         $this->loadComponent('Paginator');
     }
@@ -47,6 +48,25 @@ class TrainingsController extends AppController
         if (!empty($steps)) {
             $query->where([
                 $Courses->aliasField('status_id IN') => $steps
+            ]);
+        } else {
+            // Return empty list if approved steps not found
+            return [];
+        }
+        // End
+
+        return $query->toArray();
+    }
+
+    public function getSessionList($params=[]) {
+        $Sessions = TableRegistry::get('Training.TrainingSessions');
+        $query = $Sessions->find('list');
+
+        // Filter by Approved
+        $steps = $this->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+        if (!empty($steps)) {
+            $query->where([
+                $Sessions->aliasField('status_id IN') => $steps
             ]);
         } else {
             // Return empty list if approved steps not found
