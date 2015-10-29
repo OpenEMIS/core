@@ -20,7 +20,7 @@ class DropoutRequestsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons']);
+		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
