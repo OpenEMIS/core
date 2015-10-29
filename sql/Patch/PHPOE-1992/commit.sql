@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS `training_courses` (
   `name` varchar(250) NOT NULL,
   `description` text DEFAULT NULL,
   `objective` text DEFAULT NULL,
-  `credit_hours` int(3) DEFAULT NULL,
-  `duration` int(3) DEFAULT NULL,
+  `credit_hours` int(3) NOT NULL,
+  `duration` int(3) NOT NULL,
   `number_of_months` int(3) NOT NULL,
   `file_name` varchar(250) DEFAULT NULL,
   `file_content` longblob DEFAULT NULL,
@@ -77,19 +77,16 @@ CREATE TABLE IF NOT EXISTS `training_courses` (
 
 
 ALTER TABLE `training_courses`
-  ADD PRIMARY KEY (`id`);
-
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_field_of_study_id` (`training_field_of_study_id`),
+  ADD KEY `training_course_type_id` (`training_course_type_id`),
+  ADD KEY `training_mode_of_delivery_id` (`training_mode_of_delivery_id`),
+  ADD KEY `training_requirement_id` (`training_requirement_id`),
+  ADD KEY `training_level_id` (`training_level_id`),
+  ADD KEY `status_id` (`status_id`);
 
 ALTER TABLE `training_courses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `training_courses`
-ADD INDEX(`training_field_of_study_id`),
-ADD INDEX(`training_course_type_id`),
-ADD INDEX(`training_mode_of_delivery_id`),
-ADD INDEX(`training_requirement_id`),
-ADD INDEX(`training_level_id`),
-ADD INDEX(`status_id`);
 
 -- New table - training_courses_target_populations
 DROP TABLE IF EXISTS `training_courses_target_populations`;
@@ -101,11 +98,9 @@ CREATE TABLE IF NOT EXISTS `training_courses_target_populations` (
 
 
 ALTER TABLE `training_courses_target_populations`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `training_courses_target_populations`
-ADD INDEX(`training_course_id`),
-ADD INDEX(`target_population_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_course_id` (`training_course_id`),
+  ADD KEY `target_population_id` (`target_population_id`);
 
 -- New table - training_courses_providers
 DROP TABLE IF EXISTS `training_courses_providers`;
@@ -117,11 +112,9 @@ CREATE TABLE IF NOT EXISTS `training_courses_providers` (
 
 
 ALTER TABLE `training_courses_providers`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `training_courses_providers`
-ADD INDEX(`training_course_id`),
-ADD INDEX(`training_provider_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_course_id` (`training_course_id`),
+  ADD KEY `training_provider_id` (`training_provider_id`);
 
 -- New table - training_courses_prerequisites
 DROP TABLE IF EXISTS `training_courses_prerequisites`;
@@ -133,11 +126,9 @@ CREATE TABLE IF NOT EXISTS `training_courses_prerequisites` (
 
 
 ALTER TABLE `training_courses_prerequisites`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `training_courses_prerequisites`
-ADD INDEX(`training_course_id`),
-ADD INDEX(`prerequisite_training_course_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_course_id` (`training_course_id`),
+  ADD KEY `prerequisite_training_course_id` (`prerequisite_training_course_id`);
 
 -- New table - training_courses_specialisations
 DROP TABLE IF EXISTS `training_courses_specialisations`;
@@ -148,11 +139,9 @@ CREATE TABLE IF NOT EXISTS `training_courses_specialisations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE `training_courses_specialisations`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `training_courses_specialisations`
-ADD INDEX(`training_course_id`),
-ADD INDEX(`training_specialisation_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_course_id` (`training_course_id`),
+  ADD KEY `training_specialisation_id` (`training_specialisation_id`);
 
 -- New table - training_courses_result_types
 DROP TABLE IF EXISTS `training_courses_result_types`;
@@ -164,21 +153,20 @@ CREATE TABLE IF NOT EXISTS `training_courses_result_types` (
 
 
 ALTER TABLE `training_courses_result_types`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `training_courses_result_types`
-ADD INDEX(`training_course_id`),
-ADD INDEX(`training_result_type_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_course_id` (`training_course_id`),
+  ADD KEY `training_result_type_id` (`training_result_type_id`);
 
 -- New table - training_sessions
 DROP TABLE IF EXISTS `training_sessions`;
 CREATE TABLE IF NOT EXISTS `training_sessions` (
   `id` int(11) NOT NULL,
-  `training_course_id` int(11) NOT NULL,
-  `training_provider_id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   `comment` text DEFAULT NULL,
+  `training_course_id` int(11) NOT NULL,
+  `training_provider_id` int(11) NOT NULL,
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -188,26 +176,24 @@ CREATE TABLE IF NOT EXISTS `training_sessions` (
 
 
 ALTER TABLE `training_sessions`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_course_id` (`training_course_id`),
+  ADD KEY `training_provider_id` (`training_provider_id`),
+  ADD KEY `status_id` (`status_id`);
 
 
 ALTER TABLE `training_sessions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `training_sessions`
-ADD INDEX(`training_course_id`),
-ADD INDEX(`training_provider_id`),
-ADD INDEX(`status_id`);
 
 -- New table - training_session_trainers
 DROP TABLE IF EXISTS `training_session_trainers`;
 CREATE TABLE IF NOT EXISTS `training_session_trainers` (
   `id` char(36) NOT NULL,
   `type` varchar(20) NOT NULL,
-  `trainer_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `name` varchar(250) DEFAULT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `training_session_id` int(11) NOT NULL,
+  `trainer_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -216,11 +202,9 @@ CREATE TABLE IF NOT EXISTS `training_session_trainers` (
 
 
 ALTER TABLE `training_session_trainers`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `training_session_trainers`
-ADD INDEX(`trainer_id`),
-ADD INDEX(`training_session_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_session_id` (`training_session_id`),
+  ADD KEY `trainer_id` (`trainer_id`);
 
 -- New table - training_sessions_trainees
 DROP TABLE IF EXISTS `training_sessions_trainees`;
@@ -232,19 +216,62 @@ CREATE TABLE IF NOT EXISTS `training_sessions_trainees` (
 
 
 ALTER TABLE `training_sessions_trainees`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_session_id` (`training_session_id`),
+  ADD KEY `trainee_id` (`trainee_id`);
 
-ALTER TABLE `training_sessions_trainees`
-ADD INDEX(`training_session_id`),
-ADD INDEX(`trainee_id`);
+-- New table - training_session_results
+DROP TABLE IF EXISTS `training_session_results`;
+CREATE TABLE IF NOT EXISTS `training_session_results` (
+  `id` int(11) NOT NULL,
+  `training_session_id` int(11) NOT NULL,
+  `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE `training_session_results`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_session_id` (`training_session_id`),
+  ADD KEY `status_id` (`status_id`);
+
+ALTER TABLE `training_session_results`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - training_session_trainee_results
+DROP TABLE IF EXISTS `training_session_trainee_results`;
+CREATE TABLE IF NOT EXISTS `training_session_trainee_results` (
+  `id` char(36) NOT NULL,
+  `result` varchar(10) DEFAULT NULL,
+  `training_session_id` int(11) NOT NULL,
+  `trainee_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `training_session_trainee_results`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `training_session_id` (`training_session_id`),
+  ADD KEY `trainee_id` (`trainee_id`);
 
 -- labels
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'TrainingCourses', 'file_content', 'Administration -> Training -> Course','Attachment', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES
+(uuid(), 'TrainingCourses', 'number_of_months', 'Administration -> Training -> Course', 'Experiences', 1, 1, NOW()),
+(uuid(), 'TrainingCourses', 'file_content', 'Administration -> Training -> Course', 'Attachment', 1, 1, NOW()),
+(uuid(), 'TrainingCourses', 'training_field_of_study_id', 'Administration -> Training -> Course', 'Field of Study', 1, 1, NOW()),
+(uuid(), 'TrainingCourses', 'training_course_type_id', 'Administration -> Training -> Course', 'Course Type', 1, 1, NOW()),
+(uuid(), 'TrainingCourses', 'training_mode_of_delivery_id', 'Administration -> Training -> Course', 'Mode of Delivery', 1, 1, NOW());
 
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `filter`, `created_user_id`, `created`) VALUES
 ('Administration > Training > Courses', 'Training.TrainingCourses', NULL, 1, NOW()),
-('Administration > Training > Sessions', 'Training.TrainingSessions', NULL, 1, NOW());
+('Administration > Training > Sessions', 'Training.TrainingSessions', NULL, 1, NOW()),
+('Administration > Training > Results', 'Training.TrainingSessionResults', NULL, 1, NOW());
 
 -- field_options
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingAchievementTypes';
