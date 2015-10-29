@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 class TrainingSessionResultsTable extends AppTable {
 	public $openStatusIds = [];
 	public $approvedStatusIds = [];
+	public $resultTypeOptions = [];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -20,7 +21,7 @@ class TrainingSessionResultsTable extends AppTable {
 
 	public function onGetTrainingCourse(Event $event, Entity $entity) {
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
-		return $trainingSession->_matchingData['Courses']->name;
+		return $trainingSession->course->name;
 	}
 
 	public function onGetTrainingProvider(Event $event, Entity $entity) {
@@ -28,8 +29,59 @@ class TrainingSessionResultsTable extends AppTable {
 		return $trainingSession->_matchingData['TrainingProviders']->name;
 	}
 
+	public function onGetTrainingResultType(Event $event, Entity $entity) {
+		$currentAction = $this->ControllerAction->action();
+		if ($currentAction == 'index') {
+			$resultTypeOptions = $this->getResultTypeOptions($entity->training_session_id);
+			return implode(', ', $resultTypeOptions);
+		} else if ($currentAction == 'view') {
+			$html = '';
+
+			$Form = $event->subject()->Form;
+			$url = [
+				'plugin' => $this->request->params['plugin'],
+			    'controller' => $this->request->params['controller'],
+			    'action' => $this->request->params['action']
+			];
+			if (!empty($this->request->pass)) {
+				$url = array_merge($url, $this->request->pass);
+			}
+			$dataNamedGroup = [];
+			if (!empty($this->request->query)) {
+				foreach ($this->request->query as $key => $value) {
+					if (in_array($key, ['result_type'])) continue;
+					echo $Form->hidden($key, [
+						'value' => $value,
+						'data-named-key' => $key
+					]);
+					$dataNamedGroup[] = $key;
+				}
+			}
+			$baseUrl = $event->subject()->Url->build($url);
+
+			$inputOptions = [
+				'class' => 'form-control',
+				'label' => false,
+				'options' => $this->resultTypeOptions,
+				'url' => $baseUrl,
+				'data-named-key' => 'result_type',
+				'escape' => false
+			];
+			if (!empty($dataNamedGroup)) {
+				$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+				$dataNamedGroup[] = 'result_type';
+			}
+
+			$fieldPrefix = $this->alias();
+	        $html = $Form->input($fieldPrefix.".result_type", $inputOptions);
+
+			return $html;
+		}
+	}
+
 	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$sessionId = $entity->training_session_id;
+		$selectedResultType = $this->request->query('result_type');
 
 		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result')];
 		$tableCells = [];
@@ -37,30 +89,37 @@ class TrainingSessionResultsTable extends AppTable {
 		$key = 'trainees';
 
 		$trainees = [];
-		$SessionsTrainees = TableRegistry::get('Training.TrainingSessionsTrainees');
-		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+		if (!is_null($selectedResultType)) {
+			$SessionsTrainees = TableRegistry::get('Training.TrainingSessionsTrainees');
+			$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
 
-		$query = $SessionsTrainees
-			->find()
-			->matching('Trainees')
-			->select([
-				$TraineeResults->aliasField('id'),
-				$TraineeResults->aliasField('result')
-			])
-			->leftJoin(
-				[$TraineeResults->alias() => $TraineeResults->table()],
-				[
-					$TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
-					$TraineeResults->aliasField('training_session_id') => $sessionId
-				]
-			)
-			->where([
-				$SessionsTrainees->aliasField('training_session_id') => $sessionId
-			])
-			->group([$SessionsTrainees->aliasField('trainee_id')])
-			->autoFields(true);
+			$query = $SessionsTrainees
+				->find()
+				->matching('Trainees')
+				->select([
+					$TraineeResults->aliasField('id'),
+					$TraineeResults->aliasField('result')
+				])
+				->leftJoin(
+					[$TraineeResults->alias() => $TraineeResults->table()],
+					[
+						$TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
+						$TraineeResults->aliasField('training_session_id') => $sessionId,
+						$TraineeResults->aliasField('training_result_type_id') => $selectedResultType
+					]
+				)
+				->where([
+					$SessionsTrainees->aliasField('training_session_id') => $sessionId
+				])
+				->group([$SessionsTrainees->aliasField('trainee_id')])
+				->autoFields(true);
 
-		$trainees = $query->toArray();
+			$trainees = $query->toArray();
+
+			if (empty($trainees)) {
+		  		$this->Alert->warning($this->aliasField('noTrainees'));
+		  	}
+		}
 
 		if ($action == 'view') {
 			foreach ($trainees as $i => $obj) {
@@ -95,10 +154,6 @@ class TrainingSessionResultsTable extends AppTable {
 			}
 		}
 
-		if (empty($trainees)) {
-	  		$this->Alert->warning($this->aliasField('noTrainees'));
-	  	}
-
 	  	$attr['tableHeaders'] = $tableHeaders;
     	$attr['tableCells'] = $tableCells;
 
@@ -123,6 +178,10 @@ class TrainingSessionResultsTable extends AppTable {
 				$this->buildRecords();
 			}
 		}
+
+		$this->ControllerAction->setFieldOrder([
+			'training_course', 'training_provider', 'training_session_id'
+		]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -138,12 +197,14 @@ class TrainingSessionResultsTable extends AppTable {
 
 			if (empty($errors)) {
 				$sessionId = $data[$SessionResults->alias()]['training_session_id'];
+				$resultTypeId = $data[$SessionResults->alias()]['training_result_type'];
 				$trainees = $data[$SessionResults->alias()]['trainees'];
 
 				foreach ($trainees as $key => $obj) {
 					if (strlen($obj['result']) > 0) {
 						$resultData = [
 							'result' => $obj['result'],
+							'training_result_type_id' => $resultTypeId,
 							'trainee_id' => $obj['trainee_id'],
 							'training_session_id' => $sessionId
 						];
@@ -203,7 +264,7 @@ class TrainingSessionResultsTable extends AppTable {
 				$trainingSession = $this->Sessions->getTrainingSession($sessionId);
 
 				$attr['type'] = 'readonly';
-				$attr['attr']['value'] = $trainingSession->_matchingData['Courses']->name;
+				$attr['attr']['value'] = $trainingSession->course->name;
 			}
     	}
 
@@ -242,6 +303,33 @@ class TrainingSessionResultsTable extends AppTable {
 
 		return $attr;
 	}
+
+    public function onUpdateFieldTrainingResultType(Event $event, array $attr, $action, $request) {
+    	$resultTypeOptions = [];
+
+    	if (isset($attr['attr']['value'])) {
+			$sessionId = $attr['attr']['value'];
+			$resultTypeOptions = $this->getResultTypeOptions($sessionId);
+		}
+
+		if (empty($resultTypeOptions )) {
+	  		$this->Alert->warning($this->aliasField('noResultTypes'));
+	  	} else {
+	  		$selectedResultType = $this->queryString('result_type', $resultTypeOptions);
+			$this->advancedSelectOptions($resultTypeOptions, $selectedResultType);
+	  	}
+
+		if ($action == 'view') {
+			$this->resultTypeOptions = $resultTypeOptions;
+    		$attr['valueClass'] = 'table-full-width';
+    	} else if ($action == 'edit') {
+    		$attr['type'] = 'select';
+    		$attr['attr']['options'] = $resultTypeOptions;
+    		$attr['onChangeReload'] = 'changeResultType';
+    	}
+
+    	return $attr;
+    }
 
 	public function buildRecords($sessionId=null) {
 		$sessions = $this->controller->getSessionList();
@@ -283,6 +371,19 @@ class TrainingSessionResultsTable extends AppTable {
 		}
 	}
 
+	public function getResultTypeOptions($id=null) {
+		$list = [];
+
+		if (!is_null($id)) {
+			$trainingSession = $this->Sessions->getTrainingSession($id);
+			foreach ($trainingSession->course->result_types as $key => $obj) {
+				$list[$obj->id] = $obj->name;
+			}
+		}
+
+		return $list;
+	}
+
 	public function setupFields(Entity $entity) {
 		$this->ControllerAction->field('status', [
 			'visible' => ['index' => false, 'view' => false, 'edit' => true],
@@ -294,6 +395,9 @@ class TrainingSessionResultsTable extends AppTable {
 		$this->ControllerAction->field('training_provider', [
 			'attr' => ['value' => $entity->training_session_id]
 		]);
+		$this->ControllerAction->field('training_result_type', [
+			'attr' => ['value' => $entity->training_session_id]
+		]);
 		$this->ControllerAction->field('training_session_id', [
 			'attr' => ['value' => $entity->training_session_id]
 		]);
@@ -303,7 +407,7 @@ class TrainingSessionResultsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'status', 'training_course', 'training_provider', 'training_session_id', 'trainees'
+			'status', 'training_course', 'training_provider', 'training_session_id', 'training_result_type', 'trainees'
 		]);
 	}
 }

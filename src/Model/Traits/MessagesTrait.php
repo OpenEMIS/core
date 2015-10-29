@@ -403,6 +403,7 @@ trait MessagesTrait {
 			'external_trainer' => 'External Trainer'
 		],
 		'TrainingSessionResults' => [
+			'noResultTypes' => 'You need to configure Result Types under Training Course.',
 			'noTrainees' => 'No Available Trainees'
 		],
 
