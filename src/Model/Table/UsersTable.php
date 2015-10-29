@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use User\Model\Table\UsersTable AS BaseUsers;
 
 class UsersTable extends AppTable {
 	public function initialize(array $config) {
@@ -49,18 +50,7 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
-		$controller = $this->controller;
-		$userId = $this->Auth->user('id');
-		$tabElements = [
-			'account' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'view', $userId],
-				'text' => __('Account')
-			],
-			'password' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'Users', 'password'],
-				'text' => __('Password')
-			]
-		];
+		$tabElements = $this->controller->getTabElements();
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'account');
@@ -82,6 +72,19 @@ class UsersTable extends AppTable {
 
 	public function viewBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Roles']);
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('openemis_no', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
+		$this->ControllerAction->field('last_login', ['visible' => false]);
 	}
 
 	public function password() {
@@ -164,59 +167,38 @@ class UsersTable extends AppTable {
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
-    	$attr['tableCells'] = $tableCells;
+		$attr['tableCells'] = $tableCells;
 
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->allowEmpty('middle_name')
-			->allowEmpty('third_name')
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->allowEmpty('preferred_name')
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->add('address', [])
-			->allowEmpty('photo_content')
-			;
-		return $validator;
+		return BaseUsers::setUserValidation($validator);
 	}
 
 	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
-		$toolbarButtons->exchangeArray([]);
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
+		switch ($action) {
+			case 'view':
+				foreach ($toolbarButtons as $key => $value) {
+					if (!in_array($key, ['edit'])) {
+						unset($toolbarButtons[$key]);
+					}
+				}
+				break;
+			
+			case 'edit':
+				foreach ($toolbarButtons as $key => $value) {
+					if (!in_array($key, ['back'])) {
+						unset($toolbarButtons[$key]);
+					}
+				}
+				break;
+		}
 	}
 }
