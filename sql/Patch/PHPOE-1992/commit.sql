@@ -268,8 +268,7 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `vis
 (uuid(), 'TrainingCourses', 'file_content', 'Administration -> Training -> Course', 'Attachment', 1, 1, NOW()),
 (uuid(), 'TrainingCourses', 'training_field_of_study_id', 'Administration -> Training -> Course', 'Field of Study', 1, 1, NOW()),
 (uuid(), 'TrainingCourses', 'training_course_type_id', 'Administration -> Training -> Course', 'Course Type', 1, 1, NOW()),
-(uuid(), 'TrainingCourses', 'training_mode_of_delivery_id', 'Administration -> Training -> Course', 'Mode of Delivery', 1, 1, NOW()),
-(uuid(), 'TrainingSessionResults', 'training_result_type', 'Administration -> Training -> Results', 'Result Type', 1, 1, NOW());
+(uuid(), 'TrainingCourses', 'training_mode_of_delivery_id', 'Administration -> Training -> Course', 'Mode of Delivery', 1, 1, NOW());
 
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `filter`, `created_user_id`, `created`) VALUES
