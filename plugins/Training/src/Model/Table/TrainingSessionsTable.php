@@ -24,6 +24,7 @@ class TrainingSessionsTable extends AppTable {
 		$this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
 		$this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('Trainees', [
 			'className' => 'User.Users',
 			'joinTable' => 'training_sessions_trainees',
@@ -121,7 +122,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
-			'training_course_id', 'start_date', 'training_provider_id'
+			'name', 'start_date', 'training_course_id', 'training_provider_id'
 		]);
 	}
 
@@ -350,9 +351,25 @@ class TrainingSessionsTable extends AppTable {
 		return $attr;
 	}
 
+	public function getTrainingSession($id=null) {
+		if (!is_null($id)) {
+			return $results = $this
+				->find()
+				->matching('Courses')
+				->matching('TrainingProviders')
+				->where([
+					$this->aliasField('id') => $id
+				])
+				->first();
+		}
+
+		return null;
+	}
+
 	public function setupFields(Entity $entity) {
 		$fieldOrder = [
-			'status_id', 'training_course_id', 'training_provider_id', 'start_date', 'end_date', 'comment',
+			'training_course_id', 'training_provider_id',
+			'name', 'start_date', 'end_date', 'comment',
 			'trainers'
 		];
 

@@ -402,6 +402,9 @@ trait MessagesTrait {
 			'internal_trainer' => 'Internal Trainer',
 			'external_trainer' => 'External Trainer'
 		],
+		'TrainingSessionResults' => [
+			'noTrainees' => 'No Available Trainees'
+		],
 
 		// Validation Messages
 		'Institution' => [
