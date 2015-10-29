@@ -4,6 +4,7 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -80,7 +81,7 @@ class UsersTable extends AppTable {
 		$this->fields['address_area_id']['visible'] = false;
 		$this->fields['birthplace_area_id']['visible'] = false;
 
-		if ($this->action != 'index' && $this->action != 'view') {
+		if (in_array($this->action, ['add'])) {
 			$this->fields['username']['visible'] = true;
 			$this->fields['password']['visible'] = true;
 			$this->fields['password']['type'] = 'password';
