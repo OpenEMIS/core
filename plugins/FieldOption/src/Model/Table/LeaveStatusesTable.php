@@ -7,6 +7,7 @@ use Cake\Validation\Validator;
 class LeaveStatusesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
-		$this->hasMany('Leaves', ['className' => 'Staff.Leaves', 'dependent' => true, 'cascadeCallbacks' => true]);
+		parent::initialize($config);
+		$this->hasMany('Leaves', ['className' => 'Staff.Leaves', 'foreignKey' => 'leave_status_id']);
 	}
 }

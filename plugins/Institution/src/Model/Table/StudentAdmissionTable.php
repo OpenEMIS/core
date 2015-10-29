@@ -75,12 +75,17 @@ class StudentAdmissionTable extends AppTable {
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
+		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'type', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
 			'start_date', 'end_date', 'comment', 
 		]);
+
+		$urlParams = $this->ControllerAction->url('edit');
+		if ($urlParams['controller'] == 'Dashboard') {
+			$this->Navigation->addCrumb('Student Admission', $urlParams);
+		}
     }
 
     public function viewAfterAction($event, Entity $entity) {
@@ -201,7 +206,7 @@ class StudentAdmissionTable extends AppTable {
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->contain(['Users', 'Institutions', 'EducationGrades', 'ModifiedUser', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created')
@@ -359,6 +364,24 @@ class StudentAdmissionTable extends AppTable {
 			$newEntity = $Students->newEntity($newData);
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
+
+				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+
+				$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
+				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $entity->student_id, 
+					'status' => self::NEW_REQUEST,
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				// Reject all other new pending admission / transfer application entry of the 
+				// same student for the same academic period
+				$this->updateAll(
+					['status' => self::REJECTED],
+					[$conditions]
+				);
 
 				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;

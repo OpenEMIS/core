@@ -44,47 +44,8 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->allowEmpty('photo_content')
-			;
-
-		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
-		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
-		return $validator;
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {

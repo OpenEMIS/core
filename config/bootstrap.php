@@ -81,6 +81,8 @@ try {
 if (!Configure::read('debug')) {
     Configure::write('Cache._cake_model_.duration', '+1 years');
     Configure::write('Cache._cake_core_.duration', '+1 years');
+    $errorHandler = new AppError();
+    $errorHandler->register();
 }
 
 /**
@@ -114,8 +116,6 @@ if ($isCli) {
 if ($isCli) {
     require __DIR__ . '/bootstrap_cli.php';
 }
-$errorHandler = new AppError();
-$errorHandler->register();
 
 /**
  * Set the full base URL.
@@ -218,6 +218,9 @@ Plugin::load('InstitutionCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StudentCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('Error', ['routes' => true, 'autoload' => true]);
+Plugin::load('Import', ['routes' => true, 'autoload' => true]);
+Plugin::load('API', ['routes' => true, 'autoload' => true]);
+Plugin::load('Log', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
