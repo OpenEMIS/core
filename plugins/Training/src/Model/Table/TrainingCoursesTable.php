@@ -158,16 +158,14 @@ class TrainingCoursesTable extends AppTable {
 	public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$Courses = TableRegistry::get('Training.TrainingCourses');
-			$courseQuery = $this->controller->getCourseList();
 
 			$id = $request->query('course');
+			$excludes = [];
 			if (!is_null($id)) {
-				$courseQuery->where([
-					$Courses->aliasField('id <> ') => $id
-				]);
+				$excludes[$id] = $id;
 			}
 
-			$courseOptions = $courseQuery->toArray();
+			$courseOptions = $this->controller->getCourseList(['excludes' => $excludes]);
 			$attr['options'] = $courseOptions;
 		}
 
