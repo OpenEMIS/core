@@ -113,7 +113,7 @@ class StudentsTable extends AppTable {
 				'Identities.identity_type_id' => $settings['identity']->id
 			]
 		);
-		$query->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number']);
+		$query->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number', 'code' => 'Institutions.code']);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
@@ -132,7 +132,31 @@ class StudentsTable extends AppTable {
 		   ->first();
 
 		$settings['identity'] = $identity;
+
+		// To update to this code when upgrade server to PHP 5.5 and above
+		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
+
+		foreach ($fields as $key => $field) {
+			if ($field['field'] == 'institution_id') {
+				unset($fields[$key]);
+				break;
+			}
+		}
 		
+		$extraField[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$extraField[] = [
+			'key' => 'Students.institution_id',
+			'field' => 'institution_id',
+			'type' => 'integer',
+			'label' => '',
+		];
+
 		$extraField[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
@@ -144,7 +168,7 @@ class StudentsTable extends AppTable {
 			'key' => 'Identities.number',
 			'field' => 'number',
 			'type' => 'string',
-			'label' => $identity->name
+			'label' => __($identity->name)
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());
