@@ -283,21 +283,6 @@ class TrainingSessionResultsTable extends AppTable {
 		}
 	}
 
-	// public function getTrainingSession($id=null) {
-	// 	if (!is_null($id)) {
-	// 		return $results = $this->Sessions
-	// 			->find()
-	// 			->matching('Courses')
-	// 			->matching('TrainingProviders')
-	// 			->where([
-	// 				$this->Sessions->aliasField('id') => $id
-	// 			])
-	// 			->first();
-	// 	}
-
-	// 	return null;
-	// }
-
 	public function setupFields(Entity $entity) {
 		$this->ControllerAction->field('status', [
 			'visible' => ['index' => false, 'view' => false, 'edit' => true],
