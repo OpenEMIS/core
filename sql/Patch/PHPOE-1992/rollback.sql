@@ -17,6 +17,7 @@ DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'file_cont
 DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'training_field_of_study_id';
 DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'training_course_type_id';
 DELETE FROM `labels` WHERE `module` = 'TrainingCourses' AND `field` = 'training_mode_of_delivery_id';
+DELETE FROM `labels` WHERE `module` = 'TrainingSessionResults' AND `field` = 'training_result_type';
 
 -- Restore Admin - training tables
 RENAME TABLE `z_1992_training_courses` TO `training_courses`;

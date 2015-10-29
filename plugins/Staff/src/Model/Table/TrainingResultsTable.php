@@ -14,11 +14,25 @@ class TrainingResultsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
+		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
+	}
+
+	public function onGetStatus(Event $event, Entity $entity) {
+		$SessionResults = $this->Sessions->SessionResults;
+		$sessionResult = $SessionResults
+			->find()
+			->matching('Statuses')
+			->where([
+				$SessionResults->aliasField('training_session_id') => $entity->training_session_id
+			])
+			->first();
+
+		return '<span class="status highlight">' . $sessionResult->_matchingData['Statuses']->name . '</span>';
 	}
 
 	public function onGetTrainingCourse(Event $event, Entity $entity) {
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
-		return $trainingSession->_matchingData['Courses']->name;
+		return $trainingSession->course->name;
 	}
 
 	public function onGetTrainingProvider(Event $event, Entity $entity) {
@@ -50,6 +64,7 @@ class TrainingResultsTable extends AppTable {
 	}
 
 	public function setupFields() {
+		$this->ControllerAction->field('status');
 		$this->ControllerAction->field('trainee_id', [
 			'visible' => false
 		]);
@@ -57,7 +72,7 @@ class TrainingResultsTable extends AppTable {
 		$this->ControllerAction->field('training_provider');
 
 		$this->ControllerAction->setFieldOrder([
-			'training_session_id', 'training_course', 'training_provider', 'result'
+			'status', 'training_course', 'training_provider', 'training_session_id', 'training_result_type_id', 'result'
 		]);
 	}
 }
