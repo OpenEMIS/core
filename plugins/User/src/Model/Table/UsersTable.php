@@ -393,7 +393,7 @@ class UsersTable extends AppTable {
 	}
 
 	// this is the method to call for user validation - currently in use by Student Staff.. 
-	public function setUserValidation(Validator $validator) {
+	public function setUserValidation(Validator $validator, $thisModel = null) {
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [
@@ -425,6 +425,11 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->allowEmpty('password')
+			->add('password' , [
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6]
+				]
+			])
 			->allowEmpty('photo_content')
 			->add('date_of_birth', [
 					'ruleValidDate' => [
@@ -433,13 +438,15 @@ class UsersTable extends AppTable {
 				])
 			;
 
-		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
-		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
-		$this->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
+		$thisModel = ($thisModel == null)? $this: $thisModel;
+		$thisModel->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$thisModel->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
+		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
+		$thisModel->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
 		return $validator;
 	}
 
