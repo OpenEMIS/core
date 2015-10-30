@@ -31,6 +31,7 @@ $description = __d('open_emis', $_productName);
 	?>
 	<![endif]-->
 </head>
+<?php echo $this->element('OpenEmis.analytics') ?>
 
 <body onload="$('input[type=text]:first').focus()" class="login">
 	<div class="body-wrapper">
