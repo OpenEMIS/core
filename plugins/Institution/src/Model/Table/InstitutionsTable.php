@@ -264,15 +264,14 @@ class InstitutionsTable extends AppTable  {
 			$conditions = [];
 
 			if (! $this->AccessControl->isAdmin()) {
-
 				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-
 				// Total Institutions: number
 				$institutionCount = $institutionCount
 					->where([$this->aliasField('id').' IN' => $institutionIds]);
-
 				$conditions['id IN'] = $institutionIds;
 			}
+
+			$this->advancedSearchQuery($this->request, $institutionCount);
 
 			$models = [
 				['Types', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
@@ -325,11 +324,13 @@ class InstitutionsTable extends AppTable  {
 				])
 				->group($modelId)
 				->where($_conditions)
-				->toArray();
+				;
+
+			$this->advancedSearchQuery($this->request, $institutionSiteTypesCount);
 
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionSiteTypesCount as $key => $value) {
+			foreach ($institutionSiteTypesCount->toArray() as $key => $value) {
 	            // Compile the dataset
 				$dataSet[] = [__($value['name']), $value['count']];
 			}
