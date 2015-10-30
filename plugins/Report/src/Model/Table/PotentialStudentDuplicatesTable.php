@@ -40,16 +40,14 @@ class PotentialStudentDuplicatesTable extends AppTable  {
 			->join([
 				'su' => [
 					'table' => 
-						"(SELECT first_name, middle_name, third_name, last_name, gender_id, date_of_birth 
+						"(SELECT first_name, last_name, gender_id, date_of_birth 
 						FROM security_users 
 						where is_student = 1 
-						group by first_name, middle_name, third_name, last_name, gender_id, date_of_birth 
+						group by first_name, last_name, gender_id, date_of_birth 
 						having count(*) > 1)",
 					'type' => 'INNER',
 					'conditions' => [
 						'su.first_name = '.$this->aliasField('first_name'),
-						'su.middle_name = '.$this->aliasField('middle_name'),
-						'su.third_name = '.$this->aliasField('third_name'),
 						'su.last_name = '.$this->aliasField('last_name'),
 						'su.gender_id = '.$this->aliasField('gender_id'),
 						'su.date_of_birth = '.$this->aliasField('date_of_birth')
