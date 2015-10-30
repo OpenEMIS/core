@@ -21,7 +21,7 @@ class AdvanceSearchBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-
+		$this->_table->addBehavior('Area.Area');
 	}
 	
 
@@ -55,6 +55,7 @@ class AdvanceSearchBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$language = $session->read('System.language');
 			$fields = $this->model->schema()->columns();
+
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->_exclude)) {
 					if ($this->isForeignKey($key)) {
@@ -102,12 +103,42 @@ class AdvanceSearchBehavior extends Behavior {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
 		$conditions = '';
-		foreach ($this->data as $key => $value) {
-			if (!empty($value) && $value>0) {
-				$conditions[$this->model->aliasField($key)] = $value;
-        	}
-        }
+		$advancedSearch = [];
+		
+		if (isset($request->data['AdvanceSearch'])) {
+			$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
+		}
+		$areaKeys[] = 'area_id';
+		$areaKeys[] = 'area_administrative_id';
+		$areaKeys[] = 'birthplace_area_id';
+		$areaKeys[] = 'address_area_id';
 
+		foreach ($advancedSearch as $key=>$value) {
+			if (!empty($value) && $value>0) {
+				if(in_array($key, $areaKeys)){
+					switch ($key) {
+						case 'area_id':
+							$tableName = 'areas';
+							$id = $advancedSearch[$key];
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+							break;
+
+						case 'area_administrative_id':
+						case 'birthplace_area_id':
+						case 'address_area_id':
+							$tableName = 'area_administratives';
+							$id = $advancedSearch[$key];
+							$AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+							break;
+					}
+				}
+        	} else {
+				if (!empty($value) && $value>0) {
+					$conditions[$this->model->aliasField($key)] = $value;
+	        	}
+			}
+        }
         if (!empty($conditions)) {
         	$query->where($conditions);
         }
