@@ -26,24 +26,6 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			// Remove the edit button if the status is not editable
-			$isEditable = $this->request->data[$this->alias()]['is_editable'];
-			if (! $isEditable) {
-				if (isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
-		}
-	}
-
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain($this->_contain);
 	}
@@ -54,13 +36,7 @@ class WorkflowStatusesTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		// Remove the edit button and delete button if the status is not editable
-		if (! $entity->is_editable) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
-			}
-		}
-
+		// Remove the delete button if the status is not editable
 		if (! $entity->is_removable) {
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
@@ -236,26 +212,25 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('name');
-		$this->ControllerAction->field('is_editable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
-		$this->ControllerAction->field('is_removable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden', 'value'=>1]);
+		$this->ControllerAction->field('is_editable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden']);
+		$this->ControllerAction->field('is_removable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden']);
 		$this->ControllerAction->field('statuses_steps', ['type' => 'statuses_steps', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 	}
 	
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->request->data[$this->alias()]['is_editable'] = $entity->is_editable;
 		$this->ControllerAction->setFieldOrder([
 			'workflow_model_id', 'code', 'name', 'statuses_steps'
 		]);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		if (!$entity->is_editable) {
-			$event->stopPropagation();
-			return $this->controller->redirect(['plugin'=>'Workflow', 'controller' => 'Workflows', 'action' => 'Statuses']);
-		}
 		$this->request->data[$this->alias()]['workflow_model_id'] = $entity->workflow_model_id;
+		$this->request->data[$this->alias()]['code'] = $entity->code;
+		$this->request->data[$this->alias()]['name'] = $entity->name;
+		$this->request->data[$this->alias()]['is_editable'] = $entity->is_editable;
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'readonly', 'value' => $entity->workflow_model_id]);
+		$this->ControllerAction->field('code');
+		$this->ControllerAction->field('name');
 		$this->ControllerAction->setFieldOrder([
 			'workflow_model_id', 'code', 'name', 'statuses_steps'
 		]);
@@ -273,6 +248,30 @@ class WorkflowStatusesTable extends AppTable {
 			$workflowModelId = $this->request->data[$this->alias()]['workflow_model_id'];
 			$attr['attr']['value'] = $this->WorkflowModels->get($workflowModelId)->name;
 			return $attr;
+		}
+	}
+
+	public function onUpdateFieldCode(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			if (!$this->request->data[$this->alias()]['is_editable']) {
+				$code = $this->request->data[$this->alias()]['code'];
+				$attr['attr']['value'] = $code;
+				$attr['value'] = $code;
+				$attr['type'] = 'readonly';
+				return $attr;
+			}
+		}
+	}
+
+	public function onUpdateFieldName(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			if (!$this->request->data[$this->alias()]['is_editable']) {
+				$name = $this->request->data[$this->alias()]['name'];
+				$attr['attr']['value'] = $name;
+				$attr['value'] = $name;
+				$attr['type'] = 'readonly';
+				return $attr;
+			}
 		}
 	}
 
