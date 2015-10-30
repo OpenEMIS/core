@@ -189,9 +189,12 @@ class StaffTable extends AppTable {
 		if ($this->action == 'index') {
 			// Get total number of students
 			$count = $this->find()->where([$this->aliasField('is_staff') => 1]);
-			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
-			$this->joinInstitutionStaffs($institutionIds, $count);
-			$count->group([$this->aliasField('id')]);
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$this->joinInstitutionStaffs($institutionIds, $count);
+				$count->group([$this->aliasField('id')]);
+			}
+			$this->advancedSearchQuery($this->request, $count);
 
 			// Get the gender for all students
 			$data = [];
@@ -224,12 +227,16 @@ class StaffTable extends AppTable {
 		->where([$this->aliasField('is_staff') => 1])
 		->group('gender_id')
 		;
-		$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
-		$this->joinInstitutionStaffs($institutionIds, $query);
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStaffs($institutionIds, $query);
+		}
+		$this->advancedSearchQuery($this->request, $query);
 
 		$genders = $this->Genders->getList()->toArray();
 
 		$resultSet = $query->all();
+		$dataSet = [];
 		foreach ($resultSet as $entity) {
 			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}
