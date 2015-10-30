@@ -132,12 +132,10 @@ class AdvanceSearchBehavior extends Behavior {
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 					}
-				}
-        	} else {
-				if (!empty($value) && $value>0) {
+				} else {
 					$conditions[$this->model->aliasField($key)] = $value;
-	        	}
-			}
+				}
+        	}
         }
         if (!empty($conditions)) {
         	$query->where($conditions);
