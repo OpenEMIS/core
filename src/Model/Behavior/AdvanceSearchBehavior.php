@@ -102,6 +102,10 @@ class AdvanceSearchBehavior extends Behavior {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
+		$this->advancedSearchQuery ($request, $query);
+	}
+
+	public function advancedSearchQuery ($request, $query) {
 		$conditions = '';
 		$advancedSearch = [];
 		
@@ -140,6 +144,7 @@ class AdvanceSearchBehavior extends Behavior {
         if (!empty($conditions)) {
         	$query->where($conditions);
         }
+        return $query;
 	}
 
 
