@@ -9,3 +9,7 @@ v3.2.7
 v3.2.8
 - Added Institution name and ID in Student report
 - Fixed a bug that caused wrong absence date to be saved in arabic language
+
+v3.2.9
+- Preference link is now working properly, user can edit their personal information
+- Fixed a bug that caused other users to modify another user's information
