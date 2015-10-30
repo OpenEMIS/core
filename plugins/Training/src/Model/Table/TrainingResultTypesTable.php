@@ -8,5 +8,6 @@ class TrainingResultTypesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
 		$this->hasMany('TrainingCoursesResultTypes', ['className' => 'Training.TrainingCoursesResultTypes', 'foreignKey' => 'training_result_type_id']);
+		$this->hasMany('TrainingSessionTraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_result_type_id']);
 	}
 }

@@ -44,23 +44,61 @@ class TrainingResultsTable extends AppTable {
 		$this->setupFields();
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->setupFields();
-	}
-
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 		$sessionKey = 'Staff.Staff.id';
 		if ($session->check($sessionKey)) {
 			$userId = $session->read($sessionKey);
+
+			// Filter by trainee
 			$query->where([
 				$this->aliasField('trainee_id') => $userId
 			]);
+			// End
+
+			// Filter by training session
+			$sessionOptions = $this
+				->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+				->matching('Sessions')
+				->select(['id' => 'Sessions.id', 'name' => 'Sessions.name'])
+				->where([
+					$this->aliasField('trainee_id') => $userId
+				])
+				->group([
+					$this->aliasField('training_session_id')
+				])
+				->toArray();
+
+			if (!empty($sessionOptions)) {
+				$selectedSession = $this->queryString('training_session', $sessionOptions);
+				$this->advancedSelectOptions($sessionOptions, $selectedSession);
+
+				//Add controls filter to index page
+				$toolbarElements = [
+					['name' => 'Staff.Training/controls', 'data' => [], 'options' => []]
+				];
+
+				$this->controller->set('toolbarElements', $toolbarElements);
+				$this->controller->set('sessionOptions', $sessionOptions);
+
+				$query->where([
+					$this->aliasField('training_session_id') => $selectedSession
+				]);
+			}
+			// End
 		} else {
-			$this->Alert->warning('general.noData');
-			$event->stopPropagation();
-			return $this->redirect(['action' => 'index']);
+			// need better solution to return zero results as stopPropagation will cause error
+			$query->where([
+				$this->aliasField('trainee_id') => -1
+			]);
+			// $this->Alert->warning('general.noData');
+			// $event->stopPropagation();
+			// return $this->controller->redirect(['action' => 'index']);
 		}
+	}
+
+	public function viewBeforeAction(Event $event) {
+		$this->setupFields();
 	}
 
 	public function setupFields() {
