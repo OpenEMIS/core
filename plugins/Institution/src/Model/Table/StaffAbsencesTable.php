@@ -229,13 +229,9 @@ class StaffAbsencesTable extends AppTable {
 		$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
-		$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
-		$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
-	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('start_date');
-		$this->ControllerAction->field('end_date');
+		$this->ControllerAction->field('start_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
+		$this->ControllerAction->field('end_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
@@ -293,9 +289,8 @@ class StaffAbsencesTable extends AppTable {
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'add'){
-			$startDate = $request->data[$this->alias()]['academic_start_date'];
-			$endDate = $request->data[$this->alias()]['academic_end_date'];
-
+			$startDate = $attr['startDate'];
+			$endDate = $attr['endDate'];
 			$attr['value'] = $startDate->format('d-m-Y');
 			$attr['default_date'] = false;
 			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
@@ -305,9 +300,8 @@ class StaffAbsencesTable extends AppTable {
 
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'add'){
-			$startDate = $request->data[$this->alias()]['academic_start_date'];
-			$endDate = $request->data[$this->alias()]['academic_end_date'];
-
+			$startDate = $attr['startDate'];
+			$endDate = $attr['endDate'];
 			$attr['value'] = $startDate->format('d-m-Y');
 			$attr['default_date'] = false;
 			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
