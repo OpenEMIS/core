@@ -34,6 +34,7 @@
 	?>
 
 </head>
+<?php echo $this->element('OpenEmis.analytics') ?>
 
 <body class='default'>
 
