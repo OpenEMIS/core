@@ -3,6 +3,7 @@ namespace Workflow\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class WorkflowTransitionsTable extends AppTable {

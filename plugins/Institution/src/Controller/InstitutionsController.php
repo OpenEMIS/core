@@ -64,13 +64,14 @@ class InstitutionsController extends AppController  {
 			// Quality
 			'Rubrics' 			=> ['className' => 'Institution.InstitutionRubrics', 'actions' => ['index', 'view', 'remove']],
 			'RubricAnswers' 	=> ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
-			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits']
+			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits'],
+
+			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['index', 'add']],
 		];
 	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
@@ -96,12 +97,6 @@ class InstitutionsController extends AppController  {
 
 		if ($action == 'index') {
 			$session->delete('Institution.Institutions.id');
-		} else if ($action == 'Surveys') {
-			// This is to turn off workflow for New and Draft Survey
-			$this->loadComponent('Survey.Survey', [
-				'model' => 'Institution.InstitutionSurveys'
-			]);
-			$this->Workflow->attachWorkflow = $this->Survey->getAttachWorkflow();
 		}
 
 		if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
@@ -208,9 +203,16 @@ class InstitutionsController extends AppController  {
 
 			$this->set('contentHeader', $header);
 		} else {
-			$this->Alert->warning('general.notExists');
-			$event->stopPropagation();
-			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+			// pr($model->alias());die;
+			if ($model->alias() == 'ImportInstitutions') {
+				$this->Navigation->addCrumb($model->getHeader($model->alias()));
+				$header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
+				$this->set('contentHeader', $header);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$event->stopPropagation();
+				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+			}
 		}
 	}
 

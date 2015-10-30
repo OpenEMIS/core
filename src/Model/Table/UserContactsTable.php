@@ -1,8 +1,9 @@
 <?php
 namespace App\Model\Table;
 
-use User\Model\Table\ContactsTable as BaseTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
+use User\Model\Table\ContactsTable as BaseTable;
 
 class UserContactsTable extends BaseTable {
 	public function initialize(array $config) {
