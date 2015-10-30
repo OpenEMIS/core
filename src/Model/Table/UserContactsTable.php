@@ -3,6 +3,7 @@ namespace App\Model\Table;
 
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use User\Model\Table\ContactsTable as BaseTable;
 
 class UserContactsTable extends BaseTable {
