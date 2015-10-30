@@ -287,10 +287,28 @@ UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingPriorit
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingProviders';
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingRequirements';
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingResultTypes';
-UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingStatuses';
-
-INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
-('Training', 'TrainingSpecialisations', 'Specialisations', 'Training', NULL, 0, 1, 1, NOW());
+UPDATE `field_options` SET `plugin` = 'Institution' WHERE `code` = 'StaffPositionTitles';
 
 UPDATE `field_options` SET `visible` = 1 WHERE `parent` = 'Training';
-UPDATE `field_options` SET `visible` = 0 WHERE `code` = 'TrainingStatuses';
+
+-- delete TrainingStatuses
+SET @parentId := 0;
+SELECT `id` INTO @parentId FROM `field_options` WHERE `code` = 'TrainingStatuses';
+DELETE FROM `field_option_values` WHERE `field_option_id` = @parentId;
+DELETE FROM `field_options` WHERE `id` = @parentId;
+
+-- purge and recreate TrainingResultTypes
+SET @parentId := 0;
+SELECT `id` INTO @parentId FROM `field_options` WHERE `code` = 'TrainingResultTypes';
+DELETE FROM `field_option_values` WHERE `field_option_id` = @parentId;
+INSERT INTO `field_option_values` (`name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES
+('Exam', 1, 1, 1, 0, @parentId, 1, NOW()),
+('Practical', 2, 1, 1, 0, @parentId, 1, NOW()),
+('Attendance', 3, 1, 1, 0, @parentId, 1, NOW());
+
+-- create TrainingSpecialisations
+SET @ordering := 0;
+SELECT `order` + 1 INTO @ordering FROM `field_options` WHERE `code` = 'TrainingResultTypes';
+UPDATE `field_options` SET `order` = `order` + 1 WHERE `order` >= @ordering;
+INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
+('Training', 'TrainingSpecialisations', 'Specialisations', 'Training', NULL, @ordering, 1, 1, NOW());

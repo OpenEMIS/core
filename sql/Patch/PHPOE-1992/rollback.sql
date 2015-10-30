@@ -50,7 +50,7 @@ UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingPriorities';
 UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingProviders';
 UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingRequirements';
 UPDATE `field_options` SET `plugin` = 'Training' WHERE `code` = 'TrainingResultTypes';
-UPDATE `field_options` SET `plugin` = NUll WHERE `code` = 'TrainingStatuses';
+UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'StaffPositionTitles';
 
 UPDATE `field_options` SET `visible` = 0 WHERE parent = 'Training';
 

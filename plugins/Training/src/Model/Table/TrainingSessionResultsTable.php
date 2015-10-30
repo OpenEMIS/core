@@ -19,6 +19,76 @@ class TrainingSessionResultsTable extends AppTable {
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 	}
 
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$SessionResults = $this;
+		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+
+		$process = function($model, $entity) use ($data, $SessionResults, $TraineeResults) {
+			$errors = $entity->errors();
+
+			if (empty($errors)) {
+				$sessionId = $data[$SessionResults->alias()]['training_session_id'];
+				$resultTypeId = $data[$SessionResults->alias()]['result_type'];
+				$trainees = $data[$SessionResults->alias()]['trainees'];
+
+				foreach ($trainees as $key => $obj) {
+					if (strlen($obj['result']) > 0) {
+						$resultData = [
+							'result' => $obj['result'],
+							'training_result_type_id' => $resultTypeId,
+							'trainee_id' => $obj['trainee_id'],
+							'training_session_id' => $sessionId
+						];
+
+						if (isset($obj['id'])) {
+							$resultData['id'] = $obj['id'];
+						}
+
+						$resultEntity = $TraineeResults->newEntity($resultData, ['validate' => false]);
+						if( $TraineeResults->save($resultEntity) ){
+						} else {
+							$TraineeResults->log($resultEntity->errors(), 'debug');
+						}
+					} else {
+						if (isset($obj['id'])) {
+							$TraineeResults->deleteAll([
+								$TraineeResults->aliasField('id') => $obj['id']
+							]);
+						}
+					}
+				}
+
+				return true;
+			} else {
+				return false;
+			}
+		};
+
+		return $process;
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+		// redirect back to edit page
+		$url = $this->ControllerAction->url('edit');
+		$event->stopPropagation();
+		return $this->controller->redirect($url);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		// To clear all records in training_session_trainee_results when delete
+		$entity = $this->get($id);
+		$TraineeResults = $this->Sessions->TraineeResults;
+		$TraineeResults->deleteAll([
+			$TraineeResults->aliasField('training_session_id') => $entity->training_session_id
+		]);
+
+		$this->Alert->success('general.delete.success');
+		$url = $this->ControllerAction->url('index');
+
+		$event->stopPropagation();
+		return $this->controller->redirect($url);
+	}
+
 	public function onGetTrainingCourse(Event $event, Entity $entity) {
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->course->name;
@@ -92,7 +162,8 @@ class TrainingSessionResultsTable extends AppTable {
 				->matching('Trainees')
 				->select([
 					$TraineeResults->aliasField('id'),
-					$TraineeResults->aliasField('result')
+					$TraineeResults->aliasField('result'),
+					$TraineeResults->aliasField('training_result_type_id')
 				])
 				->leftJoin(
 					[$TraineeResults->alias() => $TraineeResults->table()],
@@ -105,7 +176,9 @@ class TrainingSessionResultsTable extends AppTable {
 				->where([
 					$SessionsTrainees->aliasField('training_session_id') => $sessionId
 				])
-				->group([$SessionsTrainees->aliasField('trainee_id')])
+				->group([
+					$SessionsTrainees->aliasField('trainee_id')
+				])
 				->autoFields(true);
 
 			$trainees = $query->toArray();
@@ -180,54 +253,6 @@ class TrainingSessionResultsTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
-	}
-
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$SessionResults = $this;
-		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
-
-		$process = function($model, $entity) use ($data, $SessionResults, $TraineeResults) {
-			$errors = $entity->errors();
-
-			if (empty($errors)) {
-				$sessionId = $data[$SessionResults->alias()]['training_session_id'];
-				$resultTypeId = $data[$SessionResults->alias()]['result_type'];
-				$trainees = $data[$SessionResults->alias()]['trainees'];
-
-				foreach ($trainees as $key => $obj) {
-					if (strlen($obj['result']) > 0) {
-						$resultData = [
-							'result' => $obj['result'],
-							'training_result_type_id' => $resultTypeId,
-							'trainee_id' => $obj['trainee_id'],
-							'training_session_id' => $sessionId
-						];
-
-						if (isset($obj['id'])) {
-							$resultData['id'] = $obj['id'];
-						}
-
-						$resultEntity = $TraineeResults->newEntity($resultData, ['validate' => false]);
-						if( $TraineeResults->save($resultEntity) ){
-						} else {
-							$TraineeResults->log($resultEntity->errors(), 'debug');
-						}
-					} else {
-						if (isset($obj['id'])) {
-							$TraineeResults->deleteAll([
-								$TraineeResults->aliasField('id') => $obj['id']
-							]);
-						}
-					}
-				}
-
-				return true;
-			} else {
-				return false;
-			}
-		};
-
-		return $process;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
@@ -335,6 +360,7 @@ class TrainingSessionResultsTable extends AppTable {
 					$request->query['result_type'] = $request->data[$this->alias()]['result_type'];
 				}
 			}
+			$data[$this->alias()]['trainees'] = [];
 			$data[$this->alias()]['status_id'] = $entity->status_id;
 		}
     }
@@ -410,7 +436,7 @@ class TrainingSessionResultsTable extends AppTable {
 			'attr' => ['value' => $entity->training_session_id]
 		]);
 		$this->ControllerAction->field('trainees', [
-			'type' => 'trainee_table',
+			'type' => 'trainee_table',	// custom type
 			'valueClass' => 'table-full-width'
 		]);
 
