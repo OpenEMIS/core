@@ -221,7 +221,7 @@ class StaffAbsencesTable extends AppTable {
 			$this->fields['end_time']['visible'] = false;
 		}
 	}
-	public function addBeforeAction(Event $event) {
+	public function addEditBeforeAction(Event $event) {
 		if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$this->request->data[$this->alias()]['academic_period_id'] = $AcademicPeriodTable->getCurrent();
