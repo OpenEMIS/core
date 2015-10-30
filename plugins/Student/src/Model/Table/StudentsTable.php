@@ -224,9 +224,20 @@ class StudentsTable extends AppTable {
 			'value' => $openemisNo
 		]);
 
-		$this->ControllerAction->field('username', ['order' => 70, 'visible' => false]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => false, 'type' => 'password']);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => false]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password']);
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
