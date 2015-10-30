@@ -243,6 +243,8 @@ class StudentsTable extends AppTable {
 				$count->group([$this->aliasField('id')]);
 			}
 
+			$this->advancedSearchQuery($this->request, $count);
+
 			// Get the gender for all students
 			$data = [];
 			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
@@ -289,9 +291,12 @@ class StudentsTable extends AppTable {
 			$this->joinInstitutionStudents($institutionIds, $query);
 		}
 
+		$this->advancedSearchQuery($this->request, $query);
+
 		$genders = $this->Genders->getList()->toArray();
 
 		$resultSet = $query->all();
+		$dataSet = [];
 		foreach ($resultSet as $entity) {
 			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}
