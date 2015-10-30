@@ -94,6 +94,12 @@ class StaffAbsencesTable extends AppTable {
 		$fields->exchangeArray($newFields);
 	}
 
+	public function onExcelGetStaffAbsenceReasonId(Event $event, Entity $entity) {
+		if ($entity->staff_absence_reason_id == 0) {
+			return __('Unexcused');
+		}
+	}
+
 	public function onExcelGetAbsences(Event $event, Entity $entity) {
 		$startDate = "";
 		$endDate = "";
@@ -120,10 +126,10 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onGetDate(Event $event, Entity $entity) {
-		$startDate = date('d-m-Y', strtotime($entity->start_date));
-		$endDate = date('d-m-Y', strtotime($entity->end_date));
+		$startDate = $this->formatDate($entity->start_date);
+		$endDate = $this->formatDate($entity->end_date);
 		if ($entity->full_day == 1) {
-			if (!empty($entity->end_date) && strtotime($entity->end_date) > strtotime($entity->start_date)) {
+			if (!empty($entity->end_date) && $entity->end_date > $entity->start_date) {
 				$value = sprintf('%s - %s (%s)', $startDate, $endDate, __('full day'));
 			} else {
 				$value = sprintf('%s (%s)', $startDate, __('full day'));
