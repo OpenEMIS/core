@@ -116,15 +116,8 @@ class StudentsTable extends AppTable {
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-			$query->innerJoin(
-				['InstitutionStudent' => 'institution_students'],
-				[
-					'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStudent.institution_id IN ' => $institutionIds
-				]
-			)
-			->group([$this->aliasField('id')]);
-			;
+			$this->joinInstitutionStudents($institutionIds, $query);
+			$query->group([$this->aliasField('id')]);
 		}
 	}
 
@@ -240,8 +233,15 @@ class StudentsTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
+
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_student') => 1])->count();
+			$count = $this->find()->where([$this->aliasField('is_student') => 1]);
+
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$this->joinInstitutionStudents($institutionIds, $count);
+				$count->group([$this->aliasField('id')]);
+			}
 
 			// Get the gender for all students
 			$data = [];
@@ -252,13 +252,23 @@ class StudentsTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'students',
-	            	'modelCount' => $count,
+	            	'modelCount' => $count->count(),
 	            	'modelArray' => $data,
 	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
+	}
+
+	private function joinInstitutionStudents(array $institutionIds, Query $query) {
+		$query->innerJoin(
+			['InstitutionStudent' => 'institution_students'],
+			[
+				'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
+				'InstitutionStudent.institution_id IN ' => $institutionIds
+			]
+		);
 	}
 	
 	private function setupTabElements($options) {
@@ -270,10 +280,14 @@ class StudentsTable extends AppTable {
 	public function getNumberOfStudentsByGender($params=[]) {
 		$query = $this->find();
 		$query
-		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
+		->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
 		->where([$this->aliasField('is_student') => 1])
 		->group('gender_id')
 		;
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStudents($institutionIds, $query);
+		}
 
 		$genders = $this->Genders->getList()->toArray();
 
