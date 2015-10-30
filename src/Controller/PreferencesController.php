@@ -75,7 +75,7 @@ class PreferencesController extends AppController {
 
 		if ($session->check($this->name.'.security_user_id')) {
 			if ($model->hasField('security_user_id')) {
-				$userId = $session->read($this->name.'.security_user_id');
+				$userId = $this->Auth->user('id');
 				$query->where([$model->aliasField('security_user_id') => $userId]);
 			}
 		} else {
