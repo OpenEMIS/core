@@ -12,7 +12,6 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use User\Model\Table\UsersTable AS BaseUsers;
 
 class UsersTable extends AppTable {
 	public function initialize(array $config) {
@@ -173,7 +172,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return BaseUsers::setUserValidation($validator);
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator);
 	}
 
 	public function implementedEvents() {
@@ -185,18 +185,19 @@ class UsersTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
 		switch ($action) {
 			case 'view':
-				foreach ($toolbarButtons as $key => $value) {
-					if (!in_array($key, ['edit'])) {
-						unset($toolbarButtons[$key]);
-					}
+				if ($toolbarButtons->offsetExists('edit')) {
+					$toolbarButtons->exchangeArray(['edit' => $toolbarButtons['edit']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
 				}
+				
 				break;
 			
 			case 'edit':
-				foreach ($toolbarButtons as $key => $value) {
-					if (!in_array($key, ['back'])) {
-						unset($toolbarButtons[$key]);
-					}
+				if ($toolbarButtons->offsetExists('back')) {
+					$toolbarButtons->exchangeArray(['back' => $toolbarButtons['back']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
 				}
 				break;
 		}
