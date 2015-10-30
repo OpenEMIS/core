@@ -40,6 +40,12 @@ class TrainingSessionsTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 		
 		return $validator
+			->add('code', [
+				'ruleUnique' => [
+					'rule' => ['validateUnique', ['scope' => 'training_course_id']],
+					'provider' => 'table'
+				]
+			])
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
 			]);
