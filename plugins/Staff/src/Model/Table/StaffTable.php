@@ -115,15 +115,20 @@ class StaffTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$query->innerJoin(
-				['InstitutionStaff' => 'institution_site_staff'],
-				[
-					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStaff.institution_site_id IN ' => $institutionIds
-				]
-			)
-			->group([$this->aliasField('id')]);
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+			$this->joinInstitutionStaffs($institutionIds, $query);
+			$query->group([$this->aliasField('id')]);
 		}
+	}
+
+	private function joinInstitutionStaffs(array $institutionIds, Query $query) {
+		$query->innerJoin(
+			['InstitutionStaff' => 'institution_site_staff'],
+			[
+				'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+				'InstitutionStaff.institution_site_id IN ' => $institutionIds
+			]
+		);
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
@@ -183,7 +188,10 @@ class StaffTable extends AppTable {
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_staff') => 1])->count();
+			$count = $this->find()->where([$this->aliasField('is_staff') => 1]);
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStaffs($institutionIds, $count);
+			$count->group([$this->aliasField('id')]);
 
 			// Get the gender for all students
 			$data = [];
@@ -194,7 +202,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $count,
+	            	'modelCount' => $count->count(),
 	            	'modelArray' => $data,
 	            ],
 	            'options' => [],
@@ -212,10 +220,12 @@ class StaffTable extends AppTable {
 	public function getNumberOfStaffByGender($params=[]) {
 		$query = $this->find();
 		$query
-		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
+		->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
 		->where([$this->aliasField('is_staff') => 1])
 		->group('gender_id')
 		;
+		$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+		$this->joinInstitutionStaffs($institutionIds, $query);
 
 		$genders = $this->Genders->getList()->toArray();
 
