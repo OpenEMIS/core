@@ -221,7 +221,7 @@ class StaffAbsencesTable extends AppTable {
 			$this->fields['end_time']['visible'] = false;
 		}
 	}
-	public function addEditBeforeAction(Event $event) {
+	public function addBeforeAction(Event $event) {
 		if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$this->request->data[$this->alias()]['academic_period_id'] = $AcademicPeriodTable->getCurrent();
@@ -239,21 +239,25 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		list($periodOptions, $selectedPeriod, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
 		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
-
-		$this->ControllerAction->field('academic_period_id', [
-			'options' => $periodOptions
-		]);
-		$this->ControllerAction->field('security_user_id', [
-			'options' => $staffOptions
-		]);
+		$this->ControllerAction->field('academic_period_id');
+		$this->ControllerAction->field('security_user_id');
+		
 		$this->ControllerAction->field('full_day', [
 			'options' => $fullDayOptions
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
+			list($periodOptions, $selectedPeriod, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
+		
+			$this->ControllerAction->field('academic_period_id', [
+				'options' => $periodOptions
+			]);
+			$this->ControllerAction->field('security_user_id', [
+				'options' => $staffOptions
+			]);
+
 			// Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
 			// $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			// $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
@@ -288,23 +292,27 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$startDate = $request->data[$this->alias()]['academic_start_date'];
-		$endDate = $request->data[$this->alias()]['academic_end_date'];
+		if ($action == 'add'){
+			$startDate = $request->data[$this->alias()]['academic_start_date'];
+			$endDate = $request->data[$this->alias()]['academic_end_date'];
 
-		$attr['value'] = $startDate->format('d-m-Y');
-		$attr['default_date'] = false;
-		$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-		return $attr;
+			$attr['value'] = $startDate->format('d-m-Y');
+			$attr['default_date'] = false;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
-		$startDate = $request->data[$this->alias()]['academic_start_date'];
-		$endDate = $request->data[$this->alias()]['academic_end_date'];
+		if ($action == 'add'){
+			$startDate = $request->data[$this->alias()]['academic_start_date'];
+			$endDate = $request->data[$this->alias()]['academic_end_date'];
 
-		$attr['value'] = $startDate->format('d-m-Y');
-		$attr['default_date'] = false;
-		$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-		return $attr;
+			$attr['value'] = $startDate->format('d-m-Y');
+			$attr['default_date'] = false;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
