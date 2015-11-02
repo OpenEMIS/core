@@ -93,21 +93,6 @@ class InstitutionsTable extends AppTable  {
 
 	}
 
-	public function onExcelGenerate(Event $event, $writer, $settings) {
-		// pr($settings);
-		// $generate = function() { pr('dsa'); };
-		// return $generate;
-	}
-
-	public function onExcelBeforeQuery(Event $event, Query $query) {
-		// pr($this->Session->read($this->aliasField('id')));die;
-		// $query->where(['Institutions.id' => 2]);
-	}
-
-	// public function onExcelGetLabel(Event $event, $column) {
-	// 	return 'asd';
-	// }
-
 	public function validationDefault(Validator $validator) {
 		$validator
 			->add('date_opened', [
