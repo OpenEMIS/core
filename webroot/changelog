@@ -2,3 +2,14 @@ v3.2.6
 - Added workflows to institution's survey
 - Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
 
+v3.2.7
+- Fixed Rubrics Report
+- Fixed some minor errors that appears when debug is turned on
+
+v3.2.8
+- Added Institution name and ID in Student report
+- Fixed a bug that caused wrong absence date to be saved in arabic language
+
+v3.2.9
+- Preference link is now working properly, user can edit their personal information
+- Fixed a bug that caused other users to modify another user's information
