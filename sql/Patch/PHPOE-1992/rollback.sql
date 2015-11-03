@@ -54,5 +54,10 @@ UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'StaffPositionTitle
 
 UPDATE `field_options` SET `visible` = 0 WHERE parent = 'Training';
 
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` = 5039;
+DELETE FROM `security_functions` WHERE `id` = 5040;
+DELETE FROM `security_functions` WHERE `id` = 5041;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1992';
