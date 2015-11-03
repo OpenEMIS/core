@@ -489,3 +489,8 @@ UPDATE `field_options` SET `order` = `order` + 1 WHERE `order` >= @ordering;
 INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
 ('Training', 'TrainingSpecialisations', 'Specialisations', 'Training', NULL, @ordering, 1, 1, NOW());
 
+-- Security function
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(5039, 'Courses', 'Trainings', 'Administration', 'Trainings', 5000,  'Courses.index|Courses.view', 'Courses.edit', 'Courses.add', 'Courses.remove', 'Courses.download', 5039, 1, 1, NOW()),
+(5040, 'Sessions', 'Trainings', 'Administration', 'Trainings', 5000,  'Sessions.index|Sessions.view', 'Sessions.edit', 'Sessions.add', 'Sessions.remove', NULL, 5040, 1, 1, NOW()),
+(5041, 'Results', 'Trainings', 'Administration', 'Trainings', 5000,  'Results.index|Results.view', 'Results.edit', NULL, 'Results.remove', NULL, 5041, 1, 1, NOW());
