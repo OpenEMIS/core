@@ -63,10 +63,10 @@ class SurveysTable extends AppTable  {
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
-		$surveyStatuses = $WorkflowStatusMappingsTable->getWorkflowSteps($status);
+		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
-		$WorkflowStatusesTable = $WorkflowStatusMappingsTable->WorkflowStatuses;
+		
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
 		
 		$statusCondition = [
