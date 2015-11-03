@@ -77,6 +77,31 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 		]);
 	}
 
+	public function addEditAfterAction(Event $event, Entity $entity) {
+
+		if (empty($this->_bankOptions)) {
+			$this->_bankOptions = $this->getBankOptions();
+		}
+		if (($entity->toArray())) {
+			if ($entity->has('bank')) {
+				$this->_selectedBankId = $entity->bank;
+			} else {
+				$this->_selectedBankId = $entity->bank_branch->bank->id;
+			}
+		} else {
+
+			// 1st instance of add
+			reset($this->_bankOptions);
+			$this->_selectedBankId = key($this->_bankOptions);
+		}
+		$bankBranches = $this->BankBranches
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['bank_id'=>$this->_selectedBankId])
+			->toArray();
+		$this->fields['bank_branch_id']['options'] = $bankBranches;
+
+	}
+
 
 /******************************************************************************************************************
 **
@@ -104,23 +129,6 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 	public function onUpdateFieldBank(Event $event, array $attr, $action, $request) {
 		$this->_bankOptions = $this->getBankOptions();
 		$attr['options'] = $this->_bankOptions;
-		return $attr;
-	}
-
-	public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, $request) {
-		if (empty($this->_bankOptions)) {
-			$this->_bankOptions = $this->getBankOptions();
-		}
-		reset($this->_bankOptions);
-		if (array_key_exists($this->alias(), $this->request->data)) {
-			$this->_selectedBankId = (array_key_exists('bank', $this->request->data[$this->alias()]))? $this->request->data[$this->alias()]['bank']:key($this->_bankOptions);
-		}
-
-		$bankBranches = $this->BankBranches
-			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-			->where(['bank_id'=>$this->_selectedBankId])
-			->toArray();
-		$attr['options'] = $bankBranches;
 		return $attr;
 	}
 
