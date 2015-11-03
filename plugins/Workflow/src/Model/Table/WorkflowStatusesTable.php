@@ -238,6 +238,8 @@ class WorkflowStatusesTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'select']);
+		$this->ControllerAction->field('is_editable', ['value' => 1]);
+		$this->ControllerAction->field('is_removable', ['value' => 1]);
 		$this->ControllerAction->setFieldOrder([
 			'workflow_model_id', 'code', 'name', 'statuses_steps'
 		]);
