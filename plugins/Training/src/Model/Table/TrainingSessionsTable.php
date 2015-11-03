@@ -175,8 +175,7 @@ class TrainingSessionsTable extends AppTable {
 		$dataOptions = [
 			'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
 			'trainer_id' => '',
-			'name' => '',
-			'visible' => 1
+			'name' => ''
 		];
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
