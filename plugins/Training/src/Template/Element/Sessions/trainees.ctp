@@ -1,9 +1,11 @@
 <?php
+	$tableClass = 'table-in-view';
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 ?>
 
 <?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
+	<?php $tableClass = 'table-responsive'; ?>
 	<div class="clearfix"></div>
 	<hr>
 	<h3><?= __('Trainees') ?></h3>
@@ -32,8 +34,8 @@
 	<hr>
 <?php endif ?>
 
-<div class="table-in-view" autocomplete-ref="trainee_id">
-	<table class="table table-striped table-hover table-bordered table-input">
+<div class="<?= $tableClass; ?>" autocomplete-ref="trainee_id">
+	<table class="table">
 		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 		<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 	</table>
