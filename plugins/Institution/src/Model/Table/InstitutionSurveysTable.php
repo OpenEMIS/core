@@ -118,11 +118,14 @@ class InstitutionSurveysTable extends AppTable {
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
     	$this->updateStatusId($entity);
 
-    	$currentAction = $this->ControllerAction->action();
-    	if ($currentAction == 'edit') {
-			$url = $this->ControllerAction->url($currentAction);
-			$event->stopPropagation();
-			return $this->controller->redirect($url);
+    	// add this checking to avoid error when download from mobile
+    	if (isset($this->ControllerAction)) {
+			$currentAction = $this->ControllerAction->action();
+	    	if ($currentAction == 'edit') {
+				$url = $this->ControllerAction->url($currentAction);
+				$event->stopPropagation();
+				return $this->controller->redirect($url);
+	    	}
     	}
 	}
 
