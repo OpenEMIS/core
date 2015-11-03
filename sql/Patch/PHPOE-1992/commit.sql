@@ -192,7 +192,6 @@ CREATE TABLE IF NOT EXISTS `training_session_trainers` (
   `id` char(36) NOT NULL,
   `type` varchar(20) NOT NULL,
   `name` varchar(250) DEFAULT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
   `training_session_id` int(11) NOT NULL,
   `trainer_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `modified_user_id` int(11) DEFAULT NULL,
