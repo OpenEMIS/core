@@ -111,7 +111,11 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
 		}
-		$this->_selectedBankId = $this->postString('bank_id', $this->_bankOptions);
+		reset($this->_bankOptions);
+		if (array_key_exists($this->alias(), $this->request->data)) {
+			$this->_selectedBankId = (array_key_exists('bank', $this->request->data[$this->alias()]))? $this->request->data[$this->alias()]['bank']:key($this->_bankOptions);
+		}
+
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->where(['bank_id'=>$this->_selectedBankId])
