@@ -321,7 +321,8 @@ class NavigationComponent extends Component {
 				'collapse' => true,
 				'items' => [
 					'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
-					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']]
+					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']],
+					'Achievements' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Achievements']]
 				]
 			]
 		];
