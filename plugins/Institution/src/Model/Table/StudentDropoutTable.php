@@ -271,40 +271,25 @@ class StudentDropoutTable extends AppTable {
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
 
-		$conditions = [
-			'institution_id' => $institutionId,
-			'student_id' => $studentId,
-			'academic_period_id' => $periodId,
-			'education_grade_id' => $gradeId,
-			'student_status_id' => $statuses['DROPOUT']
-		];
+		// Change the status of the student in the school
+		// Update only enrolled statuses student
+		$Students->updateAll(
+			['student_status_id' => $statuses['DROPOUT'], 'end_date' => $effectiveDate],
+			[
+				'institution_id' => $institutionId,
+				'student_id' => $studentId,
+				'academic_period_id' => $periodId,
+				'education_grade_id' => $gradeId,
+				'student_status_id' => $statuses['CURRENT']
+			]
+		);
 
-		$newData = $conditions;
+		$this->Alert->success('StudentDropout.approve');
 
-		// If the student is not already drop out
-		if (!$Students->exists($conditions)) {
-			// Change the status of the student in the school
-			// Update only enrolled statuses student
-			$Students->updateAll(
-				['student_status_id' => $statuses['DROPOUT'], 'end_date' => $effectiveDate],
-				[
-					'institution_id' => $institutionId,
-					'student_id' => $studentId,
-					'academic_period_id' => $periodId,
-					'education_grade_id' => $gradeId,
-					'student_status_id' => $statuses['CURRENT']
-				]
-			);
-
-			$this->Alert->success('StudentDropout.approve');
-
-			$entity->status = self::APPROVED;
-			$entity->effective_date = date('Y-m-d', $effectiveDate);
-			if (!$this->save($entity)) {
-				$this->log($entity->errors(), 'debug');
-			}
-		} else {
-			$this->Alert->error('StudentDropout.exists');
+		$entity->status = self::APPROVED;
+		$entity->effective_date = date('Y-m-d', $effectiveDate);
+		if (!$this->save($entity)) {
+			$this->log($entity->errors(), 'debug');
 		}
 
 		// To redirect back to the student admission if it is not access from the workbench
