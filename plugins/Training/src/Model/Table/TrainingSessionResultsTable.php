@@ -75,12 +75,25 @@ class TrainingSessionResultsTable extends AppTable {
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		// To clear all records in training_session_trainee_results when delete
+		// To manually clear all records in training_session_trainee_results when delete
 		$entity = $this->get($id);
 		$TraineeResults = $this->Sessions->TraineeResults;
 		$TraineeResults->deleteAll([
 			$TraineeResults->aliasField('training_session_id') => $entity->training_session_id
 		]);
+		// End
+
+		// To manually delete from records and transitions table
+		$this->attachWorkflow = $this->controller->Workflow->attachWorkflow;
+		if ($this->attachWorkflow) {
+			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
+			if (!empty($workflowRecord)) {
+				$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
+				$workflowRecord = $WorkflowRecords->get($workflowRecord->id);
+				$WorkflowRecords->delete($workflowRecord);
+			}
+		}
+		// End
 
 		$this->Alert->success('general.delete.success');
 		$url = $this->ControllerAction->url('index');
