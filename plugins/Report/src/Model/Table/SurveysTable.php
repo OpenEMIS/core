@@ -38,6 +38,7 @@ class SurveysTable extends AppTable  {
 		$this->ControllerAction->field('survey_form', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
+		$this->ControllerAction->field('postfix', ['type' => 'hidden']);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -245,5 +246,17 @@ class SurveysTable extends AppTable  {
 		$surveyStatuses = $this->surveyStatuses;
 		$status = $entity->status_id;
 		return __($surveyStatuses[$status]);
+	}
+
+	public function onUpdateFieldPostfix(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			if (isset($this->request->data[$this->alias()]['survey_form'])) {
+				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
+				if (!empty($surveyForm)) {
+					$attr['value'] = $this->SurveyForms->get($surveyForm)->name;
+					return $attr;
+				}
+			}
+		}
 	}
 }
