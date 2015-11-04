@@ -492,10 +492,14 @@ class StaffTable extends AppTable {
 
 			$positionId = $this->request->query('position');
 
+			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
+
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
+				->matching('Users')
 				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->where($searchConditions)
 				->distinct(['security_user_id']);
 
 			if ($positionId != 0) {
@@ -504,7 +508,7 @@ class StaffTable extends AppTable {
 			}
 			// Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['conditions' => $conditions, 'key' => __('Gender')]);
+				['conditions' => $conditions, 'searchConditions' => $searchConditions,  'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
@@ -704,6 +708,8 @@ class StaffTable extends AppTable {
 				$_conditions[$this->alias().'.'.$key] = $value;
 			}
 
+			$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
+
 			$institutionSiteRecords = $this->find();
 			$institutionSiteStaffCount = $institutionSiteRecords
 				->contain(['Users', 'Users.Genders'])
@@ -712,6 +718,7 @@ class StaffTable extends AppTable {
 					'gender' => 'Genders.name'
 				])
 				->where($_conditions)
+				->where($searchConditions)
 				->group('gender_id');
 
 			// Creating the data set		

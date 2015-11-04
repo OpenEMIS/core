@@ -405,11 +405,15 @@ class StudentsTable extends AppTable {
 			$conditions['institution_id'] = $institutionId;
 			$conditions['academic_period_id'] = $periodId;
 
+			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
+
 			$studentCount = $this->find()
+				->matching('Users')
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
 					$this->aliasField('academic_period_id') => $periodId
 				])
+				->where($searchConditions)
 				->group(['student_id']);
 			
 			if ($statusId != -1) {
@@ -430,15 +434,15 @@ class StudentsTable extends AppTable {
 
 			//Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_student_gender', 
-				['conditions' => $conditions, 'key' => __('Gender')]);
+				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'key' => __('Gender')]);
 			
 			// Get Age
 			$institutionSiteArray[__('Age')] = $this->getDonutChart('institution_student_age', 
-				['conditions' => $conditions, 'key' => __('Age')]);
+				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'key' => __('Age')]);
 
 			// Get Grades
 			$institutionSiteArray[__('Grade')] = $this->getDonutChart('institution_site_section_student_grade', 
-				['conditions' => $conditions, 'key' => __('Grade')]);
+				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'key' => __('Grade')]);
 
 
 			$indexDashboard = 'dashboard';
@@ -1144,6 +1148,7 @@ class StudentsTable extends AppTable {
 		foreach ($conditions as $key => $value) {
 			$_conditions[$this->alias().'.'.$key] = $value;
 		}
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$studentsConditions = [
 			'Users.date_of_death IS NULL',
 		];
@@ -1157,9 +1162,8 @@ class StudentsTable extends AppTable {
 				'gender' => 'Genders.name'
 			])
 			->where($studentsConditions)
+			->where($searchConditions)
 			->group('gender');
-
-
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -1178,6 +1182,7 @@ class StudentsTable extends AppTable {
 		foreach ($conditions as $key => $value) {
 			$_conditions[$this->alias().'.'.$key] = $value;
 		}
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 
 		$studentsConditions = [
 			'Users.date_of_death IS NULL',
@@ -1198,6 +1203,7 @@ class StudentsTable extends AppTable {
 			])
 			->distinct(['student'])
 			->where($studentsConditions)
+			->where($searchConditions)
 			->order('age');
 
 		$institutionSiteStudentCount = $query->toArray();
@@ -1241,6 +1247,7 @@ class StudentsTable extends AppTable {
 		$studentsByGradeConditions = [
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 		];
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 
 		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
 
@@ -1251,9 +1258,10 @@ class StudentsTable extends AppTable {
 				'count' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
 			])
 			->contain([
-				'EducationGrades'
+				'Users', 'EducationGrades'
 			])
 			->where($studentsByGradeConditions)
+			->where($searchConditions)
 			->group([
 				$this->aliasField('education_grade_id'),
 			])

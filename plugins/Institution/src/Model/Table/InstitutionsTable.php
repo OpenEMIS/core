@@ -262,6 +262,10 @@ class InstitutionsTable extends AppTable  {
 		if ($this->action == 'index') {
 			$institutionCount = $this->find();
 			$conditions = [];
+						
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+			$institutionCount = $institutionCount->where($searchConditions);
+
 
 			if (! $this->AccessControl->isAdmin()) {
 				$institutionIds = $this->AccessControl->getInstitutionsByUser();
@@ -274,9 +278,9 @@ class InstitutionsTable extends AppTable  {
 			$this->advancedSearchQuery($this->request, $institutionCount);
 
 			$models = [
-				['Types', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
-				['Sectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
-				['Localities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
+				['Types', 'institution_site_type_id', 'Type', 'conditions' => $conditions, 'searchConditions' => $searchConditions],
+				['Sectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions, 'searchConditions' => $searchConditions],
+				['Localities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions, 'searchConditions' => $searchConditions],
 			];
 
 			foreach ($models as $key => $model) {
@@ -313,6 +317,8 @@ class InstitutionsTable extends AppTable  {
 				$_conditions[$this->aliasField($key)] = $value;
 			}
 
+			$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
+
 			$institutionRecords = $this->find();
 			
 			$selectString = $modelName.'.name';
@@ -324,6 +330,7 @@ class InstitutionsTable extends AppTable  {
 				])
 				->group($modelId)
 				->where($_conditions)
+				->where($searchConditions)
 				;
 
 			$this->advancedSearchQuery($this->request, $institutionSiteTypesCount);

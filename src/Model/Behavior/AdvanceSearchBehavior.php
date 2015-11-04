@@ -34,7 +34,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
-			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
+			'ControllerAction.Model.index.beforePaginate' => ['callable' => 'indexBeforePaginate', 'priority' => 110],
 			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);
@@ -102,7 +102,7 @@ class AdvanceSearchBehavior extends Behavior {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
-		$this->advancedSearchQuery ($request, $query);
+		$conditions = $this->advancedSearchQuery ($request, $query);
 	}
 
 	public function advancedSearchQuery ($request, $query) {

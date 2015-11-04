@@ -234,8 +234,12 @@ class StudentsTable extends AppTable {
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
 
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_student') => 1]);
+			$count = $this->find()
+				->where([$this->aliasField('is_student') => 1])
+				->where($searchConditions);
 
 			if (!$this->AccessControl->isAdmin()) {
 				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
@@ -247,7 +251,7 @@ class StudentsTable extends AppTable {
 
 			// Get the gender for all students
 			$data = [];
-			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
+			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['searchConditions' => $searchConditions,'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
@@ -280,10 +284,12 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Student.Students)
 	public function getNumberOfStudentsByGender($params=[]) {
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$query = $this->find();
 		$query
 		->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
 		->where([$this->aliasField('is_student') => 1])
+		->where($searchConditions)
 		->group('gender_id')
 		;
 		if (!$this->AccessControl->isAdmin()) {

@@ -28,26 +28,27 @@ class InstitutionBehavior extends Behavior {
 		$userId = $options['userId'];
 		$findOptions = $options['options'];
 
+		$queryClone = clone $query;
 		// find from security areas
-		$query
-		->innerJoin(['AreaAll' => 'areas'], [
-			'AreaAll.lft <= Areas.lft', 
-			'AreaAll.rght >= Areas.rght'
-		])
-		->innerJoin(['SecurityGroupArea' => 'security_group_areas'], [
-			'SecurityGroupArea.area_id = AreaAll.id'
-		])
-		->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
-			'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id',
-			'SecurityGroupUser.security_user_id' => $userId
-		])
-		->group([$this->_table->aliasField('id')])
-
+		$institutions = $queryClone
+			->innerJoin(['AreaAll' => 'areas'], [
+				'AreaAll.lft <= Areas.lft', 
+				'AreaAll.rght >= Areas.rght'
+			])
+			->innerJoin(['SecurityGroupArea' => 'security_group_areas'], [
+				'SecurityGroupArea.area_id = AreaAll.id'
+			])
+			->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
+				'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id',
+				'SecurityGroupUser.security_user_id' => $userId
+			])
+			->group([$this->_table->aliasField('id')])
+			->select(['id' => $this->_table->aliasField('id')], true);
+		
 		// find from security institutions
-		->union(
-			$this->_table->find()
+		$securityInstitution = $this->_table->find()
 			->contain($findOptions['contain'])
-			->select($findOptions['select'])
+			->select(['id' => $this->_table->aliasField('id')])
 			->join($findOptions['join'])
 			->innerJoin(['SecurityGroupInstitutionSite' => 'security_group_institution_sites'], [
 				'SecurityGroupInstitutionSite.institution_site_id = ' . $this->_table->aliasField('id')
@@ -56,10 +57,14 @@ class InstitutionBehavior extends Behavior {
 				'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
 				'SecurityGroupUser.security_user_id' => $userId
 			])
-			->group([$this->_table->aliasField('id')])
-		)
-		;
+			->group([$this->_table->aliasField('id')]);
 
+		$query->where([
+			'OR' => [
+				[$this->_table->aliasField('id').' IN ' => $institutions],
+				[$this->_table->aliasField('id').' IN ' => $securityInstitution]
+			]
+		]);
 		return $query;
 	}
 }
