@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
+use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -30,7 +30,12 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		return $validator
+			->add('position_no', 'ruleUnique', [
+				'rule' => 'validateUnique', 
+				'provider' => 'table'
+			])
+			;
 	}
 
 	public function beforeAction($event) {
@@ -67,6 +72,23 @@ class InstitutionSitePositionsTable extends AppTable {
 			'element' => 'Institution.Positions/past',
 			'visible' => true
 		]);
+	}
+
+	public function onUpdateFieldPositionNo(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['attr']['value'] = $this->getUniquePositionNo();
+			return $attr;
+		}
+	}
+
+	public function getUniquePositionNo() {
+		$prefix = '';
+		$currentStamp = time();
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionCode = $this->Institutions->get($institutionId)->code;
+		$prefix .= $institutionCode;
+		$newStamp = $currentStamp;
+		return $prefix.'-'.$newStamp;
 	}
 
 
