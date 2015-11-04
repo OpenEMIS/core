@@ -151,6 +151,8 @@ class StaffTable extends AppTable {
 					->count();
 			}
 		]);
+		$request->query['academic_period_id'] = $selectedPeriod;
+
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
@@ -493,6 +495,7 @@ class StaffTable extends AppTable {
 			$positionId = $this->request->query('position');
 
 			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->data['Search']['searchField']));
 
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
@@ -508,13 +511,13 @@ class StaffTable extends AppTable {
 			}
 			// Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['conditions' => $conditions, 'searchConditions' => $searchConditions,  'key' => __('Gender')]);
+				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'academicPeriod' => $periodId, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
 			// Revisit here in awhile
 			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['conditions' => $conditions, 'key' => __('Licenses')]);
+				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'academicPeriod' => $periodId, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
@@ -709,9 +712,11 @@ class StaffTable extends AppTable {
 			}
 
 			$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
+			$periodId = isset($params['academicPeriod']) ? $params['academicPeriod'] : [];
 
 			$institutionSiteRecords = $this->find();
 			$institutionSiteStaffCount = $institutionSiteRecords
+				->find('academicPeriod', ['academic_period_id' => $periodId])
 				->contain(['Users', 'Users.Genders'])
 				->select([
 					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
