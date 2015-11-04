@@ -130,7 +130,7 @@ class ValidationBehavior extends Behavior {
 			if (!is_bool($result)) {
 				return $result;
 			} else {
-				return (!$result) ? __(Inflector::humanize($compareField).' should be on a later '.$type) : true;
+				return (!$result) ? __(Inflector::humanize($globalData['field'])).' should be earlier than '.__(Inflector::humanize($compareField)) : true;
 			}
 		} else {
 			return true;
