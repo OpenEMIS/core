@@ -46,10 +46,6 @@ class StudentSurveysTable extends AppTable {
     	return $events;
     }
 
-	public function onGetStatusId(Event $event, Entity $entity) {
-		return '<span class="status highlight">' . $entity->status->name . '</span>';
-	}
-
 	public function beforeAction(Event $event) {
 		//Add controls filter to index, view and edit page
 		$toolbarElements = [
@@ -119,6 +115,7 @@ class StudentSurveysTable extends AppTable {
 		$this->ControllerAction->field('student_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('status_id', ['type' => 'hidden']);
 
 		$this->institutionId = $institutionId;
 		$this->studentId = $studentId;
