@@ -47,6 +47,7 @@ class LicensesTable extends AppTable {
 			 $_conditions[$innerJoinArraySize++] = 'InstitutionStaff.'.$key.' = '.$value;
 		}
 		$innerJoinArray = array_merge($innerJoinArray, $_conditions);
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 
 		$licenseRecord = $this->find();
 		$licenseCount = $licenseRecord
@@ -55,6 +56,7 @@ class LicensesTable extends AppTable {
 				'license' => 'LicenseTypes.name',
 				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
 			])
+			->where($searchConditions)
 			->innerJoin(['InstitutionStaff' => 'institution_site_staff'],
 				$innerJoinArray
 			)
