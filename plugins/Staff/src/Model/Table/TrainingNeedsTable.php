@@ -32,6 +32,12 @@ class TrainingNeedsTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
+			->add('course_code', [
+				'ruleUnique' => [
+					'rule' => ['validateUnique'],
+					'provider' => 'table'
+				]
+			])
 			->allowEmpty('course_code', function ($context) {
 				if (array_key_exists('type', $context['data'])) {
 					$type = $context['data']['type'];
