@@ -319,6 +319,8 @@ class StudentsTable extends AppTable {
 			}
 		]);
 
+		$request->query['academic_period_id'] = $selectedAcademicPeriod;
+
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
 
@@ -406,7 +408,7 @@ class StudentsTable extends AppTable {
 			$conditions['academic_period_id'] = $periodId;
 
 			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
-
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->data['Search']['searchField']));
 			$studentCount = $this->find()
 				->matching('Users')
 				->where([

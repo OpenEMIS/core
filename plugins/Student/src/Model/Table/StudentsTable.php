@@ -235,7 +235,7 @@ class StudentsTable extends AppTable {
 		if ($this->action == 'index') {
 
 			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
-
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this, $this->request->data['Search']['searchField']));
 			// Get total number of students
 			$count = $this->find()
 				->where([$this->aliasField('is_student') => 1])

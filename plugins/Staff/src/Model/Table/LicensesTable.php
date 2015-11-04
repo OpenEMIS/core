@@ -1,6 +1,7 @@
 <?php
 namespace Staff\Model\Table;
 
+use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
@@ -11,8 +12,8 @@ class LicensesTable extends AppTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
-
-		 $this->addBehavior('HighChart', [
+		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('HighChart', [
 			'institution_staff_licenses' => [
 				'_function' => 'getNumberOfStaffByLicenses'
 			]
@@ -38,17 +39,18 @@ class LicensesTable extends AppTable {
 	public function getNumberOfStaffByLicenses($params=[]){
 		$institutionId = 0;
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
+		$_conditions = [];	
+		$staffTable = TableRegistry::get('Institution.Staff');
 		$innerJoinArray = [
-					'InstitutionStaff.security_user_id = ' . $this->aliasField('security_user_id'),
-				];
+			'StaffUser.security_user_id = '. $this->aliasField('security_user_id'),
+		];
 		$innerJoinArraySize = count($innerJoinArray);
 		foreach ($conditions as $key => $value) {
-			 $_conditions[$innerJoinArraySize++] = 'InstitutionStaff.'.$key.' = '.$value;
+			 $_conditions[$innerJoinArraySize++] = 'StaffUser.'.$key.' = '.$value;
 		}
 		$innerJoinArray = array_merge($innerJoinArray, $_conditions);
 		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
-
+		$periodId = isset($params['academicPeriod']) ? $params['academicPeriod'] : [];
 		$licenseRecord = $this->find();
 		$licenseCount = $licenseRecord
 			->contain(['Users', 'LicenseTypes'])
@@ -57,9 +59,18 @@ class LicensesTable extends AppTable {
 				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
 			])
 			->where($searchConditions)
-			->innerJoin(['InstitutionStaff' => 'institution_site_staff'],
-				$innerJoinArray
-			)
+			->join([
+
+					'StaffUser' => [
+						'table' => $staffTable->find('academicPeriod', ['academic_period_id' => $periodId])
+							->select([
+								'security_user_id' => $staffTable->aliasField('security_user_id'),
+								'institution_site_id' => $staffTable->aliasField('institution_site_id')
+							]),
+						'type' => 'INNER',
+						'conditions' => $innerJoinArray
+					]
+			])
 			->group('license')
 			->toArray();
 		$dataSet = [];
