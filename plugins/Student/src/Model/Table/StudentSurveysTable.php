@@ -7,6 +7,9 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class StudentSurveysTable extends AppTable {
+	// Default Status
+	const EXPIRED = -1;
+
 	private $institutionId = null;
 	private $studentId = null;
 
@@ -14,6 +17,7 @@ class StudentSurveysTable extends AppTable {
 		$this->table('institution_student_surveys');
 		parent::initialize($config);
 		
+		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -42,6 +46,10 @@ class StudentSurveysTable extends AppTable {
     	return $events;
     }
 
+	public function onGetStatusId(Event $event, Entity $entity) {
+		return '<span class="status highlight">' . $entity->status->name . '</span>';
+	}
+
 	public function beforeAction(Event $event) {
 		//Add controls filter to index, view and edit page
 		$toolbarElements = [
@@ -59,7 +67,8 @@ class StudentSurveysTable extends AppTable {
 		// Build Survey Records
 		$currentAction = $this->ControllerAction->action();
 		if ($currentAction == 'index') {
-			$this->_buildSurveyRecords($studentId);
+			// Disabled auto-insert New Survey for Student until there is a better solution
+			// $this->_buildSurveyRecords($studentId);
 		}
 		// End
 
@@ -75,7 +84,7 @@ class StudentSurveysTable extends AppTable {
 						$this->aliasField('institution_id') => $institutionId,
 						$this->aliasField('student_id') => $studentId,
 						$this->aliasField('academic_period_id') => $id,
-						$this->aliasField('status !=') => -1	// Not expired
+						$this->aliasField('status_id <>') => self::EXPIRED	// Not expired
 					])
 					->count();
 			}
@@ -95,7 +104,7 @@ class StudentSurveysTable extends AppTable {
 					$this->aliasField('student_id') => $studentId,
 					$this->aliasField('academic_period_id') => $selectedPeriod,
 					$this->aliasField('survey_form_id') => $surveyFormId,
-					$this->aliasField('status !=') => -1	// Not expired
+					$this->aliasField('status_id <>') => self::EXPIRED	// Not expired
 				])
 				->count();
 			if ($count) {
@@ -110,7 +119,6 @@ class StudentSurveysTable extends AppTable {
 		$this->ControllerAction->field('student_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('status', ['type' => 'hidden', 'attr' => ['survey-status' => 1]]);
 
 		$this->institutionId = $institutionId;
 		$this->studentId = $studentId;
@@ -138,35 +146,15 @@ class StudentSurveysTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		$selectedStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : 0;
-
 		if (isset($toolbarButtons['list'])) {
 			unset($toolbarButtons['list']);
 		}
-
-		if ($action == 'view') {
-			if (isset($toolbarButtons['back'])) {
-				unset($toolbarButtons['back']);
-			}
-			if ($selectedStatus == 2) {	//Completed
-				if (isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
+		if (isset($toolbarButtons['back'])) {
+			unset($toolbarButtons['back']);
 		}
-	}
-
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		$cancelButton = $buttons[1];
-		$buttons[0] = [
-			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(1);']
-		];
-		$buttons[1] = [
-			'name' => '<i class="fa fa-check"></i> ' . __('Submit'),
-			'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onClick' => '$(\'input:hidden[survey-status=1]\').val(2);']
-		];
-		$buttons[2] = $cancelButton;
+		if (isset($toolbarButtons['edit'])) {
+			unset($toolbarButtons['edit']);
+		}
 	}
 
 	private function setupTabElements($entity=null) {
@@ -191,6 +179,7 @@ class StudentSurveysTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
+	/* Disabled auto-insert New Survey for Student until there is a better solution
 	public function _buildSurveyRecords($studentId=null, $institutionId=null) {
 		$session = $this->controller->request->session();
 		if ($session->check('Institution.Institutions.id')) {
@@ -204,11 +193,11 @@ class StudentSurveysTable extends AppTable {
 			$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
 
 			// Update all New Survey to Expired by Institution ID and Student ID
-			$this->updateAll(['status' => -1],
+			$this->updateAll(['status_id' => -1],
 				[
 					'institution_id' => $institutionId,
 					'student_id' => $studentId,
-					'status' => 0
+					'status_id' => 0
 				]
 			);
 
@@ -252,13 +241,13 @@ class StudentSurveysTable extends AppTable {
 						}
 					} else {
 						// Update Expired Survey back to New
-						$this->updateAll(['status' => 0],
+						$this->updateAll(['status_id' => 0],
 							[
 								'institution_id' => $institutionId,
 								'student_id' => $studentId,
 								'academic_period_id' => $academicPeriodId,
 								'survey_form_id' => $surveyFormId,
-								'status' => -1
+								'status_id' => self::EXPIRED
 							]
 						);
 					}
@@ -266,6 +255,7 @@ class StudentSurveysTable extends AppTable {
 			}
 		}
 	}
+	*/
 
 	public function _redirect($institutionId=null, $studentId=null, $periodId=0, $formId=0) {
 		$currentAction = $this->ControllerAction->action();
@@ -278,12 +268,12 @@ class StudentSurveysTable extends AppTable {
 				$this->aliasField('student_id') => $studentId,
 				$this->aliasField('academic_period_id') => $periodId,
 				$this->aliasField('survey_form_id') => $formId,
-				$this->aliasField('status !=') => -1	// Not Expired
+				$this->aliasField('status_id <>') => self::EXPIRED	// Not Expired
 			])
 			->first();
 
 		if (!empty($results)) {
-			$this->request->query['status'] = $results->status;
+			$this->request->query['status'] = $results->status_id;
 
 			$url = $this->ControllerAction->url('view');
 			$url[1] = $results->id;

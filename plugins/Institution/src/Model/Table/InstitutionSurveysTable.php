@@ -58,6 +58,7 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
     	$events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
     	$events['Workflow.getEvents'] = 'getWorkflowEvents';
     	$events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -273,6 +274,17 @@ class InstitutionSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', [
 			'attr' => ['value' => $entity->survey_form_id]
 		]);
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		// For Institution Survey, delete button will be disabled regardless settings in Workflow
+		if (array_key_exists('remove', $buttons)) {
+			unset($buttons['remove']);
+		}
+
+		return $buttons;
 	}
 
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
