@@ -134,3 +134,62 @@ SELECT `id` INTO @approvedId FROM `workflow_statuses` WHERE `code` = 'APPROVED' 
 INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
 (uuid(), @pendingId, @approvalStepId),
 (uuid(), @approvedId, @approvedStepId);
+
+-- Workflow for Training > Achievements
+SET @modelId := 0;
+SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Staff.Achievements';
+INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
+('TRN-5001', 'Training Courses', @modelId, 1, NOW());
+
+SET @workflowId := 0;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'TRN-5001' AND `workflow_model_id` = @modelId;
+INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `workflow_id`, `created_user_id`, `created`) VALUES
+('Open', 0, 1, 1, @workflowId, 1, NOW()),
+('Pending For Approval', 1, 0, 0, @workflowId, 1, NOW()),
+('Closed', 2, 0, 0, @workflowId, 1, NOW()),
+('Pending For Recommendation', NULL, 0, 0, @workflowId, 1, NOW()),
+('Pending For Accreditation', NULL, 0, 0, @workflowId, 1, NOW()),
+('Accredited', NULL, 0, 0, @workflowId, 1, NOW());
+
+SET @openStepId := 0;
+SET @approvalStepId := 0;
+SET @closedStepId := 0;
+SET @recommendStepId := 0;
+SET @accreditationStepId := 0;
+SET @accreditedStepId := 0;
+SELECT `id` INTO @openStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Open' AND `stage` = 0;
+SELECT `id` INTO @approvalStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Approval' AND `stage` = 1;
+SELECT `id` INTO @closedStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Closed' AND `stage` = 2;
+SELECT `id` INTO @recommendStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Recommendation';
+SELECT `id` INTO @accreditationStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Accreditation';
+SELECT `id` INTO @accreditedStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Accredited';
+
+INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, `workflow_step_id`, `created_user_id`, `created`) VALUES
+('Submit For Recommendation', 0, 1, @recommendStepId, '', 0, @openStepId, 1, NOW()),
+('Cancel', 1, 1, @closedStepId, '', 1, @openStepId, 1, NOW()),
+('Submit For Accreditation', 0, 1, @accreditationStepId, '', 0, @approvalStepId, 1, NOW()),
+('Reject', 1, 1, @openStepId, '', 1, @approvalStepId, 1, NOW()),
+('Approve', 0, 0, 0, '', 0, @closedStepId, 1, NOW()),
+('Reject', 1, 0, 0, '', 0, @closedStepId, 1, NOW()),
+('Reopen', NULL, 1, @openStepId, '', 1, @closedStepId, 1, NOW()),
+('Submit For Approval', 0, 1, @approvalStepId, '', 0, @recommendStepId, 1, NOW()),
+('Reject', 1, 1, @openStepId, '', 1, @recommendStepId, 1, NOW()),
+('Accredit', 0, 1, @accreditedStepId, '', 0, @accreditationStepId, 1, NOW()),
+('Reject', 1, 1, @openStepId, '', 1, @accreditationStepId, 1, NOW()),
+('Approve', 0, 0, 0, '', 0, @accreditedStepId, 1, NOW()),
+('Reject', 1, 0, 0, '', 0, @accreditedStepId, 1, NOW()),
+('Inactive', NULL, 1, @closedStepId, '', 1, @accreditedStepId, 1, NOW());
+
+INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
+('PENDING', 'Pending', 0, 0, @modelId, 1, NOW()),
+('APPROVED', 'Approved', 0, 0, @modelId, 1, NOW());
+
+SET @pendingId := 0;
+SET @approvedId := 0;
+SELECT `id` INTO @pendingId FROM `workflow_statuses` WHERE `code` = 'PENDING' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @approvedId FROM `workflow_statuses` WHERE `code` = 'APPROVED' AND `workflow_model_id` = @modelId;
+INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
+(uuid(), @pendingId, @recommendStepId),
+(uuid(), @pendingId, @approvalStepId),
+(uuid(), @pendingId, @accreditationStepId),
+(uuid(), @approvedId, @accreditedStepId);
