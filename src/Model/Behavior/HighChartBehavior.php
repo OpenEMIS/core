@@ -96,4 +96,19 @@ class HighChartBehavior extends Behavior {
 		return json_encode($options, JSON_NUMERIC_CHECK);
 	}
 
+	public function getSearchConditions($model, $searchString) {
+		$schema = $this->_table->ControllerAction->getSchema($model);
+		$conditions = [];
+		$OR = [];
+		foreach ($schema as $name => $obj) {
+			if ($obj['type'] == 'string' && $name != 'password') {
+				$OR[$model->aliasField("$name").' LIKE'] = '%' . $searchString . '%';
+			}
+		}
+		if (!empty($OR)) {
+			$conditions = ['OR' => $OR];
+		}
+		return $conditions;
+	}
+
 }
