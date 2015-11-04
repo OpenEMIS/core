@@ -13,4 +13,5 @@ INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `p
 ('Institution Student Accounts', 'Institution', 'Administration', 'Accounts', 5000, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5000, 1, NULL, NULL, 1, NOW()),
 ('Staff Accounts', 'Staff', 'Administration', 'Accounts', 5000, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5000, 1, NULL, NULL, 1, NOW()),
 ('Institution Staff Accounts', 'Institution', 'Administration', 'Accounts', 5000, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5000, 1, NULL, NULL, 1, NOW()),
-('Guardian Accounts', 'Guardians', 'Administration', 'Accounts', 5000, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5000, 1, NULL, NULL, 1, NOW());
+('Guardian Accounts', 'Guardians', 'Administration', 'Accounts', 5000, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5000, 1, NULL, NULL, 1, NOW()),
+('User Accounts', 'Securities', 'Administration', 'Accounts', 5000, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5000, 1, NULL, NULL, 1, NOW());
