@@ -13,3 +13,8 @@ v3.2.8
 v3.2.9
 - Preference link is now working properly, user can edit their personal information
 - Fixed a bug that caused other users to modify another user's information
+
+v3.2.10
+- Fixed a bug that caused survey template not able to be downloaded on mobile
+- Improved performance when loading students/staff list
+- Survey Report status is now configurable via Administration -> Workflows -> Statuses
