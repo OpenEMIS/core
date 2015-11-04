@@ -109,7 +109,7 @@ SET @approvedStepId := 0;
 SELECT `id` INTO @openStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Open' AND `stage` = 0;
 SELECT `id` INTO @approvalStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Approval' AND `stage` = 1;
 SELECT `id` INTO @closedStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Closed' AND `stage` = 2;
-SELECT `id` INTO @approvedStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Accredited';
+SELECT `id` INTO @approvedStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Approved';
 
 INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, `workflow_step_id`, `created_user_id`, `created`) VALUES
 ('Submit For Approval', 0, 1, @approvalStepId, '', 0, @openStepId, 1, NOW()),
