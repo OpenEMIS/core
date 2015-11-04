@@ -188,7 +188,8 @@ class StaffTable extends AppTable {
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
 
-			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this, $this->request->data['Search']['searchField']));
 			// Get total number of students
 			$count = $this->find()
 				->where([$this->aliasField('is_staff') => 1])
