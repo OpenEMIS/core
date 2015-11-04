@@ -480,6 +480,11 @@ trait MessagesTrait {
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
+			'InstitutionSitePositions' => [
+				'position_no' => [
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+				]
+			],
 			'StudentGuardians' => [
 				'guardianRelationId' => 'You need to configure Guardian Relations first.',
 				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
