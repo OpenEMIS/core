@@ -15,19 +15,19 @@ use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('institution_sites');
+		$this->table('institutions');
         parent::initialize($config);
 
 		/**
 		 * fieldOption tables
 		 */
-		$this->belongsTo('Localities', 						['className' => 'Institution.Localities', 'foreignKey' => 'institution_site_locality_id']);
-		$this->belongsTo('Types', 							['className' => 'Institution.Types', 'foreignKey' => 'institution_site_type_id']);
-		$this->belongsTo('Ownerships',				 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_site_ownership_id']);
-		$this->belongsTo('Statuses', 						['className' => 'Institution.Statuses', 'foreignKey' => 'institution_site_status_id']);
-		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_site_sector_id']);
-		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
-		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_site_gender_id']);
+		$this->belongsTo('Localities', 						['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
+		$this->belongsTo('Types', 							['className' => 'Institution.Types', 'foreignKey' => 'institution_type_id']);
+		$this->belongsTo('Ownerships',				 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_ownership_id']);
+		$this->belongsTo('Statuses', 						['className' => 'Institution.Statuses', 'foreignKey' => 'institution_status_id']);
+		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
+		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
+		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
 		/**
 		 * end fieldOption tables
 		 */
