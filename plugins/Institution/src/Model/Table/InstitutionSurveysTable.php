@@ -28,13 +28,12 @@ class InstitutionSurveysTable extends AppTable {
 	private $workflowEvents = [];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_surveys');
 		parent::initialize($config);
 		
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => $this->module
 		]);
@@ -48,9 +47,9 @@ class InstitutionSurveysTable extends AppTable {
 			// 'filterKey' => 'custom_filter_id',
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
-			'recordKey' => 'institution_site_survey_id',
-			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'institution_survey_id',
+			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -77,10 +76,10 @@ class InstitutionSurveysTable extends AppTable {
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 
 		// To update to this code when upgrade server to PHP 5.5 and above
-		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 		
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_site_id') {
+			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
 				break;
 			}
@@ -94,8 +93,8 @@ class InstitutionSurveysTable extends AppTable {
 		];
 
 		$fields[] = [
-			'key' => 'InstitutionSurveys.institution_site_id',
-            'field' => 'institution_site_id',
+			'key' => 'InstitutionSurveys.institution_id',
+            'field' => 'institution_id',
             'type' => 'integer',
             'label' => '',
 		];
@@ -344,7 +343,7 @@ class InstitutionSurveysTable extends AppTable {
 				// Update all New Survey to Expired by Institution Id
 				$this->updateAll(['status_id' => self::EXPIRED],
 					[
-						'institution_site_id' => $institutionId,
+						'institution_id' => $institutionId,
 						'survey_form_id' => $surveyFormId,
 						'status_id' => $openStatusId
 					]
@@ -368,7 +367,7 @@ class InstitutionSurveysTable extends AppTable {
 						$where = [
 							$this->aliasField('academic_period_id') => $periodId,
 							$this->aliasField('survey_form_id') => $surveyFormId,
-							$this->aliasField('institution_site_id') => $institutionId
+							$this->aliasField('institution_id') => $institutionId
 						];
 
 						$results = $this
@@ -382,7 +381,7 @@ class InstitutionSurveysTable extends AppTable {
 								'status_id' => $openStatusId,
 								'academic_period_id' => $periodId,
 								'survey_form_id' => $surveyFormId,
-								'institution_site_id' => $institutionId
+								'institution_id' => $institutionId
 							];
 
 							$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
@@ -396,7 +395,7 @@ class InstitutionSurveysTable extends AppTable {
 								[
 									'academic_period_id' => $periodId,
 									'survey_form_id' => $surveyFormId,
-									'institution_site_id' => $institutionId,
+									'institution_id' => $institutionId,
 									'status_id' => self::EXPIRED
 								]
 							);
