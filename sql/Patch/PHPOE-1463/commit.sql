@@ -25,3 +25,7 @@ CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT ''
 -- institution_custom_table_cells
 ALTER TABLE `institution_custom_table_cells` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ;
+
+-- institution_activities
+ALTER TABLE `institution_site_activities` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_activities` ;

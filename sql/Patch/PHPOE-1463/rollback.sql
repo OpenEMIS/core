@@ -25,3 +25,7 @@ CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT ''
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
+
+-- institution_site_activities
+ALTER TABLE `institution_activities` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_site_activities` ;
