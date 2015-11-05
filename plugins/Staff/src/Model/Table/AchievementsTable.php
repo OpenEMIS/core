@@ -1,13 +1,11 @@
 <?php
 namespace Staff\Model\Table;
 
-// use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-// use Cake\Network\Request;
+use Cake\Network\Request;
 use App\Model\Table\AppTable;
-// use App\Model\Traits\OptionsTrait;
 
 class AchievementsTable extends AppTable {
 	public function initialize(array $config) {
@@ -42,6 +40,27 @@ class AchievementsTable extends AppTable {
 			->allowEmpty('file_content');
 	}
 
+	public function beforeAction(Event $event) {
+		$visible = ['index' => false, 'view' => true, 'edit' => true];
+		$this->ControllerAction->field('training_achievement_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('description', ['visible' => $visible]);
+		$this->ControllerAction->field('objective', ['visible' => $visible]);
+		$this->ControllerAction->field('end_date', ['visible' => $visible]);
+		$this->ControllerAction->field('duration', ['visible' => $visible]);
+		$this->ControllerAction->field('file_name', [
+			'type' => 'hidden',
+			'visible' => $visible
+		]);
+		$this->ControllerAction->field('file_content', ['visible' => $visible]);
+		$this->ControllerAction->field('staff_id', ['type' => 'hidden']);
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'training_achievement_type_id', 'code', 'name', 'start_date', 'credit_hours'
+		]);
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
 	}
@@ -50,13 +69,24 @@ class AchievementsTable extends AppTable {
 		$this->setupFields($entity);
 	}
 
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$session = $request->session();
+			$sessionKey = 'Staff.Staff.id';
+
+			if ($session->check($sessionKey)) {
+				$attr['attr']['value'] = $session->read($sessionKey);
+			}
+		}
+
+		return $attr;
+	}
+
 	public function setupFields(Entity $entity) {
-		$this->ControllerAction->field('training_achievement_type_id', ['type' => 'select']);
-		$this->ControllerAction->field('staff_id', ['type' => 'hidden']);
 		$this->ControllerAction->setFieldOrder([
-			'code', 'name', 'description', 'objective',
+			'training_achievement_type_id', 'code', 'name', 'description', 'objective',
 			'start_date', 'end_date', 'credit_hours', 'duration',
-			'training_achievement_type_id', 'file_name', 'file_content'
+			'file_name', 'file_content'
 		]);
 	}
 }
