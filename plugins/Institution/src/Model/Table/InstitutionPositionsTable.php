@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionSitePositionsTable extends AppTable {
+class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
 	public $institutionId = 0;
 	
@@ -22,9 +22,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
-		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
-		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff']);
+		$this->hasMany('InstitutionStaff', 	['className' => 'Institution.InstitutionStaff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
 		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
 	}
@@ -137,7 +137,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		}
 		// pr($id);die;
 		// start Current Staff List field
-		$Staff = $this->Institutions->InstitutionSiteStaff;
+		$Staff = $this->Institutions->InstitutionStaff;
 		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institution.Institutions.id'), $id)
 							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
 							->order([$Staff->aliasField('start_date')])
@@ -184,7 +184,7 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	/**
-	 * Used by InstitutionSiteStaff.add
+	 * Used by Staff.add
 	 * @param  boolean $institutionId [description]
 	 * @param  boolean $status        [description]
 	 * @return [type]                 [description]
