@@ -37,3 +37,7 @@ DROP TABLE `institution_attachments`;
 ALTER TABLE `institution_site_attachments` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_attachments` ;
+
+-- institution_positions
+ALTER TABLE `institution_site_positions` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_positions` ;

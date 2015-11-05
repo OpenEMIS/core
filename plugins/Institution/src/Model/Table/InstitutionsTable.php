@@ -38,7 +38,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionActivities', 			['className' => 'Institution.InstitutionActivities', 'dependent' => true]);
 		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true]);
 
-		$this->hasMany('InstitutionSitePositions', 			['className' => 'Institution.InstitutionSitePositions', 'dependent' => true]);
+		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteShifts', 			['className' => 'Institution.InstitutionSiteShifts', 'dependent' => true]);
 		$this->hasMany('InstitutionSiteSections', 			['className' => 'Institution.InstitutionSiteSections', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSiteClasses', 			['className' => 'Institution.InstitutionSiteClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
