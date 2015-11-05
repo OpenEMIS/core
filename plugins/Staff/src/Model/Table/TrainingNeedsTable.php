@@ -38,6 +38,12 @@ class TrainingNeedsTable extends AppTable {
 					'provider' => 'table'
 				]
 			])
+			->add('course_id', [
+				'ruleUnique' => [
+					'rule' => ['validateUnique', ['scope' => 'course_code']],
+					'provider' => 'table'
+				]
+			])
 			->allowEmpty('course_code', function ($context) {
 				if (array_key_exists('type', $context['data'])) {
 					$type = $context['data']['type'];
