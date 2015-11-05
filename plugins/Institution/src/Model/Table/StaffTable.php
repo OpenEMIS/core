@@ -20,12 +20,12 @@ class StaffTable extends AppTable {
 	use OptionsTrait;
 
 	public function initialize(array $config) {
-		$this->table('institution_site_staff');
+		$this->table('institution_staff');
 		parent::initialize($config);
 
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionSitePositions', 'foreignKey' => 'institution_site_position_id']);
-		$this->belongsTo('Institutions',	['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
 
@@ -68,7 +68,7 @@ class StaffTable extends AppTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			->add('institution_site_position_id', 'ruleCheckFTE', [
+			->add('institution_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
 			// Added in add before patch and add on new as it is only use by the add action
@@ -91,7 +91,7 @@ class StaffTable extends AppTable {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
+		$query->where([$this->aliasField('institution_id') => $institutionId]);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
@@ -104,7 +104,7 @@ class StaffTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields['security_user_id']['order'] = 5;
-		$this->fields['institution_site_position_id']['order'] = 6;
+		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
 	}
 
@@ -130,7 +130,7 @@ class StaffTable extends AppTable {
 		$positionData = $this->Positions
 		->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 		->contain(['StaffPositionTitles'])
-		->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+		->where([$this->Positions->aliasField('institution_id') => $institutionId])
 		->toArray();
 
 		$positionOptions = [0 => __('All Positions')] + $positionData;
@@ -155,7 +155,7 @@ class StaffTable extends AppTable {
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
 		if ($selectedPosition != 0) {
-			$query->where([$this->aliasField('institution_site_position_id') => $selectedPosition]);
+			$query->where([$this->aliasField('institution_position_id') => $selectedPosition]);
 		}
 		
 		$search = $this->ControllerAction->getSearchKey();
@@ -182,13 +182,13 @@ class StaffTable extends AppTable {
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('staff_name');
-		$this->ControllerAction->field('institution_site_position_id');
+		$this->ControllerAction->field('institution_position_id');
 		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'institution_site_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
+			'institution_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 	}
 
@@ -206,16 +206,16 @@ class StaffTable extends AppTable {
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$alias = $this->alias();
 		$recordId = $entity->id;
-		$institutionId = $entity->institution_site_id;
+		$institutionId = $entity->institution_id;
 		$newEndDate = strtotime($data[$this->alias()]['end_date']);
 		$newStartDate = strtotime($data[$this->alias()]['start_date']);
 		$staffId = $data[$this->alias()]['security_user_id'];
-		$positionId = $data[$this->alias()]['institution_site_position_id'];
+		$positionId = $data[$this->alias()]['institution_position_id'];
 		$condition = [
 			$this->aliasField('security_user_id') => $staffId,
-			$this->aliasField('institution_site_position_id') => $positionId,
+			$this->aliasField('institution_position_id') => $positionId,
 			$this->aliasField('id').' IS NOT' => $recordId,
-			$this->aliasField('institution_site_id') => $institutionId
+			$this->aliasField('institution_id') => $institutionId
 		];
 		$count = 0;
 		if (empty($newEndDate)) {
@@ -345,7 +345,7 @@ class StaffTable extends AppTable {
 			$positionOptions = $this->Positions
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->contain(['StaffPositionTitles'])
-			->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+			->where([$this->Positions->aliasField('institution_id') => $institutionId])
 			->toArray();
 			$attr['options'] = $positionOptions;
 		}
@@ -488,19 +488,19 @@ class StaffTable extends AppTable {
 			$institutionId = $session->read('Institution.Institutions.id');
 
 			$periodId = $this->request->query('academic_period_id');
-			$conditions = ['institution_site_id' => $institutionId];
+			$conditions = ['institution_id' => $institutionId];
 
 			$positionId = $this->request->query('position');
 
 			// Get Number of staff in an institution
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
-				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->where([$this->aliasField('institution_id') => $institutionId])
 				->distinct(['security_user_id']);
 
 			if ($positionId != 0) {
-				$staffCount->where([$this->aliasField('institution_site_position_id') => $positionId]);
-				$conditions = array_merge($conditions, ['institution_site_position_id' => $positionId])	;
+				$staffCount->where([$this->aliasField('institution_position_id') => $positionId]);
+				$conditions = array_merge($conditions, ['institution_position_id' => $positionId])	;
 			}
 			// Get Gender
 			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
@@ -532,7 +532,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$i = 10;
 		$this->fields['security_user_id']['order'] = $i++;
-		$this->fields['institution_site_position_id']['order'] = $i++;
+		$this->fields['institution_position_id']['order'] = $i++;
 		$this->fields['position_type']['order'] = $i++;
 		$this->fields['FTE']['order'] = $i++;
 	}
@@ -547,7 +547,7 @@ class StaffTable extends AppTable {
 			'order' => 10, 
 			'attr' => ['value' => $entity->user->name_with_id]
 		]);
-		$this->ControllerAction->field('institution_site_position_id', [
+		$this->ControllerAction->field('institution_position_id', [
 			'type' => 'readonly', 
 			'order' => 11,
 			'attr' => ['value' => $entity->position->name]
@@ -572,7 +572,7 @@ class StaffTable extends AppTable {
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		// note that $this->table('institution_site_staff');
 		$id = $entity->id;
-		$institutionId = $entity->institution_site_id;
+		$institutionId = $entity->institution_id;
 		$securityUserId = $entity->security_user_id;
 
 		
@@ -584,7 +584,7 @@ class StaffTable extends AppTable {
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
 		$sectionsInPosition = $InstitutionSiteSections->find()
 			->where(
-				['security_user_id' => $securityUserId, 'institution_site_id' => $institutionId]
+				['security_user_id' => $securityUserId, 'institution_id' => $institutionId]
 			)
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
@@ -637,12 +637,12 @@ class StaffTable extends AppTable {
 
 		$targetData = $InstitutionSiteClassStaff->find()
 			->where([$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
-			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
+			$InstitutionSiteClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
 			;
 
 		$InstitutionSiteClassStaff->deleteAll([
 			$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
-			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+			$InstitutionSiteClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
 		]);
 
 
