@@ -32,7 +32,7 @@ trait OptionsTrait {
 				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
 			],
 			'TrainingNeeds' => [
-				'types' => ['CATALOGUE' => __('Course Catelogue'), 'NEED' => __('Need Category')]
+				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
 			]
 		];
 
