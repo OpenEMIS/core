@@ -322,7 +322,8 @@ class NavigationComponent extends Component {
 				'items' => [
 					'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
 					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']],
-					'Achievements' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Achievements']]
+					// Disabled Achievement until get requirements from client
+					// 'Achievements' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Achievements']]
 				]
 			]
 		];
