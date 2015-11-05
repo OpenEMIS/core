@@ -14,14 +14,14 @@ use Cake\I18n\Time;
 class StaffPositionsTable extends AppTable {
 	//public $useTable = false;
 	public function initialize(array $config) {
-				$this->table('institution_site_staff');
+		$this->table('institution_staff');
 
         parent::initialize($config);
-        $this->entityClass('Institution.InstitutionSiteStaff');
+        $this->entityClass('Institution.Staff');
       	$this->addBehavior('Year', ['end_date' => 'end_year']);
         $this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
-		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions','foreignKey' => 'institution_site_position_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
+		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionPositions','foreignKey' => 'institution_position_id']);
 		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 	}
@@ -48,7 +48,7 @@ class StaffPositionsTable extends AppTable {
 
 	public function editBeforeAction(Event $event) {
 		$session = $this->request->session();
-		$institutionSiteId = $session->read('Institution.Institutions.id');
+		$institutionId = $session->read('Institution.Institutions.id');
 		foreach ($this->fields as $key => $value) {
 			$this->fields[$key]['visible'] = false;
 		}	
@@ -63,11 +63,11 @@ class StaffPositionsTable extends AppTable {
 		
 		//make some visible
 		$this->ControllerAction->field('security_user_id', ['visible' => true]);
-		$this->ControllerAction->field('institution_site_id', ['visible' => true]);
-		$this->ControllerAction->field('institution_site_position_id', ['visible' => true]);
+		$this->ControllerAction->field('institution_id', ['visible' => true]);
+		$this->ControllerAction->field('institution_position_id', ['visible' => true]);
 
-		$this->ControllerAction->field('institution_site_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('institution_site_position_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('institution_position_id', ['type' => 'hidden']);
 
 		$this->ControllerAction->field('FTE', ['type' => 'readonly']);
 		$this->ControllerAction->field('end_date', ['type' => 'date']);
@@ -75,7 +75,7 @@ class StaffPositionsTable extends AppTable {
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		
 		$this->ControllerAction->setFieldOrder([
-			'security_user_id', 'institution_site_id', 'institution_site_position_id', 'security_user_id', 'position', 'FTE', 'start_date', 'end_date', 'staff_type_id', 'staff_status_id'
+			'security_user_id', 'institution_id', 'institution_position_id', 'security_user_id', 'position', 'FTE', 'start_date', 'end_date', 'staff_type_id', 'staff_status_id'
 			
 			]);
 	}
@@ -115,19 +115,19 @@ class StaffPositionsTable extends AppTable {
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
     	if($action == 'view') {
     		$staffPositionId = $toolbarButtons['edit']['url']['1'];
-    		$staffPosition = TableRegistry::get('Institution.InstitutionSiteStaff')->get($staffPositionId);
+    		$staffPosition = TableRegistry::get('Institution.Staff')->get($staffPositionId);
     		if(!empty($staffPosition) && !empty($toolbarButtons['back'])) {
     			$toolbarButtons['back']['url']['action'] = 'Positions';
 	    		$toolbarButtons['back']['url']['0'] = 'view';
-	    		$toolbarButtons['back']['url']['1'] = $staffPosition->institution_site_position_id;
+	    		$toolbarButtons['back']['url']['1'] = $staffPosition->institution_position_id;
     		}
     	} else if($action == 'edit') {
     		$staffPositionId = $toolbarButtons['back']['url']['1'];
-    		$staffPosition = TableRegistry::get('Institution.InstitutionSiteStaff')->get($staffPositionId);
+    		$staffPosition = TableRegistry::get('Institution.Staff')->get($staffPositionId);
     		if(!empty($staffPosition) && !empty($toolbarButtons['list'])) {
     			$toolbarButtons['list']['url']['action'] = 'Positions';
 	    		$toolbarButtons['list']['url']['0'] = 'view';
-	    		$toolbarButtons['list']['url']['1'] = $staffPosition->institution_site_position_id;
+	    		$toolbarButtons['list']['url']['1'] = $staffPosition->institution_position_id;
     		}
     	} 
 	}

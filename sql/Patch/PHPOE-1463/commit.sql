@@ -97,3 +97,59 @@ RENAME TO  `institution_shifts` ;
 ALTER TABLE `institution_site_grades` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_grades` ;
+
+-- institution_infrastructure
+ALTER TABLE `institution_infrastructures` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ;
+
+-- institution_bank_accounts
+ALTER TABLE `institution_site_bank_accounts` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_bank_accounts` ;
+
+-- institution_student_absence
+ALTER TABLE `institution_site_student_absences` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_student_absences` ;
+
+-- institution_assessments
+ALTER TABLE `institution_site_assessments` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_assessments` ;
+
+-- institution_quality_visit
+ALTER TABLE `institution_site_quality_visits` 
+CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_quality_visits` ;
+
+-- institution_quality_rubric_answers
+ALTER TABLE `institution_site_quality_rubric_answers` 
+CHANGE COLUMN `institution_site_quality_rubric_id` `institution_quality_rubric_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_quality_rubric_answers` ;
+
+-- institution_quality_rubrics
+ALTER TABLE `institution_site_quality_rubrics` 
+CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_quality_rubrics` ;
+
+-- institution_survey_answers
+ALTER TABLE `institution_site_survey_answers` 
+CHANGE COLUMN `institution_site_survey_id` `institution_survey_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_survey_answers` ;
+
+-- institution_survey
+ALTER TABLE `institution_site_surveys` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_surveys` ;
+
+-- institution_survey_table_cells
+ALTER TABLE `institution_site_survey_table_cells` 
+CHANGE COLUMN `institution_site_survey_id` `institution_survey_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_survey_table_cells` ;
+
+
+

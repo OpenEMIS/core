@@ -10,7 +10,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionSiteStudentAbsencesTable extends AppTable {
+class InstitutionStudentAbsencesTable extends AppTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
 		'academic_period_id', 'section', 'security_user_id',
@@ -29,7 +29,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			'excludes' => [
 				'start_year',
 				'end_year',
-				'institution_site_id',
+				'institution_id',
 				'security_user_id',
 				'full_day', 
 				'start_date', 
@@ -44,7 +44,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
-			->where([$this->aliasField('institution_site_id') => $institutionId])
+			->where([$this->aliasField('institution_id') => $institutionId])
 			->select(['openemis_no' => 'Users.openemis_no']);
 	}
 
@@ -59,13 +59,13 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			'label' => ''
 		];
 		$newArray[] = [
-			'key' => 'InstitutionSiteStudentAbsences.security_user_id',
+			'key' => 'InstitutionStudentAbsences.security_user_id',
 			'field' => 'security_user_id',
 			'type' => 'integer',
 			'label' => ''
 		];
 		$newArray[] = [
-			'key' => 'InstitutionSiteStudentAbsences.absences',
+			'key' => 'InstitutionStudentAbsences.absences',
 			'field' => 'absences',
 			'type' => 'string',
 			'label' => __('Absences')
@@ -229,12 +229,12 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$studentId = $entity->security_user_id;
-		$institutionId = $entity->institution_site_id;
+		$institutionId = $entity->institution_id;
 		if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$process = function ($model, $entity) {
 				return false;
 			};
-			$this->Alert->error('InstitutionSiteStudentAbsences.notEnrolled');
+			$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
 			return $process;
 		}
 	}
@@ -421,8 +421,8 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$Sections = TableRegistry::get('Institution.InstitutionSections');
+		$Students = TableRegistry::get('Institution.InstitutionSectionStudents');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
@@ -434,7 +434,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 				return $Sections
 					->find()
 					->where([
-						$Sections->aliasField('institution_site_id') => $institutionId,
+						$Sections->aliasField('institution_id') => $institutionId,
 						$Sections->aliasField('academic_period_id') => $id
 					])
 					->count();
@@ -449,7 +449,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			->find('list')
 			->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 			->where([
-				$Sections->aliasField('institution_site_id') => $institutionId,
+				$Sections->aliasField('institution_id') => $institutionId,
 				$Sections->aliasField('academic_period_id') => $selectedPeriod
 			])
 			->order([$Sections->aliasField('section_number') => 'ASC'])
@@ -461,7 +461,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 				return $Students
 					->find()
 					->where([
-						$Students->aliasField('institution_site_section_id') => $id
+						$Students->aliasField('institution_section_id') => $id
 					])
 					->count();
 			}
@@ -469,11 +469,11 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 		// End
 		
 		// Student
-		$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		$Students = TableRegistry::get('Institution.InstitutionSectionStudents');
 		$studentOptions = $Students
 			->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 			->where([
-				$Students->aliasField('institution_site_section_id') => $selectedSection
+				$Students->aliasField('institution_section_id') => $selectedSection
 			])
 			->contain(['Users'])
 			->toArray();

@@ -10,7 +10,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionSiteBankAccountsTable extends AppTable {
+class InstitutionBankAccountsTable extends AppTable {
 	use OptionsTrait;
 	private $_selectedBankId = 1;
 	private $_bankOptions = [];
@@ -24,7 +24,7 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
 	
 	}

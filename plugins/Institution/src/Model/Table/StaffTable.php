@@ -146,7 +146,7 @@ class StaffTable extends AppTable {
 			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
-					->findByInstitutionSiteId($institutionId)
+					->findByInstitutionId($institutionId)
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -254,7 +254,7 @@ class StaffTable extends AppTable {
 					]);
 		}
 		if ($count->count() > 0) {
-			$this->Alert->error('Institution.InstitutionSiteStaff.staffExistWithinPeriod');
+			$this->Alert->error('Institution.InstitutionStaff.staffExistWithinPeriod');
 			$urlParams = $this->ControllerAction->url('edit');
 			$event->stopPropagation();
 			return $this->controller->redirect($urlParams);
@@ -339,7 +339,7 @@ class StaffTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$positionOptions = $this->Positions
@@ -481,7 +481,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('security_user_id');
 		
 		if ($this->action == 'index') {
-			$institutionSiteArray = [];
+			$InstitutionArray = [];
 			
 
 			$session = $this->Session;
@@ -503,13 +503,13 @@ class StaffTable extends AppTable {
 				$conditions = array_merge($conditions, ['institution_position_id' => $positionId])	;
 			}
 			// Get Gender
-			$institutionSiteArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
+			$InstitutionArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
 				['conditions' => $conditions, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
 			// Revisit here in awhile
-			$institutionSiteArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
+			$InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
 				['conditions' => $conditions, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
@@ -519,7 +519,7 @@ class StaffTable extends AppTable {
 	            'data' => [
 	            	'model' => 'staff',
 	            	'modelCount' => $staffCount->count(['security_user_id']),
-	            	'modelArray' => $institutionSiteArray,
+	            	'modelArray' => $InstitutionArray,
 	            ],
 	            'options' => [],
 	            'order' => 1
@@ -570,7 +570,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		// note that $this->table('institution_site_staff');
+		// note that $this->table('institution_staff');
 		$id = $entity->id;
 		$institutionId = $entity->institution_id;
 		$securityUserId = $entity->security_user_id;
@@ -580,9 +580,9 @@ class StaffTable extends AppTable {
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
 
-		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
-		$sectionsInPosition = $InstitutionSiteSections->find()
+		$sectionsInPosition = $InstitutionSections->find()
 			->where(
 				['security_user_id' => $securityUserId, 'institution_id' => $institutionId]
 			)
@@ -605,7 +605,7 @@ class StaffTable extends AppTable {
 			$sectionArray[] = $value->id;
 		}
 		if (!empty($sectionArray)) {
-			$InstitutionSiteSections->updateAll(
+			$InstitutionSections->updateAll(
 				['security_user_id' => 0],
 				['id IN ' => $sectionArray]
 			);
@@ -613,8 +613,8 @@ class StaffTable extends AppTable {
 
 		// delete the staff from subjects		
 		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
-		$InstitutionSiteClasses = TableRegistry::get('Institution.InstitutionSiteClasses');	
-		$classesDuringStaffPeriod = $InstitutionSiteClasses->find()
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');	
+		$classesDuringStaffPeriod = $InstitutionClasses->find()
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -633,16 +633,16 @@ class StaffTable extends AppTable {
 			$classIdsDuringStaffPeriod[] = $value->id;
 		}
 
-		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 
-		$targetData = $InstitutionSiteClassStaff->find()
-			->where([$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
-			$InstitutionSiteClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
+		$targetData = $InstitutionClassStaff->find()
+			->where([$InstitutionClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
 			;
 
-		$InstitutionSiteClassStaff->deleteAll([
-			$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
-			$InstitutionSiteClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		$InstitutionClassStaff->deleteAll([
+			$InstitutionClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
 		]);
 
 
@@ -704,11 +704,11 @@ class StaffTable extends AppTable {
 				$_conditions[$this->alias().'.'.$key] = $value;
 			}
 
-			$institutionSiteRecords = $this->find();
-			$institutionSiteStaffCount = $institutionSiteRecords
+			$InstitutionRecords = $this->find();
+			$InstitutionStaffCount = $InstitutionRecords
 				->contain(['Users', 'Users.Genders'])
 				->select([
-					'count' => $institutionSiteRecords->func()->count('DISTINCT security_user_id'),	
+					'count' => $InstitutionRecords->func()->count('DISTINCT security_user_id'),	
 					'gender' => 'Genders.name'
 				])
 				->where($_conditions)
@@ -716,7 +716,7 @@ class StaffTable extends AppTable {
 
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionSiteStaffCount->toArray() as $value) {
+			foreach ($InstitutionStaffCount->toArray() as $value) {
 	            //Compile the dataset
 				$dataSet[] = [__($value['gender']), $value['count']];
 			}

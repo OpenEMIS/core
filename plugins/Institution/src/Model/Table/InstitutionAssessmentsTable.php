@@ -42,12 +42,12 @@ class InstitutionAssessmentsTable extends AppTable {
 	private $baseUrl = null;
 
 	public function initialize(array $config) {
-		$this->table('institution_site_assessments');
+		$this->table('institution_assessments');
 		parent::initialize($config);
 		
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
@@ -211,13 +211,13 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->Classes = TableRegistry::get('Institution.InstitutionSiteSections');
-		$this->ClassGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
-		$this->ClassSubjects = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
+		$this->Classes = TableRegistry::get('Institution.InstitutionSections');
+		$this->ClassGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
+		$this->ClassSubjects = TableRegistry::get('Institution.InstitutionSectionClasses');
 
-		$this->Subjects = TableRegistry::get('Institution.InstitutionSiteClasses');
-		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
-		$this->SubjectStudents = TableRegistry::get('Institution.InstitutionSiteClassStudents');
+		$this->Subjects = TableRegistry::get('Institution.InstitutionClasses');
+		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionClassStaff');
+		$this->SubjectStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 
 		$this->AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$this->AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -312,7 +312,7 @@ class InstitutionAssessmentsTable extends AppTable {
 			$errors = $entity->errors();
 
 			if (empty($errors)) {
-				$institutionId = $data[$InstitutionAssessments->alias()]['institution_site_id'];
+				$institutionId = $data[$InstitutionAssessments->alias()]['institution_id'];
 				$periodId = $data[$InstitutionAssessments->alias()]['academic_period_id'];
 
 				$students = [];
@@ -417,7 +417,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 				$Results = TableRegistry::get('Assessment.AssessmentItemResults');
 				$Results->deleteAll([
-					$Results->aliasField('institution_id') => $assessmentRecord->institution_site_id,
+					$Results->aliasField('institution_id') => $assessmentRecord->institution_id,
 					$Results->aliasField('academic_period_id') => $assessmentRecord->academic_period_id,
 					$Results->aliasField('assessment_item_id IN') => $itemIds
 				]);
@@ -508,7 +508,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		$classOptions = [];
 		$_conditions = [
-			$this->Classes->aliasField('institution_site_id') => $institutionId,
+			$this->Classes->aliasField('institution_id') => $institutionId,
 			$this->Classes->aliasField('academic_period_id') => $selectedPeriod
 		];
 
@@ -517,20 +517,20 @@ class InstitutionAssessmentsTable extends AppTable {
 			->innerJoin(
 				[$this->ClassGrades->alias() => $this->ClassGrades->table()],
 				[
-					$this->ClassGrades->aliasField('institution_site_section_id = ') . $this->Classes->aliasField('id'),
+					$this->ClassGrades->aliasField('institution_section_id = ') . $this->Classes->aliasField('id'),
 					$this->ClassGrades->aliasField('education_grade_id') => $selectedGrade
 				]
 			)
 			->innerJoin(
 				[$this->ClassSubjects->alias() => $this->ClassSubjects->table()],
 				[
-					$this->ClassSubjects->aliasField('institution_site_section_id = ') . $this->Classes->aliasField('id')
+					$this->ClassSubjects->aliasField('institution_section_id = ') . $this->Classes->aliasField('id')
 				]
 			)
 			->innerJoin(
 				[$this->Subjects->alias() => $this->Subjects->table()],
 				[
-					$this->Subjects->aliasField('id = ') . $this->ClassSubjects->aliasField('institution_site_class_id'),
+					$this->Subjects->aliasField('id = ') . $this->ClassSubjects->aliasField('institution_class_id'),
 					$this->Subjects->aliasField('education_subject_id IN') => $this->educationSubjectIds
 				]
 			)
@@ -554,7 +554,7 @@ class InstitutionAssessmentsTable extends AppTable {
 				$query->innerJoin(
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
-						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+						$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
@@ -573,7 +573,7 @@ class InstitutionAssessmentsTable extends AppTable {
 				$query->innerJoin(
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
-						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+						$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
@@ -618,12 +618,12 @@ class InstitutionAssessmentsTable extends AppTable {
 			->innerJoin(
 				[$this->ClassSubjects->alias() => $this->ClassSubjects->table()],
 				[
-					$this->ClassSubjects->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
-					$this->ClassSubjects->aliasField('institution_site_section_id') => $selectedClass
+					$this->ClassSubjects->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
+					$this->ClassSubjects->aliasField('institution_section_id') => $selectedClass
 				]
 			)
 			->where([
-				$this->Subjects->aliasField('institution_site_id') => $institutionId,
+				$this->Subjects->aliasField('institution_id') => $institutionId,
 				$this->Subjects->aliasField('academic_period_id') => $selectedPeriod,
 				$this->Subjects->aliasField('education_subject_id IN') => $this->educationSubjectIds
 			]);
@@ -638,7 +638,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					$query->innerJoin(
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 						[
-							$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+							$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 							$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
 							$this->SubjectStaff->aliasField('status') => 1
 						]
@@ -656,7 +656,7 @@ class InstitutionAssessmentsTable extends AppTable {
 				$query->innerJoin(
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
-						$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+						$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
@@ -680,7 +680,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					return $SubjectStudents
 						->find()
 						->where([
-							$SubjectStudents->aliasField('institution_site_class_id') => $id,
+							$SubjectStudents->aliasField('institution_class_id') => $id,
 							$SubjectStudents->aliasField('status') => 1
 						])
 						->count();
@@ -766,7 +766,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					]
 				)
 				->where([
-					$this->SubjectStudents->aliasField('institution_site_class_id') => $selectedSubject,
+					$this->SubjectStudents->aliasField('institution_class_id') => $selectedSubject,
 					$this->SubjectStudents->aliasField('status') => 1
 				])
 				->autoFields(true);
@@ -958,7 +958,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		// Update all New Assessment to Expired by Institution Id
 		$this->updateAll(['status' => self::EXPIRED],
 			[
-				'institution_site_id' => $institutionId,
+				'institution_id' => $institutionId,
 				'status' => self::NEW_STATUS
 			]
 		);
@@ -995,7 +995,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						->find()
 						->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
 						->where([
-							$Grades->aliasField('institution_site_id') => $institutionId,
+							$Grades->aliasField('institution_id') => $institutionId,
 							$Grades->aliasField('education_grade_id') => $gradeId
 						])
 						->all();
@@ -1005,7 +1005,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						$results = $this
 							->find()
 							->where([
-								$this->aliasField('institution_site_id') => $institutionId,
+								$this->aliasField('institution_id') => $institutionId,
 								$this->aliasField('academic_period_id') => $academicPeriodId,
 								$this->aliasField('assessment_id') => $assessmentId
 							])
@@ -1014,7 +1014,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						if ($results->isEmpty()) {
 							// Insert New Assessment if not found
 							$data = [
-								'institution_site_id' => $institutionId,
+								'institution_id' => $institutionId,
 								'academic_period_id' => $academicPeriodId,
 								'assessment_id' => $assessmentId
 							];
@@ -1030,7 +1030,7 @@ class InstitutionAssessmentsTable extends AppTable {
 							// Update Expired Assessment back to New
 							$this->updateAll(['status' => self::NEW_STATUS],
 								[
-									'institution_site_id' => $institutionId,
+									'institution_id' => $institutionId,
 									'academic_period_id' => $academicPeriodId,
 									'assessment_id' => $assessmentId,
 									'status' => self::EXPIRED

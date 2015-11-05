@@ -54,7 +54,7 @@ class UserBehavior extends Behavior {
 
 		switch ($this->_table->table()) {
 			case 'institution_students':
-			case 'institution_site_staff':
+			case 'institution_staff':
 				break;
 			default:
 				$this->_table->fields['username']['visible'] = false;
