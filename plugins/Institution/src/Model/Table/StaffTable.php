@@ -342,11 +342,32 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			// excluding positions where 'InstitutionSiteStaff.end_date is NULL'
+			$excludePositions = $this->Positions->find('list');
+			$excludePositions->matching('InstitutionSiteStaff', function ($q) {
+					return $q->where(['InstitutionSiteStaff.end_date is NULL']);
+				});
+			$excludePositions->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
+			$positionConditions = [];
+			$positionConditions[$this->Positions->aliasField('institution_site_id')] = $institutionId;
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
+			}
+
 			$positionOptions = $this->Positions
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->contain(['StaffPositionTitles'])
-			->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+			->where($positionConditions)
 			->toArray();
+
 			$attr['options'] = $positionOptions;
 		}
 		return $attr;
