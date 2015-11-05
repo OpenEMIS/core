@@ -346,7 +346,7 @@ class StaffTable extends AppTable {
 			// excluding positions where 'InstitutionSiteStaff.end_date is NULL'
 			$excludePositions = $this->Positions->find('list');
 			$excludePositions->matching('InstitutionSiteStaff', function ($q) {
-					return $q->where(['InstitutionSiteStaff.end_date is NULL']);
+					return $q->where(['InstitutionSiteStaff.end_date is NULL', 'InstitutionSiteStaff.FTE' => 1]);
 				});
 			$excludePositions->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
 				->toArray()
