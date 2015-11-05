@@ -23,9 +23,29 @@ CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT ''
 ALTER TABLE `institution_custom_table_cells` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ;
 
--- db_patches
-DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
-
 -- institution_site_activities
 ALTER TABLE `institution_activities` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_site_activities` ;
+
+-- institution_attachments
+ALTER TABLE `institution_attachments` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_site_attachments` ;
+
+CREATE TABLE `institution_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(250) NOT NULL,
+  `description` varchar(250) NOT NULL,
+  `file_name` varchar(250) NOT NULL,
+  `file_content` longblob NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `institution_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
