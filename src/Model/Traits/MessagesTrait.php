@@ -818,6 +818,9 @@ trait MessagesTrait {
 			'TrainingNeeds' => [
 				'course_code' => [
 					'ruleUnique' => 'This code already exists in the system'
+				],
+				'course_id' => [
+					'ruleUnique' => 'This code already exists in the system'
 				]
 			],
 			'Achievements' => [
