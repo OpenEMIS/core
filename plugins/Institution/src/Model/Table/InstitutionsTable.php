@@ -61,8 +61,8 @@ class InstitutionsTable extends AppTable  {
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
-			'joinTable' => 'security_group_institution_sites',
-			'foreignKey' => 'institution_site_id', 
+			'joinTable' => 'security_group_institutions',
+			'foreignKey' => 'institution_id', 
 			'targetForeignKey' => 'security_group_id',
 			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
@@ -76,9 +76,9 @@ class InstitutionsTable extends AppTable  {
 			'filterKey' => 'institution_custom_filter_id',
 			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
 			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-			'recordKey' => 'institution_site_id',
-			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'institution_id',
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institution.Institutions.id']);
@@ -88,7 +88,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
-        $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
+        $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
 
 	}
@@ -171,13 +171,13 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('created', ['visible' => false]);
 		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 
-		$this->ControllerAction->field('institution_site_type_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_locality_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_ownership_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_status_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_locality_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_status_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_sector_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 
@@ -204,7 +204,7 @@ class InstitutionsTable extends AppTable  {
 				// add the relationship of security group and institutions
 				$securityInstitution = $SecurityInstitutions->newEntity([
 					'security_group_id' => $securityGroup->id, 
-					'institution_site_id' => $entity->id
+					'institution_id' => $entity->id
 				]);
 				$SecurityInstitutions->save($securityInstitution);
 
@@ -260,13 +260,13 @@ class InstitutionsTable extends AppTable  {
 			}
 
 			$models = [
-				['Types', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
-				['Sectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
-				['Localities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
+				['Types', 'institution_type_id', 'Type', 'conditions' => $conditions],
+				['Sectors', 'institution_sector_id', 'Sector', 'conditions' => $conditions],
+				['Localities', 'institution_locality_id', 'Locality', 'conditions' => $conditions],
 			];
 
 			foreach ($models as $key => $model) {
-				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
+				$institutionSiteArray[$key] = $this->getDonutChart('institutions', $model);
 			}
 
 			$indexDashboard = 'dashboard';
@@ -333,11 +333,11 @@ class InstitutionsTable extends AppTable  {
 		$this->Session->delete('Institutions.id');
 
 		$this->ControllerAction->setFieldOrder([
-			'code', 'name', 'area_id', 'institution_site_type_id'
+			'code', 'name', 'area_id', 'institution_type_id'
 		]);
 
 		$this->ControllerAction->setFieldVisible(['index'], [
-			'code', 'name', 'area_id', 'institution_site_type_id'
+			'code', 'name', 'area_id', 'institution_type_id'
 		]);
 	}
 
@@ -433,11 +433,11 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
-			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
+			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
+			'institution_ownership_id', 'institution_gender_id', 'institution_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
-			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
+			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
 			'area_id', 'area_administrative_id',
@@ -460,11 +460,11 @@ class InstitutionsTable extends AppTable  {
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
-			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
+			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
+			'institution_ownership_id', 'institution_gender_id', 'institution_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
-			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
+			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
 			'area_id', 'area_administrative_id',

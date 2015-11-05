@@ -12,3 +12,16 @@ CHANGE COLUMN `institution_site_sector_id` `institution_sector_id` INT(11) NOT N
 CHANGE COLUMN `institution_site_provider_id` `institution_provider_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_gender_id` `institution_gender_id` INT(5) NOT NULL COMMENT '' , 
 RENAME TO  `institutions` ;
+
+-- security_group_institutions
+ALTER TABLE `security_group_institution_sites` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `security_group_institutions` ;
+
+-- institution_custom_field_values
+ALTER TABLE `institution_custom_field_values` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ;
+
+-- institution_custom_table_cells
+ALTER TABLE `institution_custom_table_cells` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ;
