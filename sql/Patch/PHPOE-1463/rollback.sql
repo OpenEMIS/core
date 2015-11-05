@@ -25,11 +25,12 @@ CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT ''
 
 -- institution_site_activities
 ALTER TABLE `institution_activities` 
-CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_site_activities` ;
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_site_activities` ;
 
 -- institution_attachments
 ALTER TABLE `institution_attachments` 
-CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_attachments` ;
 
 CREATE TABLE `institution_attachments` (
@@ -46,6 +47,10 @@ CREATE TABLE `institution_attachments` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- institution_positions
+ALTER TABLE `institution_positions` 
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_site_positions` ;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
