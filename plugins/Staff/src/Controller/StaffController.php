@@ -45,6 +45,8 @@ class StaffController extends AppController {
 			'Achievements'		=> ['className' => 'Staff.Achievements']
 		];
 
+		$this->loadComponent('Training.Training');
+
 		$this->set('contentHeader', 'Staff');
 	}
 

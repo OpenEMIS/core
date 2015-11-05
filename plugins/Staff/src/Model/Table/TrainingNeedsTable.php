@@ -156,8 +156,7 @@ class TrainingNeedsTable extends AppTable {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
 			if ($selectedType == self::CATALOGUE) {
-				// $courseOptions = $this->Courses->getCourseList();
-				$courseOptions = $this->Courses->getList()->toArray();
+				$courseOptions = $this->Training->getCourseList();
 				$selectedCourse = $this->queryString('course', $courseOptions);
 				if (!is_null($selectedCourse)) {
 					$this->course = $this->Courses
