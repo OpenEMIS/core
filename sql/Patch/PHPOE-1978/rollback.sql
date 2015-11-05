@@ -1,6 +1,5 @@
 -- Drop New tables
 DROP TABLE IF EXISTS `staff_training_needs`;
-DROP TABLE IF EXISTS `staff_training_self_studies`;
 
 -- Restore Admin - training tables
 RENAME TABLE `z_1978_staff_training_needs` TO `staff_training_needs`;
