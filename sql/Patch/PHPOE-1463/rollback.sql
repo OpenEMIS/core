@@ -52,5 +52,11 @@ CREATE TABLE `institution_attachments` (
 ALTER TABLE `institution_positions` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_site_positions` ;
 
+-- institution_site_staff
+ALTER TABLE `institution_staff` 
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_position_id` `institution_site_position_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_site_staff` ;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';

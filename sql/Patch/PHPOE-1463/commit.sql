@@ -40,4 +40,60 @@ RENAME TO  `institution_attachments` ;
 
 -- institution_positions
 ALTER TABLE `institution_site_positions` 
-CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_positions` ;
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_positions` ;
+
+-- institution_staff
+ALTER TABLE `institution_site_staff` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_position_id` `institution_position_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_staff` ;
+
+-- institution_classes
+ALTER TABLE `institution_site_classes` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO `institution_classes` ;
+
+-- institution_class_staff
+ALTER TABLE `institution_site_class_staff` 
+CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_class_staff` ;
+
+-- institution_class_student
+ALTER TABLE `institution_site_class_students` 
+CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_class_students` ;
+
+-- institution_section
+ALTER TABLE `institution_site_sections` 
+CHANGE COLUMN `institution_site_shift_id` `institution_shift_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_sections` ;
+
+-- institution_section_students
+ALTER TABLE `institution_site_section_students` 
+CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_section_students` ;
+
+-- institution_section_grades
+ALTER TABLE `institution_site_section_grades` 
+CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_section_grades` ;
+
+-- institution_section_classes
+ALTER TABLE `institution_site_section_classes` 
+CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_section_classes` ;
+
+-- institution_shifts
+ALTER TABLE `institution_site_shifts` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `location_institution_site_id` `location_institution_id` INT(11) NULL DEFAULT NULL COMMENT '' , 
+RENAME TO  `institution_shifts` ;
+
+-- institution_grades
+ALTER TABLE `institution_site_grades` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_grades` ;
