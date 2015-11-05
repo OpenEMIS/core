@@ -20,7 +20,7 @@ class InstitutionsController extends AppController  {
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
-			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
+			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions', 'options' => ['deleteStrategy' => 'transfer']],
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
