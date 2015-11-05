@@ -18,3 +18,8 @@ v3.2.10
 - Fixed a bug that caused survey template not able to be downloaded on mobile
 - Improved performance when loading students/staff list
 - Survey Report status is now configurable via Administration -> Workflows -> Statuses
+
+v3.3.1
+- Profession Development Tracking is now available under Administrations -> Trainings
+- Fixed a bug on Survey type - Student List
+- Fixed a bug on Staff Attendance edit page
