@@ -167,7 +167,7 @@ class InstitutionSectionsTable extends AppTable {
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
+				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);

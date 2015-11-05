@@ -156,7 +156,7 @@ class StudentPromotionTable extends AppTable {
 					'callable' => function($id) use ($Grades, $institutionId) {
 						return $Grades
 							->find()
-							->where([$Grades->aliasField('institution_site_id') => $institutionId])
+							->where([$Grades->aliasField('institution_id') => $institutionId])
 							->find('academicPeriod', ['academic_period_id' => $id])
 							->count();
 					}
@@ -169,7 +169,7 @@ class StudentPromotionTable extends AppTable {
 			$this->gradeOptions = $Grades
 				->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 				->contain(['EducationGrades'])
-				->where([$Grades->aliasField('institution_site_id') => $institutionId])
+				->where([$Grades->aliasField('institution_id') => $institutionId])
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->toArray();
 			$selectedGrade = $this->queryString('grade', $this->gradeOptions);
@@ -308,7 +308,7 @@ class StudentPromotionTable extends AppTable {
 				$this->nextPeriodGradeOptions = $Grades
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 					->contain(['EducationGrades'])
-					->where([$Grades->aliasField('institution_site_id') => $institutionId])
+					->where([$Grades->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $nextAcademicPeriodId])
 					->toArray();
 			} else {

@@ -24,7 +24,7 @@ class StaffUserTable extends UserTable {
 			$positionData = $this->Session->read($sessionKey);
 			$positionData['security_user_id'] = $entity->id;
 			$role = $positionData['role'];
-			$institutionId = $positionData['institution_site_id'];
+			$institutionId = $positionData['institution_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
 			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
@@ -42,7 +42,7 @@ class StaffUserTable extends UserTable {
 				}
 			} else {
 				$errors = $staffEntity->errors();
-				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
+				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
 					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
 				} else {
 					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);

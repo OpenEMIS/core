@@ -19,7 +19,7 @@ class StaffAbsencesTable extends AppTable {
 	];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_staff_absences');
+		$this->table('institution_staff_absences');
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
 		
@@ -30,7 +30,7 @@ class StaffAbsencesTable extends AppTable {
 			'excludes' => [
 				'start_year',
 				'end_year',
-				'institution_site_id',
+				'institution_id',
 				'security_user_id',
 				'full_day', 
 				'start_date', 
@@ -65,7 +65,7 @@ class StaffAbsencesTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
-			->where([$this->aliasField('institution_site_id') => $institutionId])
+			->where([$this->aliasField('institution_id') => $institutionId])
 			->select(['openemis_no' => 'Users.openemis_no']);
 	}
 
@@ -319,13 +319,13 @@ class StaffAbsencesTable extends AppTable {
 		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
 
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$Staff = TableRegistry::get('Institution.InstitutionStaff');
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
 					->find()
-					->where([$Staff->aliasField('institution_site_id') => $institutionId])
+					->where([$Staff->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -422,7 +422,7 @@ class StaffAbsencesTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$Staff = TableRegistry::get('Institution.InstitutionStaff');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
@@ -434,7 +434,7 @@ class StaffAbsencesTable extends AppTable {
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
 					->find()
-					->where([$Staff->aliasField('institution_site_id') => $institutionId])
+					->where([$Staff->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -446,7 +446,7 @@ class StaffAbsencesTable extends AppTable {
 		// Staff
 		$staffOptions = $Staff
 			->find()
-			->where([$Staff->aliasField('institution_site_id') => $institutionId])
+			->where([$Staff->aliasField('institution_id') => $institutionId])
 			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 			->contain(['Users'])
 			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])

@@ -55,7 +55,7 @@ class LicensesTable extends AppTable {
 				'license' => 'LicenseTypes.name',
 				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
 			])
-			->innerJoin(['InstitutionStaff' => 'institution_site_staff'],
+			->innerJoin(['InstitutionStaff' => 'institution_staff'],
 				$innerJoinArray
 			)
 			->group('license')

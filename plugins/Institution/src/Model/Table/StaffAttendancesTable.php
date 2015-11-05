@@ -24,14 +24,14 @@ class StaffAttendancesTable extends AppTable {
 	private $_absenceData = [];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_staff');
+		$this->table('institution_staff');
 		$config['Modified'] = false;
 		$config['Created'] = false;
 		parent::initialize($config);
 
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
-		$this->belongsTo('InstitutionSitePositions', ['className' => 'Institution.InstitutionSitePositions']);
+		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('AcademicPeriod.Period');
@@ -44,8 +44,8 @@ class StaffAttendancesTable extends AppTable {
 				'FTE',
 				'staff_type_id',
 				'staff_status_id',
-				'institution_site_id',
-				'institution_site_position_id'
+				'institution_id',
+				'institution_position_id'
 			],
 			'pages' => ['index']
 		]);
@@ -61,7 +61,7 @@ class StaffAttendancesTable extends AppTable {
 		$academicPeriodId = $this->request->query['academic_period_id'];
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
-			->where([$this->aliasField('institution_site_id') => $institutionId])
+			->where([$this->aliasField('institution_id') => $institutionId])
 			->distinct([$this->aliasField('security_user_id')])
 			->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
 	}
@@ -160,7 +160,7 @@ class StaffAttendancesTable extends AppTable {
 		$absenceData = $StaffAbsencesTable->find('all')
 				->contain(['StaffAbsenceReasons'])
 				->where([
-					$StaffAbsencesTable->aliasField('institution_site_id') => $institutionId,
+					$StaffAbsencesTable->aliasField('institution_id') => $institutionId,
 					$StaffAbsencesTable->aliasField('start_date').' >= ' => $monthStartDay,
 					$StaffAbsencesTable->aliasField('end_date').' <= ' => $monthEndDay,
 				])
@@ -224,7 +224,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->ControllerAction->field('end_year', ['visible' => false]);
 		$this->ControllerAction->field('staff_type_id', ['visible' => false]);
 		$this->ControllerAction->field('staff_status_id', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_position_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_position_id', ['visible' => false]);
 	}
 
 	// Event: ControllerAction.Model.afterAction
@@ -270,7 +270,7 @@ class StaffAttendancesTable extends AppTable {
 			}			
 
 			$html .= $Form->input($fieldPrefix.".absence_type", $options);
-			$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
+			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
 
 			$selectedDate = $this->selectedDate->format('d-m-Y');
@@ -450,7 +450,7 @@ class StaffAttendancesTable extends AppTable {
 			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
-					->findByInstitutionSiteId($institutionId)
+					->findByInstitutionId($institutionId)
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -555,7 +555,7 @@ class StaffAttendancesTable extends AppTable {
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
-				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->where([$this->aliasField('institution_id') => $institutionId])
 				;
 
 			if ($selectedDay == -1) {
@@ -645,7 +645,7 @@ class StaffAttendancesTable extends AppTable {
     		])
 			->join([
 				[
-					'table' => 'institution_site_staff_absences',
+					'table' => 'institution_staff_absences',
 					'alias' => 'StaffAbsences',
 					'type' => 'LEFT',
 					'conditions' => $conditions
