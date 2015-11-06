@@ -58,9 +58,9 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
     	$events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
     	$events['Workflow.getEvents'] = 'getWorkflowEvents';
-    	$events['Workflow.afterTransition'] = 'workflowAfterTransition';
     	foreach ($this->workflowEvents as $event) {
     		$events[$event['value']] = $event['method'];
     	}
@@ -116,8 +116,6 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-    	$this->updateStatusId($entity);
-
     	// add this checking to avoid error when download from mobile
     	if (isset($this->ControllerAction)) {
 			$currentAction = $this->ControllerAction->action();
@@ -149,10 +147,6 @@ class InstitutionSurveysTable extends AppTable {
 
     	return $this->workflowEvents;
     }
-
-    public function onGetStatusId(Event $event, Entity $entity) {
-		return '<span class="status highlight">' . $entity->status->name . '</span>';
-	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
 		$surveyFormId = $entity->survey_form->id;
@@ -225,7 +219,7 @@ class InstitutionSurveysTable extends AppTable {
 		}
 
 		$this->ControllerAction->field('description');
-		$fieldOrder = ['status_id', 'survey_form_id', 'description', 'academic_period_id'];
+		$fieldOrder = ['survey_form_id', 'description', 'academic_period_id'];
 		$selectedStatus = $this->ControllerAction->getVar('selectedStatus');
 
 		if (is_null($selectedStatus) || $selectedStatus == -1) {
@@ -258,7 +252,6 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->field('status_id');
 		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->field('survey_form_id');
 	}
@@ -275,15 +268,26 @@ class InstitutionSurveysTable extends AppTable {
 		]);
 	}
 
-	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
-		if ($action == 'view') {
-			$attr['type'] = 'hidden';
-		} else if ($action == 'edit') {
-			$statusOptions = $this->getWorkflowStepList();
-			$statusId = $attr['attr']['value'];
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $statusOptions[$statusId];
+		// For Institution Survey, delete button will be disabled regardless settings in Workflow
+		if (array_key_exists('remove', $buttons)) {
+			unset($buttons['remove']);
+		}
+
+		return $buttons;
+	}
+
+	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit') {
+			$statusOptions = $this->getWorkflowStepList();
+			if (isset($attr['attr']['value'])) {
+				$statusId = $attr['attr']['value'];
+
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $statusOptions[$statusId];
+			}
 		}
 
 		return $attr;
@@ -403,23 +407,6 @@ class InstitutionSurveysTable extends AppTable {
 						}
 					}
 				}
-			}
-		}
-	}
-
-	public function workflowAfterTransition(Event $event, $id=null) {
-		$entity = $this->get($id);
-		$this->updateStatusId($entity);
-	}
-
-	public function updateStatusId(Entity $entity) {
-		if($this->hasBehavior('Workflow')) {
-			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-			if (!empty($workflowRecord)) {
-				$this->updateAll(
-					['status_id' => $workflowRecord->workflow_step_id],
-					['id' => $entity->id]
-				);
 			}
 		}
 	}
