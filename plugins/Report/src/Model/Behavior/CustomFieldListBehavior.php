@@ -54,7 +54,9 @@ class CustomFieldListBehavior extends Behavior {
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		if (!(is_null($this->config('moduleKey')))) {
 			$filter = $this->getFilter($this->config('model'));
+			pr($filter);
 			$types = $this->getType($filter);
+			pr($types);die;
 			$filterKey = $this->getFilterKey($filter);
 			if (!empty($types)) {
 				foreach ($types as $key => $name) {

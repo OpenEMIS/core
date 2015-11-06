@@ -11,7 +11,7 @@ class AbsencesTable extends AppTable {
 		$this->table('institution_staff_absences');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
 	}
@@ -28,7 +28,7 @@ class AbsencesTable extends AppTable {
 		$this->fields['start_time']['visible'] = false; //Need to change from start_time_absence to start_time
 		$this->fields['end_time']['visible'] = false; //Need to change from end_time_absence to end_time
 		$this->fields['comment']['visible'] = false;
-		$this->fields['security_user_id']['visible'] = false;
+		$this->fields['staff_id']['visible'] = false;
 
 		$this->ControllerAction->addField('days', []);
 		$this->ControllerAction->addField('time', []);

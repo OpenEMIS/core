@@ -45,6 +45,7 @@ RENAME TO  `institution_positions` ;
 
 -- institution_staff
 ALTER TABLE `institution_site_staff` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_position_id` `institution_position_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_staff` ;
@@ -56,6 +57,7 @@ RENAME TO `institution_classes` ;
 
 -- institution_class_staff
 ALTER TABLE `institution_site_class_staff` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_class_staff` ;
 
@@ -67,6 +69,7 @@ RENAME TO  `institution_class_students` ;
 
 -- institution_section
 ALTER TABLE `institution_site_sections` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_shift_id` `institution_shift_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_sections` ;
@@ -164,6 +167,7 @@ RENAME TO  `z_1463_institution_site_students` ;
 
 -- institution_staff_absences
 ALTER TABLE `institution_site_staff_absences` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_staff_absences` ;
 
@@ -175,3 +179,65 @@ DROP TABLE IF EXISTS institution_site_staff_absence_attachments;
 
 -- institution_site_quality_visit_attachments
 DROP TABLE IF EXISTS institution_site_quality_visit_attachments;
+
+-- staff
+ALTER TABLE `staff` 
+RENAME TO  `z_1463_staff` ;
+
+-- staff_activities
+ALTER TABLE `staff_activities` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_attendances
+DROP TABLE IF EXISTS `staff_attendances`;
+
+-- staff_attendance_types
+DROP TABLE IF EXISTS `staff_attendance_types`;
+
+-- staff_categories
+DROP TABLE IF EXISTS `staff_categories`;
+
+-- staff_custom_field_values
+ALTER TABLE `staff_custom_field_values` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_leaves
+ALTER TABLE `staff_leaves` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_leave_types
+DROP TABLE IF EXISTS `staff_leave_types`;
+
+-- staff_licenses
+ALTER TABLE `staff_licenses` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_memberships
+ALTER TABLE `staff_memberships` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_qualifications
+ALTER TABLE `staff_qualifications` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- custom_modules
+UPDATE `custom_modules` SET `filter`='FieldOption.InstitutionTypes' WHERE `model`='Institution.Institutions';
+
+-- field_options
+UPDATE `field_options` SET `plugin`='FieldOption', `code`='InstitutionTypes' WHERE `plugin`='Institution' AND `code`='Types';
+
+-- staff_employments
+ALTER TABLE `staff_employments` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_extracurriculars
+ALTER TABLE `staff_extracurriculars` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_salaries
+ALTER TABLE `staff_salaries` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_custom_table_cells
+ALTER TABLE `staff_custom_table_cells` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;

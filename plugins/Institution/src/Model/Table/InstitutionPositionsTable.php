@@ -22,7 +22,7 @@ class InstitutionPositionsTable extends AppTable {
 		
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
-		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
 
 		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);

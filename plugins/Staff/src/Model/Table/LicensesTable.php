@@ -9,7 +9,7 @@ class LicensesTable extends AppTable {
 		$this->table('staff_licenses');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
 
 		 $this->addBehavior('HighChart', [
@@ -40,7 +40,7 @@ class LicensesTable extends AppTable {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
 		$innerJoinArray = [
-					'InstitutionStaff.security_user_id = ' . $this->aliasField('security_user_id'),
+					'InstitutionStaff.staff_id = ' . $this->aliasField('staff_id'),
 				];
 		$innerJoinArraySize = count($innerJoinArray);
 		foreach ($conditions as $key => $value) {
@@ -53,7 +53,7 @@ class LicensesTable extends AppTable {
 			->contain(['Users', 'LicenseTypes'])
 			->select([
 				'license' => 'LicenseTypes.name',
-				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
+				'count' => $licenseRecord->func()->count($this->aliasField('staff_id'))
 			])
 			->innerJoin(['InstitutionStaff' => 'institution_staff'],
 				$innerJoinArray
