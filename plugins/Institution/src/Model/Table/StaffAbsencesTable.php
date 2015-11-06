@@ -13,7 +13,7 @@ use App\Model\Traits\OptionsTrait;
 class StaffAbsencesTable extends AppTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
-		'academic_period_id', 'security_user_id',
+		'academic_period_id', 'staff_id',
 		'full_day', 'start_date', 'end_date', 'start_time', 'end_time',
 		'absence_type', 'staff_absence_reason_id'
 	];
@@ -23,7 +23,7 @@ class StaffAbsencesTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
@@ -31,7 +31,7 @@ class StaffAbsencesTable extends AppTable {
 				'start_year',
 				'end_year',
 				'institution_id',
-				'security_user_id',
+				'staff_id',
 				'full_day', 
 				'start_date', 
 				'start_time', 
@@ -79,8 +79,8 @@ class StaffAbsencesTable extends AppTable {
 			'label' => ''
 		];
 		$newArray[] = [
-			'key' => 'StaffAbsences.security_user_id',
-			'field' => 'security_user_id',
+			'key' => 'StaffAbsences.staff_id',
+			'field' => 'staff_id',
 			'type' => 'integer',
 			'label' => ''
 		];
@@ -198,11 +198,11 @@ class StaffAbsencesTable extends AppTable {
 		$this->fields['end_time']['visible'] = false;
 		$this->fields['comment']['visible'] = false;
 
-		$this->_fieldOrder = ['date', 'security_user_id', 'absence_type', 'staff_absence_reason_id'];
+		$this->_fieldOrder = ['date', 'staff_id', 'absence_type', 'staff_absence_reason_id'];
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['staff'] = $entity->security_user_id;
+		$this->request->query['staff'] = $entity->staff_id;
 		$this->request->query['full_day'] = $entity->full_day;
 		$this->request->query['absence_type'] = $entity->staff_absence_reason_id == 0 ? 'UNEXCUSED' : 'EXCUSED';
 	}
@@ -246,7 +246,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', [
 			'options' => $periodOptions
 		]);
-		$this->ControllerAction->field('security_user_id', [
+		$this->ControllerAction->field('staff_id', [
 			'options' => $staffOptions
 		]);
 		$this->ControllerAction->field('full_day', [
@@ -341,7 +341,7 @@ class StaffAbsencesTable extends AppTable {
 		*/
 	}
 
-	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			$Users = TableRegistry::get('User.Users');
 			$selectedStaff = $request->query('staff');
@@ -449,7 +449,7 @@ class StaffAbsencesTable extends AppTable {
 			->where([$Staff->aliasField('institution_id') => $institutionId])
 			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 			->contain(['Users'])
-			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
+			->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
 			->toArray();
 		$selectedStaff = !is_null($this->request->query('staff')) ? $this->request->query('staff') : key($staffOptions);
 		// End

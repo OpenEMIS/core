@@ -19,7 +19,7 @@ class StaffAttendancesTable extends AppTable {
 	private $selectedDate = [];
 	private $typeOptions = [];
 	private $reasonOptions = [];
-	private $_fieldOrder = ['openemis_no', 'security_user_id'];
+	private $_fieldOrder = ['openemis_no', 'staff_id'];
 	private $dataCount = null;
 	private $_absenceData = [];
 
@@ -32,7 +32,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Excel', [
@@ -62,7 +62,7 @@ class StaffAttendancesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
 			->where([$this->aliasField('institution_id') => $institutionId])
-			->distinct([$this->aliasField('security_user_id')])
+			->distinct([$this->aliasField('staff_id')])
 			->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
 	}
 
@@ -140,8 +140,8 @@ class StaffAttendancesTable extends AppTable {
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
 		// get the data from the temporary variable
 		$absenceData = $this->_absenceData;
-		if (isset($absenceData[$entity->security_user_id][$attr['date']])) {
-			$absenceObj = $absenceData[$entity->security_user_id][$attr['date']];
+		if (isset($absenceData[$entity->staff_id][$attr['date']])) {
+			$absenceObj = $absenceData[$entity->staff_id][$attr['date']];
 			if (! $absenceObj['full_day']) {
 				$startTimeAbsent = $absenceObj['start_time'];
 				$endTimeAbsent = $absenceObj['end_time'];
@@ -165,7 +165,7 @@ class StaffAttendancesTable extends AppTable {
 					$StaffAbsencesTable->aliasField('end_date').' <= ' => $monthEndDay,
 				])
 				->select([
-					'security_user_id' => $StaffAbsencesTable->aliasField('security_user_id'),
+					'staff_id' => $StaffAbsencesTable->aliasField('staff_id'),
 					'start_date' => $StaffAbsencesTable->aliasField('start_date'),
 					'end_date' => $StaffAbsencesTable->aliasField('end_date'),
 					'full_day' => $StaffAbsencesTable->aliasField('full_day'),
@@ -176,7 +176,7 @@ class StaffAttendancesTable extends AppTable {
 				->toArray();
 		$absenceCheckList = [];
 		foreach ($absenceData as $absenceUnit) {
-			$staffId = $absenceUnit['security_user_id'];
+			$staffId = $absenceUnit['staff_id'];
 			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
 			$absenceCheckList[$staffId][$indexAbsenceDate] = $absenceUnit;
 
@@ -215,7 +215,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->controller->set('selectedAction', 'Attendance');
 
 		$this->ControllerAction->field('openemis_no');
-		$this->ControllerAction->field('security_user_id', ['order' => 2]);
+		$this->ControllerAction->field('staff_id', ['order' => 2]);
 
 		$this->ControllerAction->field('FTE', ['visible' => false]);
 		$this->ControllerAction->field('start_date', ['visible' => false]);
@@ -252,7 +252,7 @@ class StaffAttendancesTable extends AppTable {
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$id = $entity->security_user_id;
+			$id = $entity->staff_id;
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 			
 			$alias = Inflector::underscore($StaffAbsences->alias());
@@ -271,7 +271,7 @@ class StaffAttendancesTable extends AppTable {
 
 			$html .= $Form->input($fieldPrefix.".absence_type", $options);
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
-			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
+			$html .= $Form->hidden($fieldPrefix.".staff_id", ['value' => $id]);
 
 			$selectedDate = $this->selectedDate->format('d-m-Y');
 			$html .= $Form->hidden($fieldPrefix.".full_day", ['value' => 1]);	//full day
@@ -301,7 +301,7 @@ class StaffAttendancesTable extends AppTable {
 		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
-			$id = $entity->security_user_id;
+			$id = $entity->staff_id;
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 
 			$alias = Inflector::underscore($StaffAbsences->alias());
@@ -581,7 +581,7 @@ class StaffAttendancesTable extends AppTable {
 		} else {
 			$settings['pagination'] = false;
 			$query
-				->where([$this->aliasField('security_user_id') => 0]);
+				->where([$this->aliasField('staff_id') => 0]);
 
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
@@ -597,7 +597,7 @@ class StaffAttendancesTable extends AppTable {
 	public function findWithAbsence(Query $query, array $options) {
 		$date = $options['date'];
 
-		$conditions = ['StaffAbsences.security_user_id = StaffAttendances.security_user_id'];
+		$conditions = ['StaffAbsences.staff_id = StaffAttendances.staff_id'];
 		if (is_array($date)) {
 			$startDate = $date[0]->format('Y-m-d');
 			$endDate = $date[1]->format('Y-m-d');
@@ -636,7 +636,7 @@ class StaffAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('security_user_id'), 
+    			$this->aliasField('staff_id'), 
     			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',

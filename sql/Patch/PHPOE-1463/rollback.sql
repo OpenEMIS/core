@@ -54,6 +54,7 @@ CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT ''
 
 -- institution_site_staff
 ALTER TABLE `institution_staff` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_position_id` `institution_site_position_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_staff` ;
@@ -65,6 +66,7 @@ RENAME TO `institution_site_classes` ;
 
 -- institution_site_class_staff
 ALTER TABLE `institution_class_staff` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_class_staff` ;
 
@@ -76,6 +78,7 @@ RENAME TO  `institution_site_class_students` ;
 
 -- institution_site_section
 ALTER TABLE `institution_sections` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_shift_id` `institution_site_shift_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_sections` ;
@@ -202,6 +205,7 @@ RENAME TO  `institution_site_students` ;
 
 -- institution_site_staff_absences
 ALTER TABLE `institution_staff_absences` 
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_staff_absences` ;
 
@@ -249,6 +253,119 @@ CREATE TABLE `institution_site_quality_visit_attachments` (
   PRIMARY KEY (`id`),
   KEY `institution_site_quality_visit_id` (`institution_site_quality_visit_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- staff
+ALTER TABLE `z_1463_staff` 
+RENAME TO  `staff` ;
+
+-- staff_attendances
+CREATE TABLE `staff_attendances` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `staff_attendance_type_id` int(11) NOT NULL,
+  `academic_period_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `school_year_id` (`academic_period_id`),
+  KEY `institution_site_id` (`institution_site_id`),
+  KEY `security_user_id` (`security_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- staff_activities
+ALTER TABLE `staff_activities` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_attendance_types
+CREATE TABLE `staff_attendance_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `international_code` varchar(10) DEFAULT NULL,
+  `national_code` varchar(10) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- staff_categories
+CREATE TABLE `staff_categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `international_code` varchar(10) DEFAULT NULL,
+  `national_code` varchar(10) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- staff_custom_field_values
+ALTER TABLE `staff_custom_field_values` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_leaves
+ALTER TABLE `staff_leaves` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_leave_types
+CREATE TABLE `staff_leave_types` (
+  `id` int(3) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `international_code` varchar(20) DEFAULT NULL,
+  `national_code` varchar(20) DEFAULT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- staff_licenses
+ALTER TABLE `staff_licenses` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_memberships
+ALTER TABLE `staff_memberships` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_qualifications
+ALTER TABLE `staff_qualifications` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- custom_modules
+UPDATE `custom_modules` SET `filter`='FieldOption.InstitutionSiteTypes' WHERE `model`='Institution.Institutions';
+
+-- field_options
+UPDATE `field_options` SET `plugin`='Institution', `code`='Types' WHERE `plugin`='FieldOption' AND `code`='InstitutionTypes';
+
+-- staff_employments
+ALTER TABLE `staff_employments` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_extracurriculars
+ALTER TABLE `staff_extracurriculars` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_salaries
+ALTER TABLE `staff_salaries` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- staff_custom_table_cells
+ALTER TABLE `staff_custom_table_cells` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
