@@ -12,7 +12,7 @@
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
 					<th><?= $this->Label->get('date.start'); ?></th>
-					<th><?= $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
+					<th><?= $this->Label->get('InstitutionStaff.fte'); ?></th>
 				</tr>
 			</thead>
 	
@@ -51,7 +51,7 @@
 
 			<tfoot>
 				<tr>
-					<td colspan="3" class="side-label"><?php echo $this->Label->get('InstitutionSiteStaff.total_fte'); ?></td>
+					<td colspan="3" class="side-label"><?php echo $this->Label->get('InstitutionStaff.total_fte'); ?></td>
 					<td><?= $attr['totalCurrentFTE'];?></td>
 				</tr>
 			</tfoot>

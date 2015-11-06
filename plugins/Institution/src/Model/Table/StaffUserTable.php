@@ -43,9 +43,9 @@ class StaffUserTable extends UserTable {
 			} else {
 				$errors = $staffEntity->errors();
 				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
-					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
+					$this->Alert->error('Institution.InstitutionStaff.noFTE', ['reset' => true]);
 				} else {
-					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);
+					$this->Alert->error('Institution.InstitutionStaff.error', ['reset' => true]);
 				}
 			}
 			$this->Session->delete($sessionKey);

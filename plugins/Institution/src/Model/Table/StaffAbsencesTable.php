@@ -319,7 +319,7 @@ class StaffAbsencesTable extends AppTable {
 		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
 
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$Staff = TableRegistry::get('Institution.InstitutionStaff');
+		$Staff = TableRegistry::get('Institution.Staff');
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
 			'callable' => function($id) use ($Staff, $institutionId) {
@@ -422,7 +422,7 @@ class StaffAbsencesTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Staff = TableRegistry::get('Institution.InstitutionStaff');
+		$Staff = TableRegistry::get('Institution.Staff');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period

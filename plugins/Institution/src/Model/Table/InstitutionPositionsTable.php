@@ -24,7 +24,7 @@ class InstitutionPositionsTable extends AppTable {
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
-		$this->hasMany('InstitutionStaff', 	['className' => 'Institution.InstitutionStaff']);
+		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
 		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
 	}
@@ -189,7 +189,7 @@ class InstitutionPositionsTable extends AppTable {
 	 * @param  boolean $status        [description]
 	 * @return [type]                 [description]
 	 */
-	public function getInstitutionSitePositionList($institutionId = false, $status = false) {
+	public function getInstitutionPositionList($institutionId = false, $status = false) {
 		$data = $this->find();
 
 		if ($institutionId !== false) {

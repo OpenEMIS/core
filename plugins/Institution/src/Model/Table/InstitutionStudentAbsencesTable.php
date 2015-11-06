@@ -13,7 +13,7 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionStudentAbsencesTable extends AppTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
-		'academic_period_id', 'section', 'security_user_id',
+		'academic_period_id', 'section', 'student_id',
 		'full_day', 'start_date', 'end_date', 'start_time', 'end_time',
 		'absence_type', 'student_absence_reason_id'
 	];
@@ -22,7 +22,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
@@ -30,7 +30,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				'start_year',
 				'end_year',
 				'institution_id',
-				'security_user_id',
+				'student_id',
 				'full_day', 
 				'start_date', 
 				'start_time', 
@@ -59,8 +59,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			'label' => ''
 		];
 		$newArray[] = [
-			'key' => 'InstitutionStudentAbsences.security_user_id',
-			'field' => 'security_user_id',
+			'key' => 'InstitutionStudentAbsences.student_id',
+			'field' => 'student_id',
 			'type' => 'integer',
 			'label' => ''
 		];
@@ -199,11 +199,11 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->fields['end_time']['visible'] = false;
 		$this->fields['comment']['visible'] = false;
 
-		$this->_fieldOrder = ['date', 'security_user_id', 'absence_type', 'student_absence_reason_id'];
+		$this->_fieldOrder = ['date', 'student_id', 'absence_type', 'student_absence_reason_id'];
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['student'] = $entity->security_user_id;
+		$this->request->query['student'] = $entity->student_id;
 		$this->request->query['full_day'] = $entity->full_day;
 		$this->request->query['absence_type'] = $entity->student_absence_reason_id == 0 ? 'UNEXCUSED' : 'EXCUSED';
 	}
@@ -228,7 +228,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$StudentTable = TableRegistry::get('Institution.Students');
-		$studentId = $entity->security_user_id;
+		$studentId = $entity->student_id;
 		$institutionId = $entity->institution_id;
 		if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 			$process = function ($model, $entity) {
@@ -250,7 +250,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->ControllerAction->field('section', [
 			'options' => $sectionOptions
 		]);
-		$this->ControllerAction->field('security_user_id', [
+		$this->ControllerAction->field('student_id', [
 			'options' => $studentOptions
 		]);
 		$this->ControllerAction->field('full_day', [
@@ -309,7 +309,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			$Users = TableRegistry::get('User.Users');
 			$selectedStudent = $request->query('student');

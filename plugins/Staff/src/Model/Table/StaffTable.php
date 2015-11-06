@@ -63,22 +63,22 @@ class StaffTable extends AppTable {
 	public static function handleAssociations($model) {
 		$model->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
-			'joinTable' => 'institution_site_staff', // will need to change to institution_staff
+			'joinTable' => 'institution_staff', // will need to change to institution_staff
 			'foreignKey' => 'security_user_id', // will need to change to staff_id
-			'targetForeignKey' => 'institution_site_id', // will need to change to institution_id
+			'targetForeignKey' => 'institution_id', // will need to change to institution_id
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
 
 		// section should never cascade delete
-		$model->hasMany('InstitutionSiteSections', 		['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'security_user_id']);
+		$model->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 'foreignKey' => 'security_user_id']);
 
 		$model->belongsToMany('Subjects', [
-			'className' => 'Institution.InstitutionSiteClass',
-			'joinTable' => 'institution_site_class_staff',
+			'className' => 'Institution.InstitutionClass',
+			'joinTable' => 'institution_class_staff',
 			'foreignKey' => 'security_user_id',
-			'targetForeignKey' => 'institution_site_class_id',
-			'through' => 'Institution.InstitutionSiteClassStaff',
+			'targetForeignKey' => 'institution_class_id',
+			'through' => 'Institution.InstitutionClassStaff',
 			'dependent' => true
 		]);
 
@@ -116,10 +116,10 @@ class StaffTable extends AppTable {
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$query->innerJoin(
-				['InstitutionStaff' => 'institution_site_staff'],
+				['InstitutionStaff' => 'institution_staff'],
 				[
 					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStaff.institution_site_id IN ' => $institutionIds
+					'InstitutionStaff.institution_id IN ' => $institutionIds
 				]
 			)
 			->group([$this->aliasField('id')]);
@@ -158,8 +158,8 @@ class StaffTable extends AppTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
 			// sections are not to be deleted (cascade delete is not set and need to change id)
-			$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-			$InstitutionSiteSections->updateAll(
+			$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+			$InstitutionSections->updateAll(
 					['security_user_id' => 0],
 					['security_user_id' => $id]
 				);
