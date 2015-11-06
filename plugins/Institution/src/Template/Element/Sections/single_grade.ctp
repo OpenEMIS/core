@@ -10,8 +10,8 @@
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?= $this->Label->get('InstitutionSiteSections.section'); ?></th>
-					<th><?= $this->Label->get('InstitutionSiteSections.security_user_id'); ?></th>
+					<th><?= $this->Label->get('InstitutionSections.section'); ?></th>
+					<th><?= $this->Label->get('InstitutionSections.security_user_id'); ?></th>
 				</tr>
 			</thead>
 			

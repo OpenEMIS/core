@@ -9,6 +9,6 @@ class OwnershipsTable extends AppTable {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
 		
-		$this->hasMany('Institutions', ['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_ownership_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_ownership_id']);
 	}
 }

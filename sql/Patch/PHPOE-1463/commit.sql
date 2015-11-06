@@ -32,7 +32,7 @@ CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT ''
 RENAME TO  `institution_activities` ;
 
 -- institution_attachments
-DROP TABLE `institution_attachments`;
+DROP TABLE IF EXISTS `institution_attachments`;
 
 ALTER TABLE `institution_site_attachments` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
@@ -109,7 +109,8 @@ RENAME TO  `institution_bank_accounts` ;
 
 -- institution_student_absence
 ALTER TABLE `institution_site_student_absences` 
-CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' , 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
 RENAME TO  `institution_student_absences` ;
 
 -- institution_assessments
@@ -151,5 +152,26 @@ ALTER TABLE `institution_site_survey_table_cells`
 CHANGE COLUMN `institution_site_survey_id` `institution_survey_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_survey_table_cells` ;
 
+-- student_attendance
+DROP TABLE IF EXISTS student_attendances;
 
+-- student_attendance_types
+DROP TABLE IF EXISTS student_attendance_types;
 
+-- institution_site_students
+ALTER TABLE `institution_site_students` 
+RENAME TO  `z_1463_institution_site_students` ;
+
+-- institution_staff_absences
+ALTER TABLE `institution_site_staff_absences` 
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_staff_absences` ;
+
+-- institution_site_student_absence_attachments
+DROP TABLE IF EXISTS institution_site_student_absence_attachments;
+
+-- institution_site_staff_absence_attachments
+DROP TABLE IF EXISTS institution_site_staff_absence_attachments;
+
+-- institution_site_quality_visit_attachments
+DROP TABLE IF EXISTS institution_site_quality_visit_attachments;

@@ -435,8 +435,8 @@ class ValidationBehavior extends Behavior {
 		$existingRecords = $Staff->find()
 			->where(
 				[
-					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
-					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
+					$Staff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
+					$Staff->aliasField('institution_id') => $globalData['data']['institution_id'],
 					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
 					'OR' => [
 						[$Staff->aliasField('end_date').' IS NULL'],
@@ -555,10 +555,10 @@ class ValidationBehavior extends Behavior {
 		} else {
 			$endDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
 		}
-		$security_user_id = $globalData['data']['security_user_id'];
-		$institution_site_id = $globalData['data']['institution_site_id'];
+		$student_id = $globalData['data']['student_id'];
+		$institution_id = $globalData['data']['institution_id'];
 
-		// this will assome there will be start date and end date and security_user_id and academic period
+		// this will assome there will be start date and end date and student_id and academic period
 		$overlapDateCondition = [];
 		$overlapDateCondition['OR'] = [
 			'OR' => [
@@ -615,8 +615,8 @@ class ValidationBehavior extends Behavior {
 		// need to check for overlap time
 		$found = $SearchTable->find()
 			->where($overlapDateCondition)
-			->where([$SearchTable->aliasField('security_user_id') => $security_user_id])
-			->where([$SearchTable->aliasField('institution_site_id') => $institution_site_id])
+			->where([$SearchTable->aliasField('student_id') => $student_id])
+			->where([$SearchTable->aliasField('institution_id') => $institution_id])
 			;
 			// ->toArray();
 
@@ -655,7 +655,7 @@ class ValidationBehavior extends Behavior {
 		$identicalPositionHolders = $InstitutionStaff->find()
 			->where(
 				[
-					$InstitutionStaff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id']
+					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
 					
 				]
 			)

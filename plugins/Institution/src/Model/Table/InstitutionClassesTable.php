@@ -125,7 +125,7 @@ class InstitutionClassesTable extends AppTable {
 
 		$this->_academicPeriodOptions = $this->getAcademicPeriodOptions();
 		if (empty($this->_academicPeriodOptions)) {
-			$this->Alert->warning('InstitutionSiteClasses.noPeriods');
+			$this->Alert->warning('InstitutionClasses.noPeriods');
 		}
 
 		if (empty($this->request->query['academic_period_id'])) {
@@ -333,7 +333,7 @@ class InstitutionClassesTable extends AppTable {
 		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 			'callable' => function($id) use ($SectionGrades) {
-				return $SectionGrades->findByInstitutionSiteSectionId($id)->count();
+				return $SectionGrades->findByInstitutionSectionId($id)->count();
 			}
 		]);
 

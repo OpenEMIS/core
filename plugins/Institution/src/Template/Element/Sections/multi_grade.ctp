@@ -15,8 +15,8 @@
 			<thead>
 				<tr>
 					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-					<th><?= $this->Label->get('InstitutionSiteSections.education_programme') ?></th>
-					<th><?= $this->Label->get('InstitutionSiteSections.education_grade') ?></th>
+					<th><?= $this->Label->get('InstitutionSections.education_programme') ?></th>
+					<th><?= $this->Label->get('InstitutionSections.education_grade') ?></th>
 				</tr>
 			</thead>
 
@@ -26,7 +26,7 @@
 				<?php 	$selected = (isset($attr['selected']) && in_array($obj->education_grade_id, $attr['selected'])) ? true : false; ?>
 				<tr>
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSiteSections[institution_site_section_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->education_grade_id?>" <?php echo ($selected) ? 'checked' : '';?> />
+						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSections[institution_section_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->education_grade_id?>" <?php echo ($selected) ? 'checked' : '';?> />
 					</td>
 					<td><?= $obj->education_grade->programme_name ?></td>
 					<td><?= $obj->education_grade->name ?></td>

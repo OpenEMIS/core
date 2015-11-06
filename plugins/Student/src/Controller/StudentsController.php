@@ -155,10 +155,7 @@ class StudentsController extends AppController {
 		
 		if ($model->alias() != 'Students') {
 			if ($session->check('Student.Students.id')) {
-				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
-					$userId = $session->read('Student.Students.id');
-					$query->where([$model->aliasField('security_user_id') => $userId]);
-				} else if ($model->hasField('student_id')) {
+				if ($model->hasField('student_id')) {
 					$userId = $session->read('Student.Students.id');
 					$query->where([$model->aliasField('student_id') => $userId]);
 				}
