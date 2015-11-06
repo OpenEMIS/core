@@ -36,19 +36,19 @@ class StaffBehavior extends Behavior {
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $event->subject()->request->session();
 				$institutionId = $session->read('Institution.Institutions.id');
-				$query->andWhere(['InstitutionSiteStaff.institution_site_id' => $institutionId]);
+				$query->andWhere(['Staff.institution_id' => $institutionId]);
 			}
 		}
 
 		// this part filters the list by institutions/areas granted to the group
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
-			$query->where(['InstitutionSiteStaff.institution_site_id IN ' => $institutionIds]);
+			$query->where(['Staff.institution_id IN ' => $institutionIds]);
 		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$settings['model'] = 'Institution.InstitutionSiteStaff';
+		$settings['model'] = 'Institution.Staff';
 
 		$this->_table->ControllerAction->field('name');
 		$this->_table->ControllerAction->field('default_identity_type');
@@ -72,12 +72,12 @@ class StaffBehavior extends Behavior {
 			$session = $event->subject()->request->session();
 			$institutionId = $session->read('Institution.Institutions.id');
 
-			$InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
-			$obj = $InstitutionSiteStaff->find()
+			$InstitutionStaff = TableRegistry::get('Institution.Staff');
+			$obj = $InstitutionStaff->find()
 				->contain('StaffStatuses')
 				->where([
-					$InstitutionSiteStaff->aliasField('institution_site_id') => $institutionId,
-					$InstitutionSiteStaff->aliasField('security_user_id') => $entity->id
+					$InstitutionStaff->aliasField('institution_id') => $institutionId,
+					$InstitutionStaff->aliasField('security_user_id') => $entity->id
 				])
 				->first();
 			$name = $obj->staff_status->name;
@@ -92,8 +92,8 @@ class StaffBehavior extends Behavior {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		$alias = $this->_table->alias;
-		$table = TableRegistry::get('Institution.InstitutionSiteStaff');
-		$institutionSiteArray = [];
+		$table = TableRegistry::get('Institution.Staff');
+		$institutionArray = [];
 		switch($alias){
 
 			// For Institution Staff
@@ -104,22 +104,22 @@ class StaffBehavior extends Behavior {
 
 				// Get Number of staff in an institution
 				$staffCount = $table->find()
-					->where([$table->aliasField('institution_site_id') => $institutionId])
+					->where([$table->aliasField('institution_id') => $institutionId])
 					->distinct(['security_user_id'])
 					->count(['security_user_id']);
 
 				// Get Gender
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', 
-					['institution_site_id' => $institutionId, 'key' => 'Gender']);
+				$institutionArray['Gender'] = $table->getDonutChart('institution_staff_gender', 
+					['institution_id' => $institutionId, 'key' => 'Gender']);
 
 				// To be implemented when the qualification table is fixed
-				// $institutionSiteArray['Qualification'] = $table->getDonutChart('institution_site_staff_qualification', 
-				// 	['institution_site_id' => $institutionId, 'key' => 'Qualification']);
+				// $institutionArray['Qualification'] = $table->getDonutChart('institution_staff_qualification', 
+				// 	['institution_id' => $institutionId, 'key' => 'Qualification']);
 
 				// Get Staff Licenses
 				$table = TableRegistry::get('Staff.Licenses');
-				$institutionSiteArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
-					['institution_site_id' => $institutionId, 'key' => 'Licenses']);
+				$institutionArray['Licenses'] = $table->getDonutChart('institution_staff_licenses', 
+					['institution_id' => $institutionId, 'key' => 'Licenses']);
 
 				break;
 
@@ -130,7 +130,7 @@ class StaffBehavior extends Behavior {
 					->distinct(['security_user_id'])
 					->count(['security_user_id']);
 				// Get Staff genders
-				$institutionSiteArray['Gender'] = $table->getDonutChart('institution_site_staff_gender', ['key' => 'Gender']);
+				$institutionArray['Gender'] = $table->getDonutChart('institution_staff_gender', ['key' => 'Gender']);
 				break;
 		}
 		if ($this->_table->action == 'index') {
@@ -140,7 +140,7 @@ class StaffBehavior extends Behavior {
 	            'data' => [
 	            	'model' => 'staff',
 	            	'modelCount' => $staffCount,
-	            	'modelArray' => $institutionSiteArray,
+	            	'modelArray' => $institutionArray,
 	            ],
 	            'options' => [],
 	            'order' => 1
@@ -150,7 +150,7 @@ class StaffBehavior extends Behavior {
 
 	public function addBeforeAction(Event $event) {
 		$name = $this->_table->alias();
-		$this->_table->ControllerAction->addField('institution_site_staff.0.institution_site_id', [
+		$this->_table->ControllerAction->addField('institution_staff.0.institution_id', [
 			'type' => 'hidden', 
 			'value' => 0
 		]);
@@ -164,48 +164,48 @@ class StaffBehavior extends Behavior {
 				$institutionStaffData = $this->_table->Session->read($this->_table->alias().'.add.'.$this->_table->request->query['new']);
 
 				if (array_key_exists($this->_table->alias(), $data)) {
-						if (!array_key_exists('institution_site_staff', $data[$this->_table->alias()])) {
-						$data[$this->_table->alias()]['institution_site_staff'] = [];
-						$data[$this->_table->alias()]['institution_site_staff'][0] = [];
+						if (!array_key_exists('institution_staff', $data[$this->_table->alias()])) {
+						$data[$this->_table->alias()]['institution_staff'] = [];
+						$data[$this->_table->alias()]['institution_staff'][0] = [];
 					}
-					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_id'];
+					$data[$this->_table->alias()]['institution_staff'][0]['institution_id'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['institution_id'];
 
-					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'];
-					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'];
+					$data[$this->_table->alias()]['institution_staff'][0]['staff_type_id'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['staff_type_id'];
+					$data[$this->_table->alias()]['institution_staff'][0]['staff_status_id'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['staff_status_id'];
 
-					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'];
+					$data[$this->_table->alias()]['institution_staff'][0]['institution_position_id'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['institution_position_id'];
 
-					$data[$this->_table->alias()]['institution_site_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['FTE'];
+					$data[$this->_table->alias()]['institution_staff'][0]['FTE'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['FTE'];
 
 					// start (date and year) handling
-					//$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['start_date'];
+					//$data[$this->_table->alias()]['institution_staff'][0]['start_date'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['start_date'];
 					
-					$data[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'] = $institutionStaffData[$this->_table->alias()]['institution_site_staff'][0]['security_role_id'];
+					$data[$this->_table->alias()]['institution_staff'][0]['security_role_id'] = $institutionStaffData[$this->_table->alias()]['institution_staff'][0]['security_role_id'];
 					
 				}
 			}
 		}
 
-		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_site_staff'][0])) {
-			$startData = getdate(strtotime($data[$this->_table->alias()]['institution_site_staff'][0]['start_date']));
-			$data[$this->_table->alias()]['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+		if (array_key_exists('start_date', $data[$this->_table->alias()]['institution_staff'][0])) {
+			$startData = getdate(strtotime($data[$this->_table->alias()]['institution_staff'][0]['start_date']));
+			$data[$this->_table->alias()]['institution_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
 		}
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
-		$options['associated'] = ['InstitutionSiteStaff'];
+		$options['associated'] = ['Staff'];
 
 		// Jeff: workaround, needs to redo this logic
-		if (isset($data[$this->_table->alias()]['institution_site_staff'])) {
-			$obj = $data[$this->_table->alias()]['institution_site_staff'];
-			if (!empty($obj) && isset($obj[0]) && isset($obj[0]['institution_site_id'])) {
-				if ($obj[0]['institution_site_id'] == 0) {
-					$data[$this->_table->alias()]['institution_site_staff'][0]['start_date'] = date('Y-m-d');
-					$data[$this->_table->alias()]['institution_site_staff'][0]['end_date'] = date('Y-m-d', time()+86400);
-					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_type_id'] = 0;
-					$data[$this->_table->alias()]['institution_site_staff'][0]['institution_site_position_id'] = 0;
-					$data[$this->_table->alias()]['institution_site_staff'][0]['staff_status_id'] = 0;
+		if (isset($data[$this->_table->alias()]['institution_staff'])) {
+			$obj = $data[$this->_table->alias()]['institution_staff'];
+			if (!empty($obj) && isset($obj[0]) && isset($obj[0]['institution_id'])) {
+				if ($obj[0]['institution_id'] == 0) {
+					$data[$this->_table->alias()]['institution_staff'][0]['start_date'] = date('Y-m-d');
+					$data[$this->_table->alias()]['institution_staff'][0]['end_date'] = date('Y-m-d', time()+86400);
+					$data[$this->_table->alias()]['institution_staff'][0]['staff_type_id'] = 0;
+					$data[$this->_table->alias()]['institution_staff'][0]['institution_position_id'] = 0;
+					$data[$this->_table->alias()]['institution_staff'][0]['staff_status_id'] = 0;
 				}
 			}
 		}

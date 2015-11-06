@@ -266,7 +266,7 @@ class InstitutionsTable extends AppTable  {
 			];
 
 			foreach ($models as $key => $model) {
-				$institutionSiteArray[$key] = $this->getDonutChart('institutions', $model);
+				$institutionArray[$key] = $this->getDonutChart('institutions', $model);
 			}
 
 			$indexDashboard = 'dashboard';
@@ -275,7 +275,7 @@ class InstitutionsTable extends AppTable  {
 	            'data' => [ 
 	            	'model' => 'institutions',
 	            	'modelCount' => $institutionCount->count(),
-	            	'modelArray' => $institutionSiteArray,
+	            	'modelArray' => $institutionArray,
 	            ],
 	            'options' => [],
 	            'order' => 1
@@ -302,7 +302,7 @@ class InstitutionsTable extends AppTable  {
 			$institutionRecords = $this->find();
 			
 			$selectString = $modelName.'.name';
-			$institutionSiteTypesCount = $institutionRecords
+			$institutionTypesCount = $institutionRecords
 				->contain([$modelName])
 				->select([
 					'count' => $institutionRecords->func()->count($modelId),
@@ -314,7 +314,7 @@ class InstitutionsTable extends AppTable  {
 
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionSiteTypesCount as $key => $value) {
+			foreach ($institutionTypesCount as $key => $value) {
 	            // Compile the dataset
 				$dataSet[] = [__($value['name']), $value['count']];
 			}
@@ -506,7 +506,7 @@ class InstitutionsTable extends AppTable  {
 		return $data;
 	}
 
-	public function onUpdateFieldInstitutionSiteTypeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$attr['onChangeReload'] = true;
 		}

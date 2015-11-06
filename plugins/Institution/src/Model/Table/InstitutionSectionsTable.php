@@ -177,7 +177,7 @@ class InstitutionSectionsTable extends AppTable {
 		} else {
 			/**
 			 * Added on PHPOE-1762 for PHPOE-1766
-			 * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionSiteGradeOptions() 
+			 * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions() 
 			 * so as to avoid unadherence of User's Requirements.
 			 */
 			$gradeOptions[-1] = 'All Grades';

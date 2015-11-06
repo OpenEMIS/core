@@ -92,10 +92,10 @@
 					</td>
 
 					<td>
-						<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_site_class_staff][0][status]', $i) ?>" value="1" />
+						<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_class_staff][0][status]', $i) ?>" value="1" />
 						<?php 
 						if (!$selected) {
-							echo $this->Form->input(sprintf('MultiSubjects.%d.institution_site_class_staff.0.security_user_id', $i), array(
+							echo $this->Form->input(sprintf('MultiSubjects.%d.institution_class_staff.0.security_user_id', $i), array(
 								'options' => $attr['data']['teachers'], 
 								'label' => false,
 							));
@@ -141,7 +141,7 @@
 						</td>
 
 						<td>
-							<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_site_class_staff][0][status]', $i) ?>" value="1" />
+							<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_class_staff][0][status]', $i) ?>" value="1" />
 						</td>
 					</tr>
 					<?php endforeach;//end $attr['data']['existedSubjects'] ?>

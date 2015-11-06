@@ -17,7 +17,7 @@ class ResultsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
 		$this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
 	}
@@ -25,8 +25,8 @@ class ResultsTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}
-	public function onGetInstitutionSiteId(Event $event, Entity $entity) {
-		return $this->Institutions->get($entity->institution_site_id)->name;
+	public function onGetInstitutionId(Event $event, Entity $entity) {
+		return $this->Institutions->get($entity->institution_id)->name;
 	}
 
 	public function onGetAcademicPeriodId(Event $event, Entity $entity) {
@@ -48,7 +48,7 @@ class ResultsTable extends AppTable {
 		$this->ControllerAction->field('assessment_grading_option_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'institution_site_id', 'assessment', 'assessment_item_id'
+			'academic_period_id', 'institution_id', 'assessment', 'assessment_item_id'
 		]);
 	}
 
@@ -59,15 +59,15 @@ class ResultsTable extends AppTable {
 			'AssessmentItems.Assessments'
 		])
 		->join(
-			[	'table'=> 'institution_site_assessments',
-				'alias' => 'InstitutionSiteAssessments',
+			[	'table'=> 'institution_assessments',
+				'alias' => 'InstitutionAssessments',
 				'conditions' => [
-					'InstitutionSiteAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
-					'InstitutionSiteAssessments.institution_site_id = '. $this->aliasField('institution_site_id')
+					'InstitutionAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
+					'InstitutionAssessments.institution_id = '. $this->aliasField('institution_id')
 				]
 			]
 		)
-		->where(['InstitutionSiteAssessments.status' => 2])
+		->where(['InstitutionAssessments.status' => 2])
 		;
 	}
 }

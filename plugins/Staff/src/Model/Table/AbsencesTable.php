@@ -8,11 +8,11 @@ use Cake\ORM\Entity;
 
 class AbsencesTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_staff_absences');
+		$this->table('institution_staff_absences');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
 	}
 

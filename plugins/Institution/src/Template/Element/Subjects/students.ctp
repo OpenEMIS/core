@@ -56,17 +56,17 @@
 				<tr>
 					<?php
 
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.id", [ 'value' => $obj->id ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.student_id", [ 'value' => $n ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.status", [ 'value' => $obj->status ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.institution_site_class_id", [ 'value' => $obj->institution_site_class_id ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.institution_site_section_id", [ 'value' => $obj->institution_site_section_id ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.id", [ 'value' => $obj->id ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.student_id", [ 'value' => $n ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.status", [ 'value' => $obj->status ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.institution_class_id", [ 'value' => $obj->institution_class_id ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.institution_section_id", [ 'value' => $obj->institution_section_id ]);
 
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.id", [ 'value' => $n ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.name", [ 'value' => $userData['name'] ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.gender.name", [ 'value' => $userData['gender']['name'] ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.date_of_birth", [ 'value' => $userData['date_of_birth'] ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.user.id", [ 'value' => $n ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.user.name", [ 'value' => $userData['name'] ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.user.gender.name", [ 'value' => $userData['gender']['name'] ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_students.$n.user.date_of_birth", [ 'value' => $userData['date_of_birth'] ]);
 					?>
 					<td><?= $userData['openemis_no'] ?></td>
 					<td><?= $userData['name'] ?></td>

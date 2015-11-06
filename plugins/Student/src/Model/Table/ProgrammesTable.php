@@ -17,7 +17,7 @@ class ProgrammesTable extends AppTable {
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity) {		

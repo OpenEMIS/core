@@ -118,6 +118,7 @@ RENAME TO  `institution_site_bank_accounts` ;
 
 -- institution_site_student_absence
 ALTER TABLE `institution_student_absences` 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_student_absences` ;
 
@@ -159,6 +160,95 @@ RENAME TO  `institution_site_surveys` ;
 ALTER TABLE `institution_survey_table_cells` 
 CHANGE COLUMN `institution_survey_id` `institution_site_survey_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_survey_table_cells` ;
+
+-- student_attendance
+CREATE TABLE `student_attendances` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `student_attendance_type_id` int(11) NOT NULL,
+  `academic_period_id` int(11) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `institution_id` int(11) NOT NULL,
+  `institution_class_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `school_year_id` (`academic_period_id`),
+  KEY `institution_site_id` (`institution_id`),
+  KEY `institution_site_class_id` (`institution_class_id`),
+  KEY `security_user_id` (`security_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- student_attendance_types
+CREATE TABLE `student_attendance_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `international_code` varchar(10) DEFAULT NULL,
+  `national_code` varchar(10) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- institution_site_students
+ALTER TABLE `z_1463_institution_site_students` 
+RENAME TO  `institution_site_students` ;
+
+-- institution_site_staff_absences
+ALTER TABLE `institution_staff_absences` 
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+RENAME TO  `institution_site_staff_absences` ;
+
+-- institution_site_student_absence_attachments
+CREATE TABLE `institution_site_student_absence_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(250) NOT NULL,
+  `file_content` longblob NOT NULL,
+  `institution_site_student_absence_id` int(11) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `institution_site_student_attendance_id` (`institution_site_student_absence_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- institution_site_staff_absence_attachments
+CREATE TABLE `institution_site_staff_absence_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(250) NOT NULL,
+  `file_content` longblob NOT NULL,
+  `institution_site_staff_absence_id` int(11) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `institution_site_staff_absence_id` (`institution_site_staff_absence_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- institution_site_quality_visit_attachments
+CREATE TABLE `institution_site_quality_visit_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(200) DEFAULT NULL,
+  `file_content` longblob,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `institution_site_quality_visit_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `institution_site_quality_visit_id` (`institution_site_quality_visit_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';

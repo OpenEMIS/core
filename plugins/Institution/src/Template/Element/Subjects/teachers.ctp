@@ -38,10 +38,10 @@
 				<tr>
 					<?php
 
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_staff.$n.id", [ 'value'=> $obj->id ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_staff.$n.security_user_id", [ 'value'=> $obj->security_user_id ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_staff.$n.status", [ 'value' => $obj->status ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_staff.$n.institution_site_class_id", [ 'value'=> $obj->institution_site_class_id ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_staff.$n.id", [ 'value'=> $obj->id ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_staff.$n.security_user_id", [ 'value'=> $obj->security_user_id ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_staff.$n.status", [ 'value' => $obj->status ]);
+					echo $this->Form->hidden("InstitutionClasses.institution_class_staff.$n.institution_class_id", [ 'value'=> $obj->institution_class_id ]);
 
 					?>
 					<td><?php echo $obj->user->openemis_no ?></td>
