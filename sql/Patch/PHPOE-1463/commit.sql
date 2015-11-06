@@ -241,3 +241,92 @@ CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
 -- staff_custom_table_cells
 ALTER TABLE `staff_custom_table_cells` 
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+
+-- census_behaviours
+DROP TABLE IF EXISTS census_behaviours;
+
+-- census_buildings
+DROP TABLE IF EXISTS census_buildings;
+
+-- census_classes
+DROP TABLE IF EXISTS census_classes;
+
+-- census_class_grades
+DROP TABLE IF EXISTS census_class_grades;
+
+-- census_custom_field_options
+DROP TABLE IF EXISTS census_custom_field_options;
+
+-- census_custom_fields
+DROP TABLE IF EXISTS census_custom_fields;
+
+-- census_custom_values
+DROP TABLE IF EXISTS census_custom_values;
+
+-- census_energy
+DROP TABLE IF EXISTS census_energy;
+
+-- census_finances
+DROP TABLE IF EXISTS census_finances;
+
+-- census_furniture
+DROP TABLE IF EXISTS census_furniture;
+
+-- census_graduates
+DROP TABLE IF EXISTS census_graduates;
+
+-- census_grids
+DROP TABLE IF EXISTS census_grids;
+
+-- census_grid_values
+DROP TABLE IF EXISTS census_grid_values;
+
+-- census_grid_x_categories
+DROP TABLE IF EXISTS census_grid_x_categories;
+
+-- census_grid_y_categories
+DROP TABLE IF EXISTS census_grid_y_categories;
+
+-- census_resources
+DROP TABLE IF EXISTS census_resources;
+
+-- census_rooms
+DROP TABLE IF EXISTS census_rooms;
+
+-- census_sanitations
+DROP TABLE IF EXISTS census_sanitations;
+
+-- census_shifts
+DROP TABLE IF EXISTS census_shifts;
+
+-- census_students
+DROP TABLE IF EXISTS census_students;
+
+-- census_teacher_fte
+DROP TABLE IF EXISTS census_teacher_fte;
+
+-- census_teacher_grades
+DROP TABLE IF EXISTS census_teacher_grades;
+
+-- census_teachers
+DROP TABLE IF EXISTS census_teachers;
+
+-- census_teacher_training
+DROP TABLE IF EXISTS census_teacher_training;
+
+-- census_textbooks
+DROP TABLE IF EXISTS census_textbooks;
+
+-- census_verifications
+DROP TABLE IF EXISTS census_verifications;
+
+-- census_water
+DROP TABLE IF EXISTS census_water;
+
+-- students
+ALTER TABLE `students` 
+RENAME TO  `z_1463_students` ;
+
+-- guardians
+ALTER TABLE `guardians` 
+RENAME TO  `z_1463_guardians` ;
