@@ -19,7 +19,7 @@ class StaffPositionsTable extends AppTable {
         parent::initialize($config);
         $this->entityClass('Institution.Staff');
       	$this->addBehavior('Year', ['end_date' => 'end_year']);
-        $this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'security_user_id']);
+        $this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
 		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionPositions','foreignKey' => 'institution_position_id']);
 		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
@@ -28,7 +28,7 @@ class StaffPositionsTable extends AppTable {
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('position', ['type' => 'readonly', 'attr' => ['value' => $entity->position->staff_position_title->name]]);
-		$this->ControllerAction->field('security_user_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
+		$this->ControllerAction->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 
 		if ($entity->start_date instanceof Time) {
 			$startDate = $this->formatDate($entity->start_date);
@@ -62,7 +62,7 @@ class StaffPositionsTable extends AppTable {
 		$this->ControllerAction->field('staff_status_id', ['visible' => true]);
 		
 		//make some visible
-		$this->ControllerAction->field('security_user_id', ['visible' => true]);
+		$this->ControllerAction->field('staff_id', ['visible' => true]);
 		$this->ControllerAction->field('institution_id', ['visible' => true]);
 		$this->ControllerAction->field('institution_position_id', ['visible' => true]);
 
@@ -75,7 +75,7 @@ class StaffPositionsTable extends AppTable {
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		
 		$this->ControllerAction->setFieldOrder([
-			'security_user_id', 'institution_id', 'institution_position_id', 'security_user_id', 'position', 'FTE', 'start_date', 'end_date', 'staff_type_id', 'staff_status_id'
+			'staff_id', 'institution_id', 'institution_position_id', 'staff_id', 'position', 'FTE', 'start_date', 'end_date', 'staff_type_id', 'staff_status_id'
 			
 			]);
 	}

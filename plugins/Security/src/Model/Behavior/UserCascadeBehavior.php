@@ -50,8 +50,8 @@ class UserCascadeBehavior extends Behavior {
 
 		$table = TableRegistry::get('institution_sections');
 		$table->updateAll(
-			['security_user_id' => 0],
-			['security_user_id' => $userId]
+			['staff_id' => 0],
+			['staff_id' => $userId]
 		);
 	}
 

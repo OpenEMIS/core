@@ -26,11 +26,11 @@ class Staff extends Entity
 		return ($this->has('user'))? $this->user->name_with_id : '';
 	}
 
-	protected function _getOpenemisNo() {
-		return ($this->has('user'))? $this->user->openemis_no: '';
-	}
+	// protected function _getOpenemisNo() {
+	// 	return ($this->has('user'))? $this->user->openemis_no: '';
+	// }
 
-	protected function _getDefaultIdentityType() {
-		return ($this->has('user'))? $this->user->defaultIdentityType: '';
-	}
+	// protected function _getDefaultIdentityType() {
+	// 	return ($this->has('user'))? $this->user->defaultIdentityType: '';
+	// }
 }

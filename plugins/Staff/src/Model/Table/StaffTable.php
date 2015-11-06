@@ -39,9 +39,9 @@ class StaffTable extends AppTable {
 			'filterKey' => 'staff_custom_filter_id',
 			'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'staff_id',
+			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
@@ -64,25 +64,25 @@ class StaffTable extends AppTable {
 		$model->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
 			'joinTable' => 'institution_staff', // will need to change to institution_staff
-			'foreignKey' => 'security_user_id', // will need to change to staff_id
+			'foreignKey' => 'staff_id', // will need to change to staff_id
 			'targetForeignKey' => 'institution_id', // will need to change to institution_id
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
 
 		// section should never cascade delete
-		$model->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 'foreignKey' => 'security_user_id']);
+		$model->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 'foreignKey' => 'staff_id']);
 
 		$model->belongsToMany('Subjects', [
 			'className' => 'Institution.InstitutionClass',
 			'joinTable' => 'institution_class_staff',
-			'foreignKey' => 'security_user_id',
+			'foreignKey' => 'staff_id',
 			'targetForeignKey' => 'institution_class_id',
 			'through' => 'Institution.InstitutionClassStaff',
 			'dependent' => true
 		]);
 
-		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'staff_id', 'dependent' => true]);
 	}
 
 
@@ -118,7 +118,7 @@ class StaffTable extends AppTable {
 			$query->innerJoin(
 				['InstitutionStaff' => 'institution_staff'],
 				[
-					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+					'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
 					'InstitutionStaff.institution_id IN ' => $institutionIds
 				]
 			)
@@ -131,7 +131,7 @@ class StaffTable extends AppTable {
 		$institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
 		->contain(['Institutions'])
 		->select(['Institutions.name'])
-		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
+		->where([$this->InstitutionStaff->aliasField('staff_id') => $userId])
 		->andWhere([$this->InstitutionStaff->aliasField('end_date').' IS NULL'])
 		->toArray();
 		;
@@ -160,8 +160,8 @@ class StaffTable extends AppTable {
 			// sections are not to be deleted (cascade delete is not set and need to change id)
 			$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
 			$InstitutionSections->updateAll(
-					['security_user_id' => 0],
-					['security_user_id' => $id]
+					['staff_id' => 0],
+					['staff_id' => $id]
 				);
 
 			$userQuery = $model->find()->where([$this->aliasField('id') => $id])->first();

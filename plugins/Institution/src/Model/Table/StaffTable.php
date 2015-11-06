@@ -23,7 +23,7 @@ class StaffTable extends AppTable {
 		$this->table('institution_staff');
 		parent::initialize($config);
 
-		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
@@ -103,7 +103,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$this->fields['security_user_id']['order'] = 5;
+		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
 	}
@@ -173,7 +173,7 @@ class StaffTable extends AppTable {
 				'id' => Text::uuid(),
 				'security_group_id' => $entity->group_id, 
 				'security_role_id' => $entity->role, 
-				'security_user_id' => $entity->security_user_id
+				'security_user_id' => $entity->staff_id
 			];
 			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 			$GroupUsers->save($GroupUsers->newEntity($obj));
@@ -209,10 +209,10 @@ class StaffTable extends AppTable {
 		$institutionId = $entity->institution_id;
 		$newEndDate = strtotime($data[$this->alias()]['end_date']);
 		$newStartDate = strtotime($data[$this->alias()]['start_date']);
-		$staffId = $data[$this->alias()]['security_user_id'];
+		$staffId = $data[$this->alias()]['staff_id'];
 		$positionId = $data[$this->alias()]['institution_position_id'];
 		$condition = [
-			$this->aliasField('security_user_id') => $staffId,
+			$this->aliasField('staff_id') => $staffId,
 			$this->aliasField('institution_position_id') => $positionId,
 			$this->aliasField('id').' IS NOT' => $recordId,
 			$this->aliasField('institution_id') => $institutionId
@@ -330,7 +330,7 @@ class StaffTable extends AppTable {
 			'userRole' => 'Staff',
 			'action' => $this->action,
 			'id' => $entity->id,
-			'userId' => $entity->security_user_id
+			'userId' => $entity->staff_id
 		];
 
 		$tabElements = $this->controller->getUserTabElements($options);
@@ -409,7 +409,7 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldStaffName(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
-			$attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
+			$attr['target'] = ['key' => 'staff_id', 'name' => $this->aliasField('staff_id')];
 			$attr['noResults'] = __('No Staff found');
 			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
 			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Staff', 'ajaxUserAutocomplete'];
@@ -425,7 +425,7 @@ class StaffTable extends AppTable {
 		return $attr;
 	}
 
-	public function onGetSecurityUserId(Event $event, Entity $entity) {
+	public function onGetStaffId(Event $event, Entity $entity) {
 		$value = '';
 		if ($entity->has('user')) {
 			$value = $entity->user->name;
@@ -464,7 +464,7 @@ class StaffTable extends AppTable {
 		$options['validate'] = 'Role';
 		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($patch->errors());
-		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('security_user_id', $patch->errors()))) {
+		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('staff_id', $patch->errors()))) {
 			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
 			$event->stopPropagation();
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffUser', 'add'];
@@ -478,7 +478,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('position_type');
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
-		$this->ControllerAction->field('security_user_id');
+		$this->ControllerAction->field('staff_id');
 		
 		if ($this->action == 'index') {
 			$InstitutionArray = [];
@@ -496,7 +496,7 @@ class StaffTable extends AppTable {
 			$staffCount = $this->find()
 				->find('academicPeriod', ['academic_period_id' => $periodId])
 				->where([$this->aliasField('institution_id') => $institutionId])
-				->distinct(['security_user_id']);
+				->distinct(['staff_id']);
 
 			if ($positionId != 0) {
 				$staffCount->where([$this->aliasField('institution_position_id') => $positionId]);
@@ -518,7 +518,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount->count(['security_user_id']),
+	            	'modelCount' => $staffCount->count(['staff_id']),
 	            	'modelArray' => $InstitutionArray,
 	            ],
 	            'options' => [],
@@ -531,7 +531,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$i = 10;
-		$this->fields['security_user_id']['order'] = $i++;
+		$this->fields['staff_id']['order'] = $i++;
 		$this->fields['institution_position_id']['order'] = $i++;
 		$this->fields['position_type']['order'] = $i++;
 		$this->fields['FTE']['order'] = $i++;
@@ -542,7 +542,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('security_user_id', [
+		$this->ControllerAction->field('staff_id', [
 			'type' => 'readonly', 
 			'order' => 10, 
 			'attr' => ['value' => $entity->user->name_with_id]
@@ -573,7 +573,7 @@ class StaffTable extends AppTable {
 		// note that $this->table('institution_staff');
 		$id = $entity->id;
 		$institutionId = $entity->institution_id;
-		$securityUserId = $entity->security_user_id;
+		$staffId = $entity->staff_id;
 
 		
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
@@ -584,7 +584,7 @@ class StaffTable extends AppTable {
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
 		$sectionsInPosition = $InstitutionSections->find()
 			->where(
-				['security_user_id' => $securityUserId, 'institution_id' => $institutionId]
+				['staff_id' => $staffId, 'institution_id' => $institutionId]
 			)
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
@@ -606,7 +606,7 @@ class StaffTable extends AppTable {
 		}
 		if (!empty($sectionArray)) {
 			$InstitutionSections->updateAll(
-				['security_user_id' => 0],
+				['staff_id' => 0],
 				['id IN ' => $sectionArray]
 			);
 		}
@@ -636,12 +636,12 @@ class StaffTable extends AppTable {
 		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 
 		$targetData = $InstitutionClassStaff->find()
-			->where([$InstitutionClassStaff->aliasField('security_user_id') => $securityUserId,
+			->where([$InstitutionClassStaff->aliasField('staff_id') => $staffId,
 			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
 			;
 
 		$InstitutionClassStaff->deleteAll([
-			$InstitutionClassStaff->aliasField('security_user_id') => $securityUserId,
+			$InstitutionClassStaff->aliasField('staff_id') => $staffId,
 			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
 		]);
 
@@ -661,7 +661,7 @@ class StaffTable extends AppTable {
 			$groupId = $institutionEntity->security_group_id;
 			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 			$GroupUsers->deleteAll([
-				'security_user_id' => $entity->security_user_id,
+				'security_user_id' => $entity->staff_id,
 				'security_group_id' => $groupId
 			]);
 		} catch (InvalidPrimaryKeyException $ex) {
@@ -708,7 +708,7 @@ class StaffTable extends AppTable {
 			$InstitutionStaffCount = $InstitutionRecords
 				->contain(['Users', 'Users.Genders'])
 				->select([
-					'count' => $InstitutionRecords->func()->count('DISTINCT security_user_id'),	
+					'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
 					'gender' => 'Genders.name'
 				])
 				->where($_conditions)
@@ -748,7 +748,7 @@ class StaffTable extends AppTable {
 				'Positions.type',
 				'Users.id',
 				'Genders.name',
-				'total' => $query->func()->count('DISTINCT '.$this->aliasField('security_user_id'))
+				'total' => $query->func()->count('DISTINCT '.$this->aliasField('staff_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([

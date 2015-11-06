@@ -22,7 +22,7 @@ class StaffUserTable extends UserTable {
 		$sessionKey = 'Institution.Staff.new';
 		if ($this->Session->check($sessionKey)) {
 			$positionData = $this->Session->read($sessionKey);
-			$positionData['security_user_id'] = $entity->id;
+			$positionData['staff_id'] = $entity->id;
 			$role = $positionData['role'];
 			$institutionId = $positionData['institution_id'];
 

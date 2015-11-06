@@ -98,7 +98,7 @@ class StaffController extends AppController {
 
 			// $params = $this->request->params;
 			$this->set('contentHeader', $header);
-
+			pr($alias);
 			if ($model->hasField('security_user_id')) {
 				$model->fields['security_user_id']['type'] = 'hidden';
 				$model->fields['security_user_id']['value'] = $userId;
@@ -139,9 +139,7 @@ class StaffController extends AppController {
 		if ($model->alias() != 'Staff') {
 			if ($session->check('Staff.Staff.id')) {
 				$userId = $session->read('Staff.Staff.id');
-				if ($model->hasField('security_user_id')) {
-					$query->where([$model->aliasField('security_user_id') => $userId]);
-				} else if ($model->hasField('staff_id')) {
+				if ($model->hasField('staff_id')) {
 					$query->where([$model->aliasField('staff_id') => $userId]);
 				}
 			} else {
