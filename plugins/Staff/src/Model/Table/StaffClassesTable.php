@@ -11,7 +11,7 @@ class StaffClassesTable extends AppTable {
 		$this->table('institution_class_staff');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}

@@ -134,6 +134,7 @@ RENAME TO  `institution_site_assessments` ;
 ALTER TABLE `institution_quality_visits` 
 CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_quality_visits` ;
 
@@ -146,6 +147,7 @@ RENAME TO  `institution_site_quality_rubric_answers` ;
 ALTER TABLE `institution_quality_rubrics` 
 CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_quality_rubrics` ;
 
@@ -857,6 +859,14 @@ RENAME TO  `students` ;
 -- guardians
 ALTER TABLE `z_1463_guardians` 
 RENAME TO  `guardians` ;
+
+-- student_custom_field_values
+ALTER TABLE `student_custom_field_values` 
+CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- student_custom_table_cells
+ALTER TABLE `student_custom_table_cells` 
+CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';

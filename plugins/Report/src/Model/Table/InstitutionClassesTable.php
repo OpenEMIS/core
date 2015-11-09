@@ -14,7 +14,7 @@ class InstitutionClassesTable extends AppTable  {
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'staff_id']);
 		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts',	'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 		

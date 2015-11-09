@@ -437,7 +437,7 @@ class ValidationBehavior extends Behavior {
 				[
 					$Staff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
 					$Staff->aliasField('institution_id') => $globalData['data']['institution_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					$Staff->aliasField('staff_id') => $globalData['data']['staff_id'],
 					'OR' => [
 						[$Staff->aliasField('end_date').' IS NULL'],
 						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]

@@ -538,7 +538,7 @@ class InstitutionAssessmentsTable extends AppTable {
 
 		if ($this->AccessControl->check(['Institutions', 'Sections', 'index'])) {
 			$conditions = array_merge($_conditions, [
-				$this->Classes->aliasField('security_user_id') => $this->userId // homeroom teacher
+				$this->Classes->aliasField('staff_id') => $this->userId // homeroom teacher
 			]);
 
 			$query->where($conditions, [], true);
@@ -555,7 +555,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
 						$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
-						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+						$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
 				);
@@ -574,7 +574,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
 						$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
-						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+						$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
 				);
@@ -639,7 +639,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 						[
 							$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
-							$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+							$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 							$this->SubjectStaff->aliasField('status') => 1
 						]
 					);
@@ -657,7 +657,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 					[
 						$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
-						$this->SubjectStaff->aliasField('security_user_id') => $this->userId, // subject teacher
+						$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 						$this->SubjectStaff->aliasField('status') => 1
 					]
 				);
