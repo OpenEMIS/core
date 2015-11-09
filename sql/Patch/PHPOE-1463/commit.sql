@@ -125,6 +125,7 @@ RENAME TO  `institution_assessments` ;
 ALTER TABLE `institution_site_quality_visits` 
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_quality_visits` ;
 
@@ -137,6 +138,7 @@ RENAME TO  `institution_quality_rubric_answers` ;
 ALTER TABLE `institution_site_quality_rubrics` 
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_quality_rubrics` ;
 
@@ -330,3 +332,11 @@ RENAME TO  `z_1463_students` ;
 -- guardians
 ALTER TABLE `guardians` 
 RENAME TO  `z_1463_guardians` ;
+
+-- student_custom_field_values
+ALTER TABLE `student_custom_field_values` 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
+
+-- student_custom_table_cells
+ALTER TABLE `student_custom_table_cells` 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;

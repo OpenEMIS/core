@@ -8,7 +8,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class InstitutionQualityVisitsTable extends AppTable {
-	private $_fieldOrder = ['date', 'academic_period_level', 'academic_period_id', 'institution_section_id', 'education_grade_id', 'institution_class_id', 'security_user_id', 'quality_visit_type_id'];
+	private $_fieldOrder = ['date', 'academic_period_level', 'academic_period_id', 'institution_section_id', 'education_grade_id', 'institution_class_id', 'staff_id', 'quality_visit_type_id'];
 
 	public function initialize(array $config) {
 		$this->table('institution_quality_visits');
@@ -19,7 +19,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSections', 'foreignKey' => 'institution_section_id']);
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
@@ -49,7 +49,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
 
 		$this->_fieldOrder = [
-			'date', 'education_grade_id', 'institution_class_id', 'security_user_id', 'quality_visit_type_id'
+			'date', 'education_grade_id', 'institution_class_id', 'staff_id', 'quality_visit_type_id'
 		];
 	}
 
@@ -139,7 +139,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		// End
 
 		// Staff Options
-		$this->ControllerAction->field('security_user_id', ['options' => $staffOptions]);
+		$this->ControllerAction->field('staff_id', ['options' => $staffOptions]);
 		// End
 
 		// Visit Type Options
@@ -153,7 +153,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$request->query['section'] = $entity->institution_section_id;
 		$request->query['grade'] = $entity->education_grade_id;
 		$request->query['class'] = $entity->institution_class_id;
-		$request->query['staff'] = $entity->security_user_id;
+		$request->query['staff'] = $entity->staff_id;
 	}
 
 	public function _getSelectOptions() {
@@ -234,14 +234,14 @@ class InstitutionQualityVisitsTable extends AppTable {
 				'table' => $InstitutionClassStaff->_table,
 				'alias' => $InstitutionClassStaff->alias(),
 				'conditions' => [
-					$InstitutionClassStaff->aliasField('security_user_id =') . $this->Users->aliasField('id'),
+					$InstitutionClassStaff->aliasField('staff_id =') . $this->Users->aliasField('id'),
 					$InstitutionClassStaff->aliasField('institution_class_id') => $selectedClass
 				]
 			])
 			->toArray();
 		$selectedStaff = $this->queryString('staff', $staffOptions);
 		if ($request->is(['post', 'put'])) {
-			$selectedStaff = $request->data($this->aliasField('security_user_id'));
+			$selectedStaff = $request->data($this->aliasField('staff_id'));
 		}
 
 		return compact('levelOptions', 'selectedLevel', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection', 'gradeOptions', 'selectedGrade', 'classOptions', 'selectedClass', 'staffOptions', 'selectedStaff');

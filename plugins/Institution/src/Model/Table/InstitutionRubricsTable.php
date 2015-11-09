@@ -26,7 +26,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSections', 'foreignKey' => 'institution_section_id']);
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -230,7 +230,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
 
-		$this->_fieldOrder = ['rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'security_user_id'];
+		$this->_fieldOrder = ['rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'staff_id'];
         if ($selectedStatus == 0) {	//New
 			$this->ControllerAction->field('to_be_completed_by');
 			$this->_fieldOrder[] = 'to_be_completed_by';
@@ -278,7 +278,7 @@ class InstitutionRubricsTable extends AppTable {
 				break;
 		}
 
-		$this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_section_id', 'institution_class_id', 'security_user_id', 'rubric_sections'];
+		$this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_section_id', 'institution_class_id', 'staff_id', 'rubric_sections'];
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
@@ -411,7 +411,7 @@ class InstitutionRubricsTable extends AppTable {
 							foreach ($section->institution_classes as $class) {
 								$classId = $class->id;
 								foreach ($class->institution_class_staff as $staff) {
-									$staffId = $staff->security_user_id;
+									$staffId = $staff->staff_id;
 
 									$results = $this
 										->find('all')
@@ -422,7 +422,7 @@ class InstitutionRubricsTable extends AppTable {
 											$this->aliasField('education_grade_id') => $gradeId,
 											$this->aliasField('institution_section_id') => $sectionId,
 											$this->aliasField('institution_class_id') => $classId,
-											$this->aliasField('security_user_id') => $staffId
+											$this->aliasField('staff_id') => $staffId
 										])
 										->all();
 									
@@ -435,7 +435,7 @@ class InstitutionRubricsTable extends AppTable {
 											'education_grade_id' => $gradeId,
 											'institution_section_id' => $sectionId,
 											'institution_class_id' => $classId,
-											'security_user_id' => $staffId
+											'staff_id' => $staffId
 										];
 										$entity = $this->newEntity($data);
 
@@ -453,7 +453,7 @@ class InstitutionRubricsTable extends AppTable {
 												'education_grade_id' => $gradeId,
 												'institution_section_id' => $sectionId,
 												'institution_class_id' => $classId,
-												'security_user_id' => $staffId,
+												'staff_id' => $staffId,
 												'status' => -1
 											]
 										);

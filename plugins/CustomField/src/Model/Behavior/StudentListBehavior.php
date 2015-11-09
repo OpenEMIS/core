@@ -200,7 +200,7 @@ class StudentListBehavior extends Behavior {
                                     $Sections->aliasField('id') => $id,
                                     $Sections->aliasField('institution_id') => $institutionId,
                                     $Sections->aliasField('academic_period_id') => $periodId,
-                                    $Sections->aliasField('security_user_id') => $userId
+                                    $Sections->aliasField('staff_id') => $userId
                                 ])
                                 ->first();
 
@@ -227,7 +227,7 @@ class StudentListBehavior extends Behavior {
                         $this->Sections->aliasField('academic_period_id') => $periodId
                     ];
                     if (!$this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
-                        $sectionConditions[$this->Sections->aliasField('security_user_id')] = $userId;
+                        $sectionConditions[$this->Sections->aliasField('staff_id')] = $userId;
                     }
 
                     $studentQuery
