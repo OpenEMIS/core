@@ -25,7 +25,7 @@ class StaffTable extends AppTable  {
 		$this->addBehavior('Report.CustomFieldList', [
 			'model' => 'Staff.Staff',
 			'formFilterClass' => null,
-			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		]);
 	}
 

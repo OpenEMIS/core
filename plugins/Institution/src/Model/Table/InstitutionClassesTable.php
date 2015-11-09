@@ -43,7 +43,7 @@ class InstitutionClassesTable extends AppTable {
 			'through' => 'InstitutionClassStaff',
 			'conditions' => ['InstitutionClassStaff.status' => 1],
 			'foreignKey' => 'institution_class_id',
-			'targetForeignKey' => 'security_user_id'
+			'targetForeignKey' => 'staff_id'
 		]);
 
 		// this behavior restricts current user to see All Subjects or My Subjects
@@ -241,7 +241,7 @@ class InstitutionClassesTable extends AppTable {
 		// 	'className' => 'User.Users',
 		// 	'through' => 'InstitutionClassStaff',
 		// 	'conditions' => ['InstitutionClassStaff.status' => 1],
-		// 	'targetForeignKey' => 'security_user_id'
+		// 	'targetForeignKey' => 'staff_id'
 		// ]);
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
@@ -362,7 +362,7 @@ class InstitutionClassesTable extends AppTable {
 							]
 						]
 					];
-					if ($row['institution_class_staff'][0]['security_user_id']!=0) {
+					if ($row['institution_class_staff'][0]['staff_id']!=0) {
 						$subjects[$key]['institution_class_staff'] = $row['institution_class_staff'];
 					}
 				}
@@ -487,7 +487,7 @@ class InstitutionClassesTable extends AppTable {
 		// $this->InstitutionClassStaff->updateAll(['status'=>0], ['institution_class_id' => $entity->id]);
 
 		/**
-		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
+		 * In students.ctp, we set the staff_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
 		 */
 		foreach($entity->institution_class_students as $key => $record) {
@@ -510,7 +510,7 @@ class InstitutionClassesTable extends AppTable {
 		}
 		$checkedStaff = [];
 		foreach($entity->institution_class_staff as $key => $record) {
-			$k = $record->security_user_id;
+			$k = $record->staff_id;
 			if (	array_key_exists('teachers', $data[$this->alias()])	
 				&& 	array_key_exists('_ids', $data[$this->alias()]['teachers'])
 				&&  !empty($data[$this->alias()]['teachers']['_ids'])
@@ -524,7 +524,7 @@ class InstitutionClassesTable extends AppTable {
 					$checkedStaff[] = $k;
 					$data[$this->alias()]['institution_class_staff'][$k] = [
 						'id' => $record->id,
-						'security_user_id' => $k,
+						'staff_id' => $k,
 						'status' => 1
 					];
 				}
@@ -542,7 +542,7 @@ class InstitutionClassesTable extends AppTable {
 			$balance = array_diff($data[$this->alias()]['teachers']['_ids'], $checkedStaff);
 			foreach ($balance as $bal) {
 				$data[$this->alias()]['institution_class_staff'][$bal] = [
-					'security_user_id' => $bal,
+					'staff_id' => $bal,
 					'status' => 1
 				];
 			}
@@ -670,10 +670,10 @@ class InstitutionClassesTable extends AppTable {
 				'user'=>[]
 			];
 		} else {
-			$userData = $this->Institutions->Staff->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+			$userData = $this->Institutions->Staff->find()->contain(['Users'=>['Genders']])->where(['staff_id'=>$id])->first();
 			$data = [
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
-				'security_user_id'=>$id,
+				'staff_id'=>$id,
 				'institution_class_id'=>$entity->id,
 				'institution_section_id'=>$sectionId,
 				'status'=>1,
@@ -696,7 +696,7 @@ class InstitutionClassesTable extends AppTable {
 					$recordId = $data->id;
 				}
 			} else {
-				if ($data->security_user_id == $id) {
+				if ($data->staff_id == $id) {
 					$recordId = $data->id;
 				}
 			}

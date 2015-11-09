@@ -95,7 +95,7 @@
 						<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_class_staff][0][status]', $i) ?>" value="1" />
 						<?php 
 						if (!$selected) {
-							echo $this->Form->input(sprintf('MultiSubjects.%d.institution_class_staff.0.security_user_id', $i), array(
+							echo $this->Form->input(sprintf('MultiSubjects.%d.institution_class_staff.0.staff_id', $i), array(
 								'options' => $attr['data']['teachers'], 
 								'label' => false,
 							));

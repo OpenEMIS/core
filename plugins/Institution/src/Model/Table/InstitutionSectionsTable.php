@@ -25,7 +25,7 @@ class InstitutionSectionsTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'staff_id']);
 		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts','foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 
@@ -111,7 +111,7 @@ class InstitutionSectionsTable extends AppTable {
 		$this->ControllerAction->field('institution
 			_shift_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
 
-		$this->ControllerAction->field('security_user_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('staff_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
 		$this->ControllerAction->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->ControllerAction->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
@@ -139,7 +139,7 @@ class InstitutionSectionsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'security_user_id', 'male_students', 'female_students', 'classes',
+			'name', 'staff_id', 'male_students', 'female_students', 'classes',
 		]);
 
 	}
@@ -321,7 +321,7 @@ class InstitutionSectionsTable extends AppTable {
     	}
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'security_user_id', 'students'
+			'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'staff_id', 'students'
 		]);
 
 	}
@@ -433,8 +433,8 @@ class InstitutionSectionsTable extends AppTable {
 
 			$this->fields['name']['visible'] = false;
 			$this->fields['students']['visible'] = false;
-			$this->fields['security_user_id']['visible'] = false;
-			$this->fields['security_user_id']['type'] = 'hidden';
+			$this->fields['staff_id']['visible'] = false;
+			$this->fields['staff_id']['type'] = 'hidden';
 			$this->ControllerAction->setFieldOrder([
 				'academic_period_id', 'education_grade', 'institution_shift_id', 'section_number', 'number_of_sections', 'single_grade_field'
 			]);
@@ -456,10 +456,10 @@ class InstitutionSectionsTable extends AppTable {
 				'field' => 'multi_grade_field',
 				'data' => $gradeOptions
 			]);
-			$this->fields['security_user_id']['options'] = $staffOptions;
+			$this->fields['staff_id']['options'] = $staffOptions;
 			$this->fields['students']['visible'] = false;
 			$this->ControllerAction->setFieldOrder([
-				'academic_period_id', 'name', 'institution_shift_id', 'security_user_id', 'multi_grade_field'
+				'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'multi_grade_field'
 			]);
 
     	}
@@ -729,7 +729,7 @@ class InstitutionSectionsTable extends AppTable {
 		}
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'institution_shift_id', 'security_user_id', 'students',
+			'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'students',
 		]);
 	}
 
@@ -893,9 +893,9 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	/**
-	 * security_user_id field setup
+	 * staff_id field setup
 	 */
-	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 
 			if ($this->_selectedAcademicPeriodId > -1) {
