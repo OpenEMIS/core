@@ -53,7 +53,7 @@ class AccessControlComponent extends Component {
 					if (is_null($lastModified)) {
 						$this->buildPermissions();
 					} else {
-						if ($entity->modified->gt($lastModified)) {
+						if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
 							$this->buildPermissions();
 						}
 					}
@@ -89,7 +89,7 @@ class AccessControlComponent extends Component {
 			foreach ($functions as $entity) { // for each function in roles
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
-					if (is_null($lastModified) || (!is_null($lastModified) && !empty($entity->modified) && $lastModified->lt($entity->modified))) {
+					if (is_null($lastModified) || (!is_null($lastModified) && !is_null($entity->modified) && $lastModified->lt($entity->modified))) {
 						$lastModified = $entity->modified;
 					} 
 
