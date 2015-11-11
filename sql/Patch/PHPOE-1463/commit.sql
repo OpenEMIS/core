@@ -31,9 +31,11 @@ ALTER TABLE `institution_site_activities`
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_activities` ;
 
--- institution_attachments
-DROP TABLE IF EXISTS `institution_attachments`;
+-- institution_attachments (Extra table in the database)
+ALTER TABLE `institution_attachments`
+RENAME TO `z_1463_institution_attachments`;
 
+-- institution_attachments
 ALTER TABLE `institution_site_attachments` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_attachments` ;
@@ -157,47 +159,15 @@ ALTER TABLE `institution_site_survey_table_cells`
 CHANGE COLUMN `institution_site_survey_id` `institution_survey_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_survey_table_cells` ;
 
--- student_attendance
-DROP TABLE IF EXISTS student_attendances;
-
--- student_attendance_types
-DROP TABLE IF EXISTS student_attendance_types;
-
--- institution_site_students
-ALTER TABLE `institution_site_students` 
-RENAME TO  `z_1463_institution_site_students` ;
-
 -- institution_staff_absences
 ALTER TABLE `institution_site_staff_absences` 
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_staff_absences` ;
 
--- institution_site_student_absence_attachments
-DROP TABLE IF EXISTS institution_site_student_absence_attachments;
-
--- institution_site_staff_absence_attachments
-DROP TABLE IF EXISTS institution_site_staff_absence_attachments;
-
--- institution_site_quality_visit_attachments
-DROP TABLE IF EXISTS institution_site_quality_visit_attachments;
-
--- staff
-ALTER TABLE `staff` 
-RENAME TO  `z_1463_staff` ;
-
 -- staff_activities
 ALTER TABLE `staff_activities` 
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
-
--- staff_attendances
-DROP TABLE IF EXISTS `staff_attendances`;
-
--- staff_attendance_types
-DROP TABLE IF EXISTS `staff_attendance_types`;
-
--- staff_categories
-DROP TABLE IF EXISTS `staff_categories`;
 
 -- staff_custom_field_values
 ALTER TABLE `staff_custom_field_values` 
@@ -206,9 +176,6 @@ CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
 -- staff_leaves
 ALTER TABLE `staff_leaves` 
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
-
--- staff_leave_types
-DROP TABLE IF EXISTS `staff_leave_types`;
 
 -- staff_licenses
 ALTER TABLE `staff_licenses` 
@@ -244,86 +211,59 @@ CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
 ALTER TABLE `staff_custom_table_cells` 
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
 
--- census_behaviours
-DROP TABLE IF EXISTS census_behaviours;
+-- student_custom_field_values
+ALTER TABLE `student_custom_field_values` 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
 
--- census_buildings
-DROP TABLE IF EXISTS census_buildings;
+-- student_custom_table_cells
+ALTER TABLE `student_custom_table_cells` 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
 
--- census_classes
-DROP TABLE IF EXISTS census_classes;
+-- TABLES TO DROP
 
--- census_class_grades
-DROP TABLE IF EXISTS census_class_grades;
+-- student_attendance
+ALTER TABLE `student_attendances`
+RENAME TO `z_1463_student_attendances`;
 
--- census_custom_field_options
-DROP TABLE IF EXISTS census_custom_field_options;
+-- student_attendance_types
+ALTER TABLE `student_attendance_types`
+RENAME TO `z_1463_student_attendance_types`;
 
--- census_custom_fields
-DROP TABLE IF EXISTS census_custom_fields;
+-- institution_site_students
+ALTER TABLE `institution_site_students` 
+RENAME TO  `z_1463_institution_site_students` ;
 
--- census_custom_values
-DROP TABLE IF EXISTS census_custom_values;
+-- institution_site_student_absence_attachments
+ALTER TABLE `institution_site_student_absence_attachments`
+RENAME TO  `z_1463_institution_site_student_absence_attachments`;
 
--- census_energy
-DROP TABLE IF EXISTS census_energy;
+-- institution_site_staff_absence_attachments
+ALTER TABLE `institution_site_staff_absence_attachments`
+RENAME TO  `z_1463_institution_site_staff_absence_attachments`;
 
--- census_finances
-DROP TABLE IF EXISTS census_finances;
+-- institution_site_quality_visit_attachments
+ALTER TABLE `institution_site_quality_visit_attachments`
+RENAME TO  `z_1463_institution_site_quality_visit_attachments`;
 
--- census_furniture
-DROP TABLE IF EXISTS census_furniture;
+-- staff
+ALTER TABLE `staff` 
+RENAME TO  `z_1463_staff` ;
 
--- census_graduates
-DROP TABLE IF EXISTS census_graduates;
+-- staff_attendances
+ALTER TABLE `staff_attendances`
+RENAME TO  `z_1463_staff_attendances` ;
 
--- census_grids
-DROP TABLE IF EXISTS census_grids;
+-- staff_attendance_types
+ALTER TABLE `staff_attendance_types`
+RENAME TO  `z_1463_staff_attendance_types` ;
 
--- census_grid_values
-DROP TABLE IF EXISTS census_grid_values;
+-- staff_categories
+ALTER TABLE `staff_categories`
+RENAME TO  `z_1463_staff_categories` ;
 
--- census_grid_x_categories
-DROP TABLE IF EXISTS census_grid_x_categories;
-
--- census_grid_y_categories
-DROP TABLE IF EXISTS census_grid_y_categories;
-
--- census_resources
-DROP TABLE IF EXISTS census_resources;
-
--- census_rooms
-DROP TABLE IF EXISTS census_rooms;
-
--- census_sanitations
-DROP TABLE IF EXISTS census_sanitations;
-
--- census_shifts
-DROP TABLE IF EXISTS census_shifts;
-
--- census_students
-DROP TABLE IF EXISTS census_students;
-
--- census_teacher_fte
-DROP TABLE IF EXISTS census_teacher_fte;
-
--- census_teacher_grades
-DROP TABLE IF EXISTS census_teacher_grades;
-
--- census_teachers
-DROP TABLE IF EXISTS census_teachers;
-
--- census_teacher_training
-DROP TABLE IF EXISTS census_teacher_training;
-
--- census_textbooks
-DROP TABLE IF EXISTS census_textbooks;
-
--- census_verifications
-DROP TABLE IF EXISTS census_verifications;
-
--- census_water
-DROP TABLE IF EXISTS census_water;
+-- staff_leave_types
+ALTER TABLE `staff_leave_types`
+RENAME TO  `z_1463_staff_leave_types` ;
 
 -- students
 ALTER TABLE `students` 
@@ -333,10 +273,207 @@ RENAME TO  `z_1463_students` ;
 ALTER TABLE `guardians` 
 RENAME TO  `z_1463_guardians` ;
 
--- student_custom_field_values
-ALTER TABLE `student_custom_field_values` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
+-- census_behaviours
+ALTER TABLE `census_behaviours`
+RENAME TO  `z_1463_census_behaviours` ;
 
--- student_custom_table_cells
-ALTER TABLE `student_custom_table_cells` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
+-- census_buildings
+ALTER TABLE `census_buildings`
+RENAME TO  `z_1463_census_buildings` ;
+
+-- census_classes
+ALTER TABLE `census_classes`
+RENAME TO  `z_1463_census_classes` ;
+
+-- census_class_grades
+ALTER TABLE `census_class_grades`
+RENAME TO  `z_1463_census_class_grades` ;
+
+-- census_custom_field_options
+ALTER TABLE `census_custom_field_options`
+RENAME TO  `z_1463_census_custom_field_options` ;
+
+-- census_custom_fields
+ALTER TABLE `census_custom_fields`
+RENAME TO  `z_1463_census_custom_fields` ;
+
+-- census_custom_values
+ALTER TABLE `census_custom_values`
+RENAME TO  `z_1463_census_custom_values` ;
+
+-- census_energy
+ALTER TABLE `census_energy`
+RENAME TO  `z_1463_census_energy` ;
+
+-- census_finances
+ALTER TABLE `census_finances`
+RENAME TO  `z_1463_census_finances` ;
+
+-- census_furniture
+ALTER TABLE `census_furniture`
+RENAME TO  `z_1463_census_furniture` ;
+
+-- census_graduates
+ALTER TABLE `census_graduates`
+RENAME TO  `z_1463_census_graduates` ;
+
+-- census_grids
+ALTER TABLE `census_grids`
+RENAME TO  `z_1463_census_grids` ;
+
+-- census_grid_values
+ALTER TABLE `census_grid_values`
+RENAME TO  `z_1463_census_grid_values` ;
+
+-- census_grid_x_categories
+ALTER TABLE `census_grid_x_categories`
+RENAME TO  `z_1463_census_grid_x_categories` ;
+
+-- census_grid_y_categories
+ALTER TABLE `census_grid_y_categories`
+RENAME TO  `z_1463_census_grid_y_categories` ;
+
+-- census_resources
+ALTER TABLE `census_resources`
+RENAME TO  `z_1463_census_resources` ;
+
+-- census_rooms
+ALTER TABLE `census_rooms`
+RENAME TO  `z_1463_census_rooms` ;
+
+-- census_sanitations
+ALTER TABLE `census_sanitations`
+RENAME TO  `z_1463_census_sanitations` ;
+
+-- census_shifts
+ALTER TABLE `census_shifts`
+RENAME TO  `z_1463_census_shifts` ;
+
+-- census_students
+ALTER TABLE `census_students`
+RENAME TO  `z_1463_census_students` ;
+
+-- census_teacher_fte
+ALTER TABLE `census_teacher_fte`
+RENAME TO  `z_1463_census_teacher_fte` ;
+
+-- census_teacher_grades
+ALTER TABLE `census_teacher_grades`
+RENAME TO  `z_1463_census_teacher_grades` ;
+
+-- census_teachers
+ALTER TABLE `census_teachers`
+RENAME TO  `z_1463_census_teachers` ;
+
+-- census_teacher_training
+ALTER TABLE `census_teacher_training`
+RENAME TO  `z_1463_census_teacher_training` ;
+
+-- census_textbooks
+ALTER TABLE `census_textbooks`
+RENAME TO  `z_1463_census_textbooks` ;
+
+-- census_verifications
+ALTER TABLE `census_verifications`
+RENAME TO  `z_1463_census_verifications` ;
+
+-- census_water
+ALTER TABLE `census_water`
+RENAME TO  `z_1463_census_water` ;
+
+-- batch_report
+ALTER TABLE `batch_reports` 
+RENAME TO  `z_1463_batch_reports` ;
+
+-- finance_categories
+ALTER TABLE `finance_categories` 
+RENAME TO  `z_1463_finance_categories` ;
+
+-- finance_natures
+ALTER TABLE `finance_natures` 
+RENAME TO  `z_1463_finance_natures` ;
+
+-- finance_sources
+ALTER TABLE `finance_sources` 
+RENAME TO  `z_1463_finance_sources` ;
+
+-- finance_types
+ALTER TABLE `finance_types` 
+RENAME TO  `z_1463_finance_types` ;
+
+-- guardian_education_levels
+ALTER TABLE `guardian_education_levels` 
+RENAME TO  `z_1463_guardian_education_levels` ;
+
+-- guardian_relations
+ALTER TABLE `guardian_relations` 
+RENAME TO  `z_1463_guardian_relations` ;
+
+-- infrastructure_buildings
+ALTER TABLE `infrastructure_buildings` 
+RENAME TO  `z_1463_infrastructure_buildings` ;
+
+-- infrastructure_categories
+ALTER TABLE `infrastructure_categories` 
+RENAME TO  `z_1463_infrastructure_categories` ;
+
+-- infrastructure_energy
+ALTER TABLE `infrastructure_energy` 
+RENAME TO  `z_1463_infrastructure_energy` ;
+
+-- infrastructure_furniture
+ALTER TABLE `infrastructure_furniture` 
+RENAME TO  `z_1463_infrastructure_furniture` ;
+
+-- infrastructure_materials
+ALTER TABLE `infrastructure_materials` 
+RENAME TO  `z_1463_infrastructure_materials` ;
+
+-- infrastructure_resources
+ALTER TABLE `infrastructure_resources` 
+RENAME TO  `z_1463_infrastructure_resources` ;
+
+-- infrastructure_rooms
+ALTER TABLE `infrastructure_rooms` 
+RENAME TO  `z_1463_infrastructure_rooms` ;
+
+-- infrastructure_sanitations
+ALTER TABLE `infrastructure_sanitations` 
+RENAME TO  `z_1463_infrastructure_sanitations` ;
+
+-- infrastructure_statuses
+ALTER TABLE `infrastructure_statuses` 
+RENAME TO  `z_1463_infrastructure_statuses` ;
+
+-- infrastructure_water
+ALTER TABLE `infrastructure_water` 
+RENAME TO  `z_1463_infrastructure_water` ;
+
+-- institution_custom_value_history
+ALTER TABLE `institution_custom_value_history` 
+RENAME TO  `z_1463_institution_custom_value_history` ;
+
+-- institution_providers
+ALTER TABLE `institution_providers` 
+RENAME TO  `z_1463_institution_providers` ;
+
+-- institution_sectors
+ALTER TABLE `institution_sectors` 
+RENAME TO  `z_1463_institution_sectors` ;
+
+-- institution_statuses
+ALTER TABLE `institution_statuses` 
+RENAME TO  `z_1463_institution_statuses` ;
+
+-- leave_statuses
+ALTER TABLE `leave_statuses` 
+RENAME TO  `z_1463_leave_statuses` ;
+
+-- qualification_level_bak
+ALTER TABLE `qualification_levels_bak` 
+RENAME TO  `z_1463_qualification_levels_bak` ;
+
+-- security_user_access
+ALTER TABLE `security_user_access` 
+RENAME TO  `z_1463_security_user_access` ;
+
