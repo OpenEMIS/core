@@ -17,7 +17,9 @@ RENAME TO  `security_group_institution_sites` ;
 
 -- institution_custom_field_values
 ALTER TABLE `institution_custom_field_values` 
-CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '',
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`);
 
 -- institution_custom_table_cells
 ALTER TABLE `institution_custom_table_cells` 
@@ -25,7 +27,9 @@ CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT ''
 
 -- institution_site_activities
 ALTER TABLE `institution_activities` 
-CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_activities` ;
 
 -- institution_attachments
@@ -42,11 +46,15 @@ ALTER TABLE `institution_staff`
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_position_id` `institution_site_position_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_staff` ;
 
 -- institution_site_classes
 ALTER TABLE `institution_classes` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO `institution_site_classes` ;
 
 -- institution_site_class_staff
@@ -66,11 +74,15 @@ ALTER TABLE `institution_sections`
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_shift_id` `institution_site_shift_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_sections` ;
 
 -- institution_site_section_students
 ALTER TABLE `institution_section_students` 
 CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_section_id` ,
+ADD INDEX `institution_site_id` (`institution_site_section_id`),
 RENAME TO  `institution_site_section_students` ;
 
 -- institution_site_section_grades
@@ -88,16 +100,24 @@ RENAME TO  `institution_site_section_classes` ;
 ALTER TABLE `institution_shifts` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `location_institution_id` `location_institution_site_id` INT(11) NULL DEFAULT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
+DROP INDEX `location_institution_id` ,
+ADD INDEX `location_site_institution_id` (`location_site_institution_id`),
 RENAME TO  `institution_site_shifts` ;
 
 -- institution_grades
 ALTER TABLE `institution_grades` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution__site_id`),
 RENAME TO  `institution_site_grades` ;
 
 -- institution_infrastructure
 ALTER TABLE `institution_infrastructures` 
-CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`);
 
 -- institution_site_bank_accounts
 ALTER TABLE `institution_bank_accounts` 
@@ -113,6 +133,8 @@ RENAME TO  `institution_site_student_absences` ;
 -- institution_site_assessments
 ALTER TABLE `institution_assessments` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_assessments` ;
 
 -- institution_site_quality_visit
@@ -121,6 +143,8 @@ CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_quality_visits` ;
 
 -- institution_site_quality_rubric_answers
@@ -134,6 +158,8 @@ CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_quality_rubrics` ;
 
 -- institution_site_survey_answers
@@ -144,6 +170,8 @@ RENAME TO  `institution_site_survey_answers` ;
 -- institution_site_survey
 ALTER TABLE `institution_surveys` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_surveys` ;
 
 -- institution_site_survey_table_cells
@@ -155,6 +183,8 @@ RENAME TO  `institution_site_survey_table_cells` ;
 ALTER TABLE `institution_staff_absences` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_staff_absences` ;
 
 -- staff_activities
@@ -210,8 +240,6 @@ CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 -- student_custom_table_cells
 ALTER TABLE `student_custom_table_cells` 
 CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
-
--- TABLES TO DROP
 
 -- institution_attachments
 ALTER TABLE `z_1463_institution_attachments`
@@ -472,6 +500,16 @@ RENAME TO  `qualification_levels_bak` ;
 -- security_user_access
 ALTER TABLE `z_1463_security_user_access` 
 RENAME TO  `security_user_access` ;
+
+-- assessment_item_results
+ALTER TABLE `assessment_item_results` 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_id`);
+
+-- institution_fees
+ALTER TABLE `institution_fees` 
+DROP INDEX `institution_id` ,
+ADD INDEX `institution_site_id` (`institution_id`);
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
