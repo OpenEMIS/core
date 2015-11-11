@@ -33,21 +33,6 @@ ALTER TABLE `institution_attachments`
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_attachments` ;
 
-CREATE TABLE `institution_attachments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `description` varchar(250) NOT NULL,
-  `file_name` varchar(250) NOT NULL,
-  `file_content` longblob NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `institution_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 -- institution_positions
 ALTER TABLE `institution_positions` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , RENAME TO  `institution_site_positions` ;
@@ -121,7 +106,7 @@ RENAME TO  `institution_site_bank_accounts` ;
 
 -- institution_site_student_absence
 ALTER TABLE `institution_student_absences` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_student_absences` ;
 
@@ -166,151 +151,15 @@ ALTER TABLE `institution_survey_table_cells`
 CHANGE COLUMN `institution_survey_id` `institution_site_survey_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_survey_table_cells` ;
 
--- student_attendance
-CREATE TABLE `student_attendances` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `student_attendance_type_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `security_user_id` int(11) NOT NULL,
-  `institution_id` int(11) NOT NULL,
-  `institution_class_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `institution_site_id` (`institution_id`),
-  KEY `institution_site_class_id` (`institution_class_id`),
-  KEY `security_user_id` (`security_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- student_attendance_types
-CREATE TABLE `student_attendance_types` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `international_code` varchar(10) DEFAULT NULL,
-  `national_code` varchar(10) DEFAULT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- institution_site_students
-ALTER TABLE `z_1463_institution_site_students` 
-RENAME TO  `institution_site_students` ;
-
 -- institution_site_staff_absences
 ALTER TABLE `institution_staff_absences` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_site_staff_absences` ;
-
--- institution_site_student_absence_attachments
-CREATE TABLE `institution_site_student_absence_attachments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `file_name` varchar(250) NOT NULL,
-  `file_content` longblob NOT NULL,
-  `institution_site_student_absence_id` int(11) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_student_attendance_id` (`institution_site_student_absence_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- institution_site_staff_absence_attachments
-CREATE TABLE `institution_site_staff_absence_attachments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `file_name` varchar(250) NOT NULL,
-  `file_content` longblob NOT NULL,
-  `institution_site_staff_absence_id` int(11) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_staff_absence_id` (`institution_site_staff_absence_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- institution_site_quality_visit_attachments
-CREATE TABLE `institution_site_quality_visit_attachments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `file_name` varchar(200) DEFAULT NULL,
-  `file_content` longblob,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `institution_site_quality_visit_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_quality_visit_id` (`institution_site_quality_visit_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- staff
-ALTER TABLE `z_1463_staff` 
-RENAME TO  `staff` ;
-
--- staff_attendances
-CREATE TABLE `staff_attendances` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `staff_attendance_type_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `security_user_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `security_user_id` (`security_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- staff_activities
 ALTER TABLE `staff_activities` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
-
--- staff_attendance_types
-CREATE TABLE `staff_attendance_types` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `international_code` varchar(10) DEFAULT NULL,
-  `national_code` varchar(10) DEFAULT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- staff_categories
-CREATE TABLE `staff_categories` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `international_code` varchar(10) DEFAULT NULL,
-  `national_code` varchar(10) DEFAULT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- staff_custom_field_values
 ALTER TABLE `staff_custom_field_values` 
@@ -319,21 +168,6 @@ CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 -- staff_leaves
 ALTER TABLE `staff_leaves` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
-
--- staff_leave_types
-CREATE TABLE `staff_leave_types` (
-  `id` int(3) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `international_code` varchar(20) DEFAULT NULL,
-  `national_code` varchar(20) DEFAULT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- staff_licenses
 ALTER TABLE `staff_licenses` 
@@ -369,497 +203,6 @@ CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 ALTER TABLE `staff_custom_table_cells` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
--- census_behaviours
-CREATE TABLE `census_behaviours` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `gender_id` int(11) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `source` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> Data Entry, 1 -> External, 2 -> Estimate',
-  `student_behaviour_category_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `student_behaviour_category_id` (`student_behaviour_category_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `gender_id` (`gender_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_buildings
-CREATE TABLE `census_buildings` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `infrastructure_building_id` int(11) NOT NULL,
-  `infrastructure_material_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_classes
-CREATE TABLE `census_classes` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `classes` int(5) NOT NULL,
-  `seats` int(11) DEFAULT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_class_grades
-CREATE TABLE `census_class_grades` (
-  `census_class_id` int(11) NOT NULL,
-  `education_grade_id` int(11) NOT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`census_class_id`,`education_grade_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_custom_field_options
-CREATE TABLE `census_custom_field_options` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` varchar(250) NOT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `census_custom_field_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8;
-
--- census_custom_fields
-CREATE TABLE `census_custom_fields` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `order` int(3) NOT NULL,
-  `type` int(1) NOT NULL DEFAULT '1' COMMENT '1 -> Label, 2 -> Text, 3 -> Dropdown, 4 -> Multiple, 5 -> Textarea',
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `institution_site_type_id` int(11) NOT NULL DEFAULT '0',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8;
-
--- census_custom_values
-CREATE TABLE `census_custom_values` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` varchar(250) NOT NULL,
-  `census_custom_field_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_energy
-CREATE TABLE `census_energy` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `infrastructure_energy_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_finances
-CREATE TABLE `census_finances` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `description` varchar(150) NOT NULL,
-  `amount` float(11,2) NOT NULL,
-  `finance_source_id` int(11) NOT NULL,
-  `finance_category_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_furniture
-CREATE TABLE `census_furniture` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `infrastructure_furniture_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_graduates
-CREATE TABLE `census_graduates` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `gender_id` int(11) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `education_programme_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `education_programme_id` (`education_programme_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `gender_id` (`gender_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_grids
-CREATE TABLE `census_grids` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `description` text,
-  `x_title` varchar(100) DEFAULT NULL,
-  `y_title` varchar(100) DEFAULT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `institution_site_type_id` int(11) NOT NULL DEFAULT '0',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
-
--- census_grid_values
-CREATE TABLE `census_grid_values` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` varchar(250) NOT NULL,
-  `census_grid_id` int(11) NOT NULL,
-  `census_grid_x_category_id` int(11) DEFAULT NULL,
-  `census_grid_y_category_id` int(11) DEFAULT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_grid_x_categories
-CREATE TABLE `census_grid_x_categories` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `order` int(1) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `census_grid_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
-
--- census_grid_y_categories
-CREATE TABLE `census_grid_y_categories` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `order` int(1) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `census_grid_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8;
-
--- census_resources
-CREATE TABLE `census_resources` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `infrastructure_resource_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_rooms
-CREATE TABLE `census_rooms` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `infrastructure_room_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_sanitations
-CREATE TABLE `census_sanitations` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `gender_id` int(11) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `infrastructure_sanitation_id` int(11) NOT NULL,
-  `infrastructure_material_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `infrastructure_status_id` (`infrastructure_status_id`),
-  KEY `source` (`source`),
-  KEY `gender_id` (`gender_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_shifts
-CREATE TABLE `census_shifts` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `census_class_id` int(11) NOT NULL,
-  `shift_id` int(11) DEFAULT NULL,
-  `value` int(11) DEFAULT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `census_class_id` (`census_class_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_students
-CREATE TABLE `census_students` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `age` int(5) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `gender_id` int(11) NOT NULL,
-  `student_category_id` int(11) NOT NULL,
-  `education_grade_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `gender_id` (`gender_id`),
-  KEY `student_category_id` (`student_category_id`),
-  KEY `education_grade_id` (`education_grade_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`),
-  KEY `age` (`age`),
-  KEY `unique_yearage_census` (`institution_site_id`,`education_grade_id`,`student_category_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_teacher_fte
-CREATE TABLE `census_teacher_fte` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `gender_id` int(11) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `education_level_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `education_level_id` (`education_level_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`),
-  KEY `gender_id` (`gender_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_teacher_grades
-CREATE TABLE `census_teacher_grades` (
-  `census_teacher_id` int(11) NOT NULL,
-  `education_grade_id` int(11) NOT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`census_teacher_id`,`education_grade_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_teachers
-CREATE TABLE `census_teachers` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `gender_id` int(11) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `source` (`source`),
-  KEY `gender_id` (`gender_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_teacher_training
-CREATE TABLE `census_teacher_training` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `gender_id` int(11) NOT NULL,
-  `value` int(11) NOT NULL DEFAULT '0',
-  `education_level_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `source` (`source`),
-  KEY `gender_id` (`gender_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_textbooks
-CREATE TABLE `census_textbooks` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `education_grade_subject_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_verifications
-CREATE TABLE `census_verifications` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `status` int(1) NOT NULL DEFAULT '1' COMMENT '0 -> Unverified, 1 -> Verified',
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `status` (`status`),
-  KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- census_water
-CREATE TABLE `census_water` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `value` int(11) NOT NULL,
-  `infrastructure_water_id` int(11) NOT NULL,
-  `infrastructure_status_id` int(11) NOT NULL,
-  `institution_site_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `school_year_id` (`academic_period_id`),
-  KEY `infrastructure_status_id` (`infrastructure_status_id`),
-  KEY `source` (`source`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- students
-ALTER TABLE `z_1463_students` 
-RENAME TO  `students` ;
-
--- guardians
-ALTER TABLE `z_1463_guardians` 
-RENAME TO  `guardians` ;
-
 -- student_custom_field_values
 ALTER TABLE `student_custom_field_values` 
 CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
@@ -867,6 +210,268 @@ CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 -- student_custom_table_cells
 ALTER TABLE `student_custom_table_cells` 
 CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
+
+-- TABLES TO DROP
+
+-- institution_attachments
+ALTER TABLE `z_1463_institution_attachments`
+RENAME TO `institution_attachments`;
+
+-- student_attendance
+ALTER TABLE `z_1463_student_attendances`
+RENAME TO `student_attendances`;
+
+-- student_attendance_types
+ALTER TABLE `z_1463_student_attendance_types`
+RENAME TO `student_attendance_types`;
+
+-- institution_site_students
+ALTER TABLE `z_1463_institution_site_students` 
+RENAME TO  `institution_site_students` ;
+
+-- institution_site_student_absence_attachments
+ALTER TABLE `z_1463_institution_site_student_absence_attachments`
+RENAME TO  `institution_site_student_absence_attachments`;
+
+-- institution_site_staff_absence_attachments
+ALTER TABLE `z_1463_institution_site_staff_absence_attachments`
+RENAME TO  `institution_site_staff_absence_attachments`;
+
+-- institution_site_quality_visit_attachments
+ALTER TABLE `z_1463_institution_site_quality_visit_attachments`
+RENAME TO  `institution_site_quality_visit_attachments`;
+
+-- staff
+ALTER TABLE  `z_1463_staff`
+RENAME TO   `staff`;
+
+-- staff_attendances
+ALTER TABLE `z_1463_staff_attendances`
+RENAME TO  `staff_attendances`;
+
+-- staff_attendance_types
+ALTER TABLE `z_1463_staff_attendance_types`
+RENAME TO  `staff_attendance_types`;
+
+-- staff_categories
+ALTER TABLE `z_1463_staff_categories`
+RENAME TO `staff_categories`;
+
+-- staff_leave_types
+ALTER TABLE `z_1463_staff_leave_types`
+RENAME TO `staff_leave_types` ;
+
+-- students
+ALTER TABLE `z_1463_students`
+RENAME TO `students`;
+
+-- guardians
+ALTER TABLE  `z_1463_guardians`
+RENAME TO `guardians` ;
+
+-- census_behaviours
+ALTER TABLE `z_1463_census_behaviours`
+RENAME TO  `census_behaviours`;
+
+-- census_buildings
+ALTER TABLE `z_1463_census_buildings`
+RENAME TO  `census_buildings`;
+
+-- census_classes
+ALTER TABLE `z_1463_census_classes`
+RENAME TO  `census_classes`;
+
+-- census_class_grades
+ALTER TABLE `z_1463_census_class_grades`
+RENAME TO  `census_class_grades`;
+
+-- census_custom_field_options
+ALTER TABLE `z_1463_census_custom_field_options`
+RENAME TO  `census_custom_field_options`;
+
+-- census_custom_fields
+ALTER TABLE `z_1463_census_custom_fields`
+RENAME TO  `census_custom_fields` ;
+
+-- census_custom_values
+ALTER TABLE `z_1463_census_custom_values`
+RENAME TO  `census_custom_values` ;
+
+-- census_energy
+ALTER TABLE `z_1463_census_energy`
+RENAME TO  `census_energy` ;
+
+-- census_finances
+ALTER TABLE `z_1463_census_finances`
+RENAME TO  `census_finances` ;
+
+-- census_furniture
+ALTER TABLE `z_1463_census_furniture`
+RENAME TO  `census_furniture` ;
+
+-- census_graduates
+ALTER TABLE `z_1463_census_graduates`
+RENAME TO `census_graduates`;
+
+-- census_grids
+ALTER TABLE `z_1463_census_grids`
+RENAME TO  `census_grids`;
+
+-- census_grid_values
+ALTER TABLE `z_1463_census_grid_values`
+RENAME TO  `census_grid_values`;
+
+-- census_grid_x_categories
+ALTER TABLE `z_1463_census_grid_x_categories`
+RENAME TO  `census_grid_x_categories`;
+
+-- census_grid_y_categories
+ALTER TABLE `z_1463_census_grid_y_categories`
+RENAME TO  `census_grid_y_categories` ;
+
+-- census_resources
+ALTER TABLE `z_1463_census_resources`
+RENAME TO  `census_resources`;
+
+-- census_rooms
+ALTER TABLE `z_1463_census_rooms`
+RENAME TO  `census_rooms`;
+
+-- census_sanitations
+ALTER TABLE `z_1463_census_sanitations`
+RENAME TO  `census_sanitations`;
+
+-- census_shifts
+ALTER TABLE `z_1463_census_shifts`
+RENAME TO  `census_shifts`;
+
+-- census_students
+ALTER TABLE `z_1463_census_students`
+RENAME TO  `census_students`;
+
+-- census_teacher_fte
+ALTER TABLE `z_1463_census_teacher_fte`
+RENAME TO  `census_teacher_fte`;
+
+-- census_teacher_grades
+ALTER TABLE `z_1463_census_teacher_grades`
+RENAME TO  `census_teacher_grades`;
+
+-- census_teachers
+ALTER TABLE `z_1463_census_teachers`
+RENAME TO  `census_teachers`;
+
+-- census_teacher_training
+ALTER TABLE `z_1463_census_teacher_training`
+RENAME TO  `census_teacher_training`;
+
+-- census_textbooks
+ALTER TABLE `z_1463_census_textbooks`
+RENAME TO  `census_textbooks`;
+
+-- census_verifications
+ALTER TABLE `z_1463_census_verifications`
+RENAME TO  `census_verifications`;
+
+-- census_water
+ALTER TABLE `z_1463_census_water`
+RENAME TO  `census_water`;
+
+-- batch_report
+ALTER TABLE `z_1463_batch_reports` 
+RENAME TO  `batch_reports` ;
+
+-- finance_categories
+ALTER TABLE `z_1463_finance_categories` 
+RENAME TO  `finance_categories`;
+
+-- finance_natures
+ALTER TABLE `z_1463_finance_natures` 
+RENAME TO  `finance_natures` ;
+
+-- finance_sources
+ALTER TABLE  `z_1463_finance_sources`
+RENAME TO  `finance_sources` ;
+
+-- finance_types
+ALTER TABLE `z_1463_finance_types` 
+RENAME TO  `finance_types` ;
+
+-- guardian_education_levels
+ALTER TABLE  `z_1463_guardian_education_levels` 
+RENAME TO  `guardian_education_levels`;
+
+-- guardian_relations
+ALTER TABLE  `z_1463_guardian_relations`
+RENAME TO  `guardian_relations`;
+
+-- infrastructure_buildings
+ALTER TABLE `z_1463_infrastructure_buildings` 
+RENAME TO  `infrastructure_buildings` ;
+
+-- infrastructure_categories
+ALTER TABLE `z_1463_infrastructure_categories` 
+RENAME TO  `infrastructure_categories` ;
+
+-- infrastructure_energy
+ALTER TABLE `z_1463_infrastructure_energy` 
+RENAME TO  `infrastructure_energy` ;
+
+-- infrastructure_furniture
+ALTER TABLE `z_1463_infrastructure_furniture` 
+RENAME TO  `infrastructure_furniture` ;
+
+-- infrastructure_materials
+ALTER TABLE `z_1463_infrastructure_materials` 
+RENAME TO  `infrastructure_materials` ;
+
+-- infrastructure_resources
+ALTER TABLE `z_1463_infrastructure_resources` 
+RENAME TO  `infrastructure_resources` ;
+
+-- infrastructure_rooms
+ALTER TABLE `z_1463_infrastructure_rooms` 
+RENAME TO  `infrastructure_rooms` ;
+
+-- infrastructure_sanitations
+ALTER TABLE `z_1463_infrastructure_sanitations` 
+RENAME TO  `infrastructure_sanitations` ;
+
+-- infrastructure_statuses
+ALTER TABLE `z_1463_infrastructure_statuses` 
+RENAME TO  `infrastructure_statuses` ;
+
+-- infrastructure_water
+ALTER TABLE `z_1463_infrastructure_water` 
+RENAME TO  `infrastructure_water` ;
+
+-- institution_custom_value_history
+ALTER TABLE `z_1463_institution_custom_value_history` 
+RENAME TO  `institution_custom_value_history` ;
+
+-- institution_providers
+ALTER TABLE `z_1463_institution_providers` 
+RENAME TO  `institution_providers` ;
+
+-- institution_sectors
+ALTER TABLE `z_1463_institution_sectors` 
+RENAME TO  `institution_sectors` ;
+
+-- institution_statuses
+ALTER TABLE `z_1463_institution_statuses` 
+RENAME TO  `institution_statuses` ;
+
+-- leave_statuses
+ALTER TABLE `z_1463_leave_statuses` 
+RENAME TO  `leave_statuses` ;
+
+-- qualification_level_bak
+ALTER TABLE `z_1463_qualification_levels_bak` 
+RENAME TO  `qualification_levels_bak` ;
+
+-- security_user_access
+ALTER TABLE `z_1463_security_user_access` 
+RENAME TO  `security_user_access` ;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
