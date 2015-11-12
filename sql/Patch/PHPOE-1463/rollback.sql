@@ -103,14 +103,14 @@ CHANGE COLUMN `location_institution_id` `location_institution_site_id` INT(11) N
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_site_id`),
 DROP INDEX `location_institution_id` ,
-ADD INDEX `location_site_institution_id` (`location_site_institution_id`),
+ADD INDEX `location_institution_site_id` (`location_institution_site_id`),
 RENAME TO  `institution_site_shifts` ;
 
 -- institution_grades
 ALTER TABLE `institution_grades` 
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_id` ,
-ADD INDEX `institution_site_id` (`institution__site_id`),
+ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_grades` ;
 
 -- institution_infrastructure
@@ -510,6 +510,13 @@ ADD INDEX `institution_site_id` (`institution_id`);
 ALTER TABLE `institution_fees` 
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_id`);
+
+-- labels
+UPDATE `labels`
+INNER JOIN `z_1463_labels` ON `labels`.`id` = `z_1463_labels`.`id`
+SET `labels`.`module` = `z_1463_labels`.`module`, `labels`.`field` = `z_1463_labels`.`field`;
+
+DROP TABLE `z_1463_labels`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
