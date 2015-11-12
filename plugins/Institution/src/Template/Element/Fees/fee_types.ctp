@@ -7,7 +7,7 @@
 	});
 </script>
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
+	<label for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
 	<div class="table-in-view table-responsive">
 		<table class="table">
 			<thead>
@@ -70,7 +70,7 @@
 
 	<?php if (isset($attr['non-editable']) && $action != 'view'):   ?>
 	<div class="input clearfix">
-		<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
+		<label for="<?= $attr['id'] ?>"><?= __('Fee Types') ?></label>
 		<div class="table-in-view">
 	<?php else : ?>
 		<div class="table-in-view col-md-4 table-responsive" style="width:inherit">
