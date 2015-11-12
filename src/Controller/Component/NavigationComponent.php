@@ -102,33 +102,33 @@ class NavigationComponent extends Component {
 			'collapse' => false,
 			'items' => [
 				'Institutions' => [
-					'icon' => '<i class="fa kd-institutions"></i>',
+					'icon' => '<span><i class="fa kd-institutions"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
 				],
 				'Students' => [
-					'icon' => '<i class="fa kd-students"></i>',
+					'icon' => '<span><i class="fa kd-students"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']
 				],
 				'Staff' => [
-					'icon' => '<i class="fa kd-staff"></i>',
+					'icon' => '<span><i class="fa kd-staff"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
 				'Guardians' => [
-					'icon' => '<i class="fa kd-guardian"></i>',
+					'icon' => '<span><i class="fa kd-guardian"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				],
 
 				'Reports' => [
-					'icon' => '<i class="fa kd-reports"></i>',
+					'icon' => '<span><i class="fa kd-reports"></i></span>',
 					'collapse' => true
 				],
 				
 				'Administration' => [
-					'icon' => '<i class="fa fa-cogs"></i>',
+					'icon' => '<span><i class="fa fa-cogs"></i></span>',
 					'collapse' => true
 				]
 			]
@@ -320,7 +320,7 @@ class NavigationComponent extends Component {
 			'Training' => [
 				'collapse' => true,
 				'items' => [
-					'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
+					// 'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
 					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']]
 				]
 			]
