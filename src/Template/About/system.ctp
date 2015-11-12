@@ -6,7 +6,7 @@ $this->start('panelBody');
 		<!-- System Information -->
 			<div id="system-info">
 				<div class="table-responsive">
-					<table class="table table-striped table-hover table-bordered table-sortable">
+					<table class="table table-curved table-sortable">
 						<thead>
 							<th><?php echo __('Database') ?></th>
 							<th><?php echo __('PHP Version') ?></th>
