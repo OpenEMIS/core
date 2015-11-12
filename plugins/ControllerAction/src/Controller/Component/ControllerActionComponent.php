@@ -1267,52 +1267,67 @@ class ControllerActionComponent extends Component {
 							}
 						}
 					}
+
 					if ($process($model, $transferFrom, $deleteOptions)) {
-						foreach ($associations as $assoc) {
-							if ($assoc->type() == 'oneToMany') {
-								$assoc->updateAll(
-									[$assoc->foreignKey() => $transferTo],
-									[$assoc->foreignKey() => $transferFrom]
-								);
+						$id = $request->data[$primaryKey];
+						$transferOptions = new ArrayObject([]);
 
-							} else if ($assoc->type() == 'manyToMany') {
-								$modelAssociationTable = $assoc->junction();
+						$transferProcess = function($associations, $transferFrom, $transferTo, $model) {
+							foreach ($associations as $assoc) {
+								if ($assoc->type() == 'oneToMany') {
+									$assoc->updateAll(
+										[$assoc->foreignKey() => $transferTo],
+										[$assoc->foreignKey() => $transferFrom]
+									);
 
-								// List of the target foreign keys for subqueries
-								$targetForeignKeys = $modelAssociationTable->find()
-									->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
-									->where([
-										$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-									]);
+								} else if ($assoc->type() == 'manyToMany') {
+									$modelAssociationTable = $assoc->junction();
 
-								// List of id in the junction table to be deleted
-								$idNotToUpdate = $modelAssociationTable->find('list',[
-										'keyField' => 'id',
-										'valueField' => 'id'
-									])
-									->where([
-										$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
-										$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
-									])
-									->toArray();
+									// List of the target foreign keys for subqueries
+									$targetForeignKeys = $modelAssociationTable->find()
+										->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+										->where([
+											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+										]);
 
-								$condition = [];
+									// List of id in the junction table to be deleted
+									$idNotToUpdate = $modelAssociationTable->find('list',[
+											'keyField' => 'id',
+											'valueField' => 'id'
+										])
+										->where([
+											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
+											$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
+										])
+										->toArray();
 
-								if (empty($idNotToUpdate)) {
-									$condition = [$assoc->foreignKey() => $transferFrom];
-								} else {
-									$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+									$condition = [];
+
+									if (empty($idNotToUpdate)) {
+										$condition = [$assoc->foreignKey() => $transferFrom];
+									} else {
+										$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+									}
+									
+									// Update all transfer records
+									$modelAssociationTable->updateAll(
+										[$assoc->foreignKey() => $transferTo],
+										$condition
+									);
 								}
-								
-								// Update all transfer records
-								$modelAssociationTable->updateAll(
-									[$assoc->foreignKey() => $transferTo],
-									$condition
-								);
 							}
+						};
 
-
+						// Event: onDeleteTransfer
+						$params = [$transferOptions, $id];
+						$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onDeleteTransfer');
+						$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onDeleteTransfer', null, $params);
+						if ($event->isStopped()) { return $event->result; }
+						if (is_callable($event->result)) {
+							$transferProcess = $event->result;
 						}
+
+						$transferProcess($associations, $transferFrom, $transferTo, $model);
 						$this->Alert->success('general.delete.success');
 					} else {
 						$this->Alert->error('general.delete.failed');
