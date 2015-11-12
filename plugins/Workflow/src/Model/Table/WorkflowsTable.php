@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use Cake\Datasource\ConnectionManager;
 use App\Model\Traits\OptionsTrait;
 
 class WorkflowsTable extends AppTable {
@@ -341,6 +342,7 @@ class WorkflowsTable extends AppTable {
 		$convertOptions = $this
 			->find('list')
 			->where([
+				$this->aliasField('workflow_model_id') => $entity->workflow_model_id,
 				$this->aliasField('id <>') => $entity->id
 			])
 			->toArray();
@@ -411,11 +413,11 @@ class WorkflowsTable extends AppTable {
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$requestData = $this->request->data;
 		$submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
+
 		if ($submit == 'save') {
 			$process = function($model, $id, $options) {
 				$entity = $model->get($id);
-				$requestData = $this->request->data;die;
-
+				// Overwrite $process and skip delete, delete is done in onDeleteTransfer
 				return true;
 			};
 
@@ -426,6 +428,92 @@ class WorkflowsTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
 		}
+	}
+
+	public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {
+		$transferProcess = function($associations, $transferFrom, $transferTo, $model) {
+			$conn = ConnectionManager::get('default');
+			$conn->begin();
+
+			$requestData = $this->request->data;
+			$entity = $model->get($transferFrom);
+
+			// Update workflow_id in workflows_filters
+			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+			$filterResults = $WorkflowsFilters
+				->find()
+				->where([
+					$WorkflowsFilters->aliasField('workflow_id') => $transferTo,
+					$WorkflowsFilters->aliasField('filter_id') => 0
+				])
+				->all();
+
+			if ($filterResults->isEmpty()) {
+				$WorkflowsFilters->updateAll(
+					['workflow_id' => $transferTo],
+					['workflow_id' => $transferFrom]
+				);
+			} else {
+				$WorkflowsFilters->deleteAll([
+					'workflow_id' => $transferFrom
+				]);
+			}
+			// End
+
+			// Update workflow_step_id in workflow_records and model table
+			$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
+			$registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
+			$targetModel = TableRegistry::get($registryAlias);
+			foreach ($requestData[$this->alias()]['steps'] as $key => $stepObj) {
+				$stepFrom = $stepObj['workflow_step_id'];
+				$stepTo = $stepObj['convert_workflow_step_id'];
+
+				$WorkflowRecords->updateAll(
+					['workflow_step_id' => $stepTo],
+					['workflow_step_id' => $stepFrom]
+				);
+
+				$targetModel->updateAll(
+					['status_id' => $stepTo],
+					['status_id' => $stepFrom]
+				);
+			}
+			// End
+
+			// delete workflow
+			if ($model->delete($entity)) {
+				$conn->commit();
+			} else {
+				$conn->rollback();
+			}
+			// End
+		};
+
+		return $transferProcess;
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (array_key_exists('remove', $buttons)) {
+			// Check by model if filter applied, disabled delete button if the workflow is apply to all.
+			$filter = $this->WorkflowModels->get($entity->workflow_model_id)->filter;
+			if (!is_null($filter)) {
+				$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+				$results = $WorkflowsFilters
+					->find()
+					->where([
+						$WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+						$WorkflowsFilters->aliasField('filter_id') => 0
+					])
+					->all();
+
+				if (!$results->isEmpty()) {
+					unset($buttons['remove']);
+				}
+			}
+		}
+
+		return $buttons;
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
