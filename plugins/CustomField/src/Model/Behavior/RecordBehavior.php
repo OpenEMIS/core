@@ -259,6 +259,23 @@ class RecordBehavior extends Behavior {
     	}
     }
 
+    /**
+	 *	Function to get the filter key from the filter specified
+	 *
+	 *	@param String $model The filter provided by the custom module
+	 *	@return String The filter column name
+	 */
+	public function getFilterKey($model) {
+		$filterKey = '';
+		$associations = TableRegistry::get($model)->associations();
+		foreach ($associations as $assoc) {
+			if ($assoc->type() == 'oneToMany') {
+				$filterKey = $assoc->foreignKey();
+			}
+		}
+		return $filterKey;
+	}
+
 	public function getCustomFieldQuery($entity) {
 		$customFieldQuery = null;
 		//For Institution Survey
@@ -293,7 +310,7 @@ class RecordBehavior extends Behavior {
 
 			if (!empty($filter)) {
 				$modelAlias = $this->getModel($filter)['model'];
-				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+				$filterKey = $this->getFilterKey($filter);
 
 				$filterId = $entity->$filterKey;
 				$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];

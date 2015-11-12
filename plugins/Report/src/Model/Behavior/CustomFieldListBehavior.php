@@ -265,14 +265,13 @@ class CustomFieldListBehavior extends Behavior {
 	 *	@return String The filter column name
 	 */
 	public function getFilterKey($model) {
-		$split = explode('.', $model);
-		$plugin = null;
-		$modelClass = $model;
-		if (count($split) > 1) {
-			$plugin = $split[0];
-			$modelClass = $split[1];
+		$filterKey = '';
+		$associations = TableRegistry::get($model)->associations();
+		foreach ($associations as $assoc) {
+			if ($assoc->type() == 'oneToMany') {
+				$filterKey = $assoc->foreignKey();
+			}
 		}
-		$filterKey = Inflector::underscore(Inflector::singularize($modelClass)) . '_id';
 		return $filterKey;
 	}
 
