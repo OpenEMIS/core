@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.9
+ControllerActionComponent - Current Version 3.1.10
+3.1.10 (Thed) - added new event onDeleteTransfer
 3.1.9 (Malcolm) - Added 'getTriggerFrom()' get method
 3.1.8 (Jeff) - session variable to store the primary key value of object includes the plugin name now
 3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
