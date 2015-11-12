@@ -110,7 +110,7 @@ CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT ''
 CHANGE COLUMN `location_institution_site_id` `location_institution_id` INT(11) NULL DEFAULT NULL COMMENT '' , 
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`),
-DROP INDEX `location_site_institution_id` ,
+DROP INDEX `location_institution_site_id` ,
 ADD INDEX `location_institution_id` (`location_institution_id`),
 RENAME TO  `institution_shifts` ;
 
@@ -515,5 +515,171 @@ ALTER TABLE `institution_fees`
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`);
 
+-- labels
+CREATE TABLE `z_1463_labels` (
+  `id` char(36) NOT NULL,
+  `module` varchar(100) NOT NULL,
+  `field` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_id';
 
+UPDATE `labels` SET `field` = 'institution_id' WHERE `field` = 'institution_site_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_section_id';
+
+UPDATE `labels` SET `field` = 'institution_section_id' WHERE `field` = 'institution_site_section_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_class_id';
+
+UPDATE `labels` SET `field` = 'institution_class_id' WHERE `field` = 'institution_site_class_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_gender_id';
+
+UPDATE `labels` SET `field` = 'institution_gender_id' WHERE `field` = 'institution_site_gender_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_locality_id';
+
+UPDATE `labels` SET `field` = 'institution_locality_id' WHERE `field` = 'institution_site_locality_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_ownership_id';
+
+UPDATE `labels` SET `field` = 'institution_ownership_id' WHERE `field` = 'institution_site_ownership_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_provider_id';
+
+UPDATE `labels` SET `field` = 'institution_provider_id' WHERE `field` = 'institution_site_provider_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_position_id';
+
+UPDATE `labels` SET `field` = 'institution_position_id' WHERE `field` = 'institution_site_position_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_section';
+
+UPDATE `labels` SET `field` = 'institution_section' WHERE `field` = 'institution_site_section';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_shift_id';
+
+UPDATE `labels` SET `field` = 'institution_shift_id' WHERE `field` = 'institution_site_shift_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'location_institution_site_id';
+
+UPDATE `labels` SET `field` = 'location_institution_id' WHERE `field` = 'location_institution_site_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_sector_id';
+
+UPDATE `labels` SET `field` = 'institution_sector_id' WHERE `field` = 'institution_site_sector_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_status_id';
+
+UPDATE `labels` SET `field` = 'institution_status_id' WHERE `field` = 'institution_site_status_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `field` = 'institution_site_type_id';
+
+UPDATE `labels` SET `field` = 'institution_type_id' WHERE `field` = 'institution_site_type_id';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteActivities';
+
+UPDATE `labels` SET `module` = 'InstitutionActivities' WHERE `module` = 'InstitutionSiteActivities';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteStaff';
+
+UPDATE `labels` SET `module` = 'InstitutionStaff' WHERE `module` = 'InstitutionSiteStaff';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteAttachments';
+
+UPDATE `labels` SET `module` = 'InstitutionAttachments' WHERE `module` = 'InstitutionSiteAttachments';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSitePositions';
+
+UPDATE `labels` SET `module` = 'InstitutionPositions' WHERE `module` = 'InstitutionSitePositions';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteClasses';
+
+UPDATE `labels` SET `module` = 'InstitutionClasses' WHERE `module` = 'InstitutionSiteClasses';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteSections';
+
+UPDATE `labels` SET `module` = 'InstitutionSections' WHERE `module` = 'InstitutionSiteSections';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteSections';
+
+UPDATE `labels` SET `module` = 'InstitutionSections' WHERE `module` = 'InstitutionSiteSections';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteStudentAbsences';
+
+UPDATE `labels` SET `module` = 'InstitutionStudentAbsences' WHERE `module` = 'InstitutionSiteStudentAbsences';
+
+INSERT IGNORE INTO `z_1463_labels` (`id`, `module`, `field`) 
+SELECT `id`, `module`, `field` 
+FROM `labels`
+WHERE `module` = 'InstitutionSiteShifts';
+
+UPDATE `labels` SET `module` = 'InstitutionShifts' WHERE `module` = 'InstitutionSiteShifts';
