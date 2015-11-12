@@ -51,7 +51,7 @@ RENAME TO  `institution_positions` ;
 
 -- institution_staff
 ALTER TABLE `institution_site_staff` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_position_id` `institution_position_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_site_id` ,
@@ -67,7 +67,7 @@ RENAME TO `institution_classes` ;
 
 -- institution_class_staff
 ALTER TABLE `institution_site_class_staff` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' , 
 RENAME TO  `institution_class_staff` ;
 
@@ -79,7 +79,7 @@ RENAME TO  `institution_class_students` ;
 
 -- institution_section
 ALTER TABLE `institution_site_sections` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_shift_id` `institution_shift_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_site_id` ,
@@ -134,7 +134,7 @@ RENAME TO  `institution_bank_accounts` ;
 
 -- institution_student_absence
 ALTER TABLE `institution_site_student_absences` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' , 
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id' , 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
 RENAME TO  `institution_student_absences` ;
 
@@ -149,7 +149,7 @@ RENAME TO  `institution_assessments` ;
 ALTER TABLE `institution_site_quality_visits` 
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`),
@@ -164,7 +164,7 @@ RENAME TO  `institution_quality_rubric_answers` ;
 ALTER TABLE `institution_site_quality_rubrics` 
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`),
@@ -189,7 +189,7 @@ RENAME TO  `institution_survey_table_cells` ;
 
 -- institution_staff_absences
 ALTER TABLE `institution_site_staff_absences` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ,
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`),
@@ -197,27 +197,27 @@ RENAME TO  `institution_staff_absences` ;
 
 -- staff_activities
 ALTER TABLE `staff_activities` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_custom_field_values
 ALTER TABLE `staff_custom_field_values` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_leaves
 ALTER TABLE `staff_leaves` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_licenses
 ALTER TABLE `staff_licenses` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_memberships
 ALTER TABLE `staff_memberships` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_qualifications
 ALTER TABLE `staff_qualifications` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- custom_modules
 UPDATE `custom_modules` SET `filter`='FieldOption.InstitutionTypes' WHERE `model`='Institution.Institutions';
@@ -227,27 +227,27 @@ UPDATE `field_options` SET `plugin`='FieldOption', `code`='InstitutionTypes' WHE
 
 -- staff_employments
 ALTER TABLE `staff_employments` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_extracurriculars
 ALTER TABLE `staff_extracurriculars` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_salaries
 ALTER TABLE `staff_salaries` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- staff_custom_table_cells
 ALTER TABLE `staff_custom_table_cells` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- student_custom_field_values
 ALTER TABLE `student_custom_field_values` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- student_custom_table_cells
 ALTER TABLE `student_custom_table_cells` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
 
 -- student_attendance
 ALTER TABLE `student_attendances`
