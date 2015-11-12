@@ -17,6 +17,7 @@ class ResultsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
 		$this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);

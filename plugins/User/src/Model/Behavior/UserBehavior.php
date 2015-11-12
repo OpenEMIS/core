@@ -51,10 +51,10 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_student']['type'] = 'hidden';
 		$this->_table->fields['is_staff']['type'] = 'hidden';
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
-
 		switch ($this->_table->table()) {
 			case 'institution_students':
 			case 'institution_staff':
+			case 'student_guardians':
 				break;
 			default:
 				$this->_table->fields['username']['visible'] = false;

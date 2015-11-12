@@ -31,6 +31,7 @@ class StaffTable extends AppTable {
 		$this->addBehavior('AdvanceSearch');
 
 		$this->addBehavior('CustomField.Record', [
+			'model' => 'Staff.Staff',
 			'behavior' => 'Staff',
 			'fieldKey' => 'staff_custom_field_id',
 			'tableColumnKey' => 'staff_custom_table_column_id',
