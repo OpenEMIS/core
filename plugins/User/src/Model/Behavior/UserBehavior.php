@@ -50,9 +50,9 @@ class UserBehavior extends Behavior {
 
 	public function onExcelGetStatus(Event $event, Entity $entity) {
 		if ($entity->status == 1) {
-			return "Active";
+			return __('Active');
 		} else {
-			return "Inactive";
+			return __('Inactive');
 		}
 	}
 
