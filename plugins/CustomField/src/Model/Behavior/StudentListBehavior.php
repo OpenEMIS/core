@@ -195,7 +195,7 @@ class StudentListBehavior extends Behavior {
                     $session = $this->_table->request->session();
                     $plugin = $this->_table->controller->plugin;
                     $model = $this->_table->alias();
-                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_site_section";
+                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_section";
                     $fieldKey = $customFieldObj->id;
 
                     if ($this->_table->request->is(['get'])) {
@@ -210,8 +210,8 @@ class StudentListBehavior extends Behavior {
                         $requestData = $this->_table->request->data;
                         if (array_key_exists($this->_table->alias(), $requestData)) {
                             if (array_key_exists($attr['field'], $requestData[$this->_table->alias()]['custom_field_values'])) {
-                                if (array_key_exists('institution_site_section', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
-                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_site_section']);
+                                if (array_key_exists('institution_section', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
+                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_section']);
                                 }
                             }
                         }
@@ -231,7 +231,7 @@ class StudentListBehavior extends Behavior {
                     if ($action == 'view' || $action == 'edit') {
                         $studentQuery
                             ->where([
-                                $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
+                                $this->SectionStudents->aliasField('institution_section_id') => $selectedSection
                         ]);
                     }
 
