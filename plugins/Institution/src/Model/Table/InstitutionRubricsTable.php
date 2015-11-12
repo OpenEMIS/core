@@ -191,14 +191,14 @@ class InstitutionRubricsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = $dateDisabled->format('d-m-Y');
+			$value = $this->formatDate($dateDisabled);
 		}
 
 		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {
