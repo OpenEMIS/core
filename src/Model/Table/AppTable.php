@@ -306,7 +306,8 @@ class AppTable extends Table {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 

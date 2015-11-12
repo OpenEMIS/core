@@ -4,6 +4,15 @@ $(document).ready(function() {
 	Checkable.init();
 	$('[data-toggle="tooltip"]').tooltip();
 	$('.focus').focus();
+
+
+	$('.table-responsive').on('show.bs.dropdown', function () {
+	     $('.table-responsive').css( "overflow-x", "inherit" );
+	});
+
+	$('.table-responsive').on('hide.bs.dropdown', function () {
+	     $('.table-responsive').css( "overflow-x", "auto" );
+	})
 });
 
 var Chosen = {
@@ -61,13 +70,5 @@ var Checkable = {
 		}
 	}
 };
-
-$('.table-responsive').on('show.bs.dropdown', function () {
-     $('.table-responsive').css( "overflow", "inherit" );
-});
-
-$('.table-responsive').on('hide.bs.dropdown', function () {
-     $('.table-responsive').css( "overflow", "auto" );
-})
 
 </script>
