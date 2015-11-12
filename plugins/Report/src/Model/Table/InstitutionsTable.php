@@ -68,6 +68,39 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
 	}
 
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$requestData = json_decode($settings['process']['params']);
+		$feature = $requestData->feature;
+		$filter = $requestData->institution_filter;
+		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
+			$sheets[] = [
+				'name' => $this->alias(),
+				'table' => $this,
+				'query' => $this->find(),
+			];
+			// Stop the customfieldlist behavior onExcelBeforeStart function
+			$event->stopPropagation();
+		}
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$requestData = json_decode($settings['process']['params']);
+		$feature = $requestData->feature;
+		$filter = $requestData->institution_filter;
+		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
+			// Stop the customfieldlist behavior onExcelUpdateFields function
+			$copyField = $fields->getArrayCopy();
+			$includedFields = ['name', 'alternative_name', 'code', 'area_id'];
+			foreach ($copyField as $key => $value) {
+				if (!in_array($value['field'], $includedFields)) {
+					unset($copyField[$key]);
+				}
+			}
+			$fields->exchangeArray($copyField);
+			$event->stopPropagation();
+		}
+	}
+
 	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
 		if (isset($this->request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
@@ -78,6 +111,8 @@ class InstitutionsTable extends AppTable  {
 				$attr['type'] = 'select';
 				$attr['options'] = $option;
 				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
 			}
 		}
 	}
