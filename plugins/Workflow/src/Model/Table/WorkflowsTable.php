@@ -462,11 +462,41 @@ class WorkflowsTable extends AppTable {
 
 			// Update workflow_step_id in workflow_records and model table
 			$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
+			$WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
 			$registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
 			$targetModel = TableRegistry::get($registryAlias);
 			foreach ($requestData[$this->alias()]['steps'] as $key => $stepObj) {
 				$stepFrom = $stepObj['workflow_step_id'];
 				$stepTo = $stepObj['convert_workflow_step_id'];
+				$step = $this->WorkflowSteps->get($stepTo);
+
+				$records = $WorkflowRecords
+					->find()
+					->matching('WorkflowSteps')
+					->where([
+						$WorkflowRecords->aliasField('workflow_step_id') => $stepFrom
+					])
+					->all();
+
+				foreach ($records as $recordObj) {
+					// workflow_step_id is needed for afterSave logic in WorkflowTransitions
+					$transitionData = [
+						'comment' => '',
+						'prev_workflow_step_id' => $recordObj->_matchingData['WorkflowSteps']->id,
+						'prev_workflow_step_name' => $recordObj->_matchingData['WorkflowSteps']->name,
+						'workflow_step_id' => $step->id,
+						'workflow_step_name' => $step->name,
+						'workflow_action_id' => NULL,
+						'workflow_action_name' => __('Administration - Delete and Transfer Workflow.'),
+						'workflow_record_id' => $recordObj->id
+					];
+
+					$transitionEntity = $WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
+					if( $WorkflowTransitions->save($transitionEntity) ){
+					} else {
+						$WorkflowTransitions->log($transitionEntity->errors(), 'debug');
+					}
+				}
 
 				$WorkflowRecords->updateAll(
 					['workflow_step_id' => $stepTo],

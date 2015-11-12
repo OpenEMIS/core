@@ -662,6 +662,7 @@ class WorkflowBehavior extends Behavior {
 		$step = $this->workflowRecord->workflow_step; // Latest Workflow Step
 
 		$alias = $this->WorkflowTransitions->alias();
+		// workflow_step_id is needed for afterSave logic in WorkflowTransitions
 		$fields = [
 			$alias.'.prev_workflow_step_id' => [
 				'type' => 'hidden',
