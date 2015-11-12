@@ -2,7 +2,7 @@
 <?php if ($action == 'view') : ?>
 	<?php if (!empty($data->custom_table_columns)) : ?>
 		<div class="table-in-view">
-			<table class="table table-striped table-hover table-bordered">
+			<table class="table">
 				<thead>
 					<tr>
 						<?php foreach ($data->custom_table_columns as $col => $obj) : ?>
@@ -45,7 +45,7 @@
 		</div>
 		<?php if (!empty($data->custom_table_columns) || !empty($data->custom_table_rows)) : ?>
 			<div class="table-in-view">
-				<table class="table table-striped table-hover table-bordered table-checkable table-input">
+				<table class="table table-checkable table-input">
 					<thead>
 						<tr>
 							<?php if (!empty($data->custom_table_columns)) : ?>
