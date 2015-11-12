@@ -25,8 +25,9 @@ class AuditTable extends AppTable  {
 		$this->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
-		
-		$this->addBehavior('Excel', ['pages' => false]);
+		$this->addBehavior('Excel', ['excludes' => ['username', 'address', 'postal_code', 
+			'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'super_admin', 
+			'photo_name', 'photo_content',  'photo_name', 'is_student', 'is_staff', 'is_guardian'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 	}
 
@@ -34,6 +35,14 @@ class AuditTable extends AppTable  {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
+	}
+
+	public function onExcelGetStatus(Event $event, Entity $entity) {
+		if ($entity->status == 1) {
+			return __('Active');
+		} else {
+			return __('Inactive');
+		}
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
