@@ -51,7 +51,7 @@ if (isset($_navigations)) {
 }
 ?>
 
-<div class="sidebar-nav">
+<div class="left-menu">
 	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
 		<?php echo $this->Navigation->render($navigations) ?>
 	</div>
