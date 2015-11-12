@@ -316,6 +316,13 @@ class NavigationComponent extends Component {
 					'Bank Accounts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']],
 					'Salaries' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Salaries']]
 				]
+			],
+			'Training' => [
+				'collapse' => true,
+				'items' => [
+					// 'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
+					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']]
+				]
 			]
 		];
 
@@ -488,6 +495,23 @@ class NavigationComponent extends Component {
 						'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'Logs']
 					]
 				]
+			],
+			'Training' => [
+				'collapse' => true,
+				'items' => [
+					'Courses' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Courses']
+					],
+					'Sessions' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Sessions']
+					],
+					'Results' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'Results']
+					]
+				],
 			],
 			'Workflow' => [
 				'collapse' => true,
