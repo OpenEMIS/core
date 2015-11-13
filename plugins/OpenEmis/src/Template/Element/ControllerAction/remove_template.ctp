@@ -27,9 +27,9 @@ $this->start('panelBody');
 ?>
 
 <div class="input clearfix">
-	<label class="pull-left"><?= __('Apply To') ?></label>
+	<label><?= __('Apply To') ?></label>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table">
 			<thead><?= $this->Html->tableHeaders([__('Feature'), __('No of records')]) ?></thead>
 			<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
 		</table>
