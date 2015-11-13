@@ -54,10 +54,8 @@ class CustomFieldListBehavior extends Behavior {
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		if (!(is_null($this->config('moduleKey')))) {
 			$filter = $this->getFilter($this->config('model'));
-			pr($filter);
 			$types = $this->getType($filter);
-			pr($types);die;
-			$filterKey = $this->getFilterKey($filter);
+			$filterKey = $this->getFilterKey($filter, $this->config('model'));
 			if (!empty($types)) {
 				foreach ($types as $key => $name) {
 					$this->excelContent($sheets, $name, $filterKey, $key);
@@ -260,21 +258,22 @@ class CustomFieldListBehavior extends Behavior {
 		return $filter;
 	}
 
-	/**
+    /**
 	 *	Function to get the filter key from the filter specified
-	 *
-	 *	@param String $model The filter provided by the custom module
-	 *	@return String The filter column name
-	 */
-	public function getFilterKey($model) {
-		$split = explode('.', $model);
-		$plugin = null;
-		$modelClass = $model;
-		if (count($split) > 1) {
-			$plugin = $split[0];
-			$modelClass = $split[1];
+     *
+     *	@param string $filter The filter provided by the custom module
+     *	@param string $model The model provided by the custom module
+     *	@return The filter foreign key name if found. If not it will return empty.
+     */
+	public function getFilterKey($filter, $model) {
+		$filterKey = '';
+		$associations = TableRegistry::get($filter)->associations();
+		foreach ($associations as $assoc) {
+			if ($assoc->registryAlias() == $model) {
+				$filterKey = $assoc->foreignKey();
+				return $filterKey;
+			}
 		}
-		$filterKey = Inflector::underscore(Inflector::singularize($modelClass)) . '_id';
 		return $filterKey;
 	}
 

@@ -73,7 +73,7 @@
 		?>
 	</div>
 	<div class="table-responsive">
-		<table class="table">
+		<table class="table table-curved">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
