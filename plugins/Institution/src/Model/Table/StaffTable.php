@@ -795,4 +795,88 @@ class StaffTable extends AppTable {
 
 		return $params;
 	}
+
+	// Functions that are migrated over
+	/******************************************************************************************************************
+**
+** finders functions to be used with query
+**
+******************************************************************************************************************/
+	/**
+	 * $options['type'] == 0 > non-teaching
+	 * $options['type'] == 1 > teaching
+	 * refer to OptionsTrait
+	 */
+	public function findByPositions(Query $query, array $options) {
+		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$positions = $this->Positions->find('list')
+						->find('withBelongsTo')
+				        ->where([
+				        	'Institutions.id' => $options['Institutions.id'],
+				        	$this->Positions->aliasField('type') => $options['type']
+				        ])
+				        ->toArray();
+			$positions = array_keys($positions);
+			return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
+		} else {
+			return $query;
+		}
+	}
+
+	public function findByInstitution(Query $query, array $options) {
+		if (array_key_exists('Institutions.id', $options)) {
+			return $query->where([$this->aliasField('institution_id') => $options['Institutions.id']]);
+		} else {
+			return $query;
+		}
+	}
+
+	/**
+	 * currently available values:
+	 * 	Full-Time
+	 * 	Part-Time
+	 * 	Contract
+	 */
+	public function findByType(Query $query, array $options) {
+		if (array_key_exists('type', $options)) {
+			$types = $this->StaffTypes->getList()->toArray();
+			if (is_array($types) && in_array($options['type'], $types)) {
+				$typeId = array_search($options['type'], $types);
+				return $query->where([$this->aliasField('staff_type_id') => $typeId]);
+			} else {
+				return $query;
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	/**
+	 * currently available values:
+	 * 	Current
+	 * 	Transferred
+	 * 	Resigned
+	 * 	Leave
+	 * 	Terminated
+	 */
+	public function findByStatus(Query $query, array $options) {
+		if (array_key_exists('status', $options)) {
+			$statuses = $this->StaffStatuses->getList()->toArray();
+			if (is_array($statuses) && in_array($options['status'], $statuses)) {
+				$statusId = array_search($options['status'], $statuses);
+				return $query->where([$this->aliasField('staff_status_id') => $statusId]);
+			} else {
+				return $query;
+			}
+		} else {
+			return $query;
+		}
+	}
+
+	public function findWithBelongsTo(Query $query, array $options) {
+		return $query
+			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
+	}
+
+
 }
