@@ -211,12 +211,6 @@ CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 ALTER TABLE `staff_qualifications` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
--- custom_modules
-UPDATE `custom_modules` SET `filter`='FieldOption.InstitutionSiteTypes' WHERE `model`='Institution.Institutions';
-
--- field_options
-UPDATE `field_options` SET `plugin`='Institution', `code`='Types' WHERE `plugin`='FieldOption' AND `code`='InstitutionTypes';
-
 -- staff_employments
 ALTER TABLE `staff_employments` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
