@@ -111,7 +111,7 @@ class InstitutionBankAccountsTable extends AppTable {
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
 		}
-		$this->_selectedBankId = $this->postString('bank_id', $this->_bankOptions);
+		$this->_selectedBankId = $this->postString('bank', $this->_bankOptions);
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->where(['bank_id'=>$this->_selectedBankId])
