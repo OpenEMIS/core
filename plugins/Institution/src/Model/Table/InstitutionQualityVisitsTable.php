@@ -138,6 +138,21 @@ class InstitutionQualityVisitsTable extends AppTable {
 		]);
 		// End
 
+		if (!is_null($selectedClass)) {
+			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+			$staffOptions = $InstitutionStaffTable
+				->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
+				->contain(['Users'])
+				->innerJoin(
+					['ClassStaff' => 'institution_class_staff'],
+					[
+						$InstitutionStaffTable->aliasField('staff_id').' = ClassStaff.staff_id',
+						'ClassStaff.institution_class_id' => $selectedClass
+					]
+				)
+				->toArray();
+		}
+
 		// Staff Options
 		$this->ControllerAction->field('staff_id', ['options' => $staffOptions]);
 		// End
