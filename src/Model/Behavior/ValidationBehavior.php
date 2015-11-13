@@ -555,7 +555,15 @@ class ValidationBehavior extends Behavior {
 		} else {
 			$endDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
 		}
-		$student_id = $globalData['data']['student_id'];
+		$userId = '';
+		$userKey = 'security_user_id';
+		if ($SearchTable->table() == 'institution_student_absences') {
+			$userId = $globalData['data']['student_id'];
+			$userKey = 'student_id';
+		} else if ($SearchTable->table() == 'institution_staff_absences') {
+			$userId = $globalData['data']['staff_id'];
+			$userKey = 'staff_id';
+		}
 		$institution_id = $globalData['data']['institution_id'];
 
 		// this will assome there will be start date and end date and student_id and academic period
@@ -615,7 +623,7 @@ class ValidationBehavior extends Behavior {
 		// need to check for overlap time
 		$found = $SearchTable->find()
 			->where($overlapDateCondition)
-			->where([$SearchTable->aliasField('student_id') => $student_id])
+			->where([$SearchTable->aliasField($userKey) => $userId])
 			->where([$SearchTable->aliasField('institution_id') => $institution_id])
 			;
 			// ->toArray();

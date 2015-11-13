@@ -29,7 +29,7 @@ class InstitutionClassesTable extends AppTable {
 		
 		$this->hasMany('InstitutionSectionClasses', 	['className' => 'Institution.InstitutionSectionClasses']);
 		$this->hasMany('InstitutionClassStudents', 		['className' => 'Institution.InstitutionClassStudents']);
-		$this->hasMany('InstitutionStaff', 				['className' => 'Institution.InstitutionClassStaff']);
+		$this->hasMany('InstitutionClassStaff', 		['className' => 'Institution.InstitutionClassStaff']);
 
 		$this->belongsToMany('InstitutionSections', [
 			'className' => 'Institution.InstitutionSections',
