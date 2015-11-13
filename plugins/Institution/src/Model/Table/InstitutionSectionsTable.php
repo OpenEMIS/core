@@ -26,7 +26,7 @@ class InstitutionSectionsTable extends AppTable {
 		
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'staff_id']);
-		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts','foreignKey' => 'institution_shift_id']);
+		$this->belongsTo('InstitutionShifts',		['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 
 		$this->hasMany('InstitutionSectionGrades', 		['className' => 'Institution.InstitutionSectionGrades', 'dependent' => true]);
@@ -108,8 +108,7 @@ class InstitutionSectionsTable extends AppTable {
 		$this->ControllerAction->field('created', ['visible' => false]);
 
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
-		$this->ControllerAction->field('institution
-			_shift_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('institution_shift_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
 
 		$this->ControllerAction->field('staff_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
