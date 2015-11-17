@@ -2,7 +2,7 @@
 
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('general.visible'); ?></th>
@@ -49,7 +49,7 @@
 	</div>
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
 	<div class="input">
-		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+		<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-toolbar">
 			<button onclick="$('#reload').val('addAction').click();return false;" class="btn btn-default btn-xs">
 				<i class="fa fa-plus"></i>
@@ -57,7 +57,7 @@
 			</button>
 		</div>
 		<div class="table-in-view">
-			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
 						<?php if ($action == 'edit') : ?>

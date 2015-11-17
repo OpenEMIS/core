@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
