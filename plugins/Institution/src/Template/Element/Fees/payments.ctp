@@ -20,8 +20,8 @@
 	?>
 	</div>
 
-	<div class="table-in-view col-md-4 table-responsive">
-	    <table class="table table-striped table-hover table-bordered table-checkable table-input">
+	<div class="table-in-view">
+	    <table class="table table-checkable table-input">
 			<thead>
 				<tr>
 					<?php foreach ($attr['fields'] as $key=>$field) : ?>
@@ -157,7 +157,7 @@
 
 <?php else : ?>
 
-<div class="table-in-view table-responsive" style="width:inherit">
+<div class="table-in-view" style="width:inherit">
 	<table class="table">
 		<thead>
 			<tr>
