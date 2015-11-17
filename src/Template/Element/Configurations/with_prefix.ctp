@@ -13,7 +13,7 @@ if ($enable) {
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __('Value') ?></label>
 	
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered table-checkable table-input">
+		<table class="table table-checkable table-input">
 			<thead>
 				<tr>
 					<th class="checkbox-column">Enable</th>

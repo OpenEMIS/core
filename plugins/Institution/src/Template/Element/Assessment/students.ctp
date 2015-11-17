@@ -12,7 +12,7 @@
 ?>
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
@@ -49,7 +49,7 @@
 	<div class="input clearfix">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="table-in-view">
-			<table class="table table-striped table-hover table-bordered table-checkable">
+			<table class="table table-checkable">
 				<thead>
 					<tr>
 						<th><?= $this->Label->get('General.openemis_no'); ?></th>
