@@ -15,7 +15,7 @@ $dropdown = [
 		'icon' => 'fa-cog'
 	],
 	'Help' => [
-		'url' => 'https://support.openemis.org/web/www/core/',
+		'url' => 'https://support.openemis.org/core/',
 		'icon' => 'fa-info-circle'
 	],
 	'_divider',
