@@ -7,7 +7,7 @@
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<?php endif; ?>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered table-checkable table-input">
+		<table class="table table-checkable table-input">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('InstitutionSiteSections.section'); ?></th>

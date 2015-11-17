@@ -41,7 +41,7 @@ $this->start('panelBody');
 
 		// add the table under each section
 		echo '<div class="table-responsive" checkbox-toggle="' . $section . '">
-			<table class="table table-striped table-hover table-bordered">
+			<table class="table table-curved">
 				<thead>' . $this->Html->tableHeaders($tableHeaders) . '</thead>
 				<tbody>
 			';
