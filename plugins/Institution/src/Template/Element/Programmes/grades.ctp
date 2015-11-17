@@ -5,7 +5,7 @@
 <div class="input clearfix">
 	<label><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered table-checkable">
+		<table class="table table-checkable">
 			<thead>
 				<tr>
 					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
