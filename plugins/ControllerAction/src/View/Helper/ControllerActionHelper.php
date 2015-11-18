@@ -272,7 +272,7 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getPaginatorButtons($type='prev') {
-		$icon = array('prev' => '&laquo', 'next' => '&raquo');
+		$icon = array('prev' => '', 'next' => '');
 		$html = $this->Paginator->{$type}(
 			$icon[$type],
 			array('tag' => 'li', 'escape' => false),

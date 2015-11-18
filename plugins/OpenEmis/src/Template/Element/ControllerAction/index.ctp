@@ -43,7 +43,13 @@ foreach ($data as $entity) {
 	$tableData[] = $row;
 }
 
-$tableClass = 'table table-striped table-hover table-bordered table-sortable table-checkable';
+$tableClass = 'table table-curved table-sortable table-checkable';
+if (isset($tabElements)) {
+	if (isset($toolbarElements)) {
+	} else {
+		$tableClass = 'table table-sortable table-checkable';
+	}
+}
 
 $url = [
 	'plugin' => $this->request->params['plugin'],
