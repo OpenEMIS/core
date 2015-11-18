@@ -5,6 +5,8 @@ $path = WWW_ROOT.$file;
 if (file_exists($path)) {
 	$code = file_get_contents($path);
 	if (!empty($code)) {
+		$code = str_replace("\r", '', $code);
+        $code = str_replace("\n", '', $code);
 ?>
 
 <script type="text/javascript">
