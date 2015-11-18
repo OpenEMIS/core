@@ -4,6 +4,7 @@ $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User
 $lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
 $userId = $session->check('Auth.User.id') ? $session->read('Auth.User.id') : '';
 $homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
+$supportUrl = $session->check('System.help') ? $session->read('System.help') : 'https://support.openemis.org/core/';
 
 $dropdown = [
 	'About' => [
@@ -15,7 +16,7 @@ $dropdown = [
 		'icon' => 'fa-cog'
 	],
 	'Help' => [
-		'url' => 'https://support.openemis.org/core/',
+		'url' => $supportUrl,
 		'icon' => 'fa-question-circle'
 	],
 	'_divider',
