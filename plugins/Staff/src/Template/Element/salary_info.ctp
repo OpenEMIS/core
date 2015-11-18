@@ -31,7 +31,7 @@ switch ($fieldName) {
 	});
 </script>
 <div class="input">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+	<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="table-toolbar">
 		<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()">
 			<i class="fa fa-plus"></i> 
