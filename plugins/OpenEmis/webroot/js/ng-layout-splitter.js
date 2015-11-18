@@ -49,6 +49,10 @@ angular.module('bgDirectives', [])
                     var bounds = element[0].getBoundingClientRect();
                     var pos = 0;
 
+                    $.each($('.highchart'), function(key, group) {
+                        $(group).highcharts().reflow();
+                    });
+
                     if (vertical) {
 
                         var height = bounds.bottom - bounds.top;

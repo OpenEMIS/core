@@ -23,7 +23,7 @@
 	</div>
 <?php else : ?>
 	<div class="input">
-		<label class="pull-left" for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+		<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="table-in-view">
 			<table class="table table-checkable table-input">
 				<thead>	
