@@ -17,7 +17,8 @@ $dropdown = [
 	],
 	'Help' => [
 		'url' => $supportUrl,
-		'icon' => 'fa-question-circle'
+		'icon' => 'fa-question-circle',
+		'target' => '_blank'
 	],
 	'_divider',
 	'Logout' => [
@@ -61,8 +62,9 @@ if ($session->check('System.User.roles')) {
 				<?php
 				foreach ($dropdown as $name => $attr) {
 					if ($name != '_divider') {
+						$target = isset($attr['target']) ? $attr['target'] : '_self';
 						echo '<li>';
-						echo '<a href="' . $this->Url->build($attr['url']) . '">';
+						echo '<a href="' . $this->Url->build($attr['url']) . '" target="' . $target. '">';
 						echo '<i class="fa ' . $attr['icon'] . '"></i>';
 						echo '<span> ' . __($name) . '</span>';
 						echo '</a>';
