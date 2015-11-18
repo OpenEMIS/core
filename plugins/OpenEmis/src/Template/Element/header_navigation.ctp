@@ -16,7 +16,7 @@ $dropdown = [
 	],
 	'Help' => [
 		'url' => 'https://support.openemis.org/core/',
-		'icon' => 'fa-info-circle'
+		'icon' => 'fa-question-circle'
 	],
 	'_divider',
 	'Logout' => [
