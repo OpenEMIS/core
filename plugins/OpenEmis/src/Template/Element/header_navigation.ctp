@@ -7,12 +7,16 @@ $homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
 
 $dropdown = [
 	'About' => [
-		'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'], 
+		'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'contact'], 
 		'icon' => 'fa-info-circle'
 	],
 	'Preferences' => [
 		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index'], 
 		'icon' => 'fa-cog'
+	],
+	'Help' => [
+		'url' => 'https://support.openemis.org/core/',
+		'icon' => 'fa-question-circle'
 	],
 	'_divider',
 	'Logout' => [

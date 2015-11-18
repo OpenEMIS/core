@@ -6,7 +6,7 @@
 	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
 
 	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table table-curved">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
