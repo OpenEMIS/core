@@ -5,11 +5,7 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 
 <div class="input clearfix">
-	<?php if ($this->ControllerAction->locale() == 'ar'): ?>
-	<label class="pull-right" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
-	<?php else: ?>
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
-	<?php endif; ?>
+	<label for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-in-view">
 		<table class="table table-checkable">
 			<thead>
