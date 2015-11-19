@@ -276,8 +276,8 @@ class NavigationComponent extends Component {
 
 	public function getStaffNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Institutions.Staff.id');
-
+		$id = $session->read('Institution.Staff.id');
+		
 		$navigation = [
 			'General' => [
 				'collapse' => true,
