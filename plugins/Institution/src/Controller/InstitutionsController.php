@@ -107,11 +107,12 @@ class InstitutionsController extends AppController  {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
-				if ($action == 'dashboard') {
-					$session->write('Institution.Institutions.id', $id);
-				}
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
+				if ($action == 'dashboard') {
+					$session->write('Institution.Institutions.id', $id);
+					$session->write('Institution.Institutions.name', $name);
+				}
 				if ($action == 'view') {
 					$header = $name .' - '.__('Overview');
 				} else {
