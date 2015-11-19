@@ -193,6 +193,8 @@ class StaffTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Staff.Staff.id', $entity->security_user_id);
+		$this->Session->write('Staff.Staff.name', $entity->user->name);
 		$this->setupTabElements($entity);
 	}
 

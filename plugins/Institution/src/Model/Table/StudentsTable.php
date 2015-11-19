@@ -591,6 +591,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Student.Students.id', $entity->student_id);
+		$this->Session->write('Student.Students.name', $entity->user->name);
 		$this->setupTabElements($entity);
 	}
 
