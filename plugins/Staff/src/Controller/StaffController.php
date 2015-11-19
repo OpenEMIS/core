@@ -51,8 +51,12 @@ class StaffController extends AppController {
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->Navigation->addCrumb('Staff', ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
 		$session = $this->request->session();
+		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+		$institutionName = $session->read('Institution.Institutions.name');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $institutionId]);
+		$this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
 		$action = $this->request->params['action'];
 		$header = __('Staff');
 
@@ -72,7 +76,8 @@ class StaffController extends AppController {
 				$entity = $this->Staff->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]);
+				$institutionStaffId = $session->read('Institution.Staff.id');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'view', $institutionStaffId]);
 			}
 		}
 		$this->set('contentHeader', $header);
