@@ -907,8 +907,7 @@ class StudentsTable extends AppTable {
 			if ($this->AccessControl->check(['Institutions', 'Promotion', 'indexEdit'])) {
 				$graduateButton = $buttons['index'];
 				$graduateButton['url']['action'] = 'Promotion';
-				$graduateButton['url'][0] = 'index';
-				$graduateButton['url']['mode'] = 'edit';
+				$graduateButton['url'][0] = 'add';
 				$graduateButton['type'] = 'button';
 				$graduateButton['label'] = '<i class="fa kd-graduate"></i>';
 				$graduateButton['attr'] = $attr;
