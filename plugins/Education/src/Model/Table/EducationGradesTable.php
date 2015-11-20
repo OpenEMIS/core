@@ -81,6 +81,24 @@ class EducationGradesTable extends AppTable {
 		return $educationSystemId;
 	}
 
+	public function getNextAvailableEducationGrades($gradeId) {
+		$gradeObj = $this->get($gradeId);
+		$programmeId = $gradeObj->education_programme_id;
+		$order = $gradeObj->order;
+		$gradeOptions = $this->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'programme_grade_name'
+			])
+			->where([
+				$this->aliasField('education_programme_id') => $programmeId,
+				$this->aliasField('order').' > ' => $order
+			])
+			->toArray();
+		$nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+		$results = $gradeOptions + $nextProgrammesGradesOptions;
+		return $results;
+	}
+
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
 	}
