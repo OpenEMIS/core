@@ -60,8 +60,8 @@ class StudentPromotionTable extends AppTable {
     	$this->ControllerAction->field('grade_to_promote');
     	$this->ControllerAction->field('education_grade_id');
 		$this->ControllerAction->field('students');
-
-		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'grade_to_promote', 'education_grade_id', 'students']);
+		$this->ControllerAction->field('student_status_id');
+		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'grade_to_promote', 'education_grade_id', 'student_status_id', 'students']);
 	}
 
 	public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
@@ -122,68 +122,98 @@ class StudentPromotionTable extends AppTable {
 		}
 		return $attr;
 	}
+
+	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$studentStatusesList = $this->StudentStatuses->find('list')->toArray();
+			$statusesCode = $this->statuses;
+			$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
+			$nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+
+			// If there is no more next grade in the same education grades then the student may be graduated
+			if (count($nextGrades) == 0) {
+				$options[$statusesCode['GRADUATED']] = $studentStatusesList[$statusesCode['GRADUATED']];
+			}
+			$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
+			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
+			$attr['options'] = $options;
+			return $attr;
+		}
+	}
 	
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-  //   	if (array_key_exists($this->alias(), $data)) {
-		// 	$nextAcademicPeriodId = null;
-		// 	$nextEducationGradeId = null;
-		// 	$nextInstitutionId = null;
-		// 	$studentTransferReasonId = null;
 
-		// 	if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
-		// 		$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
-		// 	}
-		// 	if (array_key_exists('next_education_grade_id', $data[$this->alias()])) {
-		// 		$nextEducationGradeId = $data[$this->alias()]['next_education_grade_id'];
-		// 	}
-		// 	if (array_key_exists('next_institution_id', $data[$this->alias()])) {
-		// 		$nextInstitutionId = $data[$this->alias()]['next_institution_id'];
-		// 	}
-		// 	if (array_key_exists('student_transfer_reason_id', $data[$this->alias()])) {
-		// 		$studentTransferReasonId = $data[$this->alias()]['student_transfer_reason_id'];
-		// 	}
+    	if (array_key_exists($this->alias(), $data)) {
+			$nextAcademicPeriodId = null;
+			$nextEducationGradeId = null;
+			$currentAcademicPeriod = null;
+			$currentGrade = null;
+			$statusToUpdate = null;
+			$institutionId = $this->institutionId;
+			if (array_key_exists('current_academic_period_id', $data[$this->alias()])) {
+				$currentAcademicPeriod = $data[$this->alias()]['current_academic_period_id'];
+			}
+			if (array_key_exists('grade_to_promote', $data[$this->alias()])) {
+				$currentGrade = $data[$this->alias()]['grade_to_promote'];
+			}
 
-		// 	if (!empty($nextAcademicPeriodId) && !empty($nextEducationGradeId) && !empty($nextInstitutionId) && !empty($studentTransferReasonId)) {
-		// 		if (array_key_exists('students', $data[$this->alias()])) {
-		// 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-		// 			$institutionId = $data[$this->alias()]['institution_id'];
+			if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
+				$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
+			}
+			if (array_key_exists('education_grade_id', $data[$this->alias()])) {
+				$nextEducationGradeId = $data[$this->alias()]['education_grade_id'];
+			}
+			if (array_key_exists('student_status_id', $data[$this->alias()])) {
+				$statusToUpdate = $data[$this->alias()]['student_status_id'];
+			}
+			if (!empty($nextAcademicPeriodId) && !empty($currentAcademicPeriod) && !empty($currentGrade)) {
+				if (array_key_exists('students', $data[$this->alias()])) {
+					$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
+					$studentStatuses = $this->statuses;
+					$tranferCount = 0;
+					foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
+						if ($studentObj['selected']) {
+							unset($studentObj['selected']);
+							$studentObj['academic_period_id'] = $nextAcademicPeriodId;
+							$studentObj['education_grade_id'] = $nextEducationGradeId;
+							$studentObj['institution_id'] = $institutionId;
+							$studentObj['student_status_id'] = $studentStatuses['CURRENT'];
+							$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
+							$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
+							$entity = $this->newEntity($studentObj);
 
-		// 			$tranferCount = 0;
-		// 			foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
-		// 				if ($studentObj['selected']) {
-		// 					unset($studentObj['selected']);
-		// 					$studentObj['academic_period_id'] = $nextAcademicPeriodId;
-		// 					$studentObj['education_grade_id'] = $nextEducationGradeId;
-		// 					$studentObj['institution_id'] = $nextInstitutionId;
-		// 					$studentObj['student_transfer_reason_id'] = $studentTransferReasonId;
-		// 					$studentObj['previous_institution_id'] = $institutionId;
-
-		// 					$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
-		// 					$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
-		// 					$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
-
-		// 					$entity = $TransferRequests->newEntity($studentObj);
-		// 					if ($TransferRequests->save($entity)) {
-		// 						$tranferCount++;
-		// 						$this->Alert->success($this->aliasField('success'));
-		// 					} else {
-		// 						$this->log($entity->errors(), 'debug');
-		// 						$this->Alert->error('general.add.failed');
-		// 					}
-		// 				}
-		// 			}
-
-		// 			if ($tranferCount == 0) {
-		// 				$this->Alert->error('general.notSelected');
-		// 			}
-
-		// 			$url = $this->ControllerAction->url('add');
-
-		// 			$event->stopPropagation();
-		// 			return $this->controller->redirect($url);
-		// 		}
-		// 	}			
-		// }
+							$update = $this->updateAll(
+									['student_status_id' => $statusToUpdate],
+									[
+										'student_id' => $studentObj['student_id'], 
+										'education_grade_id' => $currentGrade,
+										'academic_period_id' => $currentAcademicPeriod,
+										'institution_id' => $institutionId
+									]
+								);
+							
+							if ($update) {
+								if ($nextEducationGradeId != 0) {
+									if ($this->save($entity)) {
+										$this->Alert->success($this->aliasField('success'));
+									} else {
+										$this->log($entity->errors(), 'debug');
+										$this->Alert->error('general.add.failed');
+									}
+								} else {
+									$this->Alert->success($this->aliasField('success'));
+								}
+							} else {
+								$this->Alert->error('general.edit.failed');
+							}
+						}
+					}
+					$url = $this->ControllerAction->url('add');
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
+				}
+			}			
+		}
     }
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
@@ -204,6 +234,10 @@ class StudentPromotionTable extends AppTable {
 
 		// Only display the options that are available in the institution and also linked to the current programme
 		$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+
+		if (count($options) == 0) {
+			$options = [0 => __('No Available Grades in this Institution')];
+		}
 		$attr['type'] = 'select';
 		$attr['options'] = $options;
 		return $attr;
@@ -236,42 +270,6 @@ class StudentPromotionTable extends AppTable {
 
 		return $attr;
     }
-
-	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
-	}
-
-	public function onGetSecurityUserId(Event $event, Entity $entity) {
-		return $entity->user->name;
-	}
-
-	public function onGetStudentStatusId(Event $event, Entity $entity) {
-		$html = '';
-
-		$selectedPeriod = $this->request->query('period');
-		$selectedGrade = $this->request->query('grade');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$id = $entity->user->id;
-
-		$alias = Inflector::underscore($this->alias());
-		$fieldPrefix = $this->EducationGrades->alias() . '.'.$alias.'.' . $id;
-		$Form = $event->subject()->Form;
-
-		$html .= $Form->hidden($this->EducationGrades->alias().".academic_period_id", ['value' => $selectedPeriod]);
-		$html .= $Form->hidden($this->EducationGrades->alias().".education_grade_id", ['value' => $selectedGrade]);
-		$html .= $Form->hidden($this->EducationGrades->alias().".next_status_id", ['value' => $this->nextStatusId]);
-		$html .= $Form->hidden($this->EducationGrades->alias().".repeat_status_id", ['value' => $this->repeatStatusId]);
-		$html .= $Form->hidden($this->EducationGrades->alias().".current_status_id", ['value' => $this->currentStatusId]);
-
-		$options = ['type' => 'select', 'label' => false, 'options' => $this->statusOptions, 'onChange' => '$(".grade_'.$id.'").hide();$("#grade_'.$id.'_"+$(this).val()).show();'];
-		$html .= $Form->input($fieldPrefix.".student_status_id", $options);
-		$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
-		$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
-
-		if (!is_null($this->request->query('mode'))) {
-			return $html;
-		}
-	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'add') {
