@@ -11,7 +11,7 @@ use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
 class StudentPromotionTable extends AppTable {
-	private $Grades = null;
+	private $InstitutionGrades = null;
 	private $institutionId = null;
 	private $currentPeriod = null;
 	private $statuses = [];	// Student Status
