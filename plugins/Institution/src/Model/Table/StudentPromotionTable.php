@@ -11,18 +11,6 @@ use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
 class StudentPromotionTable extends AppTable {
-	private $nextGrade = null;
-	private $gradeOptions = [];
-	private $nextPeriodGradeOptions = [];
-
-	private $nextStatusId = null;	// promoted / graduated
-	private $repeatStatusId = null;	// repeated
-	private $currentStatusId = null;	// current
-	private $statusOptions = [];
-	private $statusMap = [];
-
-	private $dataCount = null;
-
 	private $Grades = null;
 	private $institutionId = null;
 	private $currentPeriod = null;
@@ -140,81 +128,6 @@ class StudentPromotionTable extends AppTable {
 			return $attr;
 		}
 	}
-	
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-
-    	if (array_key_exists($this->alias(), $data)) {
-			$nextAcademicPeriodId = null;
-			$nextEducationGradeId = null;
-			$currentAcademicPeriod = null;
-			$currentGrade = null;
-			$statusToUpdate = null;
-			$institutionId = $this->institutionId;
-			if (array_key_exists('current_academic_period_id', $data[$this->alias()])) {
-				$currentAcademicPeriod = $data[$this->alias()]['current_academic_period_id'];
-			}
-			if (array_key_exists('grade_to_promote', $data[$this->alias()])) {
-				$currentGrade = $data[$this->alias()]['grade_to_promote'];
-			}
-
-			if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
-				$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
-			}
-			if (array_key_exists('education_grade_id', $data[$this->alias()])) {
-				$nextEducationGradeId = $data[$this->alias()]['education_grade_id'];
-			}
-			if (array_key_exists('student_status_id', $data[$this->alias()])) {
-				$statusToUpdate = $data[$this->alias()]['student_status_id'];
-			}
-			if (!empty($nextAcademicPeriodId) && !empty($currentAcademicPeriod) && !empty($currentGrade)) {
-				if (array_key_exists('students', $data[$this->alias()])) {
-					$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
-					$studentStatuses = $this->statuses;
-					$tranferCount = 0;
-					foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
-						if ($studentObj['selected']) {
-							unset($studentObj['selected']);
-							$studentObj['academic_period_id'] = $nextAcademicPeriodId;
-							$studentObj['education_grade_id'] = $nextEducationGradeId;
-							$studentObj['institution_id'] = $institutionId;
-							$studentObj['student_status_id'] = $studentStatuses['CURRENT'];
-							$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
-							$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
-							$entity = $this->newEntity($studentObj);
-
-							$update = $this->updateAll(
-									['student_status_id' => $statusToUpdate],
-									[
-										'student_id' => $studentObj['student_id'], 
-										'education_grade_id' => $currentGrade,
-										'academic_period_id' => $currentAcademicPeriod,
-										'institution_id' => $institutionId
-									]
-								);
-							
-							if ($update) {
-								if ($nextEducationGradeId != 0) {
-									if ($this->save($entity)) {
-										$this->Alert->success($this->aliasField('success'));
-									} else {
-										$this->log($entity->errors(), 'debug');
-										$this->Alert->error('general.add.failed');
-									}
-								} else {
-									$this->Alert->success($this->aliasField('success'));
-								}
-							} else {
-								$this->Alert->error('general.edit.failed');
-							}
-						}
-					}
-					$url = $this->ControllerAction->url('add');
-					$event->stopPropagation();
-					return $this->controller->redirect($url);
-				}
-			}			
-		}
-    }
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
 		$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
@@ -281,4 +194,78 @@ class StudentPromotionTable extends AppTable {
 			$toolbarButtons['back']['url']['action'] = 'Students';
 		}
 	}
+
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    	if (array_key_exists($this->alias(), $data)) {
+			$nextAcademicPeriodId = null;
+			$nextEducationGradeId = null;
+			$currentAcademicPeriod = null;
+			$currentGrade = null;
+			$statusToUpdate = null;
+			$institutionId = $this->institutionId;
+			if (array_key_exists('current_academic_period_id', $data[$this->alias()])) {
+				$currentAcademicPeriod = $data[$this->alias()]['current_academic_period_id'];
+			}
+			if (array_key_exists('grade_to_promote', $data[$this->alias()])) {
+				$currentGrade = $data[$this->alias()]['grade_to_promote'];
+			}
+
+			if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
+				$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
+			}
+			if (array_key_exists('education_grade_id', $data[$this->alias()])) {
+				$nextEducationGradeId = $data[$this->alias()]['education_grade_id'];
+			}
+			if (array_key_exists('student_status_id', $data[$this->alias()])) {
+				$statusToUpdate = $data[$this->alias()]['student_status_id'];
+			}
+			if (!empty($nextAcademicPeriodId) && !empty($currentAcademicPeriod) && !empty($currentGrade)) {
+				if (array_key_exists('students', $data[$this->alias()])) {
+					$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
+					$studentStatuses = $this->statuses;
+					$tranferCount = 0;
+					foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
+						if ($studentObj['selected']) {
+							unset($studentObj['selected']);
+							$studentObj['academic_period_id'] = $nextAcademicPeriodId;
+							$studentObj['education_grade_id'] = $nextEducationGradeId;
+							$studentObj['institution_id'] = $institutionId;
+							$studentObj['student_status_id'] = $studentStatuses['CURRENT'];
+							$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
+							$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
+							$entity = $this->newEntity($studentObj);
+							$update = $this->updateAll(
+									['student_status_id' => $statusToUpdate],
+									[
+										'student_id' => $studentObj['student_id'], 
+										'education_grade_id' => $currentGrade,
+										'academic_period_id' => $currentAcademicPeriod,
+										'institution_id' => $institutionId
+									]
+								);
+							// If the update count is more than 0	
+							if ($update) {
+								if ($nextEducationGradeId != 0) {
+									if ($this->save($entity)) {
+										$this->Alert->success($this->aliasField('success'));
+									} else {
+										$this->log($entity->errors(), 'debug');
+										$this->Alert->error('general.add.failed');
+									}
+								} else {
+									$this->Alert->success($this->aliasField('success'));
+								}
+							} else {
+								// The student may have been promoted, transfered or dropped out
+								$this->Alert->error('general.edit.failed');
+							}
+						}
+					}
+					$url = $this->ControllerAction->url('add');
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
+				}
+			}			
+		}
+    }
 }
