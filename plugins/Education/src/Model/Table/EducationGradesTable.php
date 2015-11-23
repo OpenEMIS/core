@@ -81,7 +81,7 @@ class EducationGradesTable extends AppTable {
 		return $educationSystemId;
 	}
 
-	public function getNextAvailableEducationGrades($gradeId) {
+	public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades=true) {
 		$gradeObj = $this->get($gradeId);
 		$programmeId = $gradeObj->education_programme_id;
 		$order = $gradeObj->order;
@@ -94,8 +94,12 @@ class EducationGradesTable extends AppTable {
 				$this->aliasField('order').' > ' => $order
 			])
 			->toArray();
-		$nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
-		$results = $gradeOptions + $nextProgrammesGradesOptions;
+		if ($getNextProgrammeGrades) {
+			$nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+			$results = $gradeOptions + $nextProgrammesGradesOptions;
+		} else {
+			$results = $gradeOptions;
+		}
 		return $results;
 	}
 
