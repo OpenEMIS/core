@@ -81,6 +81,7 @@ class StudentPromotionTable extends AppTable {
 		$InstitutionGradesTable = $this->InstitutionGrades;
 		$selectedPeriod = $this->currentPeriod->id;
 		$institutionId = $this->institutionId;
+		$statuses = $this->statuses;
 		$gradeOptions = $InstitutionGradesTable
 			->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 			->contain(['EducationGrades'])
@@ -92,13 +93,14 @@ class StudentPromotionTable extends AppTable {
 		$GradeStudents = $this;
 		$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-			'callable' => function($id) use ($GradeStudents, $institutionId, $selectedPeriod) {
+			'callable' => function($id) use ($GradeStudents, $institutionId, $selectedPeriod, $statuses) {
 				return $GradeStudents
 					->find()
 					->where([
 						$GradeStudents->aliasField('institution_id') => $institutionId,
 						$GradeStudents->aliasField('academic_period_id') => $selectedPeriod,
-						$GradeStudents->aliasField('education_grade_id') => $id
+						$GradeStudents->aliasField('education_grade_id') => $id,
+						$GradeStudents->aliasField('student_status_id') => $statuses['CURRENT']
 					])
 					->count();
 			}
