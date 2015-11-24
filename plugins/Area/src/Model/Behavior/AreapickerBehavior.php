@@ -34,7 +34,12 @@ class AreapickerBehavior extends Behavior {
 			$options['options'] = $areaOptions;
 			$options['id'] = 'areapicker';
 			$options['area-label'] = $options['label'];
-			$options['form-error'] = !empty($entity->errors($attr['field']));
+			$arr = $entity->errors($attr['field']);
+			if (!empty($arr)) {
+				$options['form-error'] = true;
+			} else {
+				$option['form-error'] = false;
+			}
 
 			$value = "<div class='areapicker'>";
 			$value .= $Form->input($fieldName, $options);
