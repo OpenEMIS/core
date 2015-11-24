@@ -91,7 +91,7 @@ class AccessControlComponent extends Component {
 					$function = $entity->security_function;
 					if (is_null($lastModified) || (!is_null($lastModified) && $lastModified->lt($entity->modified))) {
 						$lastModified = $entity->modified;
-					}
+					} 
 
 					foreach ($operations as $op) { // for each operation in function
 						if (!empty($function->$op) && $entity->$op == 1) {
@@ -147,6 +147,13 @@ class AccessControlComponent extends Component {
 
 		if (empty($url)) {
 			$url = [$this->controller->name, $this->action];
+		}
+
+		// check if the action is excluded from permissions checking
+		$action = next($url);
+		$controller = reset($url);
+		if ($this->isIgnored($controller, $action)) {
+			return true;
 		}
 
 		$url = array_merge(['Permissions'], $url);

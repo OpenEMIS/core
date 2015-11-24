@@ -4,9 +4,9 @@
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	<div class="input table">
-		<label class="pull-left" for="<?= $attr['id'] ?>"><?= __($attr['label']); ?></label>
-		<div class="table-in-view col-md-4 table-responsive">
-			<table class="table table-striped table-hover table-bordered table-checkable">
+		<label for="<?= $attr['id'] ?>"><?= __($attr['label']); ?></label>
+		<div class="table-in-view">
+			<table class="table table-checkable">
 				<thead>
 					<tr>
 						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
@@ -46,8 +46,8 @@
 		</div>
 	</div>
 <?php else : ?>
-	<div class="table-in-view col-md-4 table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+	<div class="table-in-view">
+		<table class="table">
 			<thead>
 				<tr>
 					<th><?= __('Visible') ?></th>

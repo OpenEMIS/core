@@ -3,15 +3,17 @@ namespace Education\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class EducationCyclesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
-		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -21,6 +23,13 @@ class EducationCyclesTable extends AppTable {
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
+	}
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
