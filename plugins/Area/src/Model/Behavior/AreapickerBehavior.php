@@ -38,7 +38,7 @@ class AreapickerBehavior extends Behavior {
 			if (!empty($arr)) {
 				$options['form-error'] = true;
 			} else {
-				$option['form-error'] = false;
+				$options['form-error'] = false;
 			}
 
 			$value = "<div class='areapicker'>";
