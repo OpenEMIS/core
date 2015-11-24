@@ -32,3 +32,12 @@ v3.3.2
 v3.3.3
 - Fixed minor UI issues
 
+v3.3.4
+- Added Audit report to show all users and their last login
+- Added Reports to show institutions with no student and institutions with no staffs
+- Added new feature to allow users to import attendance data via excel
+
+v3.3.5
+- Fixed a bug that caused dates to save as 01-01-1970 when language is set to arabic
+- Staff leave days are now auto-calculated based on start and end date
+- Security -> Users will show usernames now
