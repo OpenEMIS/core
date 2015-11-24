@@ -1,1 +1,34 @@
-changelog
+v3.2.6
+- Added workflows to institution's survey
+- Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
+
+v3.2.7
+- Fixed Rubrics Report
+- Fixed some minor errors that appears when debug is turned on
+
+v3.2.8
+- Added Institution name and ID in Student report
+- Fixed a bug that caused wrong absence date to be saved in arabic language
+
+v3.2.9
+- Preference link is now working properly, user can edit their personal information
+- Fixed a bug that caused other users to modify another user's information
+
+v3.2.10
+- Fixed a bug that caused survey template not able to be downloaded on mobile
+- Improved performance when loading students/staff list
+- Survey Report status is now configurable via Administration -> Workflows -> Statuses
+
+v3.3.1
+- Profession Development Tracking is now available under Administrations -> Trainings
+- Fixed a bug on Survey type - Student List
+- Fixed a bug on Staff Attendance edit page
+
+v3.3.2
+- Fixed a bug that caused 404 error page in Students -> Results
+- Fixed warning messages on rubrics and student guardians when debug is turned on
+- Fixed a bug that staff custom fields not working properly
+
+v3.3.3
+- Fixed minor UI issues
+

@@ -81,6 +81,8 @@ try {
 if (!Configure::read('debug')) {
     Configure::write('Cache._cake_model_.duration', '+1 years');
     Configure::write('Cache._cake_core_.duration', '+1 years');
+    $errorHandler = new AppError();
+    $errorHandler->register();
 }
 
 /**
@@ -114,8 +116,6 @@ if ($isCli) {
 if ($isCli) {
     require __DIR__ . '/bootstrap_cli.php';
 }
-$errorHandler = new AppError();
-$errorHandler->register();
 
 /**
  * Set the full base URL.
@@ -204,13 +204,12 @@ Plugin::load('User', ['routes' => true, 'autoload' => true]);
 Plugin::load('Student', ['routes' => true, 'autoload' => true]);
 Plugin::load('Staff', ['routes' => true, 'autoload' => true]);
 Plugin::load('Guardian', ['routes' => true, 'autoload' => true]);
-Plugin::load('Area', ['routes' => true, 'autoload' => true]);
-Plugin::load('AcademicPeriod', ['routes' => true, 'autoload' => true]);
 Plugin::load('Education', ['routes' => true, 'autoload' => true]);
 Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
 Plugin::load('Assessment', ['routes' => true, 'autoload' => true]);
 Plugin::load('Security', ['routes' => true, 'autoload' => true]);
 Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
+Plugin::load('Restful', ['routes' => true, 'autoload' => true]);
 Plugin::load('Report', ['routes' => true, 'autoload' => true]);
 Plugin::load('Rubric', ['routes' => true, 'autoload' => true]);
 Plugin::load('Workflow', ['routes' => true, 'autoload' => true]);
@@ -219,6 +218,10 @@ Plugin::load('InstitutionCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StudentCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('Error', ['routes' => true, 'autoload' => true]);
+Plugin::load('Import', ['routes' => true, 'autoload' => true]);
+Plugin::load('API', ['routes' => true, 'autoload' => true]);
+Plugin::load('Log', ['routes' => true, 'autoload' => true]);
+Plugin::load('Training', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system

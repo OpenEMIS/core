@@ -6,7 +6,7 @@
 	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
 
 	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table table-curved">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
@@ -29,15 +29,8 @@
 							<tr><td>There is an error with this user data. User might have been deleted from users table.</td></tr>
 							<?php else: 
 									$link = '';
-									if ($_edit) {
-										$url = $ControllerAction['buttons']['index']['url'];
-										$url['action'] = 'StaffPositions';
-										$url[0] = 'view';
-										$url[1] = $obj->id;
-										$link = $this->Url->build($url, true);
-									} 
 							?>
-							<tr onclick="location.href='<?= $link ?>'">
+							<tr>
 								<td><?= $obj->user->openemis_no; ?></td>
 								<td><?= $obj->user->name ?></td>
 								<td><?= $ControllerAction['table']->formatDate($obj->start_date) ?></td>

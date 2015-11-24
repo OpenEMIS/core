@@ -69,7 +69,8 @@ class SecurityRolesTable extends AppTable {
 
 		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
 
-		if ($selectedAction == 'user') {
+		$action = $this->ControllerAction->action();
+		if ($action == 'index' && $selectedAction == 'user') {
 			$toolbarElements = [
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
@@ -188,43 +189,46 @@ class SecurityRolesTable extends AppTable {
 
 	// this function will return all roles (system roles & user roles) that has lower
 	// privileges than the current role of the user in a specific group
-	public function getPrivilegedRoleOptionsByGroup($groupId, $userId=null) {
+	public function getPrivilegedRoleOptionsByGroup($groupId=null, $userId=null) {
 		$roleOptions = [];
 
 		// -1 is system defined roles (not editable)
 		// 0 is system defined roles (editable)
 		// >1 is user defined roles in specific group
-		$groupIds = [-1, 0, $groupId];
+		$groupIds = [-1, 0];
+		if (!is_null($groupId)) {
+			$groupIds[] = $groupId;
+		}
 
 		if (!is_null($userId)) { // userId will be null if he/she is a super admin
 			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-			foreach ($groupIds as $id) {
-				// this will show only roles of the user by group
-				$query = $GroupRoles
-					->find()
-					->contain('SecurityRoles')
-					->order(['SecurityRoles.order'])
+			// this will show only roles of the user in the specified group ($groupId)
+			$query = $GroupRoles
+				->find()
+				->contain('SecurityRoles')
+				->order(['SecurityRoles.order'])
+				->where([
+					$GroupRoles->aliasField('security_group_id') => $groupId,
+					$GroupRoles->aliasField('security_user_id') => $userId
+				])
+			;
+
+			// get the highest role of the current user
+			$highestRole = $query->first();
+
+			if (!is_null($highestRole)) {
+				// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+				// within -1 (system defined roles), 0 (system defined roles), and user defined roles in the specified group
+				$roleOptions = $this
+					->find('list')
+					->find('visible')
 					->where([
-						$GroupRoles->aliasField('security_group_id') => $groupId,
-						$GroupRoles->aliasField('security_user_id') => $userId,
-						'SecurityRoles.security_group_id' => $id
+						$this->aliasField('security_group_id') . ' IN ' => $groupIds,
+						$this->aliasField('order') . ' > ' => $highestRole->security_role->order,
 					])
+					->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+					->toArray()
 				;
-
-				// first find the roles based on current role of user
-				$highestRole = $query->first();
-
-				if (!is_null($highestRole)) {
-					// find the list of roles with lower privilege than the current highest privilege role assigned to this user
-					$roleList = $this->find('list')
-						->where([
-							$this->aliasField('security_group_id') => $id,
-							$this->aliasField('order') . ' > ' => $highestRole->security_role->order,
-						])
-						->toArray()
-					;
-					$roleOptions = $roleOptions + $roleList;
-				}
 			}
 		} else { // super admin will show all roles of system and group specific
 			$roleOptions = $this
@@ -236,5 +240,10 @@ class SecurityRolesTable extends AppTable {
 			;
 		}
 		return $roleOptions;
+	}
+
+	public function onGetName(Event $event, Entity $entity) {
+		//Transalation is only for security roles
+		return ($entity->security_group_id == -1) ? __($entity->name) : $entity->name;
 	}
 }

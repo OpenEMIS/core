@@ -5,9 +5,9 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
-	<div class="table-in-view col-md-5 table-responsive">
-		<table class="table table-striped table-hover table-bordered table-checkable">
+	<label for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
+	<div class="table-in-view">
+		<table class="table table-checkable">
 			<thead>
 				<tr>
 					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>

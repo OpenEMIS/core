@@ -18,7 +18,7 @@ class GuardiansController extends AppController {
         // $this->ControllerAction->model()->addBehavior('AdvanceSearch');
 
 		$this->ControllerAction->models = [
-			'Accounts' 			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts' 			=> ['className' => 'Guardian.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -27,6 +27,8 @@ class GuardiansController extends AppController {
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'History' 			=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
 		];
+
+		$this->loadComponent('User.Image');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -37,15 +39,15 @@ class GuardiansController extends AppController {
 		$header = __('Guardians');
 
 		if ($action == 'index') {
-			$session->delete('Guardians.id');
-			$session->delete('Guardians.name');
-		} else if ($session->check('Guardians.id') || $action == 'view' || $action == 'edit') {
+			$session->delete('Guardian.Guardians.id');
+			$session->delete('Guardian.Guardians.name');
+		} else if ($session->check('Guardian.Guardians.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
-			} else if ($session->check('Guardians.id')) {
-				$id = $session->read('Guardians.id');
+			} else if ($session->check('Guardian.Guardians.id')) {
+				$id = $session->read('Guardian.Guardians.id');
 			}
 
 			if (!empty($id)) {
@@ -64,12 +66,12 @@ class GuardiansController extends AppController {
 		 */
 
 		$session = $this->request->session();
-		if ($session->check('Guardians.id')) {
+		if ($session->check('Guardian.Guardians.id')) {
 			$header = '';
-			$userId = $session->read('Guardians.id');
+			$userId = $session->read('Guardian.Guardians.id');
 
-			if ($session->check('Guardians.name')) {
-				$header = $session->read('Guardians.name');
+			if ($session->check('Guardian.Guardians.name')) {
+				$header = $session->read('Guardian.Guardians.name');
 			}
 
 			$alias = $model->alias;
@@ -110,8 +112,8 @@ class GuardiansController extends AppController {
 		$session = $this->request->session();
 
 		if ($model->alias() != 'Guardians') {
-			if ($session->check('Guardians.id')) {
-				$userId = $session->read('Guardians.id');
+			if ($session->check('Guardian.Guardians.id')) {
+				$userId = $session->read('Guardian.Guardians.id');
 				if ($model->hasField('security_user_id')) {
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('guardian_id')) {
@@ -124,5 +126,31 @@ class GuardiansController extends AppController {
 			}
 		}
 		return $options;
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }
