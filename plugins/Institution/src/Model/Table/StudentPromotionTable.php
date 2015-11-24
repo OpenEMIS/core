@@ -121,7 +121,7 @@ class StudentPromotionTable extends AppTable {
 			$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
 			$nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
 
-			// If there is no more next grade in the same education grades then the student may be graduated
+			// If there is no more next grade in the same education programme then the student may be graduated
 			if (count($nextGrades) == 0) {
 				$options[$statusesCode['GRADUATED']] = $studentStatusesList[$statusesCode['GRADUATED']];
 			} else {
@@ -260,24 +260,21 @@ class StudentPromotionTable extends AppTable {
 										'student_id' => $studentObj['student_id'], 
 										'education_grade_id' => $currentGrade,
 										'academic_period_id' => $currentAcademicPeriod,
-										'institution_id' => $institutionId
+										'institution_id' => $institutionId,
+										'student_status_id' => $studentStatuses['CURRENT']
 									]
 								);
 							// If the update count is more than 0	
 							if ($update) {
 								if ($nextEducationGradeId != 0) {
 									if ($this->save($entity)) {
-										$this->Alert->success($this->aliasField('success'));
+										$this->Alert->success($this->aliasField('success'), ['reset' => true]);
 									} else {
 										$this->log($entity->errors(), 'debug');
-										$this->Alert->error('general.add.failed');
 									}
 								} else {
-									$this->Alert->success($this->aliasField('success'));
+									$this->Alert->success($this->aliasField('success'), ['reset' => true]);
 								}
-							} else {
-								// The student may have been promoted, transfered or dropped out
-								$this->Alert->error('general.edit.failed');
 							}
 						}
 					}
