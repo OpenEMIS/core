@@ -34,7 +34,7 @@
 							'label' => false,
 							'options' => $periodOptions,
 							'url' => $baseUrl,
-							'data-named-key' => 'period_id',
+							'data-named-key' => 'academic_period_id',
 							'escape' => false
 						];
 						if (!empty($dataNamedGroup)) {
@@ -106,7 +106,7 @@
 							'label' => false,
 							'options' => $periodOptions,
 							'url' => $baseUrl,
-							'data-named-key' => 'period_id'
+							'data-named-key' => 'academic_period_id'
 						));
 					}
 
@@ -117,7 +117,7 @@
 							'options' => $weekOptions,
 							'url' => $baseUrl,
 							'data-named-key' => 'week',
-							'data-named-group' => 'period_id'
+							'data-named-group' => 'academic_period_id'
 						));
 					}
 
@@ -128,7 +128,7 @@
 							'options' => $dayOptions,
 							'url' => $baseUrl,
 							'data-named-key' => 'day',
-							'data-named-group' => 'period_id,week'
+							'data-named-group' => 'academic_period_id,week'
 						));
 					}
 
@@ -139,7 +139,7 @@
 							'options' => $sectionOptions,
 							'url' => $baseUrl,
 							'data-named-key' => 'section_id',
-							'data-named-group' => 'period_id,week,day'
+							'data-named-group' => 'academic_period_id,week,day'
 						));
 					}
 				}

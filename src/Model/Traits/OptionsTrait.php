@@ -27,6 +27,9 @@ trait OptionsTrait {
 			'Rubrics' => [
 				'types' => [1 => __('Section Break'), 2 => __('Criteria')],
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
+			],
+			'TrainingSessions' => [
+				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
 			]
 		];
 
@@ -40,5 +43,15 @@ trait OptionsTrait {
 			}
 		}
 		return $options;
+	}
+
+	public function selectEmpty($code) {
+		$codes = [
+			'period' => 'Period',
+			'class' => 'Class',
+			'student' => 'Student',
+			'staff' => 'Staff'
+		];
+		return '-- ' . __('Select ' . $codes[$code]) . ' --';
 	}
 }

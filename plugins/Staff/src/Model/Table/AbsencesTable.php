@@ -4,6 +4,7 @@ namespace Staff\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class AbsencesTable extends AppTable {
 	public function initialize(array $config) {
@@ -38,5 +39,22 @@ class AbsencesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('time', $order++);
 		$this->ControllerAction->setFieldOrder('staff_absence_reason_id', $order++);
 		//$this->ControllerAction->setFieldOrder('absence_type', $order++); //Remove this line as the absence_type has been drop in the new table structure
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		parent::onUpdateActionButtons($event, $entity, $buttons);
+		
+		if (array_key_exists('view', $buttons)) {
+			$institutionId = $entity->institution->id;
+			$url = [
+				'plugin' => 'Institution', 
+				'controller' => 'Institutions', 
+				'action' => 'StaffAbsences',
+				'view', $entity->id,
+				'institution_id' => $institutionId,
+			];
+			$buttons['view']['url'] = $url;
+		}
+		return $buttons;
 	}
 }

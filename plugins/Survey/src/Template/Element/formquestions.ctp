@@ -5,8 +5,8 @@
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 	?>
-	<div class="table-in-view table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+	<div class="table-in-view">
+		<table class="table">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
@@ -63,7 +63,7 @@
 			<br/>
 		</div>
 	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
+		<table class="table table-curved table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
