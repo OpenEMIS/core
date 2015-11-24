@@ -106,14 +106,8 @@ class StudentsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
-		$query->leftJoin(
-			['Identities' => 'user_identities'],
-			[
-				'Identities.security_user_id = '.$this->aliasField('student_id'),
-				'Identities.identity_type_id' => $settings['identity']->id
-			]
-		);
-		$query->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number', 'code' => 'Institutions.code']);
+		$query->contain(['Users.Nationalities.Countries', 'Users.Identities.IdentityTypes', 'Users.Genders']);
+		$query->select(['openemis_no' => 'Users.openemis_no', 'gender_id' => 'Genders.name', 'date_of_birth' => 'Users.date_of_birth', 'code' => 'Institutions.code']);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
@@ -121,20 +115,6 @@ class StudentsTable extends AppTable {
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
-		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-		$identity = $IdentityType
-		   ->find()
-		   ->contain(['FieldOptions'])
-		   ->where([
-		   		'FieldOptions.code' => 'IdentityTypes'
-		   ])
-		   ->order(['IdentityTypes.default DESC'])
-		   ->first();
-
-		$settings['identity'] = $identity;
-
-		// To update to this code when upgrade server to PHP 5.5 and above
-		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
 			if ($field['field'] == 'institution_id') {
@@ -165,14 +145,67 @@ class StudentsTable extends AppTable {
 		];
 
 		$extraField[] = [
+			'key' => 'Users.gender_id',
+			'field' => 'gender_id',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Users.date_of_birth',
+			'field' => 'date_of_birth',
+			'type' => 'date',
+			'label' => ''
+		];
+
+		$extraField[] = [
 			'key' => 'Identities.number',
 			'field' => 'number',
-			'type' => 'string',
-			'label' => __($identity->name)
+			'type' => 'identities',
+			'label' => __('Identities')
+		];
+
+		$extraField[] = [
+			'key' => 'Nationalities.country_id',
+			'field' => 'country_id',
+			'type' => 'nationalities',
+			'label' => __('Nationalities')
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());
 		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelRenderIdentities(Event $event, Entity $entity, array $attr) {
+		$str = '';
+		if(!empty($entity['user']['identities'])) {
+			$identities = $entity['user']['identities'];
+			foreach ($identities as $identity) {
+				$number = $identity['number'];
+				$identityType = $identity['identity_type']['name'];
+				$str .= '('.$identityType.') '.$number.', ';
+			}
+		}
+		if (!empty($str)) {
+			$str = substr($str, 0, -2);
+		}
+		return $str;
+	}
+
+	public function onExcelRenderNationalities(Event $event, Entity $entity, array $attr) {
+		$str = '';
+		if(!empty($entity['user']['nationalities'])) {
+			$nationalities = $entity['user']['nationalities'];
+			foreach ($nationalities as $nationality) {
+				if (isset($nationality['country']['name'])) {
+					$str .= $nationality['country']['name'].', ';
+				}			
+			}
+		}
+		if (!empty($str)) {
+			$str = substr($str, 0, -2);
+		}
+		return $str;
 	}
 
 	public function implementedEvents() {
