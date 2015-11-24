@@ -46,10 +46,11 @@ class StudentPromotionTable extends AppTable {
     	$this->ControllerAction->field('current_academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->currentPeriod->name], 'value' => $this->currentPeriod->id]);
     	$this->ControllerAction->field('next_academic_period_id');
     	$this->ControllerAction->field('grade_to_promote');
+    	$this->ControllerAction->field('student_status_id');
     	$this->ControllerAction->field('education_grade_id');
 		$this->ControllerAction->field('students');
-		$this->ControllerAction->field('student_status_id');
-		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'grade_to_promote', 'education_grade_id', 'student_status_id', 'students']);
+		
+		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'grade_to_promote', 'next_academic_period_id', 'student_status_id', 'education_grade_id', 'students']);
 	}
 
 	public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
@@ -129,34 +130,46 @@ class StudentPromotionTable extends AppTable {
 			
 			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
 			$attr['options'] = $options;
+			$attr['onChangeReload'] = true;
+			if (empty($request->data[$this->alias()]['student_status_id'])) {
+				reset($options);
+				$request->data[$this->alias()]['student_status_id'] = key($options);
+			}
 			return $attr;
 		}
 	}
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
-		$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
-		$institutionId = $this->institutionId;
-		
-		// list of grades available to promote to
-		$listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
+		$studentStatusId = $request->data[$this->alias()]['student_status_id'];
+		$statuses = $this->statuses;
+		if ($studentStatusId != $statuses['REPEATED']) {
+			$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
+			$institutionId = $this->institutionId;
+			
+			// list of grades available to promote to
+			$listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
 
-		// list of grades available in the institution
-		$listOfInstitutionGrades = $this->InstitutionGrades
-			->find('list', [
-				'keyField' => 'education_grade_id', 
-				'valueField' => 'education_grade.programme_grade_name'])
-			->contain(['EducationGrades'])
-			->where([$this->InstitutionGrades->aliasField('institution_site_id') => $institutionId])
-			->toArray();
+			// list of grades available in the institution
+			$listOfInstitutionGrades = $this->InstitutionGrades
+				->find('list', [
+					'keyField' => 'education_grade_id', 
+					'valueField' => 'education_grade.programme_grade_name'])
+				->contain(['EducationGrades'])
+				->where([$this->InstitutionGrades->aliasField('institution_site_id') => $institutionId])
+				->toArray();
 
-		// Only display the options that are available in the institution and also linked to the current programme
-		$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+			// Only display the options that are available in the institution and also linked to the current programme
+			$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
-		if (count($options) == 0) {
-			$options = [0 => __('No Available Grades in this Institution')];
+			if (count($options) == 0) {
+				$options = [0 => __('No Available Grades in this Institution')];
+			}
+			$attr['type'] = 'select';
+			$attr['options'] = $options;
+		} else {
+			$attr['type'] = 'hidden';
 		}
-		$attr['type'] = 'select';
-		$attr['options'] = $options;
+		
 		return $attr;
 	}
 
@@ -206,6 +219,7 @@ class StudentPromotionTable extends AppTable {
 			$currentAcademicPeriod = null;
 			$currentGrade = null;
 			$statusToUpdate = null;
+			$studentStatuses = $this->statuses;
 			$institutionId = $this->institutionId;
 			if (array_key_exists('current_academic_period_id', $data[$this->alias()])) {
 				$currentAcademicPeriod = $data[$this->alias()]['current_academic_period_id'];
@@ -223,10 +237,12 @@ class StudentPromotionTable extends AppTable {
 			if (array_key_exists('student_status_id', $data[$this->alias()])) {
 				$statusToUpdate = $data[$this->alias()]['student_status_id'];
 			}
+			if ($statusToUpdate == $studentStatuses['REPEATED']) {
+				$nextEducationGradeId = $currentGrade;
+			}
 			if (!empty($nextAcademicPeriodId) && !empty($currentAcademicPeriod) && !empty($currentGrade)) {
 				if (array_key_exists('students', $data[$this->alias()])) {
 					$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
-					$studentStatuses = $this->statuses;
 					$tranferCount = 0;
 					foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
 						if ($studentObj['selected']) {
