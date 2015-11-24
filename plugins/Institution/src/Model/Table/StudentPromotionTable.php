@@ -123,8 +123,10 @@ class StudentPromotionTable extends AppTable {
 			// If there is no more next grade in the same education grades then the student may be graduated
 			if (count($nextGrades) == 0) {
 				$options[$statusesCode['GRADUATED']] = $studentStatusesList[$statusesCode['GRADUATED']];
+			} else {
+				$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
 			}
-			$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
+			
 			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
 			$attr['options'] = $options;
 			return $attr;
