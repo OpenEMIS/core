@@ -34,7 +34,7 @@ $this->start('panelBody');
 </style>
 
 <div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered" id="ReportList" url="<?= $url ?>">
+	<table class="table table-curved" id="ReportList" url="<?= $url ?>">
 		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
