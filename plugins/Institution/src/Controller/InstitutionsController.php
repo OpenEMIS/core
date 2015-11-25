@@ -196,9 +196,11 @@ class InstitutionsController extends AppController  {
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
+
+					// replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
 					if (!$exists) {
 						$this->Alert->warning('general.notExists');
-						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $alias]);
+						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 					}
 				}
 			}
