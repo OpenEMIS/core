@@ -28,9 +28,13 @@ class InstitutionBehavior extends Behavior {
 		$userId = $options['userId'];
 		$findOptions = $options['options'];
 
-		$queryClone = clone $query;
+		$institutionTableClone1 = clone $this->_table;
+		$institutionTableClone1->alias('InstitutionSecurityArea');
 		// find from security areas
-		$institutions = $queryClone
+		$institutionsSecurityArea = $institutionTableClone1->find()
+			->innerJoin(['Areas' => 'areas'], [
+				'Areas.id = '. $institutionTableClone1->aliasField('area_id')
+			])
 			->innerJoin(['AreaAll' => 'areas'], [
 				'AreaAll.lft <= Areas.lft', 
 				'AreaAll.rght >= Areas.rght'
@@ -40,29 +44,28 @@ class InstitutionBehavior extends Behavior {
 			])
 			->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
 				'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id',
-				'SecurityGroupUser.security_user_id' => $userId
+				'SecurityGroupUser.security_user_id ='.$userId
 			])
-			->group([$this->_table->aliasField('id')])
-			->select(['id' => $this->_table->aliasField('id')], true);
+			->select(['id' => $institutionTableClone1->aliasField('id')]);
 		
+		$institutionTableClone2 = clone $this->_table;
+		$institutionTableClone2->alias('InstitutionSecurity');
+
 		// find from security institutions
-		$securityInstitution = $this->_table->find()
-			->contain($findOptions['contain'])
-			->select(['id' => $this->_table->aliasField('id')])
-			->join($findOptions['join'])
+		$institutionSecurity = $institutionTableClone2->find()
+			->select(['id' => $institutionTableClone2->aliasField('id')])
 			->innerJoin(['SecurityGroupInstitutionSite' => 'security_group_institution_sites'], [
-				'SecurityGroupInstitutionSite.institution_site_id = ' . $this->_table->aliasField('id')
+				'SecurityGroupInstitutionSite.institution_site_id = ' . $institutionTableClone2->aliasField('id')
 			])
 			->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
 				'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
-				'SecurityGroupUser.security_user_id' => $userId
-			])
-			->group([$this->_table->aliasField('id')]);
+				'SecurityGroupUser.security_user_id ='.$userId
+			]);
 
 		$query->where([
 			'OR' => [
-				[$this->_table->aliasField('id').' IN ' => $institutions],
-				[$this->_table->aliasField('id').' IN ' => $securityInstitution]
+				['EXISTS ('.$institutionsSecurityArea->sql().' WHERE '.$institutionTableClone1->aliasField('id').'='.$this->_table->aliasField('id').')'],
+				['EXISTS ('.$institutionSecurity->sql().' WHERE '.$institutionTableClone2->aliasField('id').'='.$this->_table->aliasField('id').')']
 			]
 		]);
 		return $query;
