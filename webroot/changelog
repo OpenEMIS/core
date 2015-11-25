@@ -41,3 +41,5 @@ v3.3.5
 - Fixed a bug that caused dates to save as 01-01-1970 when language is set to arabic
 - Staff leave days are now auto-calculated based on start and end date
 - Security -> Users will show usernames now
+- Fixed a bug that caused next programmes not to be saved
+- Fixed a bug that shows 404 error when user click on Subjects link in Students -> Subjects
