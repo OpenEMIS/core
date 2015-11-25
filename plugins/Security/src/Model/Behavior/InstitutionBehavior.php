@@ -51,7 +51,7 @@ class InstitutionBehavior extends Behavior {
 		$institutionTableClone2 = clone $this->_table;
 		$institutionTableClone2->alias('InstitutionSecurity');
 
-		// find from security institutions
+		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()
 			->select(['id' => $institutionTableClone2->aliasField('id')])
 			->innerJoin(['SecurityGroupInstitutionSite' => 'security_group_institution_sites'], [
