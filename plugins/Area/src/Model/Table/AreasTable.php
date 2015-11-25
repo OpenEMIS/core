@@ -15,6 +15,7 @@ class AreasTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Area.Areas']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Tree');
 	}
 
@@ -27,6 +28,19 @@ class AreasTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function deleteUpdateConvertOptions(Event $event, Entity $entity, array $convertOptions) {
+		$id = $entity->id;
+		$level = $this->find()->contain(['Levels'])->where([$this->aliasField('id') => $id])->first()->level->id;
+		$options = $this
+			->find('list')
+			->where([
+				$this->aliasField('area_level_id') => $level, 
+				$this->aliasField('id').' IS NOT ' => $id
+			])
+			->toArray();
+		return $options;
 	}
 
 	public function indexBeforeAction(Event $event) {
