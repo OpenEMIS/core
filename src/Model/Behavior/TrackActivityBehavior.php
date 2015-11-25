@@ -140,29 +140,8 @@ class TrackActivityBehavior extends Behavior {
 		return true;
 	}
 
-	// public function beforeDelete(Event $event, Entity $entity, ArrayObject $options) {
-	// 	if (!empty($entity->id) && $this->_table->trackActivity && isset($this->_table->fields)) { 
-	// 		pr($entity);
-	// 		$alias = $this->_table->alias();
-	// 		$id = $entity->id;
-	// 		$activity['model'] = $alias;
-	// 		$activity['model_reference'] = $id;
-	// 		$activity['field'] = '';
-	// 		$activity['field_type'] = '';
-	// 		$activity['old_value'] = '';
-	// 		$activity['new_value'] = '';
-	// 		$activity['institution_site_id'] = $id;
-	// 		$activity['operation'] = 'delete';
-	// 		$ActivityModel = TableRegistry::get($this->config('target'));
-
-	// 		// pr($alias);
-	// 	}
-	// 	// pr('done');die;
-	// }
-
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		if (!empty($entity->id) && $this->_table->trackActivity && isset($this->_table->fields)) { 
-			// pr($entity);
+		if (!empty($entity->id) && $this->_table->trackActivity) { 
 			$alias = $this->_table->alias();
 			$id = $entity->id;
 			$activity['model'] = $alias;
@@ -173,11 +152,12 @@ class TrackActivityBehavior extends Behavior {
 			$activity['new_value'] = '';
 			$activity['institution_site_id'] = $id;
 			$activity['operation'] = 'delete';
+
 			$ActivityModel = TableRegistry::get($this->config('target'));
-
-			// pr($alias);
+			$newEntity = $ActivityModel->newEntity($activity);
+			if (!$ActivityModel->save($newEntity)) {
+				Log::write('debug', $newEntity->errors());
+			}
 		}
-		// pr('done');die;
 	}
-
 }
