@@ -216,7 +216,7 @@ class RecordBehavior extends Behavior {
 
     					foreach ($obj[$StudentSurveys->alias()] as $studentId => $surveyObj) {
     						if (array_key_exists('custom_field_values', $surveyObj)) {
-    							$surveyObj['status'] = $entity->status;
+    							$surveyObj['status_id'] = $entity->status_id;
     							foreach ($surveyObj['custom_field_values'] as $fieldkey => $fieldObj) {
 		    						$fieldType = $this->CustomFields
 										->find('all')
@@ -254,11 +254,6 @@ class RecordBehavior extends Behavior {
     						$redirectUrl = $this->_table->ControllerAction->url('edit');
     					}
     				}
-    			}
-
-    			if ($entity->status == 1 && !is_null($redirectUrl)) {
-					$event->stopPropagation();
-					return $this->_table->controller->redirect($redirectUrl);
     			}
     		}
     	}
@@ -579,7 +574,7 @@ class RecordBehavior extends Behavior {
 
 				$fieldName = "custom_.$customFieldOrder._field";
 				$fieldOrder[$order++] = $fieldName;
-				$valueClass = strtolower($_field_type) == 'table' ? 'table-full-width' : '';
+				$valueClass = strtolower($_field_type) == 'table' || strtolower($_field_type) == 'student_list' ? 'table-full-width' : '';
 
 				$this->_table->ControllerAction->field($fieldName, [
 		            'type' => 'custom_'. strtolower($_field_type),

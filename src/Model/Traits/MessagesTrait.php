@@ -398,6 +398,15 @@ trait MessagesTrait {
 			'failed' => 'failed to import.',
 			'survey_not_found' => 'No identifiable survey found',
 		],
+		'TrainingSessions' => [
+			'trainer_type' => 'Type',
+			'internal_trainer' => 'Internal Trainer',
+			'external_trainer' => 'External Trainer'
+		],
+		'TrainingSessionResults' => [
+			'noResultTypes' => 'You need to configure Result Types under Training Course.',
+			'noTrainees' => 'No Available Trainees'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -419,10 +428,13 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
+				], 
+				'area_id' => [
+					'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
 				],
 				'code' => [
 					'ruleUnique' => 'Please enter a unique code'
-				]
+				],
 			],
 			
 			'InstitutionSiteSections' => [
@@ -869,6 +881,21 @@ trait MessagesTrait {
 		'Labels' => [
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
+			]
+		],
+		'Training' => [
+			'TrainingCourses' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
+			],
+			'TrainingSessions' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
 			]
 		],
 		'Workflow' => [
