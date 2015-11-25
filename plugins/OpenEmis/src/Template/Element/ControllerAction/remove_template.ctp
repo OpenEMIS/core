@@ -21,8 +21,10 @@ $this->start('panelBody');
 	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
 
 	$tableData = [];
-	foreach ($associations as $row) {
-		$tableData[] = [$row['model'], $row['count']];
+	foreach ($associations as $r) {
+		foreach ($r as $row) {
+			$tableData[] = [$row['model'], $row['count']];
+		}
 	}
 ?>
 
