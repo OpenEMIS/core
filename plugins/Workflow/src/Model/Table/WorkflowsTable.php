@@ -26,6 +26,7 @@ class WorkflowsTable extends AppTable {
 
 	private $_fieldOrder = ['workflow_model_id', 'code', 'name'];
 	private $_contain = ['Filters'];
+	private $filter = null;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -206,7 +207,6 @@ class WorkflowsTable extends AppTable {
 		list($modelOptions, $selectedModel) = array_values($this->_getSelectOptions());
 		$this->controller->set(compact('modelOptions', 'selectedModel'));
 
-		$filter = null;
 		$filterClass = [
 			'className' => 'FieldOption.FieldOptionValues',
 			'joinTable' => 'workflows_filters',
@@ -216,9 +216,9 @@ class WorkflowsTable extends AppTable {
 			'dependent' => true
 		];
 		if (!is_null($selectedModel)) {
-			$filter = $this->WorkflowModels->get($selectedModel)->filter;
-			if (!is_null($filter)) {
-				$filterClass['className'] = $filter;
+			$this->filter = $this->WorkflowModels->get($selectedModel)->filter;
+			if (!is_null($this->filter)) {
+				$filterClass['className'] = $this->filter;
 			}
 		}
 		
@@ -260,12 +260,16 @@ class WorkflowsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 		// End
 
-		$this->ControllerAction->field('apply_to_all');
-		$this->ControllerAction->field('filters', [
-			'type' => 'chosenSelect'
-		]);
+		if (!is_null($this->filter)) {
+			$this->ControllerAction->field('apply_to_all');
+			$this->ControllerAction->field('filters', [
+				'type' => 'chosenSelect'
+			]);
 
-		$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
+			$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
+		} else {
+			$this->_fieldOrder = ['workflow_model_id', 'code', 'name'];
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
