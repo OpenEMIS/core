@@ -6,6 +6,8 @@ use CustomField\Model\Table\CustomFieldsTable;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Network\Request;
+use Cake\Utility\Text;
 
 class SurveyQuestionsTable extends CustomFieldsTable {
 	protected $_fieldFormat = ['OpenEMIS', 'OpenEMIS_Institution'];
@@ -39,6 +41,18 @@ class SurveyQuestionsTable extends CustomFieldsTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder(['code', 'name', 'field_type', 'is_mandatory', 'is_unique']);
+	}
+
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('code');
+	}
+
+	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$textValue = substr(Text::uuid(), 0, 8);
+			$attr['attr']['value'] = $textValue;
+			return $attr;
+		}
 	}
 
 }
