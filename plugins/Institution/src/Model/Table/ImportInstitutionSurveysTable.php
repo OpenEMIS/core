@@ -295,6 +295,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 				$originalRow = new ArrayObject();
 				$rowInvalidCodeCols = [];
 				$tempRow = [];
+				$tempTableRow = [];
 				$rowFailed = false;
 
 				foreach ($questions as $question) {
@@ -308,7 +309,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					} else if (empty($cellValue) && !$questions[$col]->is_mandatory) {
 						continue;
 					}
-					
+
 					switch ($fieldType) {
 						case 'DROPDOWN':
 							$originalRow[$colCount] = $cellValue;
@@ -333,12 +334,10 @@ class ImportInstitutionSurveysTable extends AppTable {
 							$questionOptions = new Collection($questionOptions);
 							$selections = explode(',', $cellValue);
 							foreach ($selections as $selectionKey => $selection) {
-
 								$filtered = $questionOptions->filter(function ($record, $key, $iterator) use ($selection) {
 								    return $record->id == trim($selection);
 								});
 								$selectedAnswer = $filtered->toArray();
-
 								if (!empty($selectedAnswer)) {
 									$codeIndex = key($selectedAnswer);
 									$trimmedVal = $selectedAnswer[$codeIndex]->id;
@@ -350,7 +349,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 								if (!$rowFailed) {
 									$obj = [
 										'institution_site_survey_id' => $this->institutionSurvey->id,
-										'survey_question_id' => $questions[$col]->id,
+										'survey_question_id' => $question->id,
 										$this->fieldTypes[$fieldType] => $trimmedVal,
 									];
 									$tableEntity = $this->InstitutionSurveyAnswers->newEntity();
@@ -411,8 +410,19 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 							if (sizeof($rows) !=0 && sizeof($columns) !=0 ) {
 								for($i = 1; $i < sizeof($columns); $i++) {
-									foreach ($rows as $r) {	
-										$colCount++;
+									$c = $columns[$i];
+									foreach ($rows as $r) {
+										$answerKey = '-'.$c['id'].'-'.$r['id'];
+										$obj = [
+											'institution_site_survey_id' => $this->institutionSurvey->id,
+											'survey_question_id' => $question->id,
+											'survey_table_row_id' => $r->id,
+											'survey_table_column_id' => $c->id,
+											'text_value' => $this->getCellValue($sheet, $colCount++, $row)
+										];
+										$tableEntity = $this->InstitutionSurveyTableCells->newEntity();
+										$this->InstitutionSurveyTableCells->patchEntity($tableEntity, $obj);
+										$tempTableRow[$columnCode.$answerKey] = $tableEntity;
 									}
 								}
 							}
@@ -432,29 +442,28 @@ class ImportInstitutionSurveysTable extends AppTable {
 						$this->InstitutionSurveyAnswers->patchEntity($tableEntity, $obj);
 						$tempRow[$columnCode] = $tableEntity;
 					}
-
-					pr($tempRow);
-					if (!$rowFailed) {
-						foreach ($tempRow as $entity) {
-							// $this->InstitutionSurveyAnswers->save($entity);
-						}
-						$totalImported++;
-					} else {
-						$rowCodeError = $this->getExcelLabel('Import', 'invalid_code').': ';
-						$rowCodeError .= implode(', ', $rowInvalidCodeCols);
-						$dataFailed[] = array(
-							'row_number' => $row,
-							'error' => $rowCodeError,
-							'data' => $originalRow
-						);
-						$model->log('ImportBehavior @ line '.__LINE__, 'debug');
-						$model->log($rowCodeError, 'debug');
-						continue;
-					}
-					
 				}
 
-				pr('done');die;
+				if (!$rowFailed) {
+					foreach ($tempRow as $entity) {
+						$this->InstitutionSurveyAnswers->save($entity);
+					}
+					foreach ($tempTableRow as $entity) {
+						$this->InstitutionSurveyTableCells->save($entity);
+					}
+					$totalImported++;
+				} else {
+					$rowCodeError = $this->getExcelLabel('Import', 'invalid_code').': ';
+					$rowCodeError .= implode(', ', $rowInvalidCodeCols);
+					$dataFailed[] = array(
+						'row_number' => $row,
+						'error' => $rowCodeError,
+						'data' => $originalRow
+					);
+					$model->log('ImportBehavior @ line '.__LINE__, 'debug');
+					$model->log($rowCodeError, 'debug');
+					continue;
+				}
 			} // for ($row = 1; $row <= $highestRow; ++$row)
 
 			if (!empty($dataFailed)) {
