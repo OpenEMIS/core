@@ -168,7 +168,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 				$data[$sheetName][1][4] = '';
 				$data[$sheetName][1][5] = $question->name;
 				$data[$sheetName][2][4] = '';
-				$data[$sheetName][2][5] = __('(Multiple codes can be selected and seperated by comma)');
+				$data[$sheetName][2][5] = __('(Multiple codes can be selected and seperated by comma and a space. Example: 1, 2)');
 			}
 		}
 		return $data;
@@ -413,12 +413,13 @@ class ImportInstitutionSurveysTable extends AppTable {
 									$c = $columns[$i];
 									foreach ($rows as $r) {
 										$answerKey = '-'.$c['id'].'-'.$r['id'];
+										$originalRow[$colCount] = $this->getCellValue($sheet, $colCount, $row);
 										$obj = [
 											'institution_site_survey_id' => $this->institutionSurvey->id,
 											'survey_question_id' => $question->id,
 											'survey_table_row_id' => $r->id,
 											'survey_table_column_id' => $c->id,
-											'text_value' => $this->getCellValue($sheet, $colCount++, $row)
+											'text_value' => $this->getCellValue($sheet, $originalRow[$colCount++], $row)
 										];
 										$tableEntity = $this->InstitutionSurveyTableCells->newEntity();
 										$this->InstitutionSurveyTableCells->patchEntity($tableEntity, $obj);
@@ -429,6 +430,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 							break;
 
 						default:
+							$originalRow[$colCount] = $cellValue;
 							$colCount++;
 							break;
 					}
