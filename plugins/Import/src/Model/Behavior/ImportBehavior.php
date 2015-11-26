@@ -75,9 +75,11 @@ class ImportBehavior extends Behavior {
 		// 'csv' 	=> 'text/plain',
 		// 'csv' 	=> 'text/csv',
 		'xls' 	=> 'application/vnd.ms-excel',
+		// Use for openoffice .xls format
+		'xls-2' => 'application/vnd.ms-office',
 		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		'ods' 	=> 'application/zip',
-		// 'zip' 	=> 'application/zip',
+		'ods' 	=> 'application/vnd.oasis.opendocument.spreadsheet',
+		'zip' 	=> 'application/zip',
 	];
 	public $institutionId = false;
 
