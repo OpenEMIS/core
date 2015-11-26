@@ -386,6 +386,11 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->allowEmpty('password')
+			->add('password' , [
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6]
+				]
+			])
 			->add('address', [])
 			->allowEmpty('photo_content')
 			;

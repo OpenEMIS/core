@@ -383,7 +383,7 @@ class ControllerActionHelper extends Helper {
 				}
 
 				if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
-					$html .= '<input style="display:none" type="text" name="'.$_field.'"/>';
+					$html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
 				}
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
 			}
