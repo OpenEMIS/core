@@ -13,7 +13,8 @@ class WorkflowsController extends AppController
 
         $this->ControllerAction->models = [
             'Workflows' => ['className' => 'Workflow.Workflows'],
-            'Steps' => ['className' => 'Workflow.WorkflowSteps']
+            'Steps' => ['className' => 'Workflow.WorkflowSteps'],
+            'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
 		$this->loadComponent('Paginator');
     }
@@ -36,10 +37,19 @@ class WorkflowsController extends AppController
             ];
         }
 
+        if ($this->AccessControl->check([$this->name, 'Statuses', 'view'])) {
+            $tabElements['Statuses'] = [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Statuses'],
+                'text' => __('Statuses')
+            ];
+        }
+
         $selectedAction = $this->request->action;
         if (!$this->AccessControl->check([$this->name, 'Workflows', 'view'])) {
             if ($this->AccessControl->check([$this->name, 'Steps', 'view'])) {
                 $selectedAction = 'Steps';
+            } elseif ($this->AccessControl->check([$this->name, 'Statuses', 'view'])) {
+                $selectedAction = 'Statuses';
             }
         }
 

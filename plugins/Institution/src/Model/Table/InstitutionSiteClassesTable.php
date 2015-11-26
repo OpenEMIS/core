@@ -15,7 +15,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionSiteClassesTable extends AppTable {
 	public $institutionId = 0;
-	public $selectedClassId = 0;
+	public $selectedSectionId = 0;
 	private $public = 0;
 	private $_academicPeriodOptions = [];
 	private $_selectedAcademicPeriodId = -1;
@@ -105,7 +105,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'fieldNameKey' => 'teachers',
 			'fieldName' => $this->alias() . '.teachers._ids',
 			'placeholder' => $this->getMessage('Users.select_teacher'),
-			'valueWhenEmpty' => 'No Teacher Assigned',
+			'valueWhenEmpty' => __('No Teacher Assigned'),
 			'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
 		]);
 
@@ -125,7 +125,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 		$this->_academicPeriodOptions = $this->getAcademicPeriodOptions();
 		if (empty($this->_academicPeriodOptions)) {
-			$this->Alert->warning('Institutions.noProgrammes');
+			$this->Alert->warning('InstitutionSiteClasses.noPeriods');
 		}
 
 		if (empty($this->request->query['academic_period_id'])) {
@@ -154,19 +154,19 @@ class InstitutionSiteClassesTable extends AppTable {
 			}
 		]);
 
-		$classOptions = $Sections->find('list')
+		$sectionOptions = $Sections->find('list')
 									->where([
 										'academic_period_id'=>$this->_selectedAcademicPeriodId, 
 										'institution_site_id'=>$institutionId
 									])
 									->toArray();
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
-		if (empty($classOptions)) {
-			$this->Alert->warning('Institutions.noSections');
+		if (empty($sectionOptions)) {
+			$this->Alert->warning('Institutions.noClassRecords');
 		}
-		$this->selectedClassId = $this->queryString('class_id', $classOptions);
-		$this->advancedSelectOptions($classOptions, $this->selectedClassId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+		$this->selectedSectionId = $this->queryString('class_id', $sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
 			'callable' => function($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId) {
 				$query = $Subjects->find()
 									->join([
@@ -174,7 +174,7 @@ class InstitutionSiteClassesTable extends AppTable {
 											'table' => 'institution_site_section_classes',
 											'alias' => 'InstitutionSiteSectionClass',
 											'conditions' => [
-												'InstitutionSiteSectionClass.institution_site_class_id = '.$Subjects->aliasField('id'),
+												'InstitutionSiteSectionClass.institution_site_class_id = ' . $Subjects->aliasField('id'),
 												'InstitutionSiteSectionClass.institution_site_section_id' => $id
 											]
 										]
@@ -191,8 +191,8 @@ class InstitutionSiteClassesTable extends AppTable {
             ['name' => 'Institution.Subjects/controls', 
              'data' => [
 	            	'academicPeriodOptions'=>$academicPeriodOptions,
-	            	'classOptions'=>$classOptions, 
-	            	'selectedClass'=>$this->selectedClassId, 
+	            	'classOptions'=>$sectionOptions, 
+	            	'selectedClass'=>$this->selectedSectionId, 
 	            ],
 	         'options' => []
             ]
@@ -209,7 +209,7 @@ class InstitutionSiteClassesTable extends AppTable {
 					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => [
 						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClasses.id',
-						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedClassId
+						'InstitutionSiteSectionClass.institution_site_section_id' => $this->selectedSectionId
 					]
 				]
 			])
@@ -316,7 +316,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
@@ -329,8 +329,8 @@ class InstitutionSiteClassesTable extends AppTable {
 									])
 									->toArray();
 		$SectionGrades = $this->InstitutionSiteSectionGrades;
-		$this->selectedClassId = $this->postString('class_name', $sectionOptions);
-		$this->advancedSelectOptions($sectionOptions, $this->selectedClassId, [
+		$this->selectedSectionId = $this->postString('class_name', $sectionOptions);
+		$this->advancedSelectOptions($sectionOptions, $this->selectedSectionId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 			'callable' => function($id) use ($SectionGrades) {
 				return $SectionGrades->findByInstitutionSiteSectionId($id)->count();
@@ -727,7 +727,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
 							->where([
-								$Grade->aliasField('institution_site_section_id') => $this->selectedClassId,
+								$Grade->aliasField('institution_site_section_id') => $this->selectedSectionId,
 								$Grade->aliasField('status') => 1
 							])
 							->toArray();
@@ -778,7 +778,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				],
 			])
 			->where([
-				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->selectedClassId,
+				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->selectedSectionId,
 				'InstitutionSiteSectionClasses.status' => 1
 			])
 			->toArray();
