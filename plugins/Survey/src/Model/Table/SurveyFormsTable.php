@@ -3,10 +3,12 @@ namespace Survey\Model\Table;
 
 use CustomField\Model\Table\CustomFormsTable;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Text;
 
 class SurveyFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
@@ -64,6 +66,10 @@ class SurveyFormsTable extends CustomFormsTable {
 	public function afterAction(Event $event){
 		unset($this->fields['custom_fields']);
 		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'survey_question']);
+	}
+
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('code');
 	}
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
@@ -134,6 +140,14 @@ class SurveyFormsTable extends CustomFormsTable {
 				$toolbarButtons['download']['attr'] = $attr;
 				$toolbarButtons['download']['attr']['title'] = __('Download');
 			}
+		}
+	}
+
+	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$textValue = substr(Text::uuid(), 0, 8);
+			$attr['attr']['value'] = $textValue;
+			return $attr;
 		}
 	}
 
