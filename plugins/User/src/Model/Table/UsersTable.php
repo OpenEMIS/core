@@ -330,7 +330,11 @@ class UsersTable extends AppTable {
 			->order($this->aliasField('id').' DESC')
 			->first();
 
-		$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+		if (is_array($latest)) {
+			$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+		} else {
+			$latestOpenemisNo = $latest->openemis_no;
+		}
 		if(empty($prefix)){
 			$latestDbStamp = $latestOpenemisNo;
 		}else{
@@ -385,6 +389,64 @@ class UsersTable extends AppTable {
 			->add('address', [])
 			->allowEmpty('photo_content')
 			;
+		return $validator;
+	}
+
+	// this is the method to call for user validation - currently in use by Student Staff.. 
+	public function setUserValidation(Validator $validator, $thisModel = null) {
+		$validator
+			->add('first_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
+					]
+				])
+			->add('last_name', [
+					'ruleCheckIfStringGotNoNumber' => [
+						'rule' => 'checkIfStringGotNoNumber',
+					]
+				])
+			->add('openemis_no', [
+					'ruleUnique' => [
+						'rule' => 'validateUnique',
+						'provider' => 'table',
+					]
+				])
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			->allowEmpty('username')
+			->allowEmpty('password')
+			->add('password' , [
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6]
+				]
+			])
+			->allowEmpty('photo_content')
+			->add('date_of_birth', [
+					'ruleValidDate' => [
+						'rule' => ['date', 'dmy']
+					]
+				])
+			;
+
+		$thisModel = ($thisModel == null)? $this: $thisModel;
+		$thisModel->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$thisModel->setValidationCode('first_name.ruleNotBlank', 'User.Users');
+		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
+		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
+		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
+		$thisModel->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
 		return $validator;
 	}
 

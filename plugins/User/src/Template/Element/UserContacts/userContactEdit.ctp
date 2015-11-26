@@ -1,7 +1,7 @@
 <?php pr($data->toArray()); ?>
 
 <div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered">
+	<table class="table table-curved">
 		<thead class="table_head">
 			<tr>
 				<td class="table_cell"><?php echo __('Type'); ?></td>
