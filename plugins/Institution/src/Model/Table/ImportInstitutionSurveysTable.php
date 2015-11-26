@@ -128,7 +128,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 				ksort($column);
 				$column = array_values($column);
 
-				if (sizeof($row) !=0 || sizeof($column) !=0 ) {
+				if (sizeof($row) !=0 && sizeof($column) !=0 ) {
 					for($i = 1; $i < sizeof($column); $i++) {
 						foreach ($row as $r) {
 							$header[] = '(' . $question->code . ') '. $question->name . ' ('.$column[$i]['name'].', '.$r['name'].')';
@@ -275,10 +275,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			ksort($surveyFormQuestions);
 			$surveyFormQuestions = array_values($surveyFormQuestions);
 			$questions = $surveyFormQuestions;
-			$totalColumns = count($questions);
-
 			$totalColumns = $this->getTotalColumns($questions);
-			pr($totalColumns);die;
 
 			for ($row = 1; $row <= $highestRow; ++$row) {
 				if ($row == self::RECORD_QUESTION) { // skip header but check if the uploaded template is correct
@@ -293,50 +290,29 @@ class ImportInstitutionSurveysTable extends AppTable {
 						break;
 					}
 				}
-				
+
+				$colCount = 0;
+				$originalRow = new ArrayObject();
+				$rowInvalidCodeCols = [];
+				$tempRow = [];
+				$rowFailed = false;
+
 				foreach ($questions as $question) {
 					$fieldType = $question->field_type;
-					switch ($fieldType) {
-						case 'DROPDOWN':
+					$cellValue = $this->getCellValue($sheet, $colCount, $row);
+					$columnCode = $question->code;
 
-							break;
-						case 'CHECKBOX':
-							break;
-
-						case 'NUMBER':
-							break;
-
-						case 'DATE':
-						case 'TIME':
-							break;
-
-						case 'TABLE':
-							break;
-					}
-
-					if ($fieldType != 'CHECKBOX') {
-
-					}
-				}
-
-				$tempRow = [];
-				$rowInvalidCodeCols = [];
-				$originalRow = new ArrayObject;
-				$rowFailed = false;
-				for ($col = 0; $col < $totalColumns; ++$col) {
-					$cellValue = $this->getCellValue($sheet, $col, $row);
-
-					$columnCode = $questions[$col]->code;
-					$questionOptions = $questions[$col]->custom_field_options;
-					$originalRow[$col] = $cellValue;
-					if (empty($cellValue) && $questions[$col]->is_mandatory) {
+					if (empty($cellValue) && $question->is_mandatory) {
 						$rowFailed = true;
 						$rowInvalidCodeCols[] = $columnCode;
 					} else if (empty($cellValue) && !$questions[$col]->is_mandatory) {
 						continue;
 					}
-					switch ($questions[$col]->field_type) {
+					
+					switch ($fieldType) {
 						case 'DROPDOWN':
+							$originalRow[$colCount] = $cellValue;
+							$questionOptions = $question->custom_field_options;
 							$questionOptions = new Collection($questionOptions);
 							$filtered = $questionOptions->filter(function ($record, $key, $iterator) use ($cellValue) {
 							    return $record->id == $cellValue;
@@ -349,12 +325,14 @@ class ImportInstitutionSurveysTable extends AppTable {
 								$rowFailed = true;
 								$rowInvalidCodeCols[] = $columnCode;
 							}
+							$colCount++;
 							break;
-						
 						case 'CHECKBOX':
+							$originalRow[$colCount] = $cellValue;
+							$questionOptions = $question->custom_field_options;
 							$questionOptions = new Collection($questionOptions);
 							$selections = explode(',', $cellValue);
-							foreach ($selections as $selectionKey=>$selection) {
+							foreach ($selections as $selectionKey => $selection) {
 
 								$filtered = $questionOptions->filter(function ($record, $key, $iterator) use ($selection) {
 								    return $record->id == trim($selection);
@@ -373,24 +351,28 @@ class ImportInstitutionSurveysTable extends AppTable {
 									$obj = [
 										'institution_site_survey_id' => $this->institutionSurvey->id,
 										'survey_question_id' => $questions[$col]->id,
-										$this->fieldTypes[$questions[$col]->field_type] => $trimmedVal,
+										$this->fieldTypes[$fieldType] => $trimmedVal,
 									];
 									$tableEntity = $this->InstitutionSurveyAnswers->newEntity();
 									$this->InstitutionSurveyAnswers->patchEntity($tableEntity, $obj);
 									$tempRow[$columnCode.$selectionKey] = $tableEntity;
 								}
-
 							}
+							$colCount++;
 							break;
 
 						case 'NUMBER':
+							$originalRow[$colCount] = $cellValue;
 							if (!is_numeric($cellValue)) {
 								$rowFailed = true;
 								$rowInvalidCodeCols[] = $columnCode;
 							}
+							$colCount++;
 							break;
 
-						case 'DATE':case 'TIME':
+						case 'DATE':
+						case 'TIME':
+							$originalRow[$colCount] = $cellValue;
 							if (is_numeric($cellValue)) {
 								$cellValue = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($cellValue));
 								// converts val to Time object so that this field will pass 'validDate' check since
@@ -398,57 +380,81 @@ class ImportInstitutionSurveysTable extends AppTable {
 								// so it is best to convert the date here instead of adjusting individual model's date validation format
 								try {
 									$cellValue = new Time($cellValue);
-									if ($questions[$col]->field_type == 'DATE') {
-										$originalRow[$col] = $cellValue->format($systemDateFormat);
+									if ($fieldType->field_type == 'DATE') {
+										$originalRow[$colCount] = $cellValue->format($systemDateFormat);
 									} else {
-										$originalRow[$col] = $cellValue->format($systemTimeFormat);
+										$originalRow[$colCount] = $cellValue->format($systemTimeFormat);
 									}
 								} catch (Exception $e) {
-								    $originalRow[$col] = $cellValue;
+								    $originalRow[$colCount] = $cellValue;
 								}
 							} else {
 								$rowFailed = true;
 								$rowInvalidCodeCols[] = $columnCode;
 							}
+							$colCount++;
 							break;
 
 						case 'TABLE':
-							pr($this->getCellValue($sheet, $col++, $row));
-							pr($this->getCellValue($sheet, $col++, $row));
-							pr($questions[$col]);die;
+							$columns = [];
+							$rows = [];
+							foreach($question->custom_table_rows as $tableRow) {
+								$rows[$tableRow['order']] = $tableRow;
+							}
+							ksort($rows);
+							$rows = array_values($rows);
+							foreach($question->custom_table_columns as $tableCol) {
+								$columns[$tableCol['order']] = $tableCol;
+							}
+							ksort($columns);
+							$columns = array_values($columns);
+
+							if (sizeof($rows) !=0 && sizeof($columns) !=0 ) {
+								for($i = 1; $i < sizeof($columns); $i++) {
+									foreach ($rows as $r) {	
+										$colCount++;
+									}
+								}
+							}
+							break;
+
+						default:
+							$colCount++;
 							break;
 					}
-
-					if ($questions[$col]->field_type != 'CHECKBOX') {
+					if ($fieldType != 'CHECKBOX' && $fieldType != 'TABLE') {
 						$obj = [
 							'institution_site_survey_id' => $this->institutionSurvey->id,
-							'survey_question_id' => $questions[$col]->id,
-							$this->fieldTypes[$questions[$col]->field_type] => $cellValue,
+							'survey_question_id' => $question->id,
+							$this->fieldTypes[$fieldType] => $cellValue,
 						];
 						$tableEntity = $this->InstitutionSurveyAnswers->newEntity();
 						$this->InstitutionSurveyAnswers->patchEntity($tableEntity, $obj);
 						$tempRow[$columnCode] = $tableEntity;
 					}
-				}
 
-				if (!$rowFailed) {
-					foreach ($tempRow as $entity) {
-						$this->InstitutionSurveyAnswers->save($entity);
+					pr($tempRow);
+					if (!$rowFailed) {
+						foreach ($tempRow as $entity) {
+							// $this->InstitutionSurveyAnswers->save($entity);
+						}
+						$totalImported++;
+					} else {
+						$rowCodeError = $this->getExcelLabel('Import', 'invalid_code').': ';
+						$rowCodeError .= implode(', ', $rowInvalidCodeCols);
+						$dataFailed[] = array(
+							'row_number' => $row,
+							'error' => $rowCodeError,
+							'data' => $originalRow
+						);
+						$model->log('ImportBehavior @ line '.__LINE__, 'debug');
+						$model->log($rowCodeError, 'debug');
+						continue;
 					}
-					$totalImported++;
-				} else {
-					$rowCodeError = $this->getExcelLabel('Import', 'invalid_code').': ';
-					$rowCodeError .= implode(', ', $rowInvalidCodeCols);
-					$dataFailed[] = array(
-						'row_number' => $row,
-						'error' => $rowCodeError,
-						'data' => $originalRow
-					);
-					$model->log('ImportBehavior @ line '.__LINE__, 'debug');
-					$model->log($rowCodeError, 'debug');
-					continue;
+					
 				}
 
+				pr('done');die;
 			} // for ($row = 1; $row <= $highestRow; ++$row)
 
 			if (!empty($dataFailed)) {
