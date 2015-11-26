@@ -94,6 +94,9 @@ class UsersTable extends AppTable {
 		}
 
 		$this->ControllerAction->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->setFieldOrder([
+			'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'status', 'username', 'password'
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
