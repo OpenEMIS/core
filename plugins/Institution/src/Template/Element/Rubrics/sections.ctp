@@ -4,10 +4,12 @@
 ?>
 
 <?php if ($action == 'view') : ?>
-	<div class="table-in-view">
-		<table class="table table-checkable table-input">
-			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-		</table>
+	<div class="table-wrapper">
+		<div class="table-in-view">
+			<table class="table table-checkable table-input">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
 	</div>
 <?php endif ?>
