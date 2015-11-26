@@ -5,7 +5,7 @@
 
 <?php if ($action == 'view') : ?>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered table-checkable table-input">
+		<table class="table table-checkable table-input">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
@@ -14,7 +14,7 @@
 	<div class="input table">
 		<label><?= $attr['attr']['label']; ?></label>
 		<div class="table-in-view">
-			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+			<table class="table table-checkable table-input">
 				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 			</table>

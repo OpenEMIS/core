@@ -35,9 +35,13 @@ class StudentsController extends AppController {
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index']],
-			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']]
+			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
+			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
+			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 		];
+
+		$this->loadComponent('User.Image');
+
 		$this->set('contentHeader', 'Students');
 	}
 
@@ -80,6 +84,24 @@ class StudentsController extends AppController {
 			$header = '';
 			$userId = $session->read('Student.Students.id');
 
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $session->read('AccessControl.Institutions.ids');
+				$studentId = $session->read('Student.Students.id');
+				$enrolledStatus = false;
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				foreach ($institutionIds as $id) {
+					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+					if ($enrolledStatus) {
+						break;
+					}
+				}
+				if (! $enrolledStatus) {
+					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
+						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
+					}
+				}
+			}
+
 			if ($session->check('Student.Students.name')) {
 				$header = $session->read('Student.Students.name');
 			}
@@ -116,9 +138,15 @@ class StudentsController extends AppController {
 				}
 			}
 		} else {
-			$this->Alert->warning('general.notExists');
-			$event->stopPropagation();
-			return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+			if ($model->alias() == 'ImportStudents') {
+				$this->Navigation->addCrumb($model->getHeader($model->alias()));
+				$header = __('Students') . ' - ' . $model->getHeader($model->alias());
+				$this->set('contentHeader', $header);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$event->stopPropagation();
+				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+			}
 		}
 	}
 
@@ -165,5 +193,11 @@ class StudentsController extends AppController {
 		];
 
 		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }

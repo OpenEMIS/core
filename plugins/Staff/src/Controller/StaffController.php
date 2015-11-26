@@ -39,7 +39,12 @@ class StaffController extends AppController {
 			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
+			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
+			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']]
 		];
+
+		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Staff');
 	}
@@ -118,9 +123,15 @@ class StaffController extends AppController {
 				}
 			}
 		} else {
-			$this->Alert->warning('general.notExists');
-			$event->stopPropagation();
-			return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+			if ($model->alias() == 'ImportStaff') {
+				$this->Navigation->addCrumb($model->getHeader($model->alias()));
+				$header = __('Staff') . ' - ' . $model->getHeader($model->alias());
+				$this->set('contentHeader', $header);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$event->stopPropagation();
+				return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+			}
 		}
 	}
 
@@ -166,5 +177,11 @@ class StaffController extends AppController {
 		];
 
 		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }

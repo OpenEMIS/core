@@ -1,9 +1,9 @@
 <?php ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
+	<label for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered table-checkable table-input">
+		<table class="table table-checkable table-input">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('InstitutionSiteSections.section'); ?></th>
@@ -15,10 +15,16 @@
 				<?php 
 				$startingSectionNumber = count($attr['data']['existedSections']) + 1;
 				for ($i=0; $i<$attr['data']['numberOfSections']; $i++) :
-					
 					$nameIsAvailable = false;
 					do {
-						$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+						/**
+						 * In case in the future, a specific arabic locale such as "ar_JO" or "ar_SA" is being used.
+						 */
+						if ($this->ControllerAction->locale() == 'ar' || substr_count($this->ControllerAction->locale(), 'ar_') > 0) {
+							$letter = $this->Label->getArabicLetter($startingSectionNumber);
+						} else {
+							$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+						}
 						$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
 						if (!in_array($defaultName, $attr['data']['existedSections'])) {
 						    $nameIsAvailable = true;

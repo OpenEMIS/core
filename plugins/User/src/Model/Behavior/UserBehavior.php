@@ -44,16 +44,32 @@ class UserBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
 		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
+		$events['Model.excel.onExcelGetStatus'] = 'onExcelGetStatus';
 		return $events;
+	}
+
+	public function onExcelGetStatus(Event $event, Entity $entity) {
+		if ($entity->status == 1) {
+			return __('Active');
+		} else {
+			return __('Inactive');
+		}
 	}
 
 	public function beforeAction(Event $event) {
 		$this->_table->fields['is_student']['type'] = 'hidden';
 		$this->_table->fields['is_staff']['type'] = 'hidden';
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
-
-		$this->_table->fields['username']['visible'] = false;
-		$this->_table->fields['last_login']['visible'] = false;
+		switch ($this->_table->table()) {
+			case 'institution_students':
+			case 'institution_site_staff':
+			case 'student_guardians':
+				break;
+			default:
+				$this->_table->fields['username']['visible'] = false;
+				$this->_table->fields['last_login']['visible'] = false;
+			break;
+		}	
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
@@ -103,7 +119,34 @@ class UserBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
+		$plugin = $this->_table->controller->plugin;
+		$name = $this->_table->controller->name;
+		
+		switch ($this->_table->alias()) {
+			case 'Students':
+				$imageDefault = 'kd-students';
+				break;
+			case 'Staff':
+				$imageDefault = 'kd-staff';
+				break;
+			case 'Guardians':
+				$imageDefault = 'fa fa-user';
+				break;
+			default:
+				$imageDefault = 'fa fa-user';
+				break;
+		}
+		
+		if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
+			// for controlleraction->model
+			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'getImage'];
+		} else {
+			// for controlleraction->modelS 
+			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'getImage'];
+		}
+
+		// need to find out what kind of user is it
+		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
 		$this->_table->ControllerAction->field('openemis_no', [
 			'type' => 'readonly',
 			'order' => 1,
@@ -152,6 +195,8 @@ class UserBehavior extends Behavior {
 				$pluginName = 'Student';
 			} else if ($model == 'Staff') {
 				$pluginName = 'Staff';
+			} else if ($model == 'Guardians') {
+				$pluginName = 'Guardian';
 			}
 
 			if (($action == 'view') ) {
@@ -187,6 +232,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
+		// check file name instead of file content
 		$fileContent = null;
 		if ($entity instanceof User) {
 			$fileContent = $entity->photo_content;
@@ -292,4 +338,37 @@ class UserBehavior extends Behavior {
 
 		return $prefix.$newStamp;
 	}
+
+	public function getImage($id) {
+		$base64Format = (array_key_exists('base64', $this->_table->controller->request->query))? $this->_table->controller->request->query['base64']: false;
+
+		$this->_table->controller->autoRender = false;
+		$this->_table->controller->ControllerAction->autoRender = false;
+
+		$currModel = $this->_table;
+		if ($entity instanceof User) {
+			$photoData = $currModel->find()
+				->select([$currModel->aliasField('photo_content')])
+				->where([$currModel->aliasField($currModel->primaryKey()) => $id])
+				->first()
+				;
+			$phpResourceFile = $photoData->photo_content;
+		} {
+			$photoData = $currModel->find()
+				->contain('Users')
+				->select(['Users.photo_content'])
+				->where([$currModel->aliasField($currModel->primaryKey()) => $id])
+				->first()
+				;
+			$phpResourceFile = $photoData->Users->photo_content;
+		}
+		
+		if ($base64Format) {
+			echo base64_encode(stream_get_contents($phpResourceFile));
+		} else {
+			$this->_table->controller->response->type('jpg');
+			$this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+		}
+	}
+
 }
