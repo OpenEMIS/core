@@ -28,7 +28,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	    $this->InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
 	    $this->InstitutionSurveyAnswers = TableRegistry::get('Institution.InstitutionSurveyAnswers');
-	    // $this->InstitutionSurveyTableCells = TableRegistry::get('Institution.InstitutionSurveyTableCells');
+	    $this->InstitutionSurveyTableCells = TableRegistry::get('Institution.InstitutionSurveyTableCells');
 	    $this->SurveyForms = TableRegistry::get('Survey.SurveyForms');
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 	}
@@ -46,11 +46,22 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$this->institutionSurvey = $this->InstitutionSurveys
 			->find()
 			->contain([
-				'SurveyForms.CustomFields.CustomFieldOptions'
+				'SurveyForms.CustomFields.CustomFieldOptions', 'SurveyForms.CustomFields.CustomTableColumns', 'SurveyForms.CustomFields.CustomTableRows'
 			])
 			->where([$this->InstitutionSurveys->aliasField('id') => $this->institutionSurveyId])
 			->first()
 			;
+
+		// This is to sort the questions by the order
+		$surveyFormQuestions = [];
+		foreach ($this->institutionSurvey->survey_form->custom_fields as $question) {
+			$order = $question['_joinData']['order'];
+			$surveyFormQuestions[$order] = $question;
+		}
+		ksort($surveyFormQuestions);
+		$surveyFormQuestions = array_values($surveyFormQuestions);
+		$this->institutionSurvey->survey_form->custom_fields = $surveyFormQuestions;
+
 		$this->fieldTypes = $this->CustomFieldTypes
 			->find('list', ['keyField' => 'code', 'valueField' => 'value'])
 			->toArray()
@@ -75,11 +86,9 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 		$writer = new \XLSXWriter();
 		
-		$header = [];
 		$surveyForm = $this->institutionSurvey->survey_form;
-		foreach ($surveyForm->custom_fields as $question) {
-			$header[] = '(' . $question->code .') '. $question->name;
-		}
+		$header = $this->generateHeader($surveyForm->custom_fields);
+
 		$surveySheetName = Text::truncate('(' . $surveyForm->code .') '.$surveyForm->name, 31, ['ellipsis' => '']);
 		$writer->writeSheetRow($surveySheetName, array_values($header));
 		
@@ -93,6 +102,36 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$writer->writeToFile($excelPath);
 		$this->performDownload($excelFile);
 		die;
+	}
+
+	private function generateHeader($surveyQuestions) {
+		$header = [];
+		foreach ($surveyQuestions as $question) {
+			if ($question['field_type'] == 'TABLE') {
+				$column = [];
+				$row = [];
+				foreach($question['custom_table_rows'] as $tableRow) {
+					$row[$tableRow['order']] = $tableRow;
+				}
+				ksort($row);
+				$row = array_values($row);
+				foreach($question['custom_table_columns'] as $tableCol) {
+					$column[$tableCol['order']] = $tableCol;
+				}
+				ksort($column);
+				$column = array_values($column);
+
+				if (sizeof($row) !=0 || sizeof($column) !=0 ) {
+					for($i = 1; $i < sizeof($column); $i++) {
+						foreach ($row as $r) {
+							$header[] = '(' . $question->code .','.$r['id'].','.$column[$i]['id'].') '. $question->name . ' ('.$column[$i]['name'].', '.$r['name'].')';
+						}
+					}
+				}
+			}
+			$header[] = '(' . $question->code .') '. $question->name;
+		}
+		return $header;
 	}
 
 	public function excelGetCodesData(Table $model) {
@@ -147,13 +186,10 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$controller = $model->controller;
 			$controller->loadComponent('PhpExcel');
 
-			$header = [];
 			$surveyForm = $this->institutionSurvey->survey_form;
-			foreach ($surveyForm->custom_fields as $question) {
-				$header[] = '(' . $question->code .') '. $question->name;
-			}
+			$header = $this->generateHeader($surveyForm->custom_fields);
 
-			$fileObj = $entity->select_file;		
+			$fileObj = $entity->select_file;
 			$uploadedName = $fileObj['name'];
 			$uploaded = $fileObj['tmp_name'];
 			$objPHPExcel = $controller->PhpExcel->loadWorksheet($uploaded);
@@ -301,6 +337,10 @@ class ImportInstitutionSurveysTable extends AppTable {
 								$rowFailed = true;
 								$rowInvalidCodeCols[] = $columnCode;
 							}
+							break;
+
+						case 'TABLE':
+							
 							break;
 					}
 
