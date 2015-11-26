@@ -46,7 +46,14 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$this->institutionSurvey = $this->InstitutionSurveys
 			->find()
 			->contain([
-				'SurveyForms.CustomFields.CustomFieldOptions', 'SurveyForms.CustomFields.CustomTableColumns', 'SurveyForms.CustomFields.CustomTableRows'
+				'SurveyForms.CustomFields.CustomFieldOptions', 
+				'SurveyForms.CustomFields.CustomTableRows' => function ($q) {
+						return $q->where(['CustomTableRows.visible' => 1]);
+					},
+				'SurveyForms.CustomFields.CustomTableColumns' => function ($q) {
+						return $q
+							->where(['CustomTableColumns.visible' => 1]);
+					}
 			])
 			->where([$this->InstitutionSurveys->aliasField('id') => $this->institutionSurveyId])
 			->first()
@@ -124,12 +131,13 @@ class ImportInstitutionSurveysTable extends AppTable {
 				if (sizeof($row) !=0 || sizeof($column) !=0 ) {
 					for($i = 1; $i < sizeof($column); $i++) {
 						foreach ($row as $r) {
-							$header[] = '(' . $question->code .','.$r['id'].','.$column[$i]['id'].') '. $question->name . ' ('.$column[$i]['name'].', '.$r['name'].')';
+							$header[] = '(' . $question->code . ') '. $question->name . ' ('.$column[$i]['name'].', '.$r['name'].')';
 						}
 					}
 				}
+			} else {
+				$header[] = '(' . $question->code .') '. $question->name;
 			}
-			$header[] = '(' . $question->code .') '. $question->name;
 		}
 		return $header;
 	}
@@ -164,6 +172,30 @@ class ImportInstitutionSurveysTable extends AppTable {
 			}
 		}
 		return $data;
+	}
+
+	private function getCellValue($sheet, $columnNumber, $rowNumber) {
+		$cell = $sheet->getCellByColumnAndRow($columnNumber, $rowNumber);
+		$cellValue = $cell->getValue();
+		return $cellValue;
+	}
+
+	private function getTotalColumns($surveyFormQuestions) {
+		$count = 0;
+		foreach ($surveyFormQuestions as $question) {
+			if ($question['field_type'] == 'TABLE') {
+
+				// First row is a description of the first column
+				$rowCount = count($question['custom_table_rows']) - 1;
+				$colCount = count($question['custom_table_columns']);
+
+				// Multiplication of both count will determine the number of columns for this table type
+				$count += ($rowCount * $colCount);
+			} else {
+				$count++;
+			}
+		}
+		return $count;
 	}
 
 	/**
@@ -218,17 +250,35 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 			$surveyCode = (isset($output[1])) ? $output[1] : str_replace(')', '', str_replace('(', '', $output[0]));
 			$survey = $this->SurveyForms
-							->find()
-							->contain([
-								'CustomFields.CustomFieldOptions'
-							])
-							->where([
-								$this->SurveyForms->aliasField('code') => $surveyCode
-							])
-							->first()
-							;
+				->find()
+				->contain([
+					'CustomFields.CustomFieldOptions', 
+					'CustomFields.CustomTableColumns' => function ($q) {
+						return $q->where(['CustomTableColumns.visible' => 1]);
+					}, 
+					'CustomFields.CustomTableRows' => function ($q) {
+						return $q->where(['CustomTableRows.visible' => 1]);
+					}
+				])
+				->where([
+					$this->SurveyForms->aliasField('code') => $surveyCode
+				])
+				->first()
+				;
 			$questions = $survey->custom_fields;
+			// This is to sort the questions by the order
+			$surveyFormQuestions = [];
+			foreach ($questions as $question) {
+				$order = $question['_joinData']['order'];
+				$surveyFormQuestions[$order] = $question;
+			}
+			ksort($surveyFormQuestions);
+			$surveyFormQuestions = array_values($surveyFormQuestions);
+			$questions = $surveyFormQuestions;
 			$totalColumns = count($questions);
+
+			$totalColumns = $this->getTotalColumns($questions);
+			pr($totalColumns);die;
 
 			for ($row = 1; $row <= $highestRow; ++$row) {
 				if ($row == self::RECORD_QUESTION) { // skip header but check if the uploaded template is correct
@@ -244,13 +294,37 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 				}
 				
+				foreach ($questions as $question) {
+					$fieldType = $question->field_type;
+					switch ($fieldType) {
+						case 'DROPDOWN':
+
+							break;
+						case 'CHECKBOX':
+							break;
+
+						case 'NUMBER':
+							break;
+
+						case 'DATE':
+						case 'TIME':
+							break;
+
+						case 'TABLE':
+							break;
+					}
+
+					if ($fieldType != 'CHECKBOX') {
+
+					}
+				}
+
 				$tempRow = [];
 				$rowInvalidCodeCols = [];
 				$originalRow = new ArrayObject;
 				$rowFailed = false;
 				for ($col = 0; $col < $totalColumns; ++$col) {
-					$cell = $sheet->getCellByColumnAndRow($col, $row);
-					$cellValue = $cell->getValue();
+					$cellValue = $this->getCellValue($sheet, $col, $row);
 
 					$columnCode = $questions[$col]->code;
 					$questionOptions = $questions[$col]->custom_field_options;
@@ -261,7 +335,6 @@ class ImportInstitutionSurveysTable extends AppTable {
 					} else if (empty($cellValue) && !$questions[$col]->is_mandatory) {
 						continue;
 					}
-
 					switch ($questions[$col]->field_type) {
 						case 'DROPDOWN':
 							$questionOptions = new Collection($questionOptions);
@@ -340,7 +413,9 @@ class ImportInstitutionSurveysTable extends AppTable {
 							break;
 
 						case 'TABLE':
-							
+							pr($this->getCellValue($sheet, $col++, $row));
+							pr($this->getCellValue($sheet, $col++, $row));
+							pr($questions[$col]);die;
 							break;
 					}
 
