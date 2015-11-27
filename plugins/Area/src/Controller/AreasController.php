@@ -57,7 +57,7 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
 	}
 
-	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id) {
+	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id, $displayCountry = 1) {
 		$this->getView()->layout('ajax');
 		$rootId = -1; // Root node
 
@@ -68,6 +68,18 @@ class AreasController extends AppController
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
 		$formError = $this->request->query('formerror');
+		if (!$displayCountry) {
+			if ($tableName == 'Area.AreaAdministratives') {
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
+				$condition[] = [
+					'OR' => [
+						[$Table->aliasField('is_main_country') => 1],
+						[$Table->aliasField('parent_id').' IS NOT ' => $worldId]
+					]
+				];
+			} 
+		}
+		
 		if (! $AccessControl->isAdmin()) {
 			if ($tableName == 'Area.Areas') {
 				$authorisedArea = $this->AccessControl->getAreasByUser();
@@ -148,6 +160,6 @@ class AreasController extends AppController
 			$obj->list = $list;
 			$count++;
 		}
-		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName', 'formError'));
+		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName', 'formError', 'displayCountry'));
 	}
 }
