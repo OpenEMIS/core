@@ -25,9 +25,31 @@ class AreaAdministrativesTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('area_administrative_level_id');
 		$this->ControllerAction->field('name');
-
+		$this->ControllerAction->field('is_main_country');
+		$count = $this->find()->where([
+				'OR' => [
+					[$this->aliasField('lft').' IS NULL'],
+					[$this->aliasField('rght').' IS NULL']
+				]
+			])
+			->count();
+		if ($count) {
+			$this->rebuildLftRght();
+		}
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
+	}
+
+	public function rebuildLftRght() {
+		$this->updateAll(
+			['parent_id' => null],
+			['parent_id' => -1]
+		);
+		$this->recover();
+		$this->updateAll(
+			['parent_id' => -1],
+			['parent_id IS NULL']
+		);
 	}
 
 	public function afterAction(Event $event) {
@@ -131,6 +153,11 @@ class AreaAdministrativesTable extends AppTable {
 			'index',
 			'parent' => $entity->id
 		]);
+	}
+
+	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
 	}
 
 	public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request) {
