@@ -30,8 +30,6 @@
 				]);
 			?>
 		</div>
-	</div>
-
 	<div class="table-responsive">
 		<table class="table table-curved table-input">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>

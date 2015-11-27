@@ -103,6 +103,8 @@ class UsersTable extends AppTable {
 		$this->fields['date_of_birth']['visible'] = false;
 		$this->fields['identity']['visible'] = false;
 
+		$this->fields['username']['visible'] = true;
+
 		$this->ControllerAction->field('name');
 	}
 
@@ -113,7 +115,7 @@ class UsersTable extends AppTable {
 		$search = $this->ControllerAction->getSearchKey();
 
 		if (!empty($search)) {
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search, 'searchByUserName' => true]);
 		}
 	}
 
