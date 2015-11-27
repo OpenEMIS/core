@@ -16,6 +16,7 @@ class AreaAdministrativesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Area.AreaAdministratives']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
+		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('UsersAddressAreas', ['className' => 'Staff.Staff', 'foreignKey' => 'address_area_id']);
 		$this->hasMany('UsersBirthplaceAreas', ['className' => 'Staff.Staff', 'foreignKey' => 'birthplace_area_id']);
@@ -54,6 +55,15 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function($model, $id, $options) {
+			$entity = $model->get($id);
+			$model->removeFromTree($entity);
+			return $model->delete($entity, $deleteOptions->getArrayCopy());
+		};
+		return $process;
 	}
 
 	public function deleteUpdateConvertOptions(Event $event, Entity $entity, array $convertOptions) {
