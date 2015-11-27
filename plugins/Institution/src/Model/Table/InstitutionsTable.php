@@ -85,7 +85,9 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('AdvanceSearch');
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
-        $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('Area.Areapicker', [
+        	'display_country' => false
+        ]);
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);

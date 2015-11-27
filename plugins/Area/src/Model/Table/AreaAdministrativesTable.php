@@ -22,7 +22,7 @@ class AreaAdministrativesTable extends AppTable {
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('area_administrative_level_id');
 		$this->ControllerAction->field('name');
-
+		$this->ControllerAction->field('is_main_country');
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
@@ -115,6 +115,11 @@ class AreaAdministrativesTable extends AppTable {
 			'index',
 			'parent' => $entity->id
 		]);
+	}
+
+	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
 	}
 
 	public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request) {
