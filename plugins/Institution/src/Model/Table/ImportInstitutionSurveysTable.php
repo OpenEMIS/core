@@ -265,6 +265,12 @@ class ImportInstitutionSurveysTable extends AppTable {
 				])
 				->first()
 				;
+
+			if (empty($survey)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_not_found')]);
+				return false;
+			}
+
 			$questions = $survey->custom_fields;
 			// This is to sort the questions by the order
 			$surveyFormQuestions = [];
@@ -276,13 +282,15 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$surveyFormQuestions = array_values($surveyFormQuestions);
 			$questions = $surveyFormQuestions;
 			$totalColumns = $this->getTotalColumns($questions);
+			$header = $this->generateHeader($questions);
+
 
 			for ($row = 1; $row <= $highestRow; ++$row) {
 				if ($row == self::RECORD_QUESTION) { // skip header but check if the uploaded template is correct
-					// if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-					// 	$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')]);
-					// 	return false;
-					// }
+					if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
+						$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')]);
+						return false;
+					}
 					continue;
 				}
 				if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop

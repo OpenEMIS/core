@@ -74,12 +74,11 @@ class ImportBehavior extends Behavior {
 	private $_fileTypesMap = [
 		// 'csv' 	=> 'text/plain',
 		// 'csv' 	=> 'text/csv',
-		'xls' 	=> 'application/vnd.ms-excel',
+		'xls' 	=> ['application/vnd.ms-excel', 'application/vnd.ms-office'],
 		// Use for openoffice .xls format
-		'xls-2' => 'application/vnd.ms-office',
-		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		'ods' 	=> 'application/vnd.oasis.opendocument.spreadsheet',
-		'zip' 	=> 'application/zip',
+		'xlsx' 	=> ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+		'ods' 	=> ['application/vnd.oasis.opendocument.spreadsheet'],
+		'zip' 	=> ['application/zip']
 	];
 	public $institutionId = false;
 
@@ -252,12 +251,18 @@ class ImportBehavior extends Behavior {
 		$finfo = finfo_open(FILEINFO_MIME_TYPE);
 		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
 		finfo_close($finfo);
-		if (!in_array($fileFormat, $supportedFormats)) {
+		$formatFound = false;
+		foreach ($supportedFormats as $eachformat) {
+			if (in_array($fileFormat, $eachformat)) {
+				$formatFound = true;
+			} 
+		}
+		if (!$formatFound) {
 			if (!empty($fileFormat)) {
 				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
 				$options['validate'] = true;
 			}
-		} 
+		}				
 
 		$fileExt = $fileObj['name'];
 		$fileExt = explode('.', $fileExt);
@@ -595,7 +600,7 @@ class ImportBehavior extends Behavior {
 	 * @param  integer 		$row          	Row number
 	 * @return boolean               		the result to be return as true or false
 	 */
-	protected function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
+	public function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
 		$cellsValue = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
