@@ -13,7 +13,11 @@ class User extends Entity {
     protected $_virtual = ['name', 'name_with_id', 'default_identity_type'];
 
     protected function _setPassword($password) {
-        return (new DefaultPasswordHasher)->hash($password);
+    	if (empty($password)) {
+    		return null;
+    	} else {
+    		return (new DefaultPasswordHasher)->hash($password);
+    	}
     }
 
     /**
