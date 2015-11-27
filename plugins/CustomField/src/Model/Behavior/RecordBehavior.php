@@ -284,68 +284,73 @@ class RecordBehavior extends Behavior {
 				])
 				->where($where)
 				->first();
-			$customModuleId = $customModuleResults->id;
-			$filter = $customModuleResults->filter;
 
-			$customFormQuery = $this->CustomForms
-				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-				->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
+			if (!empty($customModuleResults)) {
+				$customModuleId = $customModuleResults->id;
+				$filter = $customModuleResults->filter;
 
-			if (!empty($filter)) {
-				$modelAlias = $this->getModel($filter)['model'];
-				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+				$customFormQuery = $this->CustomForms
+					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+					->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
 
-				$filterId = $entity->$filterKey;
-				$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
-				$customFormQuery
-					->join([
-						'table' => Inflector::tableize($filterModelAlias),
-						'alias' => $this->CustomFormsFilters->alias(),
-						'conditions' => [
-							'OR' => [
-								[
-									$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-									$this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
-								],
-								[
-									$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-									$this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
+				if (!empty($filter)) {
+					$modelAlias = $this->getModel($filter)['model'];
+					$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+
+					$filterId = $entity->$filterKey;
+					$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
+					$customFormQuery
+						->join([
+							'table' => Inflector::tableize($filterModelAlias),
+							'alias' => $this->CustomFormsFilters->alias(),
+							'conditions' => [
+								'OR' => [
+									[
+										$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+										$this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
+									],
+									[
+										$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+										$this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
+									]
 								]
 							]
-						]
-					]);
+						]);
+				}
 			}
 		}
 
-		$customFormIds = $customFormQuery
-			->toArray();
+		if (!empty($customFormQuery)) {
+			$customFormIds = $customFormQuery
+				->toArray();
 
-		$customFieldQuery = $this->CustomFormsFields
-			->find('all')
-			->find('order')
-			->contain([
-				'CustomFields.CustomFieldOptions' => function($q) {
-					return $q
-						->find('visible')
-						->find('order');
-				},
-				'CustomFields.CustomTableColumns' => function ($q) {
-			       return $q
-			       		->find('visible')
-			       		->find('order');
-			    },
-				'CustomFields.CustomTableRows' => function ($q) {
-			       return $q
-			       		->find('visible')
-			       		->find('order');
-			    }
-			])
-			->where([
-				$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
-			])
-			->group([
-				$this->CustomFormsFields->aliasField($this->config('fieldKey'))
-			]);
+			$customFieldQuery = $this->CustomFormsFields
+				->find('all')
+				->find('order')
+				->contain([
+					'CustomFields.CustomFieldOptions' => function($q) {
+						return $q
+							->find('visible')
+							->find('order');
+					},
+					'CustomFields.CustomTableColumns' => function ($q) {
+				       return $q
+				       		->find('visible')
+				       		->find('order');
+				    },
+					'CustomFields.CustomTableRows' => function ($q) {
+				       return $q
+				       		->find('visible')
+				       		->find('order');
+				    }
+				])
+				->where([
+					$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
+				])
+				->group([
+					$this->CustomFormsFields->aliasField($this->config('fieldKey'))
+				]);
+		}
 
 		return $customFieldQuery;
 	}
