@@ -9,7 +9,7 @@ use Cake\Event\Event;
 class AreaLevelsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->hasMany('Areas', ['className' => 'Area.Areas', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreign_key' => 'area_level_id']);
 	}
 
 	public function beforeAction(Event $event) {

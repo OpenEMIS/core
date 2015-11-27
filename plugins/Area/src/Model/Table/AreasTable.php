@@ -15,6 +15,7 @@ class AreasTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Area.Areas']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Tree');
 	}
@@ -49,6 +50,15 @@ class AreasTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$process = function($model, $id, $options) {
+			$entity = $model->get($id);
+			$model->removeFromTree($entity);
+			return $model->delete($entity, $deleteOptions->getArrayCopy());
+		};
+		return $process;
 	}
 
 	public function deleteUpdateConvertOptions(Event $event, Entity $entity, array $convertOptions) {
