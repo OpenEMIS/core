@@ -228,3 +228,7 @@ table thead {
     margin-right: 0 !important;
     margin-left: 10px;
 }
+
+.login .form-horizontal input {
+    font-size: 14px;
+}
