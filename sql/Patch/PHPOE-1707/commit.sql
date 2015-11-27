@@ -12,45 +12,41 @@ UPDATE security_functions SET _view = REPLACE(_view, '|StudentAccount.view', '')
 
 -- Student Accounts
 SELECT id INTO @currentParentId FROM security_functions WHERE category = 'General' AND module = 'Students' AND name = 'Students' LIMIT 1;
-SELECT security_functions.order INTO @currentOrder FROM security_functions WHERE category = 'General' AND module = 'Students' AND name = 'Students' LIMIT 1;
-UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE module = 'Students' AND security_functions.order > @currentOrder;
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-	('Accounts', 'Students', 'Students', 'General', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, @currentOrder+1, 1, NULL, NULL, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+	(2020, 'Accounts', 'Students', 'Students', 'General', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 2020, 1, NULL, NULL, 1, NOW());
 
 -- Staff Accounts
 SELECT id INTO @currentParentId FROM security_functions WHERE category = 'General' AND module = 'Staff' AND name = 'Staff' LIMIT 1;
-SELECT security_functions.order INTO @currentOrder FROM security_functions WHERE category = 'General' AND module = 'Staff' AND name = 'Staff' LIMIT 1;
-UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE module = 'Staff' AND security_functions.order > @currentOrder;
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-	('Accounts', 'Staff', 'Staff', 'General', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, @currentOrder+1, 1, NULL, NULL, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+	(3027, 'Accounts', 'Staff', 'Staff', 'General', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 3027, 1, NULL, NULL, 1, NOW());
 
 -- Guardian Accounts
 SELECT id INTO @currentParentId FROM security_functions WHERE category = 'General' AND module = 'Guardians' AND name = 'Guardians' LIMIT 1;
-SELECT security_functions.order INTO @currentOrder FROM security_functions WHERE category = 'General' AND module = 'Guardians' AND name = 'Guardians' LIMIT 1;
-UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE module = 'Guardians' AND security_functions.order > @currentOrder;
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-	('Accounts', 'Guardians', 'Guardians', 'General', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, @currentOrder+1, 1, NULL, NULL, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+	(4008, 'Accounts', 'Guardians', 'Guardians', 'General', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 4008, 1, NULL, NULL, 1, NOW());
 
 -- Institution Student Accounts
 SELECT id INTO @currentParentId FROM security_functions WHERE category = 'Students' AND module = 'Institutions' AND name = 'Students' LIMIT 1;
-SELECT security_functions.order INTO @currentOrder FROM security_functions WHERE category = 'Students' AND module = 'Institutions' AND name = 'Students' LIMIT 1;
-UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE module = 'Institutions' AND security_functions.order > @currentOrder;
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-	('Accounts', 'Institutions', 'Institutions', 'Students', @currentParentId, 'StudentAccount.view', 'StudentAccount.edit', NULL, '', NULL, @currentOrder+1, 1, NULL, NULL, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+	(1032, 'Accounts', 'Institutions', 'Institutions', 'Students', @currentParentId, 'StudentAccount.view', 'StudentAccount.edit', NULL, '', NULL, 1032, 1, NULL, NULL, 1, NOW());
 
 -- Institution Staff Accounts
 SELECT id INTO @currentParentId FROM security_functions WHERE category = 'Staff' AND module = 'Institutions' AND name = 'Staff' LIMIT 1;
-SELECT security_functions.order INTO @currentOrder FROM security_functions WHERE category = 'Staff' AND module = 'Institutions' AND name = 'Staff' LIMIT 1;
-UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE module = 'Institutions' AND security_functions.order > @currentOrder;
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-	('Accounts', 'Institutions', 'Institutions', 'Staff', @currentParentId, 'StaffAccount.view', 'StaffAccount.edit', NULL, '', NULL, @currentOrder+1, 1, NULL, NULL, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+	(1033, 'Accounts', 'Institutions', 'Institutions', 'Staff', @currentParentId, 'StaffAccount.view', 'StaffAccount.edit', NULL, '', NULL, 1033, 1, NULL, NULL, 1, NOW());
 
 -- User Accounts
 SELECT id INTO @currentParentId FROM security_functions WHERE category = 'Security' AND module = 'Administration' AND name = 'Users' LIMIT 1;
-SELECT security_functions.order INTO @currentOrder FROM security_functions WHERE category = 'Security' AND module = 'Administration' AND name = 'Users' LIMIT 1;
-UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE module = 'Administration' AND security_functions.order > @currentOrder;
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-	('Accounts', 'Securities', 'Administration', 'Security', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, @currentOrder+1, 1, NULL, NULL, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+	(5042, 'Accounts', 'Securities', 'Administration', 'Security', @currentParentId, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5042, 1, NULL, NULL, 1, NOW());
 
 	-- SELECT category FROM security_functions group by category
 	-- SELECT module FROM security_functions group by module
+-- 2020	Accounts	Students	Students	General
+-- 3027	Accounts	Staff	Staff	Accounts
+-- 4008	Accounts	Guardians	Guardians	General
+-- 1032	Accounts	Institutions	Institutions	Students
+-- 1033	Accounts	Institutions	Institutions	Staff
+-- 5042	Accounts	Securities	Administration	Security
+
+-- select * from security_functions where id in (2020 ,3027 ,4008 ,1032 ,1033 ,5042);
