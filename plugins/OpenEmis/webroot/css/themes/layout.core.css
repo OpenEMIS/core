@@ -232,3 +232,8 @@ table thead {
 .login .form-horizontal input {
     font-size: 14px;
 }
+
+input[disabled="disabled"],
+textarea[disabled="disabled"] {
+    background: #EEE;
+}
