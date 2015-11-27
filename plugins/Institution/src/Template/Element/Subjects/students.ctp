@@ -23,8 +23,12 @@
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
 					<th><?= $this->Label->get('Users.gender_id'); ?></th>
-					<th><?= $this->Label->get('Users.date_of_birth'); ?></th>
-					<th class="cell-delete"></th>
+					<?php 
+
+					if ($action!='view') {
+						echo '<th class="cell-delete"></th>';
+					}
+					?>
 				</tr>
 			</thead>
 
@@ -41,7 +45,6 @@
 							'openemis_no' => $obj->user->openemis_no,
 							'name' => $obj->user->name,
 							'gender' => ['name' => $obj->user->gender->name],
-							'date_of_birth' => $ControllerAction['table']->formatDate($obj->user->date_of_birth)
 						];
 					} else if (is_array($obj->user)) {
 						$userData = $obj->user;
@@ -66,12 +69,10 @@
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.name", [ 'value' => $userData['name'] ]);
 					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.gender.name", [ 'value' => $userData['gender']['name'] ]);
-					echo $this->Form->hidden("InstitutionSiteClasses.institution_site_class_students.$n.user.date_of_birth", [ 'value' => $userData['date_of_birth'] ]);
 					?>
 					<td><?= $userData['openemis_no'] ?></td>
 					<td><?= $userData['name'] ?></td>
 					<td><?= $userData['gender']['name'] ?></td>
-					<td><?= $userData['date_of_birth'] ?></td>
 					<td> 
 						<?php //if ($attr['data']['isHistoryRecord']): ?>
 						
@@ -95,7 +96,6 @@
 					<td><?= $obj->user->openemis_no ?></td>
 					<td><?= $obj->user->name ?></td>
 					<td><?= $obj->user->gender->name ?></td>
-					<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
 				</tr>
 
 			<?php endif;?>
