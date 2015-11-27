@@ -25,7 +25,8 @@
 				'options' => $obj->list,
 				'disabled' => false,
 				'default' => $obj->selectedId,
-				'form-error' => $formError
+				'form-error' => $formError,
+				'display-country' => $displayCountry
 			]);
 		}
 		$count++;
