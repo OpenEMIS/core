@@ -58,10 +58,40 @@ class AreaAdministrativesTable extends AppTable {
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$transferTo = $this->request->data['transfer_to'];
+		$transferFrom = $id;
+		// Require to update the parent id of the children before removing the node from the tree
+		$this->updateAll(
+				[
+					'parent_id' => $transferTo, 
+					'lft' => null,
+					'rght' => null
+				],
+				['parent_id' => $transferFrom]
+			);
+
+		$entity = $this->get($id);
+		$left = $entity->lft;
+		$right = $entity->rght;
+
+		// The left and right value of the children will all have to be rebuilt
+		$this->updateAll(
+				[
+					'lft' => null,
+					'rght' => null
+				],
+				[ 
+					'lft > ' => $left, 
+					'rght < ' => $right
+				]
+			);
+
+		$this->rebuildLftRght();
+
 		$process = function($model, $id, $options) {
 			$entity = $model->get($id);
 			$model->removeFromTree($entity);
-			return $model->delete($entity, $deleteOptions->getArrayCopy());
+			return $model->delete($entity, $options->getArrayCopy());
 		};
 		return $process;
 	}
