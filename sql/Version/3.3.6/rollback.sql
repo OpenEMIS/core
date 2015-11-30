@@ -17,4 +17,4 @@ DELETE FROM security_functions WHERE `name` = 'Accounts' AND `controller` = 'Sec
  -- PATCH --
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1707';
 
-UPDATE `config_items` SET `value` = '3.3.5' WHERE `code` = db_version;
+UPDATE `config_items` SET `value` = '3.3.5' WHERE `code` = 'db_version';
