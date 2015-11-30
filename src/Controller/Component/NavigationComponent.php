@@ -203,7 +203,7 @@ class NavigationComponent extends Component {
 			'Survey' => [
 				'collapse' => true,
 				'items' => [
-					'Forms' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys']],
+					'Forms' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'], 'selected' => ['ImportInstitutionSurveys']],
 					'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics'], 'selected' => ['Rubrics', 'RubricAnswers']]
 				]
 			],
