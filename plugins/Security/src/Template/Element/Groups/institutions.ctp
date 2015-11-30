@@ -34,9 +34,11 @@ $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 
 <?php endif ?>
 
-<div class="table-responsive" autocomplete-ref="institution_id">
-	<table class="table table-curved table-input">
-		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-		<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-	</table>
+<div class="table-wrapper">
+	<div class="table-responsive" autocomplete-ref="institution_id">
+		<table class="table table-curved table-input">
+			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+		</table>
+	</div>
 </div>
