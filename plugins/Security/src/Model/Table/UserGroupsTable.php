@@ -483,12 +483,16 @@ class UserGroupsTable extends AppTable {
 			$data[$this->alias()]['institutions'] = [];
 		}
 
+		if (!array_key_exists('users', $data[$this->alias()])) {
+			$data[$this->alias()]['users'] = [];
+		}
+
 		// in case user has been added with the same role twice, we need to filter it
 		$this->filterDuplicateUserRoles($data);
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['Areas', 'Institutions'];
+		$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
