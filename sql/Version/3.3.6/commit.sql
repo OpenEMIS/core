@@ -32,4 +32,4 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
 	(5042, 'Accounts', 'Securities', 'Administration', 'Security', 5022, 'Accounts.view', 'Accounts.edit', NULL, '', NULL, 5042, 1, NULL, NULL, 1, NOW());
 
-UPDATE `config_items` SET `value` = '3.3.6' WHERE `code` = db_version;
+UPDATE `config_items` SET `value` = '3.3.6' WHERE `code` = 'db_version';
