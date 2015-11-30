@@ -40,9 +40,8 @@ $description = __d('open_emis', $_productName);
 		<div class="login-box">
 			<div class="title">
 				<span class="title-wrapper">
-					<i class="kd-openemis ltl-view"></i>
+					<i class="kd-openemis"></i>
 					<h1>OpenEMIS Core</h1>
-					<i class="kd-openemis rtl-view"></i>
 				</span>
 			</div>
 			<?php 
