@@ -34,6 +34,7 @@ class AccountBehavior extends Behavior {
 
 	public function getAccountValidation(Validator $validator) {
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
+		$this->_table->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
 		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
 		return $validator
@@ -42,6 +43,9 @@ class AccountBehavior extends Behavior {
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
 				]
 			])
 			->add('password' , [
