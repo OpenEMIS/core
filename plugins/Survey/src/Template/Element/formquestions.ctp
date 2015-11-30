@@ -5,11 +5,13 @@
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 	?>
-	<div class="table-in-view">
-		<table class="table">
-			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-		</table>
+	<div class="table-wrapper">
+		<div class="table-in-view">
+			<table class="table">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
 	</div>
 <?php elseif ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
 	<?php
@@ -62,10 +64,12 @@
 			</div>
 			<br/>
 		</div>
-	<div class="table-responsive">
+	<div class="table-wrapper">
+		<div class="table-responsive">
 		<table class="table table-curved table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
-	</div>
+		</div>
+	</div>	
 <?php endif ?>
