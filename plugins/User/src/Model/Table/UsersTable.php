@@ -105,8 +105,8 @@ class UsersTable extends AppTable {
 		);
 
 		if ($this->action == 'add') {
-			$this->ControllerAction->field('username', ['visible' => true]);
-			$this->ControllerAction->field('password', ['visible' => true, 'type' => 'password']);
+			$this->ControllerAction->field('username', ['visible' => false]);
+			$this->ControllerAction->field('password', ['visible' => false, 'type' => 'password']);
 		}
 	}
 
@@ -386,6 +386,11 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->allowEmpty('password')
+			->add('password' , [
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6]
+				]
+			])
 			->add('address', [])
 			->allowEmpty('photo_content')
 			;
