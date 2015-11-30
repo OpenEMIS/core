@@ -116,7 +116,7 @@ class AccountBehavior extends Behavior {
 		}
 
 		$this->_table->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
-		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '']]);
+		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 
 
 

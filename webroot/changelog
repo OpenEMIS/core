@@ -43,3 +43,8 @@ v3.3.5
 - Security -> Users will show usernames now
 - Fixed a bug that caused next programmes not to be saved
 - Fixed a bug that shows 404 error when user click on Subjects link in Students -> Subjects
+
+v3.3.6
+- Added new feature Survey Import to allow users to use excel spreadsheet to
+import survey answers
+- Fixed a couple of bugs related to Accounts
