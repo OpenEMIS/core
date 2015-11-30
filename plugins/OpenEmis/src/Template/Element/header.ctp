@@ -12,9 +12,8 @@ if (!empty($homeUrl)) {
 		<div class="navbar-left">
 			<a href="<?= $this->Url->build($homeUrl) ?>">
 				<span class="brand-logo">
-					<i class="kd-openemis ltl-view"></i>
+					<i class="kd-openemis"></i>
 					<h1><?php echo $_productName ?></h1>
-					<i class="kd-openemis rtl-view"></i>
 				</span>
 			</a>
 		</div>
