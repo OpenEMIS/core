@@ -33,6 +33,13 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 	}
 
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if (isset($toolbarButtons['back'])) {
+			$toolbarButtons['back']['url'] = $this->ControllerAction->url('view');
+			$toolbarButtons['back']['url']['action'] = 'Surveys';
+		}
+	}
+
 	public function beforeAction($event) {
 		$session = $this->request->session();
 		if ($session->check('Institution.Institutions.id')) {
@@ -80,6 +87,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [];
+		$newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
@@ -420,18 +428,17 @@ class ImportInstitutionSurveysTable extends AppTable {
 								for($i = 1; $i < sizeof($columns); $i++) {
 									$c = $columns[$i];
 									foreach ($rows as $r) {
-										$answerKey = '-'.$c['id'].'-'.$r['id'];
 										$originalRow[$colCount] = $this->getCellValue($sheet, $colCount, $row);
 										$obj = [
 											'institution_site_survey_id' => $this->institutionSurvey->id,
 											'survey_question_id' => $question->id,
 											'survey_table_row_id' => $r->id,
 											'survey_table_column_id' => $c->id,
-											'text_value' => $this->getCellValue($sheet, $originalRow[$colCount++], $row)
+											'text_value' => $originalRow[$colCount++]
 										];
-										$tableEntity = $this->InstitutionSurveyTableCells->newEntity();
-										$this->InstitutionSurveyTableCells->patchEntity($tableEntity, $obj);
-										$tempTableRow[$columnCode.$answerKey] = $tableEntity;
+										$entityItem = $this->InstitutionSurveyTableCells->newEntity();
+										$this->InstitutionSurveyTableCells->patchEntity($entityItem, $obj);
+										$tempTableRow[] = $entityItem;
 									}
 								}
 							}
@@ -455,9 +462,11 @@ class ImportInstitutionSurveysTable extends AppTable {
 				}
 
 				if (!$rowFailed) {
+					$this->InstitutionSurveyAnswers->deleteAll(['institution_site_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempRow as $entity) {
 						$this->InstitutionSurveyAnswers->save($entity);
 					}
+					$this->InstitutionSurveyTableCells->deleteAll(['institution_site_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempTableRow as $entity) {
 						$this->InstitutionSurveyTableCells->save($entity);
 					}
