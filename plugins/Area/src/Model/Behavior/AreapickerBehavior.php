@@ -7,6 +7,10 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class AreapickerBehavior extends Behavior {
+	protected $_defaultConfig = [
+		'display_country' => true
+	];
+
 	public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$value = $entity->$attr['field'];
 		if ($action == 'edit') {
@@ -20,11 +24,17 @@ class AreapickerBehavior extends Behavior {
 			$Form = $HtmlField->Form;
 			$targetModel = $attr['source_model'];
 			$targetTable = TableRegistry::get($targetModel);
-
+			$condition = [];
+			if (!$this->config('display_country')) {
+				if ($targetModel == 'Area.AreaAdministratives') {
+					$condition = [$targetTable->aliasField('is_main_country') => 1];
+				}
+			}
 			$areaOptions = $targetTable
 				->find('list')
+				->where($condition)
 				->toArray();
-
+				;
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			$options['onchange'] = "Area.reload(this)";
 			$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
@@ -39,6 +49,10 @@ class AreapickerBehavior extends Behavior {
 				$options['form-error'] = true;
 			} else {
 				$options['form-error'] = false;
+			}
+			$option['display-country'] = 1;
+			if (!$this->config('display_country')) {
+				$options['display-country'] = 0;
 			}
 
 			$value = "<div class='areapicker'>";
