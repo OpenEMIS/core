@@ -30,4 +30,16 @@ class CommentsTable extends AppTable {
 		;
 	}
 
+	private function setupTabElements() {
+		$tabElements = $this->controller->getUserTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		if ($this->controller->name == 'Students') {
+			$this->setupTabElements();
+		}
+	}
+
 }

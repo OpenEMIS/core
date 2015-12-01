@@ -180,23 +180,57 @@ class StudentsController extends AppController {
 		$this->autoRender = false;
 	}
 
+	// public function getUserTabElements($options = []) {
+	// 	$plugin = $this->plugin;
+	// 	$name = $this->name;
+
+	// 	$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+	// 	$tabElements = [
+	// 		$this->name => [
+	// 			'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+	// 			'text' => __('Details')
+	// 		],
+	// 		'Accounts' => [
+	// 			'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+	// 			'text' => __('Account')	
+	// 		]
+	// 	];
+
+	// 	return $tabElements;
+	// }
+
 	public function getUserTabElements($options = []) {
-		$plugin = $this->plugin;
-		$name = $this->name;
+		$session = $this->request->session();
+		$tabElements = $session->read('Institution.Students.tabElements');
+		
+		return $tabElements;
+	}
 
-		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+	public function getAcademicTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
 
-		$tabElements = [
-			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
-				'text' => __('Details')
-			],
-			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
-			]
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+		$studentTabElements = [
+			'Programmes' => ['text' => __('Programmes')],
+			'Sections' => ['text' => __('Classes')],
+			'Classes' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Results' => ['text' => __('Results')],
+			'Awards' => ['text' => __('Awards')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];
 
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			$params = [$id];
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
 		return $tabElements;
 	}
 
