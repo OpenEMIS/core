@@ -4,8 +4,8 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
@@ -81,16 +81,22 @@ class UsersTable extends AppTable {
 		$this->fields['address_area_id']['visible'] = false;
 		$this->fields['birthplace_area_id']['visible'] = false;
 
-		if ($this->action != 'index' && $this->action != 'view') {
+		if (in_array($this->action, ['add'])) {
+			$this->fields['username']['visible'] = true;
 			$this->fields['password']['visible'] = true;
 			$this->fields['password']['type'] = 'password';
 			$this->fields['password']['attr']['value'] = '';
+			$this->fields['password']['attr']['autocomplete'] = 'off';
 		}
+
 		if ($this->action == 'edit') {
 			$this->fields['last_login']['visible'] = false;
 		}
 
 		$this->ControllerAction->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->setFieldOrder([
+			'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'status', 'username', 'password'
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -215,6 +221,6 @@ class UsersTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 }
