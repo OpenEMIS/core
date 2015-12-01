@@ -36,6 +36,34 @@ class GuardiansTable extends AppTable {
 		;
 	}
 
+	private function setupTabElements($entity=null) {
+		if ($this->action == 'index') {
+			$tabElements = $this->controller->getUserTabElements();
+			$this->controller->set('tabElements', $tabElements);
+			$this->controller->set('selectedAction', $this->alias());
+			
+		} elseif ($this->action == 'view') {
+			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+
+			$tabElements = [
+				'Guardians' => ['text' => __('Relation')],
+				'GuardianUser' => ['text' => __('General')]
+			];
+
+			$tabElements['Guardians']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
+			$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'GuardianUser', 'view', $entity->guardian_id, 'id' => $entity->id]);
+
+			$this->controller->set('tabElements', $tabElements);
+			$this->controller->set('selectedAction', $this->alias());
+		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		if ($this->controller->name == 'Students') {
+			$this->setupTabElements();
+		}
+	}
+
 	public function onGetGuardianId(Event $event, Entity $entity) {
 		if ($entity->has('_matchingData')) {
 			return $entity->_matchingData['Users']->name;
@@ -76,21 +104,6 @@ class GuardiansTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
-	}
-
-	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-
-		$tabElements = [
-			'Guardians' => ['text' => __('Relation')],
-			'GuardianUser' => ['text' => __('General')]
-		];
-
-		$tabElements['Guardians']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
-		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'GuardianUser', 'view', $entity->guardian_id, 'id' => $entity->id]);
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {

@@ -31,7 +31,7 @@ class StudentAccountTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
-				$id = $this->request->query['id'];
+				$id = $this->Session->read('Institution.Students.id');
 				$StudentTable = TableRegistry::get('Institution.Students');
 				$studentId = $StudentTable->get($id)->student_id;
 				// Start PHPOE-1897

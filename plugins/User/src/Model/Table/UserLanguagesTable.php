@@ -3,6 +3,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class UserLanguagesTable extends AppTable {
 	public function initialize(array $config) {
@@ -52,4 +53,15 @@ class UserLanguagesTable extends AppTable {
 		;
 	}
 
+	private function setupTabElements() {
+		if ($this->controller->name == 'Students') {
+			$tabElements = $this->controller->getUserTabElements();
+			$this->controller->set('tabElements', $tabElements);
+			$this->controller->set('selectedAction', 'Languages');
+		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

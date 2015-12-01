@@ -296,45 +296,70 @@ class InstitutionsController extends AppController  {
 		}
 
 		$url = ['plugin' => $this->plugin, 'controller' => $this->name];
-
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$tabElements = [
 			$pluralUserRole => ['text' => __('Academic')],
-			$userRole.'User' => ['text' => __('General')],
-			$userRole.'Account' => ['text' => __('Account')]
+			$userRole.'User' => ['text' => __('Overview')],
+			$userRole.'Account' => ['text' => __('Account')], 
+			
+			// $userRole.'Nationality' => ['text' => __('Identities')],
 		];
+
+		$studentTabElements = [
+			'Identities' => ['text' => __('Identities')],
+			'Nationalities' => ['text' => __('Nationalities')],
+			'Contacts' => ['text' => __('Contacts')],
+			'Guardians' => ['text' => __('Guardians')],
+			'Languages' => ['text' => __('Languages')],
+			'SpecialNeeds' => ['text' => __('Special Needs')],
+			'Attachments' => ['text' => __('Attachments')],
+			'Comments' => ['text' => __('Comments')],
+			'History' => ['text' => __('History')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		if ($action == 'add') {
 			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'add']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'add']);
 		} else {
-			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
+			unset($tabElements[$pluralUserRole]);
+			// $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'view']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
+			
+			// $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
 
 			// Only Student has Survey tab
 			if ($userRole == 'Student') {
 				$tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
 				$tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
 			}
+
+			foreach ($studentTabElements as $key => $value) {
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			}
 		}
 
 		foreach ($tabElements as $key => $tabElement) {
 			switch ($key) {
 				case $userRole.'User':
-					$params = [$userId, 'id' => $id];
+					$params = [$userId];
 					break;
 				case $userRole.'Account':
-					$params = [$userId, 'id' => $id];
+					$params = [$userId];
 					break;
 				case $userRole.'Surveys':
-					$params = ['id' => $id, 'user_id' => $userId];
+					$params = ['user_id' => $userId];
 					break;
 				default:
 					$params = [$id];
 			}
 			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
+		$session = $this->request->session();
+		$session->write('Institution.Students.tabElements', $tabElements);
 
 		return $tabElements;
 	}
