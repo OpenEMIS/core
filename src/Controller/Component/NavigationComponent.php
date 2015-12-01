@@ -102,33 +102,33 @@ class NavigationComponent extends Component {
 			'collapse' => false,
 			'items' => [
 				'Institutions' => [
-					'icon' => '<i class="fa kd-institutions"></i>',
+					'icon' => '<span><i class="fa kd-institutions"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
 				],
 				'Students' => [
-					'icon' => '<i class="fa kd-students"></i>',
+					'icon' => '<span><i class="fa kd-students"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']
 				],
 				'Staff' => [
-					'icon' => '<i class="fa kd-staff"></i>',
+					'icon' => '<span><i class="fa kd-staff"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']
 				],
 				'Guardians' => [
-					'icon' => '<i class="fa kd-guardian"></i>',
+					'icon' => '<span><i class="fa kd-guardian"></i></span>',
 					'collapse' => true,
 					'url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']
 				],
 
 				'Reports' => [
-					'icon' => '<i class="fa kd-reports"></i>',
+					'icon' => '<span><i class="fa kd-reports"></i></span>',
 					'collapse' => true
 				],
 				
 				'Administration' => [
-					'icon' => '<i class="fa fa-cogs"></i>',
+					'icon' => '<span><i class="fa fa-cogs"></i></span>',
 					'collapse' => true
 				]
 			]
@@ -171,7 +171,7 @@ class NavigationComponent extends Component {
 					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 
 						'selected' => ['TransferRequests', 'StudentUser', 'StudentSurveys', 'StudentAccount', 'Promotion', 'Transfer', 'StudentAdmission', 'TransferApprovals', 'StudentDropout', 'DropoutRequests']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
-					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
+					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences', 'ImportStudentAttendances']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
 					'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
 				]
@@ -183,7 +183,7 @@ class NavigationComponent extends Component {
 					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['StaffUser', 'StaffAccount']],
 					'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions'], 'selected' => ['StaffPositions']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
-					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences']]
+					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences', 'ImportStaffAttendances']]
 				]
 			],
 
@@ -360,6 +360,7 @@ class NavigationComponent extends Component {
 			'Staff' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Staff']],
 			'Surveys' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Surveys']],
 			'Quality' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'InstitutionRubrics']],
+			'Audit' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Audit']],
 		];
 		return $navigation;
 	}

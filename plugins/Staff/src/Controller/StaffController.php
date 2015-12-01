@@ -46,6 +46,7 @@ class StaffController extends AppController {
 		];
 
 		$this->loadComponent('Training.Training');
+		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Staff');
 	}
@@ -178,5 +179,11 @@ class StaffController extends AppController {
 		];
 
 		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }
