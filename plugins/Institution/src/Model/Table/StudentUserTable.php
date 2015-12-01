@@ -126,6 +126,7 @@ class StudentUserTable extends UserTable {
 			}
 			
 			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$this->Session->write('Institution.Students.id', $this->request->query('id'));
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
 			$studentId = $StudentTable->get($id)->student_id;

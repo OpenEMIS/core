@@ -237,22 +237,10 @@ class NavigationComponent extends Component {
 			'Academic' => [
 				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes', 'index'], 
 				'selected' => ['Students.view', 'Programmes.index', 'Sections', 'Classes', 'Absences', 'Behaviours', 'Results', 'Awards', 'Extracurriculars'],
-				// 'items' => [
-				// 	'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
-				// 	'Subjects' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],
-				// 	'Absences' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Absences']],
-				// 	'Behaviours' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Behaviours']],
-				// 	'Results' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Results']],
-				// 	'Awards' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Awards']],
-				// 	'Extracurriculars' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Extracurriculars']]
-				// ]
 			],
 			'Finance' => [
-				'collapse' => true,
-				'items' => [
-					'Bank Accounts' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts']],
-					'Fees' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentFees']],
-				]
+				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts'], 
+				'selected' => ['StudentFees'],
 			],
 			// 'Health' => [
 			// 	'collapse' => true,
@@ -273,7 +261,7 @@ class NavigationComponent extends Component {
 			'General' => [
 				'collapse' => true,
 				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'view', $id], 'selected' => ['edit', 'add', 'Accounts', 'StaffUser', 'StaffAccount']],
+					'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id], 'selected' => ['edit', 'add', 'Accounts', 'StaffUser', 'StaffAccount']],
 					'Identities' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Identities']],
 					'Nationalities' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Nationalities']],
 					'Contacts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Contacts']],
