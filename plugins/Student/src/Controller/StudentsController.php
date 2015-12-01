@@ -234,6 +234,27 @@ class StudentsController extends AppController {
 		return $tabElements;
 	}
 
+	public function getFinanceTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+		$studentTabElements = [
+			'BankAccounts' => ['text' => __('Bank Accounts')],
+			'StudentFees' => ['text' => __('Fees')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			$params = [$id];
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
+		return $tabElements;
+	}
+
 	public function getImage($id) {
 		$this->autoRender = false;
 		$this->ControllerAction->autoRender = false;
