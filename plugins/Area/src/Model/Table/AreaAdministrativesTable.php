@@ -37,6 +37,7 @@ class AreaAdministrativesTable extends AppTable {
 		$this->fields['rght']['visible'] = false;
 	}
 
+
 	public function rebuildLftRght() {
 		$this->updateAll(
 			['parent_id' => null],
@@ -150,6 +151,7 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request) {
 		if ($action=='add') {
+			$attr['visible'] = true;
 			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
 			if ($areaAdministrativeLevelId == 1) {
 				$attr['options'] = $this->getSelectOptions('general.yesno');
@@ -160,6 +162,7 @@ class AreaAdministrativesTable extends AppTable {
 				return $attr;
 			}
 		} elseif ($action == 'edit') {
+			$attr['visible'] = true;
 			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
 			if ($areaAdministrativeLevelId == 1) {
 				$attr['options'] = $this->getSelectOptions('general.yesno');
