@@ -30,6 +30,18 @@ class ContactsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('preferred', $order++);
 	}
 
+	private function setupTabElements() {
+		$tabElements = $this->controller->getUserTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		if ($this->controller->name == 'Students') {
+			$this->setupTabElements();
+		}
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		$contactOptions = TableRegistry::get('User.ContactOptions')
 			->find('list')

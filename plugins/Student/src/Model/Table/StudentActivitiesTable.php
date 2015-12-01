@@ -2,6 +2,7 @@
 namespace Student\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\Event\Event;
 
 class StudentActivitiesTable extends AppTable {
 	public function initialize(array $config) {
@@ -13,4 +14,15 @@ class StudentActivitiesTable extends AppTable {
         $this->addBehavior('Activity');
     }
 
+    private function setupTabElements() {
+		$tabElements = $this->controller->getUserTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'History');
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		if ($this->controller->name == 'Students') {
+			$this->setupTabElements();
+		}
+	}
 }

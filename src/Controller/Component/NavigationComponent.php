@@ -85,10 +85,11 @@ class NavigationComponent extends Component {
 		} else {
 			$pass[0] = '';
 		}
+		$institutionActions = ['StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
 
-		if ($controller->name == 'Institutions' && $action != 'index' && (($pass[0]!='view' && $pass[0]!='edit'))) {
+		if (($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions)) && ($pass[0]!='view' && $pass[0]!='edit')) || ($controller->name == 'Institutions' && $action == 'Students' && $pass[0] == 'index')) {
 			$navigations['items']['Institutions']['items'] = $this->getInstitutionNavigation();
-		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && $action == 'Students')) {
+		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionActions))) {
 			$navigations['items']['Institutions']['items'] = $this->getInstitutionNavigation();
 			$navigations['items']['Institutions']['items']['Students']['items'] = $this->getStudentNavigation();
 		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && $action == 'Staff')) {
@@ -164,8 +165,8 @@ class NavigationComponent extends Component {
 
 			'Students' => [
 				'collapse' => true,
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'],
-				'selected' => ['TransferRequests', 'StudentUser', 'StudentSurveys', 'StudentAccount', 'Promotion', 'Transfer', 'StudentAdmission', 'TransferApprovals', 'StudentDropout', 'DropoutRequests'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'index'],
+				'selected' => ['Students.index', 'TransferRequests', 'Promotion', 'Transfer', 'StudentAdmission', 'TransferApprovals', 'StudentDropout', 'DropoutRequests'],
 			],
 
 			'Staff' => [
@@ -227,34 +228,24 @@ class NavigationComponent extends Component {
 	public function getStudentNavigation() {
 		$session = $this->request->session();
 		$id = $session->read('Institution.Students.id');
+		$studentId = $session->read('Student.Students.id');
 		$navigation = [
 			'General' => [
-				'collapse' => true,
-				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $id], 'selected' => ['edit', 'StudentUser', 'StudentSurveys', 'StudentAccount']],
-					'Identities' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Identities']],
-					'Nationalities' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Nationalities']],
-					'Contacts' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Contacts']],
-					'Guardians' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Guardians']],
-					'Languages' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Languages']],
-					'Special Needs' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'SpecialNeeds']],
-					'Attachments' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Attachments']],
-					'Comments' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Comments']],
-					'History' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'History']]
-				]
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $studentId],
+				'selected' => ['StudentUser', 'StudentAccount', 'StudentSurveys', 'Identities', 'Nationalities', 'Contacts', 'Guardians', 'Languages', 'SpecialNeeds', 'Attachments', 'Comments', 'History', 'GuardianUser']
 			],
 			'Academic' => [
-				'collapse' => true,
-				'items' => [
-					'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes']],
-					'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
-					'Subjects' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],
-					'Absences' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Absences']],
-					'Behaviours' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Behaviours']],
-					'Results' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Results']],
-					'Awards' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Awards']],
-					'Extracurriculars' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Extracurriculars']]
-				]
+				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes', 'index'], 
+				'selected' => ['Students.view', 'Programmes.index', 'Sections', 'Classes', 'Absences', 'Behaviours', 'Results', 'Awards', 'Extracurriculars'],
+				// 'items' => [
+				// 	'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
+				// 	'Subjects' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],
+				// 	'Absences' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Absences']],
+				// 	'Behaviours' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Behaviours']],
+				// 	'Results' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Results']],
+				// 	'Awards' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Awards']],
+				// 	'Extracurriculars' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Extracurriculars']]
+				// ]
 			],
 			'Finance' => [
 				'collapse' => true,

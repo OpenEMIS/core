@@ -71,4 +71,16 @@ class ResultsTable extends AppTable {
 		->where(['InstitutionSiteAssessments.status' => 2])
 		;
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getAcademicTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		if ($this->controller->name == 'Students') {
+			$this->setupTabElements();
+		}
+	}
 }

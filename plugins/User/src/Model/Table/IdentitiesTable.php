@@ -1,6 +1,7 @@
 <?php
 namespace User\Model\Table;
 
+use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
@@ -22,6 +23,26 @@ class IdentitiesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		$this->fields['comments']['visible'] = 'false';
+	}
+
+	private function setupTabElements($studentId) {
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+
+		$options = [
+			'userRole' => '',
+			'action' => $this->action,
+			'id' => $id,
+			'userId' => $studentId
+		];
+		$tabElements = $this->controller->getUserTabElements($options);
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$studentId = $this->Session->read('Student.Students.id');
+		$this->setupTabElements($studentId);
 	}
 
 	public function validationDefault(Validator $validator)
