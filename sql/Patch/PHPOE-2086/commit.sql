@@ -22,4 +22,18 @@ ALTER TABLE `survey_questions`  ADD `code` VARCHAR(30) CHARACTER SET utf8 COLLAT
 UPDATE `survey_questions` set `code`=(LEFT(UUID(), 8)) where 1;
 
 -- security_functions
-UPDATE `security_functions` SET `_execute`='ImportInstitutionSurveys.add|ImportInstitutionSurveys.template|ImportInstitutionSurveys.results' WHERE `id`='1024';
+CREATE TABLE `z_2086_security_functions` LIKE `security_functions`;
+
+INSERT INTO `z_2086_security_functions` 
+SELECT * FROM `security_functions` WHERE `id` IN (1024, 1025);
+
+UPDATE `security_functions` SET `name`='Import', `_view`=NULL, `_edit`=NULL, `_delete`=NULL WHERE `id`=1024;
+UPDATE `security_functions` SET `name`='Surveys', `_view`='Surveys.index|Surveys.view', `_delete`='Surveys.remove' WHERE `id`=1025;
+
+-- security_role_functions
+CREATE TABLE `z_2086_security_role_functions` LIKE `security_role_functions`;
+
+INSERT INTO `z_2086_security_role_functions`
+SELECT * FROM `security_role_functions` WHERE `security_function_id` IN (1024, 1025);
+
+UPDATE `security_role_functions` SET `security_function_id` = 0 WHERE `security_function_id` IN (1024, 1025);
