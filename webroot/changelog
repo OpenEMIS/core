@@ -45,6 +45,14 @@ v3.3.5
 - Fixed a bug that shows 404 error when user click on Subjects link in Students -> Subjects
 
 v3.3.6
+- Fixed a couple of bugs related to Accounts
+
+v3.3.7
 - Added new feature Survey Import to allow users to use excel spreadsheet to
 import survey answers
-- Fixed a couple of bugs related to Accounts
+- Fixed a bug that caused user not able to save Education Subjects in
+Education Grades
+- Enabled Staff -> Needs and Staff -> Achievements
+- Institutions add/edit page will only show the main country's areas in the
+Area Administrative field now
+
