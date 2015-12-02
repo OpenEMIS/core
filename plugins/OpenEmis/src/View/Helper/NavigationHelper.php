@@ -32,22 +32,16 @@ class NavigationHelper extends Helper {
 						--$level;
 					} else {
 						$selected = isset($attr['selected']) ? $attr['selected'] : [];
-						$pageActionSelected = $this->searchSelected($action, $selected);
-						// if (strtolower($attr['url']['controller']) == strtolower($controller) 
-						// &&  (strtolower($attr['url']['action']) == strtolower($action) || in_array($action, $selected))) {
-
-						if ($pageActionSelected > -1) {
-							$pageAction = split("\.", $selected[$pageActionSelected]);
-							if (isset($pageAction[1])) {
-								if ($pass[0] == $pageAction[1]) {
-									// pr($selected);
-									// pr($pass[0]);
-									$level = -1;
-								}
-							} elseif (count($pageAction) == 1) {
-								$level = -1;
-							}
-						} elseif (strtolower($attr['url']['action']) == strtolower($action) && strtolower($attr['url']['controller']) == strtolower($controller)) {
+						$url = $controller.'.'.$action;
+						$navControllerActionKey = $this->searchSelected($url, $selected);
+						if (!empty($pass[0])) {
+							$url .= '.'.$pass[0];
+						}
+						$navControllerActionPassKey = $this->searchSelected($url, $selected);
+						if ($navControllerActionKey !== false || $navControllerActionPassKey !== false) {
+							$level = -1;
+						} elseif (strtolower($attr['url']['controller']) == strtolower($controller) 
+							&& strtolower($attr['url']['action']) == strtolower($action)) {
 							$level = -1;
 						}
 					}
@@ -56,14 +50,8 @@ class NavigationHelper extends Helper {
 		}
 	}
 
-	private function searchSelected($action, $selected) {
-		foreach ($selected as $key => $select) {
-			$pageAction = split('\.',$select);
-			if ($pageAction[0] == $action) {
-				return $key;
-			}
-		}
-		return -1;
+	private function searchSelected($url, $selected) {
+		return array_search($url, $selected);
 	}
 
 	public function getMenu($navigations, &$html, &$level, &$index, $path) {
@@ -76,11 +64,14 @@ class NavigationHelper extends Helper {
 		++$level;
 
 		$class = 'nav-level-' . $level . ' collapse';
-		
+		$parent = '';
 		if (array_key_exists('items', $navigations)) {
 			foreach ($navigations['items'] as $name => $attr) {
+				// Bug here
+				// Same level, same name but different parent
 				if (array_key_exists($level, $path) && $name == $path[$level]) {
 					$class .= ' in';
+					$parent = $name;
 					break;
 				}
 			}
@@ -101,6 +92,7 @@ class NavigationHelper extends Helper {
 
 					++$index;
 					$toggle = 'collapse';
+
 					if (array_key_exists('url', $attr)) {
 						$href = $this->Url->build($attr['url']);
 						$toggle = '';
@@ -108,6 +100,7 @@ class NavigationHelper extends Helper {
 						$href = '#nav-menu-' . $index;
 					}
 
+					// For icon
 					if (array_key_exists('icon', $attr)) {
 						$name = $attr['icon'].'<b>'.__($name).'</b>';
 					} else {
@@ -121,26 +114,17 @@ class NavigationHelper extends Helper {
 				} else {
 					$aOptions = ['escape' => false];
 					$selected = isset($attr['selected']) ? $attr['selected'] : [];
-					$pageActionSelected = $this->searchSelected($action, $selected);
-					// if (strtolower($attr['url']['controller']) == strtolower($controller) 
-					// &&  (strtolower($attr['url']['action']) == strtolower($action) || in_array($action, $selected))) {
-					if ($pageActionSelected > -1) {
-						$pageAction = split("\.", $selected[$pageActionSelected]);
-						
-						if (isset($pageAction[1])) {
-							if ($pass[0] == $pageAction[1]) {
-								// pr($selected);
-								// pr($pass[0]);
-								$aOptions['class'] = 'nav-active';
-							}
-						} elseif (count($pageAction) == 1) {
-							// pr('here');
-							// pr($selected);
-							$aOptions['class'] = 'nav-active';
-						}
-					} elseif (strtolower($attr['url']['action']) == strtolower($action) && strtolower($attr['url']['controller']) == strtolower($controller)) {
-						// pr('here first');
-						// pr($selected);
+					$url = $controller.'.'.$action;
+					$navControllerActionKey = $this->searchSelected($url, $selected);
+					if (!empty($pass[0])) {
+						$url .= '.'.$pass[0];
+					}
+					$navControllerActionPassKey = $this->searchSelected($url, $selected);
+
+					if ($navControllerActionKey !== false || $navControllerActionPassKey !== false) {
+						$aOptions['class'] = 'nav-active';
+					} elseif (strtolower($attr['url']['controller']) == strtolower($controller) 
+							&& strtolower($attr['url']['action']) == strtolower($action)) {
 						$aOptions['class'] = 'nav-active';
 					}
 					if (array_key_exists('icon', $attr)) {

@@ -56,6 +56,8 @@ class StaffUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Staff.Staff.id', $entity->id);
+		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -65,7 +67,6 @@ class StaffUserTable extends UserTable {
 
 	private function setupTabElements($entity) {
 		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-
 		$options = [
 			'userRole' => 'Staff',
 			'action' => $this->action,

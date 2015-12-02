@@ -35,4 +35,14 @@ class EmploymentsTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getCareerTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }
