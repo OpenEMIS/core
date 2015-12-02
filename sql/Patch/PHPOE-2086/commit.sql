@@ -20,3 +20,6 @@ INSERT INTO `z2086_survey_questions` SELECT * FROM `survey_questions`;
 
 ALTER TABLE `survey_questions`  ADD `code` VARCHAR(30) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  AFTER `id`;
 UPDATE `survey_questions` set `code`=(LEFT(UUID(), 8)) where 1;
+
+-- security_functions
+UPDATE `security_functions` SET `_execute`='ImportInstitutionSurveys.add|ImportInstitutionSurveys.template|ImportInstitutionSurveys.results' WHERE `id`='1024';

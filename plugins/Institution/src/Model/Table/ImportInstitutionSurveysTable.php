@@ -144,7 +144,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 				}
 			} else {
-				$header[] = '(' . $question->code .') '. $question->name;
+				$header[] = trim('(' . $question->code .') '. $question->name);
 			}
 		}
 		return $header;
@@ -290,6 +290,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$surveyFormQuestions = array_values($surveyFormQuestions);
 			$questions = $surveyFormQuestions;
 			$totalColumns = $this->getTotalColumns($questions);
+			
 			$header = $this->generateHeader($questions);
 
 
@@ -530,6 +531,15 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$session->write($this->sessionKey, $completedData);
 			return $model->controller->redirect($this->ControllerAction->url('results'));
 		};
+	}
+
+	protected function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
+		$cellsValue = [];
+		for ($col=0; $col < $totalColumns; $col++) {
+			$cell = $sheet->getCellByColumnAndRow($col, $row);
+			$cellsValue[] = $cell->getValue();
+		}
+		return count(array_diff($cellsValue, $header)) == 0;
 	}
 
 	public function results() {

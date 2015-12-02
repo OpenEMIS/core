@@ -9,4 +9,7 @@ ALTER TABLE `z2086_survey_forms` RENAME `survey_forms`;
 DROP TABLE `survey_questions`;
 ALTER TABLE `z2086_survey_questions` RENAME `survey_questions`;
 
+-- security_functions
+UPDATE `security_functions` SET `_execute`='' WHERE `id`='1024';
+
 DELETE FROM `db_patches` WHERE `issue`='PHPOE-2086';
