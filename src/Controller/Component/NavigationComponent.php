@@ -320,8 +320,10 @@ class NavigationComponent extends Component {
 			'Training' => [
 				'collapse' => true,
 				'items' => [
-					// 'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
-					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']]
+					'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
+					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']],
+					// Disabled Achievement until get requirements from client
+					// 'Achievements' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Achievements']]
 				]
 			]
 		];
