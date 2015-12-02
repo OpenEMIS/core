@@ -28,23 +28,46 @@ class ImportLinkBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'index':
-				$url = $this->_table->request->params;
-				unset($url['_ext']);
-				unset($url['pass']);
-				if (array_key_exists('paging', $url)) {
-					unset($url['paging']);
+				if ($buttons['index']['url']['action']=='Surveys') {
+					break;
 				}
+				$this->generateImportButton($toolbarButtons, $attr);
+				break;
 
-				$import['url'] = $url;
+			case 'view':
+				if ($buttons['index']['url']['action']!='Surveys') {
+					break;
+				}
+				$import['url'] = $buttons['view']['url'];
 				$import['url']['action'] = 'Import'.$this->_table->alias();
+				$import['url'][0] = 'add';
 				$import['type'] = 'button';
 				$import['label'] = '<i class="fa kd-import"></i>';
 				$import['attr'] = $attr;
 				$import['attr']['title'] = __('Import');
+				unset($import['url']['filter']);
 
 				$toolbarButtons['import'] = $import;
 				break;
 		}
+	}
+
+	private function generateImportButton(ArrayObject $toolbarButtons, array $attr) {
+		$url = $this->_table->request->params;
+		unset($url['_ext']);
+		unset($url['pass']);
+		if (array_key_exists('paging', $url)) {
+			unset($url['paging']);
+		}
+
+		$import['url'] = $url;
+		$import['url']['action'] = 'Import'.$this->_table->alias();
+		$import['type'] = 'button';
+		$import['label'] = '<i class="fa kd-import"></i>';
+		$import['attr'] = $attr;
+		$import['attr']['title'] = __('Import');
+
+		$toolbarButtons['import'] = $import;
 	}
 
 }
