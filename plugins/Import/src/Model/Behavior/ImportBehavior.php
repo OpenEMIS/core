@@ -600,7 +600,7 @@ class ImportBehavior extends Behavior {
 	 * @param  integer 		$row          	Row number
 	 * @return boolean               		the result to be return as true or false
 	 */
-	protected function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
+	public function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
 		$cellsValue = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
