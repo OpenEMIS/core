@@ -25,24 +25,27 @@ class IdentitiesTable extends AppTable {
 		$this->fields['comments']['visible'] = 'false';
 	}
 
-	private function setupTabElements($studentId) {
-		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-
+	private function setupTabElements() {
 		$options = [
 			'userRole' => '',
-			'action' => $this->action,
-			'id' => $id,
-			'userId' => $studentId
 		];
-		$tabElements = $this->controller->getUserTabElements($options);
 
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		$studentId = $this->Session->read('Student.Students.id');
-		$this->setupTabElements($studentId);
+		$this->setupTabElements();
 	}
 
 	public function validationDefault(Validator $validator)

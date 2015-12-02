@@ -54,11 +54,22 @@ class UserLanguagesTable extends AppTable {
 	}
 
 	private function setupTabElements() {
-		if ($this->controller->name == 'Students') {
-			$tabElements = $this->controller->getUserTabElements();
-			$this->controller->set('tabElements', $tabElements);
-			$this->controller->set('selectedAction', 'Languages');
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
 		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Languages');
 	}
 
 	public function indexAfterAction(Event $event, $data) {

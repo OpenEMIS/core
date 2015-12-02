@@ -165,22 +165,80 @@ class StaffController extends AppController {
 	}
 
 	public function getUserTabElements($options = []) {
-		$plugin = $this->plugin;
-		$name = $this->name;
+		$session = $this->request->session();
+		$tabElements = $session->read('Institution.Staff.tabElements');
+		return $tabElements;
+	}
 
-		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
-
-		$tabElements = [
-			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
-				'text' => __('Details')
-			],
-			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
-			]
+	public function getCareerTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Employments' => ['text' => __('Employments')],
+			'Positions' => ['text' => __('Positions')],
+			'Sections' => ['text' => __('Classes')],
+			'Classes' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Leaves' => ['text' => __('Leaves')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Awards' => ['text' => __('Awards')],
 		];
 
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getProfessionalDevelopmentTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Qualifications' => ['text' => __('Qualifications')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Memberships' => ['text' => __('Memberships')],
+			'Licenses' => ['text' => __('Licenses')],
+			'Trainings' => ['text' => __('Trainings')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getFinanceTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'BankAccounts' => ['text' => __('Bank Accounts')],
+			'Salaries' => ['text' => __('Salaries')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getTrainingTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'TrainingResults' => ['text' => __('Training Results')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
 		return $tabElements;
 	}
 

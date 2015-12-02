@@ -48,4 +48,14 @@ class PositionsTable extends AppTable {
 		}
 		return $buttons;
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getCareerTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

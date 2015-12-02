@@ -26,4 +26,14 @@ class MembershipsTable extends AppTable {
 			])
 		;
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }
