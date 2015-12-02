@@ -34,13 +34,13 @@ class TrainingNeedsTable extends AppTable {
 		return $validator
 			->add('course_code', [
 				'ruleUnique' => [
-					'rule' => ['validateUnique'],
+					'rule' => ['validateUnique', ['scope' => ['training_need_category_id', 'staff_id']]],
 					'provider' => 'table'
 				]
 			])
 			->add('course_id', [
 				'ruleUnique' => [
-					'rule' => ['validateUnique', ['scope' => 'course_code']],
+					'rule' => ['validateUnique', ['scope' => ['course_code', 'staff_id']]],
 					'provider' => 'table'
 				]
 			])
