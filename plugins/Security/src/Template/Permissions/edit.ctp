@@ -40,7 +40,7 @@ $this->start('panelBody');
 		echo '</h6>';
 
 		// add the table under each section
-		echo '<div class="table-responsive" checkbox-toggle="' . $section . '">
+		echo '<div class="table-wrapper"><div class="table-responsive" checkbox-toggle="' . $section . '">
 			<table class="table table-curved">
 				<thead>' . $this->Html->tableHeaders($tableHeaders) . '</thead>
 				<tbody>
@@ -72,7 +72,7 @@ $this->start('panelBody');
 			echo '</tr>'; // end row
 		}
 
-		echo '</tbody></table></div>';
+		echo '</tbody></table></div></div>';
 	}
 
 	echo $this->ControllerAction->getFormButtons();
