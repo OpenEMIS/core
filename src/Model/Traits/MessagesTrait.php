@@ -396,6 +396,7 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
+			'survey_not_found' => 'No identifiable survey found',
 		],
 		'TrainingSessions' => [
 			'trainer_type' => 'Type',
@@ -850,6 +851,22 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Issue Date cannot be later than Expiry Date',
 				]
 			],
+			'TrainingNeeds' => [
+				'course_code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				],
+				'course_id' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
+			],
+			'Achievements' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
 		],
 		'AcademicPeriod' => [
 			'AcademicPeriods' => [
