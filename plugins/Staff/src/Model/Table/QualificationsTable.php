@@ -162,4 +162,14 @@ class QualificationsTable extends AppTable {
 	public function onGetFileType(Event $event, Entity $entity) {
 		return $this->getFileTypeForView($entity->file_name);
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

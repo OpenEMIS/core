@@ -38,10 +38,8 @@ class NavigationComponent extends Component {
 
 	public function beforeFilter(Event $event) {
 		$controller = $this->controller;
-		
 		$navigations = $this->buildNavigation();
 		$this->checkPermissions($navigations);
-
 		$controller->set('_navigations', $navigations);
 	}
 
@@ -85,14 +83,18 @@ class NavigationComponent extends Component {
 		} else {
 			$pass[0] = '';
 		}
-		$institutionActions = ['StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
 
-		if (($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions)) && ($pass[0]!='view' && $pass[0]!='edit')) || ($controller->name == 'Institutions' && $action == 'Students' && $pass[0] == 'index')) {
+		$institutionStudentActions = ['StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
+		$institutionStaffActions = ['Staff', 'StaffUser'];
+		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
+
+		if (($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) 
+			|| ($controller->name == 'Institutions' && ($action == 'Students'||$action == 'Staff') && $pass[0] == 'index')) {
 			$navigations['items']['Institutions']['items'] = $this->getInstitutionNavigation();
-		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionActions))) {
+		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
 			$navigations['items']['Institutions']['items'] = $this->getInstitutionNavigation();
 			$navigations['items']['Institutions']['items']['Students']['items'] = $this->getStudentNavigation();
-		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && $action == 'Staff')) {
+		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
 			$navigations['items']['Institutions']['items'] = $this->getInstitutionNavigation();
 			$navigations['items']['Institutions']['items']['Staff']['items'] = $this->getStaffNavigation();
 		} elseif ($controller->name == 'Guardians' && $action != 'index') {
@@ -147,7 +149,8 @@ class NavigationComponent extends Component {
 			'General' => [
 				'collapse' => true,
 				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id], 'selected' => ['edit']],
+					'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id], 
+						'selected' => ['Institutions.edit']],
 					'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
 					'History' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'History']]
 				]
@@ -166,33 +169,41 @@ class NavigationComponent extends Component {
 			'Students' => [
 				'collapse' => true,
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'index'],
-				'selected' => ['Students.index', 'TransferRequests', 'Promotion', 'Transfer', 'StudentAdmission', 'TransferApprovals', 'StudentDropout', 'DropoutRequests'],
+				'selected' => ['Institutions.Students.index', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 
+					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests'],
 			],
 
 			'Staff' => [
 				'collapse' => true,
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'index']
 			],
 
 			'Attendance' => [
 				'collapse' => true,
 				'items' => [
-					'Students' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
-					'Staff' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences']]
+					'Students' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 
+						'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences']],
+					'Staff' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 
+						'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences']]
 				]
 			],
 
 			'Behaviour' => [
 				'collapse' => true,
 				'items' => [
-					'Students' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
-					'Staff' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
+					'Students ' => [
+						'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours'],
+						'selected' => ['Institutions.StudentBehaviours']
+					],
+					'Staff ' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
 				]
 			],
 
-			'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],	
+			'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 
+				'selected' => ['Institutions.Assessments', 'Institutions.Results']],	
 			
-			'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions'], 'selected' => ['StaffPositions']],
+			'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions'], 
+				'selected' => ['Institutions.StaffPositions']],
 
 			'Finance' => [
 				'collapse' => true,
@@ -212,7 +223,8 @@ class NavigationComponent extends Component {
 				'collapse' => true,
 				'items' => [
 					'Forms' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys']],
-					'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics'], 'selected' => ['Rubrics', 'RubricAnswers']]
+					'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics'], 
+						'selected' => ['Institutions.Rubrics', 'Institutions.RubricAnswers']]
 				]
 			],
 
@@ -231,86 +243,50 @@ class NavigationComponent extends Component {
 		$studentId = $session->read('Student.Students.id');
 		$navigation = [
 			'General' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $studentId],
-				'selected' => ['StudentUser', 'StudentAccount', 'StudentSurveys', 'Identities', 'Nationalities', 'Contacts', 'Guardians', 'Languages', 'SpecialNeeds', 'Attachments', 'Comments', 'History', 'GuardianUser']
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $studentId, 'id' => $id],
+				'selected' => ['Institutions.StudentUser', 'Institutions.StudentAccount', 'Institutions.StudentSurveys', 'Students.Identities', 'Students.Nationalities', 
+					'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments', 'Students.History', 
+					'Students.GuardianUser']
 			],
 			'Academic' => [
 				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes', 'index'], 
-				'selected' => ['Students.view', 'Programmes.index', 'Sections', 'Classes', 'Absences', 'Behaviours', 'Results', 'Awards', 'Extracurriculars'],
+				'selected' => ['Institutions.Students.view', 'Students.Programmes.index', 'Sections', 'Classes', 'Absences', 'Behaviours', 'Results', 'Awards', 'Extracurriculars'],
 			],
 			'Finance' => [
 				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts'], 
 				'selected' => ['StudentFees'],
 			],
-			// 'Health' => [
-			// 	'collapse' => true,
-			// 	'items' => [
-			// 		'<placeholder>' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts']]
-			// 	]
-			// ]
 		];
-
 		return $navigation;
 	}
 
 	public function getStaffNavigation() {
 		$session = $this->request->session();
-		$id = $session->read('Institution.Staff.id');
-		
+		$id = $session->read('Staff.Staff.id');
 		$navigation = [
 			'General' => [
-				'collapse' => true,
-				'items' => [
-					'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id], 'selected' => ['edit', 'add', 'Accounts', 'StaffUser', 'StaffAccount']],
-					'Identities' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Identities']],
-					'Nationalities' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Nationalities']],
-					'Contacts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Contacts']],
-					'Languages' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Languages']],
-					'Special Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'SpecialNeeds']],
-					'Attachments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Attachments']],
-					'Comments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Comments']],
-					'History' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'History']]
-				]
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id],
+				'selected' => ['Institutions.StudentUser', 'Institutions.StudentAccount', 'Institutions.StudentSurveys', 'Staff.Identities', 'Staff.Nationalities', 
+					'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'Staff.Comments', 'Staff.History']
 			],
 			'Career' => [
-				'collapse' => true,
-				'items' => [
-					'Employments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Employments']],
-					'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Positions']],
-					'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Sections']],
-					'Subjects' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Classes']],
-					'Absences' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Absences']],
-					'Leave' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Leaves']],
-					'Behaviours' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Behaviours']],
-					'Awards' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Awards']]
-				]
+				'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Employments'],
+				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Sections', 'Staff.Classes', 'Staff.Absences', 
+					'Staff.Leaves', 'Staff.Behaviours', 'Staff.Awards'],
 			],
 			'Professional Development' => [
-				'collapse' => true,
-				'items' => [
-					'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications']],
-					'Extracurriculars' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Extracurriculars']],
-					'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Memberships']],
-					'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Licenses']],
-					'Trainings' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Trainings']]
-				]
+				'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications'],
+				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings'],
 			],
 			'Finance' => [
-				'collapse' => true,
-				'items' => [
-					'Bank Accounts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']],
-					'Salaries' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Salaries']]
-				]
+				'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts'],
+				'selected' => ['Staff.BankAccounts', 'Staff.Salaries'],
 			],
 			'Training' => [
-				'collapse' => true,
-				'items' => [
-					// 'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
-					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']]
-				]
+				'url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults'],
+				'selected' => ['Staff.TrainingResults'],
 			]
 		];
-
 		return $navigation;
 	}
 
@@ -355,27 +331,28 @@ class NavigationComponent extends Component {
 					'Administrative Boundaries' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas', 'index'],
-						'selected' => ['Levels', 'AdministrativeLevels', 'Administratives']
+						'selected' => ['Areas.Levels', 'Areas.AdministrativeLevels', 'Areas.Administratives']
 					],
 					'Academic Periods' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods', 'index'],
-						'selected' => ['Levels']
+						'selected' => ['AcademicPeriods.Levels']
 					],
 					'Education Structure' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems', 'index'],
-						'selected' => ['Levels', 'Cycles', 'Programmes', 'Grades', 'Subjects', 'Certifications', 'FieldOfStudies', 'ProgrammeOrientations']
+						'selected' => ['Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.Certifications', 
+							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 					],
 					'Assessments' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Assessments', 'index'],
-						'selected' => ['GradingTypes', 'GradingOptions', 'Status']
+						'selected' => ['Assessments.GradingTypes', 'Assessments.GradingOptions', 'Assessments.Status']
 					],
 					'Field Options' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
-						'selected' => ['index', 'add', 'view', 'edit', 'remove']
+						'selected' => ['FieldOptions.index', 'FieldOptions.add', 'FieldOptions.view', 'FieldOptions.edit', 'FieldOptions.remove']
 					],
 					'Custom Field' => [
 						'collapse' => true,
@@ -388,44 +365,44 @@ class NavigationComponent extends Component {
 							'Institution' => [
 								'collapse' => true,
 								'url' => ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields', 'action' => 'Fields'],
-								'selected' => ['Pages']
+								'selected' => ['InstitutionCustomFields.Pages']
 							],
 							'Student' => [
 								'collapse' => true,
 								'url' => ['plugin' => 'StudentCustomField', 'controller' => 'StudentCustomFields', 'action' => 'Fields'],
-								'selected' => ['Pages']
+								'selected' => ['StudentCustomFields.Pages']
 							],
 							'Staff' => [
 								'collapse' => true,
 								'url' => ['plugin' => 'StaffCustomField', 'controller' => 'StaffCustomFields', 'action' => 'Fields'],
-								'selected' => ['Pages']
+								'selected' => ['StaffCustomFields.Pages']
 							],
 							'Infrastructure' => [
 								'collapse' => true,
 								'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Fields'],
-								'selected' => ['Pages', 'Levels', 'Types']
+								'selected' => ['Infrastructures.Pages', 'Infrastructures.Levels', 'Infrastructures.Types']
 							],
 						]
 					],
 					'Labels' => [
 						'collapse' => true,
 						'url' => ['plugin' => false, 'controller' => 'Labels', 'action' => 'index'],
-						'selected' => ['index', 'view', 'edit']
+						'selected' => ['Labels.index', 'Labels.view', 'Labels.edit']
 					],
 					'Translations' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Localization', 'controller' => 'Translations', 'action' => 'index'],
-						'selected' => ['add', 'view', 'edit']
+						'selected' => ['Translations.add', 'Translations.view', 'Translations.edit']
 					],
 					'System Configurations' => [
 						'collapse' => true,
 						'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index'],
-						'selected' => ['add', 'view', 'edit']
+						'selected' => ['Configurations.add', 'Configurations.view', 'Configurations.edit']
 					],
 					'Notices' => [
 						'collapse' => true,
 						'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index'],
-						'selected' => ['add', 'view', 'edit']
+						'selected' => ['Notices.add', 'Notices.view', 'Notices.edit']
 					]
 				]
 			],
@@ -435,17 +412,17 @@ class NavigationComponent extends Component {
 					'Users' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Users'],
-						'selected' => ['Accounts']
+						'selected' => ['Securities.Accounts']
 					],
 					'Groups' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups'],
-						'selected' => ['UserGroups', 'SystemGroups']
+						'selected' => ['Securities.UserGroups', 'Securities.SystemGroups']
 					],
 					'Roles' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles'],
-						'selected' => ['Roles', 'Permissions']
+						'selected' => ['Securities.Roles', 'Securities.Permissions']
 					]
 				]
 			],

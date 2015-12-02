@@ -859,6 +859,14 @@ class StudentsTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 
+		if (isset($buttons['edit'])) {
+			$url = $this->ControllerAction->url('edit');
+			$url['action'] = 'StudentUser';
+			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url['id'] = $entity->id;
+			$buttons['edit']['url'] = $url;
+		}
+
 		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
 			if (isset($buttons['edit'])) {
 				unset($buttons['edit']);

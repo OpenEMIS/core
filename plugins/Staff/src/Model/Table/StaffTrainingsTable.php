@@ -23,4 +23,14 @@ class StaffTrainingsTable extends AppTable {
 		$this->ControllerAction->field('staff_training_category_id', ['type' => 'select']);
 		$this->ControllerAction->field('completed_date', ['default_date' => true]);
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Trainings');
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

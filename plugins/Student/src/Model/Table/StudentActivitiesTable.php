@@ -14,15 +14,26 @@ class StudentActivitiesTable extends AppTable {
         $this->addBehavior('Activity');
     }
 
-    private function setupTabElements() {
-		$tabElements = $this->controller->getUserTabElements();
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'History');
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		if ($this->controller->name == 'Students') {
-			$this->setupTabElements();
-		}
+		$this->setupTabElements();
 	}
 }

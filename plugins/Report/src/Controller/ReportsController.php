@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 class ReportsController extends AppController {
 	public function initialize() {
 		parent::initialize();
-
+		$this->ControllerAction->model('Reports.Reports');
 		$this->ControllerAction->models = [
 			'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],

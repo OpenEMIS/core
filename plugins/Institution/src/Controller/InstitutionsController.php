@@ -285,10 +285,12 @@ class InstitutionsController extends AppController  {
 		$action = (array_key_exists('action', $options))? $options['action']: 'add';
 		$id = (array_key_exists('id', $options))? $options['id']: 0;
 		$userId = (array_key_exists('userId', $options))? $options['userId']: 0;
+		$type = 'Students';
 
 		switch ($userRole) {
 			case 'Staff':
 				$pluralUserRole = 'Staff'; // inflector unable to handle
+				$type = 'Staff';
 				break;
 			default:
 				$pluralUserRole = Inflector::pluralize($userRole);
@@ -297,6 +299,7 @@ class InstitutionsController extends AppController  {
 
 		$url = ['plugin' => $this->plugin, 'controller' => $this->name];
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+
 		$tabElements = [
 			$pluralUserRole => ['text' => __('Academic')],
 			$userRole.'User' => ['text' => __('Overview')],
@@ -316,6 +319,11 @@ class InstitutionsController extends AppController  {
 			'Comments' => ['text' => __('Comments')],
 			'History' => ['text' => __('History')],
 		];
+
+		if ($type == 'Staff') {
+			$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+			unset($studentTabElements['Guardians']);
+		}
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
@@ -358,8 +366,9 @@ class InstitutionsController extends AppController  {
 			}
 			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
+
 		$session = $this->request->session();
-		$session->write('Institution.Students.tabElements', $tabElements);
+		$session->write('Institution.'.$type.'.tabElements', $tabElements);
 
 		return $tabElements;
 	}
