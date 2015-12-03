@@ -103,7 +103,6 @@ class ImportInstitutionSurveysTable extends AppTable {
 		
 		$surveyForm = $this->institutionSurvey->survey_form;
 		$header = $this->generateHeader($surveyForm->custom_fields);
-
 		$surveySheetName = Text::truncate('(' . $surveyForm->code .') '.$surveyForm->name, 31, ['ellipsis' => '']);
 		$writer->writeSheetRow($surveySheetName, array_values($header));
 		
@@ -144,7 +143,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 				}
 			} else {
-				$header[] = '(' . $question->code .') '. $question->name;
+				$header[] = trim('(' . $question->code .') '. $question->name);
 			}
 		}
 		return $header;
@@ -188,24 +187,6 @@ class ImportInstitutionSurveysTable extends AppTable {
 		return $cellValue;
 	}
 
-	private function getTotalColumns($surveyFormQuestions) {
-		$count = 0;
-		foreach ($surveyFormQuestions as $question) {
-			if ($question['field_type'] == 'TABLE') {
-
-				// First row is a description of the first column
-				$rowCount = count($question['custom_table_rows']) - 1;
-				$colCount = count($question['custom_table_columns']);
-
-				// Multiplication of both count will determine the number of columns for this table type
-				$count += ($rowCount * $colCount);
-			} else {
-				$count++;
-			}
-		}
-		return $count;
-	}
-
 	/**
 	 * Actual Import business logics reside in this function
 	 * @param  Event  		$event  Event object
@@ -225,9 +206,6 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 			$controller = $model->controller;
 			$controller->loadComponent('PhpExcel');
-
-			$surveyForm = $this->institutionSurvey->survey_form;
-			$header = $this->generateHeader($surveyForm->custom_fields);
 
 			$fileObj = $entity->select_file;
 			$uploadedName = $fileObj['name'];
@@ -289,9 +267,8 @@ class ImportInstitutionSurveysTable extends AppTable {
 			ksort($surveyFormQuestions);
 			$surveyFormQuestions = array_values($surveyFormQuestions);
 			$questions = $surveyFormQuestions;
-			$totalColumns = $this->getTotalColumns($questions);
 			$header = $this->generateHeader($questions);
-
+			$totalColumns = count($header);
 
 			for ($row = 1; $row <= $highestRow; ++$row) {
 				if ($row == self::RECORD_QUESTION) { // skip header but check if the uploaded template is correct
