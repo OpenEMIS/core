@@ -41,47 +41,49 @@ class ImportInstitutionSurveysTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-		$session = $this->request->session();
-		if ($session->check('Institution.Institutions.id')) {
-			$this->institutionId = $session->read('Institution.Institutions.id');
-		} else {
-			$this->institutionId = false;
-		}
-		if (!empty($this->request->pass) && isset($this->request->pass[1])) {
-			$this->institutionSurveyId = $this->request->pass[1];
-		}
-		$this->institutionSurvey = $this->InstitutionSurveys
-			->find()
-			->contain([
-				'SurveyForms.CustomFields.CustomFieldOptions', 
-				'SurveyForms.CustomFields.CustomTableRows' => function ($q) {
-						return $q->where(['CustomTableRows.visible' => 1]);
-					},
-				'SurveyForms.CustomFields.CustomTableColumns' => function ($q) {
-						return $q
-							->where(['CustomTableColumns.visible' => 1]);
-					}
-			])
-			->where([$this->InstitutionSurveys->aliasField('id') => $this->institutionSurveyId])
-			->first()
-			;
+		if ($this->action != 'downloadFailed') {
+			$session = $this->request->session();
+			if ($session->check('Institution.Institutions.id')) {
+				$this->institutionId = $session->read('Institution.Institutions.id');
+			} else {
+				$this->institutionId = false;
+			}
+			if (!empty($this->request->pass) && isset($this->request->pass[1])) {
+				$this->institutionSurveyId = $this->request->pass[1];
+			}
+			$this->institutionSurvey = $this->InstitutionSurveys
+				->find()
+				->contain([
+					'SurveyForms.CustomFields.CustomFieldOptions', 
+					'SurveyForms.CustomFields.CustomTableRows' => function ($q) {
+							return $q->where(['CustomTableRows.visible' => 1]);
+						},
+					'SurveyForms.CustomFields.CustomTableColumns' => function ($q) {
+							return $q
+								->where(['CustomTableColumns.visible' => 1]);
+						}
+				])
+				->where([$this->InstitutionSurveys->aliasField('id') => $this->institutionSurveyId])
+				->first()
+				;
 
-		// This is to sort the questions by the order
-		$surveyFormQuestions = [];
-		foreach ($this->institutionSurvey->survey_form->custom_fields as $question) {
-			$order = $question['_joinData']['order'];
-			$surveyFormQuestions[$order] = $question;
-		}
-		ksort($surveyFormQuestions);
-		$surveyFormQuestions = array_values($surveyFormQuestions);
-		$this->institutionSurvey->survey_form->custom_fields = $surveyFormQuestions;
+			// This is to sort the questions by the order
+			$surveyFormQuestions = [];
+			foreach ($this->institutionSurvey->survey_form->custom_fields as $question) {
+				$order = $question['_joinData']['order'];
+				$surveyFormQuestions[$order] = $question;
+			}
+			ksort($surveyFormQuestions);
+			$surveyFormQuestions = array_values($surveyFormQuestions);
+			$this->institutionSurvey->survey_form->custom_fields = $surveyFormQuestions;
 
-		$this->fieldTypes = $this->CustomFieldTypes
-			->find('list', ['keyField' => 'code', 'valueField' => 'value'])
-			->toArray()
-			;
-		$this->sessionKey = $this->registryAlias().'.Import.data';
-		$this->InstitutionSurveyAnswers->ControllerAction = $this->ControllerAction;
+			$this->fieldTypes = $this->CustomFieldTypes
+				->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+				->toArray()
+				;
+			$this->sessionKey = $this->registryAlias().'.Import.data';
+			$this->InstitutionSurveyAnswers->ControllerAction = $this->ControllerAction;
+		}
 	}
 
 	public function implementedEvents() {
