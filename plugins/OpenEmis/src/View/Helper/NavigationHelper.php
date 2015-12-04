@@ -14,7 +14,140 @@ class NavigationHelper extends Helper {
 		$level = 0;
 		$index = 1;
 		$this->getMenu($navigations, $html, $level, $index, $path);
+
+		$newHtml = $this->newSelect($this->getDashboard());
+		pr($newHtml);
+		pr(htmlspecialchars($newHtml));
 		return $html;
+	}
+
+	public function getDashboard() {
+		$navigation = [
+			'Institutions.index' => ['title' => 'Institutions', 'selected' => ['Institutions.index'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
+				'Institutions.dashboard' => 		['title' => 'Dashboard', 'parent' => 'Institutions.index', 'selected' => ['Institutions.dashboard'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
+				'Institution.General' =>			['title' => 'General', 'parent' => 'Institutions.index'],
+					'Institutions.view' => 				['title' => 'Overview', 'parent' => 'Institution.General', 'selected' => ['Institutions.view'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
+					'Institutions.Attachments.index' => ['title' => 'Attachments', 'parent' => 'Institution.General', 'selected' => ['Institutions.Attachments.index'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
+				'Institution.Students.index' =>			['title' => 'Students', 'parent' => 'Institutions.index'],
+				'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian']],
+		];
+
+		return $navigation;
+	}
+
+	public function newSelect($navigations) {
+		// Processing variables
+		$parentStack = [];
+		$html = '';
+		$index = 1;
+		$level = 1;
+		$isRoot = false;
+		$hasUL = false;
+		$closeUl = 0;
+		$closeLi = 0;
+
+		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
+		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
+		$class = 'nav-level-' . $level . ' collapse';		
+
+		$controller = $this->request->params['controller'];
+		$action = $this->request->params['action'];
+		$pass = [];
+		
+		if (!empty($this->request->pass)) {
+			$pass = $this->request->pass;
+		} else {
+			$pass[0] = '';
+		}	
+
+		$html .= sprintf($ul, $index, $class, $level);
+		foreach ($navigations as $key => $value) {
+			$aClass = 'panel-heading';
+			// Root parent
+			if (!isset($value['parent'])) {
+				$html .= $this->closeUlTag($closeUl, $closeLi, true);
+				$html .= '<li>';
+				$closeLi++;
+				$level = 2;
+				// $ulSet = false;
+				++$index;
+				$html .= $value['title'];
+				$parentStack = [];
+				array_push($parentStack, $key);
+				$hasUL = true;
+			} 
+			// Sub parents
+			elseif ($value['parent'] != current(array_slice($parentStack, -1))) {
+				++$index;
+				if (in_array($value['parent'], $parentStack)) {
+					$parentKey = array_search($value['parent'], $parentStack);
+					while (count($parentStack) > ($parentKey + 1)) {
+						array_pop($parentStack);
+						$html .= $this->closeUlTag($closeUl, $closeLi);
+					}
+					$html .= $value['title'];
+				} else {
+					array_push($parentStack, $value['parent']);
+					$html .= sprintf($ul, $index, $class, $level);
+					$closeUl++;
+				}
+				$ulSet = false;
+				++$level;
+				$isRoot = false;
+				$hasUL = false;
+				$html .= '<li>';
+				$html .= $value['title'];
+			} 
+			// Children
+			else {
+				$isRoot = false;
+				if ($hasUL) {
+					$html .= sprintf($ul, $index, $class, $level);
+					$hasUL = false;
+					$closeUl++;
+				}
+				$html .= '<li>';
+				$html .= $value['title'];
+				$closeLi++;
+			}
+
+			// if ($level > 1 && !$isRoot) {
+			// 	$i = $level;
+			// 	while ($i > 1) {
+			// 		$html .= ' ';
+			// 		$i--;
+			// 	}
+			// 	$html .= $value['title'].'<br />';
+			// }
+			// // Check if the ul for the sub level is already set
+			// if (!$ulSet) {
+			// 	$html .= sprintf($ul, $index, $class, $level);
+			// }
+			
+		}
+
+		$html .= $this->closeUlTag($closeUl, $closeLi, true);
+		$html .= '</ul>';
+		return $html;
+	}
+
+	public function closeUlTag(&$ulCounter, &$liCounter, $closeAll = false) {
+		$html = '';
+		if ($closeAll) {
+			for($i = $ulCounter; $i > 0; $i--) {
+				$html .= '</ul>';
+				// $html .= '</li>';
+				$liCounter--;
+			}
+			$ulCounter = 0;
+			return $html;
+		} else {
+			$html .= '</ul>';
+			// $html .= '</li>';
+			$ulCounter--;
+			$liCounter--;
+			return $html;
+		}
 	}
 
 	public function select($navigations, &$path, &$level) {
