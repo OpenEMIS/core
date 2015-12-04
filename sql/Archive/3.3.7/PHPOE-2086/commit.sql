@@ -27,8 +27,8 @@ CREATE TABLE `z_2086_security_functions` LIKE `security_functions`;
 INSERT INTO `z_2086_security_functions` 
 SELECT * FROM `security_functions` WHERE `id` IN (1024, 1025);
 
-UPDATE `security_functions` SET `name`='Import', `_view`=NULL, `_edit`=NULL, `_delete`=NULL WHERE `id`=1024;
-UPDATE `security_functions` SET `name`='Surveys', `_view`='Surveys.index|Surveys.view', `_delete`='Surveys.remove' WHERE `id`=1025;
+UPDATE `security_functions` SET `name`='Import', `_view`=NULL, `_edit`=NULL, `_delete`=NULL, `_execute` = 'ImportInstitutionSurveys.add|ImportInstitutionSurveys.template|ImportInstitutionSurveys.results' WHERE `id`=1024;
+UPDATE `security_functions` SET `name`='Surveys', `_view`='Surveys.index|Surveys.view', `_delete`='Surveys.remove', `_execute` = 'Survey.excel' WHERE `id`=1025;
 
 -- security_role_functions
 CREATE TABLE `z_2086_security_role_functions` LIKE `security_role_functions`;
