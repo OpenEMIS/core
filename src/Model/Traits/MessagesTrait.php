@@ -397,6 +397,7 @@ trait MessagesTrait {
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
 			'survey_not_found' => 'No identifiable survey found',
+			'no_answers' => 'No answers were found in the file imported.',
 		],
 		'TrainingSessions' => [
 			'trainer_type' => 'Type',
