@@ -278,9 +278,11 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 					continue;
 				}
+				// Check if there is no answers
 				if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
 					if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
-						break;
+						$entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')]);
+						return false;
 					}
 				}
 
@@ -299,9 +301,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					if (empty($cellValue) && $question->is_mandatory) {
 						$rowFailed = true;
 						$rowInvalidCodeCols[] = $columnCode;
-					} else if (empty($cellValue) && !$questions[$col]->is_mandatory) {
-						continue;
-					}
+					} 
 
 					switch ($fieldType) {
 						case 'DROPDOWN':
@@ -355,9 +355,11 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 						case 'NUMBER':
 							$originalRow[$colCount] = $cellValue;
-							if (!is_numeric($cellValue)) {
-								$rowFailed = true;
-								$rowInvalidCodeCols[] = $columnCode;
+							if (!empty($cellValue)) {
+								if (!is_numeric($cellValue)) {
+									$rowFailed = true;
+									$rowInvalidCodeCols[] = $columnCode;
+								}	
 							}
 							$colCount++;
 							break;
@@ -406,16 +408,26 @@ class ImportInstitutionSurveysTable extends AppTable {
 									$c = $columns[$i];
 									foreach ($rows as $r) {
 										$originalRow[$colCount] = $this->getCellValue($sheet, $colCount, $row);
-										$obj = [
-											'institution_site_survey_id' => $this->institutionSurvey->id,
-											'survey_question_id' => $question->id,
-											'survey_table_row_id' => $r->id,
-											'survey_table_column_id' => $c->id,
-											'text_value' => $originalRow[$colCount++]
-										];
-										$entityItem = $this->InstitutionSurveyTableCells->newEntity();
-										$this->InstitutionSurveyTableCells->patchEntity($entityItem, $obj);
-										$tempTableRow[] = $entityItem;
+										if (!empty($originalRow[$colCount])) {
+											$obj = [
+												'institution_site_survey_id' => $this->institutionSurvey->id,
+												'survey_question_id' => $question->id,
+												'survey_table_row_id' => $r->id,
+												'survey_table_column_id' => $c->id,
+												'text_value' => $originalRow[$colCount++]
+											];
+											$entityItem = $this->InstitutionSurveyTableCells->newEntity();
+											$this->InstitutionSurveyTableCells->patchEntity($entityItem, $obj);
+											$tempTableRow[] = $entityItem;
+										} else {
+											if ($question->is_mandatory) {
+												$rowFailed = true;
+												if (!in_array($columnCode, $rowInvalidCodeCols)) {
+													$rowInvalidCodeCols[] = $columnCode;
+												}
+											}
+											$colCount++;
+										}
 									}
 								}
 							}
