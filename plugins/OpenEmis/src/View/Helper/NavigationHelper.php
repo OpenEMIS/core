@@ -14,10 +14,10 @@ class NavigationHelper extends Helper {
 		$level = 0;
 		$index = 1;
 		$this->getMenu($navigations, $html, $level, $index, $path);
-
+		// pr($html);
 		$newHtml = $this->newSelect($this->getDashboard());
 		pr($newHtml);
-		pr(htmlspecialchars($newHtml));
+		// pr(htmlspecialchars($newHtml));
 		return $html;
 	}
 
@@ -29,7 +29,8 @@ class NavigationHelper extends Helper {
 					'Institutions.view' => 				['title' => 'Overview', 'parent' => 'Institution.General', 'selected' => ['Institutions.view'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
 					'Institutions.Attachments.index' => ['title' => 'Attachments', 'parent' => 'Institution.General', 'selected' => ['Institutions.Attachments.index'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
 				'Institution.Students.index' =>			['title' => 'Students', 'parent' => 'Institutions.index'],
-				'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian']],
+				'Institution.Students.test' =>			['title' => 'Students Test', 'parent' => 'Institution.Students.index'],
+			'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian']],
 		];
 
 		return $navigation;
@@ -41,10 +42,18 @@ class NavigationHelper extends Helper {
 		$html = '';
 		$index = 1;
 		$level = 1;
-		$isRoot = false;
 		$hasUL = false;
 		$closeUl = 0;
 		$closeLi = 0;
+		$parentNodes = [];
+
+		foreach ($navigations as $navigation) {
+			if (isset($navigation['parent'])) {
+				if (!in_array($navigation['parent'], $parentNodes)) {
+					$parentNodes[] = $navigation['parent'];
+				}
+			}
+		}
 
 		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
 		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
@@ -60,75 +69,66 @@ class NavigationHelper extends Helper {
 			$pass[0] = '';
 		}	
 
-		$html .= sprintf($ul, $index, $class, $level);
+		$html .= sprintf($ul, $index++, ($class.' in'), $level);
 		foreach ($navigations as $key => $value) {
-			$aClass = 'panel-heading';
 			// Root parent
 			if (!isset($value['parent'])) {
 				$html .= $this->closeUlTag($closeUl, $closeLi, true);
-				$html .= '<li>';
 				$closeLi++;
 				$level = 2;
-				// $ulSet = false;
-				++$index;
-				$html .= $value['title'];
+				// $ulSet = false;	
 				$parentStack = [];
 				array_push($parentStack, $key);
 				$hasUL = true;
 			} 
 			// Sub parents
 			elseif ($value['parent'] != current(array_slice($parentStack, -1))) {
-				++$index;
+				// If it is back to any of the other parents in the trunk
 				if (in_array($value['parent'], $parentStack)) {
 					$parentKey = array_search($value['parent'], $parentStack);
 					while (count($parentStack) > ($parentKey + 1)) {
 						array_pop($parentStack);
 						$html .= $this->closeUlTag($closeUl, $closeLi);
+						$level--;
 					}
-					$html .= $value['title'];
-				} else {
+				} 
+				// If the node is just below it's parent
+				else {
 					array_push($parentStack, $value['parent']);
-					$html .= sprintf($ul, $index, $class, $level);
+					$html .= sprintf($ul, $index++, $class, $level++);
 					$closeUl++;
 				}
-				$ulSet = false;
-				++$level;
-				$isRoot = false;
 				$hasUL = false;
-				$html .= '<li>';
-				$html .= $value['title'];
 			} 
 			// Children
 			else {
-				$isRoot = false;
 				if ($hasUL) {
-					$html .= sprintf($ul, $index, $class, $level);
+					$html .= sprintf($ul, $index++, $class, $level++);
 					$hasUL = false;
 					$closeUl++;
 				}
-				$html .= '<li>';
-				$html .= $value['title'];
+				
 				$closeLi++;
 			}
-
-			// if ($level > 1 && !$isRoot) {
-			// 	$i = $level;
-			// 	while ($i > 1) {
-			// 		$html .= ' ';
-			// 		$i--;
-			// 	}
-			// 	$html .= $value['title'].'<br />';
-			// }
-			// // Check if the ul for the sub level is already set
-			// if (!$ulSet) {
-			// 	$html .= sprintf($ul, $index, $class, $level);
-			// }
-			
+			$aClass = 'panel-heading';
+			$name = $value['title'];
+			$href = '#nav-menu-' . $index;
+			$toggle = 'collapse';
+			$html .= '<li>';
+			if ($this->hasChildren($key, $parentNodes)) {
+				$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
+			} else {
+				$html .= $name;
+			}
 		}
 
 		$html .= $this->closeUlTag($closeUl, $closeLi, true);
 		$html .= '</ul>';
 		return $html;
+	}
+
+	public function hasChildren($parentKey, $parentNodes) {
+		return in_array($parentKey, $parentNodes);
 	}
 
 	public function closeUlTag(&$ulCounter, &$liCounter, $closeAll = false) {
