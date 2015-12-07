@@ -14,22 +14,31 @@ class NavigationHelper extends Helper {
 		$level = 0;
 		$index = 1;
 		$this->getMenu($navigations, $html, $level, $index, $path);
-		// pr($html);
 		$newHtml = $this->newSelect($this->getDashboard());
-		pr($newHtml);
-		// pr(htmlspecialchars($newHtml));
-		return $html;
+		return $newHtml;
 	}
 
 	public function getDashboard() {
+		$session = $this->request->session();
+		$id = $session->read('Institution.Students.id');
+		$studentId = $session->read('Student.Students.id');
 		$navigation = [
-			'Institutions.index' => ['title' => 'Institutions', 'selected' => ['Institutions.index'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
+			'Institutions.index' => ['title' => 'Institutions', 'selected' => ['Institutions.index'], 'collapse' => true, 'params' => ['plugin' => 'Institution'], 'icon' => '<span><i class="fa kd-institutions"></i></span>'],
 				'Institutions.dashboard' => 		['title' => 'Dashboard', 'parent' => 'Institutions.index', 'selected' => ['Institutions.dashboard'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
-				'Institution.General' =>			['title' => 'General', 'parent' => 'Institutions.index'],
-					'Institutions.view' => 				['title' => 'Overview', 'parent' => 'Institution.General', 'selected' => ['Institutions.view'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
+				'Institution.General' =>			['title' => 'General', 'parent' => 'Institutions.index', 'link' => false],
+					'Institutions.view' => 				['title' => 'Overview', 'parent' => 'Institution.General', 'selected' => ['Institutions.view'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
 					'Institutions.Attachments.index' => ['title' => 'Attachments', 'parent' => 'Institution.General', 'selected' => ['Institutions.Attachments.index'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
-				'Institution.Students.index' =>			['title' => 'Students', 'parent' => 'Institutions.index'],
-			'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian']],
+				'Institutions.Students.index' =>			['title' => 'Students', 'parent' => 'Institutions.index', 'params' => ['plugin' => 'Institution']],
+					'Institutions.StudentUser.view' => ['title' => 'General', 'parent' => 'Institutions.Students.index', 'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id], 
+							'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys.view', 'Institutions.StudentSurveys.edit', 
+								'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments', 
+								'Students.History', 'Students.GuardianUser']],
+					'Students.Programmes.index' => ['title' => 'Academic', 'parent' => 'Institutions.Students.index', 'collapse' => true, 'params' => ['plugin' => 'Student'], 
+							'selected' => ['Institutions.Students.view', 'Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
+								'Students.Extracurriculars']],
+					'Students.BankAccounts' => ['title' => 'Finance', 'parent' => 'Institutions.Students.index', 'collapse' => true, 'params' => ['plugin' => 'Student'],
+							'selected' => ['Students.StudentFees']],
+			'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian'], 'icon' => '<span><i class="fa kd-guardian"></i></span>'],
 		];
 
 		return $navigation;
@@ -42,6 +51,7 @@ class NavigationHelper extends Helper {
 		$index = 1;
 		$level = 1;
 		$hasUL = false;
+		$in = false;
 		$closeUl = 0;
 		$closeLi = 0;
 		$parentNodes = [];
@@ -53,7 +63,6 @@ class NavigationHelper extends Helper {
 				}
 			}
 		}
-
 		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
 		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
 		$class = 'nav-level-' . $level . ' collapse';		
@@ -80,8 +89,8 @@ class NavigationHelper extends Helper {
 		if (empty($path)) {
 			$this->getPath($controllerActionLink, $navigations, $path);
 		}
-		$classIn = $class.' in';
-		$html .= sprintf($ul, $index++, $classIn, $level);
+		
+		$html .= sprintf($ul, $index++, ($class.' in'), $level);
 		foreach ($navigations as $key => $value) {
 			// Root parent
 			if (!isset($value['parent'])) {
@@ -91,6 +100,9 @@ class NavigationHelper extends Helper {
 				$parentStack = [];
 				array_push($parentStack, $key);
 				$hasUL = true;
+				if (in_array($key, $path) && $key != $linkName) {
+					$in = true;
+				}
 			} 
 			// Sub parents
 			elseif ($value['parent'] != current(array_slice($parentStack, -1))) {
@@ -106,9 +118,13 @@ class NavigationHelper extends Helper {
 				// If the node is just below it's parent
 				else {
 					array_push($parentStack, $value['parent']);
-					if (in_array($key, $path)) {
+					// Not to expand if the parent is the url and only to expand if the parent is found in the path
+					if (in_array($value['parent'], $path) && $value['parent'] != $linkName) {
+						$class = 'nav-level-' . $level . ' collapse';
+						$classIn = $class.' in';
 						$html .= sprintf($ul, $index++, $classIn, $level++);
 					} else {
+						$class = 'nav-level-' . $level . ' collapse';
 						$html .= sprintf($ul, $index++, $class, $level++);
 					}
 					$closeUl++;
@@ -118,9 +134,13 @@ class NavigationHelper extends Helper {
 			// Children
 			else {
 				if ($hasUL) {
-					if (in_array($key, $path)) {
+					if ($in) {
+						$class = 'nav-level-' . $level . ' collapse';
+						$classIn = $class.' in';
 						$html .= sprintf($ul, $index++, $classIn, $level++);
+						$in = false;
 					} else {
+						$class = 'nav-level-' . $level . ' collapse';
 						$html .= sprintf($ul, $index++, $class, $level++);
 					}
 					$hasUL = false;
@@ -130,17 +150,48 @@ class NavigationHelper extends Helper {
 				$closeLi++;
 			}
 			$aClass = 'panel-heading';
-			if (!in_array($key, $path)) {
+			if (!in_array($key, $path) || $key == $linkName) {
 				$aClass .= ' collapsed';
 			}
-			$name = __($value['title']);
+			if (array_key_exists('icon', $value)) {
+				$name = $value['icon'].'<b>'.__($value['title']).'</b>';
+			} else {
+				$name = __($value['title']);
+			}
 			$href = '#nav-menu-' . $index;
 			$toggle = 'collapse';
 			$html .= '<li>';
 			if ($this->hasChildren($key, $parentNodes)) {
+				if (!array_key_exists('link', $value)) {
+					$params = [];
+					if (isset($value['params'])) {
+						$params = $value['params'];
+					}
+					$href = $this->Url->build($this->getLink($key, $params));
+					$toggle = '';
+				}
+
+				if ($linkName == $key) {
+					$aClass .= ' nav-active';
+				}
 				$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
 			} else {
-				$html .= $name;
+				$params = [];
+				$aOptions = ['escape' => false];
+				if (isset($value['params'])) {
+					$params = $value['params'];
+				}
+				if ($linkName == $key) {
+					$aOptions['class'] = 'nav-active';
+				} elseif (isset($value['selected'])) {
+					foreach ($value['selected'] as $selected) {
+						if ($linkName == $selected || $controllerActionLink == $selected) {
+							$aOptions['class'] = 'nav-active';
+						}
+					}
+					
+				}
+				$html .= $this->Html->link($name, $this->getLink($key, $params), $aOptions);
 			}
 		}
 
@@ -180,6 +231,30 @@ class NavigationHelper extends Helper {
 				}
 			}
 		}
+	}
+
+	private function getLink($controllerActionModelLink, $params = []) {
+		$url = ['plugin' => null, 'controller' => null, 'action' => null];
+		if (isset($params['plugin'])) {
+			$url['plugin'] = $params['plugin'];
+			unset($params['plugin']);
+		}
+
+		$link = explode('.', $controllerActionModelLink);
+
+		if (isset($link[0])) {
+			$url['controller'] = $link[0];
+		}
+		if (isset($link[1])) {
+			$url['action'] = $link[1];
+		}
+		if (isset($link[2])) {
+			$url['0'] = $link[2];
+		}
+		if (!empty($params)) {
+			$url = array_merge($url, $params);
+		}
+		return $url;
 	}
 
 	public function closeUlTag(&$ulCounter, &$liCounter, $closeAll = false) {
