@@ -49,9 +49,7 @@ class NavigationComponent extends Component {
 			$url['plugin'] = $params['plugin'];
 			unset($params['plugin']);
 		}
-
 		$link = explode('.', $controllerActionModelLink);
-
 		if (isset($link[0])) {
 			$url['controller'] = $link[0];
 		}
@@ -104,12 +102,11 @@ class NavigationComponent extends Component {
 			$pass[0] = '';
 		}
 
-		$institutionStudentActions = ['StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
+		$institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
 		$institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
 		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
 
-		if (($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) || 
-			($controller->name == 'Institutions' && ($action == 'Students'||$action == 'Staff') && ($pass[0] == 'index' || $pass[0] == 'add'))) {
+		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
@@ -120,6 +117,7 @@ class NavigationComponent extends Component {
 		}	elseif ($controller->name == 'Guardians' && $action != 'index') {
 			$navigations = $this->appendNavigation('Guardians.index', $navigations, $this->getGuardianNavigation());
 		}
+
 		$navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
 		$navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
 
@@ -159,6 +157,13 @@ class NavigationComponent extends Component {
 				'selected' => ['Guardians.add'],
 			],
 
+			'Directories.index' => [
+				'title' => 'Directory', 
+				'icon' => '<span><i class="fa kd-guardian"></i></span>',
+				'params' => ['plugin' => 'Directory'],
+				'selected' => ['Directories.view', 'Directories.edit'],
+			],
+
 			'Reports' => [
 				'title' => 'Reports', 
 				'icon' => '<span><i class="fa kd-reports"></i></span>',
@@ -169,7 +174,7 @@ class NavigationComponent extends Component {
 				'title' => 'Administration', 
 				'icon' => '<span><i class="fa fa-cogs"></i></span>',
 				'link' => false
-			]
+			],
 		];
 
 		return $navigation;
@@ -658,21 +663,21 @@ class NavigationComponent extends Component {
 
 				'Trainings.Courses' => [
 					'title' => 'Logs',
-					'parent' => 'Administration.Communications',
+					'parent' => 'Administration.Training',
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Courses']
 				],
 
 				'Trainings.Sessions' => [
 					'title' => 'Sessions',
-					'parent' => 'Administration.Communications',
+					'parent' => 'Administration.Training',
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Sessions']
 				],
 
 				'Trainings.Results' => [
 					'title' => 'Results',
-					'parent' => 'Administration.Communications',
+					'parent' => 'Administration.Training',
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Results']
 				],

@@ -67,7 +67,7 @@ class NavigationHelper extends Helper {
 				$parentStack = [];
 				array_push($parentStack, $key);
 				$hasUL = true;
-				if (in_array($key, $path) && $key != $linkName) {
+				if (in_array($key, $path) && in_array($linkName, $path) && $key != $linkName) {
 					$in = true;
 				}
 			} 
@@ -116,9 +116,8 @@ class NavigationHelper extends Helper {
 				// If the root set the has unorder list flag
 				if ($hasUL) {
 					if ($in) {
-						$class = 'nav-level-' . $level . ' collapse';
-						$classIn = $class.' in';
-						$html .= sprintf($ul, $index++, $classIn, $level++);
+						$class = 'nav-level-' . $level . ' collapse in';
+						$html .= sprintf($ul, $index++, $class, $level++);
 						$in = false;
 					} else {
 						$class = 'nav-level-' . $level . ' collapse';
