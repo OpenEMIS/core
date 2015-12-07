@@ -7,41 +7,7 @@ class NavigationHelper extends Helper {
 	public $helpers = ['Html', 'Url'];
 
 	public function render($navigations) {
-		$html = '';
-		$path = array();
-		$level = 0;
-		$this->select($navigations, $path, $level);
-		$level = 0;
-		$index = 1;
-		$this->getMenu($navigations, $html, $level, $index, $path);
-		$newHtml = $this->newSelect($this->getDashboard());
-		return $newHtml;
-	}
-
-	public function getDashboard() {
-		$session = $this->request->session();
-		$id = $session->read('Institution.Students.id');
-		$studentId = $session->read('Student.Students.id');
-		$navigation = [
-			'Institutions.index' => ['title' => 'Institutions', 'selected' => ['Institutions.index'], 'collapse' => true, 'params' => ['plugin' => 'Institution'], 'icon' => '<span><i class="fa kd-institutions"></i></span>'],
-				'Institutions.dashboard' => 		['title' => 'Dashboard', 'parent' => 'Institutions.index', 'selected' => ['Institutions.dashboard'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
-				'Institution.General' =>			['title' => 'General', 'parent' => 'Institutions.index', 'link' => false],
-					'Institutions.view' => 				['title' => 'Overview', 'parent' => 'Institution.General', 'selected' => ['Institutions.view'], 'collapse' => true, 'params' => ['plugin' => 'Institution']],
-					'Institutions.Attachments.index' => ['title' => 'Attachments', 'parent' => 'Institution.General', 'selected' => ['Institutions.Attachments.index'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
-				'Institutions.Students.index' =>			['title' => 'Students', 'parent' => 'Institutions.index', 'params' => ['plugin' => 'Institution']],
-					'Institutions.StudentUser.view' => ['title' => 'General', 'parent' => 'Institutions.Students.index', 'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id], 
-							'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys.view', 'Institutions.StudentSurveys.edit', 
-								'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments', 
-								'Students.History', 'Students.GuardianUser']],
-					'Students.Programmes.index' => ['title' => 'Academic', 'parent' => 'Institutions.Students.index', 'collapse' => true, 'params' => ['plugin' => 'Student'], 
-							'selected' => ['Institutions.Students.view', 'Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
-								'Students.Extracurriculars']],
-					'Students.BankAccounts' => ['title' => 'Finance', 'parent' => 'Institutions.Students.index', 'collapse' => true, 'params' => ['plugin' => 'Student'],
-							'selected' => ['Students.StudentFees']],
-			'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian'], 'icon' => '<span><i class="fa kd-guardian"></i></span>'],
-		];
-
-		return $navigation;
+		return $this->newSelect($navigations);
 	}
 
 	public function newSelect($navigations) {
@@ -181,15 +147,12 @@ class NavigationHelper extends Helper {
 				if (isset($value['params'])) {
 					$params = $value['params'];
 				}
-				if ($linkName == $key) {
+				if ($linkName == $key || $controllerActionLink == $key) {
 					$aOptions['class'] = 'nav-active';
 				} elseif (isset($value['selected'])) {
-					foreach ($value['selected'] as $selected) {
-						if ($linkName == $selected || $controllerActionLink == $selected) {
-							$aOptions['class'] = 'nav-active';
-						}
+					if (in_array($linkName, $value['selected']) || in_array($controllerActionLink, $value['selected'])) {
+						$aOptions['class'] = 'nav-active';
 					}
-					
 				}
 				$html .= $this->Html->link($name, $this->getLink($key, $params), $aOptions);
 			}
@@ -273,129 +236,6 @@ class NavigationHelper extends Helper {
 			$ulCounter--;
 			$liCounter--;
 			return $html;
-		}
-	}
-
-	public function select($navigations, &$path, &$level) {
-		$controller = $this->request->params['controller'];
-		$action = $this->request->params['action'];
-		$pass = $this->request->pass;
-		if ($level != -1) {
-			$level++;
-			if (array_key_exists('items', $navigations)) {
-				foreach ($navigations['items'] as $name => $attr) {
-					$path[$level] = $name;
-					if (array_key_exists('items', $attr)) {
-						$this->select($attr, $path, $level);
-						unset($path[$level]);
-						--$level;
-					} else {
-						$selected = isset($attr['selected']) ? $attr['selected'] : [];
-						$url = $controller.'.'.$action;
-						$navControllerActionKey = $this->searchSelected($url, $selected);
-						if (!empty($pass[0])) {
-							$url .= '.'.$pass[0];
-						}
-						$navControllerActionPassKey = $this->searchSelected($url, $selected);
-						if ($navControllerActionKey !== false || $navControllerActionPassKey !== false) {
-							$level = -1;
-						} elseif (strtolower($attr['url']['controller']) == strtolower($controller) 
-							&& strtolower($attr['url']['action']) == strtolower($action)) {
-							$level = -1;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private function searchSelected($url, $selected) {
-		return array_search($url, $selected);
-	}
-
-	public function getMenu($navigations, &$html, &$level, &$index, $path) {
-		$controller = $this->request->params['controller'];
-		$action = $this->request->params['action'];
-		$pass = $this->request->pass;
-		
-		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
-		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
-		++$level;
-
-		$class = 'nav-level-' . $level . ' collapse';
-		$parent = '';
-		if (array_key_exists('items', $navigations)) {
-			foreach ($navigations['items'] as $name => $attr) {
-				// Bug here
-				// Same level, same name but different parent
-				if (array_key_exists($level, $path) && $name == $path[$level]) {
-					$class .= ' in';
-					$parent = $name;
-					break;
-				}
-			}
-
-			$html .= sprintf($ul, $index, $class, $level);
-			foreach ($navigations['items'] as $name => $attr) {
-				$collapsed = false;
-				if (array_key_exists($level, $path) && $name == $path[$level]) {
-					$collapsed = true;
-				}
-				$html .= '<li>';
-				$aClass = 'panel-heading';
-				
-				if (array_key_exists('items', $attr)) {
-					if (!$collapsed) {
-						$aClass .= ' collapsed';
-					}
-
-					++$index;
-					$toggle = 'collapse';
-
-					if (array_key_exists('url', $attr)) {
-						$href = $this->Url->build($attr['url']);
-						$toggle = '';
-					} else {
-						$href = '#nav-menu-' . $index;
-					}
-
-					// For icon
-					if (array_key_exists('icon', $attr)) {
-						$name = $attr['icon'].'<b>'.__($name).'</b>';
-					} else {
-						$name = __($name);
-					}
-					
-					$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
-	                
-					$this->getMenu($attr, $html, $level, $index, $path);
-					--$level;
-				} else {
-					$aOptions = ['escape' => false];
-					$selected = isset($attr['selected']) ? $attr['selected'] : [];
-					$url = $controller.'.'.$action;
-					$navControllerActionKey = $this->searchSelected($url, $selected);
-					if (!empty($pass[0])) {
-						$url .= '.'.$pass[0];
-					}
-					$navControllerActionPassKey = $this->searchSelected($url, $selected);
-
-					if ($navControllerActionKey !== false || $navControllerActionPassKey !== false) {
-						$aOptions['class'] = 'nav-active';
-					} elseif (strtolower($attr['url']['controller']) == strtolower($controller) 
-							&& strtolower($attr['url']['action']) == strtolower($action)) {
-						$aOptions['class'] = 'nav-active';
-					}
-					if (array_key_exists('icon', $attr)) {
-						$name = $attr['icon'].'<b>'.__($name).'</b>';
-					} else {
-						$name = __($name);
-					}
-					$html .= $this->Html->link($name, $attr['url'], $aOptions);
-				}
-				$html .= '</li>';
-			}
-			$html .= '</ul>';
 		}
 	}
 }
