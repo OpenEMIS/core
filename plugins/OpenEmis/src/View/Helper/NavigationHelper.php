@@ -67,7 +67,7 @@ class NavigationHelper extends Helper {
 				$parentStack = [];
 				array_push($parentStack, $key);
 				$hasUL = true;
-				if (in_array($key, $path) && in_array($linkName, $path) && $key != $linkName) {
+				if (in_array($key, $path) && $key != $linkName && $this->hasChildren($key, $parentNodes)) {
 					$in = true;
 				}
 			} 
