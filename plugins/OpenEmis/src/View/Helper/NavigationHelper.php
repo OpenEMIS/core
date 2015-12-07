@@ -29,7 +29,6 @@ class NavigationHelper extends Helper {
 					'Institutions.view' => 				['title' => 'Overview', 'parent' => 'Institution.General', 'selected' => ['Institutions.view'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
 					'Institutions.Attachments.index' => ['title' => 'Attachments', 'parent' => 'Institution.General', 'selected' => ['Institutions.Attachments.index'],'collapse' => true, 'params' => ['plugin' => 'Institution']],
 				'Institution.Students.index' =>			['title' => 'Students', 'parent' => 'Institutions.index'],
-				'Institution.Students.test' =>			['title' => 'Students Test', 'parent' => 'Institution.Students.index'],
 			'Guardians.index' => ['title' => 'Guardians', 'selected' => ['Guardians.index'], 'collapse' => true, 'params' => ['plugin' => 'Guardian']],
 		];
 
@@ -67,16 +66,28 @@ class NavigationHelper extends Helper {
 			$pass = $this->request->pass;
 		} else {
 			$pass[0] = '';
-		}	
+		}
 
-		$html .= sprintf($ul, $index++, ($class.' in'), $level);
+		// To find the path to the parent
+		$linkName = $controller.'.'.$action;
+		$controllerActionLink = $linkName;
+		if (!empty($pass[0])) {
+			$linkName .= '.'.$pass[0];
+		}
+
+		$path = [];
+		$this->getPath($linkName, $navigations, $path);
+		if (empty($path)) {
+			$this->getPath($controllerActionLink, $navigations, $path);
+		}
+		$classIn = $class.' in';
+		$html .= sprintf($ul, $index++, $classIn, $level);
 		foreach ($navigations as $key => $value) {
 			// Root parent
 			if (!isset($value['parent'])) {
 				$html .= $this->closeUlTag($closeUl, $closeLi, true);
 				$closeLi++;
 				$level = 2;
-				// $ulSet = false;	
 				$parentStack = [];
 				array_push($parentStack, $key);
 				$hasUL = true;
@@ -95,7 +106,11 @@ class NavigationHelper extends Helper {
 				// If the node is just below it's parent
 				else {
 					array_push($parentStack, $value['parent']);
-					$html .= sprintf($ul, $index++, $class, $level++);
+					if (in_array($key, $path)) {
+						$html .= sprintf($ul, $index++, $classIn, $level++);
+					} else {
+						$html .= sprintf($ul, $index++, $class, $level++);
+					}
 					$closeUl++;
 				}
 				$hasUL = false;
@@ -103,7 +118,11 @@ class NavigationHelper extends Helper {
 			// Children
 			else {
 				if ($hasUL) {
-					$html .= sprintf($ul, $index++, $class, $level++);
+					if (in_array($key, $path)) {
+						$html .= sprintf($ul, $index++, $classIn, $level++);
+					} else {
+						$html .= sprintf($ul, $index++, $class, $level++);
+					}
 					$hasUL = false;
 					$closeUl++;
 				}
@@ -111,7 +130,10 @@ class NavigationHelper extends Helper {
 				$closeLi++;
 			}
 			$aClass = 'panel-heading';
-			$name = $value['title'];
+			if (!in_array($key, $path)) {
+				$aClass .= ' collapsed';
+			}
+			$name = __($value['title']);
 			$href = '#nav-menu-' . $index;
 			$toggle = 'collapse';
 			$html .= '<li>';
@@ -127,8 +149,37 @@ class NavigationHelper extends Helper {
 		return $html;
 	}
 
-	public function hasChildren($parentKey, $parentNodes) {
+	private function hasChildren($parentKey, $parentNodes) {
 		return in_array($parentKey, $parentNodes);
+	}
+
+	private function getPath($node, $navigationArray, array &$path) {
+		// If the array contains the node as the key
+		if (isset($navigationArray[$node])) {
+			$path[] = $node;
+			// If the node contains a parent node, continue the recursive call
+			if (isset($navigationArray[$node]['parent'])) {
+				$node = $navigationArray[$node]['parent'];
+				$this->getPath($node, $navigationArray, $path);
+			}
+		} else {
+			// If the node is a selected value
+			foreach ($navigationArray as $key => $value) {
+				if (isset($value['selected'])) {
+					$found = false;
+					foreach ($value['selected'] as $selected) {
+						if ($selected == $node) {
+							$this->getPath($key, $navigationArray, $path);
+							$found = true;
+							break;
+						}
+					}
+					if ($found) {
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	public function closeUlTag(&$ulCounter, &$liCounter, $closeAll = false) {
