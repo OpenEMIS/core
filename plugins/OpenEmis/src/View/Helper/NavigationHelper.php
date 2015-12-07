@@ -50,6 +50,7 @@ class NavigationHelper extends Helper {
 			$linkName .= '.'.$pass[0];
 		}
 
+		// Getting the full path of the from the node to the root
 		$path = [];
 		$this->getPath($linkName, $navigations, $path);
 		if (empty($path)) {
@@ -87,8 +88,21 @@ class NavigationHelper extends Helper {
 					// Not to expand if the parent is the url and only to expand if the parent is found in the path
 					if (in_array($value['parent'], $path) && $value['parent'] != $linkName) {
 						$class = 'nav-level-' . $level . ' collapse';
-						$classIn = $class.' in';
-						$html .= sprintf($ul, $index++, $classIn, $level++);
+
+						// To check if the parent node's selected list contain the current link as selected
+						if (isset($navigations[$value['parent']]['selected'])) {
+							// If it contains the link in the selected
+							if (in_array($linkName, $navigations[$value['parent']]['selected']) || in_array($controllerActionLink, $navigations[$value['parent']]['selected'])) {
+								// do nothing
+							} else {
+								$class = $class.' in';
+							}
+						} 
+						// If the parent does not have any selected values, just expand the navigation
+						else {
+							$class = $class.' in';
+						}
+						$html .= sprintf($ul, $index++, $class, $level++);
 					} else {
 						$class = 'nav-level-' . $level . ' collapse';
 						$html .= sprintf($ul, $index++, $class, $level++);
@@ -99,6 +113,7 @@ class NavigationHelper extends Helper {
 			} 
 			// Children
 			else {
+				// If the root set the has unorder list flag
 				if ($hasUL) {
 					if ($in) {
 						$class = 'nav-level-' . $level . ' collapse';
@@ -116,9 +131,19 @@ class NavigationHelper extends Helper {
 				$closeLi++;
 			}
 			$aClass = 'panel-heading';
+
+			// If the current link is the link then collapse the arrow, or if the key is not in the same path collapse the arrow
 			if (!in_array($key, $path) || $key == $linkName) {
 				$aClass .= ' collapsed';
+			} 
+			// If the value fall in the selected options
+			elseif (isset($value['selected'])) {
+				if (in_array($linkName, $value['selected']) || in_array($controllerActionLink, $value['selected'])) {
+					$aClass .= ' collapsed';
+				}
 			}
+
+			// For processing icons
 			if (array_key_exists('icon', $value)) {
 				$name = $value['icon'].'<b>'.__($value['title']).'</b>';
 			} else {
@@ -127,7 +152,11 @@ class NavigationHelper extends Helper {
 			$href = '#nav-menu-' . $index;
 			$toggle = 'collapse';
 			$html .= '<li>';
+
+			// If the node has children
 			if ($this->hasChildren($key, $parentNodes)) {
+
+				// If the link flag is not set in the array, if there is a link flag then it will just be a parent without any url
 				if (!array_key_exists('link', $value)) {
 					$params = [];
 					if (isset($value['params'])) {
@@ -137,16 +166,24 @@ class NavigationHelper extends Helper {
 					$toggle = '';
 				}
 
-				if ($linkName == $key) {
+				// Setting the selected navigation item for navigation items that has children
+				if ($linkName == $key || $controllerActionLink == $key) {
 					$aClass .= ' nav-active';
+				} elseif (isset($value['selected'])) {
+					if (in_array($linkName, $value['selected']) || in_array($controllerActionLink, $value['selected'])) {
+						$aClass .= ' nav-active';
+					}
 				}
+
 				$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
+
 			} else {
 				$params = [];
 				$aOptions = ['escape' => false];
 				if (isset($value['params'])) {
 					$params = $value['params'];
 				}
+				// Setting the selected navigation item for navigation items that does not have children
 				if ($linkName == $key || $controllerActionLink == $key) {
 					$aOptions['class'] = 'nav-active';
 				} elseif (isset($value['selected'])) {
