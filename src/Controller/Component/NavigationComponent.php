@@ -454,7 +454,7 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Guardians.index', 
 				'params' => ['plugin' => 'Guardian'], 
-				'selected' => ['Guardians.edit', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 'Guardians.History']
+				'selected' => ['Guardians.edit', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 'Guardians.History', 'Guardians.Nationalities']
 			],
 		];
 		return $navigation;
