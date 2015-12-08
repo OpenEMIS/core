@@ -35,43 +35,45 @@
 if(!empty($attr['results']['excelFile'])):
 ?>
 
-<div class="table-responsive">
-	<table class="table">
-		<thead>
-			<tr>
-				<th></th>
-				<th><?= $this->Label->get('Import.row_number'); ?></th>
+<div class="table-wrapper">
+	<div class="table-responsive">
+		<table class="table">
+			<thead>
+				<tr>
+					<th></th>
+					<th><?= $this->Label->get('Import.row_number'); ?></th>
+					<?php 
+					foreach ($attr['results']['header'] as $col):
+						echo sprintf('<th>%s</th>', $col);
+					endforeach;
+					?>
+					<th><?= $this->Label->get('Import.error_message'); ?></th>
+				</tr>
+			</thead>
+			
+			<tbody>
 				<?php 
-				foreach ($attr['results']['header'] as $col):
-					echo sprintf('<th>%s</th>', $col);
+				foreach ($attr['results']['dataFailed'] as $row):
+				?>
+				<tr>
+					<td class="tooltip-red">
+						<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
+					</td>
+					<td>
+						<?= $row['row_number']; ?>
+					</td>
+					<?php 
+					foreach ($row['data'] as $col):
+						echo sprintf('<td>%s</td>', $col);
+					endforeach;
+					?>
+				</tr>
+				<?php 
 				endforeach;
 				?>
-				<th><?= $this->Label->get('Import.error_message'); ?></th>
-			</tr>
-		</thead>
-		
-		<tbody>
-			<?php 
-			foreach ($attr['results']['dataFailed'] as $row):
-			?>
-			<tr>
-				<td class="tooltip-red">
-					<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
-				</td>
-				<td>
-					<?= $row['row_number']; ?>
-				</td>
-				<?php 
-				foreach ($row['data'] as $col):
-					echo sprintf('<td>%s</td>', $col);
-				endforeach;
-				?>
-			</tr>
-			<?php 
-			endforeach;
-			?>
-		</tbody>
-	</table>
+			</tbody>
+		</table>
+	</div>
 </div>
 
 <div class="form-buttons">
