@@ -21,10 +21,33 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('area_administrative_level_id');
+		$this->ControllerAction->field('is_main_country', ['visible' => false]);
 		$this->ControllerAction->field('name');
-
+		$count = $this->find()->where([
+				'OR' => [
+					[$this->aliasField('lft').' IS NULL'],
+					[$this->aliasField('rght').' IS NULL']
+				]
+			])
+			->count();
+		if ($count) {
+			$this->rebuildLftRght();
+		}
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
+	}
+
+
+	public function rebuildLftRght() {
+		$this->updateAll(
+			['parent_id' => null],
+			['parent_id' => -1]
+		);
+		$this->recover();
+		$this->updateAll(
+			['parent_id' => -1],
+			['parent_id IS NULL']
+		);
 	}
 
 	public function afterAction(Event $event) {
@@ -67,6 +90,15 @@ class AreaAdministrativesTable extends AppTable {
 				return $this->controller->redirect($action);
 			}
 		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
+		$this->ControllerAction->field('is_main_country');
+	}
+
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('is_main_country');
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -115,6 +147,32 @@ class AreaAdministrativesTable extends AppTable {
 			'index',
 			'parent' => $entity->id
 		]);
+	}
+
+	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request) {
+		if ($action=='add') {
+			$attr['visible'] = true;
+			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+			if ($areaAdministrativeLevelId == 1) {
+				$attr['options'] = $this->getSelectOptions('general.yesno');
+				return $attr;
+			} else {
+				$attr['value'] = 0;
+				$attr['type'] = 'hidden';
+				return $attr;
+			}
+		} elseif ($action == 'edit') {
+			$attr['visible'] = true;
+			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+			if ($areaAdministrativeLevelId == 1) {
+				$attr['options'] = $this->getSelectOptions('general.yesno');
+				return $attr;
+			} else {
+				$attr['value'] = 0;
+				$attr['type'] = 'hidden';
+				return $attr;
+			}
+		}
 	}
 
 	public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request) {
@@ -172,6 +230,9 @@ class AreaAdministrativesTable extends AppTable {
 
 					$attr['options'] = $levelOptions;
 				}
+			}
+			if (!isset($request->data[$this->alias()]['area_administrative_level_id'])) {
+				$request->data[$this->alias()]['area_administrative_level_id'] = key($attr['options']);
 			}
 		}
 

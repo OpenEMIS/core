@@ -3,10 +3,10 @@ namespace Training\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class TrainingNeedCategoriesTable extends AppTable {
+class TrainingAchievementTypesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
-		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'training_need_category_id']);
+		$this->hasMany('Achievements', ['className' => 'Staff.Achievements', 'foreignKey' => 'training_achievement_type_id']);
 	}
 }

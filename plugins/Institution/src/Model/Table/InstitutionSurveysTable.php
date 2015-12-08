@@ -54,6 +54,7 @@ class InstitutionSurveysTable extends AppTable {
 		]);
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('Import.ImportLink');
 	}
 
 	public function implementedEvents() {
