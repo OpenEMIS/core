@@ -16,15 +16,21 @@ class DirectoriesController extends AppController {
 
 		$this->ControllerAction->model('Directory.Directories');
 		$this->ControllerAction->models = [
+			// Users
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Comments' 			=> ['className' => 'User.Comments'],
-			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
-			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
-			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
+
+			// Student
+
+			// 'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
+			// 'Awards' 			=> ['className' => 'User.Awards'],
+			// 'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
+
+			// Staff
 		];
 
 		$this->loadComponent('User.Image');
@@ -86,8 +92,8 @@ class DirectoriesController extends AppController {
 				}
 			}
 
-			if ($session->check('Student.Students.name')) {
-				$header = $session->read('Student.Students.name');
+			if ($session->check('Directory.Directories.name')) {
+				$header = $session->read('Directory.Directories.name');
 			}
 
 			$alias = $model->alias;
@@ -117,7 +123,7 @@ class DirectoriesController extends AppController {
 					 */
 					if (!$exists) {
 						$this->Alert->warning('general.notExists');
-						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
+						return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
 					}
 				}
 			}
@@ -129,29 +135,75 @@ class DirectoriesController extends AppController {
 			} else {
 				$this->Alert->warning('general.notExists');
 				$event->stopPropagation();
-				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
 			}
 		}
 	}
 
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'text' => __('Overview')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			],
+			'Identities' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
+				'text' => __('Identities')	
+			],
+			'Nationalities' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
+				'text' => __('Nationalities')	
+			],
+			'Languages' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
+				'text' => __('Languages')	
+			],
+			'Comments' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments', $id],
+				'text' => __('Comments')	
+			],
+			'Attachments' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments', $id],
+				'text' => __('Attachments')	
+			],
+			'History' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History', $id],
+				'text' => __('History')	
+			]
+		];
+
+		return $tabElements;
+	}
+
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-		
-		// if ($model->alias() != 'Students') {
-		// 	if ($session->check('Student.Students.id')) {
-		// 		if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
-		// 			$userId = $session->read('Student.Students.id');
-		// 			$query->where([$model->aliasField('security_user_id') => $userId]);
-		// 		} else if ($model->hasField('student_id')) {
-		// 			$userId = $session->read('Student.Students.id');
-		// 			$query->where([$model->aliasField('student_id') => $userId]);
-		// 		}
-		// 	} else {
-		// 		$this->Alert->warning('general.noData');
-		// 		$event->stopPropagation();
-		// 		return $this->redirect(['action' => 'index']);
-		// 	}
-		// }
+		if ($model->alias() != 'Directories') {
+			if ($session->check('Directory.Directories.id')) {
+				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
+					$userId = $session->read('Directory.Directories.id');
+					$query->where([$model->aliasField('security_user_id') => $userId]);
+				} else if ($model->hasField('student_id')) {
+					$userId = $session->read('Directory.Directories.id');
+					$query->where([$model->aliasField('student_id') => $userId]);
+				} else if ($model->hasField('staff_id')) {
+					$userId = $session->read('Directory.Directories.id');
+					$query->where([$model->aliasField('staff_id') => $userId]);
+				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
+			}
+		}
 	}
 
 	public function excel($id=0) {

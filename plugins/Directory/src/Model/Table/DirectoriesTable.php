@@ -44,6 +44,27 @@ class DirectoriesTable extends AppTable {
 		$this->ControllerAction->field('institution', ['order' => 50]);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Directory.Directories.id', $entity->id);
+		$this->Session->write('Directory.Directories.name', $entity->name);
+		$this->setupTabElements($entity);
+	}
+
+	private function setupTabElements($entity) {
+		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+
+		$options = [
+			// 'userRole' => 'Student',
+			// 'action' => $this->action,
+			// 'id' => $id,
+			// 'userId' => $entity->id
+		];
+
+		$tabElements = $this->controller->getUserTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
 	public function onGetInstitution(Event $event, Entity $entity) {
 		$userId = $entity->id;
 		$isStudent = $entity->is_student;
