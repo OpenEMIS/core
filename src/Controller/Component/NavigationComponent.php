@@ -114,8 +114,10 @@ class NavigationComponent extends Component {
 		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
-		}	elseif ($controller->name == 'Guardians' && $action != 'index') {
+		} elseif ($controller->name == 'Guardians' && $action != 'index') {
 			$navigations = $this->appendNavigation('Guardians.index', $navigations, $this->getGuardianNavigation());
+		} elseif ($controller->name == 'Directories' && $action != 'index') {
+			$navigations = $this->appendNavigation('Directories.index', $navigations, $this->getDirectoryNavigation());
 		}
 
 		$navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
@@ -160,8 +162,7 @@ class NavigationComponent extends Component {
 			'Directories.index' => [
 				'title' => 'Directory', 
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
-				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.view', 'Directories.edit'],
+				'params' => ['plugin' => 'Directory']
 			],
 
 			'Reports' => [
@@ -401,6 +402,30 @@ class NavigationComponent extends Component {
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
 				'selected' => ['Students.StudentFees']],
+		];
+		return $navigation;
+	}
+
+	public function getDirectoryNavigation() {
+		$navigation = [
+			'Directories.view' => [
+				'title' => 'General', 
+				'parent' => 'Directories.index', 
+				'params' => ['plugin' => 'Directory'], 
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 'Directories.History']
+			],
+			'Students.Programmes.index' => [
+				'title' => 'Academic', 
+				'parent' => 'Institutions.Students.index', 
+				'params' => ['plugin' => 'Student'], 
+				'selected' => []
+			],
+			'Students.BankAccounts' => [
+				'title' => 'Finance', 
+				'parent' => 'Institutions.Students.index',
+				'params' => ['plugin' => 'Student'],
+				'selected' => ['Students.StudentFees']
+			],
 		];
 		return $navigation;
 	}
