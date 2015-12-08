@@ -137,11 +137,35 @@ class GuardiansController extends AppController {
 		$tabElements = [
 			$this->name => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
-				'text' => __('Details')
+				'text' => __('Overview')
 			],
 			'Accounts' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
 				'text' => __('Account')	
+			],
+			'Identities' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
+				'text' => __('Identities')	
+			],
+			'Nationalities' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
+				'text' => __('Nationalities')	
+			],
+			'Languages' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
+				'text' => __('Languages')	
+			],
+			'Comments' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments', $id],
+				'text' => __('Comments')	
+			],
+			'Attachments' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments', $id],
+				'text' => __('Attachments')	
+			],
+			'History' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History', $id],
+				'text' => __('History')	
 			]
 		];
 
