@@ -38,4 +38,55 @@ class DirectoriesTable extends AppTable {
 
 		// $this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
+
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+		$this->fields = [];
+		$this->ControllerAction->field('institution', ['order' => 50]);
+	}
+
+	public function onGetInstitution(Event $event, Entity $entity) {
+		$userId = $entity->id;
+		$isStudent = $entity->is_student;
+		$isStaff = $entity->is_staff;
+		$isGuardian = $entity->is_guardian;
+
+		$studentInstitutions = [];
+		if ($isStudent) {
+			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
+			$studentInstitutions = $InstitutionStudentTable->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'name'
+				])
+				->matching('StudentStatuses')
+				->matching('Institutions')
+				->where([
+					$InstitutionStudentTable->aliasField('student_id') => $userId,
+					'StudentStatuses.code' => 'CURRENT'
+				])
+				->distinct(['id'])
+				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name'])
+				->toArray();
+		}
+
+		$staffInstitutions = [];
+		if ($isStaff) {
+			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+			$staffInstitutions = $InstitutionStaffTable->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'name'
+				])
+				->matching('Institutions')
+				->select(['Institutions.name'])
+				->where([$InstitutionStaffTable->aliasField('security_user_id') => $userId])
+				->andWhere([$InstitutionStaffTable->aliasField('end_date').' IS NULL'])
+				->select(['id' => 'Institutions.id', 'name' => 'Institutions.name'])
+				->toArray();
+		}
+
+		$combineArray = array_merge($studentInstitutions, $staffInstitutions);
+
+		$value = implode('<BR>', $combineArray);
+
+		return $value;
+	}
 }

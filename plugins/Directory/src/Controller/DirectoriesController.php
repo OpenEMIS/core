@@ -36,27 +36,26 @@ class DirectoriesController extends AppController {
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
 		$header = __('Directory');
+		$session = $this->request->session();
+		$action = $this->request->params['action'];
+		if ($action == 'index') {
+			$session->delete('Directory.Directories.id');
+			$session->delete('Directory.Directories.name');
+		} elseif ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
+			$id = 0;
+			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
+				$id = $this->request->pass[0];
+			} else if ($session->check('Directory.Directories.id')) {
+				$id = $session->read('Directory.Directories.id');
+			}
+			if (!empty($id)) {
+				$entity = $this->Directories->get($id);
+				$name = $entity->name;
+				$header = $name . ' - ' . __('Overview');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $id]);
+			}
+		}
 
-		// if ($action == 'index') {
-		// 	$session->delete('Student.Students.id');
-		// 	$session->delete('Student.Students.name');
-		// } else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
-		// 	// add the student name to the header
-		// 	$id = 0;
-		// 	if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-		// 		$id = $this->request->pass[0];
-		// 	} else if ($session->check('Student.Students.id')) {
-		// 		$id = $session->read('Student.Students.id');
-		// 	}
-
-		// 	// if (!empty($id)) {
-		// 	// 	$entity = $this->Students->get($id);
-		// 	// 	$name = $entity->name;
-		// 	// 	$header = $name . ' - ' . __('Overview');
-		// 	// 	$studentId = $session->read('Institution.Students.id');
-		// 	// 	$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
-		// 	// }
-		// }
 		$this->set('contentHeader', $header);
 	}
 
@@ -64,11 +63,10 @@ class DirectoriesController extends AppController {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
-		
 		$session = $this->request->session();
-		if ($session->check('Student.Students.id')) {
+		if ($session->check('Directory.Directories.id')) {
 			$header = '';
-			$userId = $session->read('Student.Students.id');
+			$userId = $session->read('Directory.Directories.id');
 
 			if (!$this->AccessControl->isAdmin()) {
 				$institutionIds = $session->read('AccessControl.Institutions.ids');
