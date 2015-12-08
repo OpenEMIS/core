@@ -283,21 +283,8 @@ class StudentTransferTable extends AppTable {
     	$nextGradeOptions = [];
 
     	if (!is_null($selectedGrade)) {
-	   		$currentGrade = $this->EducationGrades->get($selectedGrade);
 
-			$nextGradeOptions = $this->EducationGrades
-				->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-				->find('visible')
-				->where([
-					$this->EducationGrades->aliasField('education_programme_id') => $currentGrade->education_programme_id,
-					$this->EducationGrades->aliasField('order >') => $currentGrade->order
-				])
-				->toArray();
-
-			$NextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
-			$gradeOptions = $NextProgrammes->getNextGradeList($currentGrade->education_programme_id);
-
-			$nextGradeOptions = $nextGradeOptions + $gradeOptions;
+			$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade);
 
 			$nextGradeId = $this->queryString('next_education_grade_id', $nextGradeOptions);
 
