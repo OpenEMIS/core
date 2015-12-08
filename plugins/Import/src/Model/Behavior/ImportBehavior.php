@@ -74,9 +74,11 @@ class ImportBehavior extends Behavior {
 	private $_fileTypesMap = [
 		// 'csv' 	=> 'text/plain',
 		// 'csv' 	=> 'text/csv',
-		'xls' 	=> 'application/vnd.ms-excel',
-		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		// 'zip' 	=> 'application/zip',
+		'xls' 	=> ['application/vnd.ms-excel', 'application/vnd.ms-office'],
+		// Use for openoffice .xls format
+		'xlsx' 	=> ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+		'ods' 	=> ['application/vnd.oasis.opendocument.spreadsheet'],
+		'zip' 	=> ['application/zip']
 	];
 	public $institutionId = false;
 
@@ -141,11 +143,17 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['import']['url'][0] = 'template';
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
-
+				if ($buttons['index']['url']['action']=='ImportInstitutionSurveys') {
+					$toolbarButtons['import']['url'][1] = $buttons['add']['url'][1];
+				}
+				
 				break;
 		}
 		if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
 			$back = str_replace('Import', '', $this->_table->alias());
+			if (!array_key_exists($back, $this->_table->ControllerAction->models)) {
+				$back = str_replace('Institution', '', $back);
+			}
 			$toolbarButtons['back']['url']['action'] = $back;
 		} else {
 			$toolbarButtons['back']['url']['action'] = 'index';
@@ -205,42 +213,67 @@ class ImportBehavior extends Behavior {
 		$options['validate'] = false;
 		if (!array_key_exists($this->_table->alias(), $data)) {
 			$options['validate'] = true;
+			return $event->response;
 		}
 		if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
 			$options['validate'] = true;
+			return $event->response;
 		}
 		if (empty($data[$this->_table->alias()]['select_file'])) {
 			$options['validate'] = true;
+			return $event->response;
 		}
 		if ($data[$this->_table->alias()]['select_file']['error']==4) {
+			$options['validate'] = true;
+			return $event->response;
+		}
+		if ($data[$this->_table->alias()]['select_file']['error']>0) {
+			$options['validate'] = true;
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
+			return $event->response;
+		}
+		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
+			$options['validate'] = true;
+		} 
+		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
+			$options['validate'] = true;
+		} 
+		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
 		}
 
 		$fileObj = $data[$this->_table->alias()]['select_file'];
 		$supportedFormats = $this->_fileTypesMap;
+
 		$finfo = finfo_open(FILEINFO_MIME_TYPE);
 		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
 		finfo_close($finfo);
-		$model = $this->_table;
-
-		if (!in_array($fileFormat, $supportedFormats)) {
+		$formatFound = false;
+		foreach ($supportedFormats as $eachformat) {
+			if (in_array($fileFormat, $eachformat)) {
+				$formatFound = true;
+			} 
+		}
+		if (!$formatFound) {
 			if (!empty($fileFormat)) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')]);				
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
+				$options['validate'] = true;
+			}
+		}				
+
+		$fileExt = $fileObj['name'];
+		$fileExt = explode('.', $fileExt);
+		$fileExt = $fileExt[count($fileExt)-1];
+		if (!array_key_exists($fileExt, $supportedFormats)) {
+			if (!empty($fileFormat)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
 				$options['validate'] = true;
 			}
 		} 
-		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')]);
-			$options['validate'] = true;
-		} 
-		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')]);
-			$options['validate'] = true;
-		} 
-		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')]);
-			$options['validate'] = true;
-		}
+
 	}
 
 	/**
@@ -295,14 +328,14 @@ class ImportBehavior extends Behavior {
 			foreach ($worksheets as $sheet) {
 				$highestRow = $sheet->getHighestRow();
 				if ($highestRow > $maxRows) {
-					$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')]);
+					$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
 					return false;
 				}
 
 				for ($row = 1; $row <= $highestRow; ++$row) {
 					if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
 						if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-							$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')]);
+							$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
 							return false;
 						}
 						continue;
@@ -481,7 +514,8 @@ class ImportBehavior extends Behavior {
 
 		$writer = new \XLSXWriter();
 		
-		$header = $this->getHeader();
+		$mapping = $this->getMapping();
+		$header = $this->getHeader($mapping);
 		$writer->writeSheetRow(__('Data'), array_values($header));
 		
 		$codesData = $this->excelGetCodesData($this->_table);
@@ -543,7 +577,7 @@ class ImportBehavior extends Behavior {
 	 * @param  integer $row          Row number
 	 * @return boolean               the result to be return as true or false
 	 */
-	protected function checkRowCells($sheet, $totalColumns, $row) {
+	public function checkRowCells($sheet, $totalColumns, $row) {
 		$cellsState = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
@@ -566,7 +600,7 @@ class ImportBehavior extends Behavior {
 	 * @param  integer 		$row          	Row number
 	 * @return boolean               		the result to be return as true or false
 	 */
-	protected function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
+	public function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
 		$cellsValue = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
@@ -575,7 +609,7 @@ class ImportBehavior extends Behavior {
 		return $header === $cellsValue;
 	}
 	
-	protected function getMapping() {
+	public function getMapping() {
 		$model = $this->_table;
 		$mapping = $model->find('all')
 			->where([
@@ -588,11 +622,11 @@ class ImportBehavior extends Behavior {
 	
 	protected function getHeader($mapping=[]) {
 		$model = $this->_table;
-		$header = [];
 		if (empty($mapping)) {
 			$mapping = $this->getMapping($model);
 		}
 		
+		$header = [];
 		foreach ($mapping as $key => $value) {
 			$column = $value->column_name;
 			$label = $this->getExcelLabel($value->model, $column);
@@ -646,7 +680,7 @@ class ImportBehavior extends Behavior {
 		return $lookup;
 	}
 
-	protected function excelGetCodesData(Table $model) {
+	public function excelGetCodesData(Table $model) {
 		$mapping = $model->find('all')
 			->where([
 				$model->aliasField('model') => $this->config('model'),
@@ -692,7 +726,7 @@ class ImportBehavior extends Behavior {
 		return $data;
 	}
 	
-	protected function prepareDownload() {
+	public function prepareDownload() {
 		$folder = WWW_ROOT . $this->rootFolder;
 		if (!file_exists($folder)) {
 			umask(0);
@@ -720,7 +754,7 @@ class ImportBehavior extends Behavior {
 		return $folder;
 	}
 	
-	protected function performDownload($excelFile) {
+	public function performDownload($excelFile) {
 		$folder = WWW_ROOT . $this->rootFolder;
 		$excelPath = $folder . DS . $excelFile;
 		$filename = basename($excelPath);

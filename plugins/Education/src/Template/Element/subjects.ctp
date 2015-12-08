@@ -32,7 +32,6 @@
 				]);
 			?>
 		</div>
-	</div>
 
 	<div class="table-wrapper">
 		<div class="table-responsive">
