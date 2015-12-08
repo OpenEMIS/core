@@ -23,7 +23,7 @@ class DirectoriesController extends AppController {
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Comments' 			=> ['className' => 'User.Comments'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
-
+			'Accounts'			=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			// Student
 
 			// 'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
@@ -47,6 +47,14 @@ class DirectoriesController extends AppController {
 		if ($action == 'index') {
 			$session->delete('Directory.Directories.id');
 			$session->delete('Directory.Directories.name');
+			$session->delete('Directory.Directories.is_student');
+			$session->delete('Directory.Directories.is_staff');
+			$session->delete('Directory.Directories.is_guardian');
+			$session->delete('Directory.Directories.reload');
+			$session->delete('Staff.Staff.id');
+			$session->delete('Staff.Staff.name');
+			$session->delete('Student.Students.id');
+			$session->delete('Student.Students.name');
 		} elseif ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {

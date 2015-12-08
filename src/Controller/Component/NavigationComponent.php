@@ -118,6 +118,26 @@ class NavigationComponent extends Component {
 			$navigations = $this->appendNavigation('Guardians.index', $navigations, $this->getGuardianNavigation());
 		} elseif ($controller->name == 'Directories' && $action != 'index') {
 			$navigations = $this->appendNavigation('Directories.index', $navigations, $this->getDirectoryNavigation());
+
+			$session = $this->request->session();
+			$isStudent = $session->read('Directory.Directories.is_student');
+			$isStaff = $session->read('Directory.Directories.is_staff');
+			$isGuardian = $session->read('Directory.Directories.is_guardian');
+
+			if ($isGuardian) {
+				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+				$session->write('Directory.Directories.reload', true);
+			}
+
+			if ($isStudent) {
+				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+				$session->write('Directory.Directories.reload', true);
+			}
+
+			if ($isStaff) {
+				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+				$session->write('Directory.Directories.reload', true);
+			}
 		}
 
 		$navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
@@ -406,30 +426,6 @@ class NavigationComponent extends Component {
 		return $navigation;
 	}
 
-	public function getDirectoryNavigation() {
-		$navigation = [
-			'Directories.view' => [
-				'title' => 'General', 
-				'parent' => 'Directories.index', 
-				'params' => ['plugin' => 'Directory'], 
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 'Directories.History']
-			],
-			'Students.Programmes.index' => [
-				'title' => 'Academic', 
-				'parent' => 'Institutions.Students.index', 
-				'params' => ['plugin' => 'Student'], 
-				'selected' => []
-			],
-			'Students.BankAccounts' => [
-				'title' => 'Finance', 
-				'parent' => 'Institutions.Students.index',
-				'params' => ['plugin' => 'Student'],
-				'selected' => ['Students.StudentFees']
-			],
-		];
-		return $navigation;
-	}
-
 	public function getInstitutionStaffNavigation() {
 		$session = $this->request->session();
 		$id = $session->read('Staff.Staff.id');
@@ -480,6 +476,60 @@ class NavigationComponent extends Component {
 				'parent' => 'Guardians.index', 
 				'params' => ['plugin' => 'Guardian'], 
 				'selected' => ['Guardians.edit', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 'Guardians.History', 'Guardians.Nationalities']
+			],
+		];
+		return $navigation;
+	}
+
+	public function getDirectoryNavigation() {
+		$navigation = [
+			'Directories.view' => [
+				'title' => 'General', 
+				'parent' => 'Directories.index', 
+				'params' => ['plugin' => 'Directory'], 
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 'Directories.History']
+			]
+		];
+		return $navigation;
+	}
+
+	public function getDirectoryGuardianNavigation() {
+		$session = $this->request->session();
+		$id = $session->read('Guardian.Guardians.id');
+
+		$navigation = [
+			'Directories.Guardians' => [
+				'title' => 'Guardian', 
+				'parent' => 'Directories.index', 
+				'params' => ['plugin' => 'Directory', $id],
+			],
+		];
+		return $navigation;
+	}
+
+	public function getDirectoryStaffNavigation() {
+		$session = $this->request->session();
+		$id = $session->read('Guardian.Guardians.id');
+
+		$navigation = [
+			'Directories.Staff' => [
+				'title' => 'Staff', 
+				'parent' => 'Directories.index', 
+				'params' => ['plugin' => 'Directory', $id],
+			],
+		];
+		return $navigation;
+	}
+
+	public function getDirectoryStudentNavigation() {
+		$session = $this->request->session();
+		$id = $session->read('Guardian.Guardians.id');
+
+		$navigation = [
+			'Directories.Students' => [
+				'title' => 'Student', 
+				'parent' => 'Directories.index', 
+				'params' => ['plugin' => 'Directory', $id],
 			],
 		];
 		return $navigation;
