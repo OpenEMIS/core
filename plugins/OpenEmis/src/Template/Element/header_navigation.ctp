@@ -4,6 +4,7 @@ $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User
 $lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
 $userId = $session->check('Auth.User.id') ? $session->read('Auth.User.id') : '';
 $homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
+$supportUrl = $session->check('System.help') ? $session->read('System.help') : 'https://support.openemis.org/core/';
 
 $dropdown = [
 	'About' => [
@@ -15,8 +16,9 @@ $dropdown = [
 		'icon' => 'fa-cog'
 	],
 	'Help' => [
-		'url' => 'https://support.openemis.org/core/',
-		'icon' => 'fa-question-circle'
+		'url' => $supportUrl,
+		'icon' => 'fa-question-circle',
+		'target' => '_blank'
 	],
 	'_divider',
 	'Logout' => [
@@ -60,8 +62,9 @@ if ($session->check('System.User.roles')) {
 				<?php
 				foreach ($dropdown as $name => $attr) {
 					if ($name != '_divider') {
+						$target = isset($attr['target']) ? $attr['target'] : '_self';
 						echo '<li>';
-						echo '<a href="' . $this->Url->build($attr['url']) . '">';
+						echo '<a href="' . $this->Url->build($attr['url']) . '" target="' . $target. '">';
 						echo '<i class="fa ' . $attr['icon'] . '"></i>';
 						echo '<span> ' . __($name) . '</span>';
 						echo '</a>';

@@ -171,7 +171,7 @@ class TrainingCoursesTable extends AppTable {
 				$excludes[$id] = $id;
 			}
 
-			$courseOptions = $this->controller->getCourseList(['excludes' => $excludes]);
+			$courseOptions = $this->Training->getCourseList(['excludes' => $excludes]);
 			$attr['options'] = $courseOptions;
 		}
 

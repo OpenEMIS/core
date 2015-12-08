@@ -487,6 +487,11 @@ class NavigationComponent extends Component {
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
 			],
+			'Reports.Audit' => [
+				'title' => 'Audit',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Report'],
+			],
 		];
 		return $navigation;
 	}
