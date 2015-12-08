@@ -12,7 +12,6 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use User\Model\Table\UsersTable AS BaseUsers;
 
 class UsersTable extends AppTable {
 	public function initialize(array $config) {
@@ -50,6 +49,12 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
+		$userId = $this->Auth->user('id');
+		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
+		}
+
 		$tabElements = $this->controller->getTabElements();
 
 		$this->controller->set('tabElements', $tabElements);
@@ -57,11 +62,6 @@ class UsersTable extends AppTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
-		$userId = $this->Auth->user('id');
-		if ($userId != $this->request->pass[0]) { // stop user from navigating to other profiles
-			$event->stopPropagation();
-			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
-		}
 		$this->ControllerAction->field('roles', [
 			'type' => 'role_table', 
 			'valueClass' => 'table-full-width',
@@ -173,7 +173,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return BaseUsers::setUserValidation($validator);
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function implementedEvents() {
@@ -185,18 +186,19 @@ class UsersTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
 		switch ($action) {
 			case 'view':
-				foreach ($toolbarButtons as $key => $value) {
-					if (!in_array($key, ['edit'])) {
-						unset($toolbarButtons[$key]);
-					}
+				if ($toolbarButtons->offsetExists('edit')) {
+					$toolbarButtons->exchangeArray(['edit' => $toolbarButtons['edit']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
 				}
+				
 				break;
 			
 			case 'edit':
-				foreach ($toolbarButtons as $key => $value) {
-					if (!in_array($key, ['back'])) {
-						unset($toolbarButtons[$key]);
-					}
+				if ($toolbarButtons->offsetExists('back')) {
+					$toolbarButtons->exchangeArray(['back' => $toolbarButtons['back']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
 				}
 				break;
 		}

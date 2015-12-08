@@ -57,15 +57,56 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
 	}
 
-	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id) {
+	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id, $displayCountry = 1) {
 		$this->getView()->layout('ajax');
 		$rootId = -1; // Root node
 
+		$condition = [];
+		$AccessControl = $this->AccessControl;
 		$Table = TableRegistry::get($tableName);	
-
 		$areaEntity = $Table->get($id);
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
+		$formError = $this->request->query('formerror');
+		if (!$displayCountry) {
+			if ($tableName == 'Area.AreaAdministratives') {
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
+				$condition[] = [
+					'OR' => [
+						[$Table->aliasField('is_main_country') => 1],
+						[$Table->aliasField('parent_id').' IS NOT ' => $worldId]
+					]
+				];
+			} 
+		}
+		
+		if (! $AccessControl->isAdmin()) {
+			if ($tableName == 'Area.Areas') {
+				$authorisedArea = $this->AccessControl->getAreasByUser();
+				$areaCondition = [];
+				$parentIds = [];
+				foreach ($authorisedArea as $area) {
+					$areaCondition[] = [
+						$Table->aliasField('lft').' >= ' => $area['lft'],
+						$Table->aliasField('rght').' <= ' => $area['rght']
+					];
+
+					// Find all parent ids
+					$parentIds = array_merge($parentIds, $Table
+						->find('path', ['for' => $area['area_id']])
+						->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'id'
+							])
+						->order([$Table->aliasField('lft')])
+						->toArray());
+				}
+				$areaCondition[] = [
+						$Table->aliasField('id').' IN' => $parentIds
+					];
+				$condition['OR'] = $areaCondition;
+			}
+		}
 
 		// Get the id of any one of the children
 		$children = $Table
@@ -93,6 +134,7 @@ class AreasController extends AppController
 				->find('list')
 				->where([$Table->aliasField('parent_id') => $parentId])
 				->order([$Table->aliasField('order')])
+				->where($condition)
 				->toArray();
 
 			switch($tableName){
@@ -118,7 +160,6 @@ class AreasController extends AppController
 			$obj->list = $list;
 			$count++;
 		}
-
-		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName'));
+		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName', 'formError', 'displayCountry'));
 	}
 }

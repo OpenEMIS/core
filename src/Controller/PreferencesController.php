@@ -1,7 +1,9 @@
 <?php
 namespace App\Controller;
 
+use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 
 class PreferencesController extends AppController {
 	public $activeObj = null;
@@ -68,12 +70,12 @@ class PreferencesController extends AppController {
 		return $tabElements;
 	}
 
-	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
+	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
 		if ($session->check($this->name.'.security_user_id')) {
 			if ($model->hasField('security_user_id')) {
-				$userId = $session->read($this->name.'.security_user_id');
+				$userId = $this->Auth->user('id');
 				$query->where([$model->aliasField('security_user_id') => $userId]);
 			}
 		} else {
