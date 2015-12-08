@@ -1,3 +1,31 @@
+var sheet = (function() {
+// Create the <style> tag
+    var style = document.createElement("style");
+
+    // Add a media (and/or media query) here if you'd like!
+    // style.setAttribute("media", "screen")
+    // style.setAttribute("media", "only screen and (max-width : 1024px)")
+
+    // WebKit hack :(
+    style.appendChild(document.createTextNode(""));
+
+    //addCSSRule(style.sheet, ".left-pane", "background-color: #FF0;", 0);
+
+    // Add the <style> element to the page
+    document.head.appendChild(style);
+
+    return style.sheet;
+})();
+
+pos = localStorage.lastHandlerPos;
+
+if(typeof pos == 'undefined'){
+    pos = window.innerWidth * 0.1;
+}
+// console.log(window.innerWidth);
+sheet.insertRule('.left-pane{width:'+ pos + 'px;}', 0); 
+
+
 angular.module('bgDirectives', [])
     .directive('bgSplitter', function() {
         return {

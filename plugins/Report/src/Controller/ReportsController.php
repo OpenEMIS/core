@@ -16,6 +16,7 @@ class ReportsController extends AppController {
 			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
+			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
 		];
 	}
 
@@ -60,6 +61,10 @@ class ReportsController extends AppController {
 		} elseif ($module == 'InstitutionRubrics') {
 			$options = [
 				'Report.InstitutionRubrics' => __('Rubrics')
+			];
+		} elseif ($module == 'Audit') {
+			$options = [
+				'Report.Audit' => __('Audit')
 			];
 		}
 		return $options;
