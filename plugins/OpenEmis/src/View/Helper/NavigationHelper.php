@@ -19,9 +19,16 @@ class NavigationHelper extends Helper {
 		$hasUL = false;
 		$in = false;
 		$closeUl = 0;
-		$closeLi = 0;
 		$parentNodes = [];
+		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
+		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
+		$class = 'nav-level-' . $level . ' collapse';
+		$html .= sprintf($ul, $index++, ($class.' in'), $level);
+		$controller = $this->request->params['controller'];
+		$action = $this->request->params['action'];
+		$pass = [];
 
+		// Build all the parent nodes
 		foreach ($navigations as $navigation) {
 			if (isset($navigation['parent'])) {
 				if (!in_array($navigation['parent'], $parentNodes)) {
@@ -29,21 +36,15 @@ class NavigationHelper extends Helper {
 				}
 			}
 		}
-		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
-		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
-		$class = 'nav-level-' . $level . ' collapse';		
-
-		$controller = $this->request->params['controller'];
-		$action = $this->request->params['action'];
-		$pass = [];
 		
+		// Set the pass variable
 		if (!empty($this->request->pass)) {
 			$pass = $this->request->pass;
 		} else {
 			$pass[0] = '';
 		}
 
-		// To find the path to the parent
+		// The URL name "Controller.Action.Model or Controller.Action"
 		$linkName = $controller.'.'.$action;
 		$controllerActionLink = $linkName;
 		if (!empty($pass[0])) {
@@ -57,12 +58,10 @@ class NavigationHelper extends Helper {
 			$this->getPath($controllerActionLink, $navigations, $path);
 		}
 		
-		$html .= sprintf($ul, $index++, ($class.' in'), $level);
 		foreach ($navigations as $key => $value) {
-			// Root parent
+			// Root Node
 			if (!isset($value['parent'])) {
-				$html .= $this->closeUlTag($closeUl, $closeLi, true);
-				$closeLi++;
+				$html .= $this->closeUlTag($closeUl, true);
 				$level = 2;
 				$parentStack = [];
 				array_push($parentStack, $key);
@@ -78,7 +77,7 @@ class NavigationHelper extends Helper {
 					$parentKey = array_search($value['parent'], $parentStack);
 					while (count($parentStack) > ($parentKey + 1)) {
 						array_pop($parentStack);
-						$html .= $this->closeUlTag($closeUl, $closeLi);
+						$html .= $this->closeUlTag($closeUl);
 						$level--;
 					}
 				} 
@@ -115,26 +114,24 @@ class NavigationHelper extends Helper {
 			else {
 				// If the root set the has unorder list flag
 				if ($hasUL) {
+					$class = 'nav-level-' . $level . ' collapse';
 					if ($in) {
-						$class = 'nav-level-' . $level . ' collapse in';
-						$html .= sprintf($ul, $index++, $class, $level++);
+						$html .= sprintf($ul, $index++, $class.' in', $level++);
 						$in = false;
 					} else {
-						$class = 'nav-level-' . $level . ' collapse';
 						$html .= sprintf($ul, $index++, $class, $level++);
 					}
 					$hasUL = false;
 					$closeUl++;
 				}
-				
-				$closeLi++;
 			}
-			$aClass = 'panel-heading';
 
+			$aClass = 'panel-heading';
 			// If the current link is the link then collapse the arrow, or if the key is not in the same path collapse the arrow
 			if (!in_array($key, $path) || $key == $linkName) {
 				$aClass .= ' collapsed';
-			} 
+			}
+
 			// If the value fall in the selected options
 			elseif (isset($value['selected'])) {
 				if (in_array($linkName, $value['selected']) || in_array($controllerActionLink, $value['selected'])) {
@@ -193,16 +190,17 @@ class NavigationHelper extends Helper {
 				$html .= $this->Html->link($name, $this->getLink($key, $params), $aOptions);
 			}
 		}
-
-		$html .= $this->closeUlTag($closeUl, $closeLi, true);
+		$html .= $this->closeUlTag($closeUl, true);
 		$html .= '</ul>';
 		return $html;
 	}
 
+	// Function to check if the children exist in the list of parent nodes array
 	private function hasChildren($parentKey, $parentNodes) {
 		return in_array($parentKey, $parentNodes);
 	}
 
+	// Function to get the path of the nodes in the navigation array
 	private function getPath($node, $navigationArray, array &$path) {
 		// If the array contains the node as the key
 		if (isset($navigationArray[$node])) {
@@ -232,6 +230,7 @@ class NavigationHelper extends Helper {
 		}
 	}
 
+	// Function to generate the url from the key array
 	private function getLink($controllerActionModelLink, $params = []) {
 		$url = ['plugin' => null, 'controller' => null, 'action' => null];
 		if (isset($params['plugin'])) {
@@ -256,13 +255,14 @@ class NavigationHelper extends Helper {
 		return $url;
 	}
 
-	public function closeUlTag(&$ulCounter, &$liCounter, $closeAll = false) {
+	// Function to close the <ul> tags of the html. If the closeAll is set to true,
+	// it will close all ul tags that are not close base on the counter
+	public function closeUlTag(&$ulCounter, $closeAll = false) {
 		$html = '';
 		if ($closeAll) {
 			for($i = $ulCounter; $i > 0; $i--) {
 				$html .= '</ul>';
 				// $html .= '</li>';
-				$liCounter--;
 			}
 			$ulCounter = 0;
 			return $html;
@@ -270,7 +270,6 @@ class NavigationHelper extends Helper {
 			$html .= '</ul>';
 			// $html .= '</li>';
 			$ulCounter--;
-			$liCounter--;
 			return $html;
 		}
 	}

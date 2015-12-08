@@ -34,9 +34,45 @@ class DirectoriesTable extends AppTable {
 		// 	'pages' => ['view']
 		// ]);
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);®
+	}
 
-		// $this->InstitutionStudent = TableRegistry::get('Institution.Students');
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+		}
+
+		// this part filters the list by institutions/areas granted to the group
+		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+			
+			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
+
+			$institutionStudents = $InstitutionStudentTable->find()
+				->where([
+					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$InstitutionIds.')',
+					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+				]);
+
+			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+
+			$institutionStaff = $InstitutionStaffTable->find()
+				->where([
+					$InstitutionStudentTable->aliasField('institution_site_id').' IN ('.$InstitutionIds.')',
+					$InstitutionStudentTable->aliasField('security_user_id').' = '.$this->aliasField('id')
+				]);
+
+			$query->where([
+					'OR' => [
+						['EXISTS ('.$institutionStaff->sql().')'],
+						['EXISTS ('.$institutionStudents->sql().')'],
+					]
+				])
+				->group([$this->aliasField('id')]);
+		}
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
@@ -47,6 +83,36 @@ class DirectoriesTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
+		$isStudent = $entity->is_student;
+		$isStaff = $entity->is_staff;
+		$isGuardian = $entity->is_guardian;
+		$isSet = false;
+
+		if ($isStudent) {
+			$this->Session->write('Directory.Directories.is_student', true);
+			$isSet = true;
+		}
+
+		if ($isStaff) {
+			$this->Session->write('Directory.Directories.is_staff', true);
+			$isSet = true;
+		}
+
+		if ($isGuardian) {
+			$this->Session->write('Directory.Directories.is_guardian', true);
+			$isSet = true;
+		}
+
+		// To make sure the navigation component has already read the set value
+		if ($isSet) {
+			$reload = $this->Session->read('Directory.Directories.reload');
+			if (!isset($reload)) {
+				$urlParams = $this->ControllerAction->url('view');
+				$event->stopPropagation();
+				return $this->controller->redirect($urlParams);
+			}
+		}
+
 		$this->setupTabElements($entity);
 	}
 
