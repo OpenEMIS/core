@@ -88,6 +88,11 @@ class BankAccountsTable extends AppTable {
 				$this->controller->set('tabElements', $tabElements);
 				$this->controller->set('selectedAction', $this->alias());
 				break;
+			case 'Directories':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
 		}
 	}
 

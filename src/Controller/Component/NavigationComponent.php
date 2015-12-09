@@ -475,7 +475,8 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Guardians.index', 
 				'params' => ['plugin' => 'Guardian'], 
-				'selected' => ['Guardians.edit', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 'Guardians.History', 'Guardians.Nationalities']
+				'selected' => ['Guardians.edit', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 
+					'Guardians.History', 'Guardians.Nationalities']
 			],
 		];
 		return $navigation;
@@ -487,7 +488,8 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 'Directories.History']
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
+					'Directories.History', 'Directories.Awards', 'Directories.SpecialNeeds']
 			]
 		];
 		return $navigation;
@@ -515,8 +517,14 @@ class NavigationComponent extends Component {
 			'Directories.Staff' => [
 				'title' => 'Staff', 
 				'parent' => 'Directories.index', 
-				'params' => ['plugin' => 'Directory', $id],
+				'link' => false,
 			],
+				'Directories.StaffBankAccount' => [
+					'title' => 'Finance',
+					'parent' => 'Directories.Staff',
+					'params' => ['plugin' => 'Directory'],
+					'selected' => ['Directories.StaffBankAccount', 'Directories.StaffSalaries']
+				],
 		];
 		return $navigation;
 	}
