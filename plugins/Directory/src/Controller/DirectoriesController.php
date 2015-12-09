@@ -17,18 +17,29 @@ class DirectoriesController extends AppController {
 		$this->ControllerAction->model('Directory.Directories');
 		$this->ControllerAction->models = [
 			// Users
-			'Contacts' 			=> ['className' => 'User.Contacts'],
-			'Identities' 		=> ['className' => 'User.Identities'],
-			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Languages' 		=> ['className' => 'User.UserLanguages'],
-			'Comments' 			=> ['className' => 'User.Comments'],
-			'Attachments' 		=> ['className' => 'User.Attachments'],
-			'Accounts'			=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
+			'Contacts' 				=> ['className' => 'User.Contacts'],
+			'Identities' 			=> ['className' => 'User.Identities'],
+			'Nationalities' 		=> ['className' => 'User.Nationalities'],
+			'Languages' 			=> ['className' => 'User.UserLanguages'],
+			'Comments' 				=> ['className' => 'User.Comments'],
+			'Attachments' 			=> ['className' => 'User.Attachments'],
+			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
+			'Awards' 				=> ['className' => 'User.Awards'],
 			// Student
 
 			// 'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
-			// 'Awards' 			=> ['className' => 'User.Awards'],
-			// 'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
+			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
+			'StudentProgrammes'		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
+			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
+			'StudentProgrammes' 	=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
+			'StudentClasses'		=> ['className' => 'Student.StudentSections', 'actions' => ['index', 'view']],
+			'StudentSubjects' 		=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
+			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+			'StudentResults' 		=> ['className' => 'Student.Results', 'actions' => ['index']],
+			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
+			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
+			'StudentHistory' 		=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
 
 			// Staff
 		];
@@ -164,27 +175,31 @@ class DirectoriesController extends AppController {
 				'text' => __('Account')	
 			],
 			'Identities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities'],
 				'text' => __('Identities')	
 			],
 			'Nationalities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities'],
 				'text' => __('Nationalities')	
 			],
 			'Languages' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages'],
 				'text' => __('Languages')	
 			],
 			'Comments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments'],
 				'text' => __('Comments')	
 			],
 			'Attachments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments'],
 				'text' => __('Attachments')	
 			],
+			'Awards' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Awards'],
+				'text' => __('Awards')
+			],
 			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History'],
 				'text' => __('History')	
 			]
 		];
@@ -223,5 +238,52 @@ class DirectoriesController extends AppController {
 		$this->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 		$this->Image->getUserImage($id);
+	}
+
+	public function getAcademicTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+		$studentTabElements = [
+			'Programmes' => ['text' => __('Programmes')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Results' => ['text' => __('Results')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index']);
+			$params = [$id];
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
+		return $tabElements;
+	}
+
+	public function getFinanceTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+		$studentTabElements = [
+			'StudentBankAccounts' => ['text' => __('Bank Accounts')],
+			'StudentFees' => ['text' => __('Fees')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			$params = [$id];
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
+		return $tabElements;
 	}
 }

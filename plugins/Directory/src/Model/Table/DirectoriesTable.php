@@ -87,7 +87,9 @@ class DirectoriesTable extends AppTable {
 		$isStaff = $entity->is_staff;
 		$isGuardian = $entity->is_guardian;
 		$isSet = false;
-
+		$this->Session->delete('Directory.Directories.is_student');
+		$this->Session->delete('Directory.Directories.is_staff');
+		$this->Session->delete('Directory.Directories.is_guardian');
 		if ($isStudent) {
 			$this->Session->write('Directory.Directories.is_student', true);
 			$isSet = true;
