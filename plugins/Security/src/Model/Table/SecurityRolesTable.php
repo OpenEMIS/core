@@ -167,7 +167,10 @@ class SecurityRolesTable extends AppTable {
 
 	public function indexAfterPaginate(Event $event, ResultSet $data) {
 		$securityRoles = $data->toArray();
-		$firstOrder = $securityRoles[0]['order'];
+		$firstOrder = 0;
+		if (!empty($securityRoles)) {
+			$firstOrder = $securityRoles[0]['order'] - 1;
+		}
 		$count = $firstOrder;
 		$this->Session->write($this->registryAlias().'.roleOrder', $count);
 	}
