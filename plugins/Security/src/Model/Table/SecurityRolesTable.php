@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -134,7 +135,6 @@ class SecurityRolesTable extends AppTable {
 			$query
 				->where([$this->aliasField('security_group_id') => 0]) // custom system defined roles
 				->orWhere([$this->aliasField('security_group_id') => -1]); // fixed system defined roles
-			
 			if (!is_null($userId)) {
 				$userRole = $GroupRoles
 				->find()
@@ -146,8 +146,7 @@ class SecurityRolesTable extends AppTable {
 				])
 				->first();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-				$count = $userRole['security_role']['order'];
-			}				
+			}		
 		} else {
 			$query
 				->where([$this->aliasField('security_group_id') => $selectedGroup]);
@@ -162,10 +161,14 @@ class SecurityRolesTable extends AppTable {
 				])
 				->first();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-				$count = $userRole['security_role']['order'];
 			}
 		}
+	}
 
+	public function indexAfterPaginate(Event $event, ResultSet $data) {
+		$securityRoles = $data->toArray();
+		$firstOrder = $securityRoles[0]['order'];
+		$count = $firstOrder;
 		$this->Session->write($this->registryAlias().'.roleOrder', $count);
 	}
 
