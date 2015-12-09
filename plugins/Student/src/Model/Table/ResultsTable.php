@@ -75,12 +75,11 @@ class ResultsTable extends AppTable {
 	private function setupTabElements() {
 		$tabElements = $this->controller->getAcademicTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$alias = $this->alias();
+		$this->controller->set('selectedAction', $alias);
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		if ($this->controller->name == 'Students') {
-			$this->setupTabElements();
-		}
+		$this->setupTabElements();
 	}
 }

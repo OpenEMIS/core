@@ -526,11 +526,30 @@ class NavigationComponent extends Component {
 		$id = $session->read('Guardian.Guardians.id');
 
 		$navigation = [
-			'Directories.Students' => [
+			'Directories.Student' => [
 				'title' => 'Student', 
 				'parent' => 'Directories.index', 
-				'params' => ['plugin' => 'Directory', $id],
+				'link' => false,
 			],
+				'Directories.StudentGuardians' => [
+					'title' => 'General',
+					'parent' => 'Directories.Student',
+					'params' => ['plugin' => 'Directory'],
+					'selected' => ['Directories.StudentGuardians', 'Directories.StudentSpecialNeeds', 'Directories.StudentHistory']
+				],
+				'Directories.StudentProgrammes.index' => [
+					'title' => 'Academic',
+					'parent' => 'Directories.Student',
+					'params' => ['plugin' => 'Directory'],
+					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSections', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours', 
+						'Directories.StudentResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
+				],
+				'Directories.StudentBankAccounts' => [
+					'title' => 'Finance', 
+					'parent' => 'Directories.Student',
+					'params' => ['plugin' => 'Directory'],
+					'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
+				],
 		];
 		return $navigation;
 	}

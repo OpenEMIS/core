@@ -55,12 +55,14 @@ class StudentSectionsTable extends AppTable {
 	private function setupTabElements() {
 		$tabElements = $this->controller->getAcademicTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Sections');
+		$alias = 'Sections';
+		if ($this->controller->name == 'Directories') {
+			$alias = 'Classes';	
+		}
+		$this->controller->set('selectedAction', $alias);
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		if ($this->controller->name == 'Students') {
-			$this->setupTabElements();
-		}
+		$this->setupTabElements();
 	}
 }
