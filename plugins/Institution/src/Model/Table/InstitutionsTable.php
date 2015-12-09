@@ -82,31 +82,20 @@ class InstitutionsTable extends AppTable  {
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institution.Institutions.id']);
-        $this->addBehavior('AdvanceSearch');
+        $this->addBehavior('AdvanceSearch', [
+        	'display_country' => false
+        ]);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
-        $this->addBehavior('Area.Areapicker');
+        $this->addBehavior('Area.Areapicker', [
+        	'display_country' => false
+        ]);
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
 
 	}
-
-	public function onExcelGenerate(Event $event, $writer, $settings) {
-		// pr($settings);
-		// $generate = function() { pr('dsa'); };
-		// return $generate;
-	}
-
-	public function onExcelBeforeQuery(Event $event, Query $query) {
-		// pr($this->Session->read($this->aliasField('id')));die;
-		// $query->where(['Institutions.id' => 2]);
-	}
-
-	// public function onExcelGetLabel(Event $event, $column) {
-	// 	return 'asd';
-	// }
 
 	public function validationDefault(Validator $validator) {
 		$validator
@@ -158,6 +147,9 @@ class InstitutionsTable extends AppTable  {
 					'ruleValidEmail' => [
 						'rule' => 'email'
 					]
+				])
+			->add('area_id', 'ruleAuthorisedArea', [
+					'rule' => 'checkAuthorisedArea'
 				])
 	        ;
 		return $validator;
@@ -213,7 +205,7 @@ class InstitutionsTable extends AppTable  {
 		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
         if ($entity->isNew()) {
-			$obj = $SecurityGroup->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
+			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
 			$securityGroup = $SecurityGroup->save($obj);
 			if ($securityGroup) {
 				// add the relationship of security group and institutions
@@ -237,7 +229,7 @@ class InstitutionsTable extends AppTable  {
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);
 				if (is_object($obj)) {
-					$data = ['name' => $entity->code . ' - ' . $entity->name];
+					$data = ['name' => $entity->name];
 					$obj = $SecurityGroup->patchEntity($obj, $data);
 					$securityGroup = $SecurityGroup->save($obj);
 					if (!$securityGroup) {
