@@ -25,10 +25,11 @@ class DirectoriesController extends AppController {
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'Awards' 				=> ['className' => 'User.Awards'],
+			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
+			
 			// Student
-
-			// 'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
 			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
+			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
 			'StudentProgrammes'		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
 			'StudentProgrammes' 	=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
@@ -42,6 +43,8 @@ class DirectoriesController extends AppController {
 			'StudentHistory' 		=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
 
 			// Staff
+			'StaffBankAccount'		=> ['className' => 'User.BankAccounts'],
+			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
 		];
 
 		$this->loadComponent('User.Image');
@@ -159,6 +162,40 @@ class DirectoriesController extends AppController {
 		}
 	}
 
+	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
+		$session = $this->request->session();
+		if ($model->alias() != 'Directories') {
+			if ($session->check('Directory.Directories.id')) {
+				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
+					$userId = $session->read('Directory.Directories.id');
+					$query->where([$model->aliasField('security_user_id') => $userId]);
+				} else if ($model->hasField('student_id')) {
+					$userId = $session->read('Directory.Directories.id');
+					$query->where([$model->aliasField('student_id') => $userId]);
+				} else if ($model->hasField('staff_id')) {
+					$userId = $session->read('Directory.Directories.id');
+					$query->where([$model->aliasField('staff_id') => $userId]);
+				}
+			} else {
+				$this->Alert->warning('general.noData');
+				$event->stopPropagation();
+				return $this->redirect(['action' => 'index']);
+			}
+		}
+	}
+
+	public function excel($id=0) {
+		$this->Students->excel($id);
+		$this->autoRender = false;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
+	}
+
+
 	public function getUserTabElements($options = []) {
 		$plugin = $this->plugin;
 		$name = $this->name;
@@ -198,46 +235,29 @@ class DirectoriesController extends AppController {
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Awards'],
 				'text' => __('Awards')
 			],
+			'SpecialNeeds' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'SpecialNeeds'],
+				'text' => __('Special Needs')
+			],
+		];
+		return $tabElements;
+	}
+
+	public function getStudentGeneralTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+		$tabElements = [
+			'Guardians' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentGuardians'],
+				'text' => __('Guardians')	
+			],
 			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentHistory'],
 				'text' => __('History')	
 			]
 		];
 
 		return $tabElements;
-	}
-
-	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
-		$session = $this->request->session();
-		if ($model->alias() != 'Directories') {
-			if ($session->check('Directory.Directories.id')) {
-				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
-					$userId = $session->read('Directory.Directories.id');
-					$query->where([$model->aliasField('security_user_id') => $userId]);
-				} else if ($model->hasField('student_id')) {
-					$userId = $session->read('Directory.Directories.id');
-					$query->where([$model->aliasField('student_id') => $userId]);
-				} else if ($model->hasField('staff_id')) {
-					$userId = $session->read('Directory.Directories.id');
-					$query->where([$model->aliasField('staff_id') => $userId]);
-				}
-			} else {
-				$this->Alert->warning('general.noData');
-				$event->stopPropagation();
-				return $this->redirect(['action' => 'index']);
-			}
-		}
-	}
-
-	public function excel($id=0) {
-		$this->Students->excel($id);
-		$this->autoRender = false;
-	}
-
-	public function getImage($id) {
-		$this->autoRender = false;
-		$this->ControllerAction->autoRender = false;
-		$this->Image->getUserImage($id);
 	}
 
 	public function getAcademicTabElements($options = []) {
@@ -269,20 +289,92 @@ class DirectoriesController extends AppController {
 	public function getFinanceTabElements($options = []) {
 		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
 		$id = (array_key_exists('id', $options))? $options['id']: 0;
-
+		$plugin = $this->plugin;
+		$name = $this->name;
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
-			'StudentBankAccounts' => ['text' => __('Bank Accounts')],
-			'StudentFees' => ['text' => __('Fees')],
+			'BankAccounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentBankAccounts'],
+				'text' => __('Bank Accounts')
+			],
+			'StudentFees' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentFees'],
+				'text' => __('Fees')
+			],
+		];
+		return $studentTabElements;
+	}
+
+	// For staff
+	public function getCareerTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Employments' => ['text' => __('Employments')],
+			'Positions' => ['text' => __('Positions')],
+			'Sections' => ['text' => __('Classes')],
+			'Classes' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Leaves' => ['text' => __('Leaves')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Awards' => ['text' => __('Awards')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getProfessionalDevelopmentTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Qualifications' => ['text' => __('Qualifications')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Memberships' => ['text' => __('Memberships')],
+			'Licenses' => ['text' => __('Licenses')],
+			'Trainings' => ['text' => __('Trainings')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getStaffFinanceTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'BankAccounts' => ['text' => __('Bank Accounts')],
+			'Salaries' => ['text' => __('Salaries')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getTrainingTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'TrainingResults' => ['text' => __('Training Results')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
 		}
 		return $tabElements;
 	}

@@ -103,11 +103,9 @@ class StudentFeesTable extends AppTable {
 	}
 
 	private function setupTabElements() {
-		if ($this->controller->name == 'Students') {
-			$tabElements = $this->controller->getFinanceTabElements();
-			$this->controller->set('tabElements', $tabElements);
-			$this->controller->set('selectedAction', $this->alias());
-		}
+		$tabElements = $this->controller->getFinanceTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function indexAfterAction(Event $event, $data) {
