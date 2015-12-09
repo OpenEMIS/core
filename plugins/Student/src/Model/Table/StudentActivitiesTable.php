@@ -18,17 +18,20 @@ class StudentActivitiesTable extends AppTable {
 		$options = [
 			'userRole' => '',
 		];
-
+		$tabElements = [];
 		switch ($this->controller->name) {
 			case 'Students':
 				$options['userRole'] = 'Students';
+				$tabElements = $this->controller->getUserTabElements($options);
 				break;
 			case 'Staff':
 				$options['userRole'] = 'Staff';
+				$tabElements = $this->controller->getUserTabElements($options);
+				break;
+			case 'Directories':
+				$tabElements = $this->controller->getStudentGeneralTabElements($options);
 				break;
 		}
-
-		$tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'History');
 	}

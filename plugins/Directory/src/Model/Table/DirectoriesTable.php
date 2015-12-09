@@ -92,16 +92,22 @@ class DirectoriesTable extends AppTable {
 		$this->Session->delete('Directory.Directories.is_guardian');
 		if ($isStudent) {
 			$this->Session->write('Directory.Directories.is_student', true);
+			$this->Session->write('Student.Students.id', $entity->id);
+			$this->Session->write('Student.Students.name', $entity->name);
 			$isSet = true;
 		}
 
 		if ($isStaff) {
 			$this->Session->write('Directory.Directories.is_staff', true);
+			$this->Session->write('Staff.Staff.id', $entity->id);
+			$this->Session->write('Staff.Staff.name', $entity->name);
 			$isSet = true;
 		}
 
 		if ($isGuardian) {
 			$this->Session->write('Directory.Directories.is_guardian', true);
+			$this->Session->write('Guardian.Guardians.id', $entity->id);
+			$this->Session->write('Guardian.Guardians.name', $entity->name);
 			$isSet = true;
 		}
 
