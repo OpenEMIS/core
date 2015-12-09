@@ -40,7 +40,13 @@ class StaffController extends AppController {
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
+			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+			'Achievements'		=> ['className' => 'Staff.Achievements']
 		];
+
+		$this->loadComponent('Training.Training');
+		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Staff');
 	}
@@ -173,5 +179,11 @@ class StaffController extends AppController {
 		];
 
 		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }

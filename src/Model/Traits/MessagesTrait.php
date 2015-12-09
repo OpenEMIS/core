@@ -199,6 +199,9 @@ trait MessagesTrait {
 			'section' => 'Class',
 			'noAccess' => 'You do not have access to this Class.'
 		],
+		'InstitutionRubrics' => [
+			'noRubrics' => 'No Available Rubrics'
+		],
 		'InstitutionRubricAnswers' => [
 			'rubric_template' => 'Rubric Template',
 			'rubric_section_id' => 'Section',
@@ -393,6 +396,17 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
+			'survey_not_found' => 'No identifiable survey found',
+			'no_answers' => 'No answers were found in the file imported.',
+		],
+		'TrainingSessions' => [
+			'trainer_type' => 'Type',
+			'internal_trainer' => 'Internal Trainer',
+			'external_trainer' => 'External Trainer'
+		],
+		'TrainingSessionResults' => [
+			'noResultTypes' => 'You need to configure Result Types under Training Course.',
+			'noTrainees' => 'No Available Trainees'
 		],
 
 		// Validation Messages
@@ -415,10 +429,13 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
+				], 
+				'area_id' => [
+					'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
 				],
 				'code' => [
 					'ruleUnique' => 'Please enter a unique code'
-				]
+				],
 			],
 			
 			'InstitutionSiteSections' => [
@@ -549,7 +566,8 @@ trait MessagesTrait {
 				'username' => [
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
-					'ruleUnique' => 'This username is already in use.'
+					'ruleUnique' => 'This username is already in use.',
+					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -576,7 +594,8 @@ trait MessagesTrait {
 				'username' => [
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
-					'ruleUnique' => 'This username is already in use.'
+					'ruleUnique' => 'This username is already in use.',
+					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -704,6 +723,21 @@ trait MessagesTrait {
 				]
 			],
 			'Students' => [
+				'first_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid First Name'
+				],
+				'middle_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Middle Name'
+				],
+				'third_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Third Name'
+				],
+				'last_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Last Name'
+				],
+				'preferred_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Preferred Name'
+				],
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
@@ -736,6 +770,21 @@ trait MessagesTrait {
 				]
 			],
 			'Staff' => [
+				'first_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid First Name'
+				],
+				'middle_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Middle Name'
+				],
+				'third_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Third Name'
+				],
+				'last_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Last Name'
+				],
+				'preferred_name' => [
+					'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Preferred Name'
+				],
 				'openemis_no' => [
 					'ruleNotBlank' => 'Please enter a valid OpenEMIS ID',
 					'ruleUnique' => 'Please enter a unique OpenEMIS ID'
@@ -803,6 +852,22 @@ trait MessagesTrait {
 					'ruleCompareDate' => 'Issue Date cannot be later than Expiry Date',
 				]
 			],
+			'TrainingNeeds' => [
+				'course_code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				],
+				'course_id' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
+			],
+			'Achievements' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
 		],
 		'AcademicPeriod' => [
 			'AcademicPeriods' => [
@@ -835,6 +900,21 @@ trait MessagesTrait {
 		'Labels' => [
 			'code' => [
 				'ruleUnique' => 'This code already exists in the system'
+			]
+		],
+		'Training' => [
+			'TrainingCourses' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				]
+			],
+			'TrainingSessions' => [
+				'code' => [
+					'ruleUnique' => 'This code already exists in the system'
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
 			]
 		],
 		'Workflow' => [

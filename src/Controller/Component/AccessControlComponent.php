@@ -91,7 +91,7 @@ class AccessControlComponent extends Component {
 					$function = $entity->security_function;
 					if (is_null($lastModified) || (!is_null($lastModified) && $lastModified->lt($entity->modified))) {
 						$lastModified = $entity->modified;
-					}
+					} 
 
 					foreach ($operations as $op) { // for each operation in function
 						if (!empty($function->$op) && $entity->$op == 1) {
@@ -147,6 +147,13 @@ class AccessControlComponent extends Component {
 
 		if (empty($url)) {
 			$url = [$this->controller->name, $this->action];
+		}
+
+		// check if the action is excluded from permissions checking
+		$action = next($url);
+		$controller = reset($url);
+		if ($this->isIgnored($controller, $action)) {
+			return true;
 		}
 
 		$url = array_merge(['Permissions'], $url);
@@ -236,5 +243,32 @@ class AccessControlComponent extends Component {
 
 		$institutionIds = $institutionIds + $areaInstitutions;
 		return $institutionIds;
+	}
+
+	public function getAreasByUser($userId = null) {
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$groupIds = $SecurityGroupUsers
+		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
+		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+		->toArray();
+
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$areas = $SecurityGroupAreas
+		->find('all')
+		->distinct(['area_id'])
+		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
+		->innerJoin(['Areas' => 'areas'], [
+			'Areas.lft >= AreaAll.lft',
+			'Areas.rght <= AreaAll.rght'
+		])
+		->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
+		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
+		->toArray();
+
+		return $areas;
 	}
 }

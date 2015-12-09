@@ -30,6 +30,8 @@ class InstitutionRubricsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('Excel', ['excludes' => ['status', 'comment'], 'pages' => ['view']]);
+		$this->addBehavior('Report.RubricsReport');
 	}
 
 	public function beforeAction(Event $event) {
@@ -40,6 +42,18 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$templateId = $this->get($settings['id'])->rubric_template_id;
+		$sheets[] = [
+    		'name' => $this->alias(),
+			'table' => $this,
+			'query' => $this->find(),
+			'orientation' => 'portrait',
+			'templateId' => $templateId,
+    	];
+    	$event->stopPropagation();
 	}
 
 	public function onGetCustomRubricSectionsElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -177,14 +191,14 @@ class InstitutionRubricsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = $dateDisabled->format('d-m-Y');
+			$value = $this->formatDate($dateDisabled);
 		}
 
 		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {
