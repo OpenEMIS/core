@@ -38,6 +38,11 @@ class AwardsTable extends AppTable {
 				$this->controller->set('tabElements', $tabElements);
 				$this->controller->set('selectedAction', $this->alias());
 				break;
+			case 'Directories':
+				$tabElements = $this->controller->getUserTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
 		}
 	}
 

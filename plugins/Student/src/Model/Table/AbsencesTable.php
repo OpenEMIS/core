@@ -64,8 +64,6 @@ class AbsencesTable extends AppTable {
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		if ($this->controller->name == 'Students') {
-			$this->setupTabElements();
-		}
+		$this->setupTabElements();
 	}
 }

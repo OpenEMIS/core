@@ -7,10 +7,10 @@ class NavigationHelper extends Helper {
 	public $helpers = ['Html', 'Url'];
 
 	public function render($navigations) {
-		return $this->newSelect($navigations);
+		return $this->printNavigation($navigations);
 	}
 
-	public function newSelect($navigations) {
+	public function printNavigation($navigations) {
 		// Processing variables
 		$parentStack = [];
 		$html = '';
@@ -58,6 +58,7 @@ class NavigationHelper extends Helper {
 			$this->getPath($controllerActionLink, $navigations, $path);
 		}
 		
+		// Print each of the navigation
 		foreach ($navigations as $key => $value) {
 			// Root Node
 			if (!isset($value['parent'])) {
@@ -66,6 +67,7 @@ class NavigationHelper extends Helper {
 				$parentStack = [];
 				array_push($parentStack, $key);
 				$hasUL = true;
+				// If the parent is part of the path and has children nodes in the the path
 				if (in_array($key, $path) && $key != $linkName && $this->hasChildren($key, $parentNodes)) {
 					$in = true;
 				}
@@ -257,7 +259,7 @@ class NavigationHelper extends Helper {
 
 	// Function to close the <ul> tags of the html. If the closeAll is set to true,
 	// it will close all ul tags that are not close base on the counter
-	public function closeUlTag(&$ulCounter, $closeAll = false) {
+	private function closeUlTag(&$ulCounter, $closeAll = false) {
 		$html = '';
 		if ($closeAll) {
 			for($i = $ulCounter; $i > 0; $i--) {
