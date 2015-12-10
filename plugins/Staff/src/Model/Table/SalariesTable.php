@@ -178,7 +178,14 @@ class SalariesTable extends AppTable {
 	}
 
 	private function setupTabElements() {
-		$tabElements = $this->controller->getFinanceTabElements();
+		if ($this->controller->name == 'Directories') {
+			$options = [
+				'type' => 'staff'
+			];
+			$tabElements = $this->controller->getStaffFinanceTabElements($options);
+		} else {
+			$tabElements = $this->controller->getFinanceTabElements();
+		}
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
