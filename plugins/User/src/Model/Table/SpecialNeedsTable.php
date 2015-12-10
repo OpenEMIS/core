@@ -52,8 +52,17 @@ class SpecialNeedsTable extends AppTable {
 				$options['userRole'] = 'Staff';
 				break;
 		}
-
-		$tabElements = $this->controller->getUserTabElements($options);
+		if ($this->controller->name == 'Directories') {
+			$type = $this->request->query('type');
+			$options['type'] = $type;
+			if ($type == 'student') {
+				$tabElements = $this->controller->getStudentGeneralTabElements($options);
+			} else {
+				$tabElements = $this->controller->getStaffGeneralTabElements($options);
+			}
+		} else {
+			$tabElements = $this->controller->getUserTabElements($options);
+		}
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}

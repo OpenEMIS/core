@@ -106,7 +106,7 @@ class QualificationsTable extends AppTable {
 		}
 
 		$viewVars = $this->ControllerAction->vars();
-		if(!is_null($viewVars['toolbarButtons']['download'])) {
+		if(isset($viewVars['toolbarButtons']['download'])) {
 			$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
 		}
 

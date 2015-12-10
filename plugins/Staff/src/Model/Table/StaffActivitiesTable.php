@@ -27,8 +27,12 @@ class StaffActivitiesTable extends AppTable {
 				$options['userRole'] = 'Staff';
 				break;
 		}
-
-		$tabElements = $this->controller->getUserTabElements($options);
+		if ($this->controller->name == 'Directories') {
+			$options['type'] = 'staff';
+			$tabElements = $this->controller->getStaffGeneralTabElements($options);
+		} else {
+			$tabElements = $this->controller->getUserTabElements($options);		
+		}
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'History');
 	}
