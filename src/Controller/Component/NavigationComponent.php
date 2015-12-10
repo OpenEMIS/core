@@ -489,7 +489,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.Awards', 'Directories.SpecialNeeds']
+					'Directories.History', 'Directories.Awards']
 			]
 		];
 		return $navigation;
@@ -519,11 +519,36 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'link' => false,
 			],
-				'Directories.StaffBankAccount' => [
-					'title' => 'Finance',
+				'Directories.StaffSpecialNeeds' => [
+					'title' => 'General',
+					'parent' => 'Directories.Staff',
+					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
+					'selected' => ['Directories.StaffSpecialNeeds', 'Directories.StaffHistory']
+				],
+				'Directories.StaffEmployments' => [
+					'title' => 'Career',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffBankAccount', 'Directories.StaffSalaries']
+					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffSections', 'Directories.StaffClasses', 
+						'Directories.StaffAbsences', 'Directories.StaffLeaves', 'Directories.StaffBehaviours']
+				],
+				'Directories.StaffQualifications' => [
+					'title' => 'Professional Development',
+					'parent' => 'Directories.Staff',
+					'params' => ['plugin' => 'Directory'],
+					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffTrainings']
+				],
+				'Directories.StaffBankAccounts' => [
+					'title' => 'Finance',
+					'parent' => 'Directories.Staff',
+					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
+					'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries']
+				],
+				'Directories.TrainingResults' => [
+					'title' => 'Training',
+					'parent' => 'Directories.Staff',
+					'params' => ['plugin' => 'Directory'],
+					'selected' => ['Directories.TrainingResults']
 				],
 		];
 		return $navigation;
@@ -555,7 +580,7 @@ class NavigationComponent extends Component {
 				'Directories.StudentBankAccounts' => [
 					'title' => 'Finance', 
 					'parent' => 'Directories.Student',
-					'params' => ['plugin' => 'Directory'],
+					'params' => ['plugin' => 'Directory', 'type' => 'student'],
 					'selected' => ['Directories.StudentBankAccounts', 'Directories.StudentFees']
 				],
 		];

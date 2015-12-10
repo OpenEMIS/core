@@ -29,6 +29,7 @@ class StudentActivitiesTable extends AppTable {
 				$tabElements = $this->controller->getUserTabElements($options);
 				break;
 			case 'Directories':
+				$options['type'] = 'student';
 				$tabElements = $this->controller->getStudentGeneralTabElements($options);
 				break;
 		}
