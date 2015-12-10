@@ -6,7 +6,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -31,8 +30,6 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
-
-		$this->addBehavior('Reorder');
 	}
 
 	public function beforeAction(Event $event) {
@@ -165,16 +162,6 @@ class SecurityRolesTable extends AppTable {
 		}
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $data) {
-		$securityRoles = $data->toArray();
-		$firstOrder = 0;
-		if (!empty($securityRoles)) {
-			$firstOrder = $securityRoles[0]['order'] - 1;
-		}
-		$count = $firstOrder;
-		$this->Session->write($this->registryAlias().'.roleOrder', $count);
-	}
-
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		
@@ -226,11 +213,6 @@ class SecurityRolesTable extends AppTable {
 		} 
 
 		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
-	}
-
-	public function reorderUpdateOrderValue(Event $event, $orderValue) {
-		$count = $this->Session->read($this->registryAlias().'.roleOrder');
-		return ($orderValue+$count);
 	}
 
 	// this function will return all roles (system roles & user roles) that has lower
