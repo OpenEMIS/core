@@ -488,8 +488,7 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.Awards']
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments']
 			]
 		];
 		return $navigation;
@@ -503,8 +502,14 @@ class NavigationComponent extends Component {
 			'Directories.Guardians' => [
 				'title' => 'Guardian', 
 				'parent' => 'Directories.index', 
-				'params' => ['plugin' => 'Directory', $id],
+				'link' => false,
 			],
+				'Directories.GuardianHistory' => [
+					'title' => 'General',
+					'parent' => 'Directories.Guardians',
+					'params' => ['plugin' => 'Directory', 'type' => 'guardian'],
+					'selected' => ['Directories.GuardianHistory']
+				],
 		];
 		return $navigation;
 	}
@@ -523,7 +528,7 @@ class NavigationComponent extends Component {
 					'title' => 'General',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
-					'selected' => ['Directories.StaffSpecialNeeds', 'Directories.StaffHistory']
+					'selected' => ['Directories.StaffSpecialNeeds', 'Directories.StaffHistory', 'Directories.StaffAwards']
 				],
 				'Directories.StaffEmployments' => [
 					'title' => 'Career',

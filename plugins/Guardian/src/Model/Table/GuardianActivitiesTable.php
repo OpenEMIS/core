@@ -18,8 +18,8 @@ class GuardianActivitiesTable extends AppTable {
 		$options = [
 			'userRole' => '',
 		];
-
-		switch ($this->controller->name) {
+		$controllerName = $this->controller->name;
+		switch ($controllerName) {
 			case 'Students':
 				$options['userRole'] = 'Students';
 				break;
@@ -27,8 +27,13 @@ class GuardianActivitiesTable extends AppTable {
 				$options['userRole'] = 'Staff';
 				break;
 		}
-
-		$tabElements = $this->controller->getUserTabElements($options);
+		if ($controllerName == 'Directories') {
+			$options['type'] = 'guardian';
+			$tabElements = $this->controller->getGuardianGeneralTabElements($options);
+		} else {
+			$tabElements = $this->controller->getUserTabElements($options);
+		}
+		
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'History');
 	}
