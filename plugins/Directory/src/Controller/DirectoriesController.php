@@ -220,8 +220,8 @@ class DirectoriesController extends AppController {
 		$plugin = $this->plugin;
 		$name = $this->name;
 
-		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
-
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+		
 		$tabElements = [
 			$this->name => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
