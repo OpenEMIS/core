@@ -39,7 +39,14 @@ class AwardsTable extends AppTable {
 				$this->controller->set('selectedAction', $this->alias());
 				break;
 			case 'Directories':
-				$tabElements = $this->controller->getUserTabElements();
+				$type = $this->request->query('type');
+				$options['type'] = $type;
+				if ($type == 'student') {
+					$tabElements = $this->controller->getStudentGeneralTabElements($options);
+				} else {
+					$tabElements = $this->controller->getCareerTabElements($options);
+				}
+				
 				$this->controller->set('tabElements', $tabElements);
 				$this->controller->set('selectedAction', $this->alias());
 				break;
