@@ -12,6 +12,12 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 
 class InstitutionsTable extends AppTable  {
+
+	// filter
+	const NO_FILTER = 0;
+	const NO_STUDENT = 1;
+	const NO_STAFF = 2;
+
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
@@ -42,11 +48,103 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
-		return $attr;
+		if ($action == 'add') {
+			$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+			$attr['onChangeReload'] = true;
+			if (!(isset($this->request->data[$this->alias()]['feature']))) {
+				$option = $attr['options'];
+				reset($option);
+				$this->request->data[$this->alias()]['feature'] = key($option);
+			}
+			return $attr;
+		}
 	}
 
 	public function onGetReportName(Event $event, ArrayObject $data) {
 		return __('Overview');
+	}
+
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$requestData = json_decode($settings['process']['params']);
+		$feature = $requestData->feature;
+		$filter = $requestData->institution_filter;
+		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
+			$sheets[] = [
+				'name' => $this->alias(),
+				'table' => $this,
+				'query' => $this->find(),
+			];
+			// Stop the customfieldlist behavior onExcelBeforeStart function
+			$event->stopPropagation();
+		}
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$requestData = json_decode($settings['process']['params']);
+		$feature = $requestData->feature;
+		$filter = $requestData->institution_filter;
+		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
+			// Stop the customfieldlist behavior onExcelUpdateFields function
+			$copyField = $fields->getArrayCopy();
+			$includedFields = ['name', 'alternative_name', 'code', 'area_id'];
+			foreach ($copyField as $key => $value) {
+				if (!in_array($value['field'], $includedFields)) {
+					unset($copyField[$key]);
+				}
+			}
+			$fields->exchangeArray($copyField);
+			$event->stopPropagation();
+		}
+	}
+
+	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if ($feature == 'Report.Institutions') {
+				$option[self::NO_FILTER] = __('All Institutions');
+				$option[self::NO_STUDENT] = __('Institutions with No Students');
+				$option[self::NO_STAFF] = __('Institutions with No Staff');
+				$attr['type'] = 'select';
+				$attr['options'] = $option;
+				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+		}
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$requestData = json_decode($settings['process']['params']);
+		$filter = $requestData->institution_filter;
+		switch ($filter) {
+			case self::NO_STUDENT:
+				$query
+					->leftJoin(
+						['Students' => 'institution_students'],
+						[$this->aliasField('id').' = Students.institution_id']
+					)
+					->select(['student_count' => $query->func()->count('Students.id')])
+					->group([$this->aliasField('id')])
+					->having(['student_count' => 0]);
+				break;
+
+			case self::NO_STAFF:
+				$query
+					->leftJoin(
+						['Staff' => 'institution_staff'],
+						[$this->aliasField('id').' = Staff.institution_id']
+					)
+					->select(['staff_count' => $query->func()->count('Staff.id')])
+					->group([$this->aliasField('id')])
+					->having(['staff_count' => 0]);
+				break;
+
+			case self::NO_FILTER:
+				break;
+		}
 	}
 }

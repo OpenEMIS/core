@@ -34,7 +34,6 @@ class StudentClassesTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
-		
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution_section->institution_id;
 			$url = [
