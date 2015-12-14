@@ -32,33 +32,37 @@ $this->end();
 			<hr>
 
 			<h3>Contact</h3>
-			<div class="table-responsive">
-				<table class="table table-curved table-sortable">
-					<thead>
-						<th>Description</th>
-						<th>Value</th>
-						<th>Preferred</th>
-					</thead>
-					<tbody>
-						<td></td>
-						<td></td>
-						<td></td>
-					</tbody>
-				</table>			
-			</div>	
+			<div class="table-wrapper">
+				<div class="table-responsive">
+					<table class="table table-curved table-sortable">
+						<thead>
+							<th>Description</th>
+							<th>Value</th>
+							<th>Preferred</th>
+						</thead>
+						<tbody>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tbody>
+					</table>			
+				</div>	
+			</div>
 
 			<h3>Groups</h3>
-			<div class="table-responsive">
-				<table class="table table-curved table-sortable">
-					<thead>
-						<th>Group</th>
-						<th>Role</th>
-					</thead>
-					<tbody>
-						<td>Ministry of Education</td>
-						<td>Administrator</td>
-					</tbody>
-				</table>			
+			<div class="table-wrapper">
+				<div class="table-responsive">
+					<table class="table table-curved table-sortable">
+						<thead>
+							<th>Group</th>
+							<th>Role</th>
+						</thead>
+						<tbody>
+							<td>Ministry of Education</td>
+							<td>Administrator</td>
+						</tbody>
+					</table>			
+				</div>
 			</div>
 		</div>
 

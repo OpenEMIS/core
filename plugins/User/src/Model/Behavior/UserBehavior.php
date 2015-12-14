@@ -44,7 +44,16 @@ class UserBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
 		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
+		$events['Model.excel.onExcelGetStatus'] = 'onExcelGetStatus';
 		return $events;
+	}
+
+	public function onExcelGetStatus(Event $event, Entity $entity) {
+		if ($entity->status == 1) {
+			return __('Active');
+		} else {
+			return __('Inactive');
+		}
 	}
 
 	public function beforeAction(Event $event) {
