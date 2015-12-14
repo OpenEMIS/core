@@ -634,6 +634,7 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please select a Type'
 				],
 				'number' => [
+					'ruleUniqueUserIdentity' => 'Please enter a unique identity number.',
 					'ruleNotBlank' => 'Please enter a valid Number'
 				],
 				'issue_location' => [
