@@ -729,4 +729,21 @@ class ValidationBehavior extends Behavior {
 
 		return $validationResult;
 	}
+
+	public static function uniqueUserIdentity($field, array $globalData) {
+		$UserIdentities = TableRegistry::get('User.Identities');
+
+		$foundIdentities = $UserIdentities->find()
+			->where([
+				$UserIdentities->aliasField('identity_type_id') => $globalData['data']['identity_type_id'],
+				$UserIdentities->aliasField('number') => $globalData['data']['number'],
+			])
+			;
+
+		if (array_key_exists($UserIdentities->primaryKey(), $globalData['data']) && !empty($globalData['data'][$UserIdentities->primaryKey()])) {
+			$foundIdentities->where([$UserIdentities->aliasField($UserIdentities->primaryKey()).' != '.$globalData['data'][$UserIdentities->primaryKey()]]);
+		}
+		return $foundIdentities->count() <= 0;
+	}
+	
 }
