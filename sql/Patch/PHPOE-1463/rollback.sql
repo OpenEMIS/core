@@ -7,6 +7,12 @@ CHANGE COLUMN `institution_status_id` `institution_site_status_id` INT(11) NOT N
 CHANGE COLUMN `institution_sector_id` `institution_site_sector_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_provider_id` `institution_site_provider_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_gender_id` `institution_site_gender_id` INT(5) NOT NULL COMMENT '' ,
+DROP INDEX `institution_provider_id` ,
+ADD INDEX `institution_site_provider_id` (`institution_site_provider_id`),
+DROP INDEX `institution_sector_id` ,
+ADD INDEX `institution_site_sector_id` (`institution_site_sector_id`),
+DROP INDEX `institution_gender_id` ,
+ADD INDEX `institution_site_gender_id` (`institution_site_gender_id`),
 ADD COLUMN `institution_site_area_id` INT(11) NULL COMMENT '' AFTER `latitude`, 
 RENAME TO `institution_sites` ;
 
@@ -46,6 +52,10 @@ ALTER TABLE `institution_staff`
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_position_id` `institution_site_position_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_position_id` ,
+ADD INDEX `institution_site_position_id` (`institution_site_position_id`),
+DROP INDEX `staff_id` ,
+ADD INDEX `security_user_id` (`security_user_id`),
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_staff` ;
@@ -61,6 +71,10 @@ RENAME TO `institution_site_classes` ;
 ALTER TABLE `institution_class_staff` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_class_id` ,
+ADD INDEX `institution_site_class_id` (`institution_site_class_id`)  COMMENT '',
+DROP INDEX `staff_id` ,
+ADD INDEX `security_user_id` (`security_user_id`)  COMMENT '',
 RENAME TO  `institution_site_class_staff` ;
 
 -- institution_site_class_student
@@ -74,6 +88,8 @@ ALTER TABLE `institution_sections`
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_shift_id` `institution_site_shift_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_shift_id` ,
+ADD INDEX `institution_site_shift_id` (`institution_site_shift_id`),
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_sections` ;
@@ -85,15 +101,35 @@ DROP INDEX `institution_section_id` ,
 ADD INDEX `institution_site_id` (`institution_site_section_id`),
 RENAME TO  `institution_site_section_students` ;
 
+-- institution_site_class_grade_students
+ALTER TABLE `institution_class_grade_students` 
+CHANGE COLUMN `institution_class_grade_id` `institution_site_class_grade_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `institution_class_grade_id` ,
+ADD INDEX `institution_site_class_grade_id` (`institution_site_class_grade_id`), 
+RENAME TO  `institution_site_class_grade_students` ;
+
+-- institution_site_class_grades
+ALTER TABLE `institution_class_grades` 
+CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `institution_class_id` ,
+ADD INDEX `institution_site_class_id` (`institution_site_class_id`), 
+RENAME TO  `institution_site_class_grades` ;
+
 -- institution_site_section_grades
 ALTER TABLE `institution_section_grades` 
 CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_section_id` ,
+ADD INDEX `institution_site_section_id` (`institution_site_section_id`),
 RENAME TO  `institution_site_section_grades` ;
 
 -- institution_site_section_classes
 ALTER TABLE `institution_section_classes` 
 CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_section_id` ,
+ADD INDEX `institution_site_section_id` (`institution_site_section_id`),
+DROP INDEX `institution_class_id` ,
+ADD INDEX `institution_site_class_id` (`institution_site_class_id`),
 RENAME TO  `institution_site_section_classes` ;
 
 -- institution_site_shifts
@@ -143,6 +179,10 @@ CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_section_id` ,
+ADD INDEX `institution_site_section_id` (`institution_site_section_id`),
+DROP INDEX `institution_class_id` ,
+ADD INDEX `institution_site_class_id` (`institution_site_class_id`),
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_quality_visits` ;
@@ -150,6 +190,8 @@ RENAME TO  `institution_site_quality_visits` ;
 -- institution_site_quality_rubric_answers
 ALTER TABLE `institution_quality_rubric_answers` 
 CHANGE COLUMN `institution_quality_rubric_id` `institution_site_quality_rubric_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_quality_rubric_id` ,
+ADD INDEX `institution_site_quality_rubric_id` (`institution_site_quality_rubric_id`),
 RENAME TO  `institution_site_quality_rubric_answers` ;
 
 -- institution_site_quality_rubrics
@@ -158,6 +200,12 @@ CHANGE COLUMN `institution_section_id` `institution_site_section_id` INT(11) NOT
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_section_id` ,
+ADD INDEX `institution_site_section_id` (`institution_site_section_id`),
+DROP INDEX `institution_class_id` ,
+ADD INDEX `institution_site_class_id` (`institution_site_class_id`),
+DROP INDEX `staff_id` ,
+ADD INDEX `security_user_id` (`security_user_id`), 
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_quality_rubrics` ;
@@ -165,6 +213,8 @@ RENAME TO  `institution_site_quality_rubrics` ;
 -- institution_site_survey_answers
 ALTER TABLE `institution_survey_answers` 
 CHANGE COLUMN `institution_survey_id` `institution_site_survey_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_survey_id` ,
+ADD INDEX `institution_site_survey_id` (`institution_site_survey_id`),
 RENAME TO  `institution_site_survey_answers` ;
 
 -- institution_site_survey
@@ -186,6 +236,13 @@ CHANGE COLUMN `institution_id` `institution_site_id` INT(11) NOT NULL COMMENT ''
 DROP INDEX `institution_id` ,
 ADD INDEX `institution_site_id` (`institution_site_id`),
 RENAME TO  `institution_site_staff_absences` ;
+
+-- student_fees
+ALTER TABLE `student_fees` 
+DROP INDEX `institution_fee_id` ,
+ADD INDEX `institution_site_fee_id` (`institution_fee_id`),
+DROP INDEX `student_id` ,
+ADD INDEX `security_user_id` (`student_id`);
 
 -- staff_activities
 ALTER TABLE `staff_activities` 
@@ -467,10 +524,6 @@ RENAME TO  `infrastructure_statuses` ;
 ALTER TABLE `z_1463_infrastructure_water` 
 RENAME TO  `infrastructure_water` ;
 
--- institution_custom_value_history
-ALTER TABLE `z_1463_institution_custom_value_history` 
-RENAME TO  `institution_custom_value_history` ;
-
 -- institution_providers
 ALTER TABLE `z_1463_institution_providers` 
 RENAME TO  `institution_providers` ;
@@ -511,6 +564,13 @@ INNER JOIN `z_1463_labels` ON `labels`.`id` = `z_1463_labels`.`id`
 SET `labels`.`module` = `z_1463_labels`.`module`, `labels`.`field` = `z_1463_labels`.`field`;
 
 DROP TABLE `z_1463_labels`;
+
+-- import_mapping
+UPDATE `import_mapping` 
+INNER JOIN `z_1463_import_mapping` ON `import_mapping`.`id` = `z_1463_import_mapping`.id
+SET `import_mapping`.`model` = `z_1463_import_mapping`.`model`, `import_mapping`.`column_name` = `z_1463_import_mapping`.`column_name`;
+
+DROP TABLE `z_1463_import_mapping`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1463';
