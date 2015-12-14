@@ -256,7 +256,7 @@ class WorkflowBehavior extends Behavior {
 				$tableCells = [];
 				$transitionResults = $this->WorkflowTransitions
 					->find()
-					->contain(['PreviousWorkflowSteps', 'WorkflowSteps', 'WorkflowActions', 'ModifiedUser', 'CreatedUser'])
+					->contain(['ModifiedUser', 'CreatedUser'])
 					->where([
 						$this->WorkflowTransitions->aliasField('workflow_record_id') => $this->workflowRecord->id
 					])
@@ -267,17 +267,17 @@ class WorkflowBehavior extends Behavior {
 				if (!$transitionResults->isEmpty()) {
 					$transitions = $transitionResults->toArray();
 					foreach ($transitions as $key => $transition) {
-						$transitionDisplay = '<span class="status past">' . $transition->previous_workflow_step->name . '</span>';
+						$transitionDisplay = '<span class="status past">' . $transition->prev_workflow_step_name . '</span>';
 						$transitionDisplay .= '<span class="transition-arrow"></span>';
 						if (count($transitions) - 1 == $key) {
-							$transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step->name . '</span>';
+							$transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step_name . '</span>';
 						} else {
-							$transitionDisplay .= '<span class="status past">' . $transition->workflow_step->name . '</span>';
+							$transitionDisplay .= '<span class="status past">' . $transition->workflow_step_name . '</span>';
 						}
 
 						$rowData = [];
 						$rowData[] = $transitionDisplay;
-						$rowData[] = $transition->workflow_action->name;
+						$rowData[] = $transition->workflow_action_name;
 						$rowData[] = nl2br($transition->comment);
 						$rowData[] = $transition->created_user->name;
 						$rowData[] = $transition->created->format('Y-m-d H:i:s');
@@ -658,28 +658,43 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function getModalOptions() {
-		$workflowRecordId = $this->workflowRecord->id;  // Current Workflow Record
-		$workflowStepId = $this->workflowRecord->workflow_step->id; // Latest Workflow Step
+		$record = $this->workflowRecord;  // Current Workflow Record
+		$step = $this->workflowRecord->workflow_step; // Latest Workflow Step
 
 		$alias = $this->WorkflowTransitions->alias();
+		// workflow_step_id is needed for afterSave logic in WorkflowTransitions
 		$fields = [
 			$alias.'.prev_workflow_step_id' => [
 				'type' => 'hidden',
-				'value' => $workflowStepId,
+				'value' => $step->id,
+			],
+			$alias.'.prev_workflow_step_name' => [
+				'type' => 'hidden',
+				'value' => $step->name
 			],
 			$alias.'.workflow_step_id' => [
 				'type' => 'hidden',
 				'value' => 0,
 				'class' => 'workflowtransition-step-id'
 			],
+			$alias.'.workflow_step_name' => [
+				'type' => 'hidden',
+				'value' => '',
+				'class' => 'workflowtransition-step-name'
+			],
 			$alias.'.workflow_action_id' => [
 				'type' => 'hidden',
 				'value' => 0,
 				'class' => 'workflowtransition-action-id'
 			],
+			$alias.'.workflow_action_name' => [
+				'type' => 'hidden',
+				'value' => '',
+				'class' => 'workflowtransition-action-name'
+			],
 			$alias.'.workflow_record_id' => [
 				'type' => 'hidden',
-				'value' => $workflowRecordId
+				'value' => $record->id
 			],
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
