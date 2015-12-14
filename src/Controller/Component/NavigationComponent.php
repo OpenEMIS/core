@@ -171,7 +171,7 @@ class NavigationComponent extends Component {
 					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'], 
 						'selected' => ['TransferRequests', 'StudentUser', 'StudentSurveys', 'StudentAccount', 'Promotion', 'Transfer', 'StudentAdmission', 'TransferApprovals', 'StudentDropout', 'DropoutRequests']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
-					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences']],
+					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'], 'selected' => ['StudentAttendances', 'StudentAbsences', 'ImportStudentAttendances']],
 					'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments'], 'selected' => ['Assessments', 'Results']],
 					'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
 				]
@@ -183,7 +183,7 @@ class NavigationComponent extends Component {
 					'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'], 'selected' => ['StaffUser', 'StaffAccount']],
 					'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions'], 'selected' => ['StaffPositions']],
 					'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
-					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences']]
+					'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'], 'selected' => ['StaffAttendances', 'StaffAbsences', 'ImportStaffAttendances']]
 				]
 			],
 
@@ -203,7 +203,7 @@ class NavigationComponent extends Component {
 			'Survey' => [
 				'collapse' => true,
 				'items' => [
-					'Forms' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys']],
+					'Forms' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'], 'selected' => ['ImportInstitutionSurveys']],
 					'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Rubrics'], 'selected' => ['Rubrics', 'RubricAnswers']]
 				]
 			],
@@ -320,8 +320,10 @@ class NavigationComponent extends Component {
 			'Training' => [
 				'collapse' => true,
 				'items' => [
-					// 'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
-					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']]
+					'Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingNeeds']],
+					'Results' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'TrainingResults']],
+					// Disabled Achievement until get requirements from client
+					// 'Achievements' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Achievements']]
 				]
 			]
 		];
@@ -358,6 +360,7 @@ class NavigationComponent extends Component {
 			'Staff' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Staff']],
 			'Surveys' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Surveys']],
 			'Quality' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'InstitutionRubrics']],
+			'Audit' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Audit']],
 		];
 		return $navigation;
 	}
