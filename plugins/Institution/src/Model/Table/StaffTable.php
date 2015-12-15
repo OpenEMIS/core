@@ -579,7 +579,6 @@ class StaffTable extends AppTable {
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
-
 		$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
 		$sectionsInPosition = $InstitutionSiteSections->find()
@@ -599,7 +598,6 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-			
 		$sectionArray = [];
 		foreach ($sectionsInPosition as $key => $value) {
 			$sectionArray[] = $value->id;
@@ -610,11 +608,11 @@ class StaffTable extends AppTable {
 				['id IN ' => $sectionArray]
 			);
 		}
-
 		// delete the staff from subjects		
 		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
 		$InstitutionSiteClasses = TableRegistry::get('Institution.InstitutionSiteClasses');	
 		$classesDuringStaffPeriod = $InstitutionSiteClasses->find()
+			->where([$InstitutionSiteClasses->aliasField('institution_site_id') => $institutionId])
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -632,23 +630,14 @@ class StaffTable extends AppTable {
 		foreach ($classesDuringStaffPeriod as $key => $value) {
 			$classIdsDuringStaffPeriod[] = $value->id;
 		}
-
 		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
-
-		$targetData = $InstitutionSiteClassStaff->find()
-			->where([$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
-			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
-			;
 
 		$InstitutionSiteClassStaff->deleteAll([
 			$InstitutionSiteClassStaff->aliasField('security_user_id') => $securityUserId,
 			$InstitutionSiteClassStaff->aliasField('institution_site_class_id') . ' IN ' => $classIdsDuringStaffPeriod
 		]);
 
-
 		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
-
-
 
 
 
