@@ -39,7 +39,12 @@ class IdentitiesTable extends AppTable {
 			])
 			->add('expiry_date',  [
 			])
-			->add('number', [])
+			->add('number', [
+	    		'ruleUnique' => [
+			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+			        'provider' => 'table'
+			    ]
+		    ]);
 		;
 	}
 	
