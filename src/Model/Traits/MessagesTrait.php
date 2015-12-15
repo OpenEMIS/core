@@ -645,7 +645,10 @@ trait MessagesTrait {
 				],
 				'expiry_date' => [
 					'ruleNotBlank' => 'Expiry Date Is Required'
-				]
+				],
+				'number' => [
+					'ruleUnique' => 'This identity has already existed in the system.'
+				],
 			],
 			'Languages' => [
 				'language_id' => [
