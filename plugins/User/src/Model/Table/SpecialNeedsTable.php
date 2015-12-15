@@ -55,11 +55,7 @@ class SpecialNeedsTable extends AppTable {
 		if ($this->controller->name == 'Directories') {
 			$type = $this->request->query('type');
 			$options['type'] = $type;
-			if ($type == 'student') {
-				$tabElements = $this->controller->getStudentGeneralTabElements($options);
-			} else {
-				$tabElements = $this->controller->getStaffGeneralTabElements($options);
-			}
+			$tabElements = $this->controller->getUserTabElements($options);
 		} else {
 			$tabElements = $this->controller->getUserTabElements($options);
 		}

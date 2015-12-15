@@ -14,7 +14,7 @@ class DirectoriesController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Directory.Directories', ['view', 'index']);
+		$this->ControllerAction->model('Directory.Directories');
 		$this->ControllerAction->models = [
 			// Users
 			'Contacts' 				=> ['className' => 'User.Contacts'],
@@ -24,6 +24,8 @@ class DirectoriesController extends AppController {
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
+			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
+			'SpecialNeeds' 	=> ['className' => 'User.SpecialNeeds'],
 					
 			
 			// Student
@@ -37,16 +39,13 @@ class DirectoriesController extends AppController {
 			'StudentResults' 		=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
-			'StudentHistory' 		=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
-			'StudentSpecialNeeds' 	=> ['className' => 'User.SpecialNeeds'],
 			'StudentAwards' 		=> ['className' => 'User.Awards'],	
 			
 
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
 			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
-			'StaffHistory'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
 			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
@@ -60,11 +59,7 @@ class DirectoriesController extends AppController {
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults'],
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
-			'StaffSpecialNeeds' 	=> ['className' => 'User.SpecialNeeds'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
-
-			// Guardian
-			'GuardianHistory' 		=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
 		];
 
 		$this->loadComponent('User.Image');
@@ -232,30 +227,38 @@ class DirectoriesController extends AppController {
 				'text' => __('Account')	
 			],
 			'Identities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
 				'text' => __('Identities')	
 			],
 			'Nationalities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
 			],
 			'Languages' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
 				'text' => __('Languages')	
 			],
 			'Comments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments', $id],
 				'text' => __('Comments')	
 			],
 			'Attachments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments', $id],
 				'text' => __('Attachments')	
 			],
+			'SpecialNeeds' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'SpecialNeeds', $id],
+				'text' => __('Special Needs')
+			],
+			'History' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History', $id],
+				'text' => __('History')	
+			]
 		];
 		return $tabElements;
 	}
 
-	public function getStudentGeneralTabElements($options = []) {
+	public function getStudentGuardianTabElements($options = []) {
 		$type = (array_key_exists('type', $options))? $options['type']: null;
 		$plugin = $this->plugin;
 		$name = $this->name;
@@ -264,60 +267,14 @@ class DirectoriesController extends AppController {
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentGuardians', 'type' => $type],
 				'text' => __('Guardians')	
 			],
-			'SpecialNeeds' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentSpecialNeeds', 'type' => $type],
-				'text' => __('Special Needs')
-			],
-			'Awards' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentAwards', 'type' => $type],
-				'text' => __('Awards')
-			],
-			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentHistory', 'type' => $type],
-				'text' => __('History')	
-			],
-			
-		];
-
-		return $tabElements;
-	}
-
-	public function getStaffGeneralTabElements($options = []) {
-		$type = (array_key_exists('type', $options))? $options['type']: null;
-		$plugin = $this->plugin;
-		$name = $this->name;
-		$tabElements = [
-			'SpecialNeeds' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StaffSpecialNeeds', 'type' => $type],
-				'text' => __('Special Needs')
-			],
-			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StaffHistory', 'type' => $type],
-				'text' => __('History')	
-			],
-		];
-
-		return $tabElements;
-	}
-
-	public function getGuardianGeneralTabElements($options = []) {
-		$type = (array_key_exists('type', $options))? $options['type']: null;
-		$plugin = $this->plugin;
-		$name = $this->name;
-		$tabElements = [
-			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'GuardianHistory', 'type' => $type],
-				'text' => __('History')	
-			],
 		];
 
 		return $tabElements;
 	}
 
 	public function getAcademicTabElements($options = []) {
-		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
 		$id = (array_key_exists('id', $options))? $options['id']: 0;
-
+		$type = (array_key_exists('type', $options))? $options['type']: null;
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
@@ -327,13 +284,14 @@ class DirectoriesController extends AppController {
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Results')],
+			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index']);
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'type' => $type]);
 			$params = [$id];
 			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
@@ -365,6 +323,7 @@ class DirectoriesController extends AppController {
 
 	// For staff
 	public function getCareerTabElements($options = []) {
+		$type = (array_key_exists('type', $options))? $options['type']: null;
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [

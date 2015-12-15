@@ -51,7 +51,8 @@ class StaffSectionsTable extends AppTable {
 	}
 	
 	private function setupTabElements() {
-		$tabElements = $this->controller->getCareerTabElements();
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Sections');
 	}

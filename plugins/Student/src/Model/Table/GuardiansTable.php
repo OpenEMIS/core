@@ -40,7 +40,7 @@ class GuardiansTable extends AppTable {
 		if ($this->action == 'index') {
 			if ($this->controller->name == 'Directories') {
 				$options['type'] = 'student';
-				$tabElements = $this->controller->getStudentGeneralTabElements($options);
+				$tabElements = $this->controller->getStudentGuardianTabElements($options);
 			} else {
 				$tabElements = $this->controller->getUserTabElements();
 			}
