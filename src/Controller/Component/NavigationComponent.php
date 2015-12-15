@@ -114,8 +114,6 @@ class NavigationComponent extends Component {
 		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
-		} elseif ($controller->name == 'Guardians' && $action != 'index') {
-			$navigations = $this->appendNavigation('Guardians.index', $navigations, $this->getGuardianNavigation());
 		} elseif ($controller->name == 'Directories' && $action != 'index') {
 			$navigations = $this->appendNavigation('Directories.index', $navigations, $this->getDirectoryNavigation());
 
@@ -170,7 +168,8 @@ class NavigationComponent extends Component {
 				'title' => 'Guardians', 
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
 				'params' => ['plugin' => 'Guardian'],
-				'selected' => ['Guardians.add'],
+				'selected' => ['Guardians.add', 'Guardians.edit', 'Guardians.view', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 
+					'Guardians.History', 'Guardians.Nationalities'],
 			],
 
 			'Directories.index' => [
@@ -455,22 +454,6 @@ class NavigationComponent extends Component {
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
 				'selected' => ['Staff.TrainingResults'],
-			],
-		];
-		return $navigation;
-	}
-
-	public function getGuardianNavigation() {
-		$session = $this->request->session();
-		$id = $session->read('Guardian.Guardians.id');
-
-		$navigation = [
-			'Guardians.view' => [
-				'title' => 'General', 
-				'parent' => 'Guardians.index', 
-				'params' => ['plugin' => 'Guardian'], 
-				'selected' => ['Guardians.edit', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 
-					'Guardians.History', 'Guardians.Nationalities']
 			],
 		];
 		return $navigation;
