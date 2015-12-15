@@ -24,14 +24,10 @@ class IdentitiesTable extends AppTable {
 		$this->fields['comments']['visible'] = 'false';
 	}
 
-	public function validationDefault(Validator $validator)
-	{
+	public function validationDefault(Validator $validator)	{
 		$validator = parent::validationDefault($validator);
 		
 		return $validator
-			->add('number', 'ruleUniqueUserIdentity', [
-				'rule' => ['uniqueUserIdentity']
-			])
 			->add('issue_location',  [
 			])
 			->add('issue_date', 'ruleCompareDate', [

@@ -164,7 +164,7 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDate($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
