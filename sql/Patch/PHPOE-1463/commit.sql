@@ -11,10 +11,14 @@ CHANGE COLUMN `institution_site_status_id` `institution_status_id` INT(11) NOT N
 CHANGE COLUMN `institution_site_sector_id` `institution_sector_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_provider_id` `institution_provider_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_gender_id` `institution_gender_id` INT(5) NOT NULL COMMENT '' , 
-DROP INDEX `institution_site_provider_id` ,
-ADD INDEX `institution_provider_id` (`institution_provider_id`),
+ADD INDEX `institution_locality_id` (`institution_locality_id`),
+ADD INDEX `institution_type_id` (`institution_type_id`),
+ADD INDEX `institution_ownership_id` (`institution_ownership_id`),
+ADD INDEX `institution_status_id` (`institution_status_id`),
 DROP INDEX `institution_site_sector_id` ,
 ADD INDEX `institution_sector_id` (`institution_sector_id`),
+DROP INDEX `institution_site_provider_id` ,
+ADD INDEX `institution_provider_id` (`institution_provider_id`),
 DROP INDEX `institution_site_gender_id` ,
 ADD INDEX `institution_gender_id` (`institution_gender_id`),
 RENAME TO  `institutions` ;
@@ -22,6 +26,7 @@ RENAME TO  `institutions` ;
 -- security_group_institutions
 ALTER TABLE `security_group_institution_sites` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+ADD INDEX `institution_id` (`institution_id`),
 RENAME TO  `security_group_institutions` ;
 
 -- institution_custom_field_values
@@ -32,7 +37,8 @@ ADD INDEX `institution_id` (`institution_id`);
 
 -- institution_custom_table_cells
 ALTER TABLE `institution_custom_table_cells` 
-CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ;
+CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
+ADD INDEX `institution_id` (`institution_id`);
 
 -- institution_activities
 ALTER TABLE `institution_site_activities` 
@@ -42,17 +48,21 @@ ADD INDEX `institution_id` (`institution_id`),
 RENAME TO  `institution_activities` ;
 
 -- institution_attachments (Extra table in the database)
-ALTER TABLE `institution_attachments`
-RENAME TO `z_1463_institution_attachments`;
+DROP TABLE IF EXISTS `institution_attachments`;
+
+-- institution_history not in used anymore
+DROP TABLE IF EXISTS `institution_history`;
 
 -- institution_attachments
 ALTER TABLE `institution_site_attachments` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+ADD INDEX `institution_id` (`institution_id`), 
 RENAME TO  `institution_attachments` ;
 
 -- institution_positions
 ALTER TABLE `institution_site_positions` 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+ADD INDEX `institution_id` (`institution_id`), 
 RENAME TO  `institution_positions` ;
 
 -- institution_staff
@@ -85,7 +95,7 @@ DROP INDEX `security_user_id` ,
 ADD INDEX `staff_id` (`staff_id`)  COMMENT '',
 RENAME TO  `institution_class_staff` ;
 
--- institution_class_student
+-- institution_class_students
 ALTER TABLE `institution_site_class_students` 
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' , 
@@ -119,19 +129,11 @@ DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_section_id` (`institution_section_id`),
 RENAME TO  `institution_section_students` ;
 
--- institution_class_grade_students
-ALTER TABLE `institution_site_class_grade_students` 
-CHANGE COLUMN `institution_site_class_grade_id` `institution_class_grade_id` INT(11) NOT NULL COMMENT '' ,
-DROP INDEX `institution_site_class_grade_id` ,
-ADD INDEX `institution_class_grade_id` (`institution_class_grade_id`), 
-RENAME TO  `institution_class_grade_students` ;
+-- institution_class_grade_students not in used anymore
+DROP TABLE IF EXISTS `institution_site_class_grade_students`;
 
--- institution_class_grades
-ALTER TABLE `institution_site_class_grades` 
-CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
-DROP INDEX `institution_site_class_id` ,
-ADD INDEX `institution_class_id` (`institution_class_id`), 
-RENAME TO  `institution_class_grades` ;
+-- institution_class_grades not in used anymore
+DROP TABLE IF EXISTS `institution_site_class_grades`;
 
 -- institution_section_grades
 ALTER TABLE `institution_site_section_grades` 
@@ -515,6 +517,14 @@ RENAME TO  `z_1463_census_water` ;
 ALTER TABLE `batch_reports` 
 RENAME TO  `z_1463_batch_reports` ;
 
+-- reports
+ALTER TABLE `reports` 
+RENAME TO  `z_1463_reports` ;
+
+-- report_templates
+ALTER TABLE `report_templates` 
+RENAME TO  `z_1463_report_templates` ;
+
 -- finance_categories
 ALTER TABLE `finance_categories` 
 RENAME TO  `z_1463_finance_categories` ;
@@ -801,3 +811,35 @@ UPDATE `import_mapping` SET `column_name` = 'institution_provider_id' WHERE `col
 UPDATE `import_mapping` SET `column_name` = 'institution_gender_id' WHERE `column_name` = 'institution_site_gender_id' AND `model` = 'Institutions';
 UPDATE `import_mapping` SET `column_name` = 'staff_id' WHERE `column_name` = 'security_user_id' AND `model` = 'StaffAbsences';
 
+DROP TABLE IF EXISTS `staff_import`;
+DROP TABLE IF EXISTS `student_import`;
+DROP TABLE IF EXISTS `student_results`;
+DROP TABLE IF EXISTS `z_1352_institution_site_surveys`;
+DROP TABLE IF EXISTS `z_1414_institution_site_fees`;
+DROP TABLE IF EXISTS `z_1414_institution_site_fee_types`;
+DROP TABLE IF EXISTS `z_1978_staff_training_needs`;
+DROP TABLE IF EXISTS `z_1992_training_course_attachments`;
+DROP TABLE IF EXISTS `z_1992_training_course_experiences`;
+DROP TABLE IF EXISTS `z_1992_training_course_prerequisites`;
+DROP TABLE IF EXISTS `z_1992_training_course_providers`;
+DROP TABLE IF EXISTS `z_1992_training_course_result_types`;
+DROP TABLE IF EXISTS `z_1992_training_courses`;
+DROP TABLE IF EXISTS `z_1992_training_course_specialisations`;
+DROP TABLE IF EXISTS `z_1992_training_course_target_populations`;
+DROP TABLE IF EXISTS `z_1992_training_credit_hours`;
+DROP TABLE IF EXISTS `z_1992_training_session_results`;
+DROP TABLE IF EXISTS `z_1992_training_sessions`;
+DROP TABLE IF EXISTS `z_1992_training_session_trainee_results`;
+DROP TABLE IF EXISTS `z_1992_training_session_trainees`;
+DROP TABLE IF EXISTS `z_1992_training_session_trainers`;
+DROP TABLE IF EXISTS `z2081_import_mapping`;
+DROP TABLE IF EXISTS `z2084_import_mapping`;
+DROP TABLE IF EXISTS `z2086_import_mapping`;
+DROP TABLE IF EXISTS `z_2086_security_functions`;
+DROP TABLE IF EXISTS `z_2086_security_role_functions`;
+DROP TABLE IF EXISTS `z2086_survey_forms`;
+DROP TABLE IF EXISTS `z2086_survey_questions`;
+DROP TABLE IF EXISTS `z_2117_institution_site_grades`;
+DROP TABLE IF EXISTS `z_2117_institution_site_programmes`;
+DROP TABLE IF EXISTS `z_2178_Institution_sites`;
+DROP TABLE IF EXISTS `z_2305_security_users`;
