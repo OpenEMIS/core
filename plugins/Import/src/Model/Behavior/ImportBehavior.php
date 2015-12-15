@@ -613,7 +613,7 @@ class ImportBehavior extends Behavior {
 		$model = $this->_table;
 		$mapping = $model->find('all')
 			->where([
-				$model->aliasField('model') => $this->config('model')
+				$model->aliasField('model') => $this->config('plugin').'.'.$this->config('model')
 			])
 			->order($model->aliasField('order'))
 			->toArray();
@@ -683,7 +683,7 @@ class ImportBehavior extends Behavior {
 	public function excelGetCodesData(Table $model) {
 		$mapping = $model->find('all')
 			->where([
-				$model->aliasField('model') => $this->config('model'),
+				$model->aliasField('model') => $this->config('plugin').'.'.$this->config('model'),
 				$model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE]
 			])
 			->order($model->aliasField('order'))
