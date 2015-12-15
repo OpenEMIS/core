@@ -25,7 +25,7 @@ class GuardiansController extends AppController {
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Comments' 			=> ['className' => 'User.Comments'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
-			'History' 			=> ['className' => 'Guardian.GuardianActivities', 'actions' => ['index']],
+			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 		];
 
 		$this->loadComponent('User.Image');

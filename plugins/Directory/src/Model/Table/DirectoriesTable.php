@@ -45,7 +45,13 @@ class DirectoriesTable extends AppTable {
 		// 	'pages' => ['view']
 		// ]);
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);®
+		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);®
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -88,7 +94,10 @@ class DirectoriesTable extends AppTable {
 					break;
 			}
 		}
-
+		$notSuperAdminCondition = [
+			$this->aliasField('super_admin') => 0
+		];
+		$conditions = array_merge($conditions, $notSuperAdminCondition);
 		$query->where($conditions);
 
 		$search = $this->ControllerAction->getSearchKey();
@@ -235,13 +244,6 @@ class DirectoriesTable extends AppTable {
 			$isSet = true;
 		}
 
-		if ($isGuardian) {
-			$this->Session->write('Directory.Directories.is_guardian', true);
-			$this->Session->write('Guardian.Guardians.id', $entity->id);
-			$this->Session->write('Guardian.Guardians.name', $entity->name);
-			$isSet = true;
-		}
-
 		// To make sure the navigation component has already read the set value
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
@@ -314,5 +316,13 @@ class DirectoriesTable extends AppTable {
 		$value = implode('<BR>', $combineArray);
 
 		return $value;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'index') {
+			if (isset($toolbarButtons['add'])) {
+				unset($toolbarButtons['add']);
+			}
+		}
 	}
 }

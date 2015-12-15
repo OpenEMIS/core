@@ -125,8 +125,9 @@ class StudentUserTable extends UserTable {
 				unset($toolbarButtons['export']);
 			}
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			if (!empty($this->request->query('id'))) {
-				$this->Session->write('Institution.Students.id', $this->request->query('id'));
+			$id = $this->request->query('id');
+			if (!empty($id)) {
+				$this->Session->write('Institution.Students.id', $id);
 			}
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');

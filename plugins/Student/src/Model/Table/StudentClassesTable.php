@@ -49,7 +49,8 @@ class StudentClassesTable extends AppTable {
 	}
 
 	private function setupTabElements() {
-		$tabElements = $this->controller->getAcademicTabElements();
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$alias = 'Classes';
 		if ($this->controller->name == 'Directories') {
