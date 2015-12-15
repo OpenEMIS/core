@@ -89,6 +89,12 @@ RENAME TO  `institution_class_staff` ;
 ALTER TABLE `institution_site_class_students` 
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `institution_site_class_id` ,
+ADD INDEX `institution_class_id` (`institution_class_id`),
+DROP INDEX `institution_site_section_id` ,
+ADD INDEX `institution_section_id` (`institution_section_id`),
+DROP INDEX `security_user_id` ,
+ADD INDEX `student_id` (`student_id`),
 RENAME TO  `institution_class_students` ;
 
 -- institution_section
@@ -96,6 +102,8 @@ ALTER TABLE `institution_site_sections`
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_shift_id` `institution_shift_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`),
 DROP INDEX `institution_site_shift_id` ,
 ADD INDEX `institution_shift_id` (`institution_shift_id`),
 DROP INDEX `institution_site_id` ,
@@ -105,6 +113,8 @@ RENAME TO  `institution_sections` ;
 -- institution_section_students
 ALTER TABLE `institution_site_section_students` 
 CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `security_user_id` ,
+ADD INDEX `student_id` (`student_id`),
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_section_id` (`institution_section_id`),
 RENAME TO  `institution_section_students` ;
@@ -172,6 +182,8 @@ RENAME TO  `institution_bank_accounts` ;
 ALTER TABLE `institution_site_student_absences` 
 CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id' , 
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `security_user_id` ,
+ADD INDEX `student_id` (`student_id`),
 RENAME TO  `institution_student_absences` ;
 
 -- institution_assessments
@@ -187,6 +199,8 @@ CHANGE COLUMN `institution_site_section_id` `institution_section_id` INT(11) NOT
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`),
 DROP INDEX `institution_site_section_id` ,
 ADD INDEX `institution_section_id` (`institution_section_id`),
 DROP INDEX `institution_site_class_id` ,
@@ -241,6 +255,8 @@ RENAME TO  `institution_survey_table_cells` ;
 ALTER TABLE `institution_site_staff_absences` 
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_id` `institution_id` INT(11) NOT NULL COMMENT '' , 
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`),
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`),
 RENAME TO  `institution_staff_absences` ;
@@ -252,41 +268,64 @@ ADD INDEX `institution_fee_id` (`institution_fee_id`),
 DROP INDEX `security_user_id` ,
 ADD INDEX `student_id` (`student_id`);
 
+-- student_guardians
+ALTER TABLE `student_guardians` 
+DROP INDEX `security_user_id` ,
+ADD INDEX `student_id` (`student_id`);
+
 -- staff_activities
 ALTER TABLE `staff_activities` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_custom_field_values
 ALTER TABLE `staff_custom_field_values` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_leaves
 ALTER TABLE `staff_leaves` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_licenses
 ALTER TABLE `staff_licenses` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_memberships
 ALTER TABLE `staff_memberships` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_qualifications
 ALTER TABLE `staff_qualifications` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_employments
 ALTER TABLE `staff_employments` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_extracurriculars
 ALTER TABLE `staff_extracurriculars` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_salaries
 ALTER TABLE `staff_salaries` 
-CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `staff_id` (`staff_id`);
 
 -- staff_custom_table_cells
 ALTER TABLE `staff_custom_table_cells` 
@@ -294,7 +333,9 @@ CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to s
 
 -- student_custom_field_values
 ALTER TABLE `student_custom_field_values` 
-CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ;
+CHANGE COLUMN `security_user_id` `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+DROP INDEX `security_user_id` ,
+ADD INDEX `student_id` (`student_id`);
 
 -- student_custom_table_cells
 ALTER TABLE `student_custom_table_cells` 
@@ -351,6 +392,16 @@ RENAME TO  `z_1463_students` ;
 -- guardians
 ALTER TABLE `guardians` 
 RENAME TO  `z_1463_guardians` ;
+
+-- guardian_activities
+ALTER TABLE `guardian_activities` 
+CHANGE COLUMN `security_user_id` `guardian_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `security_user_id` ,
+ADD INDEX `guardian_id` (`guardian_id`);
+
+-- census_staff_bak
+ALTER TABLE `census_staff_bak` 
+RENAME TO  `z_1463_census_staff_bak` ;
 
 -- census_behaviours
 ALTER TABLE `census_behaviours`
@@ -554,6 +605,8 @@ RENAME TO  `z_1463_security_user_access` ;
 
 -- assessment_item_results
 ALTER TABLE `assessment_item_results` 
+DROP INDEX `security_user_id` ,
+ADD INDEX `student_id` (`student_id`),
 DROP INDEX `institution_site_id` ,
 ADD INDEX `institution_id` (`institution_id`);
 
@@ -746,4 +799,5 @@ UPDATE `import_mapping` SET `column_name` = 'institution_status_id' WHERE `colum
 UPDATE `import_mapping` SET `column_name` = 'institution_sector_id' WHERE `column_name` = 'institution_site_sector_id' AND `model` = 'Institutions';
 UPDATE `import_mapping` SET `column_name` = 'institution_provider_id' WHERE `column_name` = 'institution_site_provider_id' AND `model` = 'Institutions';
 UPDATE `import_mapping` SET `column_name` = 'institution_gender_id' WHERE `column_name` = 'institution_site_gender_id' AND `model` = 'Institutions';
+UPDATE `import_mapping` SET `column_name` = 'staff_id' WHERE `column_name` = 'security_user_id' AND `model` = 'StaffAbsences';
 
