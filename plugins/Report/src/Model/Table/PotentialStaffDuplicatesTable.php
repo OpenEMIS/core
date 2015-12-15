@@ -53,6 +53,36 @@ class PotentialStaffDuplicatesTable extends AppTable  {
 						'su.date_of_birth = '.$this->aliasField('date_of_birth')
 					],
         		],
-			]);
+			])
+			->leftJoin(
+				['Staff' => 'institution_site_staff'],
+				[$this->aliasField('id').' = Staff.security_user_id']
+			)
+			->leftJoin(
+				['Institutions' => 'institution_sites'],
+				['Staff.institution_site_id = Institutions.id']
+			)
+			->group([$this->aliasField('id')])
+			->select(['name' => 'Institutions.name', 'code' => 'Institutions.code'])
+			;
+
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$newArray = [];
+		$newArray[] = [
+			'key' => 'Institutions.name',
+			'field' => 'name',
+			'type' => 'string',
+			'label' => ''
+		];
+		$newArray[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => ''
+		];
+		$newFields = array_merge($newArray, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 }
