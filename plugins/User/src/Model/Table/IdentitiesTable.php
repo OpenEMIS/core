@@ -29,6 +29,9 @@ class IdentitiesTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 		
 		return $validator
+			->add('number', 'ruleUniqueUserIdentity', [
+				'rule' => ['uniqueUserIdentity']
+			])
 			->add('issue_location',  [
 			])
 			->add('issue_date', 'ruleCompareDate', [
