@@ -10,17 +10,17 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
-class InstitutionSiteAttachmentsTable extends AppTable {
+class InstitutionAttachmentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
 
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('institution_site_id', 	['type' => 'hidden', 'visible' => ['edit' => true]]);
+		$this->ControllerAction->field('institution_id', 		['type' => 'hidden', 'visible' => ['edit' => true]]);
 
 		$this->ControllerAction->field('modified', 				['visible' => ['view' => true]]);
 		$this->ControllerAction->field('modified_user_id', 		['visible' => ['view' => true]]);

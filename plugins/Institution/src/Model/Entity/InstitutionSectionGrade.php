@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class InstitutionSiteSectionGrade extends Entity
+class InstitutionSectionGrade extends Entity
 {
 	protected $_virtual = ['name', 'grade_name'];
 	

@@ -8,6 +8,6 @@ class StudentAbsenceReasonsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
-		$this->hasMany('InstitutionSiteStudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences', 'foreignKey' => 'student_absence_reason_id']);
+		$this->hasMany('InstitutionStudentAbsences', ['className' => 'Institution.InstitutionStudentAbsences', 'foreignKey' => 'student_absence_reason_id']);
 	}
 }

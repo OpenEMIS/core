@@ -18,7 +18,7 @@ class ResultsTable extends AppTable {
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
 		$this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
 	}
@@ -60,15 +60,15 @@ class ResultsTable extends AppTable {
 			'AssessmentItems.Assessments'
 		])
 		->join(
-			[	'table'=> 'institution_site_assessments',
-				'alias' => 'InstitutionSiteAssessments',
+			[	'table'=> 'institution_assessments',
+				'alias' => 'InstitutionAssessments',
 				'conditions' => [
-					'InstitutionSiteAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
-					'InstitutionSiteAssessments.institution_site_id = '. $this->aliasField('institution_id')
+					'InstitutionAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
+					'InstitutionAssessments.institution_id = '. $this->aliasField('institution_id')
 				]
 			]
 		)
-		->where(['InstitutionSiteAssessments.status' => 2])
+		->where(['InstitutionAssessments.status' => 2])
 		;
 	}
 

@@ -224,7 +224,7 @@ class AccessControlComponent extends Component {
 
 		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 		$institutionIds = $SecurityGroupInstitutions
-		->find('list', ['keyField' => 'institution_site_id', 'valueField' => 'institution_site_id'])
+		->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
 		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
@@ -237,7 +237,7 @@ class AccessControlComponent extends Component {
 			'Areas.lft >= AreaAll.lft',
 			'Areas.rght <= AreaAll.rght'
 		])
-		->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.area_id = Areas.id'])
+		->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
 		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
