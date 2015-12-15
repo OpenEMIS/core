@@ -43,10 +43,14 @@ class ContactsTable extends AppTable {
 				$options['userRole'] = 'Staff';
 				break;
 		}
-
 		$tabElements = $this->controller->getUserTabElements($options);
+		if ($this->controller->name != 'Preferences') {
+			$this->controller->set('selectedAction', $this->alias());
+		} else {
+			$this->controller->set('selectedAction', 'Contacts');
+		}
+		
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function indexAfterAction(Event $event, $data) {

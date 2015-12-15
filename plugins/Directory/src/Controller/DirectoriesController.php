@@ -25,7 +25,7 @@ class DirectoriesController extends AppController {
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-			'SpecialNeeds' 	=> ['className' => 'User.SpecialNeeds'],
+			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 					
 			
 			// Student
@@ -291,9 +291,7 @@ class DirectoriesController extends AppController {
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'type' => $type]);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
 		}
 		return $tabElements;
 	}

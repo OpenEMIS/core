@@ -402,7 +402,7 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Institutions.Students.index', 
 				'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id], 
-				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys.view', 'Institutions.StudentSurveys.edit', 
+				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments', 
 					'Students.History', 'Students.GuardianUser']],
 			'Students.Programmes.index' => [
@@ -482,7 +482,7 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
 					'Directories.History', 'Directories.SpecialNeeds']
 			]
 		];
@@ -504,7 +504,7 @@ class NavigationComponent extends Component {
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
 					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffSections', 'Directories.StaffClasses', 
-						'Directories.StaffAbsences', 'Directories.StaffLeaves', 'Directories.StaffBehaviours']
+						'Directories.StaffAbsences', 'Directories.StaffLeaves', 'Directories.StaffBehaviours', 'Directories.StaffAwards']
 				],
 				'Directories.StaffQualifications' => [
 					'title' => 'Professional Development',
@@ -548,7 +548,7 @@ class NavigationComponent extends Component {
 					'title' => 'Academic',
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSections', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours', 
+					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours', 
 						'Directories.StudentResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
 				],
 				'Directories.StudentBankAccounts' => [

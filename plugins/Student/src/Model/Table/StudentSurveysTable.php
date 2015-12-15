@@ -10,7 +10,7 @@ class StudentSurveysTable extends AppTable {
 	// Default Status
 	const EXPIRED = -1;
 
-	private $institutionId = null;
+	private $surveyInstitutionId = null;
 	private $studentId = null;
 
 	public function initialize(array $config) {
@@ -117,7 +117,7 @@ class StudentSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status_id', ['type' => 'hidden']);
 
-		$this->institutionId = $institutionId;
+		$this->surveyInstitutionId = $institutionId;
 		$this->studentId = $studentId;
 		$this->request->query['period'] = $selectedPeriod;
 		$this->request->query['form'] = $selectedForm;
