@@ -4,6 +4,7 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
@@ -65,6 +66,15 @@ class BankAccountsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('account_number', $order++);
 		$this->ControllerAction->setFieldOrder('active', $order++);
 		$this->ControllerAction->setFieldOrder('remarks', $order++);
+	}
+
+	public function onGetActive(Event $event, Entity $entity) {
+		$active = $entity->active;
+		if ($active == 1) {
+			return __('Yes');
+		} else {
+			return __('No');
+		}
 	}
 
 	public function validationDefault(Validator $validator) {

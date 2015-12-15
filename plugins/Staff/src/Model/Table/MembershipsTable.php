@@ -10,7 +10,7 @@ class MembershipsTable extends AppTable {
 		$this->table('staff_memberships');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	}
 
 	public function beforeAction() {}
