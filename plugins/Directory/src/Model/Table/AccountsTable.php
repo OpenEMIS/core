@@ -20,4 +20,7 @@ class AccountsTable extends AppTable {
 		$validator = $this->getAccountValidation($validator);
 		return $validator;
 	}
+
+	public function viewAfterAction() {
+	}
 }

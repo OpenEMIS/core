@@ -124,7 +124,7 @@ class DirectoriesTable extends AppTable {
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
 					$InstitutionStudentTable->aliasField('institution_site_id').' IN ('.$InstitutionIds.')',
-					$InstitutionStudentTable->aliasField('security_user_id').' = '.$this->aliasField('id')
+					$InstitutionStudentTable->aliasField('staff_id').' = '.$this->aliasField('id')
 				]);
 
 			$query->where([
@@ -305,7 +305,7 @@ class DirectoriesTable extends AppTable {
 				])
 				->matching('Institutions')
 				->select(['Institutions.name'])
-				->where([$InstitutionStaffTable->aliasField('security_user_id') => $userId])
+				->where([$InstitutionStaffTable->aliasField('staff_id') => $userId])
 				->andWhere([$InstitutionStaffTable->aliasField('end_date').' IS NULL'])
 				->select(['id' => 'Institutions.id', 'name' => 'Institutions.name'])
 				->toArray();
