@@ -63,6 +63,33 @@ class ValidationBehavior extends Behavior {
         return $isValid;
     }
 
+    public static function checkAuthorisedArea($check, array $globalData) {
+        $isValid = false;
+        $AccessControl = $globalData['providers']['table']->AccessControl;
+        if ($AccessControl->isAdmin()) {
+        	$isValid = true;
+        } else {
+        	$condition = [];
+        	$areaCondition = [];
+
+        	$Areas = TableRegistry::get('Area.Areas');
+        	foreach($AccessControl->getAreasByUser() as $area) {
+        		$areaCondition[] = [
+					$Areas->aliasField('lft').' >= ' => $area['lft'],
+					$Areas->aliasField('rght').' <= ' => $area['rght']
+				];
+        	}
+        	$condition['OR'] = $areaCondition;
+
+	        $isChild = $Areas->find()
+	        	->where([$Areas->aliasField('id') => $check])
+	        	->where($condition)
+	        	->count();
+	        $isValid = $isChild > 0;
+        }
+        return $isValid;
+    }
+
     public static function checkLatitude($check) {
 
         $isValid = false;
@@ -702,4 +729,21 @@ class ValidationBehavior extends Behavior {
 
 		return $validationResult;
 	}
+
+	public static function uniqueUserIdentity($field, array $globalData) {
+		$UserIdentities = TableRegistry::get('User.Identities');
+
+		$foundIdentities = $UserIdentities->find()
+			->where([
+				$UserIdentities->aliasField('identity_type_id') => $globalData['data']['identity_type_id'],
+				$UserIdentities->aliasField('number') => $globalData['data']['number'],
+			])
+			;
+
+		if (array_key_exists($UserIdentities->primaryKey(), $globalData['data']) && !empty($globalData['data'][$UserIdentities->primaryKey()])) {
+			$foundIdentities->where([$UserIdentities->aliasField($UserIdentities->primaryKey()).' != '.$globalData['data'][$UserIdentities->primaryKey()]]);
+		}
+		return $foundIdentities->count() <= 0;
+	}
+	
 }

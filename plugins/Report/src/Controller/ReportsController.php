@@ -17,6 +17,7 @@ class ReportsController extends AppController {
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
+			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
 		];
 	}
 
@@ -62,10 +63,16 @@ class ReportsController extends AppController {
 			$options = [
 				'Report.InstitutionRubrics' => __('Rubrics')
 			];
+<<<<<<< HEAD
 		} elseif ($module == 'DataQuality') {
 			$options = [
 				'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
 				'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
+=======
+		} elseif ($module == 'Audit') {
+			$options = [
+				'Report.Audit' => __('Audit')
+>>>>>>> e97fabdb73e8f4197cd07e2bdf8ff6c6a087e5ad
 			];
 		}
 		return $options;
