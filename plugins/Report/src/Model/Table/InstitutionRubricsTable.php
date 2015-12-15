@@ -38,9 +38,9 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$controllerName = $this->controller->name;
-		$reportName = __($controllerName).' - '.__('Rubrics');
+		$reportName = __('Rubrics');
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
-		$this->controller->set('contentHeader', $reportName);
+		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
