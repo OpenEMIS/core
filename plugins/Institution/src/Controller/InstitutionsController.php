@@ -70,6 +70,7 @@ class InstitutionsController extends AppController  {
 			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['index', 'add']],
 			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['index', 'add']],
 			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['index', 'add']],
+			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['index', 'add']],
 		];
 	}
 
