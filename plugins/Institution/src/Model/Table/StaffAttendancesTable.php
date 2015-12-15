@@ -49,6 +49,7 @@ class StaffAttendancesTable extends AppTable {
 			],
 			'pages' => ['index']
 		]);
+		$this->addBehavior('Import.ImportLink');
 	}
 
 	public function implementedEvents() {
