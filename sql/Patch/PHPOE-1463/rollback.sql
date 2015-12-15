@@ -328,10 +328,6 @@ ADD INDEX `security_user_id` (`security_user_id`);
 ALTER TABLE `student_custom_table_cells` 
 CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
--- institution_attachments
-ALTER TABLE `z_1463_institution_attachments`
-RENAME TO `institution_attachments`;
-
 -- student_attendance
 ALTER TABLE `z_1463_student_attendances`
 RENAME TO `student_attendances`;
