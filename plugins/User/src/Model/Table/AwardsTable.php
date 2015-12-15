@@ -42,7 +42,7 @@ class AwardsTable extends AppTable {
 				$type = $this->request->query('type');
 				$options['type'] = $type;
 				if ($type == 'student') {
-					$tabElements = $this->controller->getStudentGeneralTabElements($options);
+					$tabElements = $this->controller->getAcademicTabElements($options);
 				} else {
 					$tabElements = $this->controller->getCareerTabElements($options);
 				}

@@ -122,12 +122,6 @@ class NavigationComponent extends Component {
 			$session = $this->request->session();
 			$isStudent = $session->read('Directory.Directories.is_student');
 			$isStaff = $session->read('Directory.Directories.is_staff');
-			$isGuardian = $session->read('Directory.Directories.is_guardian');
-
-			if ($isGuardian) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
-				$session->write('Directory.Directories.reload', true);
-			}
 
 			if ($isStudent) {
 				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
@@ -252,17 +246,17 @@ class NavigationComponent extends Component {
 					'params' => ['plugin' => 'Institution']
 				],
 
-				'Institutions.Classes' => [
+				'Institutions.Sections' => [
 					'title' => 'Classes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Classes'],
+					'selected' => ['Institution.Sections'],
 					'params' => ['plugin' => 'Institution']
 				],
 
-				'Institutions.Subjects' => [
+				'Institutions.Classes' => [
 					'title' => 'Subjects',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Subjects'],
+					'selected' => ['Institution.Classes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -349,21 +343,21 @@ class NavigationComponent extends Component {
 				],
 
 				'Institutions.Fees' => [
-					'title' => 'Bank Accounts',
+					'title' => 'Fees',
 					'parent' => 'Institution.Finance', 
 					'params' => ['plugin' => 'Institution'],
 					'selected' => ['Institutions.Fees'],
 				],
 
 				'Institutions.StudentFees' => [
-					'title' => 'Bank Accounts',
+					'title' => 'Students',
 					'parent' => 'Institution.Finance', 
 					'params' => ['plugin' => 'Institution'],
 					'selected' => ['Institutions.StudentFees'],
 				],
 
 			'Institutions.Infrastructures' => [
-				'title' => 'Forms',
+				'title' => 'Infrastructures',
 				'parent' => 'Institutions.index', 
 				'params' => ['plugin' => 'Institution'],
 				'selected' => ['Institutions.Infrastructures']
@@ -488,28 +482,9 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments']
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
+					'Directories.History', 'Directories.SpecialNeeds']
 			]
-		];
-		return $navigation;
-	}
-
-	public function getDirectoryGuardianNavigation() {
-		$session = $this->request->session();
-		$id = $session->read('Guardian.Guardians.id');
-
-		$navigation = [
-			'Directories.Guardians' => [
-				'title' => 'Guardian', 
-				'parent' => 'Directories.index', 
-				'link' => false,
-			],
-				'Directories.GuardianHistory' => [
-					'title' => 'General',
-					'parent' => 'Directories.Guardians',
-					'params' => ['plugin' => 'Directory', 'type' => 'guardian'],
-					'selected' => ['Directories.GuardianHistory']
-				],
 		];
 		return $navigation;
 	}
@@ -524,12 +499,6 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'link' => false,
 			],
-				'Directories.StaffSpecialNeeds' => [
-					'title' => 'General',
-					'parent' => 'Directories.Staff',
-					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
-					'selected' => ['Directories.StaffSpecialNeeds', 'Directories.StaffHistory', 'Directories.StaffAwards']
-				],
 				'Directories.StaffEmployments' => [
 					'title' => 'Career',
 					'parent' => 'Directories.Staff',
@@ -570,10 +539,10 @@ class NavigationComponent extends Component {
 				'link' => false,
 			],
 				'Directories.StudentGuardians' => [
-					'title' => 'General',
+					'title' => 'Guardians',
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StudentGuardians', 'Directories.StudentSpecialNeeds', 'Directories.StudentHistory']
+					'selected' => ['Directories.StudentGuardians']
 				],
 				'Directories.StudentProgrammes.index' => [
 					'title' => 'Academic',

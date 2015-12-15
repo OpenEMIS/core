@@ -35,7 +35,7 @@ class ImportLinkBehavior extends Behavior {
 				break;
 
 			case 'view':
-				if ($buttons['index']['url']['action']!='Surveys') {
+				if ($buttons['view']['url']['action']!='Surveys') {
 					break;
 				}
 				$import['url'] = $buttons['view']['url'];

@@ -38,7 +38,7 @@ class StaffController extends AppController {
 			'Memberships'		=> ['className' => 'Staff.Memberships'],
 			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
-			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
+			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
 			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
