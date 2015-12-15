@@ -502,6 +502,14 @@ RENAME TO  `census_water`;
 ALTER TABLE `z_1463_batch_reports` 
 RENAME TO  `batch_reports` ;
 
+-- reports
+ALTER TABLE `z_1463_reports` 
+RENAME TO  `reports` ;
+
+-- report_templates
+ALTER TABLE `z_1463_report_templates` 
+RENAME TO  `report_templates` ;
+
 -- finance_categories
 ALTER TABLE `z_1463_finance_categories` 
 RENAME TO  `finance_categories`;
