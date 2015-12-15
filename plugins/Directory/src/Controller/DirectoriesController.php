@@ -74,12 +74,7 @@ class DirectoriesController extends AppController {
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
 		if ($action == 'index') {
-			$session->delete('Directory.Directories.id');
-			$session->delete('Directory.Directories.name');
-			$session->delete('Directory.Directories.is_student');
-			$session->delete('Directory.Directories.is_staff');
-			$session->delete('Directory.Directories.is_guardian');
-			$session->delete('Directory.Directories.reload');
+			$session->delete('Directory.Directories');
 			$session->delete('Staff.Staff.id');
 			$session->delete('Staff.Staff.name');
 			$session->delete('Student.Students.id');
@@ -181,14 +176,12 @@ class DirectoriesController extends AppController {
 		$session = $this->request->session();
 		if ($model->alias() != 'Directories') {
 			if ($session->check('Directory.Directories.id')) {
-				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
-					$userId = $session->read('Directory.Directories.id');
+				$userId = $session->read('Directory.Directories.id');
+				if ($model->hasField('security_user_id')) {
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('student_id')) {
-					$userId = $session->read('Directory.Directories.id');
 					$query->where([$model->aliasField('student_id') => $userId]);
 				} else if ($model->hasField('staff_id')) {
-					$userId = $session->read('Directory.Directories.id');
 					$query->where([$model->aliasField('staff_id') => $userId]);
 				}
 			} else {
