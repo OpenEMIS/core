@@ -15,7 +15,7 @@ class QualificationsTable extends AppTable {
 
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
 		$this->belongsTo('QualificationInstitutions', ['className' => 'Staff.QualificationInstitutions']);
 		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);

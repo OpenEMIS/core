@@ -10,7 +10,7 @@ class EmploymentsTable extends AppTable {
 		$this->table('staff_employments');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
 	}
 

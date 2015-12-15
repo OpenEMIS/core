@@ -28,7 +28,7 @@ class UserCascadeBehavior extends Behavior {
 		$tables = ConnectionManager::get('default')->schemaCollection()->listTables();
 
 		// will update this table to set value to 0 instead of deleting
-		$excludes = ['institution_site_sections'];
+		$excludes = ['institution_sections'];
 		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id'];
 
 		foreach ($tables as $key => $table) {
@@ -48,10 +48,10 @@ class UserCascadeBehavior extends Behavior {
 			}
 		}
 
-		$table = TableRegistry::get('institution_site_sections');
+		$table = TableRegistry::get('institution_sections');
 		$table->updateAll(
-			['security_user_id' => 0],
-			['security_user_id' => $userId]
+			['staff_id' => 0],
+			['staff_id' => $userId]
 		);
 	}
 
@@ -59,7 +59,7 @@ class UserCascadeBehavior extends Behavior {
 		$tables = ConnectionManager::get('default')->schemaCollection()->listTables();
 
 		// will update this table to set value to 0 instead of deleting
-		$excludes = ['institution_site_sections'];
+		$excludes = ['institution_sections'];
 		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id'];
 		pr('show sql');
 		foreach ($tables as $key => $table) {

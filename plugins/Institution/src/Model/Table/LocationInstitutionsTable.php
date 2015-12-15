@@ -4,12 +4,12 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class LocationInstitutionSitesTable extends AppTable {
+class LocationInstitutionsTable extends AppTable {
 	public function initialize(array $config) {
         // $this->addBehavior('ControllerAction.FieldOption');
-		$this->table('institution_sites');
+		$this->table('institutions');
         parent::initialize($config);
 				
-		$this->hasMany('InstitutionSiteShifts', ['className' => 'Institution.InstitutionSiteShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

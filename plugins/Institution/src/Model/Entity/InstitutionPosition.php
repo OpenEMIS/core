@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
-class InstitutionSitePosition extends Entity
+class InstitutionPosition extends Entity
 {
 	protected $_virtual = ['name'];
 	
