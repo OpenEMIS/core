@@ -59,15 +59,16 @@ class ReportsController extends AppController {
 			$options = [
 				'Report.Surveys' => __('Institutions')
 			];
-		} elseif ($module == 'InstitutionRubrics') {
+		} else if ($module == 'InstitutionRubrics') {
 			$options = [
 				'Report.InstitutionRubrics' => __('Rubrics')
 			];
-		} elseif ($module == 'DataQuality') {
+		} else if ($module == 'DataQuality') {
 			$options = [
 				'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
-				'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
-		} elseif ($module == 'Audit') {
+				'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
+			];
+		} else if ($module == 'Audit') {
 			$options = [
 				'Report.Audit' => __('Audit')
 			];
