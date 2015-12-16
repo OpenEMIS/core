@@ -40,7 +40,7 @@ class GuardiansTable extends AppTable {
 		// 	'excludes' => ['password', 'photo_name'],
 		// 	'filename' => 'Guardians'
 		// ]);
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
 	}
 
 	public function validationDefault(Validator $validator) {
