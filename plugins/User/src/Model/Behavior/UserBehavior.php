@@ -72,7 +72,7 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
 		switch ($this->_table->table()) {
 			case 'institution_students':
-			case 'institution_site_staff':
+			case 'institution_staff':
 			case 'student_guardians':
 				break;
 			default:

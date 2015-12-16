@@ -22,7 +22,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSiteSurveys']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSurveys']);
 
 	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');

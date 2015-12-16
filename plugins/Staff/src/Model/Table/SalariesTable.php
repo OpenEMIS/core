@@ -14,7 +14,7 @@ class SalariesTable extends AppTable {
 		$this->table('staff_salaries');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->hasMany('SalaryAdditions', ['className' => 'Staff.SalaryAdditions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SalaryDeductions', ['className' => 'Staff.SalaryDeductions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
@@ -175,5 +175,22 @@ class SalariesTable extends AppTable {
 		$this->fields['net_salary']['type'] = 'float';
 		$this->fields['additions']['type'] = 'float';
 		$this->fields['deductions']['type'] = 'float';
+	}
+
+	private function setupTabElements() {
+		if ($this->controller->name == 'Directories') {
+			$options = [
+				'type' => 'staff'
+			];
+			$tabElements = $this->controller->getStaffFinanceTabElements($options);
+		} else {
+			$tabElements = $this->controller->getFinanceTabElements();
+		}
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }
