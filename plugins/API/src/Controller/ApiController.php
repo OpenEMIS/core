@@ -299,7 +299,7 @@ class ApiController extends AppController
 								],
 								'Institution' => [
 									'type' => 'left',
-									'table' => 'institution_sites',
+									'table' => 'institutions',
 									'conditions' => [
 										'Institution.id = InstitutionStudent.institution_id'
 									]

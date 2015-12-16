@@ -8,6 +8,11 @@ class AdvancedNameSearchBehavior extends Behavior {
 	// findByNames
 	// advancedNameSearch Behavior
 	public function addSearchConditions(Query $query, $options = []) {
+		$searchByUserName = false;
+		if (array_key_exists('searchByUserName', $options)) {
+			$searchByUserName = $options['searchByUserName'];
+		}
+
 		if (array_key_exists('searchTerm', $options)) {
 			$search = $options['searchTerm'];
 		}
@@ -31,7 +36,7 @@ class AdvancedNameSearchBehavior extends Behavior {
 				case 1:
 					// 1 word - search by openemis id or 1st or middle or third or last
 					$searchString = '%' . $search . '%';
-					$query->where([
+					$conditions = [
 						'OR' => [
 							$alias . '.openemis_no LIKE' => $searchString,
 							$alias . '.first_name LIKE' => $searchString,
@@ -39,31 +44,65 @@ class AdvancedNameSearchBehavior extends Behavior {
 							$alias . '.third_name LIKE' => $searchString,
 							$alias . '.last_name LIKE' => $searchString
 						]
-					]);
+					];
+					if ($searchByUserName) {
+						$conditions['OR'][$alias . '.username LIKE'] = $searchString;
+					}
+					$query->where($conditions);
 					break;
 
 				case 2:
 					// 2 words - search by 1st and last name
 					$names = ["$alias.first_name", "$alias.last_name"];
-					$query->where(['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . ') ) LIKE "%' . trim($search) . '%"']);
+					$concatCondition = ['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . ') ) LIKE "%' . trim($search) . '%"'];
+					if (!$searchByUserName) {
+						$conditions = $concatCondition;
+						
+					} else {
+						$conditions = [];
+						$conditions['OR'] = [];
+						$conditions['OR'][] = $concatCondition;
+						$conditions['OR'][$alias . '.username LIKE'] = $searchString;
+					}
+					$query->where($conditions);
 					break;
 
 				case 3:
 					// 3 words - search by 1st middle last
 					$names = ["$alias.first_name", "$alias.middle_name", "$alias.last_name"];
-					$query->where(['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . '), trim(' . $names[2] . ') ) LIKE "%' . trim($search) . '%"']);
+					$concatCondition = ['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . '), trim(' . $names[2] . ') ) LIKE "%' . trim($search) . '%"'];
+					if (!$searchByUserName) {
+						$conditions = $concatCondition;
+						
+					} else {
+						$conditions = [];
+						$conditions['OR'] = [];
+						$conditions['OR'][] = $concatCondition;
+						$conditions['OR'][$alias . '.username LIKE'] = $searchString;
+					}
+					$query->where($conditions);
 					break;
 
 				case 4:
 					// 4 words - search by 1st middle third last
 					$names = ["$alias.first_name", "$alias.middle_name", "$alias.third_name", "$alias.last_name"];
-					$query->where(['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . '), trim(' . $names[2] . '), trim(' . $names[3] . ') ) LIKE "%' . trim($search) . '%"']);
+					$concatCondition = ['CONCAT_WS(" ", trim(' . $names[0] . '), trim(' . $names[1] . '), trim(' . $names[2] . '), trim(' . $names[3] . ') ) LIKE "%' . trim($search) . '%"'];
+					if (!$searchByUserName) {
+						$conditions = $concatCondition;
+						
+					} else {
+						$conditions = [];
+						$conditions['OR'] = [];
+						$conditions['OR'][] = $concatCondition;
+						$conditions['OR'][$alias . '.username LIKE'] = $searchString;
+					}
+					$query->where($conditions);
 					break;
 				
 				default:
 					foreach ($searchParams as $key => $value) {
 						$searchString = '%' . $value . '%';
-						$query->where([
+						$conditions = [
 							'OR' => [
 								$alias . '.openemis_no LIKE' => $searchString,
 								$alias . '.first_name LIKE' => $searchString,
@@ -71,14 +110,18 @@ class AdvancedNameSearchBehavior extends Behavior {
 								$alias . '.third_name LIKE' => $searchString,
 								$alias . '.last_name LIKE' => $searchString
 							]
-						]);
+						];
+						if ($searchByUserName) {
+							$conditions['OR'][$alias . '.username LIKE'] = $searchString;
+						}
 					}
 					break;
 			}
 		} else {
 			foreach ($searchParams as $key => $value) {
 				$searchString = '%' . $value . '%';
-				$query->where([
+
+				$conditions = [
 					'OR' => [
 						$alias . '.openemis_no LIKE' => $searchString,
 						$alias . '.first_name LIKE' => $searchString,
@@ -86,7 +129,10 @@ class AdvancedNameSearchBehavior extends Behavior {
 						$alias . '.third_name LIKE' => $searchString,
 						$alias . '.last_name LIKE' => $searchString
 					]
-				]);
+				];
+				if ($searchByUserName) {
+					$conditions['OR'][$alias . '.username LIKE'] = $searchString;
+				}
 			}
 		}
 

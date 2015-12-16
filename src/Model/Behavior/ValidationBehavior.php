@@ -63,6 +63,33 @@ class ValidationBehavior extends Behavior {
         return $isValid;
     }
 
+    public static function checkAuthorisedArea($check, array $globalData) {
+        $isValid = false;
+        $AccessControl = $globalData['providers']['table']->AccessControl;
+        if ($AccessControl->isAdmin()) {
+        	$isValid = true;
+        } else {
+        	$condition = [];
+        	$areaCondition = [];
+
+        	$Areas = TableRegistry::get('Area.Areas');
+        	foreach($AccessControl->getAreasByUser() as $area) {
+        		$areaCondition[] = [
+					$Areas->aliasField('lft').' >= ' => $area['lft'],
+					$Areas->aliasField('rght').' <= ' => $area['rght']
+				];
+        	}
+        	$condition['OR'] = $areaCondition;
+
+	        $isChild = $Areas->find()
+	        	->where([$Areas->aliasField('id') => $check])
+	        	->where($condition)
+	        	->count();
+	        $isValid = $isChild > 0;
+        }
+        return $isValid;
+    }
+
     public static function checkLatitude($check) {
 
         $isValid = false;
@@ -435,9 +462,9 @@ class ValidationBehavior extends Behavior {
 		$existingRecords = $Staff->find()
 			->where(
 				[
-					$Staff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id'],
-					$Staff->aliasField('institution_site_id') => $globalData['data']['institution_site_id'],
-					$Staff->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+					$Staff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
+					$Staff->aliasField('institution_id') => $globalData['data']['institution_id'],
+					$Staff->aliasField('staff_id') => $globalData['data']['staff_id'],
 					'OR' => [
 						[$Staff->aliasField('end_date').' IS NULL'],
 						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
@@ -488,8 +515,8 @@ class ValidationBehavior extends Behavior {
 
 
 			$ConfigItems = TableRegistry::get('ConfigItems');
-			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value(admission_age_minus);
-			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value(admission_age_plus);
+			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
+			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
 			// pr('ageOfStudent: '.$ageOfStudent);
 			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
@@ -555,10 +582,18 @@ class ValidationBehavior extends Behavior {
 		} else {
 			$endDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
 		}
-		$security_user_id = $globalData['data']['security_user_id'];
-		$institution_site_id = $globalData['data']['institution_site_id'];
+		$userId = '';
+		$userKey = 'security_user_id';
+		if ($SearchTable->table() == 'institution_student_absences') {
+			$userId = $globalData['data']['student_id'];
+			$userKey = 'student_id';
+		} else if ($SearchTable->table() == 'institution_staff_absences') {
+			$userId = $globalData['data']['staff_id'];
+			$userKey = 'staff_id';
+		}
+		$institution_id = $globalData['data']['institution_id'];
 
-		// this will assome there will be start date and end date and security_user_id and academic period
+		// this will assome there will be start date and end date and student_id and academic period
 		$overlapDateCondition = [];
 		$overlapDateCondition['OR'] = [
 			'OR' => [
@@ -615,8 +650,8 @@ class ValidationBehavior extends Behavior {
 		// need to check for overlap time
 		$found = $SearchTable->find()
 			->where($overlapDateCondition)
-			->where([$SearchTable->aliasField('security_user_id') => $security_user_id])
-			->where([$SearchTable->aliasField('institution_site_id') => $institution_site_id])
+			->where([$SearchTable->aliasField($userKey) => $userId])
+			->where([$SearchTable->aliasField('institution_id') => $institution_id])
 			;
 			// ->toArray();
 
@@ -655,7 +690,7 @@ class ValidationBehavior extends Behavior {
 		$identicalPositionHolders = $InstitutionStaff->find()
 			->where(
 				[
-					$InstitutionStaff->aliasField('institution_site_position_id') => $globalData['data']['institution_site_position_id']
+					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
 					
 				]
 			)

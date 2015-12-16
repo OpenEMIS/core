@@ -42,9 +42,9 @@ class UserGroupsTable extends AppTable {
 
 		$this->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
-			'joinTable' => 'security_group_institution_sites',
+			'joinTable' => 'security_group_institutions',
 			'foreignKey' => 'security_group_id',
-			'targetForeignKey' => 'institution_site_id',
+			'targetForeignKey' => 'institution_id',
 			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
 		]);
@@ -236,7 +236,7 @@ class UserGroupsTable extends AppTable {
 					foreach ($associated[$key] as $i => $obj) {
 						$this->request->data[$alias][$key][] = [
 							'id' => $obj->id,
-							'_joinData' => ['code' => $obj->code, 'institution_site_id' => $obj->id, 'name' => $obj->name]
+							'_joinData' => ['code' => $obj->code, 'institution_id' => $obj->id, 'name' => $obj->name]
 						];
 					}
 				}
@@ -249,11 +249,11 @@ class UserGroupsTable extends AppTable {
 					$joinData = $obj['_joinData'];
 					$rowData = [];
 					$name = $joinData['name'];
-					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['institution_site_id']]);
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['institution_id']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.code", ['value' => $joinData['code']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.institution_site_id", ['value' => $joinData['institution_site_id']]);
-					$rowData[] = [$joinData['code'], ['autocomplete-exclude' => $joinData['institution_site_id']]];
+					$name .= $Form->hidden("$alias.$key.$i._joinData.institution_id", ['value' => $joinData['institution_id']]);
+					$rowData[] = [$joinData['code'], ['autocomplete-exclude' => $joinData['institution_id']]];
 					$rowData[] = $name;
 					$rowData[] = $this->getDeleteButton();
 					$tableCells[] = $rowData;
@@ -279,7 +279,7 @@ class UserGroupsTable extends AppTable {
 				}
 				$data[$alias]['institutions'][] = [
 					'id' => $obj->id,
-					'_joinData' => ['code' => $obj->code, 'institution_site_id' => $obj->id, 'name' => $obj->name]
+					'_joinData' => ['code' => $obj->code, 'institution_id' => $obj->id, 'name' => $obj->name]
 				];
 			} catch (RecordNotFoundException $ex) {
 				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
@@ -429,13 +429,13 @@ class UserGroupsTable extends AppTable {
 			$query
 			->join([
 				[
-					'table' => 'security_group_institution_sites', 'alias' => 'SecurityGroupInstitutions', 'type' => 'LEFT',
+					'table' => 'security_group_institutions', 'alias' => 'SecurityGroupInstitutions', 'type' => 'LEFT',
 					'conditions' => ['SecurityGroupInstitutions.security_group_id = ' . $this->aliasField('id')]
 				],
 				[
-					'table' => 'institution_sites', 'alias' => 'Institutions', 'type' => 'LEFT',
+					'table' => 'institutions', 'alias' => 'Institutions', 'type' => 'LEFT',
 					'conditions' => [
-						'Institutions.id = ' . 'SecurityGroupInstitutions.institution_site_id',
+						'Institutions.id = ' . 'SecurityGroupInstitutions.institution_id',
 					]
 				],
 				[
@@ -468,7 +468,7 @@ class UserGroupsTable extends AppTable {
 
 	public function findNotInInstitutions(Query $query, array $options) {
 		$query->where([
-			'NOT EXISTS (SELECT `id` FROM `institution_sites` WHERE `security_group_id` = `UserGroups`.`id`)'
+			'NOT EXISTS (SELECT `id` FROM `institutions` WHERE `security_group_id` = `UserGroups`.`id`)'
 		]);
 		return $query;
 	}
@@ -483,12 +483,16 @@ class UserGroupsTable extends AppTable {
 			$data[$this->alias()]['institutions'] = [];
 		}
 
+		if (!array_key_exists('users', $data[$this->alias()])) {
+			$data[$this->alias()]['users'] = [];
+		}
+
 		// in case user has been added with the same role twice, we need to filter it
 		$this->filterDuplicateUserRoles($data);
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['Areas', 'Institutions'];
+		$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
