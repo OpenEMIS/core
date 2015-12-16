@@ -81,9 +81,9 @@ ALTER TABLE `institution_class_staff`
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
 CHANGE COLUMN `institution_class_id` `institution_site_class_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_class_id` ,
-ADD INDEX `institution_site_class_id` (`institution_site_class_id`)  COMMENT '',
+ADD INDEX `institution_site_class_id` (`institution_site_class_id`),
 DROP INDEX `staff_id` ,
-ADD INDEX `security_user_id` (`security_user_id`)  COMMENT '',
+ADD INDEX `security_user_id` (`security_user_id`),
 RENAME TO  `institution_site_class_staff` ;
 
 -- institution_site_class_students
