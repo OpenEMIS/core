@@ -14,14 +14,14 @@ class ImportStudentAttendancesTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSiteStudentAbsences']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionStudentAbsences']);
 
-	    $this->StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+	    $this->StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	    $this->Students = TableRegistry::get('Institution.Students');
 	    $this->Users = TableRegistry::get('User.Users');
 	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$this->InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$this->InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
 	}
 
 	public function beforeAction($event) {
@@ -89,11 +89,11 @@ class ImportStudentAttendancesTable extends AppTable {
 								'Users'
 							])
 							// ->join([
-							// 	'InstitutionSiteSectionStudents' => [
+							// 	'InstitutionSectionStudents' => [
 							// 		'table' => 'institution_site_section_students',
-							// 		'alias' => 'InstitutionSiteSectionStudents',
+							// 		'alias' => 'InstitutionSectionStudents',
 							// 		// 'type' => 'LEFT',
-							// 		'conditions' => 'InstitutionSiteSectionStudents.student_id = '.$this->Students->aliasField('student_id'),
+							// 		'conditions' => 'InstitutionSectionStudents.student_id = '.$this->Students->aliasField('student_id'),
 							// 	],
 							// ])
 							->order(['EducationGrades.order'])
