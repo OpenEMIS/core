@@ -64,17 +64,10 @@ class InstitutionAttachmentsTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function viewAfterAction(Event $event, Entity $entity) {
-		$this->fields['name']['type'] = 'download';
-		$this->fields['name']['attr']['url'] = $this->ControllerAction->url('download');//$this->ControllerAction->buttons['download']['url'];
-    	
+		
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
-	    }
-
-	    $viewVars = $this->ControllerAction->vars();
-	    if(!is_null($viewVars['toolbarButtons']['download'])) {
-	    	$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
 	    }
 
 		return $entity;
