@@ -729,4 +729,8 @@ class ValidationBehavior extends Behavior {
 
 		return $validationResult;
 	}
+
+	public static function checkNoSpaces($field, array $globalData) {
+		return !strrpos($field," ");
+	}
 }
