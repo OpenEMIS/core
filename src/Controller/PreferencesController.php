@@ -4,6 +4,7 @@ namespace App\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 
 class PreferencesController extends AppController {
 	public $activeObj = null;
@@ -59,6 +60,9 @@ class PreferencesController extends AppController {
 	}
 
 	public function getUserTabElements() {
+		$Config = TableRegistry::get('ConfigItems');
+		$canChangeAdminPassword = $Config->value('change_password');
+		$isSuperAdmin = $this->Auth->user('super_admin');
 		$userId = $this->Auth->user('id');
 		$tabElements = [
 			'Account' => [
@@ -102,6 +106,9 @@ class PreferencesController extends AppController {
 				'text' => __('History')	
 			]
 		];
+		if (!$canChangeAdminPassword && $isSuperAdmin) {
+			unset($tabElements['Password']);
+		}
 		return $tabElements;
 	}
 

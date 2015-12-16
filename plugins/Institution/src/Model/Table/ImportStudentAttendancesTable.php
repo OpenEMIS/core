@@ -49,6 +49,11 @@ class ImportStudentAttendancesTable extends AppTable {
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
 		$tempRow['duplicates'] = false;
 		$tempRow['entity'] = $this->StudentAbsences->newEntity();
+
+		$tempRow['full_day'] = 1;
+		$tempRow['institution_site_id'] = false;
+		$tempRow['academic_period_id'] = false;
+
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -76,7 +81,8 @@ class ImportStudentAttendancesTable extends AppTable {
 							])
 							->where([
 								$this->Students->aliasField('academic_period_id') => $currentPeriodId,
-								$this->Students->aliasField('institution_id') => $this->institutionId
+								$this->Students->aliasField('institution_id') => $this->institutionId,
+								'Users.id IS NOT NULL',
 							])
 							->contain([
 								'EducationGrades',
@@ -92,7 +98,6 @@ class ImportStudentAttendancesTable extends AppTable {
 							// ])
 							->order(['EducationGrades.order'])
 							;
-		// pr($allStudents->toArray());die;
 		$institution = $this->Institutions->get($this->institutionId);
 		$institutionHeader = $this->getExcelLabel('Imports', 'institution_site_id') . ": " . $institution->name;
 		$periodHeader = $this->getExcelLabel($lookedUpTable, 'academic_period_id') . ": " . $currentPeriod->name;
@@ -198,7 +203,7 @@ class ImportStudentAttendancesTable extends AppTable {
 		$tempRow['academic_period_id'] = $period->id;
 
 		$student = $this->Students->find()->where([
-			'academic_period_id' => $period->id,
+			'academic_period_id' => $tempRow['academic_period_id'],
 			'institution_id' => $tempRow['institution_site_id'],
 			'student_id' => $tempRow['security_user_id'],
 		])->first();
@@ -208,8 +213,6 @@ class ImportStudentAttendancesTable extends AppTable {
 			return false;
 		}
 		
-		$tempRow['full_day'] = 1;
-
 		return true;
 	}
 }
