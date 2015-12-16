@@ -245,6 +245,13 @@ class NavigationComponent extends Component {
 					'params' => ['plugin' => 'Institution']
 				],
 
+				'Institutions.Programmes' => [
+					'title' => 'Programmes',
+					'parent' => 'Institution.Academic',
+					'selected' => ['Institution.Programmes'],
+					'params' => ['plugin' => 'Institution']
+				],
+
 				'Institutions.Sections' => [
 					'title' => 'Classes',
 					'parent' => 'Institution.Academic',
@@ -716,7 +723,7 @@ class NavigationComponent extends Component {
 				],
 
 				'Rubrics.Templates' => [
-					'title' => 'Forms',
+					'title' => 'Rubrics',
 					'parent' => 'Administration.Survey',
 					'params' => ['plugin' => 'Rubric'],
 					'selected' => ['Rubrics.Sections', 'Rubrics.Criterias', 'Rubrics.Options', 'Rubrics.Status']
