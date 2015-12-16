@@ -359,8 +359,6 @@ class ImportBehavior extends Behavior {
 					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
 					$this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
 			
-					// pr($tempRow);die;
-					
 					// for each columns
 					$references = [
 						'sheet'=>$sheet, 
@@ -469,7 +467,6 @@ class ImportBehavior extends Behavior {
 				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
 				foreach($dataFailed as $record) {
 					$record['data'][] = $record['error'];
-					// pr($record);die;
 					$writer->writeSheetRow($dataSheetName, array_values($record['data']->getArrayCopy()));
 				}
 				
