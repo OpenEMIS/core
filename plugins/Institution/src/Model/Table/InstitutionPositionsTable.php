@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionSitePositionsTable extends AppTable {
+class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
 	public $institutionId = 0;
 	
@@ -22,9 +22,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
-		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
 
-		$this->hasMany('InstitutionSiteStaff', 	['className' => 'Institution.InstitutionSiteStaff']);
+		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
 		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
 	}
@@ -137,8 +137,8 @@ class InstitutionSitePositionsTable extends AppTable {
 		}
 		// pr($id);die;
 		// start Current Staff List field
-		$Staff = $this->Institutions->InstitutionSiteStaff;
-		$currentStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institution.Institutions.id'), $id)
+		$Staff = $this->Institutions->Staff;
+		$currentStaff = $Staff ->findAllByInstitutionIdAndInstitutionPositionId($session->read('Institution.Institutions.id'), $id)
 							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
 							->order([$Staff->aliasField('start_date')])
 							->find('withBelongsTo');
@@ -154,7 +154,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		// end Current Staff List field
 
 		// start PAST Staff List field
-		$pastStaff = $Staff ->findAllByInstitutionSiteIdAndInstitutionSitePositionId($session->read('Institution.Institutions.id'), $id)
+		$pastStaff = $Staff ->findAllByInstitutionIdAndInstitutionPositionId($session->read('Institution.Institutions.id'), $id)
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
 							->andWhere([$Staff->aliasField('end_date').' < DATE(NOW())'])
 							->order([$Staff->aliasField('start_date')])
@@ -184,16 +184,16 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	/**
-	 * Used by InstitutionSiteStaff.add
+	 * Used by Staff.add
 	 * @param  boolean $institutionId [description]
 	 * @param  boolean $status        [description]
 	 * @return [type]                 [description]
 	 */
-	public function getInstitutionSitePositionList($institutionId = false, $status = false) {
+	public function getInstitutionPositionList($institutionId = false, $status = false) {
 		$data = $this->find();
 
 		if ($institutionId !== false) {
-			$data->where(['institution_site_id' => $institutionId]);
+			$data->where(['institution_id' => $institutionId]);
 		}
 
 		if ($status !== false) {
@@ -220,7 +220,7 @@ class InstitutionSitePositionsTable extends AppTable {
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$query->where([$this->aliasField('institution_site_id') => $institutionId]);
+		$query->where([$this->aliasField('institution_id') => $institutionId]);
 	}
 
 

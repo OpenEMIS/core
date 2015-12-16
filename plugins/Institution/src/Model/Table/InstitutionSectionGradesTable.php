@@ -4,11 +4,11 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSiteSectionGradesTable extends AppTable {
+class InstitutionSectionGradesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 	}
 
@@ -19,12 +19,12 @@ class InstitutionSiteSectionGradesTable extends AppTable {
 	public function getGradesBySection($sectionId) {
 		$this->unbindModel(array('belongsTo' => array('EducationGrade')));
 		$data = $this->find('all', array(
-			'fields' => array('InstitutionSiteSectionGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'EducationGrade.id'),
+			'fields' => array('InstitutionSectionGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'EducationGrade.id'),
 			'joins' => array(
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
+					'conditions' => array('EducationGrade.id = InstitutionSectionGrade.education_grade_id')
 				),
 				array(
 					'table' => 'education_programmes',
@@ -38,8 +38,8 @@ class InstitutionSiteSectionGradesTable extends AppTable {
 				)
 			),
 			'conditions' => array(
-				'InstitutionSiteSectionGrade.institution_site_section_id' => $sectionId,
-				'InstitutionSiteSectionGrade.status' => 1
+				'InstitutionSectionGrade.institution_section_id' => $sectionId,
+				'InstitutionSectionGrade.status' => 1
 			),
 			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));

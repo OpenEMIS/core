@@ -7,16 +7,16 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSiteSectionStudentsTable extends AppTable {
+class InstitutionSectionStudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 
-		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrade']);
+		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrade']);
 	}
 
 	public function getMaleCountBySection($sectionId) {
@@ -25,7 +25,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_site_section_id') => $sectionId])
+			->where([$this->aliasField('institution_section_id') => $sectionId])
 			->count()
 		;
 		return $count;
@@ -37,7 +37,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_site_section_id') => $sectionId])
+			->where([$this->aliasField('institution_section_id') => $sectionId])
 			->count()
 		;
 		return $count;
@@ -51,7 +51,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	public function autoInsertSectionStudent($data) {
 		$securityUserId = $data['student_id'];
 		$selectedGradeId = $data['education_grade_id'];
-		$selectedSectionId = $data['institution_site_section_id'];
+		$selectedSectionId = $data['institution_section_id'];
 
 		if(!empty($selectedSectionId)) {
 			$autoInsertData = $this->newEntity();
@@ -62,7 +62,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 					[
 						$this->aliasField('student_id') => $securityUserId,
 						$this->aliasField('education_grade_id') => $selectedGradeId,
-						$this->aliasField('institution_site_section_id') => $selectedSectionId
+						$this->aliasField('institution_section_id') => $selectedSectionId
 					]
 				)
 				->first()
@@ -75,7 +75,7 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 			
 			$autoInsertData->student_id = $securityUserId;
 			$autoInsertData->education_grade_id = $selectedGradeId;
-			$autoInsertData->institution_site_section_id = $selectedSectionId;
+			$autoInsertData->institution_section_id = $selectedSectionId;
 			$autoInsertData->status = 1;
 
 			if ($this->save($autoInsertData)) {
@@ -85,19 +85,19 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	}
 
 	private function _autoInsertSubjectStudent($data) {
-		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
-		$Subjects = TableRegistry::get('Institution.InstitutionSiteClasses');
-		$SubjectStudents = TableRegistry::get('Institution.InstitutionSiteClassStudents');
+		$Classes = TableRegistry::get('Institution.InstitutionSections');
+		$Subjects = TableRegistry::get('Institution.InstitutionClasses');
+		$SubjectStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 
 		$record = $Classes->find()
 			->contain([
-				'InstitutionSiteClasses.InstitutionSiteClassStudents', 
-				'InstitutionSiteClasses.InstitutionSiteSections'
+				'InstitutionClasses.InstitutionClassStudents', 
+				'InstitutionClasses.InstitutionSections'
 			])->where([
-				$Classes->aliasField('id') => $data['institution_site_section_id']
+				$Classes->aliasField('id') => $data['institution_section_id']
 			])->first();
 
-		foreach ($record->institution_site_classes as $class) {
+		foreach ($record->institution_classes as $class) {
 			$student = $Subjects->createVirtualEntity($data['student_id'], $class, 'students');
 			$SubjectStudents->save($student);
 		}

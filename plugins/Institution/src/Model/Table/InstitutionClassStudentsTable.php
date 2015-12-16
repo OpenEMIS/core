@@ -4,13 +4,13 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSiteClassStudentsTable extends AppTable {
+class InstitutionClassStudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses']);
-		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 	}
 
 	public function getMaleCountBySection($sectionId) {
@@ -19,7 +19,7 @@ class InstitutionSiteClassStudentsTable extends AppTable {
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_site_section_id') => $sectionId])
+			->where([$this->aliasField('institution_section_id') => $sectionId])
 			->count()
 		;
 		return $count;
@@ -31,7 +31,7 @@ class InstitutionSiteClassStudentsTable extends AppTable {
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_site_section_id') => $sectionId])
+			->where([$this->aliasField('institution_section_id') => $sectionId])
 			->count()
 		;
 		return $count;

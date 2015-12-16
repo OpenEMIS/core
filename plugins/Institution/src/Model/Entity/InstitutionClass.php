@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class InstitutionSiteClass extends Entity
+class InstitutionClass extends Entity
 {
 	protected $_virtual = ['male_students', 'female_students', 
     'teachers', 
@@ -13,12 +13,12 @@ class InstitutionSiteClass extends Entity
 	
     protected function _getMaleStudents() {
         $gender_id = 1; // male
-        $table = TableRegistry::get('Institution.InstitutionSiteClassStudents');
+        $table = TableRegistry::get('Institution.InstitutionClassStudents');
         $count = $table
                     ->find()
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
-                    ->where([$table->aliasField('institution_site_class_id') => $this->id])
+                    ->where([$table->aliasField('institution_class_id') => $this->id])
                     ->where([$table->aliasField('status') .' > 0'])
                     ->count()
         ;
@@ -27,12 +27,12 @@ class InstitutionSiteClass extends Entity
 
     protected function _getFemaleStudents() {
         $gender_id = 2; // female
-        $table = TableRegistry::get('Institution.InstitutionSiteClassStudents');
+        $table = TableRegistry::get('Institution.InstitutionClassStudents');
         $count = $table
                     ->find()
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
-                    ->where([$table->aliasField('institution_site_class_id') => $this->id])
+                    ->where([$table->aliasField('institution_class_id') => $this->id])
                     ->where([$table->aliasField('status') .' > 0'])
                     ->count();
         return $count;
@@ -41,11 +41,11 @@ class InstitutionSiteClass extends Entity
     // protected function _getTeachers() {
     //     pr($this);die;
         // $value = '';
-        // $table = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+        // $table = TableRegistry::get('Institution.InstitutionClassStaff');
         // $rawList = $table
         //             ->find()
         //             ->contain('Users')
-        //             ->where([$table->aliasField('institution_site_class_id') => $this->id])
+        //             ->where([$table->aliasField('institution_class_id') => $this->id])
         //             ->where([$table->aliasField('status') .' > 0'])
         //             ->toArray();
         // $list = [];
@@ -72,8 +72,8 @@ class InstitutionSiteClass extends Entity
 
     // protected function _getSectionName() {
         // $value = 'mmm';
-    //     if ($this->has('institution_site_section_classes')) {
-    //         if ($this->has('institution_site_section')) {
+    //     if ($this->has('institution_section_classes')) {
+    //         if ($this->has('institution_section')) {
     //             $value = $this->education_subject->code;
     //         } else {
     //             $table = TableRegistry::get('Education.EducationSubjects');
