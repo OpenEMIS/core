@@ -110,11 +110,12 @@ class InstitutionsController extends AppController  {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
-				if ($action == 'dashboard') {
-					$session->write('Institution.Institutions.id', $id);
-				}
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
+				if ($action == 'dashboard') {
+					$session->write('Institution.Institutions.id', $id);
+					$session->write('Institution.Institutions.name', $name);
+				}
 				if ($action == 'view') {
 					$header = $name .' - '.__('Overview');
 				} else {
@@ -282,10 +283,12 @@ class InstitutionsController extends AppController  {
 		$action = (array_key_exists('action', $options))? $options['action']: 'add';
 		$id = (array_key_exists('id', $options))? $options['id']: 0;
 		$userId = (array_key_exists('userId', $options))? $options['userId']: 0;
+		$type = 'Students';
 
 		switch ($userRole) {
 			case 'Staff':
 				$pluralUserRole = 'Staff'; // inflector unable to handle
+				$type = 'Staff';
 				break;
 			default:
 				$pluralUserRole = Inflector::pluralize($userRole);
@@ -293,45 +296,77 @@ class InstitutionsController extends AppController  {
 		}
 
 		$url = ['plugin' => $this->plugin, 'controller' => $this->name];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 
 		$tabElements = [
 			$pluralUserRole => ['text' => __('Academic')],
-			$userRole.'User' => ['text' => __('General')],
-			$userRole.'Account' => ['text' => __('Account')]
+			$userRole.'User' => ['text' => __('Overview')],
+			$userRole.'Account' => ['text' => __('Account')], 
+			
+			// $userRole.'Nationality' => ['text' => __('Identities')],
 		];
+
+		$studentTabElements = [
+			'Identities' => ['text' => __('Identities')],
+			'Nationalities' => ['text' => __('Nationalities')],
+			'Contacts' => ['text' => __('Contacts')],
+			'Guardians' => ['text' => __('Guardians')],
+			'Languages' => ['text' => __('Languages')],
+			'SpecialNeeds' => ['text' => __('Special Needs')],
+			'Attachments' => ['text' => __('Attachments')],
+			'Comments' => ['text' => __('Comments')],
+			'History' => ['text' => __('History')],
+		];
+
+		if ($type == 'Staff') {
+			$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+			unset($studentTabElements['Guardians']);
+		}
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		if ($action == 'add') {
 			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'add']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'add']);
 		} else {
-			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
+			unset($tabElements[$pluralUserRole]);
+			// $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'view']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
+			
+			// $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
 
 			// Only Student has Survey tab
 			if ($userRole == 'Student') {
 				$tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
 				$tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
 			}
+
+			foreach ($studentTabElements as $key => $value) {
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			}
 		}
 
 		foreach ($tabElements as $key => $tabElement) {
 			switch ($key) {
 				case $userRole.'User':
-					$params = [$userId, 'id' => $id];
+					$params = [$userId];
 					break;
 				case $userRole.'Account':
-					$params = [$userId, 'id' => $id];
+					$params = [$userId];
 					break;
 				case $userRole.'Surveys':
-					$params = ['id' => $id, 'user_id' => $userId];
+					$params = ['user_id' => $userId];
 					break;
 				default:
 					$params = [$id];
 			}
 			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
+
+		$session = $this->request->session();
+		$session->write('Institution.'.$type.'.tabElements', $tabElements);
 
 		return $tabElements;
 	}

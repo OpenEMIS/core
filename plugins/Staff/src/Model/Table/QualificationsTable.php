@@ -106,7 +106,7 @@ class QualificationsTable extends AppTable {
 		}
 
 		$viewVars = $this->ControllerAction->vars();
-		if(!is_null($viewVars['toolbarButtons']['download'])) {
+		if(isset($viewVars['toolbarButtons']['download'])) {
 			$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
 		}
 
@@ -161,5 +161,15 @@ class QualificationsTable extends AppTable {
 
 	public function onGetFileType(Event $event, Entity $entity) {
 		return $this->getFileTypeForView($entity->file_name);
+	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

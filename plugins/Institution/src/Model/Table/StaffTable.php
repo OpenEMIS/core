@@ -193,6 +193,8 @@ class StaffTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Staff.Staff.id', $entity->security_user_id);
+		$this->Session->write('Staff.Staff.name', $entity->user->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -350,6 +352,25 @@ class StaffTable extends AppTable {
 			$attr['options'] = $positionOptions;
 		}
 		return $attr;
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (isset($buttons['view'])) {
+			$url = $this->ControllerAction->url('view');
+			$url['action'] = 'StaffUser';
+			$url[1] = $entity['_matchingData']['Users']['id'];
+			$buttons['view']['url'] = $url;
+		}
+
+		if (isset($buttons['edit'])) {
+			$url = $this->ControllerAction->url('edit');
+			$url['action'] = 'StaffUser';
+			$url[1] = $entity['_matchingData']['Users']['id'];
+			$buttons['edit']['url'] = $url;
+		}
+
+		return $buttons;
 	}
 
 	public function onUpdateFieldRole(Event $event, array $attr, $action, Request $request) {
