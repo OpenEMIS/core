@@ -97,17 +97,10 @@ class QualificationsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->fields['document_no']['type'] = 'download';
-		$this->fields['document_no']['attr']['url'] = $action = $this->ControllerAction->url('download');//$this->ControllerAction->buttons['download']['url'];
 
 		$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
 		if (!empty($entity->modified_user_id)) {
 			$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
-		}
-
-		$viewVars = $this->ControllerAction->vars();
-		if(!is_null($viewVars['toolbarButtons']['download'])) {
-			$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
 		}
 
 		return $entity;
@@ -162,4 +155,24 @@ class QualificationsTable extends AppTable {
 	public function onGetFileType(Event $event, Entity $entity) {
 		return $this->getFileTypeForView($entity->file_name);
 	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
+		if ($action == "view") {
+			$toolbarButtons['download']['type'] = 'button';
+			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+			$toolbarButtons['download']['attr'] = $attr;
+			$toolbarButtons['download']['attr']['title'] = __('Download');
+			$url = $this->ControllerAction->url('download');
+			if (!empty($url['action'])) {
+				$toolbarButtons['download']['url'] = $url;
+			}
+		}
+	}
+
 }
