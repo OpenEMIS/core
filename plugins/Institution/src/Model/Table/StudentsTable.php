@@ -61,6 +61,7 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByGradeByInstitution'
 			]
 		]);
+        $this->addBehavior('Import.ImportLink');
 	}
 
 	public function validationDefault(Validator $validator) {
