@@ -198,6 +198,7 @@ Plugin::load('Localization', ['routes' => true, 'autoload' => true]);
 Plugin::load('Area', ['routes' => true, 'autoload' => true]);
 Plugin::load('Alert', ['routes' => true, 'autoload' => true]);
 Plugin::load('AcademicPeriod', ['routes' => true, 'autoload' => true]);
+Plugin::load('Directory', ['routes' => true, 'autoload' => true]);
 Plugin::load('FieldOption', ['routes' => true, 'autoload' => true]);
 Plugin::load('Institution', ['routes' => true, 'autoload' => true]);
 Plugin::load('User', ['routes' => true, 'autoload' => true]);
