@@ -86,7 +86,7 @@ class StudentPromotionTable extends AppTable {
 		$gradeOptions = $InstitutionGradesTable
 			->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 			->contain(['EducationGrades'])
-			->where([$InstitutionGradesTable->aliasField('institution_site_id') => $institutionId])
+			->where([$InstitutionGradesTable->aliasField('institution_id') => $institutionId])
 			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 			->toArray();
 		$attr['type'] = 'select';
@@ -155,7 +155,7 @@ class StudentPromotionTable extends AppTable {
 					'keyField' => 'education_grade_id', 
 					'valueField' => 'education_grade.programme_grade_name'])
 				->contain(['EducationGrades'])
-				->where([$this->InstitutionGrades->aliasField('institution_site_id') => $institutionId])
+				->where([$this->InstitutionGrades->aliasField('institution_id') => $institutionId])
 				->toArray();
 
 			// Only display the options that are available in the institution and also linked to the current programme

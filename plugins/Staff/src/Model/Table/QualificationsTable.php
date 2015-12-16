@@ -15,7 +15,7 @@ class QualificationsTable extends AppTable {
 
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
 		$this->belongsTo('QualificationInstitutions', ['className' => 'Staff.QualificationInstitutions']);
 		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);
@@ -102,7 +102,6 @@ class QualificationsTable extends AppTable {
 		if (!empty($entity->modified_user_id)) {
 			$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
 		}
-
 		return $entity;
 	}
 
@@ -156,6 +155,16 @@ class QualificationsTable extends AppTable {
 		return $this->getFileTypeForView($entity->file_name);
 	}
 
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
+	
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -174,5 +183,4 @@ class QualificationsTable extends AppTable {
 			}
 		}
 	}
-
 }

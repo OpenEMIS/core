@@ -47,9 +47,9 @@ class StudentsTable extends AppTable {
 			'filterKey' => 'student_custom_filter_id',
 			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'student_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
@@ -71,7 +71,7 @@ class StudentsTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'student_id', 'session' => 'Users.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
