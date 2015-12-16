@@ -21,6 +21,7 @@ class ImportStaffAttendancesTable extends AppTable {
 	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	    $this->Staff = TableRegistry::get('Institution.Staff');
 	    $this->Users = TableRegistry::get('User.Users');
+	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	}
 
 	public function beforeAction($event) {
@@ -48,6 +49,11 @@ class ImportStaffAttendancesTable extends AppTable {
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
 		$tempRow['duplicates'] = false;
 		$tempRow['entity'] = $this->StaffAbsences->newEntity();
+
+		$tempRow['full_day'] = 1;
+		$tempRow['institution_site_id'] = false;
+		$tempRow['academic_period_id'] = false;
+
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -59,9 +65,9 @@ class ImportStaffAttendancesTable extends AppTable {
 		$modelData = $lookedUpTable->find('all')->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
 
 		$allStaff = $this->Staff
-							->find('all')
-							->where([$this->Staff->aliasField('institution_site_id') => $this->institutionId])
-							;
+						->find('all')
+						->where([$this->Staff->aliasField('institution_site_id') => $this->institutionId])
+						;
 		// when extracting the security_user_id from $allStaff collection, there will be no duplicates
 		$allStaff = new Collection($allStaff->toArray());
 		$modelData->where([
@@ -79,7 +85,6 @@ class ImportStaffAttendancesTable extends AppTable {
 		];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$focusedStaff = $allStaff->indexBy('security_user_id')->toArray()[$row->id];
 				$data[$sheetName][] = [
 					$institution->name,
 					$row->name,
@@ -101,9 +106,26 @@ class ImportStaffAttendancesTable extends AppTable {
 		}
 		$tempRow['institution_site_id'] = $this->institutionId;
 
+		$currentPeriodId = $this->AcademicPeriods->getCurrent();
+		if (!$currentPeriodId) {
+			$array = $this->AcademicPeriods->getAvailableAcademicPeriods();
+			reset($array);
+			$currentPeriodId = key($array);
+		}
+		$isEditable = $this->AcademicPeriods->getAvailableAcademicPeriods($currentPeriodId);
+		if (!$isEditable) {
+			$tempRow['duplicates'] = __('No data changes can be made for the current academic period');
+			$tempRow['academic_period_id'] = false;
+			return false;
+		}
 		$period = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
 		if (!$period) {
 			$tempRow['duplicates'] = __('No matching academic period');
+			$tempRow['academic_period_id'] = false;
+			return false;
+		}
+		if ($period->id != $currentPeriodId) {
+			$tempRow['duplicates'] = __('Date is not within current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
@@ -118,8 +140,6 @@ class ImportStaffAttendancesTable extends AppTable {
 			$tempRow['security_user_id'] = false;
 			return false;
 		}
-		
-		$tempRow['full_day'] = 1;
 
 		return true;
 	}
