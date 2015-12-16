@@ -132,7 +132,7 @@ class StudentFeesTable extends AppTable {
 			'openemis_no', 'student_id', 'total_fee', 'amount_paid', 'outstanding_fee'
 		]);
 		$conditions = array(
-			'InstitutionGrades.institution_site_id' => $this->institutionId
+			'InstitutionGrades.institution_id' => $this->institutionId
 		);
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {

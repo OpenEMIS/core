@@ -38,9 +38,9 @@ class StudentUserTable extends UserTable {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
 						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-						$sectionData['institution_site_section_id'] = $class;
-						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+						$sectionData['institution_section_id'] = $class;
+						$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+						$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
 					}
 				} else {
 					$validationErrors = [];

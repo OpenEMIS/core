@@ -10,7 +10,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionSiteBankAccountsTable extends AppTable {
+class InstitutionBankAccountsTable extends AppTable {
 	use OptionsTrait;
 	private $_selectedBankId = 1;
 	private $_bankOptions = [];
@@ -24,7 +24,7 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
 	
 	}
@@ -131,7 +131,19 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 		$attr['options'] = $this->_bankOptions;
 		return $attr;
 	}
-
+	
+	public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, $request) {
+		if (empty($this->_bankOptions)) {
+			$this->_bankOptions = $this->getBankOptions();
+		}
+		$this->_selectedBankId = $this->postString('bank', $this->_bankOptions);
+		$bankBranches = $this->BankBranches
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['bank_id'=>$this->_selectedBankId])
+			->toArray();
+		$attr['options'] = $bankBranches;
+		return $attr;
+	}
 
 /******************************************************************************************************************
 **

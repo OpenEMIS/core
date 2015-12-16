@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class InstitutionSiteSectionStudent extends Entity {
+class InstitutionSectionStudent extends Entity {
 	protected $_virtual = ['name'];
 	
 	protected function _getStudentName() {

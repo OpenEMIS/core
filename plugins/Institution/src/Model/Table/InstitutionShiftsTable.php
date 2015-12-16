@@ -12,17 +12,17 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
-class InstitutionSiteShiftsTable extends AppTable {
+class InstitutionShiftsTable extends AppTable {
 	public $institutionId = 0;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
-		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
+		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
+		$this->belongsTo('LocationInstitutions',	['className' => 'Institution.LocationInstitutions']);
 	
-		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 	'foreignKey' => 'institution_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 	
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
@@ -43,10 +43,10 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
 		$this->ControllerAction->field('name', ['type' => 'string']);
 		$this->ControllerAction->field('period', ['type' => 'string']);
-		$this->ControllerAction->field('location_institution_site_id', ['type' => 'select']);
+		$this->ControllerAction->field('location_institution_id', ['type' => 'select']);
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'period', 'location_institution_site_id',
+			'academic_period_id', 'name', 'period', 'location_institution_id',
 		]);
 	}
 
@@ -71,7 +71,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->fields['end_time']['visible'] = true;
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_id',
 		]);
 
 	}
@@ -99,10 +99,10 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->fields['end_time']['visible'] = true;
 		$this->fields['end_time']['type'] = 'time';
 
-		$this->fields['location_institution_site_id']['type'] = 'select';
+		$this->fields['location_institution_id']['type'] = 'select';
 
 		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_id',
 		]);
 
 	}
@@ -151,9 +151,9 @@ class InstitutionSiteShiftsTable extends AppTable {
 				'academic_period_id' => $academicPeriodId,
 				'start_time' => $settingStartTime,
 				'end_time' => $endTime,
-				'institution_site_id' => $institutionsId,
-				'location_institution_site_id' => $institutionsId,
-				'location_institution_site_name' => 'Institution Site Name (Shift Location)'
+				'institution_id' => $institutionsId,
+				'location_institution_id' => $institutionsId,
+				'location_institution_name' => 'Institution Site Name (Shift Location)'
 			];
 
 			$data = $this->newEntity();
@@ -164,11 +164,11 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	public function getShifts($institutionsId, $periodId) {
 		$conditions = [
-			'institution_site_id' => $institutionsId,
+			'institution_id' => $institutionsId,
 			'academic_period_id' => $periodId
 		];
 		$query = $this->find('all');
-		// $query->contain(['Institutions', 'LocationInstitutionSites', 'AcademicPeriods']);
+		// $query->contain(['Institutions', 'LocationInstitutions', 'AcademicPeriods']);
 		$query->where($conditions);
 		$data = $query->toArray();
 		return $data;
@@ -177,7 +177,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 	public function getShiftOptions($institutionsId, $periodId) {
 		$query = $this->find('all')
 					->where([
-						'institution_site_id' => $institutionsId,
+						'institution_id' => $institutionsId,
 						'academic_period_id' => $periodId
 					])
 					;
