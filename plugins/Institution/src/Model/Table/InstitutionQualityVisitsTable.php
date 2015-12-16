@@ -8,25 +8,25 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class InstitutionQualityVisitsTable extends AppTable {
-	private $_fieldOrder = ['date', 'academic_period_level', 'academic_period_id', 'institution_site_section_id', 'education_grade_id', 'institution_site_class_id', 'security_user_id', 'quality_visit_type_id'];
+	private $_fieldOrder = ['date', 'academic_period_level', 'academic_period_id', 'institution_section_id', 'education_grade_id', 'institution_class_id', 'staff_id', 'quality_visit_type_id'];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_quality_visits');
+		$this->table('institution_quality_visits');
 		parent::initialize($config);
 
 		$this->belongsTo('QualityVisitTypes', ['className' => 'FieldOption.QualityVisitTypes']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'institution_site_section_id']);
-		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSections', 'foreignKey' => 'institution_section_id']);
+		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
-	public function onGetInstitutionSiteClassId(Event $event, Entity $entity) {
+	public function onGetInstitutionClassId(Event $event, Entity $entity) {
 		if ($this->action == 'index') {
 			return $entity->section->name . '<span class="divider"></span>' .  $entity->class->name;
 		}
@@ -46,10 +46,10 @@ class InstitutionQualityVisitsTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->field('comment', ['visible' => false]);
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
 
 		$this->_fieldOrder = [
-			'date', 'education_grade_id', 'institution_site_class_id', 'security_user_id', 'quality_visit_type_id'
+			'date', 'education_grade_id', 'institution_class_id', 'staff_id', 'quality_visit_type_id'
 		];
 	}
 
@@ -83,7 +83,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 				return $Sections
 					->find()
 					->where([
-						$Sections->aliasField('institution_site_id') => $institutionId,
+						$Sections->aliasField('institution_id') => $institutionId,
 						$Sections->aliasField('academic_period_id') => $id
 					])
 					->count();
@@ -96,19 +96,19 @@ class InstitutionQualityVisitsTable extends AppTable {
 		// End
 
 		// Section Options
-		$Classes = $this->Classes->InstitutionSiteSectionClasses;
+		$Classes = $this->Classes->InstitutionSectionClasses;
 		$this->advancedSelectOptions($sectionOptions, $selectedSection, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Classes) {
 				return $Classes
 					->find()
 					->where([
-						$Classes->aliasField('institution_site_section_id') => $id
+						$Classes->aliasField('institution_section_id') => $id
 					])
 					->count();
 			}
 		]);
-		$this->ControllerAction->field('institution_site_section_id', [
+		$this->ControllerAction->field('institution_section_id', [
 			'options' => $sectionOptions,
 			'onChangeReload' => true
 		]);
@@ -120,26 +120,41 @@ class InstitutionQualityVisitsTable extends AppTable {
 		// End
 
 		// Classes Options
-		$Staff = $this->Classes->InstitutionSiteClassStaff;
+		$Staff = $this->Classes->InstitutionClassStaff;
 		$this->advancedSelectOptions($classOptions, $selectedClass, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
 			'callable' => function($id) use ($Staff) {
 				return $Staff
 					->find()
 					->where([
-						$Staff->aliasField('institution_site_class_id') => $id
+						$Staff->aliasField('institution_class_id') => $id
 					])
 					->count();
 			}
 		]);
-		$this->ControllerAction->field('institution_site_class_id', [
+		$this->ControllerAction->field('institution_class_id', [
 			'options' => $classOptions,
 			'onChangeReload' => true
 		]);
 		// End
 
+		if (!is_null($selectedClass)) {
+			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+			$staffOptions = $InstitutionStaffTable
+				->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
+				->contain(['Users'])
+				->innerJoin(
+					['ClassStaff' => 'institution_class_staff'],
+					[
+						$InstitutionStaffTable->aliasField('staff_id').' = ClassStaff.staff_id',
+						'ClassStaff.institution_class_id' => $selectedClass
+					]
+				)
+				->toArray();
+		}
+
 		// Staff Options
-		$this->ControllerAction->field('security_user_id', ['options' => $staffOptions]);
+		$this->ControllerAction->field('staff_id', ['options' => $staffOptions]);
 		// End
 
 		// Visit Type Options
@@ -150,10 +165,10 @@ class InstitutionQualityVisitsTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$request = $this->controller->request;
 		$request->query['period'] = $entity->academic_period_id;
-		$request->query['section'] = $entity->institution_site_section_id;
+		$request->query['section'] = $entity->institution_section_id;
 		$request->query['grade'] = $entity->education_grade_id;
-		$request->query['class'] = $entity->institution_site_class_id;
-		$request->query['staff'] = $entity->security_user_id;
+		$request->query['class'] = $entity->institution_class_id;
+		$request->query['staff'] = $entity->staff_id;
 	}
 
 	public function _getSelectOptions() {
@@ -183,24 +198,24 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$sectionOptions = $this->Sections
 			->find('list')
 			->where([
-				$this->Sections->aliasField('institution_site_id') => $institutionId,
+				$this->Sections->aliasField('institution_id') => $institutionId,
 				$this->Sections->aliasField('academic_period_id') => $selectedPeriod
 			])
 			->toArray();
 		$selectedSection = $this->queryString('section', $sectionOptions);
 		if ($request->is(['post', 'put'])) {
-			$selectedSection = $request->data($this->aliasField('institution_site_section_id'));
+			$selectedSection = $request->data($this->aliasField('institution_section_id'));
 		}
 
-		$InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
+		$InstitutionSectionGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
 		$gradeOptions = $this->EducationGrades
 			->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
 			->join([
-				'table' => $InstitutionSiteSectionGrades->_table,
-				'alias' => $InstitutionSiteSectionGrades->alias(),
+				'table' => $InstitutionSectionGrades->_table,
+				'alias' => $InstitutionSectionGrades->alias(),
 				'conditions' => [
-					$InstitutionSiteSectionGrades->aliasField('education_grade_id =') . $this->EducationGrades->aliasField('id'),
-					$InstitutionSiteSectionGrades->aliasField('institution_site_section_id') => $selectedSection
+					$InstitutionSectionGrades->aliasField('education_grade_id =') . $this->EducationGrades->aliasField('id'),
+					$InstitutionSectionGrades->aliasField('institution_section_id') => $selectedSection
 				]
 			])
 			->toArray();
@@ -209,39 +224,39 @@ class InstitutionQualityVisitsTable extends AppTable {
 			$selectedGrade = $request->data($this->aliasField('education_grade_id'));
 		}
 
-		$InstitutionSiteSectionClasses = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
+		$InstitutionSectionClasses = TableRegistry::get('Institution.InstitutionSectionClasses');
 		$classOptions = $this->Classes
 			->find('list')
 			->join([
-				'table' => $InstitutionSiteSectionClasses->_table,
-				'alias' => $InstitutionSiteSectionClasses->alias(),
+				'table' => $InstitutionSectionClasses->_table,
+				'alias' => $InstitutionSectionClasses->alias(),
 				'conditions' => [
-					$InstitutionSiteSectionClasses->aliasField('institution_site_class_id =') . $this->Classes->aliasField('id'),
-					$InstitutionSiteSectionClasses->aliasField('institution_site_section_id') => $selectedSection
+					$InstitutionSectionClasses->aliasField('institution_class_id =') . $this->Classes->aliasField('id'),
+					$InstitutionSectionClasses->aliasField('institution_section_id') => $selectedSection
 				]
 			])
 			->toArray();
 		$selectedClass = $this->queryString('class', $classOptions);
 		if ($request->is(['post', 'put'])) {
-			$selectedClass = $request->data($this->aliasField('institution_site_class_id'));
+			$selectedClass = $request->data($this->aliasField('institution_class_id'));
 		}
 
-		$InstitutionSiteClassStaff = TableRegistry::get('Institution.InstitutionSiteClassStaff');
+		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 		$staffOptions = $this->Users
 			// ->find('list')
 			->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
 			->join([
-				'table' => $InstitutionSiteClassStaff->_table,
-				'alias' => $InstitutionSiteClassStaff->alias(),
+				'table' => $InstitutionClassStaff->_table,
+				'alias' => $InstitutionClassStaff->alias(),
 				'conditions' => [
-					$InstitutionSiteClassStaff->aliasField('security_user_id =') . $this->Users->aliasField('id'),
-					$InstitutionSiteClassStaff->aliasField('institution_site_class_id') => $selectedClass
+					$InstitutionClassStaff->aliasField('staff_id =') . $this->Users->aliasField('id'),
+					$InstitutionClassStaff->aliasField('institution_class_id') => $selectedClass
 				]
 			])
 			->toArray();
 		$selectedStaff = $this->queryString('staff', $staffOptions);
 		if ($request->is(['post', 'put'])) {
-			$selectedStaff = $request->data($this->aliasField('security_user_id'));
+			$selectedStaff = $request->data($this->aliasField('staff_id'));
 		}
 
 		return compact('levelOptions', 'selectedLevel', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection', 'gradeOptions', 'selectedGrade', 'classOptions', 'selectedClass', 'staffOptions', 'selectedStaff');
