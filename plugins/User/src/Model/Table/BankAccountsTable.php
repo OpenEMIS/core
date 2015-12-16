@@ -85,4 +85,37 @@ class BankAccountsTable extends AppTable {
 			])
 		;
 	}
+
+	private function setupTabElements() {
+		switch ($this->controller->name) {
+			case 'Students':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Staff':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Directories':
+				$type = $this->request->query('type');
+				$options = [
+					'type' => $type
+				];
+				if ($type == 'student') {
+					$tabElements = $this->controller->getFinanceTabElements($options);
+				} else {
+					$tabElements = $this->controller->getStaffFinanceTabElements($options);
+				}
+				
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

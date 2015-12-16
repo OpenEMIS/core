@@ -590,24 +590,6 @@ class StudentsTable extends AppTable {
 		$this->fields['student_id']['order'] = 10;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
-	private function setupTabElements($entity) {
-		$options = [
-			'userRole' => 'Student',
-			'action' => $this->action,
-			'id' => $entity->id,
-			'userId' => $entity->student_id
-		];
-
-		$tabElements = $this->controller->getUserTabElements($options);
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
-
 	public function editBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
 	}
@@ -869,6 +851,21 @@ class StudentsTable extends AppTable {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$studentId = $this->get($entity->id)->student_id;
 		$institutionId = $entity->institution_id;
+		if (isset($buttons['view'])) {
+			$url = $this->ControllerAction->url('view');
+			$url['action'] = 'StudentUser';
+			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url['id'] = $entity->id;
+			$buttons['view']['url'] = $url;
+		}
+
+		if (isset($buttons['edit'])) {
+			$url = $this->ControllerAction->url('edit');
+			$url['action'] = 'StudentUser';
+			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url['id'] = $entity->id;
+			$buttons['edit']['url'] = $url;
+		}
 
 		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
 			if (isset($buttons['edit'])) {

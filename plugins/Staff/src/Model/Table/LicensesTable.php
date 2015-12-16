@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class LicensesTable extends AppTable {
 	public function initialize(array $config) {
@@ -67,5 +68,15 @@ class LicensesTable extends AppTable {
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
+	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

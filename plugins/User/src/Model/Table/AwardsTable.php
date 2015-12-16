@@ -3,6 +3,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class AwardsTable extends AppTable {
 	public function initialize(array $config) {
@@ -23,6 +24,37 @@ class AwardsTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		
 		return $validator;
+	}
+
+	private function setupTabElements() {
+		switch ($this->controller->name) {
+			case 'Students':
+				$tabElements = $this->controller->getAcademicTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Staff':
+				$tabElements = $this->controller->getCareerTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Directories':
+				$type = $this->request->query('type');
+				$options['type'] = $type;
+				if ($type == 'student') {
+					$tabElements = $this->controller->getAcademicTabElements($options);
+				} else {
+					$tabElements = $this->controller->getCareerTabElements($options);
+				}
+				
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+		}
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 
 	// public function autocompleteAward() {

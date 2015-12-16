@@ -176,4 +176,21 @@ class SalariesTable extends AppTable {
 		$this->fields['additions']['type'] = 'float';
 		$this->fields['deductions']['type'] = 'float';
 	}
+
+	private function setupTabElements() {
+		if ($this->controller->name == 'Directories') {
+			$options = [
+				'type' => 'staff'
+			];
+			$tabElements = $this->controller->getStaffFinanceTabElements($options);
+		} else {
+			$tabElements = $this->controller->getFinanceTabElements();
+		}
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }
