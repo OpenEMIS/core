@@ -102,10 +102,6 @@ class QualificationsTable extends AppTable {
 		if (!empty($entity->modified_user_id)) {
 			$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
 		}
-		$viewVars = $this->ControllerAction->vars();
-		if(isset($viewVars['toolbarButtons']['download'])) {
-			$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
-		}
 		return $entity;
 	}
 
@@ -158,7 +154,7 @@ class QualificationsTable extends AppTable {
 	public function onGetFileType(Event $event, Entity $entity) {
 		return $this->getFileTypeForView($entity->file_name);
 	}
-	
+
 	private function setupTabElements() {
 		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
 		$this->controller->set('tabElements', $tabElements);
@@ -168,7 +164,7 @@ class QualificationsTable extends AppTable {
 	public function indexAfterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
-
+	
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
