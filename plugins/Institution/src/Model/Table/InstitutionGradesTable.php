@@ -12,11 +12,11 @@ use App\Model\Table\AppTable;
 
 class InstitutionGradesTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_grades');
+		$this->table('institution_grades');
 		parent::initialize($config);
 		
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -83,14 +83,14 @@ class InstitutionGradesTable extends AppTable {
 			$errors = $entity->errors();
 			/**
 			 * PHPOE-2117
-			 * Remove 		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
+			 * Remove 		$this->ControllerAction->field('institution_programme_id', ['type' => 'hidden']);
 			 * 
 			 * education_grade_id will always be empty
 			 * so if errors array is more than 1, other fields are having an error
 			 */
 			if (empty($errors) || count($errors)==1) {
 				$startDate = $entity->start_date;
-				$institutionId = $entity->institution_site_id;
+				$institutionId = $entity->institution_id;
 				if ($data->offsetExists('grades')) {
 
 					$error = true;
@@ -100,7 +100,7 @@ class InstitutionGradesTable extends AppTable {
 							$error = false;
 
 							$grade['start_date'] = $startDate;
-							$grade['institution_site_id'] = $institutionId;
+							$grade['institution_id'] = $institutionId;
 							if ($entity->has('end_date')) {
 								$grade['end_date'] = $entity->end_date;
 							}
@@ -233,7 +233,7 @@ class InstitutionGradesTable extends AppTable {
 
 				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$exists = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
-				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->where([$this->aliasField('institution_id') => $institutionId])
 				->toArray();
 
 				$attr['data'] = $data;
@@ -262,7 +262,7 @@ class InstitutionGradesTable extends AppTable {
 		$query = $this->find('all')
 					->contain(['EducationGrades'])
 					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-					->where(['InstitutionGrades.institution_site_id = ' . $institutionsId])
+					->where(['InstitutionGrades.institution_id = ' . $institutionsId])
 					->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
 		$data = $query->toArray();
 		if($listOnly) {
@@ -277,7 +277,7 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	/**
-	 * Used by InstitutionSiteSectionsTable & InstitutionSiteClassesTable.
+	 * Used by InstitutionSectionsTable & InstitutionClassesTable.
 	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date' 
 	 * of registered Programmes in the Institution. 
 	 * @param  integer $model           		 [description]

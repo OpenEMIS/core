@@ -36,7 +36,7 @@ class StudentsController extends AppController {
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
-			'History' 			=> ['className' => 'Student.StudentActivities', 'actions' => ['index']],
+			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 		];
 
@@ -47,9 +47,13 @@ class StudentsController extends AppController {
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->Navigation->addCrumb('Student', ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
+		$institutionName = $session->read('Institution.Institutions.name');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $institutionId]);
+		$this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
 		$header = __('Students');
 
 		if ($action == 'index') {
@@ -68,7 +72,8 @@ class StudentsController extends AppController {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
+				$studentId = $session->read('Institution.Students.id');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
 			}
 		}
 		$this->set('contentHeader', $header);
@@ -155,7 +160,7 @@ class StudentsController extends AppController {
 		
 		if ($model->alias() != 'Students') {
 			if ($session->check('Student.Students.id')) {
-				if ($model->hasField('security_user_id')) { // will need to remove this part once we change institution_sites to institutions
+				if ($model->hasField('security_user_id')) {
 					$userId = $session->read('Student.Students.id');
 					$query->where([$model->aliasField('security_user_id') => $userId]);
 				} else if ($model->hasField('student_id')) {
@@ -175,23 +180,78 @@ class StudentsController extends AppController {
 		$this->autoRender = false;
 	}
 
+	// public function getUserTabElements($options = []) {
+	// 	$plugin = $this->plugin;
+	// 	$name = $this->name;
+
+	// 	$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+	// 	$tabElements = [
+	// 		$this->name => [
+	// 			'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+	// 			'text' => __('Details')
+	// 		],
+	// 		'Accounts' => [
+	// 			'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+	// 			'text' => __('Account')	
+	// 		]
+	// 	];
+
+	// 	return $tabElements;
+	// }
+
 	public function getUserTabElements($options = []) {
-		$plugin = $this->plugin;
-		$name = $this->name;
+		$session = $this->request->session();
+		$tabElements = $session->read('Institution.Students.tabElements');
+		
+		return $tabElements;
+	}
 
-		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+	public function getAcademicTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
 
-		$tabElements = [
-			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
-				'text' => __('Details')
-			],
-			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
-			]
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+		$studentTabElements = [
+			'Programmes' => ['text' => __('Programmes')],
+			'Sections' => ['text' => __('Classes')],
+			'Classes' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Results' => ['text' => __('Results')],
+			'Awards' => ['text' => __('Awards')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];
 
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			$params = [$id];
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
+		return $tabElements;
+	}
+
+	public function getFinanceTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+		$studentTabElements = [
+			'BankAccounts' => ['text' => __('Bank Accounts')],
+			'StudentFees' => ['text' => __('Fees')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			$params = [$id];
+			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+		}
 		return $tabElements;
 	}
 
