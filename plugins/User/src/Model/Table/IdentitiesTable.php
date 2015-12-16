@@ -1,6 +1,7 @@
 <?php
 namespace User\Model\Table;
 
+use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
@@ -24,10 +25,31 @@ class IdentitiesTable extends AppTable {
 		$this->fields['comments']['visible'] = 'false';
 	}
 
-	public function validationDefault(Validator $validator)
-	{
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
+
+	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		
 		return $validator
 			->add('issue_location',  [
 			])
@@ -36,7 +58,12 @@ class IdentitiesTable extends AppTable {
 			])
 			->add('expiry_date',  [
 			])
-			->add('number', [])
+			->add('number', [
+	    		'ruleUnique' => [
+			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+			        'provider' => 'table'
+			    ]
+		    ]);
 		;
 	}
 	

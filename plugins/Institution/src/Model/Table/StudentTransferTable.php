@@ -183,7 +183,7 @@ class StudentTransferTable extends AppTable {
 			$gradeOptions = $Grades
 				->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 				->contain(['EducationGrades'])
-				->where([$Grades->aliasField('institution_site_id') => $institutionId])
+				->where([$Grades->aliasField('institution_id') => $institutionId])
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->toArray();
 
@@ -263,7 +263,7 @@ class StudentTransferTable extends AppTable {
 				'callable' => function($id) use ($Grades, $institutionId) {
 					return $Grades
 						->find()
-						->where([$Grades->aliasField('institution_site_id') => $institutionId])
+						->where([$Grades->aliasField('institution_id') => $institutionId])
 						->find('academicPeriod', ['academic_period_id' => $id])
 						->count();
 				}
@@ -283,21 +283,8 @@ class StudentTransferTable extends AppTable {
     	$nextGradeOptions = [];
 
     	if (!is_null($selectedGrade)) {
-	   		$currentGrade = $this->EducationGrades->get($selectedGrade);
 
-			$nextGradeOptions = $this->EducationGrades
-				->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-				->find('visible')
-				->where([
-					$this->EducationGrades->aliasField('education_programme_id') => $currentGrade->education_programme_id,
-					$this->EducationGrades->aliasField('order >') => $currentGrade->order
-				])
-				->toArray();
-
-			$NextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
-			$gradeOptions = $NextProgrammes->getNextGradeList($currentGrade->education_programme_id);
-
-			$nextGradeOptions = $nextGradeOptions + $gradeOptions;
+			$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade);
 
 			$nextGradeId = $this->queryString('next_education_grade_id', $nextGradeOptions);
 
@@ -324,7 +311,7 @@ class StudentTransferTable extends AppTable {
 								'table' => $Grades->table(),
 								'alias' => $Grades->alias(),
 								'conditions' => [
-									$Grades->aliasField('institution_site_id = ') . $this->Institutions->aliasField('id'),
+									$Grades->aliasField('institution_id = ') . $this->Institutions->aliasField('id'),
 									$Grades->aliasField('education_grade_id') => $id,
 									$Grades->aliasField('start_date <=') => $nextPeriodStartDate,
 									'OR' => [
@@ -369,7 +356,7 @@ class StudentTransferTable extends AppTable {
 					'table' => $Grades->table(),
 					'alias' => $Grades->alias(),
 					'conditions' => [
-						$Grades->aliasField('institution_site_id = ') . $this->Institutions->aliasField('id'),
+						$Grades->aliasField('institution_id = ') . $this->Institutions->aliasField('id'),
 						$Grades->aliasField('education_grade_id') => $nextGradeId,
 						$Grades->aliasField('start_date <=') => $nextPeriodStartDate,
 						'OR' => [

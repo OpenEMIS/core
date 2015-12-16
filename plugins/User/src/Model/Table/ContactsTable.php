@@ -30,6 +30,33 @@ class ContactsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('preferred', $order++);
 	}
 
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+		$tabElements = $this->controller->getUserTabElements($options);
+		if ($this->controller->name != 'Preferences') {
+			$this->controller->set('selectedAction', $this->alias());
+		} else {
+			$this->controller->set('selectedAction', 'Contacts');
+		}
+		
+		$this->controller->set('tabElements', $tabElements);
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		$contactOptions = TableRegistry::get('User.ContactOptions')
 			->find('list')
@@ -56,7 +83,7 @@ class ContactsTable extends AppTable {
 		
 	}
 
-	public function beforeAction() {
+	public function beforeAction(Event $event) {
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
 	}
@@ -143,6 +170,13 @@ class ContactsTable extends AppTable {
 				'rule' => ['validatePreferred'],
 			])
 			;
+
+		// validation code must always be set because this is also being used by prefererences 'usercontacts'
+		$this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
+		$this->setValidationCode('value.ruleValidateNumeric', 'User.Contacts');
+		$this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
+		$this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
+		$this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
 
 
 		return $validator;
