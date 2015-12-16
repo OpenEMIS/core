@@ -360,6 +360,7 @@ class NavigationComponent extends Component {
 			'Staff' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Staff']],
 			'Surveys' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Surveys']],
 			'Quality' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'InstitutionRubrics']],
+			'Data Quality' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'DataQuality']],
 			'Audit' => ['url' => ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Audit']],
 		];
 		return $navigation;
