@@ -186,6 +186,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
+		$this->ControllerAction->field('staff_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
 			'institution_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
@@ -454,6 +455,7 @@ class StaffTable extends AppTable {
 			$value = $entity->_matchingData['Users']->name;
 		}
 		return $value;
+
 	}
 
 	public function onGetPositionType(Event $event, Entity $entity) {

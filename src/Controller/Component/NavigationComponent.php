@@ -349,14 +349,14 @@ class NavigationComponent extends Component {
 				],
 
 				'Institutions.Fees' => [
-					'title' => 'Fees',
+					'title' => 'Institution Fees',
 					'parent' => 'Institution.Finance', 
 					'params' => ['plugin' => 'Institution'],
 					'selected' => ['Institutions.Fees'],
 				],
 
 				'Institutions.StudentFees' => [
-					'title' => 'Students',
+					'title' => 'Student Fees',
 					'parent' => 'Institution.Finance', 
 					'params' => ['plugin' => 'Institution'],
 					'selected' => ['Institutions.StudentFees'],
