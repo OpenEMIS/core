@@ -57,6 +57,7 @@ class ImportBehavior extends Behavior {
 
 	const FIELD_OPTION = 1;
 	const DIRECT_TABLE = 2;
+	const NON_TABLE_LIST = 3;
 
 	const RECORD_HEADER = 1;
 	const FIRST_RECORD = 2;
@@ -700,7 +701,7 @@ class ImportBehavior extends Behavior {
 		$mapping = $model->find('all')
 			->where([
 				$model->aliasField('model') => $this->config('plugin').'.'.$this->config('model'),
-				$model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE]
+				$model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
 			])
 			->order($model->aliasField('order'))
 			->toArray()
@@ -731,7 +732,7 @@ class ImportBehavior extends Behavior {
 						$data[$sheetName][] = [$row, $key];
 					}
 				}
-			} else if ($foreignKey == self::DIRECT_TABLE) {
+			} else if ($foreignKey == self::DIRECT_TABLE || $foreignKey == self::NON_TABLE_LIST) {
 
 				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, $data];
 				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
@@ -906,6 +907,14 @@ class ImportBehavior extends Behavior {
 				} else {
 					$recordId = '';
 				}
+				if (!empty($recordId)) {
+					$val = $recordId->id;
+				} else {
+					$rowPass = false;
+					$rowInvalidCodeCols[] = $translatedCol;
+				}
+			} else if ($foreignKey == self::NON_TABLE_LIST) {
+				$recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
 				if (!empty($recordId)) {
 					$val = $recordId->id;
 				} else {
