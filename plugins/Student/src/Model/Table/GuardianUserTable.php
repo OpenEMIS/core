@@ -43,10 +43,15 @@ class GuardianUserTable extends UserTable {
 			'Guardians' => ['text' => __('Relation')],
 			'GuardianUser' => ['text' => __('General')]
 		];
-
+		$action = 'Guardians';
+		$actionUser = $this->alias();
+		if ($this->controller->name == 'Directories') {
+			$action = 'StudentGuardians';
+			$actionUser = 'StudentGuardianUser';
+		}
 		$id = $this->request->query['id'];
-		$tabElements['Guardians']['url'] = array_merge($url, ['action' => 'Guardians', 'view', $id]);
-		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id]);
+		$tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $id]);
+		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->id, 'id' => $id]);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());

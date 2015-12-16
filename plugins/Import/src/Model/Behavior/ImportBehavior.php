@@ -323,6 +323,13 @@ class ImportBehavior extends Behavior {
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 
+			// this is specifically for ValidationBehavior/checkAuthorisedArea(). Needs AccessControl
+			if (property_exists($this->_table, 'controller')) {
+				if (property_exists($this->_table->controller, 'AccessControl')) {
+					$activeModel->AccessControl = $this->_table->controller->AccessControl;
+				}
+			}
+
 			$maxRows = $this->config('max_rows');
 			$maxRows = $maxRows + 2;
 			foreach ($worksheets as $sheet) {
@@ -468,8 +475,14 @@ class ImportBehavior extends Behavior {
 				
 				$codesData = $this->excelGetCodesData($this->_table);
 				foreach($codesData as $modelName => $modelArr) {
-					foreach($modelArr as $row) {
-						$writer->writeSheetRow($modelName, array_values($row));
+					// added this check to support rows on sheets that require a specific format.
+					// default cell format is 'string'
+					if (array_key_exists('formats', $modelArr)) {
+						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
+					} else {
+						foreach($modelArr as $row) {
+							$writer->writeSheetRow($modelName, array_values($row));
+						}
 					}
 				}
 				
@@ -520,8 +533,14 @@ class ImportBehavior extends Behavior {
 		
 		$codesData = $this->excelGetCodesData($this->_table);
 		foreach($codesData as $modelName => $modelArr) {
-			foreach($modelArr as $row) {
-				$writer->writeSheetRow($modelName, array_values($row));
+			// added this check to support rows on sheets that require a specific format.
+			// default cell format is 'string'
+			if (array_key_exists('formats', $modelArr)) {
+				$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
+			} else {
+				foreach($modelArr as $row) {
+					$writer->writeSheetRow($modelName, array_values($row));
+				}
 			}
 		}
 		
@@ -884,7 +903,9 @@ class ImportBehavior extends Behavior {
 					$this->directTables[$registryAlias] = $excelLookupModel;
 				}
 				if (!empty($cellValue)) {
-					$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
+					$record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
+					// if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
+					$recordId = $record->first();
 				} else {
 					$recordId = '';
 				}
