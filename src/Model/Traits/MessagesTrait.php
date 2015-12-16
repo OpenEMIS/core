@@ -634,6 +634,7 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please select a Type'
 				],
 				'number' => [
+					'ruleUniqueUserIdentity' => 'Please enter a unique identity number.',
 					'ruleNotBlank' => 'Please enter a valid Number'
 				],
 				'issue_location' => [
@@ -644,7 +645,10 @@ trait MessagesTrait {
 				],
 				'expiry_date' => [
 					'ruleNotBlank' => 'Expiry Date Is Required'
-				]
+				],
+				'number' => [
+					'ruleUnique' => 'This identity has already existed in the system.'
+				],
 			],
 			'Languages' => [
 				'language_id' => [

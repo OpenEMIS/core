@@ -24,8 +24,7 @@ class IdentitiesTable extends AppTable {
 		$this->fields['comments']['visible'] = 'false';
 	}
 
-	public function validationDefault(Validator $validator)
-	{
+	public function validationDefault(Validator $validator)	{
 		$validator = parent::validationDefault($validator);
 		
 		return $validator
@@ -36,7 +35,12 @@ class IdentitiesTable extends AppTable {
 			])
 			->add('expiry_date',  [
 			])
-			->add('number', [])
+			->add('number', [
+	    		'ruleUnique' => [
+			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+			        'provider' => 'table'
+			    ]
+		    ]);
 		;
 	}
 	
