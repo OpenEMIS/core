@@ -10,7 +10,7 @@ class MembershipsTable extends AppTable {
 		$this->table('staff_memberships');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	}
 
 	public function beforeAction() {}
@@ -25,5 +25,15 @@ class MembershipsTable extends AppTable {
 			->add('expiry_date', [
 			])
 		;
+	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

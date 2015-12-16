@@ -43,9 +43,19 @@ class UserBehavior extends Behavior {
 		$events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
+		$events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch', 'priority' => 50];
 		$events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
 		$events['Model.excel.onExcelGetStatus'] = 'onExcelGetStatus';
 		return $events;
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$dataArray = $data->getArrayCopy();
+		if (array_key_exists($this->_table->alias(), $dataArray)) {
+			if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
+				$data[$this->_table->alias()]['username'] = trim($dataArray[$this->_table->alias()]['username']);
+			}
+		}
 	}
 
 	public function onExcelGetStatus(Event $event, Entity $entity) {
@@ -62,7 +72,7 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
 		switch ($this->_table->table()) {
 			case 'institution_students':
-			case 'institution_site_staff':
+			case 'institution_staff':
 			case 'student_guardians':
 				break;
 			default:
