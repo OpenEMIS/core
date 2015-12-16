@@ -16,7 +16,10 @@ class ImportLinkBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-		// pr($this->_table->ControllerAction);die;
+		$importModel = $this->config('import_model');
+		if (empty($importModel)) {
+			$this->config('import_model', 'Import'.$this->_table->alias());
+		};
 	}
 
 	public function implementedEvents() {
@@ -61,7 +64,7 @@ class ImportLinkBehavior extends Behavior {
 		}
 
 		$import['url'] = $url;
-		$import['url']['action'] = 'Import'.$this->_table->alias();
+		$import['url']['action'] = $this->config('import_model');
 		$import['type'] = 'button';
 		$import['label'] = '<i class="fa kd-import"></i>';
 		$import['attr'] = $attr;

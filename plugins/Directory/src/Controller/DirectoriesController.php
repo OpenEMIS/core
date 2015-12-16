@@ -60,6 +60,8 @@ class DirectoriesController extends AppController {
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults'],
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
+
+			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['index', 'add']],
 		];
 
 		$this->loadComponent('User.Image');
@@ -160,9 +162,9 @@ class DirectoriesController extends AppController {
 				}
 			}
 		} else {
-			if ($model->alias() == 'ImportStudents') {
+			if ($model->alias() == 'ImportUsers') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
-				$header = __('Students') . ' - ' . $model->getHeader($model->alias());
+				$header = __('Users') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
 			} else {
 				$this->Alert->warning('general.notExists');
