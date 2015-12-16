@@ -90,9 +90,9 @@ ALTER TABLE `institution_site_class_staff`
 CHANGE COLUMN `security_user_id` `staff_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
 CHANGE COLUMN `institution_site_class_id` `institution_class_id` INT(11) NOT NULL COMMENT '' , 
 DROP INDEX `institution_site_class_id` ,
-ADD INDEX `institution_class_id` (`institution_class_id`)  COMMENT '',
+ADD INDEX `institution_class_id` (`institution_class_id`),
 DROP INDEX `security_user_id` ,
-ADD INDEX `staff_id` (`staff_id`)  COMMENT '',
+ADD INDEX `staff_id` (`staff_id`),
 RENAME TO  `institution_class_staff` ;
 
 -- institution_class_students
