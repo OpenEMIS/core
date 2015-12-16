@@ -121,13 +121,13 @@ class NavigationComponent extends Component {
 			$isStudent = $session->read('Directory.Directories.is_student');
 			$isStaff = $session->read('Directory.Directories.is_staff');
 
-			if ($isStudent) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+			if ($isStaff) {
+				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStaffNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
 
-			if ($isStaff) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+			if ($isStudent) {
+				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
 		}
