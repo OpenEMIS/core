@@ -48,10 +48,8 @@ class IdentitiesTable extends AppTable {
 		$this->setupTabElements();
 	}
 
-	public function validationDefault(Validator $validator)
-	{
+	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		
 		return $validator
 			->add('issue_location',  [
 			])
@@ -60,7 +58,12 @@ class IdentitiesTable extends AppTable {
 			])
 			->add('expiry_date',  [
 			])
-			->add('number', [])
+			->add('number', [
+	    		'ruleUnique' => [
+			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+			        'provider' => 'table'
+			    ]
+		    ]);
 		;
 	}
 	
