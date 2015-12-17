@@ -141,6 +141,26 @@ class StudentsController extends AppController {
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
 				}
+			} elseif ($model->hasField('student_id')) {
+				$model->fields['student_id']['type'] = 'hidden';
+				$model->fields['student_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('student_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
+					}
+				}
 			}
 		} else {
 			if ($model->alias() == 'ImportStudents') {
