@@ -175,7 +175,8 @@ class NavigationComponent extends Component {
 			'Directories.index' => [
 				'title' => 'Directory', 
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
-				'params' => ['plugin' => 'Directory']
+				'params' => ['plugin' => 'Directory'],
+				'selected' => ['Directories.add']
 			],
 
 			'Reports' => [
@@ -472,7 +473,7 @@ class NavigationComponent extends Component {
 				'title' => 'General', 
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
-				'selected' => ['Directories.view', 'Directories.add', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
+				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
 					'Directories.History', 'Directories.SpecialNeeds']
 			]
 		];
