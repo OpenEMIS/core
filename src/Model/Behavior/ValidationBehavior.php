@@ -203,9 +203,9 @@ class ValidationBehavior extends Behavior {
 		} catch (Exception $e) {
 		    return $model->getMessage('general.invalidDate');
 		}
-		if ($model->institutionId) {
+		if (isset($globalData['data']['institution_id'])) {
 			$Institution = TableRegistry::get('Institution.Institutions');
-			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $model->institutionId])->first();
+			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $globalData['data']['institution_id']])->first();
 			return $startDate >= $institution->date_opened;
 		} else {
 		    return $model->getMessage('Institution.Institutions.noActiveInstitution');
