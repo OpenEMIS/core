@@ -41,6 +41,8 @@ class InstitutionAssessmentsTable extends AppTable {
 	private $dataNamedGroup = [];
 	private $baseUrl = null;
 
+	private $institutionId;
+
 	public function initialize(array $config) {
 		$this->table('institution_assessments');
 		parent::initialize($config);
