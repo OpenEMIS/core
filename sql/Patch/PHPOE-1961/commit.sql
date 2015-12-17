@@ -1,12 +1,44 @@
-ALTER TABLE `institution_sites` ADD `network_connectivity_id` INT NOT NULL AFTER `institution_site_gender_id`;
+-- db_patches
+INSERT INTO `db_patches` VALUES ('PHPOE-1961', NOW());
+
+ALTER TABLE `institutions` ADD `network_connectivity_id` INT NOT NULL AFTER `institution_gender_id`;
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`) VALUES (uuid(), 'Institutions', 'network_connectivity_id', 'Institutions', 'Network Connectivity', NULL, NULL, '1');
 
 
-INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`) VALUES (NULL, NULL, 'NetworkConnectivities', 'Network Connectivity', 'Institution', NULL, '1', '1');
+SET @fieldOptionOrder := 0;
+SELECT field_options.order INTO @fieldOptionOrder FROM field_options WHERE code = 'Genders';
+UPDATE field_options SET field_options.order = field_options.order+1 WHERE field_options.order > @fieldOptionOrder;
+INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES (NULL, 'Institution', 'NetworkConnectivities', 'Network Connectivity', 'Institution', '{"model":"Institution.NetworkConnectivities"}', @fieldOptionOrder+1, 1, 1, NOW());
 
-SET @fieldOptionId := 0;
-SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'NetworkConnectivities';
 
-INSERT INTO field_option_values (
+
+--
+-- Creating table 'institution_network_connectivities'
+--
+CREATE TABLE `institution_network_connectivities` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE `institution_network_connectivities`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `institution_network_connectivities`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+
+INSERT INTO institution_network_connectivities (
 `name`, 
 `order`, 
 `visible`, 
@@ -14,7 +46,8 @@ INSERT INTO field_option_values (
 `default`, 
 `international_code`, 
 `national_code`, 
-`field_option_id`
+`created_user_id`, 
+`created`
 ) VALUES 
 (
 	'None',
@@ -23,8 +56,9 @@ INSERT INTO field_option_values (
 	1, 
 	1, 
 	NULL, 
-	NULL, 
-	@fieldOptionId 
+	NULL,
+	1,
+	NOW()
 ),
 (
 	'Internet-assisted Instruction',
@@ -33,8 +67,9 @@ INSERT INTO field_option_values (
 	1, 
 	0, 
 	NULL, 
-	NULL, 
-	@fieldOptionId 
+	NULL,
+	1,
+	NOW()
 ),
 (
 	'Fixed Broadband Internet',
@@ -43,8 +78,9 @@ INSERT INTO field_option_values (
 	1, 
 	0, 
 	NULL, 
-	NULL, 
-	@fieldOptionId 
+	NULL,
+	1,
+	NOW()
 ),
 (
 	'Wireless broadband Internet',
@@ -53,8 +89,9 @@ INSERT INTO field_option_values (
 	1, 
 	0, 
 	NULL, 
-	NULL, 
-	@fieldOptionId 
+	NULL,
+	1,
+	NOW()
 ),
 (
 	'Narrowband Internet',
@@ -63,8 +100,14 @@ INSERT INTO field_option_values (
 	1, 
 	0, 
 	NULL, 
-	NULL, 
-	@fieldOptionId 
+	NULL,
+	1,
+	NOW()
 );
 
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`) VALUES (uuid(), 'Institutions', 'network_connectivity_id', 'Institutions', 'Network Connectivity', NULL, NULL, '1');
+UPDATE institution_network_connectivities SET institution_network_connectivities.order = institution_network_connectivities.id;
+
+
+
+
+
