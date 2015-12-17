@@ -339,7 +339,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 								if (!$rowFailed) {
 									$obj = [
-										'institution_site_survey_id' => $this->institutionSurvey->id,
+										'institution_survey_id' => $this->institutionSurvey->id,
 										'survey_question_id' => $question->id,
 										$this->fieldTypes[$fieldType] => $trimmedVal,
 									];
@@ -408,7 +408,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 										$originalRow[$colCount] = $this->getCellValue($sheet, $colCount, $row);
 										if (!empty($originalRow[$colCount])) {
 											$obj = [
-												'institution_site_survey_id' => $this->institutionSurvey->id,
+												'institution_survey_id' => $this->institutionSurvey->id,
 												'survey_question_id' => $question->id,
 												'survey_table_row_id' => $r->id,
 												'survey_table_column_id' => $c->id,
@@ -438,7 +438,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 					if ($fieldType != 'CHECKBOX' && $fieldType != 'TABLE') {
 						$obj = [
-							'institution_site_survey_id' => $this->institutionSurvey->id,
+							'institution_survey_id' => $this->institutionSurvey->id,
 							'survey_question_id' => $question->id,
 							$this->fieldTypes[$fieldType] => $cellValue,
 						];
@@ -449,11 +449,11 @@ class ImportInstitutionSurveysTable extends AppTable {
 				}
 
 				if (!$rowFailed) {
-					$this->InstitutionSurveyAnswers->deleteAll(['institution_site_survey_id' => $this->institutionSurvey->id]);
+					$this->InstitutionSurveyAnswers->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempRow as $entity) {
 						$this->InstitutionSurveyAnswers->save($entity);
 					}
-					$this->InstitutionSurveyTableCells->deleteAll(['institution_site_survey_id' => $this->institutionSurvey->id]);
+					$this->InstitutionSurveyTableCells->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempTableRow as $entity) {
 						$this->InstitutionSurveyTableCells->save($entity);
 					}
