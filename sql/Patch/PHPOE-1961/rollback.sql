@@ -1,10 +1,13 @@
-SET @fieldOptionId := 0;
-SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'NetworkConnectivities';
-
-DELETE FROM field_option_values WHERE field_option_id = @fieldOptionId;
-
+SET @fieldOptionOrder := 0;
+SELECT field_options.order INTO @fieldOptionOrder FROM field_options WHERE code = 'NetworkConnectivities';
+UPDATE field_options SET field_options.order = field_options.order-1 WHERE field_options.order >= @fieldOptionOrder;
 DELETE FROM field_options WHERE code = 'NetworkConnectivities';
 
-ALTER TABLE `institution_sites` DROP `network_connectivity_id`;
+DROP TABLE institution_network_connectivities;
+
+ALTER TABLE `institutions` DROP `network_connectivity_id`;
 
 DELETE FROM labels WHERE field = 'network_connectivity_id';
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1961';
