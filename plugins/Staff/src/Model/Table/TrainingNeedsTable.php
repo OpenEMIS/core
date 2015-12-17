@@ -341,4 +341,14 @@ class TrainingNeedsTable extends AppTable {
 
 		return compact('typeOptions', 'selectedType');
 	}
+	
+	private function setupTabElements() {
+		$tabElements = $this->controller->getTrainingTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }
