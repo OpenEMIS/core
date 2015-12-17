@@ -124,7 +124,7 @@ class DirectoriesTable extends AppTable {
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
-					$InstitutionStudentTable->aliasField('institution_site_id').' IN ('.$InstitutionIds.')',
+					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$InstitutionIds.')',
 					$InstitutionStudentTable->aliasField('staff_id').' = '.$this->aliasField('id')
 				]);
 
