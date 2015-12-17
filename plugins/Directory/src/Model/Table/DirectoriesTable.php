@@ -45,7 +45,7 @@ class DirectoriesTable extends AppTable {
 		// 	'pages' => ['view']
 		// ]);
 
-		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);®
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -213,24 +213,26 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
-		$options = [];
-		if (isset($attr['user_type'])) {
-			switch ($attr['user_type']) {
-				case self::STUDENT:
-					$options['model'] = 'Student';
-					break;
-				case self::STAFF:
-					$options['model'] = 'Staff';
-					break;
-				case self::GUARDIAN:
-					$options['model'] = 'Guardian';
-					break;
+		if ($action == 'add') {
+			$options = [];
+			if (isset($attr['user_type'])) {
+				switch ($attr['user_type']) {
+					case self::STUDENT:
+						$options['model'] = 'Student';
+						break;
+					case self::STAFF:
+						$options['model'] = 'Staff';
+						break;
+					case self::GUARDIAN:
+						$options['model'] = 'Guardian';
+						break;
+				}
 			}
+			$value = $this->getUniqueOpenemisId($options);
+			$attr['attr']['value'] = $value;
+			$attr['value'] = $value;
+			return $attr;
 		}
-		$value = $this->getUniqueOpenemisId($options);
-		$attr['attr']['value'] = $value;
-		$attr['value'] = $value;
-		return $attr;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {

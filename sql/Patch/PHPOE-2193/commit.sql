@@ -118,3 +118,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7033, 'Bank Accounts', 'Directories', 'Directory', 'Staff - Finance', 7000, 'StaffBankAccounts.index|StaffBankAccounts.view', 'StaffBankAccounts.edit', 'StaffBankAccounts.add', 'StaffBankAccounts.remove', 7033, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7034, 'Salaries', 'Directories', 'Directory', 'Staff - Finance', 7000, 'StaffSalaries.index|StaffSalaries.view', 'StaffSalaries.edit', 'StaffSalaries.add', 'StaffSalaries.remove', 7034, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7035, 'Training Results', 'Directories', 'Directory', 'Staff - Training', 7000, 'TrainingResults.index|TrainingResults.view', 'TrainingResults.edit', 'TrainingResults.add', 'TrainingResults.remove', 7035, 1, 1, NOW());
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Results', 'assessment_grading_option_id', 'Student -> Results', 'Grade', 1, 0, NOW());
+
