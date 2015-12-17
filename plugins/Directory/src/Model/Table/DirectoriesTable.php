@@ -141,21 +141,28 @@ class DirectoriesTable extends AppTable {
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
 			$conditions = [];
+			$iconClass = '';
 			if (!is_null($this->request->query('user_type'))) {
 				switch($this->request->query('user_type')) {
 					case self::ALL:
 						// Do nothing
+						$dashboardModel = 'users';
+						$iconClass = 'fa fa-user';
 						break;
 					case self::STUDENT:
 						$conditions = [$this->aliasField('is_student') => 1];
+						$dashboardModel = 'students';
 						break;
 
 					case self::STAFF:
 						$conditions = [$this->aliasField('is_staff') => 1];
+						$dashboardModel = 'staff';
 						break;
 
 					case self::GUARDIAN:
 						$conditions = [$this->aliasField('is_guardian') => 1];
+						$dashboardModel = 'guardians';
+						$iconClass = 'kd-guardian';
 						break;
 
 					case self::OTHER:
@@ -164,6 +171,8 @@ class DirectoriesTable extends AppTable {
 							$this->aliasField('is_staff') => 0,
 							$this->aliasField('is_guardian') => 0
 						];
+						$dashboardModel = 'others';
+						$iconClass = 'fa fa-user';
 						break;
 				}
 			}
@@ -180,9 +189,10 @@ class DirectoriesTable extends AppTable {
 			$indexElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
-					'model' => 'staff',
+					'model' => $dashboardModel,
 					'modelCount' => $userCount->count(),
 					'modelArray' => $userArray,
+					'iconClass' => $iconClass
 				],
 				'options' => [],
 				'order' => 0
