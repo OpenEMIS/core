@@ -48,10 +48,11 @@ class DirectoriesTable extends AppTable {
 		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);®
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		return $validator
+			->allowEmpty('photo_content')
+		;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -190,6 +191,70 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('user_type', ['type' => 'select']);
+		$userType = $this->request->data[$this->alias()]['user_type'];
+		$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
+	}
+
+	public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request) {
+		$options = [
+			self::STUDENT => __('Student'),
+			self::STAFF => __('Staff'),
+			self::GUARDIAN => __('Guardian'),
+			self::OTHER => __('Others')
+		];
+		$attr['options'] = $options;
+		$attr['onChangeReload'] = true;
+		if (!isset($this->request->data[$this->alias()]['user_type'])) {
+			$this->request->data[$this->alias()]['user_type'] = key($options);
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
+		$options = [];
+		if (isset($attr['user_type'])) {
+			switch ($attr['user_type']) {
+				case self::STUDENT:
+					$options['model'] = 'Student';
+					break;
+				case self::STAFF:
+					$options['model'] = 'Staff';
+					break;
+				case self::GUARDIAN:
+					$options['model'] = 'Guardian';
+					break;
+			}
+		}
+		$value = $this->getUniqueOpenemisId($options);
+		$attr['attr']['value'] = $value;
+		$attr['value'] = $value;
+		return $attr;
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+		$userType = $requestData[$this->alias()]['user_type'];
+		$type = [
+			'is_student' => 0,
+			'is_staff' => 0,
+			'is_guardian' => 0
+		];
+		switch ($userType) {
+			case self::STUDENT:
+				$type['is_student'] = 1;
+				break;
+			case self::STAFF:
+				$type['is_staff'] = 1;
+				break;
+			case self::GUARDIAN:
+				$type['is_guardian'] = 1;
+				break;
+		}
+		$directoryEntity = array_merge($requestData[$this->alias()], $type);
+		$requestData[$this->alias()] = $directoryEntity;
+	}
+
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields = [];
 		$this->ControllerAction->field('institution', ['order' => 50]);
@@ -316,13 +381,5 @@ class DirectoriesTable extends AppTable {
 		$value = implode('<BR>', $combineArray);
 
 		return $value;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'index') {
-			if (isset($toolbarButtons['add'])) {
-				unset($toolbarButtons['add']);
-			}
-		}
 	}
 }
