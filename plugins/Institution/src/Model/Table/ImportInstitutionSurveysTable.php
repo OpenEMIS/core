@@ -16,8 +16,9 @@ class ImportInstitutionSurveysTable extends AppTable {
 	const RECORD_QUESTION = 1;
 	const FIRST_RECORD = 2;
 
-	public $institutionSurveyId = false;
-	public $institutionSurvey = false;
+	private $institutionSurveyId = false;
+	private $institutionSurvey = false;
+
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
@@ -43,11 +44,6 @@ class ImportInstitutionSurveysTable extends AppTable {
 	public function beforeAction($event) {
 		if ($this->action != 'downloadFailed') {
 			$session = $this->request->session();
-			if ($session->check('Institution.Institutions.id')) {
-				$this->institutionId = $session->read('Institution.Institutions.id');
-			} else {
-				$this->institutionId = false;
-			}
 			if (!empty($this->request->pass) && isset($this->request->pass[1])) {
 				$this->institutionSurveyId = $this->request->pass[1];
 			}

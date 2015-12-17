@@ -141,7 +141,7 @@ class StudentsController extends AppController {
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
 				}
-			} elseif ($model->hasField('student_id')) {
+			} else if ($model->hasField('student_id')) {
 				$model->fields['student_id']['type'] = 'hidden';
 				$model->fields['student_id']['value'] = $userId;
 
