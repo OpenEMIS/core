@@ -14,7 +14,7 @@ use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 
 class InstitutionClassesTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	public $selectedSectionId = 0;
 	private $public = 0;
 	private $_academicPeriodOptions = [];
@@ -65,6 +65,7 @@ class InstitutionClassesTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
     	$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
     	$this->ControllerAction->field('created', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('created_user_id', ['type' => 'string', 'visible' => false]);

@@ -11,6 +11,8 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionGradesTable extends AppTable {
+	private $institutionId;
+
 	public function initialize(array $config) {
 		$this->table('institution_grades');
 		parent::initialize($config);
@@ -33,6 +35,10 @@ class InstitutionGradesTable extends AppTable {
 				])
  			;
 		return $validator;
+	}
+
+	public function beforeAction(Event $event) {
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
 	}
 
 	public function afterAction(Event $event) {
