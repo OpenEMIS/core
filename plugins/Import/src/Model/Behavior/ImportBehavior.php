@@ -387,7 +387,6 @@ class ImportBehavior extends Behavior {
 					unset($tempRow['duplicates']);
 					$activeModel->patchEntity($tableEntity, $tempRow);
 					$errors = $tableEntity->errors();
-					// pr($errors);die;
 					if (!$rowPass || $duplicates || $errors) { // row contains error or record is a duplicate based on unique key(s)
 
 						$rowCodeError = '';
