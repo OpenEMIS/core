@@ -58,6 +58,8 @@ class StaffTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
+
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
 
