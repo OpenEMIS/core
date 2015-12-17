@@ -55,7 +55,9 @@ class StudentSection extends Entity
     		$InstitutionSectionGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
     		$data = $InstitutionSectionGrades
     			->find()
-    			->where([$InstitutionSectionGrades->aliasField('institution_section_id') => $this->institution_section_id, $InstitutionSectionGrades->aliasField('institution_section_id') => 1])
+    			->where([
+                    $InstitutionSectionGrades->aliasField('institution_section_id') => $this->institution_section_id
+                ])
     			->contain(['EducationGrades'=>['EducationProgrammes'=>['EducationCycles']]])
     		;
     		$result = '';

@@ -69,7 +69,21 @@ class NavigationHelper extends Helper {
 				$hasUL = true;
 				// If the parent is part of the path and has children nodes in the the path
 				if (in_array($key, $path) && $key != $linkName && $this->hasChildren($key, $parentNodes)) {
-					$in = true;
+					// If the link is in the root's selected list, do not expand as the root is selected
+					if (isset($value['selected'])) {
+						$in = true;
+						foreach ($value['selected'] as $selected) {
+							if ($selected == $linkName) {
+								$in = false;
+								// To implement collapsed logic so that the > arrow in the navigation bar will not appear if the link is selected
+								break;
+							}
+						}
+					} else {
+						$in = true;
+					}
+				} elseif ($key == $linkName) {
+					// To implement collapsed logic so that the > arrow in the navigation bar will not appear if the link is selected
 				}
 			} 
 			// Sub parents
