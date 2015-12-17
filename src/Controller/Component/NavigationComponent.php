@@ -163,6 +163,7 @@ class NavigationComponent extends Component {
 				'title' => 'Institutions', 
 				'icon' => '<span><i class="fa kd-institutions"></i></span>',
 				'params' => ['plugin' => 'Institution'],
+				'selected' => ['Institutions.add', 'Institutions.ImportInstitutions.add', 'Institutions.ImportInstitutions.results']
 			],
 
 			'Guardians.index' => [
@@ -177,7 +178,7 @@ class NavigationComponent extends Component {
 				'title' => 'Directory', 
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
 				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.add']
+				'selected' => ['Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
 			],
 
 			'Reports' => [
@@ -475,7 +476,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.SpecialNeeds', 'Directories.ImportUsers']
+					'Directories.History', 'Directories.SpecialNeeds']
 			]
 		];
 		return $navigation;
