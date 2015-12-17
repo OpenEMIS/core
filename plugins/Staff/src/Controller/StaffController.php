@@ -254,6 +254,7 @@ class StaffController extends AppController {
 		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
 		$studentTabElements = [
 			'TrainingResults' => ['text' => __('Training Results')],
+			'TrainingNeeds' => ['text' => __('Training Needs')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
