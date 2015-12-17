@@ -290,6 +290,10 @@ class DirectoriesTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
 		$isStudent = $entity->is_student;
 		$isStaff = $entity->is_staff;
 		$isGuardian = $entity->is_guardian;

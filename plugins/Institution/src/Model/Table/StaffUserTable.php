@@ -56,6 +56,10 @@ class StaffUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
 		$this->Session->write('Staff.Staff.id', $entity->id);
 		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
