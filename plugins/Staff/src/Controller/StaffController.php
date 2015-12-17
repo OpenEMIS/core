@@ -128,6 +128,26 @@ class StaffController extends AppController {
 						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
 					}
 				}
+			} elseif ($model->hasField('staff_id')) {
+				$model->fields['staff_id']['type'] = 'hidden';
+				$model->fields['staff_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('staff_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
+					}
+				}
 			}
 		} else {
 			if ($model->alias() == 'ImportStaff') {
