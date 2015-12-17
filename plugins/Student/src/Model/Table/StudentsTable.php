@@ -71,7 +71,7 @@ class StudentsTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
-		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'student_id', 'session' => 'Users.id']);
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}

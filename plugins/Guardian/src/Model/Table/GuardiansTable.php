@@ -40,7 +40,7 @@ class GuardiansTable extends AppTable {
 		// 	'excludes' => ['password', 'photo_name'],
 		// 	'filename' => 'Guardians'
 		// ]);
-		// $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Guardian.Guardians.id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -49,6 +49,7 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Guardian.Guardians.id', $entity->id);
 		$this->Session->write('Guardian.Guardians.name', $entity->name);
 		$this->setupTabElements(['id' => $entity->id]);
 	}
