@@ -25,39 +25,43 @@ class ImportUsersTable extends AppTable {
 	    		'id' => 'is_student',
 	    		'code' => 'STU',
 	    		'name' => __('Students'),
-	    		'model' => 'Student'
+	    		'model' => 'Student',
+	    		'prefix' => '',
 	    	],
 	    	'is_staff' => [
 	    		'id' => 'is_staff',
 	    		'code' => 'STA',
 	    		'name' => __('Staff'),
-	    		'model' => 'Staff'
+	    		'model' => 'Staff',
+	    		'prefix' => '',
 	    	],
 	    	'is_guardian' => [
 	    		'id' => 'is_guardian',
 	    		'code' => 'GUA',
 	    		'name' => __('Guardians'),
-	    		'model' => 'Guardian'
+	    		'model' => 'Guardian',
+	    		'prefix' => '',
 	    	],
 	    	'others' => [
 	    		'id' => 'others',
 	    		'code' => 'OTH',
 	    		'name' => __('Others'),
-	    		'model' => ''
+	    		'model' => '',
+	    		'prefix' => '',
 	    	]
 	    ];
 
 		$studentPrefix = $this->ConfigItems->value('student_prefix');
 		$studentPrefix = explode(",", $studentPrefix);
-		$this->is_student_prefix = (isset($studentPrefix[1]) && $studentPrefix[1]>0) ? $studentPrefix[0] : '';
+		$this->accountTypes['is_student']['prefix'] = (isset($studentPrefix[1]) && $studentPrefix[1]>0) ? $studentPrefix[0] : '';
 
 		$staffPrefix = $this->ConfigItems->value('staff_prefix');
 		$staffPrefix = explode(",", $staffPrefix);
-		$this->is_staff_prefix = (isset($staffPrefix[1]) && $staffPrefix[1]>0) ? $staffPrefix[0] : '';
+		$this->accountTypes['is_staff']['prefix'] = (isset($staffPrefix[1]) && $staffPrefix[1]>0) ? $staffPrefix[0] : '';
 
 		$guardianPrefix = $this->ConfigItems->value('guardian_prefix');
 		$guardianPrefix = explode(",", $guardianPrefix);
-		$this->is_guardian_prefix = (isset($guardianPrefix[1]) && $guardianPrefix[1]>0) ? $guardianPrefix[0] : '';
+		$this->accountTypes['is_guardian']['prefix'] = (isset($guardianPrefix[1]) && $guardianPrefix[1]>0) ? $guardianPrefix[0] : '';
 
 	}
 
@@ -86,7 +90,7 @@ class ImportUsersTable extends AppTable {
 
 		if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
 			$tempRow['duplicates'] = true;
-			return true;
+			return false;
 		}
 
 		$accountType = $columns->filter(function ($value, $key, $iterator) {
@@ -94,7 +98,11 @@ class ImportUsersTable extends AppTable {
 		});
 		$accountTypeIndex = key($accountType->toArray());
 		$accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
-		$tempRow['account_type'] = $this->getAccountTypesId($accountType);
+		$tempRow['account_type'] = $this->getAccountTypeId($accountType);
+		if (empty($tempRow['account_type'])) {
+			$tempRow['duplicates'] = __('Account type cannot be empty.');
+			return false;
+		}
 
 		$user = $this->Users->find()->where(['openemis_no'=>$openemisNo])->first();
 		if (!$user) {
@@ -105,6 +113,7 @@ class ImportUsersTable extends AppTable {
 		}
 
 		if (!empty($tempRow['account_type'])) {
+			// setting is_student = 1, or is_staff = 1, or is_guardian = 1
 			$tempRow[$tempRow['account_type']] = 1;
 		}
 	}
@@ -126,7 +135,7 @@ class ImportUsersTable extends AppTable {
 	}
 
 	public function onImportGetAccountTypesId(Event $event, $cellValue) {
-		return $this->getAccountTypesId($cellValue);
+		return $this->getAccountTypeId($cellValue);
 	}
 
 	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
@@ -172,31 +181,38 @@ class ImportUsersTable extends AppTable {
 	}
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-		if (empty($tempRow['account_type'])) {
-			$tempRow['duplicates'] = __('Account type cannot be empty.');
-			return false;
-		}
 		return true;
 	}
 
-	protected function getNewOpenEmisNo($importedUniqueCodes, $row, $accountType) {
+	protected function getNewOpenEmisNo(ArrayObject $importedUniqueCodes, $row, $accountType) {
+		$model = $this->accountTypes[$accountType]['model'];
 		$importedCodes = $importedUniqueCodes->getArrayCopy();
 		if (count($importedCodes)>0) {
-			if ($accountType=='others' || empty($accountType)) {
+			if (empty($accountType)) {
 				$prefix = '';
 			} else {
-				$prefix = $this->{$accountType.'_prefix'};
+				$prefix = $this->accountTypes[$accountType]['prefix'];
 			}
 			$val = reset($importedCodes);
-			$val = $prefix . (intval(substr($val, strlen($prefix))) + $row);
+
+			foreach ($this->accountTypes as $key => $value) {
+				if (!empty($value['prefix']) && substr_count($val, $value['prefix'])>0) {
+					$val = substr($val, strlen($value['prefix']));
+				}				
+			}
+			$val = $prefix . (intval($val) + $row);
+			$user = $this->Users->find()->select(['id'])->where(['openemis_no'=>$val])->first();
+			if ($user) {
+				$importedUniqueCodes[] = $val;
+				$val = $this->Users->getUniqueOpenemisId(['model' => $model]);
+			}
 		} else {
-			$model = $this->accountTypes[$accountType]['model'];
 			$val = $this->Users->getUniqueOpenemisId(['model' => $model]);
 		}
 		return $val;
 	}
 
-	protected function getAccountTypesId($cellValue) {
+	protected function getAccountTypeId($cellValue) {
 		$accountType = '';
 		foreach ($this->accountTypes as $key=>$type) {
 			if ($type['code']==$cellValue) {
