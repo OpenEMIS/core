@@ -128,7 +128,7 @@ class StaffController extends AppController {
 						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
 					}
 				}
-			} elseif ($model->hasField('staff_id')) {
+			} else if ($model->hasField('staff_id')) {
 				$model->fields['staff_id']['type'] = 'hidden';
 				$model->fields['staff_id']['value'] = $userId;
 

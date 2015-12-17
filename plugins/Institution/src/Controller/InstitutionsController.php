@@ -182,10 +182,6 @@ class InstitutionsController extends AppController  {
 			if ($model->hasField('institution_id') && !is_null($this->activeObj)) {
 				$model->fields['institution_id']['type'] = 'hidden';
 				$model->fields['institution_id']['value'] = $session->read('Institution.Institutions.id');
-				/**
-				 * set sub model's institution id here
-				 */
-				$model->institutionId = $this->activeObj->id;
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
