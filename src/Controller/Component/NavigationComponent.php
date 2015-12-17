@@ -291,14 +291,14 @@ class NavigationComponent extends Component {
 				'Institutions.StudentAttendances.index' => [
 					'title' => 'Students',
 					'parent' => 'Institution.Attendance',
-					'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences'],
+					'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.StaffAttendances.index' => [
 					'title' => 'Staff',
 					'parent' => 'Institution.Attendance',
-					'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences'],
+					'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences', 'Institutions.ImportStaffAttendances'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -379,7 +379,7 @@ class NavigationComponent extends Component {
 					'title' => 'Forms',
 					'parent' => 'Survey', 
 					'params' => ['plugin' => 'Institution'],
-					'selected' => ['Institutions.Surveys'],
+					'selected' => ['Institutions.Surveys', 'Institutions.ImportInstitutionSurveys'],
 				],
 
 				'Institutions.Rubrics' => [
@@ -474,7 +474,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.SpecialNeeds']
+					'Directories.History', 'Directories.SpecialNeeds', 'Directories.ImportUsers']
 			]
 		];
 		return $navigation;
