@@ -10,6 +10,8 @@ use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 
 class ImportStudentAttendancesTable extends AppTable {
+	private $institutionId = false;
+
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
@@ -28,8 +30,6 @@ class ImportStudentAttendancesTable extends AppTable {
 		$session = $this->request->session();
 		if ($session->check('Institution.Institutions.id')) {
 			$this->institutionId = $session->read('Institution.Institutions.id');
-		} else {
-			$this->institutionId = false;
 		}
 		$this->systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
 	}

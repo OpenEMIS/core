@@ -79,7 +79,7 @@ class DirectoriesController extends AppController {
 			$session->delete('Staff.Staff.name');
 			$session->delete('Student.Students.id');
 			$session->delete('Student.Students.name');
-		} elseif ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
+		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
@@ -148,6 +148,46 @@ class DirectoriesController extends AppController {
 					$exists = $model->exists([
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('security_user_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
+					}
+				}
+			} else if ($model->hasField('staff_id')) {
+				$model->fields['staff_id']['type'] = 'hidden';
+				$model->fields['staff_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('staff_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
+					}
+				}
+			} else if ($model->hasField('student_id')) {
+				$model->fields['student_id']['type'] = 'hidden';
+				$model->fields['student_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('student_id') => $userId
 					]);
 					
 					/**
