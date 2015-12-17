@@ -30,6 +30,7 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('User.AdvancedNationalIdSearch');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('AdvanceSearch');
 
@@ -105,6 +106,8 @@ class DirectoriesTable extends AppTable {
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			// function from AdvancedNationalIdSearchBehavior
+			$query = $this->addNationalIdSearchConditions($query, ['searchTerm' => $search]);
 		}
 
 		// this part filters the list by institutions/areas granted to the group
