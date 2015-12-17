@@ -164,13 +164,6 @@ class NavigationComponent extends Component {
 				'icon' => '<span><i class="fa kd-institutions"></i></span>',
 				'params' => ['plugin' => 'Institution'],
 			],
-			'Guardians.index' => [
-				'title' => 'Guardians', 
-				'icon' => '<span><i class="fa kd-guardian"></i></span>',
-				'params' => ['plugin' => 'Guardian'],
-				'selected' => ['Guardians.add', 'Guardians.edit', 'Guardians.view', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 
-					'Guardians.History', 'Guardians.Nationalities'],
-			],
 
 			'Directories.index' => [
 				'title' => 'Directory', 
@@ -461,7 +454,7 @@ class NavigationComponent extends Component {
 				'title' => 'Training', 
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
-				'selected' => ['Staff.TrainingResults'],
+				'selected' => ['Staff.TrainingResults', 'Staff.TrainingNeeds'],
 			],
 		];
 		return $navigation;

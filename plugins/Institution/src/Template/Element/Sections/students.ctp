@@ -52,7 +52,7 @@
 						<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
 						<td>
 							<?php
-							echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.education_grade_id", array(
+							echo $this->Form->input("InstitutionSections.institution_section_students.$n.education_grade_id", array(
 								'label' => false,
 								'options' => $attr['data']['gradeOptions'],
 								'value' => $obj->education_grade_id
