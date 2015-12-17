@@ -46,11 +46,38 @@ class ResultsTable extends AppTable {
 		$this->ControllerAction->field('assessment');
 		$this->ControllerAction->field('assessment_result_id', ['visible' => false]);
 		$this->ControllerAction->field('assessment_result_type_id', ['visible' => false]);
-		$this->ControllerAction->field('assessment_grading_option_id', ['visible' => false]);
+		$this->ControllerAction->field('assessment_grading_option_id');
+		$this->ControllerAction->field('student_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'institution_id', 'assessment', 'assessment_item_id'
 		]);
+	}
+
+	public function onGetMarks(Event $event, Entity $entity) {
+		return $entity->marks;
+	}
+
+	public function onGetAssessmentGradingOptionId(Event $event, Entity $entity) {
+		$returnValue = '';
+		if (!empty($entity['assessment_grading_option_id'])) {
+			$gradingOptionValue = $this->AssessmentGradingOptions->find()
+				->where([$this->AssessmentGradingOptions->aliasField('id') => $entity['assessment_grading_option_id']])
+				->first();
+			if (!empty($gradingOptionValue)) {
+				if (!empty($gradingOptionValue['code'])) {
+					$returnValue = $gradingOptionValue['code'];
+				}
+				if (!empty($gradingOptionValue['name'])) {
+					if (!empty($returnValue)) {
+						$returnValue .= ' - '.$gradingOptionValue['name'];
+					} else {
+						$returnValue = $gradingOptionValue['name'];
+					}
+				} 
+			}
+		}
+		return $returnValue;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
