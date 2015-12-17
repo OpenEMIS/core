@@ -13,6 +13,10 @@ use App\Model\Table\AppTable;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
+
+	public function initialize(array $config) {
+		parent::initialize($config);
+	}
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}

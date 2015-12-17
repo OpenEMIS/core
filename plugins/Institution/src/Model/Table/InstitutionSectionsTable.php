@@ -171,9 +171,7 @@ class InstitutionSectionsTable extends AppTable {
 		]);
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
-		if (empty($gradeOptions)) {
-			$this->Alert->warning('Institutions.noGrades');
-		} else {
+		if (!empty($gradeOptions)) {
 			/**
 			 * Added on PHPOE-1762 for PHPOE-1766
 			 * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions() 

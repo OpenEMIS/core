@@ -66,5 +66,8 @@ UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id
 
 DELETE FROM `security_functions` WHERE `id` >= 7000 AND `id` <= 7035;
 
+-- labels
+DELETE FROM `labels` WHERE `module` = 'Results' AND `field` = 'assessment_grading_option_id' AND `field_name` = 'Student -> Results';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2193';
