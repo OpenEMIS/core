@@ -410,7 +410,7 @@ class TransferRequestsTable extends AppTable {
 					'table' => $InstitutionGrades->table(),
 					'alias' => $InstitutionGrades->alias(),
 					'conditions' => [
-						$InstitutionGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
+						$InstitutionGrades->aliasField('institution_id =') . $this->Institutions->aliasField('id'),
 						$InstitutionGrades->aliasField('education_grade_id') => $this->selectedGrade,
 						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
 						'OR' => [
