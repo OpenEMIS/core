@@ -140,41 +140,38 @@ class InstitutionsController extends AppController  {
 				$action = $params['pass'][0];
 			}
 
-			$persona = false;
 			$alias = $model->alias;
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
 
+			$crumbTitle = $model->getHeader($alias);
+			$crumbOptions = [];
 			if ($action) {
-				/**
-				 * replaced 'action' => $alias to 'action' => $model->alias,
-				 * since only the name changes but not url
-				 */
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-				if (strtolower($action) != 'index')	{
-					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
-						if (isset($params['pass'][1])) {
-							$persona = $model->get($params['pass'][1]);
-							if (is_object($persona)) {
-								$this->Navigation->addCrumb($persona->name);
-							}
-						}
-					} else {
-						$this->Navigation->addCrumb(ucwords($action));
-					}
-				}
-			} else {
-				$this->Navigation->addCrumb($model->getHeader($alias));
+				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
+			}
+			$this->Navigation->addCrumb($crumbTitle, $crumbOptions);
+
+			$persona = false;
+			$requestQuery = $this->request->query;
+			if (isset($params['pass'][1])) {
+				$persona = $model->get($params['pass'][1]);
+			} else if (isset($requestQuery['user_id'][1])) {
+				$persona = $model->Users->get($requestQuery['user_id']);
 			}
 
 			$header = $this->activeObj->name;
 			if ($persona) {
-				$header .= ' - ' . $persona->name;
+				$header = $persona->name . ' - ' . $model->getHeader($alias);
+				$model->addBehavior('Institution.InstitutionUserBreadcrumbs');
 			} else {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
+			$event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+			$event = $model->eventManager()->dispatch($event);
+			if ($event->isStopped()) { return $event->result; }
+			
 			if ($model->hasField('institution_id')) {
 				if (!in_array($model->alias(), ['TransferRequests'])) {
 					$model->fields['institution_id']['type'] = 'hidden';
@@ -203,7 +200,6 @@ class InstitutionsController extends AppController  {
 
 			$this->set('contentHeader', $header);
 		} else {
-			// pr($model->alias());die;
 			if ($model->alias() == 'ImportInstitutions') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Institutions') . ' - ' . $model->getHeader($model->alias());

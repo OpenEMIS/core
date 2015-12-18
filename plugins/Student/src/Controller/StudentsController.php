@@ -66,14 +66,17 @@ class StudentsController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Student.Students.id')) {
 				$id = $session->read('Student.Students.id');
+			} else if ($session->check('Institution.Students.id')) {
+				$id = $session->read('Institution.Students.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$studentId = $session->read('Institution.Students.id');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
+				// $studentId = $session->read('Institution.Students.id');
+				// $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}
 		$this->set('contentHeader', $header);
