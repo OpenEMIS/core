@@ -40,6 +40,14 @@ class NavigationComponent extends Component {
 		}
 	}
 
+	public function removeCrumb($title) {
+		$key = array_search($title, $this->array_column($this->breadcrumbs, 'title'));
+		if ($key) {
+			unset($this->breadcrumbs[$key]);
+			$this->controller->set('_breadcrumbs', $this->breadcrumbs);
+		}
+	}
+
 	public function beforeFilter(Event $event) {
 		$controller = $this->controller;
 		$navigations = $this->buildNavigation();
