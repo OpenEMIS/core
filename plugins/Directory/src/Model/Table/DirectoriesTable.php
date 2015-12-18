@@ -338,7 +338,48 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields = [];
-		$this->ControllerAction->field('institution', ['order' => 50]);
+		if (!is_null($this->request->query('user_type'))) {
+			switch($this->request->query('user_type')) {
+				case self::ALL:
+					// Do nothing
+					break;
+				case self::STUDENT:
+					$this->ControllerAction->field('student_status', ['order' => 51]);
+					$this->ControllerAction->field('institution', ['order' => 50]);
+					break;
+
+				case self::STAFF:
+					$this->ControllerAction->field('institution', ['order' => 50]);
+					break;
+
+				case self::GUARDIAN:
+					
+					break;
+
+				case self::OTHER:
+					
+					break;
+			}
+		}
+	}
+
+	public function onGetStudentStatus(Event $event, Entity $entity) {
+		$userId = $entity->id;
+		$InstitutionStudentTable = TableRegistry::get('Institution.Students');
+		$studentInstitutions = $InstitutionStudentTable->find()
+			->matching('StudentStatuses')
+			->where([
+				$InstitutionStudentTable->aliasField('student_id') => $userId
+			])
+			->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+			->first();
+		
+		if (!empty($studentInstitutions)) {
+			$value = $studentInstitutions->_matchingData['StudentStatuses']['name'];
+		} else {
+			$value = '';
+		}
+		return $value;
 	}
 
 	public function getNumberOfUsersByGender($params=[]) {
@@ -451,7 +492,9 @@ class DirectoriesTable extends AppTable {
 				])
 				->distinct(['id'])
 				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name'])
-				->toArray();
+				->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+				->first();
+			return $studentInstitutions;
 		}
 
 		$staffInstitutions = [];
@@ -467,12 +510,7 @@ class DirectoriesTable extends AppTable {
 				->andWhere([$InstitutionStaffTable->aliasField('end_date').' IS NULL'])
 				->select(['id' => 'Institutions.id', 'name' => 'Institutions.name'])
 				->toArray();
+			return implode('<BR>', $staffInstitutions);
 		}
-
-		$combineArray = array_merge($studentInstitutions, $staffInstitutions);
-
-		$value = implode('<BR>', $combineArray);
-
-		return $value;
 	}
 }
