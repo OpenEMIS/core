@@ -29,11 +29,15 @@ class NavigationComponent extends Component {
 	public function substituteCrumb($oldTitle, $title, $options=array()) {
 		foreach ($this->breadcrumbs as $key=>$value) {
 			if ($value['title'] == __($oldTitle)) {
-				unset($this->breadcrumbs[$key]);
+				$this->breadcrumbs[$key] = $item = array(
+					'title' => __($title),
+					'link' => ['url' => $options],
+					'selected' => sizeof($options)==0
+				);
+				$this->controller->set('_breadcrumbs', $this->breadcrumbs);
 				break;
 			}
 		}
-		$this->addCrumb($title, $options);
 	}
 
 	public function removeCrumb($title) {
