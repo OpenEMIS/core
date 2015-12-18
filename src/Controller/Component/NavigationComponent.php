@@ -39,6 +39,7 @@ class NavigationComponent extends Component {
 	public function beforeFilter(Event $event) {
 		$controller = $this->controller;
 		$navigations = $this->buildNavigation();
+		$this->checkSelectedLink($navigations);
 		$this->checkPermissions($navigations);
 		$controller->set('_navigations', $navigations);
 	}
@@ -93,8 +94,41 @@ class NavigationComponent extends Component {
 		}
 	}
 
+	public function checkSelectedLink(array &$navigations) {
+		// Set the pass variable
+		if (!empty($this->request->pass)) {
+			$pass = $this->request->pass;
+		} else {
+			$pass[0] = '';
+		}
+
+		// The URL name "Controller.Action.Model or Controller.Action"
+		$controller = $this->controller->name;
+		$action = $this->action;
+		$linkName = $controller.'.'.$action;
+		$controllerActionLink = $linkName;
+		if (!empty($pass[0])) {
+			$linkName .= '.'.$pass[0];
+		}
+		if (!in_array($linkName, $navigations)) {
+			$selectedArray = $this->array_column($navigations, 'selected');
+			foreach($selectedArray as $k => $selected) {
+				if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
+					$linkName = $k;
+					break;
+				}
+			}
+		}
+		$children = $this->array_column($navigations, 'parent');
+		foreach ($children as $key => $child) {
+			if ($child == $linkName) {
+				unset($navigations[$key]);
+			}
+		}
+	}
+
 	// PHP 5.5 array_column alternative
-	public function array_column($array,$column_name) {
+	public function array_column($array, $column_name) {
         return array_map(
         	function($element) use($column_name) {
         		if (isset($element[$column_name])) {
@@ -540,7 +574,7 @@ class NavigationComponent extends Component {
 					'title' => 'Guardians',
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StudentGuardians']
+					'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser']
 				],
 				'Directories.StudentProgrammes.index' => [
 					'title' => 'Academic',
