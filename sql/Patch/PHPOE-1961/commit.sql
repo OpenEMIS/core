@@ -1,9 +1,10 @@
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-1961', NOW());
 
-ALTER TABLE `institutions` ADD `network_connectivity_id` INT NOT NULL AFTER `institution_gender_id`;
+ALTER TABLE `institutions` ADD `institution_network_connectivity_id` INT NOT NULL AFTER `institution_gender_id`;
+ALTER TABLE `institutions` ADD INDEX(`institution_network_connectivity_id`);
 
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`) VALUES (uuid(), 'Institutions', 'network_connectivity_id', 'Institutions', 'Network Connectivity', NULL, NULL, '1');
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`) VALUES (uuid(), 'Institutions', 'institution_network_connectivity_id', 'Institutions', 'Network Connectivity', NULL, NULL, '1');
 
 
 SET @fieldOptionOrder := 0;
