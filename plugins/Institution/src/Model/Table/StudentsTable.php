@@ -78,8 +78,8 @@ class StudentsTable extends AppTable {
 				'rule' => ['institutionStudentId'],
 				'on' => 'create'
 			])
-			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycle', [
-				'rule' => ['checkAdmissionAgeWithEducationCycle'],
+			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
 			->add('student_name', 'ruleStudentEnrolledInOthers', [
