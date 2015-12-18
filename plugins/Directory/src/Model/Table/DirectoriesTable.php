@@ -218,6 +218,41 @@ class DirectoriesTable extends AppTable {
 		$this->ControllerAction->field('user_type', ['type' => 'select']);
 		$userType = $this->request->data[$this->alias()]['user_type'];
 		$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
+
+		switch ($userType) {
+			case self::STUDENT:
+				$this->addBehavior('CustomField.Record', [
+					'model' => 'Student.Students',
+					'behavior' => 'Student',
+					'fieldKey' => 'student_custom_field_id',
+					'tableColumnKey' => 'student_custom_table_column_id',
+					'tableRowKey' => 'student_custom_table_row_id',
+					'formKey' => 'student_custom_form_id',
+					'filterKey' => 'student_custom_filter_id',
+					'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+					'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+					'recordKey' => 'student_id',
+					'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+					'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
+				]);
+				break;
+			case self::STAFF:
+				$this->addBehavior('CustomField.Record', [
+					'model' => 'Staff.Staff',
+					'behavior' => 'Staff',
+					'fieldKey' => 'staff_custom_field_id',
+					'tableColumnKey' => 'staff_custom_table_column_id',
+					'tableRowKey' => 'staff_custom_table_row_id',
+					'formKey' => 'staff_custom_form_id',
+					'filterKey' => 'staff_custom_filter_id',
+					'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+					'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+					'recordKey' => 'staff_id',
+					'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+					'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
+				]);
+				break;
+		}
 	}
 
 	public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request) {
