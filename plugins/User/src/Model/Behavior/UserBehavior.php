@@ -143,8 +143,12 @@ class UserBehavior extends Behavior {
 				$imageDefault = 'kd-guardian';
 				break;
 			case 'Directories':
-				$userType = $this->_table->request->query['user_type'];
+
 				$tableClass = get_class($this->_table);
+				$userType = $tableClass::OTHER;
+				if (isset($this->_table->request->query['user_type'])) {
+					$userType = $this->_table->request->query['user_type'];
+				}
 				if ($userType == $tableClass::STUDENT) {
 					$imageDefault = 'kd-students';
 				} else if ($userType == $tableClass::STAFF) {
