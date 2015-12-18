@@ -65,11 +65,13 @@ class NavigationComponent extends Component {
 		return $url;
 	}
 
-	public function checkPermissions(&$navigations) {
-		$noAccessArray = [];
+	public function checkPermissions(array &$navigations) {
+		$linkOnly = [];
+
+		// Unset the children
 		foreach ($navigations as $key => $value) {
-			if (isset($value['link']) && $value['link']) {
-				// do nothing
+			if (isset($value['link']) && !$value['link']) {
+				$linkOnly[] = $key;
 			} else {
 				$params = [];
 				if (isset($value['params'])) {
@@ -77,17 +79,29 @@ class NavigationComponent extends Component {
 				}
 				$url = $this->getLink($key, $params);
 				if (!$this->AccessControl->check($url)) {
-					$noAccessArray[] = $key;
-					if (isset($value['parent']) && in_array($value['parent'], $navigations)) {
-						unset($navigations[$key]);
-					}
-					if (array_key_exists($key, $navigations)) {
-						unset($navigations[$key]);
-					}
+					unset($navigations[$key]);
 				}
 			}
 		}
+
+		// unset the parents if there is no children
+		$linkOnly = array_reverse($linkOnly);
+		foreach ($linkOnly as $link) {
+			if(!array_search($link, $this->array_column($navigations, 'parent'))){
+				unset($navigations[$link]);
+			}
+		}
 	}
+
+	// PHP 5.5 array_column alternative
+	public function array_column($array,$column_name) {
+        return array_map(
+        	function($element) use($column_name) {
+        		if (isset($element[$column_name])) {
+        			return $element[$column_name];
+        		}
+       		}, $array);
+    }
 
 	public function buildNavigation() {
 		// $navigations = $this->getNavigation();
