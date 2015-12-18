@@ -214,22 +214,6 @@ class UserBehavior extends Behavior {
 			$value = $entity->_matchingData['Users']->openemis_no;
 		} else if ($entity->has('user')) {
 			$value = $entity->user->openemis_no;
-			$action = $this->_table->ControllerAction->action();
-			$model = $this->_table->alias();
-
-			$pluginName = '';
-			if ($model == 'Students') {
-				$pluginName = 'Student';
-			} else if ($model == 'Staff') {
-				$pluginName = 'Staff';
-			} else if ($model == 'Guardians') {
-				$pluginName = 'Guardian';
-			}
-
-			if (($action == 'view') ) {
-				$url = ['plugin' => $pluginName, 'controller' => $model, 'action' => $action, $entity->user->id];
-				$value = $event->subject()->Html->link($value, $url);
-			}
 		}
 		return $value;
 	}
@@ -308,8 +292,10 @@ class UserBehavior extends Behavior {
 		// const STAFF = 2;
 		// const GUARDIAN = 3;
 		// const OTHER = 4;
-
-		$userType = $this->_table->request->data[$this->_table->alias()]['user_type'];
+		$userType = 0;
+		if (isset($this->_table->request->data[$this->_table->alias()]['user_type'])) {
+			$userType = $this->_table->request->data[$this->_table->alias()]['user_type'];
+		}
 		$tableClass = get_class($this->_table);
 		$value = '';
 		$alias = $this->_table->alias();
