@@ -566,7 +566,7 @@ class NavigationComponent extends Component {
 					'title' => 'Training',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.TrainingResults']
+					'selected' => ['Directories.TrainingResults', 'Directories.TrainingNeeds']
 				],
 		];
 		return $navigation;
