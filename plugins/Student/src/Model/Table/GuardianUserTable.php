@@ -10,7 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Guardian\Model\Table\GuardiansTable as UserTable;
+use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
