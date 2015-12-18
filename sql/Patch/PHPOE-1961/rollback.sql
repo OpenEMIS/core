@@ -5,9 +5,9 @@ DELETE FROM field_options WHERE code = 'NetworkConnectivities';
 
 DROP TABLE institution_network_connectivities;
 
-ALTER TABLE `institutions` DROP `network_connectivity_id`;
+ALTER TABLE `institutions` DROP `institution_network_connectivity_id`;
 
-DELETE FROM labels WHERE field = 'network_connectivity_id';
+DELETE FROM labels WHERE field = 'institution_network_connectivity_id';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1961';
