@@ -36,6 +36,14 @@ class GuardianUserTable extends UserTable {
 		$this->setupTabElements($entity);
 	}
 
+	public function addAfterAction(Event $event) {
+		if ($this->controller->name == 'Directories') {
+			$options['type'] = 'student';
+			$tabElements = $this->controller->getStudentGuardianTabElements($options);
+			$this->controller->set('tabElements', $tabElements);
+		}
+	}
+
 	private function setupTabElements($entity) {
 		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 		
