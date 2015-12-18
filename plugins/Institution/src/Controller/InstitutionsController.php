@@ -175,14 +175,11 @@ class InstitutionsController extends AppController  {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
-			if ($model->hasField('institution_id') && !in_array($model->alias(), ['TransferRequests'])) {
-				$model->fields['institution_id']['type'] = 'hidden';
-				$model->fields['institution_id']['value'] = $institutionId;
-			}
-
-			if ($model->hasField('institution_id') && !is_null($this->activeObj)) {
-				$model->fields['institution_id']['type'] = 'hidden';
-				$model->fields['institution_id']['value'] = $institutionId;
+			if ($model->hasField('institution_id')) {
+				if (!in_array($model->alias(), ['TransferRequests'])) {
+					$model->fields['institution_id']['type'] = 'hidden';
+					$model->fields['institution_id']['value'] = $institutionId;
+				}
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
