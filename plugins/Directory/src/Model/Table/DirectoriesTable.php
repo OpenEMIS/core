@@ -110,13 +110,14 @@ class DirectoriesTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$institutionIds = implode(', ', $institutionIds);
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			
 			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
 
 			$institutionStudents = $InstitutionStudentTable->find()
 				->where([
-					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$InstitutionIds.')',
+					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
 					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
 				]);
 
@@ -124,14 +125,27 @@ class DirectoriesTable extends AppTable {
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
-					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$InstitutionIds.')',
-					$InstitutionStudentTable->aliasField('staff_id').' = '.$this->aliasField('id')
+					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+				]);
+
+			$directoriesTableClone = clone $this;
+			$directoriesTableClone->alias('DirectoriesClone');
+
+			$guardianAndOthers = $directoriesTableClone->find()
+				->where([
+					'OR' => [
+						[$directoriesTableClone->aliasField('is_guardian').'= 1'],
+						[$directoriesTableClone->aliasField('is_student').'= 0', $directoriesTableClone->aliasField('is_guardian').'= 0', $directoriesTableClone->aliasField('is_staff').'= 0']
+					],
+					[$directoriesTableClone->aliasField('id').' = '.$this->aliasField('id')]
 				]);
 
 			$query->where([
 					'OR' => [
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
+						['EXISTS ('.$guardianAndOthers->sql().')']
 					]
 				])
 				->group([$this->aliasField('id')]);
