@@ -157,6 +157,9 @@ class GuardiansTable extends AppTable {
 		$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
+		if ($this->controller->name == 'Directories') {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+		}
 		return $this->controller->redirect($action);
 	}
 
