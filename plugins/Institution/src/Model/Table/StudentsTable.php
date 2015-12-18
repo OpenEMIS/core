@@ -379,8 +379,7 @@ class StudentsTable extends AppTable {
 		)
 		->where([
 			$ClassStudents->aliasField('student_id') => $studentId,
-			$ClassStudents->aliasField('education_grade_id') => $educationGradeId,
-			$ClassStudents->aliasField('status') => 1
+			$ClassStudents->aliasField('education_grade_id') => $educationGradeId
 		])
 		->first();
 
