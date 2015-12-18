@@ -74,8 +74,6 @@ class StudentsController extends AppController {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				// $studentId = $session->read('Institution.Students.id');
-				// $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}

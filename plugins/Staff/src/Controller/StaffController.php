@@ -72,14 +72,15 @@ class StaffController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Staff.Staff.id')) {
 				$id = $session->read('Staff.Staff.id');
+			} else if ($session->check('Institution.Staff.id')) {
+				$id = $session->read('Institution.Staff.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Staff->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$institutionStaffId = $session->read('Institution.Staff.id');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'view', $institutionStaffId]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id]);
 			}
 		}
 		$this->set('contentHeader', $header);
