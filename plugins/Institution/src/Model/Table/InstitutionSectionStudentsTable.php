@@ -1,6 +1,8 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -82,6 +84,21 @@ class InstitutionSectionStudentsTable extends AppTable {
 				$this->_autoInsertSubjectStudent($data);
 			}
 		}
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// PHPOE-2338 - implement afterDelete in InstitutionSectionStudentsTable.php to delete from InstitutionClassStudentsTable
+		$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+		$deleteClassStudent = $InstitutionClassStudentsTable->find()
+			->where([
+				$InstitutionClassStudentsTable->aliasField('student_id') => $entity->student_id,
+				$InstitutionClassStudentsTable->aliasField('institution_section_id') => $entity->institution_section_id
+			])
+			->toArray();
+			;
+			foreach ($deleteClassStudent as $key => $value) {
+				$InstitutionClassStudentsTable->delete($value);
+			}
 	}
 
 	private function _autoInsertSubjectStudent($data) {
