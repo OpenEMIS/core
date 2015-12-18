@@ -110,13 +110,14 @@ class DirectoriesTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$institutionIds = implode(', ', $institutionIds);
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			
 			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
 
 			$institutionStudents = $InstitutionStudentTable->find()
 				->where([
-					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$InstitutionIds.')',
+					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
 					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
 				]);
 
@@ -124,14 +125,27 @@ class DirectoriesTable extends AppTable {
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
-					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$InstitutionIds.')',
-					$InstitutionStudentTable->aliasField('staff_id').' = '.$this->aliasField('id')
+					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+				]);
+
+			$directoriesTableClone = clone $this;
+			$directoriesTableClone->alias('DirectoriesClone');
+
+			$guardianAndOthers = $directoriesTableClone->find()
+				->where([
+					'OR' => [
+						[$directoriesTableClone->aliasField('is_guardian').'= 1'],
+						[$directoriesTableClone->aliasField('is_student').'= 0', $directoriesTableClone->aliasField('is_guardian').'= 0', $directoriesTableClone->aliasField('is_staff').'= 0']
+					],
+					[$directoriesTableClone->aliasField('id').' = '.$this->aliasField('id')]
 				]);
 
 			$query->where([
 					'OR' => [
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
+						['EXISTS ('.$guardianAndOthers->sql().')']
 					]
 				])
 				->group([$this->aliasField('id')]);
@@ -141,21 +155,28 @@ class DirectoriesTable extends AppTable {
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
 			$conditions = [];
+			$iconClass = '';
 			if (!is_null($this->request->query('user_type'))) {
 				switch($this->request->query('user_type')) {
 					case self::ALL:
 						// Do nothing
+						$dashboardModel = 'users';
+						$iconClass = 'fa fa-user';
 						break;
 					case self::STUDENT:
 						$conditions = [$this->aliasField('is_student') => 1];
+						$dashboardModel = 'students';
 						break;
 
 					case self::STAFF:
 						$conditions = [$this->aliasField('is_staff') => 1];
+						$dashboardModel = 'staff';
 						break;
 
 					case self::GUARDIAN:
 						$conditions = [$this->aliasField('is_guardian') => 1];
+						$dashboardModel = 'guardians';
+						$iconClass = 'kd-guardian';
 						break;
 
 					case self::OTHER:
@@ -164,6 +185,8 @@ class DirectoriesTable extends AppTable {
 							$this->aliasField('is_staff') => 0,
 							$this->aliasField('is_guardian') => 0
 						];
+						$dashboardModel = 'others';
+						$iconClass = 'fa fa-user';
 						break;
 				}
 			}
@@ -180,9 +203,10 @@ class DirectoriesTable extends AppTable {
 			$indexElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
-					'model' => 'staff',
+					'model' => $dashboardModel,
 					'modelCount' => $userCount->count(),
 					'modelArray' => $userArray,
+					'iconClass' => $iconClass
 				],
 				'options' => [],
 				'order' => 0

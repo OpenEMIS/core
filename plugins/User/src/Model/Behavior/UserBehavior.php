@@ -244,22 +244,26 @@ class UserBehavior extends Behavior {
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		// check file name instead of file content
 		$fileContent = null;
+		$userEntity = null;
 		if ($entity instanceof User) {
 			$fileContent = $entity->photo_content;
+			$userEntity = $entity;
 		} else if ($entity->has('_matchingData')) {
 			$fileContent = $entity->_matchingData['Users']->photo_content;
+			$userEntity = $entity->_matchingData['Users'];
 		} else if ($entity->has('user')) {
 			$fileContent = $entity->user->photo_content;
+			$userEntity = $entity->user;
 		}
 		
 		$value = "";
 		$alias = $this->_table->alias();
 		if (empty($fileContent) && is_null($fileContent)) {
-			if ($alias == 'Students' || $alias == 'StudentUser') {
+			if ($alias == 'Students' || $alias == 'StudentUser' || (($userEntity) && $userEntity->is_student)) {
 				$value = $this->defaultStudentProfileIndex;
-			} else if ($alias == 'Staff' || $alias == 'StaffUser') {
+			} else if ($alias == 'Staff' || $alias == 'StaffUser' || (($userEntity) && $userEntity->is_staff)) {
 				$value = $this->defaultStaffProfileIndex;
-			} else if ($alias == 'Guardians' || $alias == 'GuardianUser') {
+			} else if ($alias == 'Guardians' || $alias == 'GuardianUser' || (($userEntity) && $userEntity->is_guardian)) {
 				$value = $this->defaultGuardianProfileIndex;
 			}
 		} else {
@@ -281,13 +285,22 @@ class UserBehavior extends Behavior {
 	}
 
 	public function getDefaultImgView() {
+		// const STUDENT = 1;
+		// const STAFF = 2;
+		// const GUARDIAN = 3;
+		// const OTHER = 4;
+
+		$userType = $this->_table->request->data[$this->_table->alias()]['user_type'];
+		$tableClass = get_class($this->_table);
 		$value = '';
 		$alias = $this->_table->alias();
-		if ($alias == 'Students' || $alias == 'StudentUser') {
+		if ($alias == 'Students' || $alias == 'StudentUser' || ($alias == 'Directories' && $userType == $tableClass::STUDENT)) {
 			$value = $this->defaultStudentProfileView;
-		} else if ($alias == 'Staff' || $alias == 'StaffUser') {
+		} else if ($alias == 'Staff' || $alias == 'StaffUser' || ($alias == 'Directories' && $userType == $tableClass::STAFF)) {
 			$value = $this->defaultStaffProfileView;
-		} else if ($alias == 'Guardians' || $alias == 'GuardianUser') {
+		} else if ($alias == 'Guardians' || $alias == 'GuardianUser' || ($alias == 'Directories' && $userType == $tableClass::GUARDIAN)) {
+			$value = $this->defaultGuardianProfileView;
+		} else {
 			$value = $this->defaultGuardianProfileView;
 		}
 		return $value;
