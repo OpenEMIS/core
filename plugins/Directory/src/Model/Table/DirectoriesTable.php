@@ -314,6 +314,10 @@ class DirectoriesTable extends AppTable {
 		return $params;
 	}
 
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements($entity);
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);

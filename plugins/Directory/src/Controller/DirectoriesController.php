@@ -57,11 +57,13 @@ class DirectoriesController extends AppController {
 			'StaffMemberships'		=> ['className' => 'Staff.Memberships'],
 			'StaffLicenses'			=> ['className' => 'Staff.Licenses'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
-			'TrainingResults'		=> ['className' => 'Staff.TrainingResults'],
+			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
 		];
 
+		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Directories');
@@ -417,6 +419,7 @@ class DirectoriesController extends AppController {
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
 			'TrainingResults' => ['text' => __('Training Results')],
+			'TrainingNeeds' => ['text' => __('Training Needs')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
