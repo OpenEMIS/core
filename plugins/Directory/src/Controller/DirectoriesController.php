@@ -269,6 +269,10 @@ class DirectoriesController extends AppController {
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
 			],
+			'Contacts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts', $id],
+				'text' => __('Contacts')	
+			],
 			'Languages' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
 				'text' => __('Languages')	
