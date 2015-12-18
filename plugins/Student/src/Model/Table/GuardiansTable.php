@@ -37,7 +37,7 @@ class GuardiansTable extends AppTable {
 	}
 
 	private function setupTabElements($entity=null) {
-		if ($this->action == 'index') {
+		if ($this->action != 'view') {
 			if ($this->controller->name == 'Directories') {
 				$options['type'] = 'student';
 				$tabElements = $this->controller->getStudentGuardianTabElements($options);
@@ -67,8 +67,10 @@ class GuardiansTable extends AppTable {
 		}
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		$this->setupTabElements();
+	public function afterAction(Event $event, $data) {
+		if ($this->action != 'view') {
+			$this->setupTabElements();
+		}
 	}
 
 	public function onGetGuardianId(Event $event, Entity $entity) {
@@ -179,7 +181,7 @@ class GuardiansTable extends AppTable {
 				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
 				$data[] = ['label' => $label, 'value' => $obj->id];
 			}
-
+			
 			echo json_encode($data);
 			die;
 		}
