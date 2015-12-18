@@ -64,6 +64,7 @@ class StaffTable extends AppTable {
 			->add('end_date', 'ruleCompareDateReverse', [
 		        'rule' => ['compareDateReverse', 'start_date', true]
 	    	])
+	    	->allowEmpty('staff_name')
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
