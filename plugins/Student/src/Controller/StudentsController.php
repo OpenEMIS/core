@@ -57,8 +57,7 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Student.Students.id');
-			$session->delete('Student.Students.name');
+			
 		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
