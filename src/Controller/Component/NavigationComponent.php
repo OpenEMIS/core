@@ -527,7 +527,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.SpecialNeeds']
+					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
 			]
 		];
 		return $navigation;
