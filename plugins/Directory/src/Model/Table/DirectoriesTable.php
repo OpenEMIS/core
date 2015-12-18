@@ -215,8 +215,13 @@ class DirectoriesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		if ($this->action == 'add') {
-			$this->ControllerAction->field('user_type', ['type' => 'select']);
+			if ($this->controller->name != 'Students') {
+				$this->ControllerAction->field('user_type', ['type' => 'select']);
+			} else {
+				$this->request->data[$this->alias()]['user_type'] = self::GUARDIAN;
+			}
 			$userType = $this->request->data[$this->alias()]['user_type'];
+			
 			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
 
 			switch ($userType) {
