@@ -251,8 +251,6 @@ class StudentsController extends AppController {
 
 		foreach ($studentTabElements as $key => $tab) {
 			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
 		return $tabElements;
 	}
