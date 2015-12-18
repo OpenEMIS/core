@@ -63,8 +63,7 @@ class StaffController extends AppController {
 		$header = __('Staff');
 
 		if ($action == 'index') {
-			$session->delete('Staff.Staff.id');
-			$session->delete('Staff.Staff.name');
+			
 		} else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
