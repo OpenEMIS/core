@@ -140,7 +140,20 @@ class UserBehavior extends Behavior {
 				$imageDefault = 'kd-staff';
 				break;
 			case 'Guardians':
-				$imageDefault = 'fa fa-user';
+				$imageDefault = 'kd-guardian';
+				break;
+			case 'Directories':
+				$userType = $this->_table->request->query['user_type'];
+				$tableClass = get_class($this->_table);
+				if ($userType == $tableClass::STUDENT) {
+					$imageDefault = 'kd-students';
+				} else if ($userType == $tableClass::STAFF) {
+					$imageDefault = 'kd-staff';
+				} else if ($userType == $tableClass::GUARDIAN) {
+					$imageDefault = 'kd-guardian';
+				} else {
+					$imageDefault = 'fa fa-user';
+				}
 				break;
 			default:
 				$imageDefault = 'fa fa-user';
@@ -265,6 +278,8 @@ class UserBehavior extends Behavior {
 				$value = $this->defaultStaffProfileIndex;
 			} else if ($alias == 'Guardians' || $alias == 'GuardianUser' || (($userEntity) && $userEntity->is_guardian)) {
 				$value = $this->defaultGuardianProfileIndex;
+			} else {
+				$value = $this->defaultUserProfileIndex;
 			}
 		} else {
 			$value = base64_encode(stream_get_contents($fileContent));
@@ -301,7 +316,7 @@ class UserBehavior extends Behavior {
 		} else if ($alias == 'Guardians' || $alias == 'GuardianUser' || ($alias == 'Directories' && $userType == $tableClass::GUARDIAN)) {
 			$value = $this->defaultGuardianProfileView;
 		} else {
-			$value = $this->defaultGuardianProfileView;
+			$value = $this->defaultUserProfileView;
 		}
 		return $value;
 	}
