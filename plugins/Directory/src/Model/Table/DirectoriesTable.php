@@ -19,6 +19,8 @@ class DirectoriesTable extends AppTable {
 	const GUARDIAN = 3;
 	const OTHER = 4;
 
+	private $dashboardQuery;
+
 	public function initialize(array $config) {
 		$this->table('security_users');
 		$this->entityClass('User.User');
@@ -119,7 +121,8 @@ class DirectoriesTable extends AppTable {
 				->where([
 					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
 					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-				]);
+				])
+				->bufferResults(false);
 
 			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
@@ -127,7 +130,8 @@ class DirectoriesTable extends AppTable {
 				->where([
 					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
 					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-				]);
+				])
+				->bufferResults(false);
 
 			$directoriesTableClone = clone $this;
 			$directoriesTableClone->alias('DirectoriesClone');
@@ -139,7 +143,8 @@ class DirectoriesTable extends AppTable {
 						[$directoriesTableClone->aliasField('is_student').'= 0', $directoriesTableClone->aliasField('is_guardian').'= 0', $directoriesTableClone->aliasField('is_staff').'= 0']
 					],
 					[$directoriesTableClone->aliasField('id').' = '.$this->aliasField('id')]
-				]);
+				])
+				->bufferResults(false);
 
 			$query->where([
 					'OR' => [
@@ -148,13 +153,15 @@ class DirectoriesTable extends AppTable {
 						['EXISTS ('.$guardianAndOthers->sql().')']
 					]
 				])
-				->group([$this->aliasField('id')]);
+				->group([$this->aliasField('id')])
+				;
 		}
+		
+		$this->dashboardQuery = clone $query;
 	}
 
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
-			$conditions = [];
 			$iconClass = '';
 			if (!is_null($this->request->query('user_type'))) {
 				switch($this->request->query('user_type')) {
@@ -164,36 +171,28 @@ class DirectoriesTable extends AppTable {
 						$iconClass = 'fa fa-user';
 						break;
 					case self::STUDENT:
-						$conditions = [$this->aliasField('is_student') => 1];
 						$dashboardModel = 'students';
 						break;
 
 					case self::STAFF:
-						$conditions = [$this->aliasField('is_staff') => 1];
 						$dashboardModel = 'staff';
 						break;
 
 					case self::GUARDIAN:
-						$conditions = [$this->aliasField('is_guardian') => 1];
 						$dashboardModel = 'guardians';
 						$iconClass = 'kd-guardian';
 						break;
 
 					case self::OTHER:
-						$conditions = [
-							$this->aliasField('is_student') => 0,
-							$this->aliasField('is_staff') => 0,
-							$this->aliasField('is_guardian') => 0
-						];
 						$dashboardModel = 'others';
 						$iconClass = 'fa fa-user';
 						break;
 				}
 			}
-			$userCount = $this->find()->where($conditions);
+			$userCount = $this->dashboardQuery;
 			//Get Gender
 			$userArray[__('Gender')] = $this->getDonutChart('user_gender', 
-				['conditions' => $conditions, 'key' => __('Gender')]);
+				['query' => $this->dashboardQuery, 'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
@@ -287,20 +286,24 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function getNumberOfUsersByGender($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$userRecords = $this->find();
+		$query = isset($params['query']) ? $params['query'] : null;
+		if (!is_null($query)) {
+			$userRecords = clone $query;
+		} else {
+			$userRecords = $this->find();
+		}
 		$genderCount = $userRecords
 			->contain(['Genders'])
 			->select([
 				'count' => $userRecords->func()->count($this->aliasField('id')),	
 				'gender' => 'Genders.name'
 			])
-			->where($conditions)
-			->group('gender');
+			->group('gender', true)
+			->bufferResults(false);
 
 		// Creating the data set		
 		$dataSet = [];
-		foreach ($genderCount->toArray() as $value) {
+		foreach ($genderCount as $value) {
 			//Compile the dataset
 			if (is_null($value['gender'])) {
 				$value['gender'] = 'Not Defined';
