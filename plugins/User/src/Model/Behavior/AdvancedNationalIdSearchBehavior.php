@@ -22,7 +22,35 @@ class AdvancedNationalIdSearchBehavior extends Behavior {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
 			$default_identity_type = $IdentityTypes->getDefaultValue();
 			$searchString = '%' . $search . '%';
-			$query->join([
+			if ($this->_table->table()=='institution_students' || $this->_table->table()=='institution_staff') {
+				if (array_key_exists('student_id', $this->_table->fields)) {
+					$securityUserFieldName = 'student_id';
+				} else {
+					$securityUserFieldName = 'staff_id';
+				}
+				$query
+					->join([
+						[
+							'type' => 'INNER',
+							'table' => 'security_users',
+							'alias' => 'SecurityUsers',
+							'conditions' => [
+								'SecurityUsers.id = '. $securityUserFieldName
+							]
+						]
+					])->join([
+						[
+							'type' => 'LEFT',
+							'table' => 'user_identities',
+							'alias' => 'Identities',
+							'conditions' => [
+								'Identities.security_user_id = SecurityUsers.id',
+								'Identities.identity_type_id = '. $default_identity_type
+							]
+						]
+					]);
+			} else {
+				$query->join([
 						[
 							'type' => 'LEFT',
 							'table' => 'user_identities',
@@ -33,6 +61,7 @@ class AdvancedNationalIdSearchBehavior extends Behavior {
 							]
 						]
 					]);
+			}
 			$query->orWhere(['Identities.number LIKE' =>  $searchString]);
 		}
 		return $query;
