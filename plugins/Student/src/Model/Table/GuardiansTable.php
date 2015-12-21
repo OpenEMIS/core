@@ -80,7 +80,12 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $this->Session->read('Student.Students.id')]);
+		if ($this->controller->name == 'Directories') {
+			$studentId = $this->Session->read('Directory.Directories.id');
+		} else {
+			$studentId = $this->Session->read('Student.Students.id');
+		}
+		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
 		$this->ControllerAction->field('guardian_id');
 		$this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
 	}
