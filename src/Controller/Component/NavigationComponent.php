@@ -332,7 +332,7 @@ class NavigationComponent extends Component {
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add']
+				'selected' => ['Institutions.Staff.add', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffUser.add']
 			],
 
 			'Institution.Attendance' => [
