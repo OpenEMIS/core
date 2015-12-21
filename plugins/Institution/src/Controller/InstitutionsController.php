@@ -112,7 +112,7 @@ class InstitutionsController extends AppController  {
 			if (!empty($id)) {
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
-				if ($action == 'dashboard') {
+				if ($action == 'dashboard' || $action == 'edit') {
 					$session->write('Institution.Institutions.id', $id);
 					$session->write('Institution.Institutions.name', $name);
 				}
