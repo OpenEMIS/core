@@ -112,7 +112,7 @@ class InstitutionsController extends AppController  {
 			if (!empty($id)) {
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
-				if ($action == 'dashboard') {
+				if ($action == 'dashboard' || $action == 'edit') {
 					$session->write('Institution.Institutions.id', $id);
 					$session->write('Institution.Institutions.name', $name);
 				}
@@ -161,7 +161,7 @@ class InstitutionsController extends AppController  {
 			}
 
 			$header = $this->activeObj->name;
-			if ($persona) {
+			if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
 				$header = $persona->name . ' - ' . $model->getHeader($alias);
 				$model->addBehavior('Institution.InstitutionUserBreadcrumbs');
 			} else {
@@ -170,7 +170,6 @@ class InstitutionsController extends AppController  {
 
 			$event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
 			$event = $model->eventManager()->dispatch($event);
-			if ($event->isStopped()) { return $event->result; }
 			
 			if ($model->hasField('institution_id')) {
 				if (!in_array($model->alias(), ['TransferRequests'])) {
@@ -181,10 +180,17 @@ class InstitutionsController extends AppController  {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
-						$model->aliasField('institution_id') => $institutionId
-					]);
+					if (in_array($model->alias(), ['TransferRequests'])) {
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField('previous_institution_id') => $institutionId
+						]);
+					} else {
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField('institution_id') => $institutionId
+						]);
+					}
 				
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
