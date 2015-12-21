@@ -15,11 +15,13 @@ class ImageComponent extends Component {
 			;
 		$phpResourceFile = $photoData->photo_content;
 
-		if ($base64Format) {
-			echo base64_encode(stream_get_contents($phpResourceFile));
-		} else {
-			$controller->response->type('jpg');
-			$controller->response->body(stream_get_contents($phpResourceFile));
+		if (is_resource($phpResourceFile)) {
+			if ($base64Format) {
+				echo base64_encode(stream_get_contents($phpResourceFile));
+			} else {
+				$controller->response->type('jpg');
+				$controller->response->body(stream_get_contents($phpResourceFile));
+			}
 		}
 	}
 }
