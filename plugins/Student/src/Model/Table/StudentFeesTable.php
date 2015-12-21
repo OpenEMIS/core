@@ -33,7 +33,11 @@ class StudentFeesTable extends AppTable {
 
 	public function beforeAction() {
 		$session = $this->request->session();
-		$this->studentId = $session->read('Student.Students.id');
+		if ($this->controller->name == 'Directories') {
+			$this->studentId = $session->read('Directory.Directories.id');
+		} else {
+			$this->studentId = $session->read('Student.Students.id');
+		}
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
