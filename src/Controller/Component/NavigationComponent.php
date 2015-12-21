@@ -223,6 +223,7 @@ class NavigationComponent extends Component {
 				'title' => 'Institutions', 
 				'icon' => '<span><i class="fa kd-institutions"></i></span>',
 				'params' => ['plugin' => 'Institution'],
+				'selected' => ['Institutions.add']
 			],
 
 			'Directories.index' => [
@@ -268,7 +269,7 @@ class NavigationComponent extends Component {
 				'Institutions.view' => [
 					'title' => 'Overview', 
 					'parent' => 'Institution.General', 
-					'selected' => ['Institutions.view'], 
+					'selected' => ['Institutions.view', 'Institutions.edit'], 
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -332,7 +333,7 @@ class NavigationComponent extends Component {
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add']
+				'selected' => ['Institutions.Staff.add', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffUser.add']
 			],
 
 			'Institution.Attendance' => [

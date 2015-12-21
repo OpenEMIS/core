@@ -119,6 +119,16 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7034, 'Salaries', 'Directories', 'Directory', 'Staff - Finance', 7000, 'StaffSalaries.index|StaffSalaries.view', 'StaffSalaries.edit', 'StaffSalaries.add', 'StaffSalaries.remove', 7034, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7035, 'Training Results', 'Directories', 'Directory', 'Staff - Training', 7000, 'TrainingResults.index|TrainingResults.view', 'TrainingResults.edit', 'TrainingResults.add', 'TrainingResults.remove', 7035, 1, 1, NOW());
 
+-- removal of security_function for guardians module
+CREATE TABLE `z_2193_security_function` LIKE `security_functions`;
+INSERT INTO `z_2193_security_function` SELECT * FROM `security_functions` WHERE `id` >= 4000 AND `id` < 5000;
+DELETE FROM `security_functions` WHERE `id` >= 4000 AND `id` < 5000;
+
+-- removal of security_role_functions
+CREATE TABLE `z_2193_security_role_functions` LIKE `security_role_functions`;
+INSERT INTO `z_2193_security_role_functions` SELECT * FROM `security_role_functions` WHERE `security_function_id` >= 4000 AND `security_function_id` < 5000;
+UPDATE `z_2193_security_role_functions` SET `security_function_id` = 0 WHERE `security_function_id` >= 4000 AND `security_function_id` < 5000;
+
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Results', 'assessment_grading_option_id', 'Student -> Results', 'Grade', 1, 0, NOW());
 
