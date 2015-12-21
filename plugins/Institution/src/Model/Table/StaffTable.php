@@ -369,8 +369,7 @@ class StaffTable extends AppTable {
 
 		if (isset($buttons['edit'])) {
 			$url = $this->ControllerAction->url('edit');
-			$url['action'] = 'StaffUser';
-			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url[1] = $entity->id;
 			$buttons['edit']['url'] = $url;
 		}
 
