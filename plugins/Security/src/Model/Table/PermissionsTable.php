@@ -46,7 +46,7 @@ class PermissionsTable extends AppTable {
 		$this->ControllerAction->field('_delete', $checkboxOptions);
 		$this->ControllerAction->field('_execute', $checkboxOptions);
 
-		$modules = ['Institutions', 'Guardians', 'Directory', 'Reports', 'Administration'];
+		$modules = ['Institutions', 'Directory', 'Reports', 'Administration'];
 		$this->setupTabElements($modules);
 
 		$module = $this->request->query('module');
