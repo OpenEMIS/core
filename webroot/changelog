@@ -66,3 +66,6 @@ v3.3.9
 - Added new report, Potential Duplicates
 - Added new feature to import Attendance data
 
+v3.3.10
+- Fixed a bug that caused different grades's admission age not to be updated based on configured value
+
