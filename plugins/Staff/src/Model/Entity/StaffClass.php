@@ -69,15 +69,20 @@ class StaffClass extends Entity
 	}
 
 	protected function _getMaleStudents() {
-		if ($this->has('id')) {
-			$count = TableRegistry::get('Institution.InstitutionSectionStudents')->getMaleCountBySection($this->id);
+		$count = 0;
+		if ($this->has('institution_class_id')) {
+			$count = TableRegistry::get('Institution.InstitutionClassStudents')->getMaleCountBySubject($this->institution_class_id);
+		} else if ($this->has('id')) {
+			$count = TableRegistry::get('Institution.InstitutionClassStudents')->getMaleCountBySubject($this->id);
 		}
 		return $count;
 	}
 
 	protected function _getFemaleStudents() {
-		if ($this->has('id')) {
-			$count = TableRegistry::get('Institution.InstitutionSectionStudents')->getFemaleCountBySection($this->id);
+		if ($this->has('institution_class_id')) {
+			$count = TableRegistry::get('Institution.InstitutionClassStudents')->getFemaleCountBySubject($this->institution_class_id);
+		} else if ($this->has('id')) {
+			$count = TableRegistry::get('Institution.InstitutionSectionStudents')->getFemaleCountBySubject($this->id);
 		}
 		return $count;
 	}
