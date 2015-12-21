@@ -161,7 +161,7 @@ class InstitutionsController extends AppController  {
 			}
 
 			$header = $this->activeObj->name;
-			if ($persona && $persona->has('name')) {
+			if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
 				$header = $persona->name . ' - ' . $model->getHeader($alias);
 				$model->addBehavior('Institution.InstitutionUserBreadcrumbs');
 			} else {
