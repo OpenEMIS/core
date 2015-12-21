@@ -129,6 +129,14 @@ CREATE TABLE `z_2193_security_role_functions` LIKE `security_role_functions`;
 INSERT INTO `z_2193_security_role_functions` SELECT * FROM `security_role_functions` WHERE `security_function_id` >= 4000 AND `security_function_id` < 5000;
 UPDATE `z_2193_security_role_functions` SET `security_function_id` = 0 WHERE `security_function_id` >= 4000 AND `security_function_id` < 5000;
 
+-- security_functions and security_role_functions (Missing permission for data quality report)
+INSERT INTO `z_2193_security_role_functions` SELECT * FROM `security_role_functions` WHERE `security_function_id` = 6006;
+UPDATE `security_role_functions` SET `security_function_id` = 6007 WHERE `security_function_id` = 6006;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_add`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (6007, 'Audit', 'Reports', 'Reports', 'Reports', -1, 'Audit.index', 'Audit.add', 'Audit.download', 6007, 1, 1, NOW());
+UPDATE `security_functions` SET `name`='Data Quality', `_view`='DataQuality.index', `_add`='DataQuality.add', `_execute`='DataQuality.download' WHERE `id`=6006;
+UPDATE `security_functions` SET `name`='Quality' WHERE `id`=6004;
+
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Results', 'assessment_grading_option_id', 'Student -> Results', 'Grade', 1, 0, NOW());
 
