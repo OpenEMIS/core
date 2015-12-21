@@ -223,6 +223,7 @@ class NavigationComponent extends Component {
 				'title' => 'Institutions', 
 				'icon' => '<span><i class="fa kd-institutions"></i></span>',
 				'params' => ['plugin' => 'Institution'],
+				'selected' => ['Institutions.add']
 			],
 
 			'Directories.index' => [
@@ -268,7 +269,7 @@ class NavigationComponent extends Component {
 				'Institutions.view' => [
 					'title' => 'Overview', 
 					'parent' => 'Institution.General', 
-					'selected' => ['Institutions.view'], 
+					'selected' => ['Institutions.view', 'Institutions.edit'], 
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -332,7 +333,7 @@ class NavigationComponent extends Component {
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add']
+				'selected' => ['Institutions.Staff.add', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffUser.add']
 			],
 
 			'Institution.Attendance' => [
@@ -527,7 +528,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.SpecialNeeds']
+					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
 			]
 		];
 		return $navigation;
@@ -566,7 +567,7 @@ class NavigationComponent extends Component {
 					'title' => 'Training',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.TrainingResults']
+					'selected' => ['Directories.TrainingResults', 'Directories.TrainingNeeds']
 				],
 		];
 		return $navigation;

@@ -32,7 +32,6 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('AdvanceSearch');
 
 		$this->addBehavior('HighChart', [
@@ -214,10 +213,67 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('user_type', ['type' => 'select']);
-		$userType = $this->request->data[$this->alias()]['user_type'];
-		$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
+	public function beforeAction(Event $event) {
+		if ($this->action == 'add') {
+			if ($this->controller->name != 'Students') {
+				$this->ControllerAction->field('user_type', ['type' => 'select']);
+			} else {
+				$this->request->data[$this->alias()]['user_type'] = self::GUARDIAN;
+			}
+			$userType = $this->request->data[$this->alias()]['user_type'];
+			
+			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
+
+			switch ($userType) {
+				case self::STUDENT:
+					$this->addBehavior('CustomField.Record', [
+						'model' => 'Student.Students',
+						'behavior' => 'Student',
+						'fieldKey' => 'student_custom_field_id',
+						'tableColumnKey' => 'student_custom_table_column_id',
+						'tableRowKey' => 'student_custom_table_row_id',
+						'formKey' => 'student_custom_form_id',
+						'filterKey' => 'student_custom_filter_id',
+						'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+						'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+						'recordKey' => 'student_id',
+						'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+						'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
+					]);
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+					break;
+				case self::STAFF:
+					$this->addBehavior('CustomField.Record', [
+						'model' => 'Staff.Staff',
+						'behavior' => 'Staff',
+						'fieldKey' => 'staff_custom_field_id',
+						'tableColumnKey' => 'staff_custom_table_column_id',
+						'tableRowKey' => 'staff_custom_table_row_id',
+						'formKey' => 'staff_custom_form_id',
+						'filterKey' => 'staff_custom_filter_id',
+						'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+						'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+						'recordKey' => 'staff_id',
+						'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+						'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
+					]);
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+					break;
+			}	
+		}
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
 	public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request) {
@@ -282,7 +338,48 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields = [];
-		$this->ControllerAction->field('institution', ['order' => 50]);
+		if (!is_null($this->request->query('user_type'))) {
+			switch($this->request->query('user_type')) {
+				case self::ALL:
+					// Do nothing
+					break;
+				case self::STUDENT:
+					$this->ControllerAction->field('student_status', ['order' => 51]);
+					$this->ControllerAction->field('institution', ['order' => 50]);
+					break;
+
+				case self::STAFF:
+					$this->ControllerAction->field('institution', ['order' => 50]);
+					break;
+
+				case self::GUARDIAN:
+					
+					break;
+
+				case self::OTHER:
+					
+					break;
+			}
+		}
+	}
+
+	public function onGetStudentStatus(Event $event, Entity $entity) {
+		$userId = $entity->id;
+		$InstitutionStudentTable = TableRegistry::get('Institution.Students');
+		$studentInstitutions = $InstitutionStudentTable->find()
+			->matching('StudentStatuses')
+			->where([
+				$InstitutionStudentTable->aliasField('student_id') => $userId
+			])
+			->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+			->first();
+		
+		if (!empty($studentInstitutions)) {
+			$value = $studentInstitutions->_matchingData['StudentStatuses']['name'];
+		} else {
+			$value = '';
+		}
+		return $value;
 	}
 
 	public function getNumberOfUsersByGender($params=[]) {
@@ -312,6 +409,10 @@ class DirectoriesTable extends AppTable {
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements($entity);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -391,7 +492,9 @@ class DirectoriesTable extends AppTable {
 				])
 				->distinct(['id'])
 				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name'])
-				->toArray();
+				->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+				->first();
+			return $studentInstitutions;
 		}
 
 		$staffInstitutions = [];
@@ -407,12 +510,7 @@ class DirectoriesTable extends AppTable {
 				->andWhere([$InstitutionStaffTable->aliasField('end_date').' IS NULL'])
 				->select(['id' => 'Institutions.id', 'name' => 'Institutions.name'])
 				->toArray();
+			return implode('<BR>', $staffInstitutions);
 		}
-
-		$combineArray = array_merge($studentInstitutions, $staffInstitutions);
-
-		$value = implode('<BR>', $combineArray);
-
-		return $value;
 	}
 }
