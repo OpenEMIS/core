@@ -82,7 +82,7 @@ UPDATE `security_functions` SET `module`='Institutions', `category`='Staff - Tra
 UPDATE `security_functions` SET `module`='Institutions', `category`='Staff - Training' WHERE `id`=3026;
 UPDATE `security_functions` SET `module`='Institutions', `category`='Staff - General' WHERE `id`=3027;
 
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7000, 'Overview', 'Directories', 'Directory', 'General', 7000, 'Directories.index|Directories.view', 'Directories.edit', 'Directories.add', 'Directories.remove', 7000, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7000, 'Overview', 'Directories', 'Directory', 'General', 7000, 'index|view', 'edit', 'add', 'remove', 7000, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `order`, `visible`, `created_user_id`, `created`) VALUES (7001, 'Accounts', 'Directories', 'Directory', 'General', 7000, 'Accounts.view', 'Accounts.edit', 7001, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7002, 'Identities', 'Directories', 'Directory', 'General', 7000, 'Identities.index|Identities.view', 'Identities.edit', 'Identities.add', 'Identities.remove', 7002, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7003, 'Nationalities', 'Directories', 'Directory', 'General', 7000, 'Nationalities.index|Nationalities.view', 'Nationalities.edit', 'Nationalities.add', 'Nationalities.remove', 7003, 1, 1, NOW());
@@ -118,6 +118,24 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7033, 'Bank Accounts', 'Directories', 'Directory', 'Staff - Finance', 7000, 'StaffBankAccounts.index|StaffBankAccounts.view', 'StaffBankAccounts.edit', 'StaffBankAccounts.add', 'StaffBankAccounts.remove', 7033, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7034, 'Salaries', 'Directories', 'Directory', 'Staff - Finance', 7000, 'StaffSalaries.index|StaffSalaries.view', 'StaffSalaries.edit', 'StaffSalaries.add', 'StaffSalaries.remove', 7034, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (7035, 'Training Results', 'Directories', 'Directory', 'Staff - Training', 7000, 'TrainingResults.index|TrainingResults.view', 'TrainingResults.edit', 'TrainingResults.add', 'TrainingResults.remove', 7035, 1, 1, NOW());
+
+-- removal of security_function for guardians module
+CREATE TABLE `z_2193_security_function` LIKE `security_functions`;
+INSERT INTO `z_2193_security_function` SELECT * FROM `security_functions` WHERE `id` >= 4000 AND `id` < 5000;
+DELETE FROM `security_functions` WHERE `id` >= 4000 AND `id` < 5000;
+
+-- removal of security_role_functions
+CREATE TABLE `z_2193_security_role_functions` LIKE `security_role_functions`;
+INSERT INTO `z_2193_security_role_functions` SELECT * FROM `security_role_functions` WHERE `security_function_id` >= 4000 AND `security_function_id` < 5000;
+UPDATE `z_2193_security_role_functions` SET `security_function_id` = 0 WHERE `security_function_id` >= 4000 AND `security_function_id` < 5000;
+
+-- security_functions and security_role_functions (Missing permission for data quality report)
+INSERT INTO `z_2193_security_role_functions` SELECT * FROM `security_role_functions` WHERE `security_function_id` = 6006;
+UPDATE `security_role_functions` SET `security_function_id` = 6007 WHERE `security_function_id` = 6006;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_add`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (6007, 'Audit', 'Reports', 'Reports', 'Reports', -1, 'Audit.index', 'Audit.add', 'Audit.download', 6007, 1, 1, NOW());
+UPDATE `security_functions` SET `name`='Data Quality', `_view`='DataQuality.index', `_add`='DataQuality.add', `_execute`='DataQuality.download' WHERE `id`=6006;
+UPDATE `security_functions` SET `name`='Quality' WHERE `id`=6004;
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Results', 'assessment_grading_option_id', 'Student -> Results', 'Grade', 1, 0, NOW());

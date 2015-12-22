@@ -99,6 +99,7 @@ class StaffAttendancesTable extends AppTable {
 				'startDate' => $monthStartDay,
 				'endDate' => $monthEndDay,
 				'institutionId' => $institutionId,
+				'orientation' => 'landscape'
 			];
 		}
 	}
