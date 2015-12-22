@@ -36,6 +36,43 @@ class GuardiansTable extends AppTable {
 		;
 	}
 
+	private function setupTabElements($entity=null) {
+		if ($this->action != 'view') {
+			if ($this->controller->name == 'Directories') {
+				$options['type'] = 'student';
+				$tabElements = $this->controller->getStudentGuardianTabElements($options);
+			} else {
+				$tabElements = $this->controller->getUserTabElements();
+			}
+			$this->controller->set('tabElements', $tabElements);
+			$this->controller->set('selectedAction', $this->alias());
+		} elseif ($this->action == 'view') {
+			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+
+			$tabElements = [
+				'Guardians' => ['text' => __('Relation')],
+				'GuardianUser' => ['text' => __('General')]
+			];
+			$action = $this->alias();
+			$actionUser = 'GuardianUser';
+			if ($this->controller->name == 'Directories') {
+				$action = 'StudentGuardians';
+				$actionUser = 'StudentGuardianUser';
+			}
+			$tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $entity->id]);
+			$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->guardian_id, 'id' => $entity->id]);
+
+			$this->controller->set('tabElements', $tabElements);
+			$this->controller->set('selectedAction', $this->alias());
+		}
+	}
+
+	public function afterAction(Event $event, $data) {
+		if ($this->action != 'view') {
+			$this->setupTabElements();
+		}
+	}
+
 	public function onGetGuardianId(Event $event, Entity $entity) {
 		if ($entity->has('_matchingData')) {
 			return $entity->_matchingData['Users']->name;
@@ -43,7 +80,12 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $this->Session->read('Student.Students.id')]);
+		if ($this->controller->name == 'Directories') {
+			$studentId = $this->Session->read('Directory.Directories.id');
+		} else {
+			$studentId = $this->Session->read('Student.Students.id');
+		}
+		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
 		$this->ControllerAction->field('guardian_id');
 		$this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
 	}
@@ -78,21 +120,6 @@ class GuardiansTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
-	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
-
-		$tabElements = [
-			'Guardians' => ['text' => __('Relation')],
-			'GuardianUser' => ['text' => __('General')]
-		];
-
-		$tabElements['Guardians']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id]);
-		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'GuardianUser', 'view', $entity->guardian_id, 'id' => $entity->id]);
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
-
 	public function editBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Students', 'Users']);
 	}
@@ -111,7 +138,11 @@ class GuardiansTable extends AppTable {
 			$attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
 			$attr['noResults'] = __('No Guardian found.');
 			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
-			$attr['url'] = ['controller' => 'Students', 'action' => 'Guardians', 'ajaxUserAutocomplete'];
+			$action = 'Guardians';
+			if ($this->controller->name == 'Directories') {
+				$action = 'StudentGuardians';
+			}
+			$attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
 
 			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
 			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
@@ -131,6 +162,9 @@ class GuardiansTable extends AppTable {
 		$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
+		if ($this->controller->name == 'Directories') {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+		}
 		return $this->controller->redirect($action);
 	}
 
@@ -155,7 +189,7 @@ class GuardiansTable extends AppTable {
 				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
 				$data[] = ['label' => $label, 'value' => $obj->id];
 			}
-
+			
 			echo json_encode($data);
 			die;
 		}
