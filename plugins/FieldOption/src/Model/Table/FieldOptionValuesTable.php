@@ -10,17 +10,14 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use FieldOption\Model\Traits\FieldOptionsTrait;
 use Cake\Utility\Inflector;
 
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
+	use FieldOptionsTrait; //holds private $parentFieldOptionList required for migrating tables out of field_options
+
 	private $fieldOption = null;
-	private $parentFieldOptionList = [
-		'FieldOption.BankBranches' => 	['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
-		'User.ContactTypes' => 			['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
-		'FieldOption.Banks' => 		['behavior' => 'Display'],
-		'FieldOption.Countries' => 	['behavior' => 'Countries']
-	];
 
 	public $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
 	
