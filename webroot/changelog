@@ -56,3 +56,17 @@ Education Grades
 - Institutions add/edit page will only show the main country's areas in the
 Area Administrative field now
 
+v3.3.8
+- Fixed permissions on Attendance and Survey Reports
+- Added delete function for Workflows
+
+v3.3.9
+- Fixed a bug that caused rubrics not able to save or submit
+- Adding Identities now checks for unique of the same identity type
+- Added new report, Potential Duplicates
+- Added new feature to import Attendance data
+
+v3.4.1
+- Reorganised navigations to move existing pages into tabbed view
+- Added new navigation called Directory to access user's information
+

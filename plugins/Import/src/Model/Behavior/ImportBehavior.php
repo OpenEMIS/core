@@ -80,7 +80,7 @@ class ImportBehavior extends Behavior {
 		'ods' 	=> ['application/vnd.oasis.opendocument.spreadsheet'],
 		'zip' 	=> ['application/zip']
 	];
-	public $institutionId = false;
+	private $institutionId = false;
 
 	public function initialize(array $config) {
 		$fileTypes = $this->config('fileTypes');

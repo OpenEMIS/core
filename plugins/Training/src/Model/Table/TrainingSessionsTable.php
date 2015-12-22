@@ -244,9 +244,9 @@ class TrainingSessionsTable extends AppTable {
 				$entity = $this->get($id);
 
 				$TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
-				$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+				$Staff = TableRegistry::get('Institution.Staff');
 				$Users = TableRegistry::get('User.Users');
-				$Positions = TableRegistry::get('Institution.InstitutionSitePositions');
+				$Positions = TableRegistry::get('Institution.InstitutionPositions');
 				$search = sprintf('%%%s%%', $term);
 
 				$targetPopulationIds = $TargetPopulations
@@ -277,7 +277,7 @@ class TrainingSessionsTable extends AppTable {
 							]);
 					})
 					->group([
-						$Staff->aliasField('security_user_id')
+						$Staff->aliasField('staff_id')
 					])
 					->order([$Users->aliasField('first_name')])
 					->all();
