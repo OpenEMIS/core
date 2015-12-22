@@ -2,7 +2,6 @@
 namespace App\Model\Behavior;
 
 use DateTime;
-use Exception;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
@@ -20,6 +19,30 @@ class ValidationBehavior extends Behavior {
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
 
+		$this->attachDateValidation($validator);
+
+		foreach ($validator as $field => $set) {
+			foreach ($set as $ruleName => $rule) {
+				$ruleAttr = [];
+				foreach ($properties as $prop) {
+					$ruleAttr[$prop] = $rule->get($prop);
+				}
+				if (empty($ruleAttr['message'])) {
+					$code = implode('.', [$this->_table->registryAlias(), $field, $ruleName]);
+					if (array_key_exists($code, $this->validationCode)) {
+						$code = $this->validationCode[$code];
+					}
+					$ruleAttr['message'] = $this->getMessage($code);
+				}
+				if (method_exists($this, $ruleAttr['rule'])) {
+					$ruleAttr['provider'] = 'custom';
+				}
+				$set->add($ruleName, $ruleAttr);
+			}
+		}
+	}
+
+	private function attachDateValidation(Validator $validator) {
 		$schema = $this->_table->schema();
 		$columns = $schema->columns();
 		foreach ($columns as $column) {
@@ -46,26 +69,6 @@ class ValidationBehavior extends Behavior {
 				foreach ($rulesStore as $rkey => $rvalue) {
 					$validator->field($column)->add($rkey, $rvalue);
 				}
-			}
-		}
-
-		foreach ($validator as $field => $set) {
-			foreach ($set as $ruleName => $rule) {
-				$ruleAttr = [];
-				foreach ($properties as $prop) {
-					$ruleAttr[$prop] = $rule->get($prop);
-				}
-				if (empty($ruleAttr['message'])) {
-					$code = implode('.', [$this->_table->registryAlias(), $field, $ruleName]);
-					if (array_key_exists($code, $this->validationCode)) {
-						$code = $this->validationCode[$code];
-					}
-					$ruleAttr['message'] = $this->getMessage($code);
-				}
-				if (method_exists($this, $ruleAttr['rule'])) {
-					$ruleAttr['provider'] = 'custom';
-				}
-				$set->add($ruleName, $ruleAttr);
 			}
 		}
 	}
@@ -146,11 +149,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function compareDateReverse($field, $compareField, $equals, array $globalData) {
 		$type = self::_getFieldType($compareField);
-		try {
-			$endDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$type);
-		}
+		$endDate = new DateTime($field);
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => true, 'type' => $type];
 			$result = self::doCompareDates($endDate, $compareField, $options, $globalData);
@@ -175,11 +174,7 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function compareDate($field, $compareField, $equals, array $globalData) {
 		$type = self::_getFieldType($compareField);
-		try {
-			$startDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$type);
-		}
+		$startDate = new DateTime($field);
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
 			$result = self::doCompareDates($startDate, $compareField, $options, $globalData);
@@ -205,11 +200,7 @@ class ValidationBehavior extends Behavior {
 		$equals = $options['equals'];
 		$reverse = $options['reverse'];
 		$dateTwo = $globalData['data'][$compareField];
-		try {
-			$dateTwo = new DateTime($dateTwo);
-		} catch (Exception $e) {
-			return __('Please input a proper '.$type.' for '.(ucwords(str_replace('_', ' ', $compareField))));
-		}
+		$dateTwo = new DateTime($dateTwo);
 		if($equals) {
 			if ($reverse) {
 				return $dateOne >= $dateTwo;
@@ -227,11 +218,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function compareWithInstitutionDateOpened($field, array $globalData) {
 		$model = $globalData['providers']['table'];
-		try {
-			$startDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return $model->getMessage('general.invalidDate');
-		}
+		$startDate = new DateTime($field);
 		if (isset($globalData['data']['institution_id'])) {
 			$Institution = TableRegistry::get('Institution.Institutions');
 			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $globalData['data']['institution_id']])->first();
@@ -255,11 +242,7 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function lessThanToday($field, $equal = false, array $globalData) {
 		$label = Inflector::humanize($field);
-		try {
-			$enteredDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$label);
-		}
+		$enteredDate = new DateTime($field);
 		$today = new DateTime('now');
 		if($equal) {
 			return $today >= $enteredDate;
@@ -282,32 +265,12 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function moreThanToday($field, $equal = false, array $globalData) {
 		$label = Inflector::humanize($field);
-		try {
-			$enteredDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$label);
-		}
+		$enteredDate = new DateTime($field);
 		$today = new DateTime('now');
 		if($equal) {
 			return $enteredDate >= $today;
 		} else {
 			return $enteredDate > $today;
-		}
-	}
-
-	/**
-	 * Check if user input for date is valid
-	 * @param  [type] $field      [description]
-	 * @param  [type] $globalData [description]
-	 * @return [type]             [description]
-	 */
-	public static function checkDateInput($field, array $globalData) {
-		$model = $globalData['providers']['table'];
-		try {
-			$field = new DateTime($field);
-			return true;
-		} catch (Exception $e) {
-		    return $model->getMessage('general.invalidDate');
 		}
 	}
 
@@ -433,13 +396,9 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function checkInputWithinRange($field, $field_name, $start_date, $end_date) {
 		$type = self::_getFieldType($field_name);
-		try {
-			$givenDate = new DateTime($field);
-			$startDate = new DateTime($start_date);
-			$endDate = new DateTime($end_date);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$type);
-		}
+		$givenDate = new DateTime($field);
+		$startDate = new DateTime($start_date);
+		$endDate = new DateTime($end_date);
 
 		if($givenDate > $startDate && $givenDate < $endDate) {
 			return true;
