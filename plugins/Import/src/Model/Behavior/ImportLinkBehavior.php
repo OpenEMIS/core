@@ -47,7 +47,6 @@ class ImportLinkBehavior extends Behavior {
 				}
 				$customButton['url'] = $buttons['view']['url'];
 				$customButton['url']['action'] = 'Import'.$this->_table->alias();
-				$customButton['url'][0] = 'add';
 
 				$this->generateImportButton($toolbarButtons, $attr, $customButton);
 				break;
@@ -67,6 +66,7 @@ class ImportLinkBehavior extends Behavior {
 		if (array_key_exists('filter', $customButton['url'])) {
 			unset($customButton['url']['filter']);
 		}
+		$customButton['url'][0] = 'add';
 
 		$AccessControl = $this->_table->controller->AccessControl;
 		$permission = $AccessControl->check($customButton['url']);
@@ -77,8 +77,6 @@ class ImportLinkBehavior extends Behavior {
 			$customButton['attr']['title'] = __('Import');
 
 			$toolbarButtons['import'] = $customButton;
-		} else {
-			return false;
 		}
 
 	}

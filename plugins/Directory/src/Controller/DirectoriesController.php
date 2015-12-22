@@ -62,7 +62,7 @@ class DirectoriesController extends AppController {
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
 
-			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['index', 'add']],
+			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
 		];
 
 		$this->loadComponent('Training.Training');
