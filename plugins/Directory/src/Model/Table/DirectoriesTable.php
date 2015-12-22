@@ -271,9 +271,17 @@ class DirectoriesTable extends AppTable {
 		}
 		$highestOrder = max($allOrderValues);
 
-		// username and password is always last... 
-		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
-		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+		$userType = $this->request->data[$this->alias()]['user_type'];
+
+		switch ($userType) {
+			case self::STUDENT:
+				// do nothing
+				break;
+			default:
+				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+				break;
+		}
 	}
 
 	public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request) {
