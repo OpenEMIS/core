@@ -20,6 +20,35 @@ class ValidationBehavior extends Behavior {
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
 
+		$schema = $this->_table->schema();
+		$columns = $schema->columns();
+		foreach ($columns as $column) {
+			$columnAttr = $schema->column($column);
+			if (array_key_exists('type', $columnAttr) && $columnAttr['type'] == 'date') {
+				// taking existing rules from behavior's parent and storing them
+				$rules = $validator->field($column)->rules();
+				$rulesStore = [];
+				foreach ($rules as $rkey => $rvalue) {
+					$rulesStore[$rkey] = $validator->field($column)->rule($rkey);
+					$validator->field($column)->remove($rkey);
+				}
+
+				// inserting these rules first
+				$validator->add($column, [
+					'ruleValidDate' => [
+						'rule' => ['date', 'ymd'],
+						'last' => true,
+						'message' => $this->getMessage('general.invalidDate')
+					]
+				]);
+
+				// then inserting the rules from behavior's parent back
+				foreach ($rulesStore as $rkey => $rvalue) {
+					$validator->field($column)->add($rkey, $rvalue);
+				}
+			}
+		}
+
 		foreach ($validator as $field => $set) {
 			foreach ($set as $ruleName => $rule) {
 				$ruleAttr = [];
