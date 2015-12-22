@@ -32,12 +32,13 @@ class DatePickerBehavior extends Behavior {
 			if (!empty($data[$field])) {
 				if (!$data[$field] instanceof Time) {
 					// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
-					if (date_create_from_format("d-m-y",$data[$field])) {
+					$dateObj = date_create_from_format("d-m-Y",$data[$field]);
+					if ($dateObj === false) {
 						$dateObj = date_create_from_format("d-m-y",$data[$field]);
-					} else if (date_create_from_format("d-m-Y",$data[$field])) {
-						$dateObj = date_create_from_format("d-m-Y",$data[$field]);
 					}
-					$data[$field] = date_format($dateObj, $format);
+					if ($dateObj !== false) {
+						$data[$field] = $dateObj->format($format);
+					}
 				}
 			}
 		}

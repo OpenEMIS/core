@@ -375,11 +375,6 @@ class ConfigItemsTable extends AppTable {
 	];
 	   
 	private $validateStartTime = [
-		'dateInput' => [
-			'rule'	=> ['checkDateInput'],
-			'provider' => 'table',
-			'last' => true
-		],
 		'aPValue' => [
 			'rule'	=> ['amPmValue'],
 			'provider' => 'table',
