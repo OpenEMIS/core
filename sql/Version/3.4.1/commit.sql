@@ -915,6 +915,10 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 UPDATE `security_functions` SET `name`='Data Quality', `_view`='DataQuality.index', `_add`='DataQuality.add', `_execute`='DataQuality.download' WHERE `id`=6006;
 UPDATE `security_functions` SET `name`='Quality' WHERE `id`=6004;
 
+-- security_function
+UPDATE `security_functions` SET `_execute` = 'Qualifications.download' WHERE `id`=3010;
+UPDATE `security_functions` SET `_execute` = 'StaffQualifications.download' WHERE `id`=7028;
+
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'Results', 'assessment_grading_option_id', 'Student -> Results', 'Grade', 1, 0, NOW());
 
