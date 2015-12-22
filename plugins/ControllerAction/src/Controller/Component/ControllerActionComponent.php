@@ -1383,15 +1383,18 @@ class ControllerActionComponent extends Component {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
 			
-			$ids = json_decode($request->data("ids"));		
+			$ids = json_decode($request->data("ids"));
+
+			$originalOrder = $model->find('list')
+				->where([$model->aliasField($primaryKey).' IN ' => $ids])
+				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField('order')])
+				->order(['order'])
+				->toArray();
+
+			$originalOrder = array_reverse($originalOrder);
 
 			foreach ($ids as $order => $id) {
-				$orderValue = $order + 1;
-				// trigger event to update order
-				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.reorder.updateOrderValue', null, $orderValue);
-				if ($event->result) {
-					$orderValue = $event->result;
-				}
+				$orderValue = array_pop($originalOrder);
 				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
 			}
 		}
