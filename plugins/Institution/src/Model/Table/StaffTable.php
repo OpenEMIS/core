@@ -601,8 +601,8 @@ class StaffTable extends AppTable {
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
-
 		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
 		$sectionsInPosition = $InstitutionSections->find()
 			->where(
@@ -621,7 +621,6 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-			
 		$sectionArray = [];
 		foreach ($sectionsInPosition as $key => $value) {
 			$sectionArray[] = $value->id;
@@ -632,11 +631,12 @@ class StaffTable extends AppTable {
 				['id IN ' => $sectionArray]
 			);
 		}
-
 		// delete the staff from subjects		
 		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+
 		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');	
 		$classesDuringStaffPeriod = $InstitutionClasses->find()
+			->where([$InstitutionClasses->aliasField('institution_id') => $institutionId])
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -657,20 +657,12 @@ class StaffTable extends AppTable {
 
 		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 
-		$targetData = $InstitutionClassStaff->find()
-			->where([$InstitutionClassStaff->aliasField('staff_id') => $staffId,
-			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
-			;
-
 		$InstitutionClassStaff->deleteAll([
 			$InstitutionClassStaff->aliasField('staff_id') => $staffId,
 			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
 		]);
 
-
 		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
-
-
 
 
 
