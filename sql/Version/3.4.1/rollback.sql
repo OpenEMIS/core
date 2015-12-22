@@ -409,7 +409,7 @@ UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id
 UPDATE `security_functions` SET `module`='Staff', `category`='Career' WHERE `id`=3007;
 UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id`=3008;
 UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id`=3009;
-UPDATE `security_functions` SET `module`='Staff', `category`='Professional Development', `_execute` = NULL WHERE `id`=3010;
+UPDATE `security_functions` SET `module`='Staff', `category`='Professional Development' WHERE `id`=3010;
 UPDATE `security_functions` SET `module`='Staff', `category`='Professional Development' WHERE `id`=3011;
 UPDATE `security_functions` SET `module`='Staff', `category`='Career' WHERE `id`=3012;
 UPDATE `security_functions` SET `module`='Staff', `category`='Career' WHERE `id`=3013;
@@ -443,6 +443,9 @@ UPDATE `security_functions` SET `name`='InstitutionRubrics' WHERE `id`=6004;
 UPDATE `security_role_functions` INNER JOIN `z_2193_security_role_functions` ON `security_role_functions`.`id` = `z_2193_security_role_functions`.`id`
 SET `security_role_functions`.`security_function_id` = `z_2193_security_role_functions`.`security_function_id`;
 DROP TABLE `z_2193_security_role_functions`;
+
+-- security_functions
+UPDATE `security_functions` SET `_execute` = NULL WHERE `id`=3010;
 
 -- labels
 DELETE FROM `labels` WHERE `module` = 'Results' AND `field` = 'assessment_grading_option_id' AND `field_name` = 'Student -> Results';
