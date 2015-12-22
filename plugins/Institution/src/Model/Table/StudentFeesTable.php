@@ -15,7 +15,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 class StudentFeesTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = -1;
 	private $_academicPeriodOptions = [];
 	private $_selectedEducationGradeId = -1;

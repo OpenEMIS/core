@@ -57,13 +57,15 @@ class DirectoriesController extends AppController {
 			'StaffMemberships'		=> ['className' => 'Staff.Memberships'],
 			'StaffLicenses'			=> ['className' => 'Staff.Licenses'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
-			'TrainingResults'		=> ['className' => 'Staff.TrainingResults'],
+			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['index', 'add']],
 		];
 
+		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Directories');
@@ -81,7 +83,7 @@ class DirectoriesController extends AppController {
 			$session->delete('Staff.Staff.name');
 			$session->delete('Student.Students.id');
 			$session->delete('Student.Students.name');
-		} elseif ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
+		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
@@ -160,6 +162,46 @@ class DirectoriesController extends AppController {
 						return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
 					}
 				}
+			} else if ($model->hasField('staff_id')) {
+				$model->fields['staff_id']['type'] = 'hidden';
+				$model->fields['staff_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('staff_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
+					}
+				}
+			} else if ($model->hasField('student_id')) {
+				$model->fields['student_id']['type'] = 'hidden';
+				$model->fields['student_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('student_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
+					}
+				}
 			}
 		} else {
 			if ($model->alias() == 'ImportUsers') {
@@ -228,6 +270,10 @@ class DirectoriesController extends AppController {
 			'Nationalities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
+			],
+			'Contacts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts', $id],
+				'text' => __('Contacts')	
 			],
 			'Languages' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
@@ -379,6 +425,7 @@ class DirectoriesController extends AppController {
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
 			'TrainingResults' => ['text' => __('Training Results')],
+			'TrainingNeeds' => ['text' => __('Training Needs')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

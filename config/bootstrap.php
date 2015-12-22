@@ -172,6 +172,7 @@ Request::addDetector('tablet', function ($request) {
  * Inflector::rules('uninflected', ['dontinflectme']);
  * Inflector::rules('transliteration', ['/å/' => 'aa']);
  */
+ Inflector::rules('plural', ['/(S|s)taff$/i' => '\1taff']);
 
 /**
  * Plugins need to be loaded manually, you can either load them one by one or all of them in a single call
@@ -204,7 +205,6 @@ Plugin::load('Institution', ['routes' => true, 'autoload' => true]);
 Plugin::load('User', ['routes' => true, 'autoload' => true]);
 Plugin::load('Student', ['routes' => true, 'autoload' => true]);
 Plugin::load('Staff', ['routes' => true, 'autoload' => true]);
-Plugin::load('Guardian', ['routes' => true, 'autoload' => true]);
 Plugin::load('Education', ['routes' => true, 'autoload' => true]);
 Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
 Plugin::load('Assessment', ['routes' => true, 'autoload' => true]);

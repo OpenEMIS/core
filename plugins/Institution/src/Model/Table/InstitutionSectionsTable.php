@@ -15,7 +15,7 @@ use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 
 class InstitutionSectionsTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	private $_numberOfSections = 1;
 	private $_selectedGradeType = 'single';
 	private $_selectedAcademicPeriodId = -1;
@@ -86,6 +86,7 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
 		if ($this->action == 'index') {
 			if (empty($this->request->query['academic_period_id'])) {

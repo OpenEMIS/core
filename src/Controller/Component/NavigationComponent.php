@@ -29,16 +29,29 @@ class NavigationComponent extends Component {
 	public function substituteCrumb($oldTitle, $title, $options=array()) {
 		foreach ($this->breadcrumbs as $key=>$value) {
 			if ($value['title'] == __($oldTitle)) {
-				unset($this->breadcrumbs[$key]);
+				$this->breadcrumbs[$key] = $item = array(
+					'title' => __($title),
+					'link' => ['url' => $options],
+					'selected' => sizeof($options)==0
+				);
+				$this->controller->set('_breadcrumbs', $this->breadcrumbs);
 				break;
 			}
 		}
-		$this->addCrumb($title, $options);
+	}
+
+	public function removeCrumb($title) {
+		$key = array_search($title, $this->array_column($this->breadcrumbs, 'title'));
+		if ($key) {
+			unset($this->breadcrumbs[$key]);
+			$this->controller->set('_breadcrumbs', $this->breadcrumbs);
+		}
 	}
 
 	public function beforeFilter(Event $event) {
 		$controller = $this->controller;
 		$navigations = $this->buildNavigation();
+		$this->checkSelectedLink($navigations);
 		$this->checkPermissions($navigations);
 		$controller->set('_navigations', $navigations);
 	}
@@ -65,11 +78,13 @@ class NavigationComponent extends Component {
 		return $url;
 	}
 
-	public function checkPermissions(&$navigations) {
-		$noAccessArray = [];
+	public function checkPermissions(array &$navigations) {
+		$linkOnly = [];
+
+		// Unset the children
 		foreach ($navigations as $key => $value) {
-			if (isset($value['link']) && $value['link']) {
-				// do nothing
+			if (isset($value['link']) && !$value['link']) {
+				$linkOnly[] = $key;
 			} else {
 				$params = [];
 				if (isset($value['params'])) {
@@ -77,17 +92,62 @@ class NavigationComponent extends Component {
 				}
 				$url = $this->getLink($key, $params);
 				if (!$this->AccessControl->check($url)) {
-					$noAccessArray[] = $key;
-					if (isset($value['parent']) && in_array($value['parent'], $navigations)) {
-						unset($navigations[$key]);
-					}
-					if (array_key_exists($key, $navigations)) {
-						unset($navigations[$key]);
-					}
+					unset($navigations[$key]);
 				}
 			}
 		}
+
+		// unset the parents if there is no children
+		$linkOnly = array_reverse($linkOnly);
+		foreach ($linkOnly as $link) {
+			if(!array_search($link, $this->array_column($navigations, 'parent'))){
+				unset($navigations[$link]);
+			}
+		}
 	}
+
+	public function checkSelectedLink(array &$navigations) {
+		// Set the pass variable
+		if (!empty($this->request->pass)) {
+			$pass = $this->request->pass;
+		} else {
+			$pass[0] = '';
+		}
+
+		// The URL name "Controller.Action.Model or Controller.Action"
+		$controller = $this->controller->name;
+		$action = $this->action;
+		$linkName = $controller.'.'.$action;
+		$controllerActionLink = $linkName;
+		if (!empty($pass[0])) {
+			$linkName .= '.'.$pass[0];
+		}
+		if (!in_array($linkName, $navigations)) {
+			$selectedArray = $this->array_column($navigations, 'selected');
+			foreach($selectedArray as $k => $selected) {
+				if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
+					$linkName = $k;
+					break;
+				}
+			}
+		}
+		$children = $this->array_column($navigations, 'parent');
+		foreach ($children as $key => $child) {
+			if ($child == $linkName) {
+				unset($navigations[$key]);
+			}
+		}
+	}
+
+	// PHP 5.5 array_column alternative
+	public function array_column($array, $column_name) {
+        return array_map(
+        	function($element) use($column_name) {
+        		if (isset($element[$column_name])) {
+        			return $element[$column_name];
+        		}
+       		}, $array);
+    }
 
 	public function buildNavigation() {
 		// $navigations = $this->getNavigation();
@@ -166,14 +226,6 @@ class NavigationComponent extends Component {
 				'selected' => ['Institutions.add', 'Institutions.ImportInstitutions.add', 'Institutions.ImportInstitutions.results']
 			],
 
-			'Guardians.index' => [
-				'title' => 'Guardians', 
-				'icon' => '<span><i class="fa kd-guardian"></i></span>',
-				'params' => ['plugin' => 'Guardian'],
-				'selected' => ['Guardians.add', 'Guardians.edit', 'Guardians.view', 'Guardians.Accounts', 'Guardians.Contacts', 'Guardians.Identities', 'Guardians.Languages', 'Guardians.Comments', 'Guardians.Attachments', 
-					'Guardians.History', 'Guardians.Nationalities'],
-			],
-
 			'Directories.index' => [
 				'title' => 'Directory', 
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
@@ -217,7 +269,7 @@ class NavigationComponent extends Component {
 				'Institutions.view' => [
 					'title' => 'Overview', 
 					'parent' => 'Institution.General', 
-					'selected' => ['Institutions.view'], 
+					'selected' => ['Institutions.view', 'Institutions.edit'], 
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -272,8 +324,9 @@ class NavigationComponent extends Component {
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 
-					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.ImportStudents'],
+				'selected' => ['Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 
+					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add', 
+					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']
 			],
 
@@ -281,7 +334,7 @@ class NavigationComponent extends Component {
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add']
+				'selected' => ['Institutions.Staff.add', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffUser.add']
 			],
 
 			'Institution.Attendance' => [
@@ -463,7 +516,7 @@ class NavigationComponent extends Component {
 				'title' => 'Training', 
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
-				'selected' => ['Staff.TrainingResults'],
+				'selected' => ['Staff.TrainingResults', 'Staff.TrainingNeeds'],
 			],
 		];
 		return $navigation;
@@ -476,7 +529,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Directories.index', 
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
-					'Directories.History', 'Directories.SpecialNeeds']
+					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
 			]
 		];
 		return $navigation;
@@ -515,7 +568,7 @@ class NavigationComponent extends Component {
 					'title' => 'Training',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.TrainingResults']
+					'selected' => ['Directories.TrainingResults', 'Directories.TrainingNeeds']
 				],
 		];
 		return $navigation;
@@ -535,7 +588,7 @@ class NavigationComponent extends Component {
 					'title' => 'Guardians',
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StudentGuardians']
+					'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser']
 				],
 				'Directories.StudentProgrammes.index' => [
 					'title' => 'Academic',
