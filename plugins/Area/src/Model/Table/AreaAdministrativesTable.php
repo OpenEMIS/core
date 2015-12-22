@@ -17,6 +17,11 @@ class AreaAdministrativesTable extends AppTable {
 		$this->belongsTo('Parents', ['className' => 'Area.AreaAdministratives']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
 		$this->addBehavior('Tree');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'parent_id',
+			]);
+		}
 	}
 
 	public function beforeAction(Event $event) {
