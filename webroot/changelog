@@ -70,3 +70,6 @@ v3.4.1
 - Reorganised navigations to move existing pages into tabbed view
 - Added new navigation called Directory to access user's information
 
+v3.4.2
+- Fixed a bug that caused an error while deleting staff records from school
+
