@@ -167,6 +167,29 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function beforeAction($event) {
+		if (property_exists($this->_table, 'controller')) {
+			if (property_exists($this->_table->controller, 'AccessControl')) {
+				$url = $this->_table->controller->request->params;
+				$url['action'] = $this->_table->alias();
+				$AccessControl = $this->_table->controller->AccessControl;
+				$permission = $AccessControl->check($url);
+				if (!$permission) {
+					if (array_key_exists($this->config('model'), $this->_table->ControllerAction->models)) {
+						$model = $this->config('model');
+					} else if (array_key_exists(str_replace($this->config('plugin'), '', $this->config('model')), $this->_table->ControllerAction->models)) {
+						$model = str_replace($this->config('plugin'), '', $this->config('model'));
+					} else {
+						$model = 'index';
+					}
+					$url['action'] = $model;
+					unset($url['_ext']);
+					unset($url['pass']);
+					$event->stopPropagation();
+					return $this->_table->controller->redirect($url);
+				}
+			}
+		}
+
 		$session = $this->_table->controller->request->session();
 		if ($session->check('Institution.Institutions.id')) {
 			$this->institutionId = $session->read('Institution.Institutions.id');
