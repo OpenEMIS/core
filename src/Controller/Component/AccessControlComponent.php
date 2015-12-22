@@ -250,25 +250,8 @@ class AccessControlComponent extends Component {
 			$userId = $this->Auth->user('id');
 		}
 
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$groupIds = $SecurityGroupUsers
-		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
-		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-		->toArray();
-
 		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$areas = $SecurityGroupAreas
-		->find('all')
-		->distinct(['area_id'])
-		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
-		->innerJoin(['Areas' => 'areas'], [
-			'Areas.lft >= AreaAll.lft',
-			'Areas.rght <= AreaAll.rght'
-		])
-		->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
-		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
-
+		$areas = $SecurityGroupAreas->getAreasByUser($userId);
 		return $areas;
 	}
 }
