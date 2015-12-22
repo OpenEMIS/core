@@ -145,7 +145,7 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['import']['url'][0] = 'template';
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
-				if ($buttons['index']['url']['action']=='ImportInstitutionSurveys') {
+				if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
 					$toolbarButtons['import']['url'][1] = $buttons['add']['url'][1];
 				}
 				
@@ -168,37 +168,11 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function beforeAction($event) {
-		if (property_exists($this->_table, 'controller')) {
-			if (property_exists($this->_table->controller, 'AccessControl')) {
-				$url = $this->_table->controller->request->params;
-				$url['action'] = $this->_table->alias();
-				$AccessControl = $this->_table->controller->AccessControl;
-				$permission = $AccessControl->check($url);
-				if (!$permission) {
-					if (array_key_exists($this->config('model'), $this->_table->ControllerAction->models)) {
-						$model = $this->config('model');
-					} else if (array_key_exists(str_replace($this->config('plugin'), '', $this->config('model')), $this->_table->ControllerAction->models)) {
-						$model = str_replace($this->config('plugin'), '', $this->config('model'));
-					} else {
-						$model = 'index';
-					}
-					$url['action'] = $model;
-					unset($url['_ext']);
-					unset($url['pass']);
-					$event->stopPropagation();
-					return $this->_table->controller->redirect($url);
-				}
-			}
-		}
-		$session = new Session();
+		$session = $this->_table->Session;
 		if ($session->check('Institution.Institutions.id')) {
 			$this->institutionId = $session->read('Institution.Institutions.id');
 		}
 		$this->sessionKey = $this->config('plugin').'.'.$this->config('model').'.Import.data';
-		if (strtolower($this->_table->action) == 'index') {
-			$event->stopPropagation();
-			return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
-		}
 
 		$this->_table->ControllerAction->field('plugin', ['visible' => false]);
 		$this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -507,7 +481,7 @@ class ImportBehavior extends Behavior {
 				$excelFile = null;
 			}
 
-			$session = new Session();
+			$session = $this->_table->Session;
 			$completedData = [
 				'uploadedName' => $uploadedName,
 				'dataFailed' => $dataFailed,
@@ -568,7 +542,7 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function results() {
-		$session = new Session();
+		$session = $this->_table->Session;
 		if ($session->check($this->sessionKey)) {
 			$completedData = $session->read($this->sessionKey);
 			$this->_table->ControllerAction->field('select_file', ['visible' => false]);
