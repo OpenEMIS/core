@@ -1061,6 +1061,11 @@ class StudentsTable extends AppTable {
 					$toolbarButtons['dropout'] = $dropoutButton;
 				}
 			}
+
+			if (isset($toolbarButtons['back'])) {
+				$refererUrl = $this->request->referer();
+				$toolbarButtons['back']['url'] = $refererUrl;
+			}
 		}
 	}
 
