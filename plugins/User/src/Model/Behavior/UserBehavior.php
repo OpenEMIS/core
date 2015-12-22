@@ -13,12 +13,12 @@ use User\Model\Entity\User;
 class UserBehavior extends Behavior {
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
 	private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
-	private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
+	private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-guardian'></i></div></div>";
 	private $defaultUserProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='fa fa-user'></i></div></div>";
 
 	private $defaultStudentProfileView = "<div class='profile-image'><i class='kd-students'></i></div>";
 	private $defaultStaffProfileView = "<div class='profile-image'><i class='kd-staff'></i></div>";
-	private $defaultGuardianProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
+	private $defaultGuardianProfileView = "<div class='profile-image'><i class='kd-guardian'></i></div>";
 	private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";

@@ -477,7 +477,7 @@ class NavigationComponent extends Component {
 				'title' => 'Finance', 
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
-				'selected' => ['Students.StudentFees']],
+				'selected' => ['Students.Fees']],
 		];
 		return $navigation;
 	}
