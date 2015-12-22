@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Network\Session;
 use ControllerAction\Model\Traits\EventTrait;
 
 /**
@@ -189,8 +190,7 @@ class ImportBehavior extends Behavior {
 				}
 			}
 		}
-
-		$session = $this->_table->controller->request->session();
+		$session = new Session();
 		if ($session->check('Institution.Institutions.id')) {
 			$this->institutionId = $session->read('Institution.Institutions.id');
 		}
@@ -346,13 +346,6 @@ class ImportBehavior extends Behavior {
 			$dataFailed = [];
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
-
-			// this is specifically for ValidationBehavior/checkAuthorisedArea(). Needs AccessControl
-			if (property_exists($this->_table, 'controller')) {
-				if (property_exists($this->_table->controller, 'AccessControl')) {
-					$activeModel->AccessControl = $this->_table->controller->AccessControl;
-				}
-			}
 
 			$maxRows = $this->config('max_rows');
 			$maxRows = $maxRows + 2;
@@ -514,7 +507,7 @@ class ImportBehavior extends Behavior {
 				$excelFile = null;
 			}
 
-			$session = $model->controller->request->session();
+			$session = new Session();
 			$completedData = [
 				'uploadedName' => $uploadedName,
 				'dataFailed' => $dataFailed,
@@ -575,7 +568,7 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function results() {
-		$session = $this->_table->controller->request->session();
+		$session = new Session();
 		if ($session->check($this->sessionKey)) {
 			$completedData = $session->read($this->sessionKey);
 			$this->_table->ControllerAction->field('select_file', ['visible' => false]);
