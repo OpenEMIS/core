@@ -30,6 +30,12 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+					'filter' => 'security_group_id',
+					'filterValues' => [-1, 0]
+				]);
+		}
 	}
 
 	public function beforeAction(Event $event) {

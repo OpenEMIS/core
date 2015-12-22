@@ -28,8 +28,11 @@ class FieldOptionValuesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
-
-		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'field_option_id',
+			]);
+		}
 	}
 
 	public function onGetFieldOptionId(Event $event, Entity $entity) {
@@ -254,6 +257,17 @@ class FieldOptionValuesTable extends AppTable {
 			}
 		}
 		return $result;
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$newButton = [];
+		foreach ($buttons as $button) {
+			$url = $button['url'];
+			$url[0] = $entity->id;
+			$button['url'] = $url;
+			$newButton[] = $button;
+		}
+		return $newButton;
 	}
 
 }
