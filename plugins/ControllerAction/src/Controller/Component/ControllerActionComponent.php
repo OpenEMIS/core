@@ -1388,7 +1388,7 @@ class ControllerActionComponent extends Component {
 			$originalOrder = $model->find('list')
 				->where([$model->aliasField($primaryKey).' IN ' => $ids])
 				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField('order')])
-				->order(['order'])
+				->order([$model->aliasField('order')])
 				->toArray();
 
 			$originalOrder = array_reverse($originalOrder);
