@@ -28,7 +28,7 @@ echo $this->Html->script('dashboards', ['block' => true]);
 		<div class="data-field">
 			<h4><?= __('Total ' . ucfirst($model)) ?>:</h4>
 			<h1 class="data-header">
-			<?= $modelCount ?>
+			<?= number_format($modelCount) ?>
 			</h1>
 		</div>
 	</div>
