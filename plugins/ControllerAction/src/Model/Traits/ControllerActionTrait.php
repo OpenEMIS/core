@@ -134,6 +134,9 @@ trait ControllerActionTrait {
 
 		'ControllerAction.Model.reorder.updateOrderValue'	=> 'reorderUpdateOrderValue' // event to update the order value of the fields that are reordered
 		// public function reorderUpdateOrderValue(Event $event, $orderValue) {}
+
+		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer'
+		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
 	];
 
 	public function getControllerActionEvents() {
