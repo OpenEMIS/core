@@ -41,7 +41,7 @@ class StaffClassesTable extends AppTable {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
 		
 		if (array_key_exists('view', $buttons)) {
-			$institutionId = $entity->institution_class->institution->id;
+			$institutionId = $entity->institution_class->institution_id;
 			$url = [
 				'plugin' => 'Institution', 
 				'controller' => 'Institutions', 

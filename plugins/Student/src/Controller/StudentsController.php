@@ -57,8 +57,7 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Student.Students.id');
-			$session->delete('Student.Students.name');
+			
 		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
@@ -66,14 +65,15 @@ class StudentsController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Student.Students.id')) {
 				$id = $session->read('Student.Students.id');
+			} else if ($session->check('Institution.Students.id')) {
+				$id = $session->read('Institution.Students.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$studentId = $session->read('Institution.Students.id');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}
 		$this->set('contentHeader', $header);
@@ -141,7 +141,7 @@ class StudentsController extends AppController {
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
 				}
-			} elseif ($model->hasField('student_id')) {
+			} else if ($model->hasField('student_id')) {
 				$model->fields['student_id']['type'] = 'hidden';
 				$model->fields['student_id']['value'] = $userId;
 
@@ -248,8 +248,6 @@ class StudentsController extends AppController {
 
 		foreach ($studentTabElements as $key => $tab) {
 			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
 		return $tabElements;
 	}

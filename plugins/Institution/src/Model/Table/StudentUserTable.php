@@ -92,6 +92,10 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);

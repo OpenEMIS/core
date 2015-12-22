@@ -11,6 +11,8 @@ use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 
 class ImportStaffAttendancesTable extends AppTable {
+	private $institutionId = false;
+
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
@@ -28,8 +30,6 @@ class ImportStaffAttendancesTable extends AppTable {
 		$session = $this->request->session();
 		if ($session->check('Institution.Institutions.id')) {
 			$this->institutionId = $session->read('Institution.Institutions.id');
-		} else {
-			$this->institutionId = false;
 		}
 		$this->systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
 	}
@@ -51,7 +51,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		$tempRow['entity'] = $this->StaffAbsences->newEntity();
 
 		$tempRow['full_day'] = 1;
-		$tempRow['institution_site_id'] = false;
+		$tempRow['institution_id'] = false;
 		$tempRow['academic_period_id'] = false;
 
 	}
@@ -66,7 +66,7 @@ class ImportStaffAttendancesTable extends AppTable {
 
 		$allStaff = $this->Staff
 						->find('all')
-						->where([$this->Staff->aliasField('institution_site_id') => $this->institutionId])
+						->where([$this->Staff->aliasField('institution_id') => $this->institutionId])
 						;
 		// when extracting the security_user_id from $allStaff collection, there will be no duplicates
 		$allStaff = new Collection($allStaff->toArray());
@@ -75,7 +75,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		]);
 
 		$institution = $this->Institutions->get($this->institutionId);
-		$institutionHeader = $this->getExcelLabel('Imports', 'institution_site_id') . ": " . $institution->name;
+		$institutionHeader = $this->getExcelLabel('Imports', 'institution_id') . ": " . $institution->name;
 		$nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
 		$columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
 		$data[$sheetName][] = [
@@ -101,10 +101,10 @@ class ImportStaffAttendancesTable extends AppTable {
 
 		if (!$this->institutionId) {
 			$tempRow['duplicates'] = __('No active institution');
-			$tempRow['institution_site_id'] = false;
+			$tempRow['institution_id'] = false;
 			return false;
 		}
-		$tempRow['institution_site_id'] = $this->institutionId;
+		$tempRow['institution_id'] = $this->institutionId;
 
 		$currentPeriodId = $this->AcademicPeriods->getCurrent();
 		if (!$currentPeriodId) {
@@ -132,7 +132,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		$tempRow['academic_period_id'] = $period->id;
 
 		$staff = $this->Staff->find()->where([
-			'institution_site_id' => $tempRow['institution_site_id'],
+			'institution_id' => $tempRow['institution_id'],
 			'security_user_id' => $tempRow['security_user_id'],
 		])->first();
 		if (!$staff) {
