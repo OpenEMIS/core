@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Network\Session;
 use App\Model\Traits\MessagesTrait;
 
 class ValidationBehavior extends Behavior {
@@ -65,15 +66,18 @@ class ValidationBehavior extends Behavior {
 
     public static function checkAuthorisedArea($check, array $globalData) {
         $isValid = false;
-        $AccessControl = $globalData['providers']['table']->AccessControl;
-        if ($AccessControl->isAdmin()) {
+        $session = new Session();
+        if ($session->read('Auth.User.super_admin') == 1) {
         	$isValid = true;
         } else {
         	$condition = [];
         	$areaCondition = [];
 
+			$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
         	$Areas = TableRegistry::get('Area.Areas');
-        	foreach($AccessControl->getAreasByUser() as $area) {
+        	// get areas from security group areas
+        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+        	foreach($areasByUser as $area) {
         		$areaCondition[] = [
 					$Areas->aliasField('lft').' >= ' => $area['lft'],
 					$Areas->aliasField('rght').' <= ' => $area['rght']
