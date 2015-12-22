@@ -409,7 +409,7 @@ UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id
 UPDATE `security_functions` SET `module`='Staff', `category`='Career' WHERE `id`=3007;
 UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id`=3008;
 UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id`=3009;
-UPDATE `security_functions` SET `module`='Staff', `category`='Professional Development' WHERE `id`=3010;
+UPDATE `security_functions` SET `module`='Staff', `category`='Professional Development', `_execute` = NULL WHERE `id`=3010;
 UPDATE `security_functions` SET `module`='Staff', `category`='Professional Development' WHERE `id`=3011;
 UPDATE `security_functions` SET `module`='Staff', `category`='Career' WHERE `id`=3012;
 UPDATE `security_functions` SET `module`='Staff', `category`='Career' WHERE `id`=3013;
