@@ -434,10 +434,18 @@ DELETE FROM `security_functions` WHERE `id` >= 7000 AND `id` <= 7035;
 INSERT INTO `security_functions` SELECT * FROM `z_2193_security_function`;
 DROP TABLE `z_2193_security_function`;
 
+-- security_functions (Missing permission for data quality report)
+DELETE FROM `security_functions` WHERE `id` = 6007;
+UPDATE `security_functions` SET `name`='Audit', `_view`='Audit.index', `_add`='Audit.add', `_execute`='Audit.download' WHERE `id`=6006;
+UPDATE `security_functions` SET `name`='InstitutionRubrics' WHERE `id`=6004;
+
 -- removal of security_role_functions
 UPDATE `security_role_functions` INNER JOIN `z_2193_security_role_functions` ON `security_role_functions`.`id` = `z_2193_security_role_functions`.`id`
 SET `security_role_functions`.`security_function_id` = `z_2193_security_role_functions`.`security_function_id`;
 DROP TABLE `z_2193_security_role_functions`;
+
+-- security_functions
+UPDATE `security_functions` SET `_execute` = NULL WHERE `id`=3010;
 
 -- labels
 DELETE FROM `labels` WHERE `module` = 'Results' AND `field` = 'assessment_grading_option_id' AND `field_name` = 'Student -> Results';

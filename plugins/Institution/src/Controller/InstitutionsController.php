@@ -155,7 +155,9 @@ class InstitutionsController extends AppController  {
 			$persona = false;
 			$requestQuery = $this->request->query;
 			if (isset($params['pass'][1])) {
-				$persona = $model->get($params['pass'][1]);
+				if ($model->table() == 'security_users') {
+					$persona = $model->get($params['pass'][1]);
+				}
 			} else if (isset($requestQuery['user_id'][1])) {
 				$persona = $model->Users->get($requestQuery['user_id']);
 			}
