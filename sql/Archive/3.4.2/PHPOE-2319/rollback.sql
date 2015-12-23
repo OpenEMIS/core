@@ -3,10 +3,10 @@ UPDATE `security_functions` set `_execute` = 'ImportInstitutionSurveys.add|Impor
 
 DELETE FROM `security_functions` 
 WHERE 
-`id` = 1034,
-`id` = 1035,
-`id` = 1036,
-`id` = 1037,
+`id` = 1034 or
+`id` = 1035 or
+`id` = 1036 or
+`id` = 1037 or
 `id` = 7036
 ;
 
