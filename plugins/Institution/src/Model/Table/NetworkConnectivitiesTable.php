@@ -10,6 +10,6 @@ class NetworkConnectivitiesTable extends AppTable {
         $this->table('institution_network_connectivities');
         parent::initialize($config);
 		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 	}
 }
