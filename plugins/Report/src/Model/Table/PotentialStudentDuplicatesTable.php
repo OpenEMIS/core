@@ -59,7 +59,7 @@ class PotentialStudentDuplicatesTable extends AppTable  {
 				[$this->aliasField('id').' = Students.student_id']
 			)
 			->leftJoin(
-				['Institutions' => 'institution_sites'],
+				['Institutions' => 'institutions'],
 				['Students.institution_id = Institutions.id']
 			)
 			->group([$this->aliasField('id')])
