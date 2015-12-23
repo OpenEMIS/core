@@ -83,4 +83,4 @@ institutions
 - Added new field called Network Connectivity in Institutions
 - Fixed a bug that prevent user from entering 0 as value on Student admission age
 plus/minus
-
+- Added new permissions for Import features
