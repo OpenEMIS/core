@@ -209,27 +209,6 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$options['validate'] = false;
-		if (!array_key_exists($this->_table->alias(), $data)) {
-			$options['validate'] = true;
-			return $event->response;
-		}
-		if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
-			$options['validate'] = true;
-			return $event->response;
-		}
-		if (empty($data[$this->_table->alias()]['select_file'])) {
-			$options['validate'] = true;
-			return $event->response;
-		}
-		if ($data[$this->_table->alias()]['select_file']['error']==4) {
-			$options['validate'] = true;
-			return $event->response;
-		}
-		if ($data[$this->_table->alias()]['select_file']['error']>0) {
-			$options['validate'] = true;
-			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-			return $event->response;
-		}
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
 			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
@@ -241,6 +220,26 @@ class ImportBehavior extends Behavior {
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
 			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
+		}
+		if (!array_key_exists($this->_table->alias(), $data)) {
+			$options['validate'] = true;
+		}
+		if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
+			$options['validate'] = true;
+		}
+		if (empty($data[$this->_table->alias()]['select_file'])) {
+			$options['validate'] = true;
+		}
+		if ($data[$this->_table->alias()]['select_file']['error']==4) {
+			$options['validate'] = true;
+		}
+		if ($data[$this->_table->alias()]['select_file']['error']>0) {
+			$options['validate'] = true;
+			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
+		}
+
+		if ($options['validate']) {
+			return $event->response;
 		}
 
 		$fileObj = $data[$this->_table->alias()]['select_file'];
