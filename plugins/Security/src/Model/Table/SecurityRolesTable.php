@@ -301,6 +301,7 @@ class SecurityRolesTable extends AppTable {
 			$roleOptions = $systemRoleOptions + $userRoleOptions;
 
 		} else { // super admin will show all roles of system and group specific
+			array_push($groupIds, $groupId);
 			$roleOptions = $this
 				->find('list')
 				->find('visible')
