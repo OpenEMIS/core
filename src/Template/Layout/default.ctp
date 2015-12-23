@@ -36,54 +36,33 @@
 </head>
 <?php echo $this->element('OpenEmis.analytics') ?>
 
-<body class='default'>
-
+<body class='fuelux' ng-app="OE_Styleguide">
+	
 	<?=  $this->element('OpenEmis.header'); ?>
 
-	<?php
-	$baseUrl = $this->Url->build([
-		'plugin' => $this->request->params['plugin'],
-		'controller' => $this->request->params['controller'],
-		'action' => 'setJqxSpliterSize'
-	]);
-	?>
-	<div id="main-splitter" url="<?= $baseUrl ?>">
-		<div class="left-pane" style="<?= $SystemLayout_leftPanel; ?>">
+	<bg-splitter orientation="horizontal" class="pane-wrapper">
+		<bg-pane class="left-pane">
+			<div class="pane-container">
+				<?php 
+	        		echo $this->element('OpenEmis.navigation');
+				?>
+			</div>
+		</bg-pane>
+		
+		<bg-pane class="right-pane pane-container" min-size-p="60">
 			<?php 
-        		if($htmlLangDir != 'rtl'){
-        			echo $this->element('OpenEmis.navigation');
-        		}
-				else{
-					echo $this->element('OpenEmis.header');
-					echo $this->fetch('content');
-					if (isset($modal)) {
-						echo $this->element('ControllerAction.modal');
-					}
+				echo $this->element('OpenEmis.header');
+				echo $this->fetch('content');
+				if (isset($modal)) {
+					echo $this->element('ControllerAction.modal');
 				}
 			?>
-		</div>
-        <div class="right-pane" style="<?= $SystemLayout_rightPanel; ?>">
-        	<?php 
-        		if($htmlLangDir != 'rtl'){
-					echo $this->element('OpenEmis.header');
-					echo $this->fetch('content');
-					if (isset($modal)) {
-						echo $this->element('ControllerAction.modal');
-					}
-        		}
-				else{
-					echo $this->element('OpenEmis.navigation');
-				}
-			?>
-        </div>
-	</div>
-	<div id="jqxButton" class="menu-toggle">
-		<i class="fa fa-angle-double-left"></i>
-		<span class="menu-text"><?= __('Menu') ?></span>
-	</div>
-	
+		</bg-pane>
+	</bg-splitter>	
+
 	<?= $this->element('OpenEmis.footer') ?>
 	<?= $this->fetch('scriptBottom'); ?>
 	<?= $this->element('OpenEmis.scriptBottom') ?>
+
 </body>
 </html>

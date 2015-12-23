@@ -13,11 +13,11 @@ class SurveysTable extends AppTable  {
 	private $surveyStatuses = [];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_surveys');
+		$this->table('institution_surveys');
 		parent::initialize($config);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Excel', [
 			'pages' => false
 		]);
@@ -27,7 +27,7 @@ class SurveysTable extends AppTable  {
 			'model' => 'Institution.InstitutionSurveys',
 			'formKey' => 'survey_form_id',
 			'formFilterClass' => null,
-			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		]);
 	}
 
@@ -96,10 +96,10 @@ class SurveysTable extends AppTable  {
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 
 		// To update to this code when upgrade server to PHP 5.5 and above
-		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_site_id') {
+			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
 				break;
 			}
@@ -113,8 +113,8 @@ class SurveysTable extends AppTable  {
 		];
 
 		$fields[] = [
-			'key' => 'InstitutionSurveys.institution_site_id',
-            'field' => 'institution_site_id',
+			'key' => 'InstitutionSurveys.institution_id',
+            'field' => 'institution_id',
             'type' => 'integer',
             'label' => '',
 		];
