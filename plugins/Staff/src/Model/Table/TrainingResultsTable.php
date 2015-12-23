@@ -113,4 +113,14 @@ class TrainingResultsTable extends AppTable {
 			'status', 'training_course', 'training_provider', 'training_session_id', 'training_result_type_id', 'result'
 		]);
 	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getTrainingTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

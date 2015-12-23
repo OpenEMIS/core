@@ -38,4 +38,32 @@ class SpecialNeedsTable extends AppTable {
 		$this->validationDefault($validator);
 		return $validator->allowEmpty('comment');
 	}
+
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+		if ($this->controller->name == 'Directories') {
+			$type = $this->request->query('type');
+			$options['type'] = $type;
+			$tabElements = $this->controller->getUserTabElements($options);
+		} else {
+			$tabElements = $this->controller->getUserTabElements($options);
+		}
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }
