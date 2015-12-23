@@ -55,12 +55,12 @@ class PotentialStaffDuplicatesTable extends AppTable  {
         		],
 			])
 			->leftJoin(
-				['Staff' => 'institution_site_staff'],
-				[$this->aliasField('id').' = Staff.security_user_id']
+				['Staff' => 'institution_staff'],
+				[$this->aliasField('id').' = Staff.staff_id']
 			)
 			->leftJoin(
-				['Institutions' => 'institution_sites'],
-				['Staff.institution_site_id = Institutions.id']
+				['Institutions' => 'institutions'],
+				['Staff.institution_id = Institutions.id']
 			)
 			->group([$this->aliasField('id')])
 			->select(['name' => 'Institutions.name', 'code' => 'Institutions.code'])

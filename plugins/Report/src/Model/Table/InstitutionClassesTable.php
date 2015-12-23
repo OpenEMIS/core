@@ -10,13 +10,13 @@ use App\Model\Table\AppTable;
 
 class InstitutionClassesTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('institution_site_sections');
+		$this->table('institution_sections');
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'security_user_id']);
-		$this->belongsTo('InstitutionSiteShifts', 	['className' => 'Institution.InstitutionSiteShifts','foreignKey' => 'institution_site_shift_id']);
-		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'staff_id']);
+		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts',	'foreignKey' => 'institution_shift_id']);
+		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 		
 		$this->addBehavior('Excel', ['excludes' => ['section_number']]);
 		$this->addBehavior('Report.ReportList');
