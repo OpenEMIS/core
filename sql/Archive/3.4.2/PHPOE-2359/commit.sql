@@ -8,8 +8,8 @@ UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model
 UPDATE `import_mapping` set `model`=concat('Student.', `model`) where `model`='Students';
 UPDATE `import_mapping` set `model`=concat('Staff.', `model`) where `model`='Staff';
 UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='StaffAbsences';
-UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='InstitutionSiteStudentAbsences';
-UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='InstitutionSiteSurveys';
+UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='InstitutionStudentAbsences';
+UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='InstitutionSurveys';
 
 
 INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) 
