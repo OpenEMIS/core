@@ -10,6 +10,8 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\Collection\Collection;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportInstitutionSurveysTable extends AppTable {
@@ -86,8 +88,16 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$events = parent::implementedEvents();
 		$newEvent = [];
 		$newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$newEvent['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$crumbTitle = $this->getHeader($this->alias());
+		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'];
+		$Navigation->substituteCrumb($crumbTitle, 'Surveys', $url);
+		$Navigation->addCrumb($crumbTitle);
 	}
 
 	public function template() {
