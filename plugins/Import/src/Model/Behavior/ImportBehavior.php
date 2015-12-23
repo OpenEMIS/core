@@ -12,6 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Network\Session;
 use ControllerAction\Model\Traits\EventTrait;
 
 /**
@@ -57,6 +58,7 @@ class ImportBehavior extends Behavior {
 
 	const FIELD_OPTION = 1;
 	const DIRECT_TABLE = 2;
+	const NON_TABLE_LIST = 3;
 
 	const RECORD_HEADER = 1;
 	const FIRST_RECORD = 2;
@@ -143,7 +145,7 @@ class ImportBehavior extends Behavior {
 				$toolbarButtons['import']['url'][0] = 'template';
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
-				if ($buttons['index']['url']['action']=='ImportInstitutionSurveys') {
+				if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
 					$toolbarButtons['import']['url'][1] = $buttons['add']['url'][1];
 				}
 				
@@ -166,15 +168,11 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function beforeAction($event) {
-		$session = $this->_table->controller->request->session();
+		$session = $this->_table->Session;
 		if ($session->check('Institution.Institutions.id')) {
 			$this->institutionId = $session->read('Institution.Institutions.id');
 		}
 		$this->sessionKey = $this->config('plugin').'.'.$this->config('model').'.Import.data';
-		if (strtolower($this->_table->action) == 'index') {
-			$event->stopPropagation();
-			return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
-		}
 
 		$this->_table->ControllerAction->field('plugin', ['visible' => false]);
 		$this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -352,8 +350,6 @@ class ImportBehavior extends Behavior {
 					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
 					$this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
 			
-					// pr($tempRow);die;
-					
 					// for each columns
 					$references = [
 						'sheet'=>$sheet, 
@@ -381,7 +377,6 @@ class ImportBehavior extends Behavior {
 					unset($tempRow['duplicates']);
 					$activeModel->patchEntity($tableEntity, $tempRow);
 					$errors = $tableEntity->errors();
-					// pr($errors);die;
 					if (!$rowPass || $duplicates || $errors) { // row contains error or record is a duplicate based on unique key(s)
 
 						$rowCodeError = '';
@@ -462,14 +457,19 @@ class ImportBehavior extends Behavior {
 				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
 				foreach($dataFailed as $record) {
 					$record['data'][] = $record['error'];
-					// pr($record);die;
 					$writer->writeSheetRow($dataSheetName, array_values($record['data']->getArrayCopy()));
 				}
 				
 				$codesData = $this->excelGetCodesData($this->_table);
 				foreach($codesData as $modelName => $modelArr) {
-					foreach($modelArr as $row) {
-						$writer->writeSheetRow($modelName, array_values($row));
+					// added this check to support rows on sheets that require a specific format.
+					// default cell format is 'string'
+					if (array_key_exists('formats', $modelArr)) {
+						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
+					} else {
+						foreach($modelArr as $row) {
+							$writer->writeSheetRow($modelName, array_values($row));
+						}
 					}
 				}
 				
@@ -481,7 +481,7 @@ class ImportBehavior extends Behavior {
 				$excelFile = null;
 			}
 
-			$session = $model->controller->request->session();
+			$session = $this->_table->Session;
 			$completedData = [
 				'uploadedName' => $uploadedName,
 				'dataFailed' => $dataFailed,
@@ -520,8 +520,14 @@ class ImportBehavior extends Behavior {
 		
 		$codesData = $this->excelGetCodesData($this->_table);
 		foreach($codesData as $modelName => $modelArr) {
-			foreach($modelArr as $row) {
-				$writer->writeSheetRow($modelName, array_values($row));
+			// added this check to support rows on sheets that require a specific format.
+			// default cell format is 'string'
+			if (array_key_exists('formats', $modelArr)) {
+				$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
+			} else {
+				foreach($modelArr as $row) {
+					$writer->writeSheetRow($modelName, array_values($row));
+				}
 			}
 		}
 		
@@ -536,7 +542,7 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function results() {
-		$session = $this->_table->controller->request->session();
+		$session = $this->_table->Session;
 		if ($session->check($this->sessionKey)) {
 			$completedData = $session->read($this->sessionKey);
 			$this->_table->ControllerAction->field('select_file', ['visible' => false]);
@@ -613,7 +619,7 @@ class ImportBehavior extends Behavior {
 		$model = $this->_table;
 		$mapping = $model->find('all')
 			->where([
-				$model->aliasField('model') => $this->config('model')
+				$model->aliasField('model') => $this->config('plugin').'.'.$this->config('model')
 			])
 			->order($model->aliasField('order'))
 			->toArray();
@@ -683,8 +689,8 @@ class ImportBehavior extends Behavior {
 	public function excelGetCodesData(Table $model) {
 		$mapping = $model->find('all')
 			->where([
-				$model->aliasField('model') => $this->config('model'),
-				$model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE]
+				$model->aliasField('model') => $this->config('plugin').'.'.$this->config('model'),
+				$model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
 			])
 			->order($model->aliasField('order'))
 			->toArray()
@@ -715,7 +721,7 @@ class ImportBehavior extends Behavior {
 						$data[$sheetName][] = [$row, $key];
 					}
 				}
-			} else if ($foreignKey == self::DIRECT_TABLE) {
+			} else if ($foreignKey == self::DIRECT_TABLE || $foreignKey == self::NON_TABLE_LIST) {
 
 				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, $data];
 				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
@@ -884,10 +890,20 @@ class ImportBehavior extends Behavior {
 					$this->directTables[$registryAlias] = $excelLookupModel;
 				}
 				if (!empty($cellValue)) {
-					$recordId = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue])->first();
+					$record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
+					// if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
+					$recordId = $record->first();
 				} else {
 					$recordId = '';
 				}
+				if (!empty($recordId)) {
+					$val = $recordId->id;
+				} else {
+					$rowPass = false;
+					$rowInvalidCodeCols[] = $translatedCol;
+				}
+			} else if ($foreignKey == self::NON_TABLE_LIST) {
+				$recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
 				if (!empty($recordId)) {
 					$val = $recordId->id;
 				} else {
