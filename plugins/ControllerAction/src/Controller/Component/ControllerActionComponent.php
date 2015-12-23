@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.10
+ControllerActionComponent - Current Version 3.1.11
+3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
 3.1.10 (Thed) - added new event onDeleteTransfer
 3.1.9 (Malcolm) - Added 'getTriggerFrom()' get method
 3.1.8 (Jeff) - session variable to store the primary key value of object includes the plugin name now
@@ -1383,10 +1384,19 @@ class ControllerActionComponent extends Component {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
 			
-			$ids = json_decode($request->data("ids"));		
+			$ids = json_decode($request->data("ids"));
+
+			$originalOrder = $model->find('list')
+				->where([$model->aliasField($primaryKey).' IN ' => $ids])
+				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+				->order([$model->aliasField($orderField)])
+				->toArray();
+
+			$originalOrder = array_reverse($originalOrder);
 
 			foreach ($ids as $order => $id) {
-				$model->updateAll([$orderField => $order + 1], [$primaryKey => $id]);
+				$orderValue = array_pop($originalOrder);
+				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
 			}
 		}
 	}

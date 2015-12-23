@@ -132,7 +132,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete',
 		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
 
-		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer'
+		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
 		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
 	];
 
