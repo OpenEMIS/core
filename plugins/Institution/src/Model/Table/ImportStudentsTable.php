@@ -7,8 +7,10 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
-use App\Model\Table\AppTable;
 use Cake\I18n\Time;
+use Cake\Network\Request;
+use Cake\Controller\Component;
+use App\Model\Table\AppTable;
 
 class ImportStudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -62,9 +64,15 @@ class ImportStudentsTable extends AppTable {
 			'Model.import.onImportPopulateStudentStatusesData' => 'onImportPopulateStudentStatusesData',
 			'Model.import.onImportPopulateStudentsData' => 'onImportPopulateStudentsData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+	    	'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$crumbTitle = $this->getHeader($this->alias());
+		$Navigation->substituteCrumb($crumbTitle, $crumbTitle);
 	}
 
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
