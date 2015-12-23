@@ -79,7 +79,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		// when extracting the security_user_id from $allStaff collection, there will be no duplicates
 		$allStaff = new Collection($allStaff->toArray());
 		$modelData->where([
-			'id IN' => $allStaff->extract('security_user_id')->toArray()
+			'id IN' => $allStaff->extract('staff_id')->toArray()
 		]);
 
 		$institution = $this->Institutions->get($this->institutionId);
