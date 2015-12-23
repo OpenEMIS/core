@@ -13,6 +13,8 @@ use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportStudentsTable extends AppTable {
+	private $institutionId;
+
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
@@ -197,6 +199,7 @@ class ImportStudentsTable extends AppTable {
 		if (empty($tempRow['student_id'])) {
 			return false;
 		}
+		// should use try..catch because 'get' will throw InvalidPrimaryKeyException
 		$student = $this->Students->get($tempRow['student_id']);
 		if (!$student) {
 			$tempRow['duplicates'] = __('No such student in the system.');
@@ -213,16 +216,6 @@ class ImportStudentsTable extends AppTable {
 			return false;
 		}
 		$tempRow['institution_id'] = $this->institutionId;
-
-		$institutionStudent = $this->InstitutionStudents->find()->where([
-			$this->InstitutionStudents->aliasfield('student_id') => $tempRow['student_id'],
-			$this->InstitutionStudents->aliasfield('institution_id') => $this->institutionId
-		])->first();
-		if ($institutionStudent) {
-			$tempRow['duplicates'] = __('Student is already enrolled in this institution.');
-			return false;
-		}
-		unset($institutionStudent);
 
 		if (empty($tempRow['start_date'])) {
 			$tempRow['duplicates'] = __('No start date specified.');
