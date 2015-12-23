@@ -105,10 +105,21 @@ class SecurityRolesTable extends AppTable {
 
 		$viewType = $attr['viewType'];
 		if ($viewType == 'user') {
-			// TODO-jeff: need to restrict to roles that have access to their groups
-			$groupOptions = $this->SecurityGroups->find('list')
-				->find('byUser', ['userId' => $this->Auth->user('id')])
-				->toArray();
+			
+			if ($this->Auth->user('super_admin') != 1) {
+				$groupOptions = $this->SecurityGroups->find('list')
+					->find('byUser', ['userId' => $this->Auth->user('id')])
+					->toArray();
+			} else {
+				$SecurityGroupsTable = $this->SecurityGroups;
+				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
+				$institutionSecurityGroup = $InstitutionsTable->find('list');
+				$groupOptions = $SecurityGroupsTable->find('list')->where([
+						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
+					])
+					->toArray();
+			}
+			
 
 			$selectedGroup = $this->queryString('security_group_id', $groupOptions);
 			$this->advancedSelectOptions($groupOptions, $selectedGroup);
@@ -241,7 +252,7 @@ class SecurityRolesTable extends AppTable {
 			$highestUserRole = $GroupRoles
 				->find()
 				->contain('SecurityRoles')
-				->order(['SecurityRoles.order'])
+				->order(['SecurityRoles.order']) // if user is assigned more than one role, therefore the ordering is necessary
 				->where([
 					$GroupRoles->aliasField('security_group_id') => $groupId,
 					$GroupRoles->aliasField('security_user_id') => $userId
@@ -280,7 +291,7 @@ class SecurityRolesTable extends AppTable {
 					->find('visible')
 					->where([
 						$this->aliasField('security_group_id'). ' IN ' => $groupIds,
-						$this->aliasField('order') . ' > ' => $highestSystemRole['order'],
+						$this->aliasField('order') . ' > ' => $highestSystemRole['order'], // the greater the order value, the lower privilege the role is
 					])
 					->order([$this->aliasField('order')])
 					->toArray();
