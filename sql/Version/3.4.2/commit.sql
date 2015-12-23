@@ -113,3 +113,65 @@ UPDATE institution_network_connectivities SET institution_network_connectivities
 
 
 
+-- PHPOE-2319
+INSERT INTO `db_patches` VALUES ('PHPOE-2319', NOW());
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES 
+(1034, 'Import Institutions', 'Institutions', 'Institutions', 'General', '8', NULL, NULL, NULL, NULL, 'ImportInstitutions.add|ImportInstitutions.results|ImportInstitutions.template', '1034', '1', '1', NOW()),
+(1035, 'Import Students', 'Institutions', 'Institutions', 'Students', '1012', NULL, NULL, NULL, NULL, 'ImportStudents.add|ImportStudents.results|ImportStudents.template', '1035', '1', '1', NOW()),
+(1036, 'Import Student Attendances', 'Institutions', 'Institutions', 'Students', '1012', NULL, NULL, NULL, NULL, 'ImportStudentAttendances.add|ImportStudentAttendances.results|ImportStudentAttendances.template', '1036', '1', '1', NOW()),
+(1037, 'Import Staff Attendances', 'Institutions', 'Institutions', 'Staff', '1016', NULL, NULL, NULL, NULL, 'ImportStaffAttendances.add|ImportStaffAttendances.results|ImportStaffAttendances.template', '1037', '1', '1', NOW()),
+(7036, 'Import Users', 'Directories', 'Directory', 'General', '7000', NULL, NULL, NULL, NULL, 'ImportUsers.add|ImportUsers.results|ImportUsers.template', '7036', '1', '1', NOW())
+;
+
+-- PHPOE-2359
+INSERT INTO `db_patches` VALUES ('PHPOE-2359', NOW());
+
+CREATE TABLE `z_2359_import_mapping` LIKE `import_mapping`;
+INSERT INTO `z_2359_import_mapping` SELECT * FROM `import_mapping`;
+
+UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='Institutions';
+UPDATE `import_mapping` set `model`=concat('Student.', `model`) where `model`='Students';
+UPDATE `import_mapping` set `model`=concat('Staff.', `model`) where `model`='Staff';
+UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='StaffAbsences';
+UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='InstitutionSiteStudentAbsences';
+UPDATE `import_mapping` set `model`=concat('Institution.', `model`) where `model`='InstitutionSiteSurveys';
+
+
+INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) 
+values
+('Institution.Students', 'academic_period_id', 	'Code', '1', '2', 'AcademicPeriod', 'AcademicPeriods', 'code'),
+('Institution.Students', 'education_grade_id', 	'Code', '2', '2', 'Education', 'EducationGrades', 'code'),
+('Institution.Students', 'start_date', 			'', '3', '0', NULL, NULL, NULL),
+('Institution.Students', 'student_id', 		'OpenEMIS ID', '4', '2', 'Student', 'Students', 'openemis_no')
+;
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `created_user_id`, `created`) VALUES
+(uuid(), 'Imports', 'institution_id', 'Imports', 'Institution', NULL, NULL, 1, 0, NOW())
+;
+
+-- PHPOE-2366
+INSERT INTO `db_patches` VALUES ('PHPOE-2366', NOW());
+
+CREATE TABLE `z_2366_import_mapping` LIKE `import_mapping`;
+INSERT INTO `z_2366_import_mapping` SELECT * FROM `import_mapping`;
+
+ALTER TABLE `import_mapping` CHANGE `foreign_key` `foreign_key` INT(11) NULL DEFAULT '0' COMMENT '0: not foreign key, 1: field options, 2: direct table, 3: non-table list';
+
+INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) 
+values
+('User.Users', 'openemis_no', '(Leave as blank for new entries)', 1, 0, NULL, NULL, NULL),
+('User.Users', 'first_name', NULL, 2, 0, NULL, NULL, NULL),
+('User.Users', 'middle_name', NULL, 3, 0, NULL, NULL, NULL),
+('User.Users', 'third_name', NULL, 4, 0, NULL, NULL, NULL),
+('User.Users', 'last_name', NULL, 5, 0, NULL, NULL, NULL),
+('User.Users', 'preferred_name', NULL, 6, 0, NULL, NULL, NULL),
+('User.Users', 'gender_id', 'Code (M/F)', 7, 2, 'User', 'Genders', 'code'),
+('User.Users', 'date_of_birth', NULL, 8, 0, NULL, NULL, NULL),
+('User.Users', 'address', NULL, 9, 0, NULL, NULL, NULL),
+('User.Users', 'postal_code', NULL, 10, 0, NULL, NULL, NULL),
+('User.Users', 'address_area_id', 'Code', 11, 2, 'Area', 'AreaAdministratives', 'code'),
+('User.Users', 'birthplace_area_id', 'Code', 12, 2, 'Area', 'AreaAdministratives', 'code'),
+('User.Users', 'account_type', 'Code', 13, 3, NULL, 'AccountTypes', 'code');
+
+UPDATE config_items SET value = '3.4.2' WHERE code = 'db_version';
