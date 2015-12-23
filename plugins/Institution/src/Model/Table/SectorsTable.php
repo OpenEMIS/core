@@ -9,6 +9,6 @@ class SectorsTable extends AppTable {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
 		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_sector_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_sector_id']);
 	}
 }

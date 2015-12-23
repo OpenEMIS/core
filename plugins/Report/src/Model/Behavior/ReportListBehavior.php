@@ -52,10 +52,28 @@ class ReportListBehavior extends Behavior {
 		$this->_table->fields = $fields;
 
 		$this->_table->ControllerAction->setFieldOrder(['name', 'created', 'modified', 'expiry_date', 'status']);
-		
+
+		// To remove expired reports
+		$clonedQuery = $this->ReportProgress->find();
+		$expiredReports = $clonedQuery
+			->where([
+				$this->ReportProgress->aliasField('module') => $this->_table->alias(), 
+				$this->ReportProgress->aliasField('expiry_date').' < ' => date('Y-m-d')])
+			->toArray();
+
+		foreach($expiredReports as $report) {
+			if (file_exists($report['file_path'])) {
+				if (unlink($report['file_path'])) {
+					$this->ReportProgress->delete($report);
+				}
+			} else {
+				$this->ReportProgress->delete($report);
+			}
+		}
+
 		$query = $this->ReportProgress->find()
-		->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-		->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
+			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
 
 		return $query;
 	}

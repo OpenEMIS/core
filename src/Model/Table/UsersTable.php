@@ -55,10 +55,10 @@ class UsersTable extends AppTable {
 			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
 		}
 
-		$tabElements = $this->controller->getTabElements();
+		$tabElements = $this->controller->getUserTabElements();
 
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'account');
+		$this->controller->set('selectedAction', 'Account');
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -88,7 +88,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function password() {
-		$this->controller->set('selectedAction', 'password');
+		$this->controller->set('selectedAction', 'Password');
 		$userId = $this->Auth->user('id');
 		$entity = $this->get($userId);
 		$entity->password = '';
