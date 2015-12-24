@@ -32,8 +32,7 @@ class SecurityRolesTable extends AppTable {
 		]);
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
-					'filter' => 'security_group_id',
-					'filterValues' => [-1, 0]
+					'filter' => 'security_group_id'
 				]);
 		}
 	}
@@ -79,6 +78,30 @@ class SecurityRolesTable extends AppTable {
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
+		} else if ($selectedAction == 'user') {
+			// for all other actions for user group
+			$securityGroupId = $this->request->query('security_group_id');
+			if ($this->behaviors()->has('Reorder')) {
+				$this->behaviors()->get('Reorder')->config([
+						'filterValues' => [$securityGroupId]
+					]);
+			}
+		} else {
+			if ($this->behaviors()->has('Reorder')) {
+				$this->behaviors()->get('Reorder')->config([
+						'filterValues' => [-1, 0]
+					]);
+			}
+		}
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($this->behaviors()->has('Reorder')) {
+			if (isset($data[$this->alias()]['security_group_id'])) {
+				$this->behaviors()->get('Reorder')->config([
+					'filterValues' => [$data[$this->alias()]['security_group_id']]
+				]);
+			}	
 		}
 	}
 
