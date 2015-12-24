@@ -22,9 +22,9 @@ class StaffUserTable extends UserTable {
 		$sessionKey = 'Institution.Staff.new';
 		if ($this->Session->check($sessionKey)) {
 			$positionData = $this->Session->read($sessionKey);
-			$positionData['security_user_id'] = $entity->id;
+			$positionData['staff_id'] = $entity->id;
 			$role = $positionData['role'];
-			$institutionId = $positionData['institution_site_id'];
+			$institutionId = $positionData['institution_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
 			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
@@ -42,10 +42,10 @@ class StaffUserTable extends UserTable {
 				}
 			} else {
 				$errors = $staffEntity->errors();
-				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
-					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
+				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
+					$this->Alert->error('Institution.InstitutionStaff.noFTE', ['reset' => true]);
 				} else {
-					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);
+					$this->Alert->error('Institution.InstitutionStaff.error', ['reset' => true]);
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -56,6 +56,12 @@ class StaffUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
+		$this->Session->write('Staff.Staff.id', $entity->id);
+		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -65,7 +71,6 @@ class StaffUserTable extends UserTable {
 
 	private function setupTabElements($entity) {
 		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-
 		$options = [
 			'userRole' => 'Staff',
 			'action' => $this->action,

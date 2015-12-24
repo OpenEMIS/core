@@ -17,7 +17,8 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $modelAlias = '';
 	protected $data = '';
 	protected $_defaultConfig = [
-		'' => ''
+		'' => '',
+		'display_country' => true,
 	];
 
 	public function initialize(array $config) {
@@ -70,6 +71,21 @@ class AdvanceSearchBehavior extends Behavior {
 							'options' => $relatedModel->getList(),
 							'selected' => $selected
 						];
+						$relatedModelTable = $relatedModel->table();
+						if ($relatedModelTable == 'area_administratives') {
+							if (!$this->config('display_country')) {
+								$worldId = $relatedModel->find()->where([$relatedModel->aliasField('code') => 'World'])->first()->id;
+								$options = $relatedModel->find('list')
+									->where([
+										'OR' => [
+											[$relatedModel->aliasField('is_main_country') => 1],
+											[$relatedModel->aliasField('parent_id').' IS NOT ' => $worldId]
+										],
+										[$relatedModel->aliasField('id').' IS NOT ' => $worldId]
+									]);
+								$filters[$key]['options'] = $options;
+							}
+						}
 					}
 				}
 			}
