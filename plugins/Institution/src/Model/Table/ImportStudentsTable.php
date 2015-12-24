@@ -13,6 +13,11 @@ use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportStudentsTable extends AppTable {
+	private $institutionId;
+	private $gradesInInstitution;
+	private $systemDateFormat;
+	private $studentStatusId;
+
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
@@ -44,8 +49,6 @@ class ImportStudentsTable extends AppTable {
 			$this->gradesInInstitution = [];
 		}
 		$this->systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
-		$this->admissionAgeMinus = TableRegistry::get('ConfigItems')->value('admission_age_minus');
-		$this->admissionAgePlus = TableRegistry::get('ConfigItems')->value('admission_age_plus');
 	    $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$this->studentStatusId = $StudentStatuses->find()
 												->select(['id'])
@@ -197,6 +200,17 @@ class ImportStudentsTable extends AppTable {
 		if (empty($tempRow['student_id'])) {
 			return false;
 		}
+		try {
+			$student = $this->Students->get($tempRow['student_id']);
+		} catch (InvalidPrimaryKeyException $e) {
+			$tempRow['duplicates'] = __('No such student in the system.');
+			return false;
+		}
+		if (empty($student->date_of_birth)) {
+			$tempRow['duplicates'] = __('Student\'s date of birth is empty. Please correct it at Directory page.');
+			return false;
+		}
+		$tempRow['student_name'] = $tempRow['student_id'];
 
 		if (!$this->institutionId) {
 			$tempRow['duplicates'] = __('No active institution.');
@@ -204,18 +218,11 @@ class ImportStudentsTable extends AppTable {
 		}
 		$tempRow['institution_id'] = $this->institutionId;
 
-		$institutionStudent = $this->InstitutionStudents->find()->where([
-			$this->InstitutionStudents->aliasfield('student_id') => $tempRow['student_id'],
-			$this->InstitutionStudents->aliasfield('institution_id') => $this->institutionId
-		])->first();
-		if ($institutionStudent) {
-			$tempRow['duplicates'] = __('Student is already enrolled in this institution.');
-			return false;
-		}
-		unset($institutionStudent);
-
 		if (empty($tempRow['start_date'])) {
 			$tempRow['duplicates'] = __('No start date specified.');
+			return false;
+		} else if (!$tempRow['start_date'] instanceof Time) {
+			$tempRow['duplicates'] = __('Unknown date format.');
 			return false;
 		}
 
@@ -227,25 +234,42 @@ class ImportStudentsTable extends AppTable {
 		if ($period->id != $tempRow['academic_period_id']) {
 			$tempRow['duplicates'] = __('Start date is not within selected academic period.');
 		}
+		if (!$period->start_date instanceof Time) {
+			$tempRow['duplicates'] = __('Please check the selected academic period start date in Administration.');
+			return false;
+		}
+		$periodStartDate = $period->start_date->toUnixString();
+		if (!$period->end_date instanceof Time) {
+			$tempRow['duplicates'] = __('Please check the selected academic period end date in Administration.');
+			return false;
+		}
+		$periodEndDate = $period->end_date->toUnixString();
 		$tempRow['start_year'] = $period->start_year;
 		$tempRow['end_date'] = $period->end_date;
 		$tempRow['end_year'] = $period->end_year;
 
-		$grades = array_flip($this->gradesInInstitution);
+		if (!in_array($tempRow['education_grade_id'], $this->gradesInInstitution)) {
+			$tempRow['duplicates'] = __('Selected education grade is not being offered in this institution.');
+			return false;
+		}
 		$institutionGrade = $this->InstitutionGrades
 								->find()
 								->contain('EducationGrades.EducationProgrammes.EducationCycles')
-								->where([$this->InstitutionGrades->aliasField('id') => $grades[$tempRow['education_grade_id']]])
+								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
 								;
-		if (!$institutionGrade) {
+		if ($institutionGrade->isEmpty()) {
 			$tempRow['duplicates'] = __('No matching education grade.');
 			return false;
 		}
+
 		$institutionGrade = $institutionGrade->first();
+		if (!$institutionGrade->start_date instanceof Time) {
+			$tempRow['duplicates'] = __('Please check the selected education grade start date at the institution.');
+			return false;
+		}
+
 		$gradeStartDate = $institutionGrade->start_date->toUnixString();
-		$gradeEndDate = !empty($institutionGrade->end_date) ? $institutionGrade->end_date->toUnixString() : '';
-		$periodStartDate = $period->start_date->toUnixString();
-		$periodEndDate = $period->end_date->toUnixString();
+		$gradeEndDate = (!empty($institutionGrade->end_date) && (!$institutionGrade->end_date instanceof Time)) ? $institutionGrade->end_date->toUnixString() : '';
 		if (!empty($gradeEndDate) && $gradeEndDate < $periodEndDate) {
 			$tempRow['duplicates'] = __('Selected education grade will end before academic period ends.');
 			return false;
@@ -255,31 +279,6 @@ class ImportStudentsTable extends AppTable {
 			return false;
 		}
 
-		$student = $this->Students->get($tempRow['student_id']);
-		if (!$student) {
-			$tempRow['duplicates'] = __('No such student in the system.');
-			return false;
-		}
-		if (empty($student->date_of_birth)) {
-			$tempRow['duplicates'] = __('Student\'s date of birth is empty. Please correct it at Directory page.');
-			return false;
-		}
-
-		$admissionAge = $institutionGrade->education_grade->education_programme->education_cycle->admission_age;
-		$ageOfStudent = Time::fromNow($student->date_of_birth);
-		$ageOfStudent = $ageOfStudent->y;
-		$enrolmentMinimumAge = $admissionAge - $this->admissionAgeMinus;
-		$enrolmentMaximumAge = $admissionAge + $this->admissionAgePlus;
-
-		if ($ageOfStudent > $enrolmentMaximumAge) {
-			$tempRow['duplicates'] = __('Student\'s age is more than the acceptable age for this grade.');
-			return false;
-		}
-		if ($ageOfStudent < $enrolmentMinimumAge) {
-			$tempRow['duplicates'] = __('Student\'s age is less than the acceptable age for this grade.');
-			return false;
-		}
-		
 		return true;
 	}
 }
