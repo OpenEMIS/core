@@ -5,6 +5,7 @@ use DateTime;
 use DateInterval;
 use ArrayObject;
 use PHPExcel_Worksheet;
+use InvalidArgumentException;
 use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -851,20 +852,22 @@ class ImportBehavior extends Behavior {
 			}
 			if (!empty($val)) {
 				if($activeModel->schema()->column($columnName)['type'] == 'date') {// checking the main table schema data type
-					// if date value is not numeric, let it fail validation since using PHPExcel_Shared_Date::ExcelToPHP($val)
-					// will actually converts the non-numeric value to today's date
 					if (is_numeric($val)) {
-						$val = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($val));
-						// converts val to Time object so that this field will pass 'validDate' check since
-						// different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
-						// so it is best to convert the date here instead of adjusting individual model's date validation format
-						try {
-							$val = new Time($val);
-							$originalRow[$col] = $val->format($systemDateFormat);
-						} catch (Exception $e) {
-						    $originalRow[$col] = $val;
-						}
+						$val = date($systemDateFormat, \PHPExcel_Shared_Date::ExcelToPHP($val));
 					}
+					$originalRow[$col] = $val;
+					// converts val to Time object so that this field will pass 'validDate' check since
+					// different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
+					// so it is best to convert the date here instead of adjusting individual model's date validation format
+					try {
+						$formattedDate = Time::createFromFormat($systemDateFormat, $val);
+						if ($formattedDate instanceof Time) {
+							$val = $formattedDate;
+						}
+					} catch (InvalidArgumentException $e) {
+					    // $val = '';
+					}
+
 				}
 			}
 			$translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
