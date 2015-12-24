@@ -174,7 +174,8 @@ class ImportStudentAttendancesTable extends AppTable {
 	// }
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-		if (empty($tempRow['security_user_id'])) {
+		if (empty($tempRow['student_id'])) {
+			$tempRow['duplicates'] = __('OpenEMIS ID was not defined.');
 			return false;
 		}
 
@@ -213,11 +214,11 @@ class ImportStudentAttendancesTable extends AppTable {
 		$student = $this->Students->find()->where([
 			'academic_period_id' => $tempRow['academic_period_id'],
 			'institution_id' => $tempRow['institution_id'],
-			'student_id' => $tempRow['security_user_id'],
+			'student_id' => $tempRow['student_id'],
 		])->first();
 		if (!$student) {
 			$tempRow['duplicates'] = __('No such student in the institution');
-			$tempRow['security_user_id'] = false;
+			$tempRow['student_id'] = false;
 			return false;
 		}
 		
