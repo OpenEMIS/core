@@ -14,10 +14,10 @@ class UserContactsTable extends BaseTable {
 
 	public function beforeAction(Event $event) {
 		parent::beforeAction($event);
-		$tabElements = $this->controller->getTabElements();
+		$tabElements = $this->controller->getUserTabElements();
 		
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'contacts');
+		$this->controller->set('selectedAction', 'Contacts');
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
