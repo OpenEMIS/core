@@ -76,7 +76,7 @@ class ImportStaffAttendancesTable extends AppTable {
 						->find('all')
 						->where([$this->Staff->aliasField('institution_id') => $this->institutionId])
 						;
-		// when extracting the security_user_id from $allStaff collection, there will be no duplicates
+		// when extracting the staff_id from $allStaff collection, there will be no duplicates
 		$allStaff = new Collection($allStaff->toArray());
 		$modelData->where([
 			'id IN' => $allStaff->extract('staff_id')->toArray()
@@ -103,7 +103,8 @@ class ImportStaffAttendancesTable extends AppTable {
 	}
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-		if (empty($tempRow['security_user_id'])) {
+		if (empty($tempRow['staff_id'])) {
+			$tempRow['duplicates'] = __('OpenEMIS ID was not defined.');
 			return false;
 		}
 
@@ -141,11 +142,11 @@ class ImportStaffAttendancesTable extends AppTable {
 
 		$staff = $this->Staff->find()->where([
 			'institution_id' => $tempRow['institution_id'],
-			'security_user_id' => $tempRow['security_user_id'],
+			'staff_id' => $tempRow['staff_id'],
 		])->first();
 		if (!$staff) {
 			$tempRow['duplicates'] = __('No such staff in the institution');
-			$tempRow['security_user_id'] = false;
+			$tempRow['staff_id'] = false;
 			return false;
 		}
 
