@@ -14,6 +14,9 @@ use App\Model\Table\AppTable;
 
 class ImportStudentsTable extends AppTable {
 	private $institutionId;
+	private $gradesInInstitution;
+	private $systemDateFormat;
+	private $studentStatusId;
 
 	public function initialize(array $config) {
 		$this->table('import_mapping');
@@ -46,8 +49,6 @@ class ImportStudentsTable extends AppTable {
 			$this->gradesInInstitution = [];
 		}
 		$this->systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
-		$this->admissionAgeMinus = TableRegistry::get('ConfigItems')->value('admission_age_minus');
-		$this->admissionAgePlus = TableRegistry::get('ConfigItems')->value('admission_age_plus');
 	    $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$this->studentStatusId = $StudentStatuses->find()
 												->select(['id'])
@@ -199,9 +200,9 @@ class ImportStudentsTable extends AppTable {
 		if (empty($tempRow['student_id'])) {
 			return false;
 		}
-		// should use try..catch because 'get' will throw InvalidPrimaryKeyException
-		$student = $this->Students->get($tempRow['student_id']);
-		if (!$student) {
+		try {
+			$student = $this->Students->get($tempRow['student_id']);
+		} catch (InvalidPrimaryKeyException $e) {
 			$tempRow['duplicates'] = __('No such student in the system.');
 			return false;
 		}
@@ -247,18 +248,16 @@ class ImportStudentsTable extends AppTable {
 		$tempRow['end_date'] = $period->end_date;
 		$tempRow['end_year'] = $period->end_year;
 
-		$grades = array_flip($this->gradesInInstitution);
-		if (!array_key_exists($tempRow['education_grade_id'], $grades)) {
+		if (!in_array($tempRow['education_grade_id'], $this->gradesInInstitution)) {
 			$tempRow['duplicates'] = __('Selected education grade is not being offered in this institution.');
 			return false;
 		}
-		$selectedGrade = $grades[$tempRow['education_grade_id']];
 		$institutionGrade = $this->InstitutionGrades
 								->find()
 								->contain('EducationGrades.EducationProgrammes.EducationCycles')
-								->where([$this->InstitutionGrades->aliasField('id') => $selectedGrade])
+								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
 								;
-		if (!$institutionGrade) {
+		if ($institutionGrade->isEmpty()) {
 			$tempRow['duplicates'] = __('No matching education grade.');
 			return false;
 		}
