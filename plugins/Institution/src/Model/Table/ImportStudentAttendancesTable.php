@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportStudentAttendancesTable extends AppTable {
@@ -41,9 +43,15 @@ class ImportStudentAttendancesTable extends AppTable {
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 			'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+	    	'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$crumbTitle = $this->getHeader($this->alias());
+		$Navigation->substituteCrumb($crumbTitle, $crumbTitle);
 	}
 
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
@@ -166,7 +174,8 @@ class ImportStudentAttendancesTable extends AppTable {
 	// }
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-		if (empty($tempRow['security_user_id'])) {
+		if (empty($tempRow['student_id'])) {
+			$tempRow['duplicates'] = __('OpenEMIS ID was not defined.');
 			return false;
 		}
 
@@ -205,11 +214,11 @@ class ImportStudentAttendancesTable extends AppTable {
 		$student = $this->Students->find()->where([
 			'academic_period_id' => $tempRow['academic_period_id'],
 			'institution_id' => $tempRow['institution_id'],
-			'student_id' => $tempRow['security_user_id'],
+			'student_id' => $tempRow['student_id'],
 		])->first();
 		if (!$student) {
 			$tempRow['duplicates'] = __('No such student in the institution');
-			$tempRow['security_user_id'] = false;
+			$tempRow['student_id'] = false;
 			return false;
 		}
 		

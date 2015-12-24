@@ -66,7 +66,21 @@ v3.3.9
 - Added new report, Potential Duplicates
 - Added new feature to import Attendance data
 
+v3.3.10
+- Fixed a bug that caused different grades's admission age not to be updated
+based on configured value
+
 v3.4.1
 - Reorganised navigations to move existing pages into tabbed view
 - Added new navigation called Directory to access user's information
 
+v3.4.2
+- Fixed a bug that caused an error while deleting staff records from
+institutions
+- Added new feature to allow user to import students into institutions
+- Fixed a bug that caused security roles not ordered correctly
+- Fixed a bug that caused 404 error page when importing institutions
+- Added new field called Network Connectivity in Institutions
+- Fixed a bug that prevent user from entering 0 as value on Student admission age
+plus/minus
+- Added new permissions for Import features
