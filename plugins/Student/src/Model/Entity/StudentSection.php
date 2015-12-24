@@ -13,8 +13,8 @@ class StudentSection extends Entity
 	
     protected function _getAcademicPeriod() {
     	$name = '';
-    	if ($this->has('institution_site_section') && $this->institution_site_section->has('academic_period_id')) {
-    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_site_section->academic_period_id)->toArray();
+    	if ($this->has('institution_section') && $this->institution_section->has('academic_period_id')) {
+    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_section->academic_period_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -24,8 +24,8 @@ class StudentSection extends Entity
 
 	protected function _getInstitution() {
     	$name = '';
-    	if ($this->has('institution_site_section') && $this->institution_site_section->has('institution_site_id')) {
-    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_site_section->institution_site_id)->toArray();
+    	if ($this->has('institution_section') && $this->institution_section->has('institution_id')) {
+    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_section->institution_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -35,7 +35,7 @@ class StudentSection extends Entity
 
 	protected function _getHomeroomTeacherName() {
     	$name = '';
-        $teacherId = $this->institution_site_section->security_user_id;
+        $teacherId = $this->institution_section->security_user_id;
         if (!empty($teacherId)) {
             $Users = TableRegistry::get('Security.Users');
             try {
@@ -51,11 +51,13 @@ class StudentSection extends Entity
 	protected function _getEducationGrade() {
     	$name = '';
 
-    	if ($this->has('institution_site_section_id')) {
-    		$InstitutionSiteSectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
-    		$data = $InstitutionSiteSectionGrades
+    	if ($this->has('institution_section_id')) {
+    		$InstitutionSectionGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
+    		$data = $InstitutionSectionGrades
     			->find()
-    			->where([$InstitutionSiteSectionGrades->aliasField('institution_site_section_id') => $this->institution_site_section_id, $InstitutionSiteSectionGrades->aliasField('institution_site_section_id') => 1])
+    			->where([
+                    $InstitutionSectionGrades->aliasField('institution_section_id') => $this->institution_section_id
+                ])
     			->contain(['EducationGrades'=>['EducationProgrammes'=>['EducationCycles']]])
     		;
     		$result = '';
