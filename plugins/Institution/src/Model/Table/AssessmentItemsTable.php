@@ -88,11 +88,11 @@ class AssessmentItemsTable extends AppTable {
 	// 				)
 	// 			),
 	// 			array(
-	// 				'table' => 'institution_site_classes',
-	// 				'alias' => 'InstitutionSiteClass',
+	// 				'table' => 'institution_classes',
+	// 				'alias' => 'InstitutionClass',
 	// 				'conditions' => array(
-	// 					'InstitutionSiteClass.education_subject_id = EducationGradeSubject.education_subject_id',
-	// 					'InstitutionSiteClass.id = ' . $classId
+	// 					'InstitutionClass.education_subject_id = EducationGradeSubject.education_subject_id',
+	// 					'InstitutionClass.id = ' . $classId
 	// 				)
 	// 			),
 	// 		),
