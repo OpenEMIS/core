@@ -15,8 +15,6 @@ class AssessmentGradingTypesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-		$this->addBehavior('Reorder');
 	}
 
 	public function beforeAction(Event $event) {

@@ -39,6 +39,7 @@ class DirectoriesTable extends AppTable {
 				'_function' => 'getNumberOfUsersByGender'
 			]
 		]);
+        $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportUsers']);
 
 		// $this->addBehavior('Excel', [
 		// 	'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
