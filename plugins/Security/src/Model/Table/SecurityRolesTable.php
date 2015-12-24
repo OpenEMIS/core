@@ -271,31 +271,7 @@ class SecurityRolesTable extends AppTable {
 			$systemRoleOptions = [];
 
 			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-			// this will show only roles of the user in the specified group ($groupId)
-			$highestUserRole = $GroupRoles
-				->find()
-				->contain('SecurityRoles')
-				->order(['SecurityRoles.order']) // if user is assigned more than one role, therefore the ordering is necessary
-				->where([
-					$GroupRoles->aliasField('security_group_id') => $groupId,
-					$GroupRoles->aliasField('security_user_id') => $userId
-				])
-				->first();
 
-			// If the user has a user role, then populate the user role options
-			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
-			if (!empty($highestUserRole)) {
-				$userRoleOptions = $this
-					->find('list')
-					->find('visible')
-					->where([
-						$this->aliasField('security_group_id') => $groupId,
-						$this->aliasField('order') . ' > ' => $highestUserRole['security_role']['order'],
-					])
-					->order([$this->aliasField('order')])
-					->toArray();
-			}
-			
 			// Get the highest system role
 			$highestSystemRole = $this->find()
 				->matching('GroupUsers')
@@ -318,20 +294,61 @@ class SecurityRolesTable extends AppTable {
 					])
 					->order([$this->aliasField('order')])
 					->toArray();
+
+				// If the user has system role and has access to add role, then the user will be able to see the user group roles also,
+				// however, if the users they have their own user group role, then they can only see their own user group role below their own, this is overwritten in the code below
+				$userRoleOptions = $this
+					->find('list')
+					->find('visible')
+					->where([
+						$this->aliasField('security_group_id') => $groupId,
+					])
+					->order([$this->aliasField('order')])
+					->toArray();
 			}
 
+			// this will show only roles of the user in the specified group ($groupId)
+			$highestUserRole = $GroupRoles
+				->find()
+				->contain(['SecurityRoles'=> function ($q) {
+							return $q->where(['SecurityRoles.security_group_id NOT IN ' => [-1, 0]]);
+						}])
+				->order(['SecurityRoles.order']) // if user is assigned more than one role, therefore the ordering is necessary
+				->where([
+					$GroupRoles->aliasField('security_group_id') => $groupId,
+					$GroupRoles->aliasField('security_user_id') => $userId
+				])
+				->first();
+
+			// If the user has a user role, then populate the user role options
+			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+			if (!empty($highestUserRole['security_role'])) {
+				$userRoleOptions = $this
+					->find('list')
+					->find('visible')
+					->where([
+						$this->aliasField('security_group_id') => $groupId,
+						$this->aliasField('order') . ' > ' => $highestUserRole['security_role']['order'],
+					])
+					->order([$this->aliasField('order')])
+					->toArray();
+			}
 			// Merge the permission of the user's system role and user role
 			$roleOptions = $systemRoleOptions + $userRoleOptions;
 
 		} else { // super admin will show all roles of system and group specific
-			array_push($groupIds, $groupId);
+
+			// adding the user role group in
+			if (!is_null($groupId)) {
+				array_push($groupIds, $groupId);
+			}
+
 			$roleOptions = $this
 				->find('list')
 				->find('visible')
 				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
-				->order([$this->aliasField('order')])
-				->toArray()
-			;
+				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+				->toArray();
 		}
 		return $roleOptions;
 	}
