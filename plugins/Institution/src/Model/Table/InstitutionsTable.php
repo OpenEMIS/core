@@ -28,6 +28,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
 		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
 		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
+		$this->belongsTo('NetworkConnectivities', 			['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'institution_network_connectivity_id']);
 		/**
 		 * end fieldOption tables
 		 */
@@ -185,6 +186,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 
@@ -441,7 +443,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
-			'institution_ownership_id', 'institution_gender_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -468,7 +470,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
-			'institution_ownership_id', 'institution_gender_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
