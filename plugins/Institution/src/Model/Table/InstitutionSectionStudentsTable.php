@@ -34,7 +34,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 		];
 
 		$fields[] = [
-			'key' => 'InstitutionSiteSections.institution_id',
+			'key' => 'InstitutionSections.institution_id',
 			'field' => 'institution_id',
 			'type' => 'string',
 			'label' => '',
@@ -67,7 +67,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
     	$query
-    		->contain(['InstitutionSiteSections.Institutions'])
+    		->contain(['InstitutionSections.Institutions'])
     		->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name']);
     }
 
