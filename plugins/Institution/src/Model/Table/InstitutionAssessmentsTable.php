@@ -51,6 +51,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('Excel', ['excludes' => ['status', 'education_grade_id', 'institution_section_id']]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -66,6 +67,66 @@ class InstitutionAssessmentsTable extends AppTable {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
+    }
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    	$institutionId = 0;
+    	$session = $this->controller->request->session();
+		if ($session->check('Institution.Institutions.id')) {
+			$institutionId = $session->read('Institution.Institutions.id');
+		}
+		$academicPeriodId = $this->AcademicPeriods->getCurrent();
+
+    	// Get list of classes in the institution
+		$classOptions = $this->Classes->getSectionOptions($academicPeriodId, $institutionId);
+		// Class assessments
+		$classAssessments = $this->getClassAssessments($institutionId, $academicPeriodId);
+		$sheetTable = TableRegistry::get('Institution.InstitutionSectionStudents');
+
+		foreach($classAssessments as $classId => $assessments) {
+	    	// Main sheet table
+	    	$sheets[] = [
+				'name' => $classOptions[$classId],
+				'table' => $sheetTable,
+				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_section_id') => $classId]),
+				'orientation' => 'landscape',
+				'institutionId' => $institutionId,
+				'academicPeriodId' => $academicPeriodId,
+				'classId' => $classId,
+				'assessments' => $assessments,
+			];
+		}
+    }
+
+    // Function to get the list of assessments to a class
+    public function getClassAssessments($institutionId, $academicPeriodId, $classId=null) {
+    	$condition = [];
+    	if (!(is_null($classId))) {
+    		$condition = ['InstitutionSections.id' => $classId];
+    	}
+
+    	$results = $this
+    		->find()
+    		->matching('Assessments.EducationGrades.InstitutionSectionStudents.InstitutionSections')
+    		->where([
+    			$this->aliasField('institution_id') => $institutionId, 
+    			$this->aliasField('academic_period_id') => $academicPeriodId,
+    			'Assessments.education_grade_id = InstitutionSectionStudents.education_grade_id',
+    			'InstitutionSections.institution_id' => $institutionId, 
+    			'InstitutionSections.academic_period_id' => $academicPeriodId, 
+    			$this->aliasField('status') => self::COMPLETED,
+    		])
+    		->where($condition)
+    		->select(['class' => 'InstitutionSections.id', 'assessment' => 'Assessments.id'])
+    		->group(['class', 'assessment'])
+    		->hydrate(false)
+    		->toArray();
+
+    	$returnArray = [];
+    	foreach ($results as $item) {
+    		$returnArray[$item['class']][] = $item['assessment'];
+    	}
+    	return $returnArray;
     }
 
 	public function onGetStatus(Event $event, Entity $entity) {
@@ -905,6 +966,15 @@ class InstitutionAssessmentsTable extends AppTable {
 			if ($action == 'view') {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
+				}
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
+				}
+			}
+		} else {
+			if ($action == 'index') {
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
 				}
 			}
 		}
