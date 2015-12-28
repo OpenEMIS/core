@@ -40,9 +40,9 @@ class StaffTable extends AppTable {
 			'filterKey' => 'staff_custom_filter_id',
 			'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'staff_id',
+			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
@@ -58,38 +58,40 @@ class StaffTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
+
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
 
 	public static function handleAssociations($model) {
 		$model->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
-			'joinTable' => 'institution_site_staff', // will need to change to institution_staff
-			'foreignKey' => 'security_user_id', // will need to change to staff_id
-			'targetForeignKey' => 'institution_site_id', // will need to change to institution_id
+			'joinTable' => 'institution_staff', // will need to change to institution_staff
+			'foreignKey' => 'staff_id', // will need to change to staff_id
+			'targetForeignKey' => 'institution_id', // will need to change to institution_id
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
 
 		// section should never cascade delete
-		$model->hasMany('InstitutionSiteSections', 		['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'security_user_id']);
+		$model->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 'foreignKey' => 'staff_id']);
 
 		$model->belongsToMany('Subjects', [
-			'className' => 'Institution.InstitutionSiteClass',
-			'joinTable' => 'institution_site_class_staff',
-			'foreignKey' => 'security_user_id',
-			'targetForeignKey' => 'institution_site_class_id',
-			'through' => 'Institution.InstitutionSiteClassStaff',
+			'className' => 'Institution.InstitutionClass',
+			'joinTable' => 'institution_class_staff',
+			'foreignKey' => 'staff_id',
+			'targetForeignKey' => 'institution_class_id',
+			'through' => 'Institution.InstitutionClassStaff',
 			'dependent' => true
 		]);
 
-		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'staff_id', 'dependent' => true]);
 	}
 
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -117,10 +119,10 @@ class StaffTable extends AppTable {
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$query->innerJoin(
-				['InstitutionStaff' => 'institution_site_staff'],
+				['InstitutionStaff' => 'institution_staff'],
 				[
-					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStaff.institution_site_id IN ' => $institutionIds
+					'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
+					'InstitutionStaff.institution_id IN ' => $institutionIds
 				]
 			)
 			->group([$this->aliasField('id')]);
@@ -132,7 +134,7 @@ class StaffTable extends AppTable {
 		$institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
 		->contain(['Institutions'])
 		->select(['Institutions.name'])
-		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
+		->where([$this->InstitutionStaff->aliasField('staff_id') => $userId])
 		->andWhere([$this->InstitutionStaff->aliasField('end_date').' IS NULL'])
 		->toArray();
 		;
@@ -152,17 +154,30 @@ class StaffTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 100]);
-		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 101]);
 		$this->ControllerAction->field('is_staff', ['value' => 1]);
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
 			// sections are not to be deleted (cascade delete is not set and need to change id)
-			$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-			$InstitutionSiteSections->updateAll(
-					['security_user_id' => 0],
-					['security_user_id' => $id]
+			$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+			$InstitutionSections->updateAll(
+					['staff_id' => 0],
+					['staff_id' => $id]
 				);
 
 			$userQuery = $model->find()->where([$this->aliasField('id') => $id])->first();

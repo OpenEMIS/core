@@ -9,6 +9,6 @@ class GendersTable extends AppTable {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
 		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_gender_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_gender_id']);
 	}
 }
