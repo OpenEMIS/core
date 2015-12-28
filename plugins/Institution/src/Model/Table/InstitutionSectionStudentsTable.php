@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -8,6 +9,10 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class InstitutionSectionStudentsTable extends AppTable {
+	
+	// For reports
+	private $assessmentItemResults = [];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 
@@ -18,6 +23,79 @@ class InstitutionSectionStudentsTable extends AppTable {
 
 		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrade']);
 	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
+		$fields[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'InstitutionSiteSections.institution_id',
+			'field' => 'institution_id',
+			'type' => 'string',
+			'label' => '',
+		];
+
+    	$sheet = $settings['sheet'];
+    	$assessments = $sheet['assessments'];
+    	foreach ($assessments as $assessment) {
+    		$assessmentName = TableRegistry::get('Assessment.Assessments')->get($assessment)->name;
+    		$assessmentSubjects = TableRegistry::get('Assessment.AssessmentItems')->getAssessmentItemSubjects($assessment);
+
+    		foreach($assessmentSubjects as $subject) {
+    			$label = __($assessmentName).' - '.__($subject['name']);
+    			if ($subject['type'] == 'MARKS') {
+    				$label = $label.' ('.$subject['max'].')';
+    			}
+    			$fields[] = [
+	    			'key' => $subject['id'],
+	    			'field' => 'assessment_item',
+	    			'type' => 'assessment',
+					'label' => $label,
+					'institutionId' => $sheet['institutionId'],
+					'assessmentId' => $assessment,
+					'academicPeriodId' => $sheet['academicPeriodId'],
+					'result_type' => $subject['type']
+	    		];
+    		}
+    	}
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    	$query
+    		->contain(['InstitutionSiteSections.Institutions'])
+    		->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name']);
+    }
+
+    public function onExcelRenderAssessment(Event $event, Entity $entity, array $attr) {
+    	$studentId = $entity->student_id;
+    	$assessmentItemId = $attr['key'];
+    	$academicPeriodId = $attr['academicPeriodId'];
+    	$institutionId = $attr['institutionId'];
+    	$resultType = $attr['result_type'];
+    	$assessmentItemResults = $this->assessmentItemResults;
+    	if (!(isset($assessmentItemResults[$institutionId][$studentId][$assessmentItemId]))) {
+    		$AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
+    		$this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($institutionId, $academicPeriodId);
+    		$assessmentItemResults = $this->assessmentItemResults;
+    	}
+    	if (isset($assessmentItemResults[$institutionId][$studentId][$assessmentItemId])) {
+    		$result = $assessmentItemResults[$institutionId][$studentId][$assessmentItemId];
+    		switch($resultType) {
+    			case 'MARKS':
+    				return '='.$result['marks'];
+    				break;
+    			case 'GRADES':
+					return $result['grade_code'];
+    				break;
+    		}
+    	}
+    	return '';
+    }
 
 	public function getMaleCountBySection($sectionId) {
 		$gender_id = 1; // male
