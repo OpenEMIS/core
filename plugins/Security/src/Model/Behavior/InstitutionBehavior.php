@@ -49,11 +49,11 @@ class InstitutionBehavior extends Behavior {
 			->contain($findOptions['contain'])
 			->select($findOptions['select'])
 			->join($findOptions['join'])
-			->innerJoin(['SecurityGroupInstitutionSite' => 'security_group_institution_sites'], [
-				'SecurityGroupInstitutionSite.institution_site_id = ' . $this->_table->aliasField('id')
+			->innerJoin(['SecurityGroupInstitution' => 'security_group_institutions'], [
+				'SecurityGroupInstitution.institution_id = ' . $this->_table->aliasField('id')
 			])
 			->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
-				'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
+				'SecurityGroupUser.security_group_id = SecurityGroupInstitution.security_group_id',
 				'SecurityGroupUser.security_user_id' => $userId
 			])
 			->group([$this->_table->aliasField('id')])
