@@ -46,4 +46,34 @@ class SecurityGroupUsersTable extends AppTable {
 			return false;
 		}
 	}
+
+	public function checkEditGroup($userId, $securityGroupId, $field, $roleType = 'system') {
+		// Role type system: System roles
+		// Role type user: User roles
+
+		if ($roleType == 'system') {
+			// System role
+			$securityFunctionId = 5024;
+		} else if ($roleType == 'user') {
+			// User role
+			$securityFunctionId = 5025;
+		} else {
+			// Always false
+			$securityFunctionId = 0;
+		}
+		$results = $this
+			->find()
+			->innerJoin(
+				['SecurityRoleFunctions' => 'security_role_functions'],
+				[
+					'SecurityRoleFunctions.security_role_id = '.$this->aliasField('security_role_id'),
+					'SecurityRoleFunctions.security_function_id' => $securityFunctionId,
+					'SecurityRoleFunctions.'.$field => 1
+				]
+			)
+			->where([$this->aliasField('security_user_id') => $userId, $this->aliasField('security_group_id') => $securityGroupId])
+			->hydrate(false)
+			->toArray();
+		return $results;
+	}
 }

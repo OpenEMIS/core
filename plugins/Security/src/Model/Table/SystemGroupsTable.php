@@ -42,6 +42,30 @@ class SystemGroupsTable extends AppTable {
 		}
 	}
 
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$userId = $this->Auth->user('id');
+		$securityGroupId = $entity->id;
+		// -1 = system roles, we are not allowing users to modify system roles
+		// removing all buttons from the menu
+		if (!$this->AccessControl->isAdmin()) {
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit', 'system')) {
+				if (array_key_exists('edit', $buttons)) {
+					unset($buttons['edit']);
+				}
+			}
+
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_delete', 'system')) {
+				if (array_key_exists('delete', $buttons)) {
+					unset($buttons['delete']);
+				}
+			}
+		}
+		
+		return $buttons;
+	}
+
 	public function beforeAction(Event $event) {
 		$controller = $this->controller;
 		$tabElements = [
@@ -142,7 +166,6 @@ class SystemGroupsTable extends AppTable {
 				$userId = null;
 			}
 			$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId);
-
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
 					$this->request->data[$alias] = [$key => []];
