@@ -35,9 +35,21 @@ class LeavesTable extends AppTable {
 		;
 	}
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		$dateFrom = date_create($entity->date_from);
+		$dateTo = date_create($entity->date_to);
+		$diff = date_diff($dateFrom, $dateTo, true);
+		$numberOfDays = $diff->format("%a");
+		$entity->number_of_days = ++$numberOfDays;
+	}
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('staff_leave_type_id', [
 			'type' => 'select'
+		]);
+		$this->ControllerAction->field('number_of_days', [
+			'visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]
 		]);
 		$this->ControllerAction->field('file_name', [
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
@@ -56,5 +68,16 @@ class LeavesTable extends AppTable {
 		}
 
 		return $attr;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

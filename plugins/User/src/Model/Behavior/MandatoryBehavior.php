@@ -183,8 +183,8 @@ class MandatoryBehavior extends Behavior {
 		$data[$this->_table->alias()]['identities'][0]['identity_type_id'] = $defaultIdentityType;
 
 		$options['associated'] = [
-			'InstitutionSiteStudents' => ['validate' => false],
-			'InstitutionSiteStaff' => ['validate' => false],
+			'InstitutionStudents' => ['validate' => false],
+			'InstitutionStaff' => ['validate' => false],
 			'Identities' => ['validate' => false],
 			'Nationalities' => ['validate' => false],
 			'SpecialNeeds' => ['validate' => false],
