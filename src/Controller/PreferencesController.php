@@ -4,6 +4,7 @@ namespace App\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 
 class PreferencesController extends AppController {
 	public $activeObj = null;
@@ -13,8 +14,15 @@ class PreferencesController extends AppController {
 
 		$this->ControllerAction->model('Users');
 		$this->ControllerAction->models = [
-			'Users' => ['className' => 'Users'],
-			'Contacts'=> ['className' => 'UserContacts']
+			'Users' 				=> ['className' => 'Users'],
+			'Contacts'				=> ['className' => 'UserContacts'],
+			'Identities' 			=> ['className' => 'User.Identities'],
+			'Nationalities' 		=> ['className' => 'User.Nationalities'],
+			'Languages' 			=> ['className' => 'User.UserLanguages'],
+			'Comments' 				=> ['className' => 'User.Comments'],
+			'Attachments' 			=> ['className' => 'User.Attachments'],
+			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
+			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 		];
 	}
 
@@ -51,22 +59,56 @@ class PreferencesController extends AppController {
 		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Users', 'view', $userId]);
 	}
 
-	public function getTabElements() {
+	public function getUserTabElements() {
+		$Config = TableRegistry::get('ConfigItems');
+		$canChangeAdminPassword = $Config->value('change_password');
+		$isSuperAdmin = $this->Auth->user('super_admin');
 		$userId = $this->Auth->user('id');
 		$tabElements = [
-			'account' => [
+			'Account' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $userId],
 				'text' => __('Account')
 			],
-			'password' => [
+			'Password' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Users', 'password'],
 				'text' => __('Password')
 			],
-			'contacts' => [
+			'Contacts' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Contacts'],
 				'text' => __('Contacts')
+			],
+			'Identities' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Identities'],
+				'text' => __('Identities')
+			],
+			'Nationalities' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
+				'text' => __('Nationalities')	
+			],
+			'Languages' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Languages'],
+				'text' => __('Languages')	
+			],
+			'Comments' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Comments'],
+				'text' => __('Comments')	
+			],
+			'Attachments' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Attachments'],
+				'text' => __('Attachments')	
+			],
+			'SpecialNeeds' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'SpecialNeeds'],
+				'text' => __('Special Needs')
+			],
+			'History' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'History'],
+				'text' => __('History')	
 			]
 		];
+		if (!$canChangeAdminPassword && $isSuperAdmin) {
+			unset($tabElements['Password']);
+		}
 		return $tabElements;
 	}
 
