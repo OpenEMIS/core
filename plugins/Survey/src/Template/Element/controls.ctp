@@ -17,7 +17,8 @@
 						'options' => $statusOptions,
 						'default' => $selectedStatus,
 						'url' => $baseUrl,
-						'data-named-key' => 'status'
+						'data-named-key' => 'status',
+						'data-named-group' => 'module,form'
 					));
 				}
 
@@ -28,7 +29,8 @@
 						'options' => $moduleOptions,
 						'default' => $selectedModule,
 						'url' => $baseUrl,
-						'data-named-key' => 'module'
+						'data-named-key' => 'module',
+						'data-named-group' => 'status'
 					));
 				}
 
@@ -39,7 +41,8 @@
 						'options' => $formOptions,
 						'default' => $selectedForm,
 						'url' => $baseUrl,
-						'data-named-key' => 'form'
+						'data-named-key' => 'form',
+						'data-named-group' => 'status,module'
 					));
 				}
 			?>
