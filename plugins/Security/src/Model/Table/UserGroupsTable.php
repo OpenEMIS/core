@@ -368,7 +368,8 @@ class UserGroupsTable extends AppTable {
 						];
 					}
 				} else {
-					$groupAdminId = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first()->id;
+					$groupAdmin = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first();
+					$groupAdminId = $groupAdmin->id;
 					$UserTable = TableRegistry::get('Users');
 					$user = $UserTable->get($userId);
 					if (empty($this->request->data[$alias][$key])) {
@@ -445,7 +446,7 @@ class UserGroupsTable extends AppTable {
 							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $joinData['security_role_id']]);
 							$rowData[] = $joinData['openemis_no'];
 							$rowData[] = $name;
-							$rowData[] = __($roleOptions[$joinData['security_role_id']]);
+							$rowData[] = __('Group Administrator');
 							$rowData[] = $this->getDeleteButton();
 							$tableCells[] = $rowData;
 						}

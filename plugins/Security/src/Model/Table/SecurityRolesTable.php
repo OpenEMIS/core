@@ -272,8 +272,9 @@ class SecurityRolesTable extends AppTable {
 
 			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
-			// Get the highest system role
-			$highestSystemRole = $this->find()
+			if (!$createUserGroup) {
+				// Get the highest system role
+				$highestSystemRole = $this->find()
 				->matching('GroupUsers')
 				->where([
 					'SecurityGroupUsers.security_user_id' => $userId,
@@ -282,6 +283,11 @@ class SecurityRolesTable extends AppTable {
 				])
 				->order([$this->aliasField('order')])
 				->first();
+			} else {
+				// If the user is a restricted user and is creating a user group
+				$highestSystemRole = $this->find()->where([$this->aliasField('name') => 'Group Administrator'])->first();
+			}
+			
 
 			// If the user has a system role, then populate the system role options
 			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
