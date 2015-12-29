@@ -354,7 +354,6 @@ class UserGroupsTable extends AppTable {
 				} else {
 					$this->request->data[$alias][$key] = [];
 				}
-				// pr($entity->isNew());
 				$associated = $entity->extractOriginal([$key]);
 				if (!empty($associated[$key])) {
 					foreach ($associated[$key] as $i => $obj) {
@@ -387,6 +386,10 @@ class UserGroupsTable extends AppTable {
 			}
 			// refer to addEditOnAddUser for http post
 			if ($this->request->data("$alias.$key")) {
+
+				if (!$this->AccessControl->isAdmin()) {
+					$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
+				}
 				// For the original user
 				$associated = $entity->extractOriginal([$key]);
 				$found = false;
@@ -431,19 +434,21 @@ class UserGroupsTable extends AppTable {
 						$rowData[] = $this->getDeleteButton();
 						$tableCells[] = $rowData;
 					} else if ($entity->isNew()) {
-						// If this is a new user group
-						$rowData = [];
-						$name = $joinData['name'];
-						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
-						$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
-						$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-						$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
-						$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $joinData['security_role_id']]);
-						$rowData[] = $joinData['openemis_no'];
-						$rowData[] = $name;
-						$rowData[] = __($roleOptions[$joinData['security_role_id']]);
-						$rowData[] = $this->getDeleteButton();
-						$tableCells[] = $rowData;
+						if (!$this->AccessControl->isAdmin()) {
+							// If this is a new user group
+							$rowData = [];
+							$name = $joinData['name'];
+							$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $joinData['security_role_id']]);
+							$rowData[] = $joinData['openemis_no'];
+							$rowData[] = $name;
+							$rowData[] = __($roleOptions[$joinData['security_role_id']]);
+							$rowData[] = $this->getDeleteButton();
+							$tableCells[] = $rowData;
+						}
 					}
 				}
 			}
