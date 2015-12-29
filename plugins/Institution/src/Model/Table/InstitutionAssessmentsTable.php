@@ -976,13 +976,15 @@ class InstitutionAssessmentsTable extends AppTable {
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     	list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
+    	if ($action == 'view') {
+    		if (isset($toolbarButtons['export'])) {
+				unset($toolbarButtons['export']);
+			}
+    	}
     	if ($selectedStatus == self::COMPLETED) {	//Completed
 			if ($action == 'view') {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
-				}
-				if (isset($toolbarButtons['export'])) {
-					unset($toolbarButtons['export']);
 				}
 			}
 		} else {
