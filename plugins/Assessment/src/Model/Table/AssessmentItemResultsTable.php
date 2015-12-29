@@ -24,7 +24,7 @@ class AssessmentItemResultsTable extends AppTable {
 	public function getAssessmentItemResults($institutionId, $academicPeriodId) {
 		$results = $this
 			->find()
-			->matching('GradingOptions')
+			->contain(['GradingOptions'])
 			->where([
 				$this->aliasField('institution_id') => $institutionId, 
 				$this->aliasField('academic_period_id') => $academicPeriodId
