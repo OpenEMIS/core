@@ -96,6 +96,20 @@ class InstitutionAssessmentsTable extends AppTable {
 				'assessments' => $assessments,
 			];
 		}
+
+		if (empty($classAssessments)) {
+			$academicPeriodName = TableRegistry::get('AcademicPeriods.AcademicPeriods')->get($academicPeriodId)->name;
+			$sheets[] = [
+				'name' => __('No Classes for '.$academicPeriodName),
+				'table' => $sheetTable,
+				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_section_id') => 0]),
+				'orientation' => 'landscape',
+				'institutionId' => $institutionId,
+				'academicPeriodId' => $academicPeriodId,
+				'classId' => 0,
+				'assessments' => [],
+			];
+		}
     }
 
     // Function to get the list of assessments to a class
