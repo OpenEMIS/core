@@ -389,7 +389,9 @@ class UserGroupsTable extends AppTable {
 			if ($this->request->data("$alias.$key")) {
 
 				if (!$this->AccessControl->isAdmin()) {
-					$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
+					if ($entity->isNew()) {
+						$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
+					}
 				}
 				// For the original user
 				$associated = $entity->extractOriginal([$key]);
