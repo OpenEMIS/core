@@ -517,6 +517,8 @@ class DirectoriesTable extends AppTable {
 				->matching('Institutions')
 				->where([$InstitutionStaffTable->aliasField('staff_id') => $userId])
 				->select(['id' => 'Institutions.id', 'institutionName' => 'Institutions.name'])
+				->group(['Institutions.id'])
+				->order(['Institutions.name'])
 				->toArray();
 			return implode('<BR>', $staffInstitutions);
 		}
