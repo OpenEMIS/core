@@ -30,24 +30,39 @@
 
 	echo $this->element('scripts');
 	echo $this->fetch('script');
+		
 	?>
-</head>
 
-<body>
-	<div id="wrapper">
-		<div id="sidebar-wrapper">
-			<?= $this->element('OpenEmis.navigation'); ?>
-		</div>	
-		<?php 
-		echo $this->element('OpenEmis.header');
-		echo $this->fetch('content');
-		if (isset($modal)) {
-			echo $this->element('ControllerAction.modal');
-		}
-		?>
-	</div>
+</head>
+<?php echo $this->element('OpenEmis.analytics') ?>
+
+<body class='fuelux' ng-app="OE_Styleguide">
+	
+	<?=  $this->element('OpenEmis.header'); ?>
+
+	<bg-splitter orientation="horizontal" class="pane-wrapper">
+		<bg-pane class="left-pane">
+			<div class="pane-container">
+				<?php 
+	        		echo $this->element('OpenEmis.navigation');
+				?>
+			</div>
+		</bg-pane>
+		
+		<bg-pane class="right-pane pane-container" min-size-p="60">
+			<?php 
+				echo $this->element('OpenEmis.header');
+				echo $this->fetch('content');
+				if (isset($modal)) {
+					echo $this->element('ControllerAction.modal');
+				}
+			?>
+		</bg-pane>
+	</bg-splitter>	
+
 	<?= $this->element('OpenEmis.footer') ?>
-	<?= $this->fetch('scriptBottom') ?>
+	<?= $this->fetch('scriptBottom'); ?>
 	<?= $this->element('OpenEmis.scriptBottom') ?>
+
 </body>
 </html>

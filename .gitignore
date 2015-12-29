@@ -10,10 +10,13 @@ tmp/sessions/*
 tmp/tests/*
 logs/*.log*
 webroot/export/*
+webroot/import/*
+webroot/analytics.txt
 /build
 /dist
 /tags
 *.mo
+*.po
 
 # IDE and editor specific files #
 #################################

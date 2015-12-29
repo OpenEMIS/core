@@ -12,14 +12,14 @@ use App\Model\Table\AppTable;
 
 class StudentResultsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_class_students');
+		$this->table('institution_class_students');
 		$config['Modified'] = false;
 		$config['Created'] = false;
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'institution_site_section_id']);
-		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
+		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSections', 'foreignKey' => 'institution_section_id']);
+		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
@@ -52,14 +52,14 @@ class StudentResultsTable extends AppTable {
 
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('status', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_class_id', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
 		$this->ControllerAction->field('marks');
 		$this->ControllerAction->field('grade');
 
 		$this->ControllerAction->setFieldOrder([
 			'openemis_no', 'security_user_id', 
-			'institution_site_section_id', 'institution_site_class_id', 'marks'
+			'institution_section_id', 'institution_class_id', 'marks'
 		]);
 
 		// Setup period options
@@ -73,7 +73,7 @@ class StudentResultsTable extends AppTable {
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
 			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
+				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 		$this->controller->set(compact('periodOptions'));
@@ -82,9 +82,9 @@ class StudentResultsTable extends AppTable {
 		// Setup section options
 		$sectionList = $Sections
 			->find('all')
-			->contain(['InstitutionSiteClasses'])
+			->contain(['InstitutionClasses'])
 			->where([
-			$Sections->aliasField('institution_site_id') => $institutionId,
+			$Sections->aliasField('institution_id') => $institutionId,
 				$Sections->aliasField('academic_period_id') => $selectedPeriod
 			])->all();
 		
@@ -94,12 +94,12 @@ class StudentResultsTable extends AppTable {
 		// build options for sections and classes
 		foreach ($sectionList as $section) {
 			$sectionOptions[$section->id] = ['value' => $section->id, 'text' => $section->name];
-			if ($section->has('institution_site_classes')) {
-				if (empty($section->institution_site_classes)) {
+			if ($section->has('institution_classes')) {
+				if (empty($section->institution_classes)) {
 					$sectionOptions[$section->id]['text'] .= ' - ' . $this->getMessage('general.noClasses');
 				} else {
 					$classOptions[$section->id] = [];
-					foreach ($section->institution_site_classes as $class) {
+					foreach ($section->institution_classes as $class) {
 						$classOptions[$section->id][$class->id] = ['value' => $class->id, 'text' => $class->name];
 					}
 				}
@@ -119,7 +119,7 @@ class StudentResultsTable extends AppTable {
 		// $sectionOptions = $this->Classes
 		// 	->find('list')
 		// 	->where([
-		// 		$Sections->aliasField('institution_site_id') => $institutionId, 
+		// 		$Sections->aliasField('institution_id') => $institutionId, 
 		// 		$Sections->aliasField('academic_period_id') => $selectedPeriod
 		// 	])
 		// 	->toArray();
@@ -138,23 +138,23 @@ class StudentResultsTable extends AppTable {
 		$query
 		->find('withResults')
 		->where([$this->aliasField('status') => 1])
-		->andWhere([$this->aliasField('institution_site_section_id') => $sectionId])
-		->andWhere([$this->aliasField('institution_site_class_id') => $classId]);
+		->andWhere([$this->aliasField('institution_section_id') => $sectionId])
+		->andWhere([$this->aliasField('institution_class_id') => $classId]);
 	}
 
 	public function findWithResults(Query $query, array $options) {
 		$query
 			->select([
 				$this->aliasField('security_user_id'),
-				$this->aliasField('institution_site_section_id'),
-				$this->aliasField('institution_site_class_id'),
+				$this->aliasField('institution_section_id'),
+				$this->aliasField('institution_class_id'),
 				'Users.openemis_no', 'Users.first_name', 'Users.last_name',
 				'Sections.name', 'Classes.name', 'Results.marks'
 			])
 			->join([
 				[
-					'table' => 'institution_site_classes', 'alias' => 'Classes', 'type' => 'INNER',
-					'conditions' => ['Classes.id = ' . $this->aliasField('institution_site_class_id')]
+					'table' => 'institution_classes', 'alias' => 'Classes', 'type' => 'INNER',
+					'conditions' => ['Classes.id = ' . $this->aliasField('institution_class_id')]
 				],
 				[
 					'table' => 'assessment_items', 'alias' => 'AssessmentItems', 'type' => 'INNER',
@@ -164,7 +164,7 @@ class StudentResultsTable extends AppTable {
 					'table' => 'assessment_item_results', 'alias' => 'Results', 'type' => 'LEFT',
 					'conditions' => [
 						'Results.security_user_id = ' . $this->aliasField('security_user_id'),
-						'Results.institution_site_id = Classes.institution_site_id',
+						'Results.institution_id = Classes.institution_id',
 						'Results.assessment_item_id = AssessmentItems.id'
 					]
 				]
