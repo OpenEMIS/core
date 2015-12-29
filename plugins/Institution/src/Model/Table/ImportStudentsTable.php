@@ -116,6 +116,7 @@ class ImportStudentsTable extends AppTable {
 			$endDateLabel.'(Y-M-D)'=>'date',
 			$translatedCol=>'string'
 		];
+		$data[$sheetName]['data'] = [];
 		if (!empty($modelData)) {
 			foreach($modelData as $row) {
 				$date = $row->start_date;
@@ -161,39 +162,43 @@ class ImportStudentsTable extends AppTable {
 	/**
 	 * [onImportPopulateStudentsData description]
 	 *
-	 * Currently, this function populates all students in the system and then filter them if they are not attached to any school.
-	 * It should be improved to populate students not attached to any school from the query instead of filtering after querying.
-	 * 
-	 * @todo improved to populate students not attached to any school from the query instead of filtering after querying
+	 * This function populates all students in the system and then filter them within the sql query if they are not attached to any school.
+	 *
+	 * Removed the query totally to avoid timed out issue due to large records
 	 */
 	public function onImportPopulateStudentsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-		$modelData = $lookedUpTable->find('all')
-								->contain([
-									'Institutions'
-								])
-								->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn])
-								->where([
-									$lookedUpTable->aliasField('is_student').' = 1',
-									$lookedUpTable->aliasField('status').' = 1',
-								])
-								;
-		$nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
-		$columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-		$data[$sheetName][] = [
-			$nameHeader,
-			$columnHeader
-		];
-		if (!empty($modelData)) {
-			foreach($modelData->toArray() as $row) {
-				if (count($row->institutions)==0) {
-					$data[$sheetName][] = [
-						$row->name,
-						$row->$lookupColumn
-					];
-				}
-			}
-		}
+		// $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		// $modelData = $lookedUpTable->find('all')
+		// 						->join([
+		// 							'type' => 'LEFT',
+		// 							'table' => 'institution_students',
+		// 							'alias' => 'Institutions',
+		// 							'conditions' => [
+		// 								'Institutions.student_id = '.$lookedUpTable->aliasField('id')
+		// 							]
+		// 						])
+		// 						->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn
+		// 						])
+		// 						->where([
+		// 							$lookedUpTable->aliasField('is_student').' = 1',
+		// 							$lookedUpTable->aliasField('status').' = 1',
+		// 							'Institutions.id IS NULL'
+		// 						])
+		// 						;
+		// $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
+		// $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
+		// $data[$sheetName][] = [
+		// 	$nameHeader,
+		// 	$columnHeader
+		// ];
+		// if (!empty($modelData)) {
+		// 	foreach($modelData->toArray() as $row) {
+		// 		$data[$sheetName][] = [
+		// 			$row->name,
+		// 			$row->$lookupColumn
+		// 		];
+		// 	}
+		// }
 	}
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
