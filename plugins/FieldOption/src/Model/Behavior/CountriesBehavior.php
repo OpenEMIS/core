@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\UtilityTrait;
+use Cake\ORM\Query;
 
 class CountriesBehavior extends DisplayBehavior {
 	use UtilityTrait;

@@ -216,7 +216,7 @@ class RecordBehavior extends Behavior {
 
     					foreach ($obj[$StudentSurveys->alias()] as $studentId => $surveyObj) {
     						if (array_key_exists('custom_field_values', $surveyObj)) {
-    							$surveyObj['status'] = $entity->status;
+    							$surveyObj['status_id'] = $entity->status_id;
     							foreach ($surveyObj['custom_field_values'] as $fieldkey => $fieldObj) {
 		    						$fieldType = $this->CustomFields
 										->find('all')
@@ -255,14 +255,28 @@ class RecordBehavior extends Behavior {
     					}
     				}
     			}
-
-    			if ($entity->status == 1 && !is_null($redirectUrl)) {
-					$event->stopPropagation();
-					return $this->_table->controller->redirect($redirectUrl);
-    			}
     		}
     	}
     }
+
+    /**
+	 *	Function to get the filter key from the filter specified
+     *
+     *	@param string $filter The filter provided by the custom module
+     *	@param string $model The model provided by the custom module
+     *	@return The filter foreign key name if found. If not it will return empty.
+     */
+	public function getFilterKey($filter, $model) {
+		$filterKey = '';
+		$associations = TableRegistry::get($filter)->associations();
+		foreach ($associations as $assoc) {
+			if ($assoc->registryAlias() == $model) {
+				$filterKey = $assoc->foreignKey();
+				return $filterKey;
+			}
+		}
+		return $filterKey;
+	}
 
 	public function getCustomFieldQuery($entity) {
 		$customFieldQuery = null;
@@ -289,68 +303,73 @@ class RecordBehavior extends Behavior {
 				])
 				->where($where)
 				->first();
-			$customModuleId = $customModuleResults->id;
-			$filter = $customModuleResults->filter;
 
-			$customFormQuery = $this->CustomForms
-				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-				->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
+			if (!empty($customModuleResults)) {
+				$customModuleId = $customModuleResults->id;
+				$filter = $customModuleResults->filter;
 
-			if (!empty($filter)) {
-				$modelAlias = $this->getModel($filter)['model'];
-				$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+				$customFormQuery = $this->CustomForms
+					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+					->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $customModuleId]);
 
-				$filterId = $entity->$filterKey;
-				$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
-				$customFormQuery
-					->join([
-						'table' => Inflector::tableize($filterModelAlias),
-						'alias' => $this->CustomFormsFilters->alias(),
-						'conditions' => [
-							'OR' => [
-								[
-									$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-									$this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
-								],
-								[
-									$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-									$this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
+				if (!empty($filter)) {
+					$modelAlias = $this->getModel($filter)['model'];
+					$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+
+					$filterId = $entity->$filterKey;
+					$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
+					$customFormQuery
+						->join([
+							'table' => Inflector::tableize($filterModelAlias),
+							'alias' => $this->CustomFormsFilters->alias(),
+							'conditions' => [
+								'OR' => [
+									[
+										$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+										$this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
+									],
+									[
+										$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+										$this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
+									]
 								]
 							]
-						]
-					]);
+						]);
+				}
 			}
 		}
 
-		$customFormIds = $customFormQuery
-			->toArray();
+		if (!empty($customFormQuery)) {
+			$customFormIds = $customFormQuery
+				->toArray();
 
-		$customFieldQuery = $this->CustomFormsFields
-			->find('all')
-			->find('order')
-			->contain([
-				'CustomFields.CustomFieldOptions' => function($q) {
-					return $q
-						->find('visible')
-						->find('order');
-				},
-				'CustomFields.CustomTableColumns' => function ($q) {
-			       return $q
-			       		->find('visible')
-			       		->find('order');
-			    },
-				'CustomFields.CustomTableRows' => function ($q) {
-			       return $q
-			       		->find('visible')
-			       		->find('order');
-			    }
-			])
-			->where([
-				$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
-			])
-			->group([
-				$this->CustomFormsFields->aliasField($this->config('fieldKey'))
-			]);
+			$customFieldQuery = $this->CustomFormsFields
+				->find('all')
+				->find('order')
+				->contain([
+					'CustomFields.CustomFieldOptions' => function($q) {
+						return $q
+							->find('visible')
+							->find('order');
+					},
+					'CustomFields.CustomTableColumns' => function ($q) {
+				       return $q
+				       		->find('visible')
+				       		->find('order');
+				    },
+					'CustomFields.CustomTableRows' => function ($q) {
+				       return $q
+				       		->find('visible')
+				       		->find('order');
+				    }
+				])
+				->where([
+					$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
+				])
+				->group([
+					$this->CustomFormsFields->aliasField($this->config('fieldKey'))
+				]);
+		}
 
 		return $customFieldQuery;
 	}
@@ -579,7 +598,7 @@ class RecordBehavior extends Behavior {
 
 				$fieldName = "custom_.$customFieldOrder._field";
 				$fieldOrder[$order++] = $fieldName;
-				$valueClass = strtolower($_field_type) == 'table' ? 'table-full-width' : '';
+				$valueClass = strtolower($_field_type) == 'table' || strtolower($_field_type) == 'student_list' ? 'table-full-width' : '';
 
 				$this->_table->ControllerAction->field($fieldName, [
 		            'type' => 'custom_'. strtolower($_field_type),
