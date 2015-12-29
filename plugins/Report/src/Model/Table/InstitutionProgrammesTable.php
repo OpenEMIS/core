@@ -13,13 +13,13 @@ class InstitutionProgrammesTable extends AppTable  {
 	use OptionsTrait;
 
 	public function initialize(array $config) {
-		$this->table('institution_site_grades');
+		$this->table('institution_grades');
 		parent::initialize($config);
 
 		$this->belongsTo('EducationGrades', 	['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['start_year', 'end_year', 'institution_site_programme_id']]);
+		$this->addBehavior('Excel', ['excludes' => ['start_year', 'end_year', 'institution_programme_id']]);
 		$this->addBehavior('Report.ReportList');
 	}
 

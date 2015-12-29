@@ -13,11 +13,11 @@ class SurveysTable extends AppTable  {
 	private $surveyStatuses = [];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_surveys');
+		$this->table('institution_surveys');
 		parent::initialize($config);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Excel', [
 			'pages' => false
 		]);
@@ -27,7 +27,7 @@ class SurveysTable extends AppTable  {
 			'model' => 'Institution.InstitutionSurveys',
 			'formKey' => 'survey_form_id',
 			'formFilterClass' => null,
-			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		]);
 	}
 
@@ -38,6 +38,7 @@ class SurveysTable extends AppTable  {
 		$this->ControllerAction->field('survey_form', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
+		$this->ControllerAction->field('postfix', ['type' => 'hidden']);
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -63,10 +64,10 @@ class SurveysTable extends AppTable  {
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$WorkflowStatusMappingsTable = TableRegistry::get('Workflow.WorkflowStatusMappings');
-		$surveyStatuses = $WorkflowStatusMappingsTable->getWorkflowSteps($status);
+		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
-		$WorkflowStatusesTable = $WorkflowStatusMappingsTable->WorkflowStatuses;
+		
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
 		
 		$statusCondition = [
@@ -95,10 +96,10 @@ class SurveysTable extends AppTable  {
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 
 		// To update to this code when upgrade server to PHP 5.5 and above
-		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_site_id') {
+			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
 				break;
 			}
@@ -112,8 +113,8 @@ class SurveysTable extends AppTable  {
 		];
 
 		$fields[] = [
-			'key' => 'InstitutionSurveys.institution_site_id',
-            'field' => 'institution_site_id',
+			'key' => 'InstitutionSurveys.institution_id',
+            'field' => 'institution_id',
             'type' => 'integer',
             'label' => '',
 		];
@@ -245,5 +246,17 @@ class SurveysTable extends AppTable  {
 		$surveyStatuses = $this->surveyStatuses;
 		$status = $entity->status_id;
 		return __($surveyStatuses[$status]);
+	}
+
+	public function onUpdateFieldPostfix(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			if (isset($this->request->data[$this->alias()]['survey_form'])) {
+				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
+				if (!empty($surveyForm)) {
+					$attr['value'] = $this->SurveyForms->get($surveyForm)->name;
+					return $attr;
+				}
+			}
+		}
 	}
 }
