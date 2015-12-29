@@ -57,6 +57,7 @@ class InstitutionSectionsTable extends AppTable {
 	        		'provider' => 'table',
 	        		'message' => 'Section name has to be unique'
 			    ])
+			->requirePresence('name')
 			;
 		return $validator;
 	}
