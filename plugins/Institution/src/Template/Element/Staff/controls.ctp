@@ -5,17 +5,18 @@
 				'plugin' => $this->request->params['plugin'],
 			    'controller' => $this->request->params['controller'],
 			    'action' => $this->request->params['action'],
+			    '0' => 'index'
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
 			if (!empty($periodOptions)) {
-				echo $this->Form->input('academic_period', array(
+				echo $this->Form->input('academic_period_id', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $periodOptions,
 					'url' => $baseUrl,
-					'data-named-key' => 'period',
+					'data-named-key' => 'academic_period_id',
 					'data-named-group' => 'position'
 				));
 			}
@@ -27,7 +28,7 @@
 					'options' => $positionOptions,
 					'url' => $baseUrl,
 					'data-named-key' => 'position',
-					'data-named-group' => 'period'
+					'data-named-group' => 'academic_period_id'
 				));
 			}
 

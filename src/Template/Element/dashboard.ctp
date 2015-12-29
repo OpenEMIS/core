@@ -16,11 +16,15 @@ echo $this->Html->script('dashboards', ['block' => true]);
 		visibility: hidden;
 	}
 </style>
-<div class="overview-wrapper alert overview-box">
+<div class="overview-box alert">
 	<a data-dismiss="alert" href="#" aria-hidden="true" class="close">×</a>
 	<div class="data-section">
 		<!--Getting the correct icon and the header name base on the calling method-->
+		<?php if (isset($iconClass) && !empty($iconClass)): ?>
+		<i class="<?=$iconClass ?> icon"></i>
+		<?php else: ?>
 		<i class="kd-<?=$model ?> icon"></i>
+		<?php endif; ?>
 		<div class="data-field">
 			<h4><?= __('Total ' . ucfirst($model)) ?>:</h4>
 			<h1 class="data-header">
