@@ -9,7 +9,7 @@ class ExtracurricularsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_extracurriculars');
 		parent::initialize($config);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 	}
@@ -54,5 +54,14 @@ class ExtracurricularsTable extends AppTable {
 				'rule' => ['compareDate', 'end_date', false]
 			])
 		;
+	}
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

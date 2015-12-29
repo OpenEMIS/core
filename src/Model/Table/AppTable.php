@@ -20,6 +20,8 @@ class AppTable extends Table {
 	use LogTrait;
 
 	public function initialize(array $config) {
+		Time::$defaultLocale = 'en_US';
+		
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -48,6 +50,14 @@ class AppTable extends Table {
 
 		if (in_array('order', $columns)) {
 			$this->addBehavior('Reorder');
+			// to be removed after field_option_values is dropped
+			if ($this->table() == 'field_option_values') {
+				if ($this->behaviors()->has('Reorder')) {
+					$this->behaviors()->get('Reorder')->config([
+						'filter' => 'field_option_id',
+					]);
+				}
+			}
 		}
 
 		$dateFields = [];
@@ -116,6 +126,14 @@ class AppTable extends Table {
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
 			return $this->formatDate($entity->$attr['field']);
+		} else {
+			return $entity->$attr['field'];
+		}
+	}
+
+	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			return $this->formatDateTime($entity->$attr['field']);
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -306,7 +324,8 @@ class AppTable extends Table {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 

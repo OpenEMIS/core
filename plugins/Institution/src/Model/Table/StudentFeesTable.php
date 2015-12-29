@@ -15,7 +15,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 class StudentFeesTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = -1;
 	private $_academicPeriodOptions = [];
 	private $_selectedEducationGradeId = -1;
@@ -132,7 +132,7 @@ class StudentFeesTable extends AppTable {
 			'openemis_no', 'student_id', 'total_fee', 'amount_paid', 'outstanding_fee'
 		]);
 		$conditions = array(
-			'InstitutionGrades.institution_site_id' => $this->institutionId
+			'InstitutionGrades.institution_id' => $this->institutionId
 		);
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {

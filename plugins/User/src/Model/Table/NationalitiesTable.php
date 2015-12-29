@@ -3,6 +3,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class NationalitiesTable extends AppTable {
 	public function initialize(array $config) {
@@ -25,5 +26,28 @@ class NationalitiesTable extends AppTable {
 		$this->validationDefault($validator);
 		return $validator->allowEmpty('country_id');
 	}
+
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
+	}	
 
 }
