@@ -96,6 +96,20 @@ class InstitutionAssessmentsTable extends AppTable {
 				'assessments' => $assessments,
 			];
 		}
+
+		if (empty($classAssessments)) {
+			$academicPeriodName = TableRegistry::get('AcademicPeriods.AcademicPeriods')->get($academicPeriodId)->name;
+			$sheets[] = [
+				'name' => __('No Classes for '.$academicPeriodName),
+				'table' => $sheetTable,
+				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_section_id') => 0]),
+				'orientation' => 'landscape',
+				'institutionId' => $institutionId,
+				'academicPeriodId' => $academicPeriodId,
+				'classId' => 0,
+				'assessments' => [],
+			];
+		}
     }
 
     // Function to get the list of assessments to a class
@@ -972,13 +986,15 @@ class InstitutionAssessmentsTable extends AppTable {
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     	list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
+    	if ($action == 'view') {
+    		if (isset($toolbarButtons['export'])) {
+				unset($toolbarButtons['export']);
+			}
+    	}
     	if ($selectedStatus == self::COMPLETED) {	//Completed
 			if ($action == 'view') {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
-				}
-				if (isset($toolbarButtons['export'])) {
-					unset($toolbarButtons['export']);
 				}
 			}
 		} else {
