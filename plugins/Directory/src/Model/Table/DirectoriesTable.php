@@ -40,8 +40,6 @@ class DirectoriesTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportUsers']);
-        $this->addBehavior('AcademicPeriod.Period');
-
 		// $this->addBehavior('Excel', [
 		// 	'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
 		// 	'filename' => 'Students',
