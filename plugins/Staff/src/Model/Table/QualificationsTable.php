@@ -121,7 +121,7 @@ class QualificationsTable extends AppTable {
 			$attr['target'] = ['key' => 'qualification_institution_id', 'name' => $this->aliasField('qualification_institution_id')];
 			$attr['noResults'] = 'false';
 			$attr['attr'] = ['placeholder' => __('Institution')];
-			$attr['url'] = ['controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
+			$attr['url'] = ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
 		}
 		return $attr;
 	}
