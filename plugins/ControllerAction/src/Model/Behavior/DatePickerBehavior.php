@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 namespace ControllerAction\Model\Behavior;
 
+use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
