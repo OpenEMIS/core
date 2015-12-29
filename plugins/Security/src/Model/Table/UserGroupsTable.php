@@ -372,15 +372,17 @@ class UserGroupsTable extends AppTable {
 					$groupAdminId = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first()->id;
 					$UserTable = TableRegistry::get('Users');
 					$user = $UserTable->get($userId);
-					$this->request->data[$alias][$key][] = [
-						'id' => $userId,
-						'_joinData' => [
-							'openemis_no' => $user->openemis_no, 
-							'security_user_id' => $userId, 
-							'name' => $user->name,
-							'security_role_id' => $groupAdminId
-						]
-					];
+					if (empty($this->request->data[$alias][$key])) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $userId,
+							'_joinData' => [
+								'openemis_no' => $user->openemis_no, 
+								'security_user_id' => $userId, 
+								'name' => $user->name,
+								'security_role_id' => $groupAdminId
+							]
+						];
+					}
 				}
 			}
 			// refer to addEditOnAddUser for http post
@@ -388,7 +390,7 @@ class UserGroupsTable extends AppTable {
 				// For the original user
 				$associated = $entity->extractOriginal([$key]);
 				$found = false;
-				if (!empty($associated[$key])) {
+				if (!empty($associated[$key]) && !$entity->isNew()) {
 					foreach ($associated[$key] as $i => $obj) {
 						if ($obj->id == $userId) {
 							$rowData = [];
