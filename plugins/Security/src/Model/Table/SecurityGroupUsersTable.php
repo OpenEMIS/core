@@ -47,20 +47,9 @@ class SecurityGroupUsersTable extends AppTable {
 		}
 	}
 
-	public function checkEditGroup($userId, $securityGroupId, $field, $roleType = 'system') {
-		// Role type system: System roles
-		// Role type user: User roles
-
-		if ($roleType == 'system') {
-			// System role
-			$securityFunctionId = 5024;
-		} else if ($roleType == 'user') {
-			// User role
-			$securityFunctionId = 5025;
-		} else {
-			// Always false
-			$securityFunctionId = 0;
-		}
+	public function checkEditGroup($userId, $securityGroupId, $field) {
+		// Security function: Group
+		$securityFunctionId = 5023;
 		$results = $this
 			->find()
 			->innerJoin(
