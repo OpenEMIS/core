@@ -10,7 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Guardian\Model\Table\GuardiansTable as UserTable;
+use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -36,6 +36,14 @@ class GuardianUserTable extends UserTable {
 		$this->setupTabElements($entity);
 	}
 
+	public function addAfterAction(Event $event) {
+		if ($this->controller->name == 'Directories') {
+			$options['type'] = 'student';
+			$tabElements = $this->controller->getStudentGuardianTabElements($options);
+			$this->controller->set('tabElements', $tabElements);
+		}
+	}
+
 	private function setupTabElements($entity) {
 		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 		
@@ -43,10 +51,15 @@ class GuardianUserTable extends UserTable {
 			'Guardians' => ['text' => __('Relation')],
 			'GuardianUser' => ['text' => __('General')]
 		];
-
+		$action = 'Guardians';
+		$actionUser = $this->alias();
+		if ($this->controller->name == 'Directories') {
+			$action = 'StudentGuardians';
+			$actionUser = 'StudentGuardianUser';
+		}
 		$id = $this->request->query['id'];
-		$tabElements['Guardians']['url'] = array_merge($url, ['action' => 'Guardians', 'view', $id]);
-		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $this->alias(), 'view', $entity->id, 'id' => $id]);
+		$tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $id]);
+		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->id, 'id' => $id]);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());

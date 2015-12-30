@@ -33,7 +33,11 @@ class StudentFeesTable extends AppTable {
 
 	public function beforeAction() {
 		$session = $this->request->session();
-		$this->studentId = $session->read('Student.Students.id');
+		if ($this->controller->name == 'Directories') {
+			$this->studentId = $session->read('Directory.Directories.id');
+		} else {
+			$this->studentId = $session->read('Student.Students.id');
+		}
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
@@ -100,6 +104,17 @@ class StudentFeesTable extends AppTable {
 			->group(['StudentFees.id'])
 			;
 
+	}
+
+	private function setupTabElements() {
+		$options = ['type' => 'student'];
+		$tabElements = $this->controller->getFinanceTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Fees');
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 
 

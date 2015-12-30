@@ -53,10 +53,28 @@ class ReportListBehavior extends Behavior {
 		$this->_table->fields = $fields;
 
 		$this->_table->ControllerAction->setFieldOrder(['name', 'created', 'modified', 'expiry_date', 'status']);
-		
+
+		// To remove expired reports
+		$clonedQuery = $this->ReportProgress->find();
+		$expiredReports = $clonedQuery
+			->where([
+				$this->ReportProgress->aliasField('module') => $this->_table->alias(), 
+				$this->ReportProgress->aliasField('expiry_date').' < ' => date('Y-m-d')])
+			->toArray();
+
+		foreach($expiredReports as $report) {
+			if (file_exists($report['file_path'])) {
+				if (unlink($report['file_path'])) {
+					$this->ReportProgress->delete($report);
+				}
+			} else {
+				$this->ReportProgress->delete($report);
+			}
+		}
+
 		$query = $this->ReportProgress->find()
-		->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-		->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
+			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
 
 		return $query;
 	}
@@ -119,6 +137,10 @@ class ReportListBehavior extends Behavior {
 		$alias = $this->_table->alias();
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
+		$postFix = '';
+		if (isset($data[$alias]['postfix'])) {
+			$postFix = $data[$alias]['postfix'];
+		}
 		$table = TableRegistry::get($feature);
 
 		// Event: 
@@ -129,6 +151,9 @@ class ReportListBehavior extends Behavior {
 		// End Event
 
 		$name = $featureList[$feature];
+		if (!empty($postFix)) {
+			$name .= ' - '.$postFix;
+		}
 		$params = $data[$alias];
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
