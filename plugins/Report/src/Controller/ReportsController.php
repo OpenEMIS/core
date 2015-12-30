@@ -40,7 +40,11 @@ class ReportsController extends AppController {
 				'Report.InstitutionPositions' => __('Positions'),
 				'Report.InstitutionProgrammes' => __('Programmes'),
 				'Report.InstitutionClasses' => __('Classes'),
-				'Report.InstitutionSubjects' => __('Subjects')
+				'Report.InstitutionSubjects' => __('Subjects'),
+				'Report.InstitutionStudents' => __('Students'),
+				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
+				'Report.InstitutionStaff' => __('Staff'),
+				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 			];
 		} else if ($module == 'Students') {
 			$options = [
