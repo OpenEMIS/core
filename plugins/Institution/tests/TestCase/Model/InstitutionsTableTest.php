@@ -13,7 +13,7 @@ class InstitutionsTableTest extends TestCase
 
 	public function setUp() {
 		parent::setUp();
-		$this->Institutions = TableRegistry::get('institution_sites');
+		$this->Institutions = TableRegistry::get('institutions');
 	}
 
 	public function testRecords() {
