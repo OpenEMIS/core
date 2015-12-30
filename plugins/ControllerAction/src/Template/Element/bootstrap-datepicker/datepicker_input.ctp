@@ -13,10 +13,10 @@
 	}
 	$divErrorCSS = (!empty($errorMsg))? 'error': '';
 	$inputErrorCSS = (!empty($errorMsg))? 'form-error': '';
-	 ?>
-	<div class="input-group date <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>">
+	$inputWrapperStyle = (array_key_exists('inputWrapperStyle', $attr)) ? $attr['inputWrapperStyle'] : '';
+	?>
+	<div class="input-group date <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>">
 		<?php 
-
 			$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
 			// need to format this string
 			$tokens = explode('.', $fieldName);

@@ -1,3 +1,3 @@
 <footer>
-	Copyright &copy; <?php echo date('Y') ?>  OpenEMIS. All rights reserved. | <?php echo __('Version') . ' ' . $SystemVersion ?>
+	<?= __('Copyright') ?> &copy; <?= date('Y') ?>  OpenEMIS. <?= __('All rights reserved.') ?> | <?= __('Version') . ' ' . $SystemVersion ?>
 </footer>

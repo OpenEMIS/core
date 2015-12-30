@@ -49,29 +49,19 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
-		$controller = $this->controller;
 		$userId = $this->Auth->user('id');
-		$tabElements = [
-			'account' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'view', $userId],
-				'text' => __('Account')
-			],
-			'password' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'Users', 'password'],
-				'text' => __('Password')
-			]
-		];
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'account');
-	}
-
-	public function viewBeforeAction(Event $event) {
-		$userId = $this->Auth->user('id');
-		if ($userId != $this->request->pass[0]) { // stop user from navigating to other profiles
+		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
 		}
+
+		$tabElements = $this->controller->getUserTabElements();
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Account');
+	}
+
+	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('roles', [
 			'type' => 'role_table', 
 			'valueClass' => 'table-full-width',
@@ -84,8 +74,21 @@ class UsersTable extends AppTable {
 		$query->contain(['Roles']);
 	}
 
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('openemis_no', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
+		$this->ControllerAction->field('last_login', ['visible' => false]);
+	}
+
 	public function password() {
-		$this->controller->set('selectedAction', 'password');
+		$this->controller->set('selectedAction', 'Password');
 		$userId = $this->Auth->user('id');
 		$entity = $this->get($userId);
 		$entity->password = '';
@@ -164,59 +167,40 @@ class UsersTable extends AppTable {
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
-    	$attr['tableCells'] = $tableCells;
+		$attr['tableCells'] = $tableCells;
 
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->allowEmpty('middle_name')
-			->allowEmpty('third_name')
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->allowEmpty('preferred_name')
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->add('address', [])
-			->allowEmpty('photo_content')
-			;
-		return $validator;
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
-		$toolbarButtons->exchangeArray([]);
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
+		switch ($action) {
+			case 'view':
+				if ($toolbarButtons->offsetExists('edit')) {
+					$toolbarButtons->exchangeArray(['edit' => $toolbarButtons['edit']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
+				}
+				
+				break;
+			
+			case 'edit':
+				if ($toolbarButtons->offsetExists('back')) {
+					$toolbarButtons->exchangeArray(['back' => $toolbarButtons['back']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
+				}
+				break;
+		}
 	}
 }
