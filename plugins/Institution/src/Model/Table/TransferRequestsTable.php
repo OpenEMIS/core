@@ -10,6 +10,8 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Controller\Component;
+use Cake\Utility\Inflector;
 
 class TransferRequestsTable extends AppTable {
 	private $selectedAcademicPeriod;
@@ -38,8 +40,14 @@ class TransferRequestsTable extends AppTable {
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
     	return $events;
     }
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$Navigation->substituteCrumb('Transfers', 'TransferRequests', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'TransferRequests']);
+		$Navigation->addCrumb('Edit');
+	}
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -269,7 +277,7 @@ class TransferRequestsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->request->data[$this->alias()]['status'] = $entity->status;
+    	$this->request->data[$this->alias()]['status'] = $entity->status;
 		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'type', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
@@ -393,7 +401,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$InstitutionSiteGrades = TableRegistry::get('Institutions.InstitutionSiteGrades');
+			$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -407,15 +415,15 @@ class TransferRequestsTable extends AppTable {
 			$institutionOptions = $this->Institutions
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->join([
-					'table' => $InstitutionSiteGrades->table(),
-					'alias' => $InstitutionSiteGrades->alias(),
+					'table' => $InstitutionGrades->table(),
+					'alias' => $InstitutionGrades->alias(),
 					'conditions' => [
-						$InstitutionSiteGrades->aliasField('institution_site_id =') . $this->Institutions->aliasField('id'),
-						$InstitutionSiteGrades->aliasField('education_grade_id') => $this->selectedGrade,
-						$InstitutionSiteGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
+						$InstitutionGrades->aliasField('institution_id =') . $this->Institutions->aliasField('id'),
+						$InstitutionGrades->aliasField('education_grade_id') => $this->selectedGrade,
+						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
 						'OR' => [
-							$InstitutionSiteGrades->aliasField('end_date').' IS NULL',
-							$InstitutionSiteGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
+							$InstitutionGrades->aliasField('end_date').' IS NULL',
+							$InstitutionGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
 						]
 					]
 				])
