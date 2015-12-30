@@ -891,18 +891,27 @@ class ImportBehavior extends Behavior {
 					$excelLookupModel = TableRegistry::get($registryAlias);
 					$this->directTables[$registryAlias] = $excelLookupModel;
 				}
+				$excludeValidation = false;
 				if (!empty($cellValue)) {
 					$record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
 					// if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
 					$recordId = $record->first();
 				} else {
-					$recordId = '';
+					if ($activeModel->schema()->column($columnName) && !$activeModel->schema()->column($columnName)['null']) {
+						$recordId = '';
+					} else {
+						$excludeValidation = true;
+					}
 				}
-				if (!empty($recordId)) {
-					$val = $recordId->id;
+				if (!$excludeValidation) {
+					if (!empty($recordId)) {
+						$val = $recordId->id;
+					} else {
+						$rowPass = false;
+						$rowInvalidCodeCols[] = $translatedCol;
+					}
 				} else {
-					$rowPass = false;
-					$rowInvalidCodeCols[] = $translatedCol;
+					$val = $cellValue;
 				}
 			} else if ($foreignKey == self::NON_TABLE_LIST) {
 				$recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
