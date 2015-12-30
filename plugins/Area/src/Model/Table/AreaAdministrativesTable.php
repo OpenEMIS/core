@@ -18,8 +18,8 @@ class AreaAdministrativesTable extends AppTable {
 		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
 		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
-		$this->hasMany('UsersAddressAreas', ['className' => 'Staff.Staff', 'foreignKey' => 'address_area_id']);
-		$this->hasMany('UsersBirthplaceAreas', ['className' => 'Staff.Staff', 'foreignKey' => 'birthplace_area_id']);
+		$this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
+		$this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
 		$this->addBehavior('Tree');
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
