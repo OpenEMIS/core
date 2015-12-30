@@ -53,7 +53,7 @@ class AccessControlComponent extends Component {
 					if (is_null($lastModified)) {
 						$this->buildPermissions();
 					} else {
-						if ($entity->modified->gt($lastModified)) {
+						if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
 							$this->buildPermissions();
 						}
 					}
@@ -89,7 +89,7 @@ class AccessControlComponent extends Component {
 			foreach ($functions as $entity) { // for each function in roles
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
-					if (is_null($lastModified) || (!is_null($lastModified) && $lastModified->lt($entity->modified))) {
+					if (is_null($lastModified) || (!is_null($lastModified) && !is_null($entity->modified) && $lastModified->lt($entity->modified))) {
 						$lastModified = $entity->modified;
 					} 
 
@@ -224,7 +224,7 @@ class AccessControlComponent extends Component {
 
 		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 		$institutionIds = $SecurityGroupInstitutions
-		->find('list', ['keyField' => 'institution_site_id', 'valueField' => 'institution_site_id'])
+		->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
 		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
@@ -237,11 +237,21 @@ class AccessControlComponent extends Component {
 			'Areas.lft >= AreaAll.lft',
 			'Areas.rght <= AreaAll.rght'
 		])
-		->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.area_id = Areas.id'])
+		->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
 		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
 		$institutionIds = $institutionIds + $areaInstitutions;
 		return $institutionIds;
+	}
+
+	public function getAreasByUser($userId = null) {
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$areas = $SecurityGroupAreas->getAreasByUser($userId);
+		return $areas;
 	}
 }

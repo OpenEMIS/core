@@ -9,13 +9,13 @@ use Cake\ORM\TableRegistry;
 class ReportsController extends AppController {
 	public function initialize() {
 		parent::initialize();
-
 		$this->ControllerAction->models = [
 			'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
 			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
+			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
 			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
 		];
 	}
@@ -40,7 +40,11 @@ class ReportsController extends AppController {
 				'Report.InstitutionPositions' => __('Positions'),
 				'Report.InstitutionProgrammes' => __('Programmes'),
 				'Report.InstitutionClasses' => __('Classes'),
-				'Report.InstitutionSubjects' => __('Subjects')
+				'Report.InstitutionSubjects' => __('Subjects'),
+				'Report.InstitutionStudents' => __('Students'),
+				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
+				'Report.InstitutionStaff' => __('Staff'),
+				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 			];
 		} else if ($module == 'Students') {
 			$options = [
@@ -58,11 +62,16 @@ class ReportsController extends AppController {
 			$options = [
 				'Report.Surveys' => __('Institutions')
 			];
-		} elseif ($module == 'InstitutionRubrics') {
+		} else if ($module == 'InstitutionRubrics') {
 			$options = [
 				'Report.InstitutionRubrics' => __('Rubrics')
 			];
-		} elseif ($module == 'Audit') {
+		} else if ($module == 'DataQuality') {
+			$options = [
+				'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
+				'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
+			];
+		} else if ($module == 'Audit') {
 			$options = [
 				'Report.Audit' => __('Audit')
 			];
