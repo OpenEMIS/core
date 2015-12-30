@@ -33,5 +33,11 @@ INSERT INTO `labels`
 	(UUID(), 'Imports', 'institution_name', 'Institution -> Students -> Import', 'Institution Name', NULL, NULL, '1', NULL, NULL, '0', NOW())
 	;
 
+-- clean up backup tables
+DROP TABLE IF EXISTS `z_2250_workflow_transitions`;
+DROP TABLE IF EXISTS `z_2298_security_functions`;
+DROP TABLE IF EXISTS `z_2193_guardian_activities`;
+DROP TABLE IF EXISTS `z_2193_staff_activities`;
+DROP TABLE IF EXISTS `z_2193_student_activities`;
 
 UPDATE config_items SET value = '3.4.4' WHERE code = 'db_version';
