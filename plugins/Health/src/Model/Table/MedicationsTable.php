@@ -1,6 +1,7 @@
 <?php
 namespace Health\Model\Table;
 
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class MedicationsTable extends AppTable {
@@ -11,5 +12,14 @@ class MedicationsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
 		$this->addBehavior('Health.Health');
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		
+		return $validator
+			->add('end_date', 'ruleCompareDateReverse', [
+				'rule' => ['compareDateReverse', 'start_date', true]
+			]);
 	}
 }
