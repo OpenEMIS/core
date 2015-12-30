@@ -655,6 +655,33 @@ class StaffTable extends AppTable {
 			$classIdsDuringStaffPeriod[] = $value->id;
 		}
 
+		// Staff behavior associated to institution must be deleted.
+		$StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
+		$StaffBehaviours->deleteAll([
+			$StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
+			$StaffBehaviours->aliasField('institution_id') => $entity->institution_id,
+		]);
+
+		// Staff absence associated to institution must be deleted.
+		$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+		$StaffAbsences->deleteAll([
+			$StaffAbsences->aliasField('staff_id') => $entity->staff_id,
+			$StaffAbsences->aliasField('institution_id') => $entity->institution_id,
+		]);
+
+		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
+		// association cascade deletes institution_site_quality_rubric_answers
+		$InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
+		$institutionRubricsQuery = $InstitutionRubrics->find()
+			->where([
+				$InstitutionRubrics->aliasField('staff_id') => $entity->staff_id,
+				$InstitutionRubrics->aliasField('institution_id') => $entity->institution_id,
+			])
+		;
+		foreach ($institutionRubricsQuery as $key => $value) {
+			$InstitutionRubrics->delete($value);
+		}
+
 		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 
 		$InstitutionClassStaff->deleteAll([
@@ -663,9 +690,6 @@ class StaffTable extends AppTable {
 		]);
 
 		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
-
-
-
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
 
