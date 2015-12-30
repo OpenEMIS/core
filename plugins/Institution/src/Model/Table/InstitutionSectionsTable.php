@@ -287,7 +287,9 @@ class InstitutionSectionsTable extends AppTable {
 							'InstitutionSectionGrades.institution_section_id = InstitutionSections.id'
 						]
 					]
-				]);
+				])
+				->group(['InstitutionSectionGrades.institution_section_id'])
+				;
 		}
     }
 
