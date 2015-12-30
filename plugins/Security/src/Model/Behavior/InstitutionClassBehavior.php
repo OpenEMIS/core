@@ -31,7 +31,7 @@ class InstitutionClassBehavior extends Behavior {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
 			if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
-				$query->where([$this->_table->aliasField('security_user_id') => $userId]);
+				$query->where([$this->_table->aliasField('staff_id') => $userId]);
 			}
 		}
 

@@ -8,7 +8,6 @@ class StaffPositionGradesTable extends AppTable {
 	public function initialize(array $config) {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
-				
-		$this->hasMany('Positions', ['className' => 'Institution.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_grade_id']);
 	}
 }
