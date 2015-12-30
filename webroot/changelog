@@ -1,41 +1,44 @@
-v3.2.6
-- Added workflows to institution's survey
-- Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
+v3.4.3
+- Fixed a bug that caused 404 page when adding users to groups
+- Start Date of Student Transfer is defaulted to current date now
+- Added Assessment report in Institutions
 
-v3.2.7
-- Fixed Rubrics Report
-- Fixed some minor errors that appears when debug is turned on
+v3.4.2
+- Fixed a bug that caused an error while deleting staff records from institutions
+- Added new feature to allow user to import students into institutions
+- Fixed a bug that caused security roles not ordered correctly
+- Fixed a bug that caused 404 error page when importing institutions
+- Added new field called Network Connectivity in Institutions
+- Fixed a bug that prevent user from entering 0 as value on Student admission age plus/minus
+- Added new permissions for Import features
+- Added two new reports in Institutions for generating Students and Staff
+records
 
-v3.2.8
-- Added Institution name and ID in Student report
-- Fixed a bug that caused wrong absence date to be saved in arabic language
+v3.4.1
+- Reorganised navigations to move existing pages into tabbed view
+- Added new navigation called Directory to access user's information
 
-v3.2.9
-- Preference link is now working properly, user can edit their personal information
-- Fixed a bug that caused other users to modify another user's information
+v3.3.10
+- Fixed a bug that caused different grades's admission age not to be updated based on configured value
 
-v3.2.10
-- Fixed a bug that caused survey template not able to be downloaded on mobile
-- Improved performance when loading students/staff list
-- Survey Report status is now configurable via Administration -> Workflows -> Statuses
+v3.3.9
+- Fixed a bug that caused rubrics not able to save or submit
+- Adding Identities now checks for unique of the same identity type
+- Added new report, Potential Duplicates
+- Added new feature to import Attendance data
 
-v3.3.1
-- Profession Development Tracking is now available under Administrations -> Trainings
-- Fixed a bug on Survey type - Student List
-- Fixed a bug on Staff Attendance edit page
+v3.3.8
+- Fixed permissions on Attendance and Survey Reports
+- Added delete function for Workflows
 
-v3.3.2
-- Fixed a bug that caused 404 error page in Students -> Results
-- Fixed warning messages on rubrics and student guardians when debug is turned on
-- Fixed a bug that staff custom fields not working properly
+v3.3.7
+- Added new feature Survey Import to allow users to use excel spreadsheet to import survey answers
+- Fixed a bug that caused user not able to save Education Subjects in Education Grades
+- Enabled Staff -> Needs and Staff -> Achievements
+- Institutions add/edit page will only show the main country's areas in the Area Administrative field now
 
-v3.3.3
-- Fixed minor UI issues
-
-v3.3.4
-- Added Audit report to show all users and their last login
-- Added Reports to show institutions with no student and institutions with no staffs
-- Added new feature to allow users to import attendance data via excel
+v3.3.6
+- Fixed a couple of bugs related to Accounts
 
 v3.3.5
 - Fixed a bug that caused dates to save as 01-01-1970 when language is set to arabic
@@ -44,43 +47,42 @@ v3.3.5
 - Fixed a bug that caused next programmes not to be saved
 - Fixed a bug that shows 404 error when user click on Subjects link in Students -> Subjects
 
-v3.3.6
-- Fixed a couple of bugs related to Accounts
+v3.3.4
+- Added Audit report to show all users and their last login
+- Added Reports to show institutions with no student and institutions with no staffs
+- Added new feature to allow users to import attendance data via excel
 
-v3.3.7
-- Added new feature Survey Import to allow users to use excel spreadsheet to
-import survey answers
-- Fixed a bug that caused user not able to save Education Subjects in
-Education Grades
-- Enabled Staff -> Needs and Staff -> Achievements
-- Institutions add/edit page will only show the main country's areas in the
-Area Administrative field now
+v3.3.3
+- Fixed minor UI issues
 
-v3.3.8
-- Fixed permissions on Attendance and Survey Reports
-- Added delete function for Workflows
+v3.3.2
+- Fixed a bug that caused 404 error page in Students -> Results
+- Fixed warning messages on rubrics and student guardians when debug is turned on
+- Fixed a bug that staff custom fields not working properly
 
-v3.3.9
-- Fixed a bug that caused rubrics not able to save or submit
-- Adding Identities now checks for unique of the same identity type
-- Added new report, Potential Duplicates
-- Added new feature to import Attendance data
+v3.3.1
+- Profession Development Tracking is now available under Administrations -> Trainings
+- Fixed a bug on Survey type - Student List
+- Fixed a bug on Staff Attendance edit page
 
-v3.3.10
-- Fixed a bug that caused different grades's admission age not to be updated
-based on configured value
+v3.2.10
+- Fixed a bug that caused survey template not able to be downloaded on mobile
+- Improved performance when loading students/staff list
+- Survey Report status is now configurable via Administration -> Workflows -> Statuses
 
-v3.4.1
-- Reorganised navigations to move existing pages into tabbed view
-- Added new navigation called Directory to access user's information
+v3.2.9
+- Preference link is now working properly, user can edit their personal information
+- Fixed a bug that caused other users to modify another user's information
 
-v3.4.2
-- Fixed a bug that caused an error while deleting staff records from
-institutions
-- Added new feature to allow user to import students into institutions
-- Fixed a bug that caused security roles not ordered correctly
-- Fixed a bug that caused 404 error page when importing institutions
-- Added new field called Network Connectivity in Institutions
-- Fixed a bug that prevent user from entering 0 as value on Student admission age
-plus/minus
-- Added new permissions for Import features
+v3.2.8
+- Added Institution name and ID in Student report
+- Fixed a bug that caused wrong absence date to be saved in arabic language
+
+v3.2.7
+- Fixed Rubrics Report
+- Fixed some minor errors that appears when debug is turned on
+
+v3.2.6
+- Added workflows to institution's survey
+- Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
+
