@@ -15,6 +15,7 @@ class AreasTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Area.Areas']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Tree');
 		if ($this->behaviors()->has('Reorder')) {
@@ -94,18 +95,11 @@ class AreasTable extends AppTable {
 		};
 		return $process;
 	}
-
-	public function deleteUpdateConvertOptions(Event $event, Entity $entity, array $convertOptions) {
-		$id = $entity->id;
-		$level = $this->find()->contain(['Levels'])->where([$this->aliasField('id') => $id])->first()->level->id;
-		$options = $this
-			->find('list')
-			->where([
-				$this->aliasField('area_level_id') => $level, 
-				$this->aliasField('id').' IS NOT ' => $id
-			])
-			->toArray();
-		return $options;
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_level_id;
+		$query->where([
+				$this->aliasField('area_level_id') => $level
+			]);
 	}
 
 	public function indexBeforeAction(Event $event) {
