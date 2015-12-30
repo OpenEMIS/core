@@ -819,7 +819,7 @@ class NavigationComponent extends Component {
 			],
 
 				'Trainings.Courses' => [
-					'title' => 'Logs',
+					'title' => 'Courses',
 					'parent' => 'Administration.Training',
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Courses']
