@@ -30,8 +30,12 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
-
-		$this->addBehavior('Reorder');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+					'filter' => 'security_group_id',
+					'filterValues' => [-1, 0]
+				]);
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -122,15 +126,45 @@ class SecurityRolesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query('type');
-		
+		$user = $this->Auth->user();
+		$userId = $user['id'];
+		if ($user['super_admin'] == 1) { // super admin will show all roles
+			$userId = null;
+		}
+		$count = 0;
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 		$selectedGroup = $request->query('security_group_id');
 		if ($type == 'system') {
-
 			$query
-			->where([$this->aliasField('security_group_id') => 0])		// custom system defined roles
-			->orWhere([$this->aliasField('security_group_id') => -1]);	// fixed system defined roles
+				->where([$this->aliasField('security_group_id') => 0]) // custom system defined roles
+				->orWhere([$this->aliasField('security_group_id') => -1]); // fixed system defined roles
+			if (!is_null($userId)) {
+				$userRole = $GroupRoles
+				->find()
+				->contain('SecurityRoles')
+				->order(['SecurityRoles.order'])
+				->where([
+					$GroupRoles->aliasField('security_user_id') => $userId,
+					'SecurityRoles.security_group_id IN ' => [-1,0]
+				])
+				->first();
+				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+			}		
 		} else {
-			$query->where([$this->aliasField('security_group_id') => $selectedGroup]);
+			$query
+				->where([$this->aliasField('security_group_id') => $selectedGroup]);
+			if (!is_null($userId)) {
+				$userRole = $GroupRoles
+				->find()
+				->contain('SecurityRoles')
+				->order(['SecurityRoles.order'])
+				->where([
+					$GroupRoles->aliasField('security_user_id') => $userId, 
+					'SecurityRoles.security_group_id' => $selectedGroup
+				])
+				->first();
+				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+			}
 		}
 	}
 
@@ -189,50 +223,78 @@ class SecurityRolesTable extends AppTable {
 
 	// this function will return all roles (system roles & user roles) that has lower
 	// privileges than the current role of the user in a specific group
-	public function getPrivilegedRoleOptionsByGroup($groupId, $userId=null) {
+	public function getPrivilegedRoleOptionsByGroup($groupId=null, $userId=null) {
 		$roleOptions = [];
 
 		// -1 is system defined roles (not editable)
 		// 0 is system defined roles (editable)
 		// >1 is user defined roles in specific group
-		$groupIds = [-1, 0, $groupId];
+		$groupIds = [-1, 0];
 
 		if (!is_null($userId)) { // userId will be null if he/she is a super admin
+
+			$userRoleOptions = [];
+			$systemRoleOptions = [];
+
 			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-			foreach ($groupIds as $id) {
-				// this will show only roles of the user by group
-				$query = $GroupRoles
-					->find()
-					->contain('SecurityRoles')
-					->order(['SecurityRoles.order'])
+			// this will show only roles of the user in the specified group ($groupId)
+			$highestUserRole = $GroupRoles
+				->find()
+				->contain('SecurityRoles')
+				->order(['SecurityRoles.order'])
+				->where([
+					$GroupRoles->aliasField('security_group_id') => $groupId,
+					$GroupRoles->aliasField('security_user_id') => $userId
+				])
+				->first();
+
+			// If the user has a user role, then populate the user role options
+			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+			if (!empty($highestUserRole)) {
+				$userRoleOptions = $this
+					->find('list')
+					->find('visible')
 					->where([
-						$GroupRoles->aliasField('security_group_id') => $groupId,
-						$GroupRoles->aliasField('security_user_id') => $userId,
-						'SecurityRoles.security_group_id' => $id
+						$this->aliasField('security_group_id') => $groupId,
+						$this->aliasField('order') . ' > ' => $highestUserRole['security_role']['order'],
 					])
-				;
-
-				// first find the roles based on current role of user
-				$highestRole = $query->first();
-
-				if (!is_null($highestRole)) {
-					// find the list of roles with lower privilege than the current highest privilege role assigned to this user
-					$roleList = $this->find('list')
-						->where([
-							$this->aliasField('security_group_id') => $id,
-							$this->aliasField('order') . ' > ' => $highestRole->security_role->order,
-						])
-						->toArray()
-					;
-					$roleOptions = $roleOptions + $roleList;
-				}
+					->order([$this->aliasField('order')])
+					->toArray();
 			}
+			
+			// Get the highest system role
+			$highestSystemRole = $this->find()
+				->matching('GroupUsers')
+				->where([
+					'SecurityGroupUsers.security_user_id' => $userId,
+					$this->aliasField('security_group_id') . ' IN ' => $groupIds
+				])
+				->order([$this->aliasField('order')])
+				->first();
+
+			// If the user has a system role, then populate the system role options
+			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+			if (!empty($highestSystemRole)) {
+				$systemRoleOptions = $this
+					->find('list')
+					->find('visible')
+					->where([
+						$this->aliasField('security_group_id'). ' IN ' => $groupIds,
+						$this->aliasField('order') . ' > ' => $highestSystemRole['order'],
+					])
+					->order([$this->aliasField('order')])
+					->toArray();
+			}
+
+			// Merge the permission of the user's system role and user role
+			$roleOptions = $systemRoleOptions + $userRoleOptions;
+
 		} else { // super admin will show all roles of system and group specific
 			$roleOptions = $this
 				->find('list')
 				->find('visible')
 				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
-				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+				->order([$this->aliasField('order')])
 				->toArray()
 			;
 		}
