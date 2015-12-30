@@ -1,6 +1,7 @@
 <?php
 namespace Health\Model\Table;
 
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class ConsultationsTable extends AppTable {
@@ -12,5 +13,9 @@ class ConsultationsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
 		$this->addBehavior('Health.Health');
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('health_consultation_type_id', ['type' => 'select']);
 	}
 }

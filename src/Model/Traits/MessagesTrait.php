@@ -927,7 +927,14 @@ trait MessagesTrait {
 					'ruleUnique' => 'This code already exists in the system'
 				]
 			]
-		]
+		],
+		'Health' => [
+			'Medications' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
+		],
 	];
 
 	public function getMessage($code) {
