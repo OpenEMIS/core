@@ -19,6 +19,7 @@ class ImportStudentsTable extends AppTable {
 	private $gradesInInstitution;
 	private $systemDateFormat;
 	private $studentStatusId;
+	private $availableSections;
 
 	public function initialize(array $config) {
 		$this->table('import_mapping');
@@ -157,20 +158,10 @@ class ImportStudentsTable extends AppTable {
 		}
 	}
 	
-	public function onImportPopulateSecurityUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {}
-	
 	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
 		try {
 			$institution = $this->Institutions->get($this->institutionId);
-
-			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
-
-			$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-			$modelData = [];
-			foreach ($availableAcademicPeriods as $key=>$value) {
-				$modelData[$value->code] = $lookedUpTable->getSectionOptions($value->id, $this->institutionId);
-			}
+			$modelData = $this->populateInstitutionSectionsData();
 
 			$institutionNameLabel = $this->getExcelLabel('Imports', 'institution_name');
 			$academicPeriodCodeLabel = $this->getExcelLabel('Imports', 'period_code');
@@ -203,6 +194,18 @@ class ImportStudentsTable extends AppTable {
 			$this->log($e->getMessage(), 'error');
 		}
 
+	}
+
+	private function populateInstitutionSectionsData() {
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
+
+		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$modelData = [];
+		foreach ($availableAcademicPeriods as $key=>$value) {
+			$modelData[$value->code] = $InstitutionSections->getSectionOptions($value->id, $this->institutionId);
+		}
+		return $modelData;
 	}
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
@@ -289,6 +292,30 @@ class ImportStudentsTable extends AppTable {
 		if ($gradeStartDate > $periodStartDate) {
 			$tempRow['duplicates'] = __('Selected education grade start date should be before academic period starts.');
 			return false;
+		}
+
+		if (!empty($tempRow['class']) || $tempRow['class']!=0) {
+			if (empty($this->availableSections)) {
+				$this->availableSections = $this->populateInstitutionSectionsData();
+			}
+			$this->availableSections;
+			$selectedClassIdFound = false;
+			if (!empty($this->availableSections)) {
+				foreach($this->availableSections as $periodClasses) {
+					if (!empty($periodClasses)) {
+						foreach($periodClasses as $id=>$name) {
+							if ($id == $tempRow['class']) {
+								$selectedClassIdFound = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			if (!$selectedClassIdFound) {
+				$tempRow['duplicates'] = __('Selected class does not exists in this institution.');
+				return false;
+			}
 		}
 
 		return true;
