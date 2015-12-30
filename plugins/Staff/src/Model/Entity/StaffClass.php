@@ -7,12 +7,12 @@ use Cake\ORM\Query;
 
 class StaffClass extends Entity
 {
-	protected $_virtual = ['academic_period', 'institution', 'institution_site_section', 'education_subject', 'homeroom_teacher_name', 'male_students', 'female_students'];
+	protected $_virtual = ['academic_period', 'institution', 'institution_section', 'education_subject', 'homeroom_teacher_name', 'male_students', 'female_students'];
 
 	protected function _getAcademicPeriod() {
 		$name = '';
-		if ($this->has('institution_site_class') && $this->institution_site_class->has('academic_period_id')) {
-			$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_site_class->academic_period_id)->toArray();
+		if ($this->has('institution_class') && $this->institution_class->has('academic_period_id')) {
+			$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_class->academic_period_id)->toArray();
 			if (!empty($data)) {
 				$name = $data['name'];
 			}
@@ -22,8 +22,8 @@ class StaffClass extends Entity
 
 	protected function _getInstitution() {
 		$name = '';
-		if ($this->has('institution_site_class') && $this->institution_site_class->has('institution_site_id')) {
-			$data = TableRegistry::get('Institution.Institutions')->get($this->institution_site_class->institution_site_id)->toArray();
+		if ($this->has('institution_class') && $this->institution_class->has('institution_id')) {
+			$data = TableRegistry::get('Institution.Institutions')->get($this->institution_class->institution_id)->toArray();
 			if (!empty($data)) {
 				$name = $data['name'];
 			}
@@ -31,21 +31,20 @@ class StaffClass extends Entity
 		return $name;
 	}
 
-	protected function _getInstitutionSiteSection() {
+	protected function _getInstitutionSection() {
 		$name = '';
-		if ($this->has('institution_site_class') && $this->institution_site_class->has('id')) {
-			$InstitutionSiteSectionClasses = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
-			$data = $InstitutionSiteSectionClasses
+		if ($this->has('institution_class') && $this->institution_class->has('id')) {
+			$InstitutionSectionClasses = TableRegistry::get('Institution.InstitutionSectionClasses');
+			$data = $InstitutionSectionClasses
 			->find()
-			->contain('InstitutionSiteSections')
-			->where([$InstitutionSiteSectionClasses->aliasField('institution_site_class_id') => $this->institution_site_class->id])
-			->first()
-			->toArray();
+			->contain('InstitutionSections')
+			->where([$InstitutionSectionClasses->aliasField('institution_class_id') => $this->institution_class->id])
+			->first();
+
 			if (!empty($data)) {
-				if (array_key_exists('institution_site_section', $data)) {
-					$name = $data['institution_site_section']['name'];
+				if ($data->has('institution_section')) {
+					$name = $data->institution_section->name;
 				}
-				
 			}
 		}
 		return $name;
@@ -60,8 +59,8 @@ class StaffClass extends Entity
 	}
 	protected function _getEducationSubject() {
 		$name = '';
-		if ($this->has('institution_site_class') && $this->institution_site_class->has('education_subject_id')) {
-			$data = TableRegistry::get('Education.EducationSubjects')->get($this->institution_site_class->education_subject_id)->toArray();
+		if ($this->has('institution_class') && $this->institution_class->has('education_subject_id')) {
+			$data = TableRegistry::get('Education.EducationSubjects')->get($this->institution_class->education_subject_id)->toArray();
 			if (!empty($data)) {
 				$name = $data['name'];
 			}
@@ -70,15 +69,20 @@ class StaffClass extends Entity
 	}
 
 	protected function _getMaleStudents() {
-		if ($this->has('id')) {
-			$count = TableRegistry::get('Institution.InstitutionSiteSectionStudents')->getMaleCountBySection($this->id);
+		$count = 0;
+		if ($this->has('institution_class_id')) {
+			$count = TableRegistry::get('Institution.InstitutionClassStudents')->getMaleCountBySubject($this->institution_class_id);
+		} else if ($this->has('id')) {
+			$count = TableRegistry::get('Institution.InstitutionClassStudents')->getMaleCountBySubject($this->id);
 		}
 		return $count;
 	}
 
 	protected function _getFemaleStudents() {
-		if ($this->has('id')) {
-			$count = TableRegistry::get('Institution.InstitutionSiteSectionStudents')->getFemaleCountBySection($this->id);
+		if ($this->has('institution_class_id')) {
+			$count = TableRegistry::get('Institution.InstitutionClassStudents')->getFemaleCountBySubject($this->institution_class_id);
+		} else if ($this->has('id')) {
+			$count = TableRegistry::get('Institution.InstitutionSectionStudents')->getFemaleCountBySubject($this->id);
 		}
 		return $count;
 	}
