@@ -128,8 +128,12 @@ class AppTable extends Table {
 			if ($entity->$attr['field'] instanceof Time) {
 				return $this->formatDate($entity->$attr['field']);
 			} else {
-				$date = new Time($entity->$attr['field']);
-				return $this->formatDate($date);
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Time($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
 			}
 		} else {
 			return $entity->$attr['field'];
