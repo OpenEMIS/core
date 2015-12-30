@@ -15,8 +15,21 @@
 				'options' => $fieldOptions,
 				'default' => $selectedOption,
 				'url' => $baseUrl,
-				'data-named-key' => 'field_option_id'
+				'data-named-key' => 'field_option_id',
 			));
+
+			if(!empty($parentFieldOptions)) {
+				echo $this->Form->input('parent_field_option', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $parentFieldOptions,
+					'default' => $selectedParentFieldOption,
+					'url' => $baseUrl,
+					'data-named-key' => 'parent_field_option_id',
+					'data-named-group' => 'field_option_id'
+				));
+			}
+
 		?>
 	</div>
 </div>

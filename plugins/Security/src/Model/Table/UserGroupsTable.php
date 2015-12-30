@@ -42,9 +42,9 @@ class UserGroupsTable extends AppTable {
 
 		$this->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
-			'joinTable' => 'security_group_institution_sites',
+			'joinTable' => 'security_group_institutions',
 			'foreignKey' => 'security_group_id',
-			'targetForeignKey' => 'institution_site_id',
+			'targetForeignKey' => 'institution_id',
 			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
 		]);
@@ -236,7 +236,7 @@ class UserGroupsTable extends AppTable {
 					foreach ($associated[$key] as $i => $obj) {
 						$this->request->data[$alias][$key][] = [
 							'id' => $obj->id,
-							'_joinData' => ['code' => $obj->code, 'institution_site_id' => $obj->id, 'name' => $obj->name]
+							'_joinData' => ['code' => $obj->code, 'institution_id' => $obj->id, 'name' => $obj->name]
 						];
 					}
 				}
@@ -249,11 +249,11 @@ class UserGroupsTable extends AppTable {
 					$joinData = $obj['_joinData'];
 					$rowData = [];
 					$name = $joinData['name'];
-					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['institution_site_id']]);
+					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['institution_id']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.code", ['value' => $joinData['code']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.institution_site_id", ['value' => $joinData['institution_site_id']]);
-					$rowData[] = [$joinData['code'], ['autocomplete-exclude' => $joinData['institution_site_id']]];
+					$name .= $Form->hidden("$alias.$key.$i._joinData.institution_id", ['value' => $joinData['institution_id']]);
+					$rowData[] = [$joinData['code'], ['autocomplete-exclude' => $joinData['institution_id']]];
 					$rowData[] = $name;
 					$rowData[] = $this->getDeleteButton();
 					$tableCells[] = $rowData;
@@ -279,7 +279,7 @@ class UserGroupsTable extends AppTable {
 				}
 				$data[$alias]['institutions'][] = [
 					'id' => $obj->id,
-					'_joinData' => ['code' => $obj->code, 'institution_site_id' => $obj->id, 'name' => $obj->name]
+					'_joinData' => ['code' => $obj->code, 'institution_id' => $obj->id, 'name' => $obj->name]
 				];
 			} catch (RecordNotFoundException $ex) {
 				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
@@ -337,28 +337,61 @@ class UserGroupsTable extends AppTable {
 					foreach ($associated[$key] as $i => $obj) {
 						$this->request->data[$alias][$key][] = [
 							'id' => $obj->id,
-							'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+							'_joinData' => [
+								'openemis_no' => $obj->openemis_no, 
+								'security_user_id' => $obj->id, 
+								'name' => $obj->name,
+								'security_role_id' => $obj->_joinData->security_role_id
+							]
 						];
 					}
 				}
 			}
 			// refer to addEditOnAddUser for http post
 			if ($this->request->data("$alias.$key")) {
-				$associated = $this->request->data("$alias.$key");
+				$associated = $entity->extractOriginal([$key]);
+				$found = false;
+				if (!empty($associated[$key])) {
+					foreach ($associated[$key] as $i => $obj) {
+						if ($obj->id == $userId) {
+							$rowData = [];
+							$name = $obj->name;
+							$rowData[] = $obj->openemis_no;
+							$rowData[] = $name;
 
+							// To revisit this part again due to a bug when user add itself in
+							if (isset($obj->_joinData->security_role_id)) {
+								$securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
+								$this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
+								$rowData[] = $securityRoleName;
+							} else {
+								$securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
+								$rowData[] = $securityRoleName;
+							}
+
+							$rowData[] = '';
+							$tableCells[] = $rowData;
+							$found = true;
+							break;
+						}
+					}
+				}
+				$associated = $this->request->data("$alias.$key");
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
-					$rowData = [];
-					$name = $joinData['name'];
-					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
-					$rowData[] = $joinData['openemis_no'];
-					$rowData[] = $name;
-					$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
-					$rowData[] = $this->getDeleteButton();
-					$tableCells[] = $rowData;
+					if ($joinData['security_user_id'] != $userId) {
+						$rowData = [];
+						$name = $joinData['name'];
+						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
+						$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
+						$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+						$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+						$rowData[] = $joinData['openemis_no'];
+						$rowData[] = $name;
+						$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
+						$rowData[] = $this->getDeleteButton();
+						$tableCells[] = $rowData;
+					}
 				}
 			}
 		}
@@ -413,11 +446,62 @@ class UserGroupsTable extends AppTable {
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}
+
+		$search = $this->ControllerAction->getSearchKey();
+
+		// CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
+		$options['auto_search'] = false; // it will append an AND
+		if (!empty($search)) {
+			$query->find('byInstitutionAreaNameCode', ['search' => $search]);
+		}
+	}
+
+	public function findByInstitutionAreaNameCode(Query $query, array $options) {
+		if (array_key_exists('search', $options)) {
+			$search = $options['search'];
+			$query
+			->join([
+				[
+					'table' => 'security_group_institutions', 'alias' => 'SecurityGroupInstitutions', 'type' => 'LEFT',
+					'conditions' => ['SecurityGroupInstitutions.security_group_id = ' . $this->aliasField('id')]
+				],
+				[
+					'table' => 'institutions', 'alias' => 'Institutions', 'type' => 'LEFT',
+					'conditions' => [
+						'Institutions.id = ' . 'SecurityGroupInstitutions.institution_id',
+					]
+				],
+				[
+					'table' => 'security_group_areas', 'alias' => 'SecurityGroupAreas', 'type' => 'LEFT',
+					'conditions' => ['SecurityGroupAreas.security_group_id = ' . $this->aliasField('id')]
+				],
+				[
+					'table' => 'areas', 'alias' => 'Areas', 'type' => 'LEFT',
+					'conditions' => [
+						'Areas.id = ' . 'SecurityGroupAreas.area_id',
+					]
+				],
+			])
+			->where([
+					'OR' => [
+						['Institutions.code LIKE' => '%' . $search . '%'],
+						['Institutions.name LIKE' => '%' . $search . '%'],
+						['Areas.code LIKE' => '%' . $search . '%'],
+						['Areas.name LIKE' => '%' . $search . '%'],
+						[$this->aliasField('name').' LIKE' => '%'.$search.'%']
+					]
+				]
+			)
+			->group($this->aliasField('id'))
+			;
+		}
+
+		return $query;
 	}
 
 	public function findNotInInstitutions(Query $query, array $options) {
 		$query->where([
-			'NOT EXISTS (SELECT `id` FROM `institution_sites` WHERE `security_group_id` = `UserGroups`.`id`)'
+			'NOT EXISTS (SELECT `id` FROM `institutions` WHERE `security_group_id` = `UserGroups`.`id`)'
 		]);
 		return $query;
 	}
@@ -432,12 +516,51 @@ class UserGroupsTable extends AppTable {
 			$data[$this->alias()]['institutions'] = [];
 		}
 
+		if (!array_key_exists('users', $data[$this->alias()])) {
+			$data[$this->alias()]['users'] = [];
+		}
+
 		// in case user has been added with the same role twice, we need to filter it
 		$this->filterDuplicateUserRoles($data);
 
+		// To merge in the original modifying user's permission (if any) as the user will not
+		// be able to modify their own permission
+		$key = 'users';
+		$associated = $entity->extractOriginal([$key]);
+		$user = $this->Auth->user();
+		$userId = $user['id'];
+		if ($user['super_admin'] == 1) { // super admin will show all roles
+			$userId = null;
+		}
+
+		// If not super admin
+		if(!is_null($userId)) {
+			$userArray = [];
+			if (!empty($associated[$key])) {
+				foreach ($associated[$key] as $i => $obj) {
+					if ($userId == $obj->id) {
+						$userArray[$i]['id'] = $obj->id;
+						$userArray[$i]['_joinData']['openemis_no'] = $obj->openemis_no;
+						$userArray[$i]['_joinData']['name'] = $obj->name;
+						$userArray[$i]['_joinData']['security_user_id'] = $obj->id;
+						$userArray[$i]['_joinData']['security_role_id'] = $obj->_joinData->security_role_id;
+					}
+				}
+			}
+			$data[$this->alias()][$key] = array_merge($userArray, $data[$this->alias()][$key]);
+		}
+
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['Areas', 'Institutions'];
+
+		// The association can be added if it is an add action
+		if ($this->action == 'add') {
+			$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
+		} 
+		// For edit function, the user role is save from the edit after save logic as users cannot be save properly using associated method
+		else {
+			$newOptions['associated'] = ['Areas', 'Institutions'];
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
