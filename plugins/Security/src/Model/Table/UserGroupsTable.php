@@ -552,7 +552,15 @@ class UserGroupsTable extends AppTable {
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
+
+		// The association can be added if it is an add action
+		if ($this->action == 'add') {
+			$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
+		} 
+		// For edit function, the user role is save from the edit after save logic as users cannot be save properly using associated method
+		else {
+			$newOptions['associated'] = ['Areas', 'Institutions'];
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
