@@ -102,17 +102,11 @@ class AreaAdministrativesTable extends AppTable {
 		return $process;
 	}
 
-	public function deleteUpdateConvertOptions(Event $event, Entity $entity, array $convertOptions) {
-		$id = $entity->id;
-		$level = $this->find()->contain(['Levels'])->where([$this->aliasField('id') => $id])->first()->level->id;
-		$options = $this
-			->find('list')
-			->where([
-				$this->aliasField('area_administrative_level_id') => $level, 
-				$this->aliasField('id').' IS NOT ' => $id
-			])
-			->toArray();
-		return $options;
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_administrative_level_id;
+		$query->where([
+				$this->aliasField('area_administrative_level_id') => $level
+			]);
 	}
 
 	public function indexBeforeAction(Event $event) {
