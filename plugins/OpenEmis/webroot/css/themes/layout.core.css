@@ -178,3 +178,62 @@ a:hover,
 .fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
     border-left: 14px solid #476B8F;
 }
+
+
+/* To update in styleguide version after 2.1.4 */
+.form-horizontal input, 
+.form-horizontal textarea, 
+.form-horizontal .chosen-choices {
+    font-size: 12px;
+}
+
+.table-full-width {
+    display: inline-block;    
+    width: -webkit-calc(80% - 15px);
+    width: -moz-calc(80% - 15px);
+    width: calc(80% - 15px);
+}
+
+table .input-group {
+    width: inherit !important;
+}
+
+.table-in-view {
+    -webkit-border-radius: 5px;
+            border-radius: 5px;
+}
+
+.table-in-view input {
+    padding-right: 30px;
+}
+
+.rtl .table-in-view input {
+    padding-left: 30px;
+    padding-right: 0 !important;
+}
+
+.full-width {
+    width: 100% !important;
+}
+
+table thead {
+    white-space: nowrap;
+}
+
+.fileinput-preview .btn-default {
+    margin-right: 10px;
+}
+
+.rtl .fileinput-preview .btn-default {
+    margin-right: 0 !important;
+    margin-left: 10px;
+}
+
+.login .form-horizontal input {
+    font-size: 14px;
+}
+
+input[disabled="disabled"],
+textarea[disabled="disabled"] {
+    background: #EEE;
+}

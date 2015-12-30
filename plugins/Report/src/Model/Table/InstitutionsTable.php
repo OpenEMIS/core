@@ -19,25 +19,25 @@ class InstitutionsTable extends AppTable  {
 	const NO_STAFF = 2;
 
 	public function initialize(array $config) {
-		$this->table('institution_sites');
+		$this->table('institutions');
 		parent::initialize($config);
 		
-		$this->belongsTo('Localities', 			['className' => 'Institution.Localities', 'foreignKey' => 'institution_site_locality_id']);
-		$this->belongsTo('Types', 				['className' => 'Institution.Types', 'foreignKey' => 'institution_site_type_id']);
-		$this->belongsTo('Ownerships',			['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_site_ownership_id']);
-		$this->belongsTo('Statuses', 			['className' => 'Institution.Statuses', 'foreignKey' => 'institution_site_status_id']);
-		$this->belongsTo('Sectors',				['className' => 'Institution.Sectors', 'foreignKey' => 'institution_site_sector_id']);
-		$this->belongsTo('Providers',			['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
-		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_site_gender_id']);
+		$this->belongsTo('Localities', 			['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
+		$this->belongsTo('Types', 				['className' => 'Institution.Types', 'foreignKey' => 'institution_type_id']);
+		$this->belongsTo('Ownerships',	 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_ownership_id']);
+		$this->belongsTo('Statuses', 			['className' => 'Institution.Statuses', 'foreignKey' => 'institution_status_id']);
+		$this->belongsTo('Sectors',				['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
+		$this->belongsTo('Providers',	 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
+		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'institution_site_type_id'], 'pages' => false]);
+		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.CustomFieldList', [
 			'model' => 'Institution.Institutions',
 			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		]);
 	}
 
@@ -66,6 +66,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
+		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('status', ['type' => 'hidden']);
+		$this->ControllerAction->field('type', ['type' => 'hidden']);
+		// $this->ControllerAction->field('license', ['type' => 'hidden']);
+		$this->ControllerAction->field('leaveDate', ['type' => 'hidden']);
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -117,6 +122,135 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
+	public function onUpdateFieldLeaveDate(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionStaffOnLeave'])) {
+				$attr['type'] = 'date';
+				return $attr;
+			}
+		} else {
+			$attr['value'] = self::NO_FILTER;
+		}
+
+	}
+
+	public function onUpdateFieldLicense(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionStaff'])) {
+				// need to find all types
+				$typeOptions = [];
+				$typeOptions[0] = __('All Licenses');
+
+				$Types = TableRegistry::get('FieldOption.LicenseTypes');
+				$typeData = $Types->getList();
+				foreach ($typeData as $key => $value) {
+					$typeOptions[$key] = $value;
+				}
+
+				$attr['type'] = 'select';
+				$attr['options'] = $typeOptions;
+				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+		}
+	}
+
+	public function onUpdateFieldType(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionStaff'])) {
+				// need to find all types
+				$typeOptions = [];
+				$typeOptions[0] = __('All Types');
+
+				$Types = TableRegistry::get('FieldOption.StaffTypes');
+				$typeData = $Types->getList();
+				foreach ($typeData as $key => $value) {
+					$typeOptions[$key] = $value;
+				}
+
+				$attr['type'] = 'select';
+				$attr['options'] = $typeOptions;
+				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+		}
+	}
+
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentEnrollments', 'Report.InstitutionStaff'])) {
+				// need to find all status
+				$statusOptions = [];
+				$statusOptions[0] = __('All Statuses');
+
+				switch ($feature) {
+					case 'Report.InstitutionStudents': case 'Report.InstitutionStudentEnrollments':
+						$Statuses = TableRegistry::get('Student.StudentStatuses');
+						$statusData = $Statuses->find()->select(['id', 'name'])->toArray();
+						foreach ($statusData as $key => $value) {
+							$statusOptions[$value->id] = $value->name;
+						}
+						break;
+					
+					case 'Report.InstitutionStaff':
+						$Statuses = TableRegistry::get('FieldOption.StaffStatuses');
+						$statusData = $Statuses->getList();
+						foreach ($statusData as $key => $value) {
+							$statusOptions[$key] = $value;
+						}
+						break;
+
+					default:
+						return [];
+						break;
+				}
+
+				$attr['type'] = 'select';
+				$attr['options'] = $statusOptions;
+				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+		}
+	}
+
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionStudents'])) {
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				$academicPeriodOptions = [];
+				$academicPeriodOptions[0] = __('All Academic Periods');
+				$academicPeriodData = $InstitutionStudentsTable->find()
+					->matching('AcademicPeriods')
+					->select(['id' => $InstitutionStudentsTable->aliasField('academic_period_id'), 'name' => 'AcademicPeriods.name'])
+					->group('id')
+					->toArray()
+					;
+
+				foreach ($academicPeriodData as $key => $value) {
+					$academicPeriodOptions[$value->id] = $value->name;
+				}
+
+				// $attr['onChangeReload'] = true;
+				$attr['options'] = $academicPeriodOptions;
+				$attr['type'] = 'select';
+
+				if (empty($request->data[$this->alias()]['academic_period_id'])) {
+					reset($academicPeriodOptions);
+					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
+				}
+				return $attr;
+				}
+		}
+	}
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$requestData = json_decode($settings['process']['params']);
 		$filter = $requestData->institution_filter;
@@ -135,8 +269,8 @@ class InstitutionsTable extends AppTable  {
 			case self::NO_STAFF:
 				$query
 					->leftJoin(
-						['Staff' => 'institution_site_staff'],
-						[$this->aliasField('id').' = Staff.institution_site_id']
+						['Staff' => 'institution_staff'],
+						[$this->aliasField('id').' = Staff.institution_id']
 					)
 					->select(['staff_count' => $query->func()->count('Staff.id')])
 					->group([$this->aliasField('id')])

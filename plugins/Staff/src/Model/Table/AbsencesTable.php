@@ -8,11 +8,11 @@ use Cake\ORM\Entity;
 
 class AbsencesTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_staff_absences');
+		$this->table('institution_staff_absences');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
 	}
 
@@ -28,7 +28,7 @@ class AbsencesTable extends AppTable {
 		$this->fields['start_time']['visible'] = false; //Need to change from start_time_absence to start_time
 		$this->fields['end_time']['visible'] = false; //Need to change from end_time_absence to end_time
 		$this->fields['comment']['visible'] = false;
-		$this->fields['security_user_id']['visible'] = false;
+		$this->fields['staff_id']['visible'] = false;
 
 		$this->ControllerAction->addField('days', []);
 		$this->ControllerAction->addField('time', []);
@@ -56,5 +56,16 @@ class AbsencesTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }
