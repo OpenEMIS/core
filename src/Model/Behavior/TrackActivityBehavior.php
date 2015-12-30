@@ -73,8 +73,11 @@ class TrackActivityBehavior extends Behavior {
 		    			 */
 		    			if ($oldValue != 'World' && $newValue != '' && $oldValue != $newValue) {
 
-							$relatedModel = $model->ControllerAction->getAssociatedBelongsToModel($field);
-							
+			    			/**
+			    			 * PHPOE-2081 - changed getAssociatedBelongsToModel function to getAssociatedTable function and duplicate it in App\Model\Table\AppTable
+			    			 */
+							$relatedModel = $model->getAssociatedTable($field, $model);
+
 							// check if related model's table is actually field_option_values by reading its useTable instance
 							if (is_object($relatedModel) && $relatedModel->hasBehavior('FieldOption')) {
 								// foreignKey value has to be related model's name instead of field_option_value_id which does not exists in $model's column

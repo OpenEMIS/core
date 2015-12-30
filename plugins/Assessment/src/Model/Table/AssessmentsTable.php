@@ -22,8 +22,6 @@ class AssessmentsTable extends AppTable {
 		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionAssessments', ['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
-
-		$this->addBehavior('Reorder');
 	}
 
 	public function beforeAction(Event $event) {

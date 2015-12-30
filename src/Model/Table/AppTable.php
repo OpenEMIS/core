@@ -20,6 +20,8 @@ class AppTable extends Table {
 	use LogTrait;
 
 	public function initialize(array $config) {
+		Time::$defaultLocale = 'en_US';
+		
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -48,6 +50,14 @@ class AppTable extends Table {
 
 		if (in_array('order', $columns)) {
 			$this->addBehavior('Reorder');
+			// to be removed after field_option_values is dropped
+			if ($this->table() == 'field_option_values') {
+				if ($this->behaviors()->has('Reorder')) {
+					$this->behaviors()->get('Reorder')->config([
+						'filter' => 'field_option_id',
+					]);
+				}
+			}
 		}
 
 		$dateFields = [];
@@ -69,13 +79,12 @@ class AppTable extends Table {
 		$this->attachWorkflow();
 	}
 
-	public function attachWorkflow() {
+	public function attachWorkflow($config=[]) {
 		// check for session and attach workflow behavior
 		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
 			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
-				$this->addBehavior('Workflow.Workflow', [
-					'model' => $this->registryAlias()
-				]);
+				$config = array_merge($config, ['model' => $this->registryAlias()]);
+				$this->addBehavior('Workflow.Workflow', $config);
 			}
 		}
 	}
@@ -117,6 +126,14 @@ class AppTable extends Table {
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
 			return $this->formatDate($entity->$attr['field']);
+		} else {
+			return $entity->$attr['field'];
+		}
+	}
+
+	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			return $this->formatDateTime($entity->$attr['field']);
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -307,7 +324,8 @@ class AppTable extends Table {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 
@@ -397,4 +415,46 @@ class AppTable extends Table {
 		return $selectedId;
 	}
 
+	public function isForeignKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public function getAssociatedTable($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$relatedModel = null;
+
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					$relatedModel = $assoc;
+					break;
+				}
+			}
+		}
+		return $relatedModel;
+	}
+
+	public function getAssociatedKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$tableObj = $this->getAssociatedTable($field, $table);
+		$key = null;
+		if (is_object($tableObj)) {
+			$key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+		}
+		return $key;
+	}
 }
