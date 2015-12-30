@@ -40,4 +40,15 @@ class StaffBehavioursTable extends AppTable {
 		}
 		return $buttons;
 	}
+
+	private function setupTabElements() {
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Behaviours');
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

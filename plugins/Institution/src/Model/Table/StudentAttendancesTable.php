@@ -24,13 +24,13 @@ class StudentAttendancesTable extends AppTable {
 	private $_absenceData = [];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_section_students');
+		$this->table('institution_section_students');
 		$config['Modified'] = false;
 		$config['Created'] = false;
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
-		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
@@ -42,7 +42,7 @@ class StudentAttendancesTable extends AppTable {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$sectionId = $this->request->query['section_id'];
-		$query->where([$this->aliasField('institution_site_section_id') => $sectionId]);
+		$query->where([$this->aliasField('institution_section_id') => $sectionId]);
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -70,6 +70,7 @@ class StudentAttendancesTable extends AppTable {
 				'endDate' => $endDate,
 				'institutionId' => $institutionId,
 				'sectionId' => $sectionId,
+				'orientation' => 'landscape'
  			];
 		}
 	}
@@ -133,24 +134,24 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	public function getData($monthStartDay, $monthEndDay, $institutionId, $sectionId) {		
-		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
 		$absenceData = $StudentAbsenceTable->find('all')
 			->contain(['StudentAbsenceReasons'])
 			->where([
-				$StudentAbsenceTable->aliasField('institution_site_id') => $institutionId,
+				$StudentAbsenceTable->aliasField('institution_id') => $institutionId,
 				$StudentAbsenceTable->aliasField('start_date').' >= ' => $monthStartDay,
 				$StudentAbsenceTable->aliasField('end_date').' <= ' => $monthEndDay,
 			])
 			->innerJoin(
-				['InstitutionSiteSectionStudents' => 'institution_site_section_students'],
+				['InstitutionSectionStudents' => 'institution_section_students'],
 				[
-					'InstitutionSiteSectionStudents.student_id = '.$StudentAbsenceTable->aliasField('security_user_id'),
-					'InstitutionSiteSectionStudents.institution_site_section_id' => $sectionId
+					'InstitutionSectionStudents.student_id = '.$StudentAbsenceTable->aliasField('student_id'),
+					'InstitutionSectionStudents.institution_section_id' => $sectionId
 				]
 			)
 			->select([
-					'security_user_id' => $StudentAbsenceTable->aliasField('security_user_id'),
+					'student_id' => $StudentAbsenceTable->aliasField('student_id'),
 					'start_date' => $StudentAbsenceTable->aliasField('start_date'),
 					'end_date' => $StudentAbsenceTable->aliasField('end_date'),
 					'full_day' => $StudentAbsenceTable->aliasField('full_day'),
@@ -161,7 +162,7 @@ class StudentAttendancesTable extends AppTable {
 			->toArray();
 		$absenceCheckList = [];
 		foreach ($absenceData as $absenceUnit) {
-			$studentId = $absenceUnit['security_user_id'];
+			$studentId = $absenceUnit['student_id'];
 			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
 
 			$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
@@ -206,7 +207,7 @@ class StudentAttendancesTable extends AppTable {
 
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('student_id');
-		$this->ControllerAction->field('institution_site_section_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 	}
@@ -240,7 +241,7 @@ class StudentAttendancesTable extends AppTable {
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $entity->student_id;
-			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
@@ -257,8 +258,8 @@ class StudentAttendancesTable extends AppTable {
 			}
 
 			$html .= $Form->input($fieldPrefix.".absence_type", $options);
-			$html .= $Form->hidden($fieldPrefix.".institution_site_id", ['value' => $institutionId]);
-			$html .= $Form->hidden($fieldPrefix.".security_user_id", ['value' => $id]);
+			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
+			$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
 
 			$selectedDate = $this->selectedDate->format('d-m-Y');
 			$html .= $Form->hidden($fieldPrefix.".full_day", ['value' => 1]);	//full day
@@ -291,7 +292,7 @@ class StudentAttendancesTable extends AppTable {
 			$Form = $event->subject()->Form;
 
 			$id = $entity->student_id;
-			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
@@ -384,8 +385,8 @@ class StudentAttendancesTable extends AppTable {
 			$endDate = $entity->StudentAbsences['end_date'];
 			$currentDay = $this->allDayOptions[$key]['date'];
 			if ($currentDay >= $startDate && $currentDay <= $endDate) {
-				$InstitutionSiteStudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
-				$absenceQuery = $InstitutionSiteStudentAbsences
+				$InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+				$absenceQuery = $InstitutionStudentAbsences
 					->findById($entity->StudentAbsences['id'])
 					->contain('StudentAbsenceReasons');
 				$absenceResult = $absenceQuery->first();
@@ -430,14 +431,14 @@ class StudentAttendancesTable extends AppTable {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 		
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
+		$Sections = TableRegistry::get('Institution.InstitutionSections');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
 			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
+				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 		// End setup periods
@@ -543,7 +544,7 @@ class StudentAttendancesTable extends AppTable {
 				->find('list')
 				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 				->where([
-					$Sections->aliasField('institution_site_id') => $institutionId, 
+					$Sections->aliasField('institution_id') => $institutionId, 
 					$Sections->aliasField('academic_period_id') => $selectedPeriod
 				])
 				->toArray();
@@ -557,7 +558,7 @@ class StudentAttendancesTable extends AppTable {
 			$query
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
-				->where([$this->aliasField('institution_site_section_id') => $selectedSection]);
+				->where([$this->aliasField('institution_section_id') => $selectedSection]);
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
@@ -598,7 +599,7 @@ class StudentAttendancesTable extends AppTable {
 	public function findWithAbsence(Query $query, array $options) {
 		$date = $options['date'];
 
-		$conditions = ['StudentAbsences.security_user_id = StudentAttendances.student_id'];
+		$conditions = ['StudentAbsences.student_id = StudentAttendances.student_id'];
 		if (is_array($date)) {
 			$startDate = $date[0]->format('Y-m-d');
 			$endDate = $date[1]->format('Y-m-d');
@@ -646,7 +647,7 @@ class StudentAttendancesTable extends AppTable {
     		])
 			->join([
 				[
-					'table' => 'institution_site_student_absences',
+					'table' => 'institution_student_absences',
 					'alias' => 'StudentAbsences',
 					'type' => 'LEFT',
 					'conditions' => $conditions
@@ -689,7 +690,7 @@ class StudentAttendancesTable extends AppTable {
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
-			$StudentAbsences = TableRegistry::get('Institution.InstitutionSiteStudentAbsences');
+			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
 
 			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {

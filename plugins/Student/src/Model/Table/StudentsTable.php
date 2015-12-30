@@ -47,9 +47,9 @@ class StudentsTable extends AppTable {
 			'filterKey' => 'student_custom_filter_id',
 			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'student_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
@@ -71,14 +71,14 @@ class StudentsTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -225,8 +225,21 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 71]);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => false]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
