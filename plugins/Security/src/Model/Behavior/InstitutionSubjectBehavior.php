@@ -36,19 +36,19 @@ class InstitutionSubjectBehavior extends Behavior {
 						// first condition if the current user is a teacher for this subject
 						'EXISTS (
 							SELECT 1 
-							FROM institution_site_class_staff
-							WHERE institution_site_class_staff.institution_site_class_id = ' . $this->_table->aliasField('id') . '
-							AND institution_site_class_staff.security_user_id = ' . $userId . 
+							FROM institution_class_staff
+							WHERE institution_class_staff.institution_class_id = ' . $this->_table->aliasField('id') . '
+							AND institution_class_staff.staff_id = ' . $userId . 
 						')',
 
 						// second condition if the current user is the homeroom teacher of the subject class
 						'EXISTS (
 							SELECT 1
-							FROM institution_site_section_classes
-							JOIN institution_site_sections
-							ON institution_site_sections.id = institution_site_section_classes.institution_site_section_id
-							AND institution_site_sections.security_user_id = ' . $userId . '
-							WHERE institution_site_section_classes.institution_site_class_id = ' . $this->_table->aliasField('id') .
+							FROM institution_section_classes
+							JOIN institution_sections
+							ON institution_sections.id = institution_section_classes.institution_section_id
+							AND institution_sections.staff_id = ' . $userId . '
+							WHERE institution_section_classes.institution_class_id = ' . $this->_table->aliasField('id') .
 						')'
 					]
 				]);
