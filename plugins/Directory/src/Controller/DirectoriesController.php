@@ -26,8 +26,19 @@ class DirectoriesController extends AppController {
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
-					
-			
+
+
+			// Users - Health
+			'Healths' 				=> ['className' => 'Health.Healths'],
+			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
+			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
+			'HealthFamilies' 		=> ['className' => 'Health.Families'],
+			'HealthHistories' 		=> ['className' => 'Health.Histories'],
+			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
+			'HealthMedications' 	=> ['className' => 'Health.Medications'],
+			'HealthTests' 			=> ['className' => 'Health.Tests'],
+
+
 			// Student
 			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
 			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
@@ -40,8 +51,8 @@ class DirectoriesController extends AppController {
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
-			'StudentAwards' 		=> ['className' => 'User.Awards'],	
-			
+			'StudentAwards' 		=> ['className' => 'User.Awards'],
+
 
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
