@@ -4,6 +4,7 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
@@ -81,7 +82,39 @@ class BankAccountsTable extends AppTable {
 			0 => '<i class="fa kd-cross red"></i>', 
 			1 => '<i class="fa kd-check green"></i>'
 		];
-
 		return $icons[$entity->active];
+	}
+
+	private function setupTabElements() {
+		switch ($this->controller->name) {
+			case 'Students':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Staff':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Directories':
+				$type = $this->request->query('type');
+				$options = [
+					'type' => $type
+				];
+				if ($type == 'student') {
+					$tabElements = $this->controller->getFinanceTabElements($options);
+				} else {
+					$tabElements = $this->controller->getStaffFinanceTabElements($options);
+				}
+				
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+		}
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
 	}
 }

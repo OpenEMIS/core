@@ -4,13 +4,17 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 
+use App\Model\Traits\OptionsTrait;
+
 class UsersTable extends AppTable {
+	use OptionsTrait;
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
@@ -77,14 +81,22 @@ class UsersTable extends AppTable {
 		$this->fields['address_area_id']['visible'] = false;
 		$this->fields['birthplace_area_id']['visible'] = false;
 
-		if ($this->action != 'index' && $this->action != 'view') {
+		if (in_array($this->action, ['add'])) {
+			$this->fields['username']['visible'] = true;
 			$this->fields['password']['visible'] = true;
 			$this->fields['password']['type'] = 'password';
 			$this->fields['password']['attr']['value'] = '';
+			$this->fields['password']['attr']['autocomplete'] = 'off';
 		}
+
 		if ($this->action == 'edit') {
 			$this->fields['last_login']['visible'] = false;
 		}
+
+		$this->ControllerAction->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->setFieldOrder([
+			'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'status', 'username', 'password'
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -97,6 +109,8 @@ class UsersTable extends AppTable {
 		$this->fields['date_of_birth']['visible'] = false;
 		$this->fields['identity']['visible'] = false;
 
+		$this->fields['username']['visible'] = true;
+
 		$this->ControllerAction->field('name');
 	}
 
@@ -107,7 +121,7 @@ class UsersTable extends AppTable {
 		$search = $this->ControllerAction->getSearchKey();
 
 		if (!empty($search)) {
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search, 'searchByUserName' => true]);
 		}
 	}
 
@@ -122,6 +136,15 @@ class UsersTable extends AppTable {
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => false]
 		]);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupTabElements(['id' => $entity->id]);
+	}
+
+	private function setupTabElements($options) {
+		$this->controller->set('selectedAction', 'Securities');
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
@@ -140,17 +163,38 @@ class UsersTable extends AppTable {
 		$key = 'roles';
 
 		$Group = TableRegistry::get('Security.SecurityGroups');
+		$Group->hasOne('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'security_group_id']);
 
 		if ($action == 'view') {
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$groupId = $obj['_joinData']->security_group_id;
-					$groupEntity = $Group->get($groupId);
+					$groupEntity = $Group->find()
+						->where([$Group->aliasField('id') => $groupId])
+						->contain('Institutions')
+						->first()
+						;
 
 					$rowData = [];
-					$rowData[] = $groupEntity->name;
-					$rowData[] = $obj->name;
+					if ($groupEntity) {
+						$url = [
+							'plugin' => $this->controller->plugin,
+							'controller' => $this->controller->name,
+							'view',
+							$groupEntity->id
+						];
+						if (!empty($groupEntity->institution)) {
+							$url['action'] = 'SystemGroups';
+						} else {
+							$url['action'] = 'UserGroups';
+						}
+						$rowData[] = $event->subject()->Html->link($groupEntity->name, $url);
+					} else {
+						$rowData[] = '';
+					}
+
+					$rowData[] = $obj->name; // role name
 					$tableCells[] = $rowData;
 				}
 			}
@@ -176,41 +220,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('address')
-			->allowEmpty('postal_code')
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->allowEmpty('photo_content')
-			;
-		return $validator;
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 }
