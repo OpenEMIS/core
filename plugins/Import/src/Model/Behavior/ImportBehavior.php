@@ -635,18 +635,15 @@ class ImportBehavior extends Behavior {
 		$header = [];
 		foreach ($mapping as $key => $value) {
 			$column = $value->column_name;
-			$label = $this->getExcelLabel($value->model, $column);
+			$label = $this->getExcelLabel('Imports', $value->lookup_model);
 			if (empty($label)) {
-				$headerCol = __(Inflector::humanize($column));
-			} else {
-				$headerCol = $label;
+				$label = $this->getExcelLabel($value->model, $column);
 			}
-			
 			if (!empty($value->description)) {
-				$headerCol .= ' ' . __($value->description);
+				$label .= ' ' . __($value->description);
 			}
 			
-			$header[] = $headerCol;
+			$header[] = __($label);
 		}
 
 		return $header;
@@ -782,7 +779,10 @@ class ImportBehavior extends Behavior {
 		if ($module instanceof Table) {
 			$module = $module->alias();
 		}
-
+		$dotPost = strpos($module, '.');
+		if ($dotPost > -1) {
+			$module = substr($module, ($dotPost + 1));
+		}
 		if (!empty($this->labels) && isset($this->labels[$module]) && isset($this->labels[$module][$columnName])) {
 			$translatedCol = $this->labels[$module][$columnName];
 		} else {
@@ -794,7 +794,7 @@ class ImportBehavior extends Behavior {
 				 */
 				$language = '';
 				$translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
-				if (empty($translatedCol)) {
+				if (empty($translatedCol) || $translatedCol==$columnName) {
 					$translatedCol = Inflector::humanize(substr($columnName, 0, strpos($columnName, '_id')));
 				}
 			}
@@ -891,18 +891,27 @@ class ImportBehavior extends Behavior {
 					$excelLookupModel = TableRegistry::get($registryAlias);
 					$this->directTables[$registryAlias] = $excelLookupModel;
 				}
+				$excludeValidation = false;
 				if (!empty($cellValue)) {
 					$record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
 					// if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
 					$recordId = $record->first();
 				} else {
-					$recordId = '';
+					if ($activeModel->schema()->column($columnName) && !$activeModel->schema()->column($columnName)['null']) {
+						$recordId = '';
+					} else {
+						$excludeValidation = true;
+					}
 				}
-				if (!empty($recordId)) {
-					$val = $recordId->id;
+				if (!$excludeValidation) {
+					if (!empty($recordId)) {
+						$val = $recordId->id;
+					} else {
+						$rowPass = false;
+						$rowInvalidCodeCols[] = $translatedCol;
+					}
 				} else {
-					$rowPass = false;
-					$rowInvalidCodeCols[] = $translatedCol;
+					$val = $cellValue;
 				}
 			} else if ($foreignKey == self::NON_TABLE_LIST) {
 				$recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);

@@ -556,32 +556,37 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
-			if ($entity->class > 0) {
-				$sectionData = [];
-				$sectionData['student_id'] = $entity->student_id;
-				$sectionData['education_grade_id'] = $entity->education_grade_id;
-				$sectionData['institution_section_id'] = $entity->class;
-				$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-				$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->isNew()) {
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
+				// to automatically add the student into a specific class when the student is successfully added to a school
+				if ($entity->class > 0) {
+					$sectionData = [];
+					$sectionData['student_id'] = $entity->student_id;
+					$sectionData['education_grade_id'] = $entity->education_grade_id;
+					$sectionData['institution_section_id'] = $entity->class;
+					$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+					$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+				}
+
+				// the logic below is to set all pending admission applications to rejected status once the student is successfully enrolled in a school
+				$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+				$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
+				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $entity->student_id, 
+					'status' => 0,
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				$StudentAdmissionTable->updateAll(
+					['status' => 2],
+					[$conditions]
+				);
 			}
-			$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-			$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
-			$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
-			$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
-
-			$conditions = [
-				'student_id' => $entity->student_id, 
-				'status' => 0,
-				'education_grade_id IN' => $educationGradesToUpdate
-			];
-
-			$StudentAdmissionTable->updateAll(
-				['status' => 2],
-				[$conditions]
-			);
 		}
 	}
 
