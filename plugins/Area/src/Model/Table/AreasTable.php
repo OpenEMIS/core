@@ -18,6 +18,11 @@ class AreasTable extends AppTable {
 		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Tree');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'parent_id',
+			]);
+		}
 	}
 
 	public function beforeAction(Event $event) {

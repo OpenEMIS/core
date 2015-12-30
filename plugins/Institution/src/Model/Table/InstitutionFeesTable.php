@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionFeesTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = 0;
 	private $_academicPeriodOptions = [];
 	private $_gradeOptions = [];

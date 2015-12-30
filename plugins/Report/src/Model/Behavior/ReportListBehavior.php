@@ -129,6 +129,10 @@ class ReportListBehavior extends Behavior {
 		$alias = $this->_table->alias();
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
+		$postFix = '';
+		if (isset($data[$alias]['postfix'])) {
+			$postFix = $data[$alias]['postfix'];
+		}
 		$table = TableRegistry::get($feature);
 
 		// Event: 
@@ -139,6 +143,9 @@ class ReportListBehavior extends Behavior {
 		// End Event
 
 		$name = $featureList[$feature];
+		if (!empty($postFix)) {
+			$name .= ' - '.$postFix;
+		}
 		$params = $data[$alias];
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');

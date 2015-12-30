@@ -18,7 +18,7 @@ class ResultsTable extends AppTable {
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
 		$this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
 	}
@@ -46,11 +46,38 @@ class ResultsTable extends AppTable {
 		$this->ControllerAction->field('assessment');
 		$this->ControllerAction->field('assessment_result_id', ['visible' => false]);
 		$this->ControllerAction->field('assessment_result_type_id', ['visible' => false]);
-		$this->ControllerAction->field('assessment_grading_option_id', ['visible' => false]);
+		$this->ControllerAction->field('assessment_grading_option_id');
+		$this->ControllerAction->field('student_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'institution_id', 'assessment', 'assessment_item_id'
 		]);
+	}
+
+	public function onGetMarks(Event $event, Entity $entity) {
+		return $entity->marks;
+	}
+
+	public function onGetAssessmentGradingOptionId(Event $event, Entity $entity) {
+		$returnValue = '';
+		if (!empty($entity['assessment_grading_option_id'])) {
+			$gradingOptionValue = $this->AssessmentGradingOptions->find()
+				->where([$this->AssessmentGradingOptions->aliasField('id') => $entity['assessment_grading_option_id']])
+				->first();
+			if (!empty($gradingOptionValue)) {
+				if (!empty($gradingOptionValue['code'])) {
+					$returnValue = $gradingOptionValue['code'];
+				}
+				if (!empty($gradingOptionValue['name'])) {
+					if (!empty($returnValue)) {
+						$returnValue .= ' - '.$gradingOptionValue['name'];
+					} else {
+						$returnValue = $gradingOptionValue['name'];
+					}
+				} 
+			}
+		}
+		return $returnValue;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -60,15 +87,27 @@ class ResultsTable extends AppTable {
 			'AssessmentItems.Assessments'
 		])
 		->join(
-			[	'table'=> 'institution_site_assessments',
-				'alias' => 'InstitutionSiteAssessments',
+			[	'table'=> 'institution_assessments',
+				'alias' => 'InstitutionAssessments',
 				'conditions' => [
-					'InstitutionSiteAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
-					'InstitutionSiteAssessments.institution_site_id = '. $this->aliasField('institution_id')
+					'InstitutionAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
+					'InstitutionAssessments.institution_id = '. $this->aliasField('institution_id')
 				]
 			]
 		)
-		->where(['InstitutionSiteAssessments.status' => 2])
+		->where(['InstitutionAssessments.status' => 2])
 		;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$alias = $this->alias();
+		$this->controller->set('selectedAction', $alias);
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }
