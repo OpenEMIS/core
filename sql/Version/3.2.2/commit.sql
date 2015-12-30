@@ -180,5 +180,37 @@ VALUES (1031, 'Student Dropout', 'Institutions', 'Institutions', 'Students', 100
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StudentDropout', 'created', 'Institutions -> Student Dropout','Date of Application', 1, 1, NOW());
 
+ALTER TABLE `security_group_users` ADD INDEX ( `security_group_id` ) ;
+ALTER TABLE `security_group_users` ADD INDEX ( `security_user_id` ) ;
+ALTER TABLE `security_group_users` ADD INDEX ( `security_role_id` ) ;
+
+INSERT INTO `db_patches` VALUES ('PHPOE-1919');
+
+UPDATE config_items SET name = 'Admission Age Plus' WHERE config_items.code = 'admission_age_plus';
+UPDATE config_items SET label = 'Admission Age Plus' WHERE config_items.code = 'admission_age_plus';
+
+INSERT INTO `db_patches` VALUES ('PHPOE-2117');
+
+-- institution_site_programmes
+ALTER TABLE `institution_site_programmes` 
+RENAME TO  `z_2117_institution_site_programmes` ;
+
+-- institution_site_grades
+CREATE TABLE `z_2117_institution_site_grades` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `institution_site_programme_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=179 DEFAULT CHARSET=utf8;
+
+INSERT INTO `z_2117_institution_site_grades` (`id`, `institution_site_programme_id`)
+SELECT `id`, `institution_site_programme_id` FROM `institution_site_grades`;
+
+ALTER TABLE `institution_site_grades` 
+DROP COLUMN `institution_site_programme_id`,
+DROP INDEX `institution_site_programme_id` ;
+
+-- labels
+DELETE FROM `labels` WHERE `module`='InstitutionSiteProgrammes';
+
 UPDATE `config_items` SET `value` = '3.2.2' WHERE `code` = 'db_version';
 
