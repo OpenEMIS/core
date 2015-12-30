@@ -11,6 +11,8 @@ v3.4.2
 - Added new field called Network Connectivity in Institutions
 - Fixed a bug that prevent user from entering 0 as value on Student admission age plus/minus
 - Added new permissions for Import features
+- Added two new reports in Institutions for generating Students and Staff
+records
 
 v3.4.1
 - Reorganised navigations to move existing pages into tabbed view
@@ -83,3 +85,4 @@ v3.2.7
 v3.2.6
 - Added workflows to institution's survey
 - Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
+
