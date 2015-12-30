@@ -21,8 +21,7 @@ class EducationProgrammesTable extends AppTable {
 		$this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
 		$this->belongsTo('EducationCertifications', ['className' => 'Education.EducationCertifications']);
 		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
-		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes', 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades']);
 	
 		$this->belongsToMany('EducationNextProgrammes', [
 			'className' => 'Education.EducationNextProgrammes',
@@ -54,18 +53,12 @@ class EducationProgrammesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		if (empty($this->request->data['transfer_to'])) {
-			$this->Alert->error('general.deleteTransfer.restrictDelete');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('remove'));
-		} else {
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+			$id = $entity->id;
 			$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
 			$EducationProgrammesNextProgrammesTable->deleteAll([
-						$EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
-					]);
-		}
+				$EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
+			]);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
