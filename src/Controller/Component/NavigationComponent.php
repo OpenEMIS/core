@@ -530,6 +530,12 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
 					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
+			],
+			'Directories.Healths' => [
+				'title' => 'Health',
+				'parent' => 'Directories.index',
+				'params' => ['plugin' => 'Directory'],
+				'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests']
 			]
 		];
 		return $navigation;
@@ -843,7 +849,7 @@ class NavigationComponent extends Component {
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
-				'selected' => ['Workflow.Workflows', 'Workflow.Steps']
+				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
 			],
 		];
 		return $navigation;
