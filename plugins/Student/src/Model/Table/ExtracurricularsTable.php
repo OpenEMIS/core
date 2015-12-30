@@ -59,4 +59,14 @@ class ExtracurricularsTable extends AppTable {
 			])
 		;
 	}
+	private function setupTabElements() {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

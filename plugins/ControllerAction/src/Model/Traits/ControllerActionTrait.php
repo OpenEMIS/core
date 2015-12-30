@@ -57,6 +57,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.view.beforeQuery'			=> 'viewBeforeQuery',
 		// public function viewBeforeQuery(Event $event, Query $query) {}
 
+		//'ControllerAction.Model.view.onReload'			=> 'viewOnReload',
+		// public function viewOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
+
 		'ControllerAction.Model.view.afterAction'			=> 'viewAfterAction',
 		// public function viewAfterAction(Event $event, Entity $entity) {}
 
@@ -96,6 +99,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
+		'ControllerAction.Model.edit.beforeSave'			=> 'editBeforeSave', // you can overwrite this function to implement your own saving logic
+		// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }
+
 		'ControllerAction.Model.edit.afterSave'				=> 'editAfterSave', // extra processing after saving
 		// public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
@@ -123,8 +129,11 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
 		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {}
 
-		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete'
+		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete',
 		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+
+		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
+		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
 	];
 
 	public function getControllerActionEvents() {
