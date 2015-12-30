@@ -13,15 +13,15 @@ class SecurityGroupUsersTable extends AppTable {
 	}
 
 	public function insertSecurityRoleForInstitution($data) {
-		$institutionSiteId = (array_key_exists('institution_site_id', $data))? $data['institution_site_id']: null;
+		$institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
 		$securityUserId = (array_key_exists('security_user_id', $data))? $data['security_user_id']: null;
 		$securityRoleId = (array_key_exists('security_role_id', $data))? $data['security_role_id']: null;
 
-		if (!is_null($institutionSiteId) && !is_null($securityUserId) && !is_null($securityRoleId)) {
+		if (!is_null($institutionId) && !is_null($securityUserId) && !is_null($securityRoleId)) {
 			$Institution = TableRegistry::get('Institution.Institutions');
 			$institutionQuery = $Institution
 				->find()
-				->where([$Institution->aliasField($Institution->primaryKey()) => $institutionSiteId])
+				->where([$Institution->aliasField($Institution->primaryKey()) => $institutionId])
 				->first()
 				;
 
