@@ -11,8 +11,8 @@ class StudentClass extends Entity
 
     protected function _getAcademicPeriod() {
     	$name = '';
-    	if ($this->has('institution_site_section') && $this->institution_site_section->has('academic_period_id')) {
-    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_site_section->academic_period_id)->toArray();
+    	if ($this->has('institution_section') && $this->institution_section->has('academic_period_id')) {
+    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_section->academic_period_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -22,8 +22,8 @@ class StudentClass extends Entity
 
 	protected function _getInstitution() {
     	$name = '';
-    	if ($this->has('institution_site_section') && $this->institution_site_section->has('institution_site_id')) {
-    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_site_section->institution_site_id)->toArray();
+    	if ($this->has('institution_section') && $this->institution_section->has('institution_id')) {
+    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_section->institution_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -33,24 +33,24 @@ class StudentClass extends Entity
 
 	protected function _getHomeroomTeacherName() {
     	$name = '';
-        $institution_site_section_id = $this->institution_site_section_id;
-        if($this->has('institution_site_section')) { // && $this->institution_site_section->has('staff')){
-            $InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-            $InstitutionSiteSection = $InstitutionSiteSections
+        $institution_section_id = $this->institution_section_id;
+        if($this->has('institution_section')) { // && $this->institution_section->has('staff')){
+            $InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+            $InstitutionSection = $InstitutionSections
                     ->find()
                     ->contain(['Staff'])
-                    ->where(['InstitutionSiteSections.id' => $institution_site_section_id])
+                    ->where(['InstitutionSections.id' => $institution_section_id])
                     ->first();  
    
-             if(!empty($InstitutionSiteSection->staff))
-                $name = $InstitutionSiteSection->staff->name;
+             if(!empty($InstitutionSection->staff))
+                $name = $InstitutionSection->staff->name;
         }
     	return $name;
 	}
 	protected function _getEducationSubject() {
 		$name = '';
-		if ($this->has('institution_site_class') && $this->institution_site_class->has('education_subject_id')) {
-			$data = TableRegistry::get('Education.EducationSubjects')->get($this->institution_site_class->education_subject_id)->toArray();
+		if ($this->has('institution_class') && $this->institution_class->has('education_subject_id')) {
+			$data = TableRegistry::get('Education.EducationSubjects')->get($this->institution_class->education_subject_id)->toArray();
 			if (!empty($data)) {
     			$name = $data['name'];
     		}
