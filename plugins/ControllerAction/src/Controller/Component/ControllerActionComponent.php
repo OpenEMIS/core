@@ -13,7 +13,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.9
+ControllerActionComponent - Current Version 3.1.11
+3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
+3.1.10 (Thed) - added new event onDeleteTransfer
 3.1.9 (Malcolm) - Added 'getTriggerFrom()' get method
 3.1.8 (Jeff) - session variable to store the primary key value of object includes the plugin name now
 3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
@@ -1278,52 +1280,69 @@ class ControllerActionComponent extends Component {
 							}
 						}
 					}
+
 					if ($process($model, $transferFrom, $deleteOptions)) {
-						foreach ($associations as $assocs) {
-							foreach ($assocs as $assoc) {
-								if ($assoc->type() == 'oneToMany') {
-									$assoc->updateAll(
-										[$assoc->foreignKey() => $transferTo],
-										[$assoc->foreignKey() => $transferFrom]
-									);
+						$id = $request->data[$primaryKey];
+						$transferOptions = new ArrayObject([]);
 
-								} else if ($assoc->type() == 'manyToMany') {
-									$modelAssociationTable = $assoc->junction();
+						$transferProcess = function($associations, $transferFrom, $transferTo, $model) {
+							foreach ($associations as $assocs) {
+								foreach ($assocs as $assoc) {
+									if ($assoc->type() == 'oneToMany') {
+										$assoc->updateAll(
+											[$assoc->foreignKey() => $transferTo],
+											[$assoc->foreignKey() => $transferFrom]
+										);
 
-									// List of the target foreign keys for subqueries
-									$targetForeignKeys = $modelAssociationTable->find()
-										->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
-										->where([
-											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-										]);
+									} else if ($assoc->type() == 'manyToMany') {
+										$modelAssociationTable = $assoc->junction();
 
-									// List of id in the junction table to be deleted
-									$idNotToUpdate = $modelAssociationTable->find('list',[
-											'keyField' => 'id',
-											'valueField' => 'id'
-										])
-										->where([
-											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
-											$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
-										])
-										->toArray();
+										// List of the target foreign keys for subqueries
+										$targetForeignKeys = $modelAssociationTable->find()
+											->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+											->where([
+												$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+											]);
 
-									$condition = [];
+										// List of id in the junction table to be deleted
+										$idNotToUpdate = $modelAssociationTable->find('list',[
+												'keyField' => 'id',
+												'valueField' => 'id'
+											])
+											->where([
+												$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
+												$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
+											])
+											->toArray();
 
-									if (empty($idNotToUpdate)) {
-										$condition = [$assoc->foreignKey() => $transferFrom];
-									} else {
-										$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+										$condition = [];
+
+										if (empty($idNotToUpdate)) {
+											$condition = [$assoc->foreignKey() => $transferFrom];
+										} else {
+											$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+										}
+										
+										// Update all transfer records
+										$modelAssociationTable->updateAll(
+											[$assoc->foreignKey() => $transferTo],
+											$condition
+										);
 									}
-									
-									// Update all transfer records
-									$modelAssociationTable->updateAll(
-										[$assoc->foreignKey() => $transferTo],
-										$condition
-									);
 								}
 							}
+						};
+
+						// Event: onDeleteTransfer
+						$params = [$transferOptions, $id];
+						$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onDeleteTransfer');
+						$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onDeleteTransfer', null, $params);
+						if ($event->isStopped()) { return $event->result; }
+						if (is_callable($event->result)) {
+							$transferProcess = $event->result;
 						}
+
+						$transferProcess($associations, $transferFrom, $transferTo, $model);
 						$this->Alert->success('general.delete.success');
 					} else {
 						$this->Alert->error('general.delete.failed');
@@ -1378,10 +1397,19 @@ class ControllerActionComponent extends Component {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
 			
-			$ids = json_decode($request->data("ids"));		
+			$ids = json_decode($request->data("ids"));
+
+			$originalOrder = $model->find('list')
+				->where([$model->aliasField($primaryKey).' IN ' => $ids])
+				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+				->order([$model->aliasField($orderField)])
+				->toArray();
+
+			$originalOrder = array_reverse($originalOrder);
 
 			foreach ($ids as $order => $id) {
-				$model->updateAll([$orderField => $order + 1], [$primaryKey => $id]);
+				$orderValue = array_pop($originalOrder);
+				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
 			}
 		}
 	}

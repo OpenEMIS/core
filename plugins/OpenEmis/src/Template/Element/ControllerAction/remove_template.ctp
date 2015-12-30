@@ -30,11 +30,13 @@ $this->start('panelBody');
 
 <div class="input clearfix">
 	<label><?= __('Apply To') ?></label>
-	<div class="table-in-view">
-		<table class="table">
-			<thead><?= $this->Html->tableHeaders([__('Feature'), __('No of records')]) ?></thead>
-			<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
-		</table>
+	<div class="table-wrapper">
+		<div class="table-in-view">
+			<table class="table">
+				<thead><?= $this->Html->tableHeaders([__('Feature'), __('No of records')]) ?></thead>
+				<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
+			</table>
+		</div>
 	</div>
 </div>
 

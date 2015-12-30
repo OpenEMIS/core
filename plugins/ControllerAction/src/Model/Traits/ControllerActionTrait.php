@@ -129,11 +129,14 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
 		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {}
 
-		'ControllerAction.Model.delete.updateConvertOptions'	=> 'deleteUpdateConvertOptions',
+		'ControllerAction.Model.delete.updateConvertOptions'=> 'deleteUpdateConvertOptions',
 		// public function deleteUpdateConvertOptions(Event $event, Entity $entity, array $convertOptions) {}
 
-		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete'
+		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete',
 		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+
+		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
+		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
 	];
 
 	public function getControllerActionEvents() {

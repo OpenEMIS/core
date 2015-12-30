@@ -75,10 +75,10 @@ class AbsenceBehavior extends Behavior {
 	// public function beforeFind(Event $event, Query $query, $options) {
 	// 	$query
 	// 		->join([
-	// 			'table' => 'institution_site_students',
-	// 			'alias' => 'InstitionSiteStudents',
+	// 			'table' => 'institution_students',
+	// 			'alias' => 'InstitionStudents',
 	// 			'type' => 'INNER',
-	// 			'conditions' => 'Users.id = InstitionSiteStudents.security_user_id',
+	// 			'conditions' => 'Users.id = InstitionStudents.security_user_id',
 	// 		])
 	// 		->group('Users.id');
 	// }
