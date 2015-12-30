@@ -60,8 +60,18 @@ class StaffBehavioursTable extends AppTable {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 
+		$Staff = TableRegistry::get('Institution.Staff');
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+			'callable' => function($id) use ($Staff, $institutionId) {
+				return $Staff
+					->findByInstitutionId($institutionId)
+					->find('academicPeriod', ['academic_period_id' => $id])
+					->count();
+			}
+		]);
 
 		if (!empty($selectedPeriod)) {
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
@@ -70,6 +80,17 @@ class StaffBehavioursTable extends AppTable {
 		$this->controller->set(compact('periodOptions'));
 
 		// will need to check for search by name: AdvancedNameSearchBehavior
+	}
+
+	public function addBeforeAction(Event $event) {
+		if(!empty($this->request->data[$this->alias()]['academic_period_id'])) {
+			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
+			$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
+			$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
+		}
+		$this->ControllerAction->field('date_of_behaviour');
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -90,6 +111,17 @@ class StaffBehavioursTable extends AppTable {
 			$attr['visible'] = false;
 		}
 		return $attr;
+	}
+
+	public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, $request) {
+		if(!empty($request->data[$this->alias()]['academic_period_id'])) {
+			$startDate = $request->data[$this->alias()]['academic_start_date'];
+			$endDate = $request->data[$this->alias()]['academic_end_date'];
+			$attr['value'] = $startDate->format('d-m-Y');
+			$attr['default_date'] = false;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
@@ -134,10 +166,10 @@ class StaffBehavioursTable extends AppTable {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$Staff = TableRegistry::get('Institution.Staff');
 				$staffOptions = $staffOptions + $Staff
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'name'])
+				->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
 				->matching('Users')
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-				->where([$Staff->aliasField('institution_site_id') => $institutionId])
+				->where([$Staff->aliasField('institution_id') => $institutionId])
 				->toArray();
 			}
 			

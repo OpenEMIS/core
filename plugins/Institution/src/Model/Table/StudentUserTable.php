@@ -13,6 +13,10 @@ use App\Model\Table\AppTable;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
+
+	public function initialize(array $config) {
+		parent::initialize($config);
+	}
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
@@ -28,15 +32,33 @@ class StudentUserTable extends UserTable {
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
-				if ($Student->save($Student->newEntity($academicData, ['validate' => 'AllowEmptyName']))) {
+				if (empty($academicData['student_name'])) {
+					$academicData['student_name'] = $entity->openemis_no;
+				}
+
+				$newStudentEntity = $Student->newEntity($academicData);
+				if ($Student->save($newStudentEntity)) {
 					if ($class > 0) {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
 						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-						$sectionData['institution_site_section_id'] = $class;
-						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+						$sectionData['institution_section_id'] = $class;
+						$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+						$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
 					}
+				} else {
+					$validationErrors = [];
+					foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
+						foreach ($nvalue as $ekey => $evalue) {
+							$validationErrors[] = $evalue;
+						}
+					}
+
+					$validationErrors = implode('; ', $validationErrors);
+					$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
+					$event->stopPropagation();
+					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+					return $this->controller->redirect($action);
 				}
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
@@ -59,7 +81,9 @@ class StudentUserTable extends UserTable {
 					$AdmissionTable->log($admissionEntity->errors(), 'debug');
 					$this->Alert->error('general.add.failed');
 				}
-			}
+			} 
+
+			
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
@@ -68,6 +92,12 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
+		$this->Session->write('Student.Students.id', $entity->id);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -86,7 +116,6 @@ class StudentUserTable extends UserTable {
 		];
 
 		$tabElements = $this->controller->getUserTabElements($options);
-
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
@@ -103,9 +132,12 @@ class StudentUserTable extends UserTable {
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
-			
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$id = $this->request->query['id'];
+			$id = $this->request->query('id');
+			if (!empty($id)) {
+				$this->Session->write('Institution.Students.id', $id);
+			}
+			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
 			$studentId = $StudentTable->get($id)->student_id;
 			// Start PHPOE-1897
