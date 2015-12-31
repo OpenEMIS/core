@@ -9,7 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
-class InstitutionStudentTeacherRatioTable extends AppTable  {
+class InstitutionStudentClassroomRatioTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
@@ -21,6 +21,8 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			'excludes' => ['name','alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
 			'pages' => false
 		]);
+
+
 	}
 
 	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
@@ -36,7 +38,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$sheets[] = [
-			'name' => 'Student Teacher Ratio',
+			'name' => 'Student Classroom Ratio',
 			'table' => $this,
 			'query' => $this->find(),
 			'orientation' => 'landscape'
@@ -63,61 +65,27 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
   		return $count;
   	}
 
-  	public function onExcelRenderStaffCount(Event $event, Entity $entity, $attr) {
-  		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
-  			$academic_period_id = $attr['academic_period_id'];
-  			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-  			$currAcademicPeriod = $AcademicPeriod->find()
-  				->where([$AcademicPeriod->aliasField($AcademicPeriod->primaryKey()) => $academic_period_id])
-  				->first()
-  				;
-  			if(!empty($currAcademicPeriod)) {
-  				$periodStartDate = $currAcademicPeriod->start_date->format('Y-m-d');
-  				$periodEndDate = $currAcademicPeriod->end_date->format('Y-m-d');
-  			}
-  		}
-		// get all institution Staff where institution area id = that
-		$InstitutionStaff = TableRegistry::get('Institution.Staff');
-		$area_id = $entity->area_id;
-		$query = $InstitutionStaff->find();
-		$query->matching('Institutions.Areas', function ($q) use ($area_id) {
-			return $q->where(['Areas.id' => $area_id]);
-		});	
-		
-		$query->select(['totalStaff' => $query->func()->count('DISTINCT '.$InstitutionStaff->aliasField('Staff_id'))]);
+  	public function onExcelRenderClassCount(Event $event, Entity $entity, $attr) {
 
-		if(!empty($currAcademicPeriod)) {
-			$overlapDateCondition = [];
-			$overlapDateCondition['OR'] = [
-				'OR' => [
-					[
-						$InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-						$InstitutionStaff->aliasField('start_date') . ' <=' => $periodStartDate,
-						$InstitutionStaff->aliasField('end_date') . ' >=' => $periodStartDate
-					],
-					[
-						$InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-						$InstitutionStaff->aliasField('start_date') . ' <=' => $periodEndDate,
-						$InstitutionStaff->aliasField('end_date') . ' >=' => $periodEndDate
-					],
-					[
-						$InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-						$InstitutionStaff->aliasField('start_date') . ' >=' => $periodStartDate,
-						$InstitutionStaff->aliasField('end_date') . ' <=' => $periodEndDate
-					]
-				],
-				[
-					$InstitutionStaff->aliasField('end_date') . ' IS NULL',
-					$InstitutionStaff->aliasField('start_date') . ' <=' => $periodEndDate
-				]
-			];
-			$query->where($overlapDateCondition);
+  		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$area_id = $entity->area_id;
+		$query = $InstitutionSections->find();
+		$query->matching('Institutions.Areas', function ($q) use ($area_id) {
+				return $q->where(['Areas.id' => $area_id]);
+			});
+
+		$query->select(['totalClasses' => $query->func()->count('DISTINCT '.$InstitutionSections->aliasField('id'))])
+			->group('Areas.id')
+			;
+
+		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
+			$query->where([
+				$InstitutionSections->aliasField('academic_period_id') => $attr['academic_period_id']
+			]);
 		}
 
-		$query->group('Areas.id');
-
 		$count = $query->first();
-		$count = $count['totalStaff'];
+		$count = $count['totalClasses'];
   		return $count;
   	}
 
@@ -134,10 +102,10 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		];
 
 		$extraField[] = [
-			'key' => 'StaffCount',
-			'field' => 'StaffCount',
-			'type' => 'StaffCount',
-			'label' => 'Staff Count',
+			'key' => 'ClassCount',
+			'field' => 'ClassCount',
+			'type' => 'ClassCount',
+			'label' => 'Class Count',
 			'academic_period_id' => $academicPeriodId
 		];
 
