@@ -223,7 +223,7 @@ class InstitutionsTable extends AppTable  {
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
 		if (isset($request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
-			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentTeacherRatio'])) {
+			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentTeacherRatio', 'Report.InstitutionStudentClassroomRatio'])) {
 				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 				$academicPeriodOptions = [];
 				$academicPeriodOptions[0] = __('All Academic Periods');
