@@ -491,7 +491,8 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 	
 	// autocomplete used for UserGroups
-	public function autocomplete($search) {
+	public function autocomplete($search, $params = []) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$search = sprintf('%%%s%%', $search);
 
 		$list = $this
@@ -502,6 +503,7 @@ class InstitutionsTable extends AppTable  {
 					$this->aliasField('code') . ' LIKE' => $search
 				]
 			])
+			->where([$conditions])
 			->order([$this->aliasField('name')])
 			->all();
 		
