@@ -125,7 +125,16 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDate($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Time($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -133,7 +142,12 @@ class AppTable extends Table {
 
 	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDateTime($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				$date = new Time($entity->$attr['field']);
+				return $this->formatDate($date);
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
