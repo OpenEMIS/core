@@ -18,19 +18,8 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['name','alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
+			'excludes' => ['alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
 			'pages' => false
-		]);
-	}
-
-	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
-		$query->contain(['Areas']);
-		$query->select([
-			'Areas.name',
-			'Areas.code'
-		]);
-		$query->group([
-			'Areas.id'
 		]);
 	}
 
@@ -45,13 +34,13 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 
 	public function onExcelRenderStudentCount(Event $event, Entity $entity, $attr) {
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
-		$area_id = $entity->area_id;
+		$institutionId = $entity->id;
 		$query = $InstitutionStudents->find();
-		$query->matching('Institutions.Areas', function ($q) use ($area_id) {
-				return $q->where(['Areas.id' => $area_id]);
-			});
+		$query->matching('Institutions', function ($q) use ($institutionId) {
+			return $q->where(['Institutions.id' => $institutionId]);
+		});
 		$query->select(['totalStudents' => $query->func()->count('DISTINCT '.$InstitutionStudents->aliasField('student_id'))])
-			->group('Areas.id')
+			->group('Institutions.id')
 			;
 		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
 			$query->where([
@@ -78,11 +67,11 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
   		}
 		// get all institution Staff where institution area id = that
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
-		$area_id = $entity->area_id;
+		$institutionId = $entity->id;
 		$query = $InstitutionStaff->find();
-		$query->matching('Institutions.Areas', function ($q) use ($area_id) {
-			return $q->where(['Areas.id' => $area_id]);
-		});	
+		$query->matching('Institutions', function ($q) use ($institutionId) {
+			return $q->where(['Institutions.id' => $institutionId]);
+		});
 		
 		$query->select(['totalStaff' => $query->func()->count('DISTINCT '.$InstitutionStaff->aliasField('Staff_id'))]);
 
@@ -114,7 +103,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			$query->where($overlapDateCondition);
 		}
 
-		$query->group('Areas.id');
+		$query->group('Institutions.id');
 
 		$count = $query->first();
 		$count = $count['totalStaff'];
