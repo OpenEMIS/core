@@ -193,6 +193,7 @@ class TrainingNeedsTable extends AppTable {
 			if ($selectedType == self::CATALOGUE) {
 				$attr['type'] = 'readonly';
 				if (!is_null($this->course)) {
+					$attr['value'] = $this->course->code;
 					$attr['attr']['value'] = $this->course->code;
 				}
 			}
@@ -208,6 +209,7 @@ class TrainingNeedsTable extends AppTable {
 			if ($selectedType == self::CATALOGUE) {
 				$attr['type'] = 'readonly';
 				if (!is_null($this->course)) {
+					$attr['value'] = $this->course->name;
 					$attr['attr']['value'] = $this->course->name;
 				}
 			}
@@ -269,6 +271,8 @@ class TrainingNeedsTable extends AppTable {
 					$request->query['type'] = $request->data[$this->alias()]['type'];
 				}
 			}
+			$data[$this->alias()]['course_code'] = '';
+			$data[$this->alias()]['course_name'] = '';
 			$data[$this->alias()]['status_id'] = $entity->status_id;
 		}
 	}
@@ -340,5 +344,15 @@ class TrainingNeedsTable extends AppTable {
 		$selectedType = $this->queryString('type', $typeOptions);
 
 		return compact('typeOptions', 'selectedType');
+	}
+	
+	private function setupTabElements() {
+		$tabElements = $this->controller->getTrainingTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
 	}
 }

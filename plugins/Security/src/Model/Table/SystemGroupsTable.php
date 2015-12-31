@@ -208,7 +208,7 @@ class SystemGroupsTable extends AppTable {
 	}
 
 	public function findInInstitutions(Query $query, array $options) {
-		$query->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.security_group_id = SystemGroups.id']);
+		$query->innerJoin(['Institutions' => 'institutions'], ['Institutions.security_group_id = SystemGroups.id']);
 		return $query;
 	}
 
