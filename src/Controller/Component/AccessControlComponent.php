@@ -53,7 +53,7 @@ class AccessControlComponent extends Component {
 					if (is_null($lastModified)) {
 						$this->buildPermissions();
 					} else {
-						if ($entity->modified->gt($lastModified)) {
+						if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
 							$this->buildPermissions();
 						}
 					}
@@ -89,7 +89,7 @@ class AccessControlComponent extends Component {
 			foreach ($functions as $entity) { // for each function in roles
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
-					if (is_null($lastModified) || (!is_null($lastModified) && $lastModified->lt($entity->modified))) {
+					if (is_null($lastModified) || (!is_null($lastModified) && !is_null($entity->modified) && $lastModified->lt($entity->modified))) {
 						$lastModified = $entity->modified;
 					} 
 
@@ -224,7 +224,7 @@ class AccessControlComponent extends Component {
 
 		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 		$institutionIds = $SecurityGroupInstitutions
-		->find('list', ['keyField' => 'institution_site_id', 'valueField' => 'institution_site_id'])
+		->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
 		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
@@ -237,7 +237,7 @@ class AccessControlComponent extends Component {
 			'Areas.lft >= AreaAll.lft',
 			'Areas.rght <= AreaAll.rght'
 		])
-		->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.area_id = Areas.id'])
+		->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
 		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
@@ -250,25 +250,8 @@ class AccessControlComponent extends Component {
 			$userId = $this->Auth->user('id');
 		}
 
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$groupIds = $SecurityGroupUsers
-		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
-		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-		->toArray();
-
 		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$areas = $SecurityGroupAreas
-		->find('all')
-		->distinct(['area_id'])
-		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
-		->innerJoin(['Areas' => 'areas'], [
-			'Areas.lft >= AreaAll.lft',
-			'Areas.rght <= AreaAll.rght'
-		])
-		->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
-		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
-
+		$areas = $SecurityGroupAreas->getAreasByUser($userId);
 		return $areas;
 	}
 }

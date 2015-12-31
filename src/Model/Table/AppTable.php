@@ -50,6 +50,14 @@ class AppTable extends Table {
 
 		if (in_array('order', $columns)) {
 			$this->addBehavior('Reorder');
+			// to be removed after field_option_values is dropped
+			if ($this->table() == 'field_option_values') {
+				if ($this->behaviors()->has('Reorder')) {
+					$this->behaviors()->get('Reorder')->config([
+						'filter' => 'field_option_id',
+					]);
+				}
+			}
 		}
 
 		$dateFields = [];
@@ -117,7 +125,16 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDate($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Time($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -125,7 +142,12 @@ class AppTable extends Table {
 
 	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDateTime($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				$date = new Time($entity->$attr['field']);
+				return $this->formatDate($date);
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -205,12 +227,15 @@ class AppTable extends Table {
 				$label = str_replace(' Id', '', $label);
 			}
 		}
+		if (substr($label, -1) == ')') {
+			$label = $label.' ';
+		}
 		return $label;
 	}
 
 	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return $this->getFieldLabel($module, $col, $language);
+		return __($this->getFieldLabel($module, $col, $language));
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'

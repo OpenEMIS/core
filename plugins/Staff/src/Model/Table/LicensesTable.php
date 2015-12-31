@@ -4,13 +4,14 @@ namespace Staff\Model\Table;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class LicensesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_licenses');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('HighChart', [
@@ -42,8 +43,8 @@ class LicensesTable extends AppTable {
 		$_conditions = [];	
 		$staffTable = TableRegistry::get('Institution.Staff');
 		$innerJoinArray = [
-			'StaffUser.security_user_id = '. $this->aliasField('security_user_id'),
-		];
+			'StaffUser.staff_id = '. $this->aliasField('staff_id'),
+			];
 		$innerJoinArraySize = count($innerJoinArray);
 		foreach ($conditions as $key => $value) {
 			 $_conditions[$innerJoinArraySize++] = 'StaffUser.'.$key.' = '.$value;
@@ -56,7 +57,7 @@ class LicensesTable extends AppTable {
 			->contain(['Users', 'LicenseTypes'])
 			->select([
 				'license' => 'LicenseTypes.name',
-				'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))
+				'count' => $licenseRecord->func()->count($this->aliasField('staff_id'))
 			])
 			->where($searchConditions)
 			->join([
@@ -64,8 +65,8 @@ class LicensesTable extends AppTable {
 					'StaffUser' => [
 						'table' => $staffTable->find('academicPeriod', ['academic_period_id' => $periodId])
 							->select([
-								'security_user_id' => $staffTable->aliasField('security_user_id'),
-								'institution_site_id' => $staffTable->aliasField('institution_site_id')
+								'staff_id' => $staffTable->aliasField('staff_id'),
+								'institution_id' => $staffTable->aliasField('institution_id')
 							]),
 						'type' => 'INNER',
 						'conditions' => $innerJoinArray
@@ -80,5 +81,15 @@ class LicensesTable extends AppTable {
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
+	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
 	}
 }
