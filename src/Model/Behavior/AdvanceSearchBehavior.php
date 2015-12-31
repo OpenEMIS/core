@@ -35,7 +35,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
-			'ControllerAction.Model.index.beforePaginate' => ['callable' => 'indexBeforePaginate', 'priority' => 110],
+			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
 		$events = array_merge($events,$newEvent);

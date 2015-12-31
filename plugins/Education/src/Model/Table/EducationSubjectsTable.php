@@ -7,7 +7,7 @@ class EducationSubjectsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
-		$this->hasMany('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses', 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'cascadeCallbacks' => true]);
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',
 			'joinTable' => 'education_grades_subjects',
