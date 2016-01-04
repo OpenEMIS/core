@@ -67,7 +67,7 @@ class StaffBehavioursTable extends AppTable {
 			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
-					->findByInstitutionSiteId($institutionId)
+					->findByInstitutionId($institutionId)
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -166,10 +166,10 @@ class StaffBehavioursTable extends AppTable {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$Staff = TableRegistry::get('Institution.Staff');
 				$staffOptions = $staffOptions + $Staff
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'name'])
+				->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
 				->matching('Users')
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-				->where([$Staff->aliasField('institution_site_id') => $institutionId])
+				->where([$Staff->aliasField('institution_id') => $institutionId])
 				->toArray();
 			}
 			

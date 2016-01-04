@@ -47,7 +47,6 @@ if(!empty($attr['results']['excelFile'])):
 						echo sprintf('<th>%s</th>', $col);
 					endforeach;
 					?>
-					<th><?= $this->Label->get('Import.error_message'); ?></th>
 				</tr>
 			</thead>
 			
@@ -63,7 +62,10 @@ if(!empty($attr['results']['excelFile'])):
 						<?= $row['row_number']; ?>
 					</td>
 					<?php 
-					foreach ($row['data'] as $col):
+					foreach ($row['data'] as $key=>$col):
+						if ($key == count($row['data'])-1) {
+							continue;
+						}
 						echo sprintf('<td>%s</td>', $col);
 					endforeach;
 					?>

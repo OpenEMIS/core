@@ -10,19 +10,22 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\Collection\Collection;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportInstitutionSurveysTable extends AppTable {
 	const RECORD_QUESTION = 1;
 	const FIRST_RECORD = 2;
 
-	public $institutionSurveyId = false;
-	public $institutionSurvey = false;
+	private $institutionSurveyId = false;
+	private $institutionSurvey = false;
+
 	public function initialize(array $config) {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSiteSurveys']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSurveys']);
 
 	    $this->Institutions = TableRegistry::get('Institution.Institutions');
 	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -43,11 +46,6 @@ class ImportInstitutionSurveysTable extends AppTable {
 	public function beforeAction($event) {
 		if ($this->action != 'downloadFailed') {
 			$session = $this->request->session();
-			if ($session->check('Institution.Institutions.id')) {
-				$this->institutionId = $session->read('Institution.Institutions.id');
-			} else {
-				$this->institutionId = false;
-			}
 			if (!empty($this->request->pass) && isset($this->request->pass[1])) {
 				$this->institutionSurveyId = $this->request->pass[1];
 			}
@@ -90,8 +88,16 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$events = parent::implementedEvents();
 		$newEvent = [];
 		$newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$newEvent['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$crumbTitle = $this->getHeader($this->alias());
+		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'];
+		$Navigation->substituteCrumb($crumbTitle, 'Surveys', $url);
+		$Navigation->addCrumb($crumbTitle);
 	}
 
 	public function template() {
@@ -343,7 +349,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 								if (!$rowFailed) {
 									$obj = [
-										'institution_site_survey_id' => $this->institutionSurvey->id,
+										'institution_survey_id' => $this->institutionSurvey->id,
 										'survey_question_id' => $question->id,
 										$this->fieldTypes[$fieldType] => $trimmedVal,
 									];
@@ -412,7 +418,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 										$originalRow[$colCount] = $this->getCellValue($sheet, $colCount, $row);
 										if (!empty($originalRow[$colCount])) {
 											$obj = [
-												'institution_site_survey_id' => $this->institutionSurvey->id,
+												'institution_survey_id' => $this->institutionSurvey->id,
 												'survey_question_id' => $question->id,
 												'survey_table_row_id' => $r->id,
 												'survey_table_column_id' => $c->id,
@@ -442,7 +448,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 					if ($fieldType != 'CHECKBOX' && $fieldType != 'TABLE') {
 						$obj = [
-							'institution_site_survey_id' => $this->institutionSurvey->id,
+							'institution_survey_id' => $this->institutionSurvey->id,
 							'survey_question_id' => $question->id,
 							$this->fieldTypes[$fieldType] => $cellValue,
 						];
@@ -453,11 +459,11 @@ class ImportInstitutionSurveysTable extends AppTable {
 				}
 
 				if (!$rowFailed) {
-					$this->InstitutionSurveyAnswers->deleteAll(['institution_site_survey_id' => $this->institutionSurvey->id]);
+					$this->InstitutionSurveyAnswers->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempRow as $entity) {
 						$this->InstitutionSurveyAnswers->save($entity);
 					}
-					$this->InstitutionSurveyTableCells->deleteAll(['institution_site_survey_id' => $this->institutionSurvey->id]);
+					$this->InstitutionSurveyTableCells->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempTableRow as $entity) {
 						$this->InstitutionSurveyTableCells->save($entity);
 					}

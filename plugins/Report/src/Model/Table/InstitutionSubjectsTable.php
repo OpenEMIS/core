@@ -10,11 +10,11 @@ use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('institution_site_classes');
+		$this->table('institution_classes');
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', 			['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
 		$this->addBehavior('Excel');

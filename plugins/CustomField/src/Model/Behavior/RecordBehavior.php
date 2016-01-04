@@ -259,6 +259,25 @@ class RecordBehavior extends Behavior {
     	}
     }
 
+    /**
+	 *	Function to get the filter key from the filter specified
+     *
+     *	@param string $filter The filter provided by the custom module
+     *	@param string $model The model provided by the custom module
+     *	@return The filter foreign key name if found. If not it will return empty.
+     */
+	public function getFilterKey($filter, $model) {
+		$filterKey = '';
+		$associations = TableRegistry::get($filter)->associations();
+		foreach ($associations as $assoc) {
+			if ($assoc->registryAlias() == $model) {
+				$filterKey = $assoc->foreignKey();
+				return $filterKey;
+			}
+		}
+		return $filterKey;
+	}
+
 	public function getCustomFieldQuery($entity) {
 		$customFieldQuery = null;
 		//For Institution Survey

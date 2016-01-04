@@ -9,6 +9,6 @@ class StatusesTable extends AppTable {
         $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
 		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_status_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_status_id']);
 	}
 }

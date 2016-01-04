@@ -4,6 +4,7 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
@@ -67,6 +68,15 @@ class BankAccountsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('remarks', $order++);
 	}
 
+	public function onGetActive(Event $event, Entity $entity) {
+		$active = $entity->active;
+		if ($active == 1) {
+			return __('Yes');
+		} else {
+			return __('No');
+		}
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -74,5 +84,38 @@ class BankAccountsTable extends AppTable {
 			->add('bank_name', [
 			])
 		;
+	}
+
+	private function setupTabElements() {
+		switch ($this->controller->name) {
+			case 'Students':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Staff':
+				$tabElements = $this->controller->getFinanceTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Directories':
+				$type = $this->request->query('type');
+				$options = [
+					'type' => $type
+				];
+				if ($type == 'student') {
+					$tabElements = $this->controller->getFinanceTabElements($options);
+				} else {
+					$tabElements = $this->controller->getStaffFinanceTabElements($options);
+				}
+				
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+		}
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
 	}
 }
