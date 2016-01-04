@@ -31,14 +31,9 @@ class InstitutionShiftsTable extends AppTable {
  	        ->add('start_time', 'ruleCompareDate', [
 		            'rule' => ['compareDate', 'end_time', true]
 	    	    ])
- 	        ->notEmpty('institution_name', 'Search for Institution for OTHER school selection', function ($context) {
- 	        		$data = $this->request->data[$this->alias()];
- 	        		if(!empty($data['location']) && ($data['location'] == 'OTHER')) {
- 	        			return true;
- 	        		}
-				})
- 	        ->notEmpty('location_institution_id', 'Location not chosen');
-	        ;
+ 	        ->add('institution_name', 'ruleCheckLocationInstitutionId', [
+ 	        		'rule' => ['checkInstitutionLocation']
+ 	        	]);
 		return $validator;
 	}
 
