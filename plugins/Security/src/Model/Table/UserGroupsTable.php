@@ -59,6 +59,15 @@ class UserGroupsTable extends AppTable {
 		]);
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
@@ -66,6 +75,62 @@ class UserGroupsTable extends AppTable {
 				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
 				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$userId = $this->Auth->user('id');
+		$securityGroupId = $entity->id;
+		// -1 = system roles, we are not allowing users to modify system roles
+		// removing all buttons from the menu
+		if (!$this->AccessControl->isAdmin()) {
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+				if (array_key_exists('edit', $buttons)) {
+					unset($buttons['edit']);
+				}
+			}
+
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_delete')) {
+				if (array_key_exists('remove', $buttons)) {
+					unset($buttons['remove']);
+				}
+			}
+		}
+		
+		return $buttons;
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['security_group_id'] = $entity->id;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if (!$this->AccessControl->isAdmin()) {
+				$userId = $this->Auth->user('id');
+				$securityGroupId = $this->request->data[$this->alias()]['security_group_id'];
+				$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+				if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+					if (array_key_exists('edit', $toolbarButtons)) {
+						unset($toolbarButtons['edit']);
+					}
+				}
+			}
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$userId = $this->Auth->user('id');
+			$securityGroupId = $entity->id;
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+				$urlParams = $this->ControllerAction->url('index');
+				$event->stopPropagation();
+				return $this->controller->redirect($urlParams);
+			}
 		}
 	}
 
@@ -324,14 +389,12 @@ class UserGroupsTable extends AppTable {
 				$userId = null;
 			}
 			$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId);
-
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
 					$this->request->data[$alias] = [$key => []];
 				} else {
 					$this->request->data[$alias][$key] = [];
 				}
-
 				$associated = $entity->extractOriginal([$key]);
 				if (!empty($associated[$key])) {
 					foreach ($associated[$key] as $i => $obj) {
@@ -345,13 +408,36 @@ class UserGroupsTable extends AppTable {
 							]
 						];
 					}
+				} else {
+					$groupAdmin = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first();
+					$groupAdminId = $groupAdmin->id;
+					$UserTable = TableRegistry::get('Users');
+					$user = $UserTable->get($userId);
+					if (empty($this->request->data[$alias][$key])) {
+						$this->request->data[$alias][$key][] = [
+							'id' => $userId,
+							'_joinData' => [
+								'openemis_no' => $user->openemis_no, 
+								'security_user_id' => $userId, 
+								'name' => $user->name,
+								'security_role_id' => $groupAdminId
+							]
+						];
+					}
 				}
 			}
 			// refer to addEditOnAddUser for http post
 			if ($this->request->data("$alias.$key")) {
+
+				if (!$this->AccessControl->isAdmin()) {
+					if ($entity->isNew()) {
+						$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
+					}
+				}
+				// For the original user
 				$associated = $entity->extractOriginal([$key]);
 				$found = false;
-				if (!empty($associated[$key])) {
+				if (!empty($associated[$key]) && !$entity->isNew()) {
 					foreach ($associated[$key] as $i => $obj) {
 						if ($obj->id == $userId) {
 							$rowData = [];
@@ -391,6 +477,22 @@ class UserGroupsTable extends AppTable {
 						$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
 						$rowData[] = $this->getDeleteButton();
 						$tableCells[] = $rowData;
+					} else if ($entity->isNew()) {
+						if (!$this->AccessControl->isAdmin()) {
+							// If this is a new user group
+							$rowData = [];
+							$name = $joinData['name'];
+							$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $joinData['security_role_id']]);
+							$rowData[] = $joinData['openemis_no'];
+							$rowData[] = $name;
+							$rowData[] = __('Group Administrator');
+							$rowData[] = $this->getDeleteButton();
+							$tableCells[] = $rowData;
+						}
 					}
 				}
 			}
