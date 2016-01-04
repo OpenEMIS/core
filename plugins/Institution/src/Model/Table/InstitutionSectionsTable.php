@@ -831,6 +831,7 @@ class InstitutionSectionsTable extends AppTable {
 		foreach ($record->institution_classes as $class) {
 			$students = [];
 			foreach($record->institution_section_students as $sectionStudent) {
+				if (!$sectionStudent->has('user')) continue;
 				$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students');
 			}
 			if (count($class->institution_class_students)>0) {
