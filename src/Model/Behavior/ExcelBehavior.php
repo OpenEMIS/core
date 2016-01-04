@@ -142,6 +142,9 @@ class ExcelBehavior extends Behavior {
 			$this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
 			$sheetName = $sheet['name'];
 
+			// Check to make sure the string length does not exceed 31 characters
+			$sheetName = (strlen($sheetName) > 31) ? substr($sheetName,0,28).'...' : $sheetName;
+
 			// if the primary key of the record is given, only generate that record
 			if (array_key_exists('id', $settings)) {
 				$id = $settings['id'];
