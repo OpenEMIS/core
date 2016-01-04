@@ -175,7 +175,7 @@ class SecurityRolesTable extends AppTable {
 		$permissionBtn = ['permissions' => $buttons['view']];
 		$permissionBtn['permissions']['url']['action'] = 'Permissions';
 		$permissionBtn['permissions']['url'][0] = 'index';
-		$permissionBtn['permissions']['label'] = __('Permissions');
+		$permissionBtn['permissions']['label'] = '<i class="fa fa-key"></i>' . __('Permissions');
 
 		// foreach ($permissionBtn['permissions']['url'] as $key => $val) {
 		// 	if (!in_array($key, $attr)) {
