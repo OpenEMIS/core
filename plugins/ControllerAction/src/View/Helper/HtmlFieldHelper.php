@@ -336,16 +336,31 @@ class HtmlFieldHelper extends Helper {
 		$defaultWidth = 90;
 		$defaultHeight = 115;
 
+		$maxImageWidth = 60;
+
 		if ($action == 'index' || $action == 'view') {
 			$src = $data->photo_content;
-			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
 
-			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
-			echo $jsFunc;
-
-			if (!empty($src)) {
-				$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:60px;" /></div>' : $src;
-			}	
+			if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {				
+				$imageUrl = '';
+				if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
+					$imageUrl = $this->Url->build($attr['imageUrl'], true);
+				}
+				$imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
+				$value= '<div class="table-thumb" 
+					data-load-image=true 
+					data-image-width='.$maxImageWidth.' 
+					data-image-url='.$imageUrl.'
+					>
+					<div class="profile-image-thumbnail">
+					'.$imageDefault.'
+					</div>
+					</div>';
+			} else {
+				if (!empty($src)) {
+					$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
+				}	
+			}			
 		} else if ($action == 'edit') {
 			$defaultImgViewClass = $this->table->getDefaultImgViewClass();
 			$defaultImgMsg = $this->table->getDefaultImgMsg();
@@ -376,6 +391,7 @@ class HtmlFieldHelper extends Helper {
 																							'defaultImgView' => $defaultImgView]);
 
 		} 
+
 		return $value;
 	}
 
@@ -409,7 +425,7 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy H:i:s',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto'
+			'orientation' => 'auto'
 		];
 
 		if (!isset($attr['date_options'])) {
@@ -437,7 +453,7 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto',
+			'orientation' => 'auto',
 			'autoclose' => true,
 		];
 
@@ -590,13 +606,14 @@ class HtmlFieldHelper extends Helper {
 
 	public function binary($action, Entity $data, $attr, $options=[]) {
 		$value = '';
+		$table = TableRegistry::get($attr['className']);
+		$fileUpload = $table->behaviors()->get('FileUpload');
+		$name = '&nbsp;';
+		if (!empty($fileUpload)) {
+			$name = $fileUpload->config('name');
+		}
+
 		if ($action == 'index' || $action == 'view') {
-			$table = TableRegistry::get($attr['className']);
-			$fileUpload = $table->behaviors()->get('FileUpload');
-			$name = '&nbsp;';
-			if (!empty($fileUpload)) {
-				$name = $fileUpload->config('name');
-			}
 			// $buttons = $this->_View->get('_buttons');
 			$buttons = $this->_View->get('ControllerAction');
 			$buttons = $buttons['buttons'];
@@ -604,6 +621,9 @@ class HtmlFieldHelper extends Helper {
 			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
+			if (isset($data->$name)) {
+				$attr['value'] = $data->$name;
+			}
 			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
 		}
 		return $value;

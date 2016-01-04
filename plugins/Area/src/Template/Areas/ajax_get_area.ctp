@@ -3,6 +3,10 @@
 	$this->Form->templates($template);
 
 	$url = $this->Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
+	$formClass = 'form-control';
+	if ($formError) {
+		$formClass .= ' form-error';
+	}
 
 	$count = 0;
 	foreach ($path as $obj) {
@@ -10,7 +14,7 @@
 		$name = $obj->level->name;
 		if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
 			echo $this->Form->input($name, [
-				'class' => 'form-control',
+				'class' => $formClass,
 				'div' => false,
 				'data-source' => $tableName,
 				'target-model' => $targetModel,
@@ -20,7 +24,9 @@
 				'onchange' => 'Area.reload(this)',
 				'options' => $obj->list,
 				'disabled' => false,
-				'default' => $obj->selectedId
+				'default' => $obj->selectedId,
+				'form-error' => $formError,
+				'display-country' => $displayCountry
 			]);
 		}
 		$count++;
