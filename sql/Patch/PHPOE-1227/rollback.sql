@@ -15,5 +15,13 @@ DROP TABLE IF EXISTS `health_conditions`;
 DROP TABLE IF EXISTS `health_immunization_types`;
 DROP TABLE IF EXISTS `health_test_types`;
 
+-- field_options
+DELETE FROM `field_options` WHERE `parent` = 'Health';
+
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` IN (7037, 7038, 7039, 7040, 7041, 7042, 7043, 7044);
+DELETE FROM `security_functions` WHERE `id` IN (2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028);
+DELETE FROM `security_functions` WHERE `id` IN (3028, 3029, 3030, 3031, 3032, 3033, 3034, 3035);
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1227';

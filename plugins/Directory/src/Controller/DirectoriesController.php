@@ -121,24 +121,6 @@ class DirectoriesController extends AppController {
 			$header = '';
 			$userId = $session->read('Directory.Directories.id');
 
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $session->read('AccessControl.Institutions.ids');
-				$studentId = $session->read('Student.Students.id');
-				$enrolledStatus = false;
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				foreach ($institutionIds as $id) {
-					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-					if ($enrolledStatus) {
-						break;
-					}
-				}
-				if (! $enrolledStatus) {
-					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
-						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
-					}
-				}
-			}
-
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
 			}
