@@ -5,6 +5,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Database\ValueBinder;
 
 class LicensesTable extends AppTable {
 	public function initialize(array $config) {
@@ -38,12 +39,17 @@ class LicensesTable extends AppTable {
 
 	// Use for Mini dashboard (Institution Staff)
 	public function getNumberOfStaffByLicenses($params=[]){
+		$query = $params['query'];
+		$table = $params['table'];
+
+		$StaffTableQuery = clone $query;
+		$staffIds = $StaffTableQuery->select([$table->aliasField('staff_id')]);
 		$institutionId = 0;
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];	
 		$staffTable = TableRegistry::get('Institution.Staff');
 		$innerJoinArray = [
-			'StaffUser.staff_id = '. $this->aliasField('staff_id'),
+			'StaffUser.Staff__staff_id = '. $this->aliasField('staff_id'),
 			];
 		$innerJoinArraySize = count($innerJoinArray);
 		foreach ($conditions as $key => $value) {
@@ -61,19 +67,15 @@ class LicensesTable extends AppTable {
 			])
 			->where($searchConditions)
 			->join([
-
-					'StaffUser' => [
-						'table' => $staffTable->find('academicPeriod', ['academic_period_id' => $periodId])
-							->select([
-								'staff_id' => $staffTable->aliasField('staff_id'),
-								'institution_id' => $staffTable->aliasField('institution_id')
-							]),
-						'type' => 'INNER',
-						'conditions' => $innerJoinArray
-					]
+				'StaffUser' => [
+					'table' => $staffIds,
+					'type' => 'INNER',
+					'conditions' => $innerJoinArray
+				]
 			])
 			->group('license')
-			->toArray();
+			->toArray()
+			;
 		$dataSet = [];
 		foreach ($licenseCount as $value) {
             //Compile the dataset
