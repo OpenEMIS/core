@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 
 class AccountBehavior extends Behavior {
 	private $isInstitution = false;
@@ -33,6 +34,7 @@ class AccountBehavior extends Behavior {
 
 	public function getAccountValidation(Validator $validator) {
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
+		$this->_table->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
 		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
 		return $validator
@@ -41,6 +43,9 @@ class AccountBehavior extends Behavior {
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
 				]
 			])
 			->add('password' , [
@@ -115,7 +120,7 @@ class AccountBehavior extends Behavior {
 		}
 
 		$this->_table->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
-		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '']]);
+		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 
 
 
@@ -138,8 +143,19 @@ class AccountBehavior extends Behavior {
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// trimming passwords
+		$dataArray = $data->getArrayCopy();
+		if (array_key_exists($this->_table->alias(), $dataArray)) {
+			if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
+				$data[$this->_table->alias()]['username'] = trim($dataArray[$this->_table->alias()]['username']);
+			}
+		}
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query) {

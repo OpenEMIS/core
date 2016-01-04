@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 
 class TransferApprovalsTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -37,6 +38,9 @@ class TransferApprovalsTable extends AppTable {
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
+		//set current date to start date
+		$entity->start_date = new Time(date('Y-m-d'));
+
 		// Set all selected values only
 		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
 		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
@@ -67,7 +71,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('comment');
 		$this->ControllerAction->field('previous_institution_id');
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
-		$this->ControllerAction->field('created', ['visible'=>true, 'type' => 'disabled', 'attr' => ['value' => $entity->created->format('Y-m-d')]]);
+		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
 
 		$this->ControllerAction->setFieldOrder([
 			'created', 'transfer_status', 'student',
@@ -285,7 +289,7 @@ class TransferApprovalsTable extends AppTable {
 				->contain(['Users', 'Institutions', 'EducationGrades', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
 				->where($where)
 				->order([
-					$this->aliasField('created')
+					$this->aliasField('modified') => 'DESC'
 				])
 				->toArray();
 
