@@ -30,55 +30,10 @@ class DirectoriesTable extends AppTable {
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
-		// Users
-		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Languages', ['className' => 'User.UserLanguages', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Comments', ['className' => 'User.Comments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Attachments', ['className' => 'User.Attachments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('History', ['className' => 'User.UserActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-
-		// Student
-		$this->hasMany('StudentGuardians', ['className' => 'Student.Guardians', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentProgrammes', ['className' => 'Student.Programmes', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentClasses', ['className' => 'Student.StudentSections', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentSubjects', ['className' => 'Student.StudentClasses', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentAbsences', ['className' => 'Student.Absences', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentResults', ['className' => 'Student.Results', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('StudentFeesAbstract', ['className' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id', 'dependent' => true]);
-		$this->hasMany('StudentBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('StudentAwards', ['className' => 'User.Awards', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-
-		// Staff
-		$this->hasMany('StaffEmployments', ['className' => 'Staff.Employments', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffSalaries', ['className' => 'Staff.Salaries', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffQualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		// StaffSections: do not set dependent to true, set staff_id to 0 in afterDelete
-		$this->hasMany('StaffSections', ['className' => 'Staff.StaffSections', 'foreignKey' => 'staff_id']);
-		$this->hasMany('StaffClasses', ['className' => 'Staff.StaffClasses', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffAbsences', ['className' => 'Staff.Absences', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffLeaves', ['className' => 'Staff.Leaves', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffBehaviours', ['className' => 'Staff.StaffBehaviours', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffMemberships', ['className' => 'Staff.Memberships', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffLicenses', ['className' => 'Staff.Licenses', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('TrainingResults', ['className' => 'Staff.TrainingResults', 'foreignKey' => 'trainee_id', 'dependent' => true]);
-		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'staff_id', 'dependent' => true]);
-		$this->hasMany('StaffBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('StaffAwards', ['className' => 'User.Awards', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-
-		// Guardian
-		$this->hasMany('Guardians', ['className' => 'Student.Guardians', 'foreignKey' => 'guardian_id', 'dependent' => true]);
-
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AdvanceSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -101,10 +56,6 @@ class DirectoriesTable extends AppTable {
 		return $validator
 			->allowEmpty('photo_content')
 		;
-	}
-
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$this->StaffSections->updateAll(['staff_id' => 0], ['staff_id' => $entity->id]);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
