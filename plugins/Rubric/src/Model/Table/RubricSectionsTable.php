@@ -13,6 +13,7 @@ class RubricSectionsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
 		$this->hasMany('RubricCriterias', ['className' => 'Rubric.RubricCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('Reorder', ['filter' => 'rubric_template_id']);
 	}
 
 	public function validationDefault(Validator $validator) {

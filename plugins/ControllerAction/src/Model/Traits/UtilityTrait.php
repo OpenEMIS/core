@@ -85,6 +85,15 @@ trait UtilityTrait {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
 		$defaultValue = null;
+
+		// Check if the selected key is empty. If it is not empty then change the selected to null and get
+		// the first available from the list
+		if (is_callable($callable) && !empty($selected)) {
+			$count = $callable($selected);
+			if ($count == 0) {
+				$selected = null;
+			}
+		}
 		
 		foreach ($options as $id => $val) {
 			if (is_array($val)) {
@@ -162,7 +171,6 @@ trait UtilityTrait {
 				}
 			}
 		}
-		// pr($defaultValue);
 		if (!is_null($defaultValue)) {
 			$selected = $defaultValue['selected'];
 			$group = $defaultValue['group'];
@@ -171,9 +179,7 @@ trait UtilityTrait {
 			} else if (strlen($selected) > 0) {
 				$options[$selected][] = 'selected';
 			}
-			// pr($selected);
 		}
-		// pr($options);
 		
 		return $selected;
 	}

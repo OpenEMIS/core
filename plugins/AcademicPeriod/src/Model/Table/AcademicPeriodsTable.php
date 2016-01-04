@@ -10,9 +10,10 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class AcademicPeriodsTable extends AppTable {
-	private $_fieldOrder = ['visible', 'current', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
+	private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -22,7 +23,7 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$additionalParameters = ['available = 1 AND visible > 0'];
+		$additionalParameters = ['editable = 1 AND visible > 0'];
 
 		return $validator
  	        ->add('end_date', 'ruleCompareDateReverse', [
@@ -39,24 +40,29 @@ class AcademicPeriodsTable extends AppTable {
 		$entity->start_year = date("Y", strtotime($entity->start_date));
 		$entity->end_year = date("Y", strtotime($entity->end_date));
 		if ($entity->current == 1) {
+			$entity->editable = 1;
+			$entity->visible = 1;
 			$this->updateAll(['current' => 0], []);
 		}
 	}
-
-	public function beforeAction(Event $event) {
+	public function beforeAction (Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
-		$this->ControllerAction->field('current');
-
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['school_days']['visible'] = false;
-		$this->fields['available']['visible'] = false;
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
 
 	public function afterAction(Event $event) {
+		$this->ControllerAction->field('current');
+		$this->ControllerAction->field('editable');
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['current'] = $entity->current;
+		$this->ControllerAction->field('visible');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -130,10 +136,16 @@ class AcademicPeriodsTable extends AppTable {
 			array_unshift($this->_fieldOrder, "parent");
 		}
 	}
-
+	
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
+
+	// For PHPOE-1916
+	public function onGetEditable(Event $event, Entity $entity) {
+		return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+	// End PHPOE-1916
 
 	public function onGetName(Event $event, Entity $entity) {
 		return $event->subject()->Html->link($entity->name, [
@@ -181,6 +193,27 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
+		$attr['onChangeReload'] = true;
+		return $attr;
+	}
+
+	public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['current'])) {
+			if ($request->data[$this->alias()]['current'] == 1) {
+				$attr['type'] = 'hidden';
+			}
+		}
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
+	}
+
+	public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['current'])) {
+			if ($request->data[$this->alias()]['current'] == 1) {
+				$attr['type'] = 'hidden';
+			}
+		}
+		$attr['options'] = $this->getSelectOptions('general.yesno');
 		return $attr;
 	}
 
@@ -226,7 +259,7 @@ class AcademicPeriodsTable extends AppTable {
 				->toArray();
 		} else {
 			$where = [
-			$this->aliasField('parent_id') . ' <> ' => 0
+				$this->aliasField('parent_id') . ' <> ' => 0,
 			];
 
 			// get the current period
@@ -262,6 +295,28 @@ class AcademicPeriodsTable extends AppTable {
 			return $dateObject->toDateString();
 		}
 		return false;
+	}
+
+	public function getWorkingDaysOfWeek() {
+		$weekdays = [
+			0 => 'Sunday',
+			1 => 'Monday',
+			2 => 'Tuesday',
+			3 => 'Wednesday',
+			4 => 'Thursday',
+			5 => 'Friday',
+			6 => 'Saturday',
+		];
+		$ConfigItems = TableRegistry::get('ConfigItems');
+		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+		$daysPerWeek = $ConfigItems->value('days_per_week');
+		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
+		$week = [];
+		for ($i=0; $i<$daysPerWeek; $i++) {
+			$week[] = $weekdays[$firstDayOfWeek++];
+			$firstDayOfWeek = $firstDayOfWeek % 7;
+		}
+		return $week;
 	}
 
 	public function getAttendanceWeeks($id) {
@@ -300,6 +355,14 @@ class AcademicPeriodsTable extends AppTable {
 		return $weeks;
 	}
 
+	public function getEditable($academicPeriodId) {
+		try {
+			return $this->get($academicPeriodId)->editable;
+		} catch (RecordNotFoundException $e) {
+			return false;
+		}
+	}
+
 	public function getAvailableAcademicPeriods($list = true, $order='DESC') {
 		if($list) {
 			$query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
@@ -307,7 +370,7 @@ class AcademicPeriodsTable extends AppTable {
 			$query = $this->find();
 		}
 		$result = $query->where([
-						$this->aliasField('available') => 1,
+						$this->aliasField('editable') => 1,
 						$this->aliasField('visible') . ' >' => 0,
 						$this->aliasField('parent_id') . ' >' => 0
 					])
@@ -323,7 +386,7 @@ class AcademicPeriodsTable extends AppTable {
 		$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
-						$this->aliasField('available') => 1,
+						$this->aliasField('editable') => 1,
 						$this->aliasField('visible').' > 0',
 						$this->aliasField('current') => 1,
 						$this->aliasField('parent_id').' > 0',
@@ -337,7 +400,7 @@ class AcademicPeriodsTable extends AppTable {
 			$query = $this->find()
 					->select([$this->aliasField('id')])
 					->where([
-						$this->aliasField('available') => 1,
+						$this->aliasField('editable') => 1,
 						$this->aliasField('visible').' > 0',
 						$this->aliasField('parent_id').' > 0',
 					])
@@ -350,5 +413,62 @@ class AcademicPeriodsTable extends AppTable {
 				return 0;
 			}
 		}
+	}
+
+	public function generateMonthsByDates($startDate, $endDate) {
+		$result = [];
+		$stampStartDay = strtotime($startDate);
+		$stampEndDay = strtotime($endDate);
+		// $stampToday = strtotime(date('Y-m-d'));
+		
+		$stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
+		// while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
+		while($stampFirstDayOfMonth <= $stampEndDay){
+			$monthString = date('F', $stampFirstDayOfMonth);
+			$monthNumber = date('m', $stampFirstDayOfMonth);
+			$year = date('Y', $stampFirstDayOfMonth);
+			
+			$result[] = [
+				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString],
+				'year' => $year
+			];
+			
+			$stampFirstDayOfMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+		}
+		
+		return $result;
+	}
+
+	public function generateDaysOfMonth($year, $month, $startDate, $endDate){
+		$days = [];
+		$stampStartDay = strtotime($startDate);
+		$stampEndDay = strtotime($endDate);
+		// $stampToday = strtotime(date('Y-m-d'));
+		
+		$stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
+		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);	
+		
+		if($stampFirstDayOfMonth <= $stampStartDay){
+			$tempStamp = $stampStartDay;
+		}else{
+			$tempStamp = $stampFirstDayOfMonth;
+		}
+		
+		// while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
+		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth){
+			$weekDay = date('l', $tempStamp);
+			$date = date('Y-m-d', $tempStamp);
+			$day = date('d', $tempStamp);
+			
+			$days[] = [
+				'weekDay' => $weekDay,
+				'date' => $date,
+				'day' => $day
+			];
+			
+			$tempStamp = strtotime('+1 day', $tempStamp);
+		}
+
+		return $days;
 	}
 }

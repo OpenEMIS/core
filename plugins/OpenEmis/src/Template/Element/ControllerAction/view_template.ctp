@@ -10,5 +10,12 @@ $this->start('toolbar');
 $this->end();
 
 $this->start('panelBody');
+	if (isset($toolbarElements)) {
+		foreach ($toolbarElements as $element) {
+			echo $this->element($element['name'], $element['data'], $element['options']);
+		}
+	}
+	$template = $this->ControllerAction->getFormTemplate();
+	$this->Form->templates($template);
 	echo $this->ControllerAction->getViewElements($data);
 $this->end();

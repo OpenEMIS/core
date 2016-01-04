@@ -11,19 +11,6 @@ var Autocomplete = {
 	},
 
 	select: function(event, ui) {
-		// var val = ui.item.value;
-		// for (var i in val) {
-		// 	element = $("input[autocomplete='"+i+"']");
-			
-		// 	if (element.length > 0) {
-		// 		if(element.get(0).tagName.toUpperCase() === 'INPUT') {
-		// 			element.val(val[i]);
-		// 		} else {
-		// 			element.html(val[i]);
-		// 		}
-		// 	}
-		// }
-
 		var obj = $(event.target);
 		var value = ui.item.value;
 		this.value = ui.item.label;
@@ -40,26 +27,16 @@ var Autocomplete = {
 		return false;
 	},
 
-	// keyup: function() {
-	// 	var val = Autocomplete.uiItems;
-	// 	for(var i in val) {
-	// 		target = $("input[autocomplete='"+i+"']");
-	// 		if( typeof target !== 'string' ){
-	// 			if(target.get(0).tagName.toUpperCase() === 'INPUT') {
-	// 				target.val('');
-	// 			} else {
-	// 				target.html('');
-	// 			}
-	// 		}
-	// 	}
-	// },
-
 	focus: function(event, ui) {
 		event.preventDefault();
 	},
 
 	beforeSearch: function(event, ui) {
 		var obj = $(event.target);
+		var loader = obj.parent().find('.autocomplete-loader');
+		if (loader.length > 0) {
+			loader.remove();
+		}
 		var text = obj.parent().find('.autocomplete-text');
 		if (text.length > 0) {
 			text.remove();
@@ -124,22 +101,59 @@ var Autocomplete = {
 		}
 	},
 
+	/**
+	 * This "source" function exists to make autocomplete fires an event when the input is cleared after it has a selected value.
+	 * Autocomplete does not support onBlur event.
+	 * Checking of minimum length required before triggering the search will be done here.
+	 * 
+	 * http://stackoverflow.com/questions/6851645/jquery-ui-autocomplete-input-how-to-check-if-input-is-empty-on-change
+	 * http://forum.jquery.com/topic/autocomplete-and-change-event
+	 *
+	 * "request" parameter is an object with an attribute "term" having the input's value.
+	 * "response" is autocomplete's callback function, in this case to trigger Autocomplete.searchComplete.
+	 * It only accepts one parameter which is the search result.
+	 */
+	source: function(request, response) {
+		var url = this.element.attr('autocomplete-url');
+		var length = this.element.attr('length');
+		if (length === undefined) length = 2;
+			
+		if (request.term.length >= length) {
+			$.ajax({
+	            url: url,
+	            dataType: "json",
+	            data: {
+	                term: request.term
+	            },
+	            success: function(data) {
+	                response(data);
+	            },
+	            error: function() { 
+	                response(false);
+	            }
+	        });
+	    } else {
+	    	response(false);
+	    }
+	},
+
 	attachAutoComplete: function(e) {
 		$(e).each(function() {
 			var obj = $(this);
-			var url = obj.attr('autocomplete-url');
-			
-			var length = obj.attr('length');
-			if (length === undefined) length = 2;
 			
 			obj.autocomplete({
-				source: url,
-				minLength: length,
-				select: Autocomplete.select,
+				// autocomplete options
+				source: Autocomplete.source,
+					// minimum length check before triggering the search will be done in "source" function.
+				minLength: 0,
+
+				// autocomplete events
 				focus: Autocomplete.focus,
 				response: Autocomplete.searchComplete,
-				search: Autocomplete.beforeSearch
-			});//.on( 'keyup', Autocomplete.keyup );
+				search: Autocomplete.beforeSearch,
+				select: Autocomplete.select,
+
+			});
 
 			obj.focus(function() { $(this).select(); });
 		});

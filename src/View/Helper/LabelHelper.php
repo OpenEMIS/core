@@ -119,10 +119,10 @@ class LabelHelper extends Helper {
 	// 		'single' => '*File size should not be larger than 2MB.',
 	// 		'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 	// 	],
-	// 	'InstitutionSiteStaff' => [
+	// 	'InstitutionStaff' => [
 	// 		'staff_status_id' => 'Status',
 	// 		'staff_type_id' => 'Type',
-	// 		'institution_site_position_id' => 'Position',
+	// 		'institution_position_id' => 'Position',
 	// 		'total_fte' => 'Total FTE',
 	// 		'fte' => 'FTE'
 	// 	],
@@ -208,4 +208,16 @@ class LabelHelper extends Helper {
 	public function get($code) {
 		return $this->getMessage($code);
 	}
+
+	public function getArabicLetter($columnNumber) {
+		$letters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ'];
+		$columnNumber--;
+        if ($columnNumber > count($letters)) {
+            $columnLetter = $letters[intval(($columnNumber - 1) / count($letters))]  . $letters[(($columnNumber - 1) % count($letters))];
+        } else {
+            $columnLetter = $letters[$columnNumber];
+        }
+        return $columnLetter;
+    }
+
 }

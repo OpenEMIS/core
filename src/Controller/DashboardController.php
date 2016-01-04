@@ -14,12 +14,15 @@ class DashboardController extends AppController {
 		// $this->loadComponent('Paginator');
 
 		$this->ControllerAction->models = [
-			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']]
+			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']],
+			'StudentAdmission' 	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']],
+			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['edit']],
 		];
-
+		
 		$this->loadComponent('Workbench', [
 			'models' => [
 				'Institution.TransferApprovals',
+				'Institution.StudentAdmission',
 				'Institution.StudentDropout'
 			]
 		]);
@@ -28,7 +31,7 @@ class DashboardController extends AppController {
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 
-    	$header = __('Dashboard');
+    	$header = __('Home Page');
 		$this->set('contentHeader', $header);
     }
 

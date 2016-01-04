@@ -10,7 +10,7 @@ class SecuritiesController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Accounts'		=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts'		=> ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
 			'Users'			=> ['className' => 'Security.Users'],
 			'UserGroups'	=> ['className' => 'Security.UserGroups'],
 			'SystemGroups'	=> ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!remove']],
@@ -36,5 +36,25 @@ class SecuritiesController extends AppController {
 
 	public function index() {
 		return $this->redirect(['action' => 'Users']);
+	}
+
+	public function getUserTabElements($options = []) {
+		$plugin = $this->plugin;
+		$name = $this->name;
+
+		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+
+		$tabElements = [
+			$this->name => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $id],
+				'text' => __('Details')
+			],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'text' => __('Account')	
+			]
+		];
+
+		return $tabElements;
 	}
 }

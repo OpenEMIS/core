@@ -7,6 +7,6 @@ class EducationProgrammeOrientationsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
-		$this->hasMany('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'cascadeCallbacks' => true]);
 	}
 }

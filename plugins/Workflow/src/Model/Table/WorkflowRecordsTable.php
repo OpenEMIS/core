@@ -6,5 +6,8 @@ use App\Model\Table\AppTable;
 class WorkflowRecordsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
+		$this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps']);
+		$this->hasMany('WorkflowTransitions', ['className' => 'Workflow.WorkflowTransitions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

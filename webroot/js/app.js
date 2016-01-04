@@ -233,9 +233,10 @@ var jsForm = {
 			}
 		}
 		var url = window.location.origin + $(obj).attr('url');
-		window.location.href = url+'?'+ret.join("&");
+		var separator = url.indexOf('?') == -1 ? '?' : '&';
+		window.location.href = url+separator+ret.join("&");
 	},
-	
+
 	linkVoid: function(id) {
 		var element = id!=undefined ? id + ' a.void' : 'a.void';
 		$(element).each(function() {
@@ -291,6 +292,41 @@ var jsList = {
 	
 	init: function(list) {
 		$('.table_view select').change(function() { jsList.attachSelectedEvent(this); });
+		
+		$("[data-load-image=true]:first").each(function() {
+			jsList.loadImage($(this));
+		});
+	},
+
+	loadImage: function(obj) {
+		var objRowId = obj.closest('[data-row-id]');
+		var imageUrl = obj.attr('data-image-url');
+		$.ajax({
+			url: imageUrl+'/'+objRowId.attr('data-row-id'),
+			type: "GET",
+			data: {'base64':true},
+			success: function(data) {
+				var i = new Image();
+				i.src = "data:image/jpg;base64," + data;
+				i.onload = function(){
+					var imageWidth = obj.attr('data-image-width');
+					if (typeof imageWidth !== typeof undefined && imageWidth !== false) {
+						i.width = imageWidth;
+					}
+					$(obj).find(".profile-image-thumbnail").empty().append(i);
+					// remove loading icon
+				};
+				i.onerror = function(){
+					// remove loading icon
+				};
+				$(obj).attr('data-load-image', false)
+			},
+			complete: function() {
+				$("[data-load-image=true]:first").each(function() {
+					jsList.loadImage($(this));
+				});
+			}
+		});	
 	},
 	
 	attachSelectedEvent: function(obj) {

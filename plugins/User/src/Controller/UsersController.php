@@ -51,13 +51,17 @@ class UsersController extends AppController {
 
 	public function postLogin() {
 		$this->autoRender = false;
-		
-		if ($this->request->is('post')) { 
+		if ($this->request->is('post')) {
 			if ($this->request->data['submit'] == 'login') {
+				$session = $this->request->session();
 				$username = $this->request->data('username');
 				$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
 				$user = $this->Auth->identify();
 				if ($user) {
+					if ($user['status'] != 1) {
+						$this->Alert->error('security.login.inactive');
+						return $this->redirect(['action' => 'login']);
+					}
 					$this->Auth->setUser($user);
 					$labels = TableRegistry::get('Labels');
 					$labels->storeLabelsInCache();
@@ -66,6 +70,11 @@ class UsersController extends AppController {
 						$user->password = $this->request->data('password');
 						$this->Users->save($user);
 					}
+					// Support Url
+					$ConfigItems = TableRegistry::get('ConfigItems');
+					$supportUrl = $ConfigItems->value('support_url');
+					$session->write('System.help', $supportUrl);
+					// End
 					return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 				} else {
 					$this->Alert->error('security.login.fail');

@@ -1,10 +1,16 @@
+/* 
+Version: v.1.0.2
+Created: 18/8/2015
+Modified: 7/10/2015
+*/
+
 @font-face {
 	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?-7stnl6');
-	src:url('fonts/kordit-fonts.eot?#iefix-7stnl6') format('embedded-opentype'),
-		url('fonts/kordit-fonts.ttf?-7stnl6') format('truetype'),
-		url('fonts/kordit-fonts.woff?-7stnl6') format('woff'),
-		url('fonts/kordit-fonts.svg?-7stnl6#kordit-fonts') format('svg');
+	src:url('fonts/kordit-fonts.eot?gxf0nt');
+	src:url('fonts/kordit-fonts.eot?gxf0nt#iefix') format('embedded-opentype'),
+		url('fonts/kordit-fonts.ttf?gxf0nt') format('truetype'),
+		url('fonts/kordit-fonts.woff?gxf0nt') format('woff'),
+		url('fonts/kordit-fonts.svg?gxf0nt#kordit-fonts') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,6 +29,18 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.kd-shipment:before {
+	content: "\e800";
+}
+.kd-header:before {
+	content: "\e642";
+}
+.kd-rows:before {
+	content: "\e643";
+}
+.kd-table:before {
+	content: "\e644";
+}
 .kd-draggable-line:before {
 	content: "\e641";
 }
