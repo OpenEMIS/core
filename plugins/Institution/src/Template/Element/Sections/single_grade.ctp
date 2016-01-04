@@ -7,8 +7,8 @@
 			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
-						<th><?= $this->Label->get('InstitutionSiteSections.section'); ?></th>
-						<th><?= $this->Label->get('InstitutionSiteSections.security_user_id'); ?></th>
+						<th><?= $this->Label->get('InstitutionSections.section'); ?></th>
+						<th><?= $this->Label->get('InstitutionSections.staff_id'); ?></th>
 					</tr>
 				</thead>
 				
@@ -43,7 +43,7 @@
 		    			} else {
 		    				if ($this->request->data['submit'] == 'save') {
 		    					$attrValue = $this->request->data['MultiClasses'][$i]['name'];
-		    					$attrErrors = $this->request->data['MultiClasses'][$i]['errors'];
+		    					$attrErrors = (array_key_exists('errors', $this->request->data['MultiClasses'][$i]))? $this->request->data['MultiClasses'][$i]['errors']: null;
 		    				} else {
 			    				$attrValue = $defaultName;
 		    				}
@@ -79,9 +79,9 @@
 								'value' => $startingSectionNumber
 							));?>
 						</td>
-
+						
 						<td><?php 
-						echo $this->Form->input(sprintf('MultiClasses.%d.security_user_id', $i), array(
+						echo $this->Form->input(sprintf('MultiClasses.%d.staff_id', $i), array(
 							'options' => $attr['data']['staffOptions'], 
 							'label' => false,
 							'div' => false,

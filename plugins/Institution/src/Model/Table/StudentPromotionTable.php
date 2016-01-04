@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
+use Cake\Controller\Component;
 
 class StudentPromotionTable extends AppTable {
 	private $InstitutionGrades = null;
@@ -30,8 +31,15 @@ class StudentPromotionTable extends AppTable {
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
     	return $events;
     }
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona=false) {
+		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
+		$Navigation->substituteCrumb('Promotion', 'Students', $url);
+		$Navigation->addCrumb('Promotion');
+	}
 
     public function beforeAction(Event $event) {
 		$this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -86,7 +94,7 @@ class StudentPromotionTable extends AppTable {
 		$gradeOptions = $InstitutionGradesTable
 			->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 			->contain(['EducationGrades'])
-			->where([$InstitutionGradesTable->aliasField('institution_site_id') => $institutionId])
+			->where([$InstitutionGradesTable->aliasField('institution_id') => $institutionId])
 			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 			->toArray();
 		$attr['type'] = 'select';
@@ -155,7 +163,7 @@ class StudentPromotionTable extends AppTable {
 					'keyField' => 'education_grade_id', 
 					'valueField' => 'education_grade.programme_grade_name'])
 				->contain(['EducationGrades'])
-				->where([$this->InstitutionGrades->aliasField('institution_site_id') => $institutionId])
+				->where([$this->InstitutionGrades->aliasField('institution_id') => $institutionId])
 				->toArray();
 
 			// Only display the options that are available in the institution and also linked to the current programme

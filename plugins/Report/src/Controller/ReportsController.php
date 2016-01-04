@@ -9,7 +9,6 @@ use Cake\ORM\TableRegistry;
 class ReportsController extends AppController {
 	public function initialize() {
 		parent::initialize();
-
 		$this->ControllerAction->models = [
 			'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
@@ -41,7 +40,11 @@ class ReportsController extends AppController {
 				'Report.InstitutionPositions' => __('Positions'),
 				'Report.InstitutionProgrammes' => __('Programmes'),
 				'Report.InstitutionClasses' => __('Classes'),
-				'Report.InstitutionSubjects' => __('Subjects')
+				'Report.InstitutionSubjects' => __('Subjects'),
+				'Report.InstitutionStudents' => __('Students'),
+				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
+				'Report.InstitutionStaff' => __('Staff'),
+				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 			];
 		} else if ($module == 'Students') {
 			$options = [

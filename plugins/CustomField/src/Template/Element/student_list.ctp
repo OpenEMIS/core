@@ -49,7 +49,7 @@
 			$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 			$dataNamedGroup[] = 'section_id';
 		}
-		echo $this->Form->input('institution_site_section', $inputOptions);
+		echo $this->Form->input('institution_section', $inputOptions);
 	?>
 	<div class="clearfix"></div>
 	<div class="table-wrapper">
@@ -66,7 +66,7 @@
 	<h3><?= $attr['attr']['label']; ?></h3>
 	<div class="clearfix">
 		<?php
-			echo $this->Form->input($alias.".institution_site_section", [
+			echo $this->Form->input($alias.".institution_section", [
 				'label' => $this->Label->get('InstitutionSurveys.section'),
 				'type' => 'select',
 				'options' => $sectionOptions,

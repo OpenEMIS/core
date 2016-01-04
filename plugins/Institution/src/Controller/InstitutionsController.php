@@ -19,14 +19,14 @@ class InstitutionsController extends AppController  {
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
-			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
-			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['search', 'index']],
+			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
+			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
-			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions', 'options' => ['deleteStrategy' => 'transfer']],
+			'Positions' 		=> ['className' => 'Institution.InstitutionPositions', 'options' => ['deleteStrategy' => 'transfer']],
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
-			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
-			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
+			'Shifts' 			=> ['className' => 'Institution.InstitutionShifts'],
+			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
+			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
@@ -41,7 +41,7 @@ class InstitutionsController extends AppController  {
 			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
 			'StudentAccount' 	=> ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
 			'StudentSurveys' 	=> ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
-			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionStudentAbsences'],
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'AttendanceExport'	=> ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
@@ -54,7 +54,7 @@ class InstitutionsController extends AppController  {
 			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
 
-			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
+			'BankAccounts' 		=> ['className' => 'Institution.InstitutionBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
 			'StudentFees' 		=> ['className' => 'Institution.StudentFees', 'actions' => ['index', 'view', 'add']],
 
@@ -66,10 +66,11 @@ class InstitutionsController extends AppController  {
 			'RubricAnswers' 	=> ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits'],
 
-			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['index', 'add']],
-			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['index', 'add']],
-			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['index', 'add']],
-			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['index', 'add']],
+			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
+			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
+			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
 	}
 
@@ -110,11 +111,12 @@ class InstitutionsController extends AppController  {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
-				if ($action == 'dashboard') {
-					$session->write('Institution.Institutions.id', $id);
-				}
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
+				if ($action == 'dashboard' || $action == 'edit') {
+					$session->write('Institution.Institutions.id', $id);
+					$session->write('Institution.Institutions.name', $name);
+				}
 				if ($action == 'view') {
 					$header = $name .' - '.__('Overview');
 				} else {
@@ -132,67 +134,66 @@ class InstitutionsController extends AppController  {
 	public function onInitialize(Event $event, Table $model) {
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
+			$institutionId = $session->read('Institution.Institutions.id');
 			$action = false;
 			$params = $this->request->params;
 			if (isset($params['pass'][0])) {
 				$action = $params['pass'][0];
 			}
 
-			$persona = false;
 			$alias = $model->alias;
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
 
+			$crumbTitle = $model->getHeader($alias);
+			$crumbOptions = [];
 			if ($action) {
-				/**
-				 * replaced 'action' => $alias to 'action' => $model->alias,
-				 * since only the name changes but not url
-				 */
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-				if (strtolower($action) != 'index')	{
-					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
-						if (isset($params['pass'][1])) {
-							$persona = $model->get($params['pass'][1]);
-							if (is_object($persona)) {
-								$this->Navigation->addCrumb($persona->name);
-							}
-						}
-					} else {
-						$this->Navigation->addCrumb(ucwords($action));
-					}
+				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
+			}
+			$this->Navigation->addCrumb($crumbTitle, $crumbOptions);
+
+			$persona = false;
+			$requestQuery = $this->request->query;
+			if (isset($params['pass'][1])) {
+				if ($model->table() == 'security_users') {
+					$persona = $model->get($params['pass'][1]);
 				}
-			} else {
-				$this->Navigation->addCrumb($model->getHeader($alias));
+			} else if (isset($requestQuery['user_id'][1])) {
+				$persona = $model->Users->get($requestQuery['user_id']);
 			}
 
 			$header = $this->activeObj->name;
-			if ($persona) {
-				$header .= ' - ' . $persona->name;
+			if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
+				$header = $persona->name . ' - ' . $model->getHeader($alias);
+				$model->addBehavior('Institution.InstitutionUserBreadcrumbs');
 			} else {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
-			if ($model->hasField('institution_id') && !in_array($model->alias(), ['TransferRequests'])) {
-				$model->fields['institution_id']['type'] = 'hidden';
-				$model->fields['institution_id']['value'] = $session->read('Institution.Institutions.id');
-			}
-
-			if ($model->hasField('institution_site_id') && !is_null($this->activeObj)) {
-				$model->fields['institution_site_id']['type'] = 'hidden';
-				$model->fields['institution_site_id']['value'] = $session->read('Institution.Institutions.id');
-				/**
-				 * set sub model's institution id here
-				 */
-				$model->institutionId = $this->activeObj->id;
+			$event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+			$event = $model->eventManager()->dispatch($event);
+			
+			if ($model->hasField('institution_id')) {
+				if (!in_array($model->alias(), ['TransferRequests'])) {
+					$model->fields['institution_id']['type'] = 'hidden';
+					$model->fields['institution_id']['value'] = $institutionId;
+				}
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
-						$model->aliasField('institution_site_id') => $this->activeObj->id
-					]);
+					if (in_array($model->alias(), ['TransferRequests'])) {
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField('previous_institution_id') => $institutionId
+						]);
+					} else {
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField('institution_id') => $institutionId
+						]);
+					}
 				
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -208,7 +209,6 @@ class InstitutionsController extends AppController  {
 
 			$this->set('contentHeader', $header);
 		} else {
-			// pr($model->alias());die;
 			if ($model->alias() == 'ImportInstitutions') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
@@ -232,13 +232,6 @@ class InstitutionsController extends AppController  {
 				} else {
 					$query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
 				}
-			} else if ($model->hasField('institution_site_id')) { // will need to remove this part once we change institution_sites to institutions
-				if (!$session->check('Institution.Institutions.id')) {
-					$this->Alert->error('general.notExists');
-					// should redirect
-				} else {
-					$query->where([$model->aliasField('institution_site_id') => $session->read('Institution.Institutions.id')]);
-				}
 			}
 		}
 	}
@@ -260,22 +253,22 @@ class InstitutionsController extends AppController  {
 			$params = array(
 				'conditions' => array('institution_id' => $id)
 			);
-			$InstitutionSiteStudents = TableRegistry::get('Institution.Students');
-			$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_year', $params);
+			$InstitutionStudents = TableRegistry::get('Institution.Students');
+			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 			
 			//Students By Grade for current year
 			$params = array(
 				'conditions' => array('institution_id' => $id)
 			);
 
-			$highChartDatas[] = $InstitutionSiteStudents->getHighChart('number_of_students_by_grade', $params);
+			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
 
 			//Staffs By Position for current year
 			$params = array(
-				'conditions' => array('institution_site_id' => $id)
+				'conditions' => array('institution_id' => $id)
 			);
-			$InstitutionSiteStaff = TableRegistry::get('Institution.Staff');
-			$highChartDatas[] = $InstitutionSiteStaff->getHighChart('number_of_staff', $params);
+			$InstitutionStaff = TableRegistry::get('Institution.Staff');
+			$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
 
 			$this->set('highChartDatas', $highChartDatas);
 
@@ -284,15 +277,35 @@ class InstitutionsController extends AppController  {
 		}
 	}
 
+	//autocomplete used for InstitutionSiteShift
+	public function ajaxInstitutionAutocomplete() {
+		$this->ControllerAction->autoRender = false;
+		$data = [];
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		if ($this->request->is(['ajax'])) {
+			$term = trim($this->request->query['term']);
+			$session = $this->request->session();
+			$institutionId = $session->read('Institution.Institutions.id');
+			$params['conditions'] = [$Institutions->aliasField('id').' IS NOT ' => $institutionId];
+			if (!empty($term)) 
+				$data = $Institutions->autocomplete($term, $params);
+				
+			echo json_encode($data);
+			die;
+		}
+	}
+
 	public function getUserTabElements($options = []) {
 		$userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
 		$action = (array_key_exists('action', $options))? $options['action']: 'add';
 		$id = (array_key_exists('id', $options))? $options['id']: 0;
 		$userId = (array_key_exists('userId', $options))? $options['userId']: 0;
+		$type = 'Students';
 
 		switch ($userRole) {
 			case 'Staff':
 				$pluralUserRole = 'Staff'; // inflector unable to handle
+				$type = 'Staff';
 				break;
 			default:
 				$pluralUserRole = Inflector::pluralize($userRole);
@@ -300,45 +313,77 @@ class InstitutionsController extends AppController  {
 		}
 
 		$url = ['plugin' => $this->plugin, 'controller' => $this->name];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 
 		$tabElements = [
 			$pluralUserRole => ['text' => __('Academic')],
-			$userRole.'User' => ['text' => __('General')],
-			$userRole.'Account' => ['text' => __('Account')]
+			$userRole.'User' => ['text' => __('Overview')],
+			$userRole.'Account' => ['text' => __('Account')], 
+			
+			// $userRole.'Nationality' => ['text' => __('Identities')],
 		];
+
+		$studentTabElements = [
+			'Identities' => ['text' => __('Identities')],
+			'Nationalities' => ['text' => __('Nationalities')],
+			'Contacts' => ['text' => __('Contacts')],
+			'Guardians' => ['text' => __('Guardians')],
+			'Languages' => ['text' => __('Languages')],
+			'SpecialNeeds' => ['text' => __('Special Needs')],
+			'Attachments' => ['text' => __('Attachments')],
+			'Comments' => ['text' => __('Comments')],
+			'History' => ['text' => __('History')],
+		];
+
+		if ($type == 'Staff') {
+			$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+			unset($studentTabElements['Guardians']);
+		}
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		if ($action == 'add') {
 			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'add']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'add']);
 		} else {
-			$tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
+			unset($tabElements[$pluralUserRole]);
+			// $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'view']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
+			
+			// $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
 
 			// Only Student has Survey tab
 			if ($userRole == 'Student') {
 				$tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
 				$tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
 			}
+
+			foreach ($studentTabElements as $key => $value) {
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+			}
 		}
 
 		foreach ($tabElements as $key => $tabElement) {
 			switch ($key) {
 				case $userRole.'User':
-					$params = [$userId, 'id' => $id];
+					$params = [$userId];
 					break;
 				case $userRole.'Account':
-					$params = [$userId, 'id' => $id];
+					$params = [$userId];
 					break;
 				case $userRole.'Surveys':
-					$params = ['id' => $id, 'user_id' => $userId];
+					$params = ['user_id' => $userId];
 					break;
 				default:
 					$params = [$id];
 			}
 			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
+
+		$session = $this->request->session();
+		$session->write('Institution.'.$type.'.tabElements', $tabElements);
 
 		return $tabElements;
 	}
