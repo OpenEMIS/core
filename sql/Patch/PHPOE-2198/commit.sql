@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-2198');
+INSERT INTO `db_patches` VALUES ('PHPOE-2198', NOW());
 
 -- procedure
 DROP PROCEDURE IF EXISTS updateSecurityRoleFunctions;
