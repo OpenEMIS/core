@@ -32,10 +32,11 @@ class AdvancedNameSearchBehavior extends Behavior {
 		// note that CONCAT_WS is not supported by cakephp and also not supported by some dbs like sqlite and mysqlserver, thus this condition
 		if ($this->_table->connection()->config()['driver'] == 'Cake\Database\Driver\Mysql') {
 			// this search is catered to jordon's request
+			$searchString = '%' . $search . '%';
 			switch (count($searchParams)) {
 				case 1:
 					// 1 word - search by openemis id or 1st or middle or third or last
-					$searchString = '%' . $search . '%';
+					
 					$conditions = [
 						'OR' => [
 							$alias . '.openemis_no LIKE' => $searchString,
