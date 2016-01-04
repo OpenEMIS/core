@@ -19,6 +19,8 @@ use DateTime;
 class StaffTable extends AppTable {
 	use OptionsTrait;
 
+	private $dashboardQuery = null;
+
 	public function initialize(array $config) {
 		$this->table('institution_staff');
 		parent::initialize($config);
@@ -167,6 +169,8 @@ class StaffTable extends AppTable {
 		}
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
+
+		$this->dashboardQuery = clone $query;
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -519,27 +523,21 @@ class StaffTable extends AppTable {
 			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
 			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->data['Search']['searchField']));
 
+			$institutionStaffQuery = clone $this->dashboardQuery;
 			// Get Number of staff in an institution
-			$staffCount = $this->find()
-				->find('academicPeriod', ['academic_period_id' => $periodId])
-				->matching('Users')
-				->where([$this->aliasField('institution_id') => $institutionId])
-				->where($searchConditions)
-				->distinct(['staff_id']);
+			$staffCount = $institutionStaffQuery->count();
 
-			if ($positionId != 0) {
-				$staffCount->where([$this->aliasField('institution_position_id') => $positionId]);
-				$conditions = array_merge($conditions, ['institution_position_id' => $positionId])	;
-			}
+			unset($institutionStaffQuery);
+
 			// Get Gender
 			$InstitutionArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'academicPeriod' => $periodId, 'key' => __('Gender')]);
+				['query' => $this->dashboardQuery, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
 			// Revisit here in awhile
 			$InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['conditions' => $conditions, 'searchConditions' => $searchConditions, 'academicPeriod' => $periodId, 'key' => __('Licenses')]);
+				['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
@@ -547,7 +545,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount->count(['staff_id']),
+	            	'modelCount' => $staffCount,
 	            	'modelArray' => $InstitutionArray,
 	            ],
 	            'options' => [],
@@ -743,35 +741,26 @@ class StaffTable extends AppTable {
 
 	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
-			foreach ($conditions as $key => $value) {
-				$_conditions[$this->alias().'.'.$key] = $value;
-			}
+		$query = $params['query'];
+		$InstitutionRecords = clone $query;
+		$InstitutionStaffCount = $InstitutionRecords
+			->matching('Users.Genders')
+			->select([
+				'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
+				'gender' => 'Genders.name'
+			])
+			->group('gender_id');
 
-			$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
-			$periodId = isset($params['academicPeriod']) ? $params['academicPeriod'] : [];
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($InstitutionStaffCount->toArray() as $value) {
+            //Compile the dataset
+			$dataSet[] = [__($value['gender']), $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		
+		unset($InstitutionRecords);
 
-			$InstitutionRecords = $this->find();
-			$InstitutionStaffCount = $InstitutionRecords
-				->find('academicPeriod', ['academic_period_id' => $periodId])
-				->contain(['Users', 'Users.Genders'])
-				->select([
-					'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
-					'gender' => 'Genders.name'
-				])
-				->where($_conditions)
-				->where($searchConditions)
-				->group('gender_id');
-
-			// Creating the data set		
-			$dataSet = [];
-			foreach ($InstitutionStaffCount->toArray() as $value) {
-	            //Compile the dataset
-				$dataSet[] = [__($value['gender']), $value['count']];
-			}
-			$params['dataSet'] = $dataSet;
-		//}
 		return $params;
 	}
 
