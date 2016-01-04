@@ -10,6 +10,8 @@ use Cake\Collection\Collection;
 use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\Controller\Component;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use App\Model\Table\AppTable;
 
 class ImportStudentsTable extends AppTable {
@@ -17,6 +19,7 @@ class ImportStudentsTable extends AppTable {
 	private $gradesInInstitution;
 	private $systemDateFormat;
 	private $studentStatusId;
+	private $availableSections;
 
 	public function initialize(array $config) {
 		$this->table('import_mapping');
@@ -62,10 +65,6 @@ class ImportStudentsTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-			'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
-			'Model.import.onImportPopulateEducationGradesData' => 'onImportPopulateEducationGradesData',
-			'Model.import.onImportPopulateStudentStatusesData' => 'onImportPopulateStudentStatusesData',
-			'Model.import.onImportPopulateStudentsData' => 'onImportPopulateStudentsData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 	    	'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
 		];
@@ -159,46 +158,54 @@ class ImportStudentsTable extends AppTable {
 		}
 	}
 	
-	/**
-	 * [onImportPopulateStudentsData description]
-	 *
-	 * This function populates all students in the system and then filter them within the sql query if they are not attached to any school.
-	 *
-	 * Removed the query totally to avoid timed out issue due to large records
-	 */
-	public function onImportPopulateStudentsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		// $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-		// $modelData = $lookedUpTable->find('all')
-		// 						->join([
-		// 							'type' => 'LEFT',
-		// 							'table' => 'institution_students',
-		// 							'alias' => 'Institutions',
-		// 							'conditions' => [
-		// 								'Institutions.student_id = '.$lookedUpTable->aliasField('id')
-		// 							]
-		// 						])
-		// 						->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn
-		// 						])
-		// 						->where([
-		// 							$lookedUpTable->aliasField('is_student').' = 1',
-		// 							$lookedUpTable->aliasField('status').' = 1',
-		// 							'Institutions.id IS NULL'
-		// 						])
-		// 						;
-		// $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
-		// $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-		// $data[$sheetName][] = [
-		// 	$nameHeader,
-		// 	$columnHeader
-		// ];
-		// if (!empty($modelData)) {
-		// 	foreach($modelData->toArray() as $row) {
-		// 		$data[$sheetName][] = [
-		// 			$row->name,
-		// 			$row->$lookupColumn
-		// 		];
-		// 	}
-		// }
+	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+		try {
+			$institution = $this->Institutions->get($this->institutionId);
+			$modelData = $this->populateInstitutionSectionsData();
+
+			$institutionNameLabel = $this->getExcelLabel('Imports', 'institution_name');
+			$academicPeriodCodeLabel = $this->getExcelLabel('Imports', 'period_code');
+			$classNameLabel = $this->getExcelLabel($lookupModel, 'name');
+			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_sections_code');
+			
+			unset($data[$sheetName]);
+			$sheetName = $this->getExcelLabel('Imports', $lookupModel);
+			$data[$sheetName][] = [
+				$institutionNameLabel,
+				$academicPeriodCodeLabel,
+				$classNameLabel,
+				$classCodeLabel
+			];
+			if (!empty($modelData)) {
+				foreach($modelData as $periodCode=>$periodClasses) {
+					if (!empty($periodClasses)) {
+						foreach($periodClasses as $id=>$name) {
+							$data[$sheetName][] = [
+								$institution->name,
+								$periodCode,
+								$name,
+								$id
+							];
+						}
+					}
+				}
+			}
+		} catch (\Exception $e) {
+			$this->log($e->getMessage(), 'error');
+		}
+
+	}
+
+	private function populateInstitutionSectionsData() {
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
+
+		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$modelData = [];
+		foreach ($availableAcademicPeriods as $key=>$value) {
+			$modelData[$value->code] = $InstitutionSections->getSectionOptions($value->id, $this->institutionId);
+		}
+		return $modelData;
 	}
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
@@ -207,8 +214,11 @@ class ImportStudentsTable extends AppTable {
 		}
 		try {
 			$student = $this->Students->get($tempRow['student_id']);
-		} catch (InvalidPrimaryKeyException $e) {
+		} catch (RecordNotFoundException $e) {
 			$tempRow['duplicates'] = __('No such student in the system.');
+			return false;
+		} catch (InvalidPrimaryKeyException $e) {
+			$tempRow['duplicates'] = __('Invalid OpenEMIS ID.');
 			return false;
 		}
 		if (empty($student->date_of_birth)) {
@@ -282,6 +292,30 @@ class ImportStudentsTable extends AppTable {
 		if ($gradeStartDate > $periodStartDate) {
 			$tempRow['duplicates'] = __('Selected education grade start date should be before academic period starts.');
 			return false;
+		}
+
+		if (!empty($tempRow['class']) || $tempRow['class']!=0) {
+			if (empty($this->availableSections)) {
+				$this->availableSections = $this->populateInstitutionSectionsData();
+			}
+			$this->availableSections;
+			$selectedClassIdFound = false;
+			if (!empty($this->availableSections)) {
+				foreach($this->availableSections as $periodClasses) {
+					if (!empty($periodClasses)) {
+						foreach($periodClasses as $id=>$name) {
+							if ($id == $tempRow['class']) {
+								$selectedClassIdFound = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			if (!$selectedClassIdFound) {
+				$tempRow['duplicates'] = __('Selected class does not exists in this institution.');
+				return false;
+			}
 		}
 
 		return true;

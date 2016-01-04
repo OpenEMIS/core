@@ -9,6 +9,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Report\Model\Table\ReportProgressTable as Process;
+use Cake\I18n\I18n;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -84,11 +85,18 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$data[$this->_table->alias()]['locale'] = I18n::locale();
 		$process = function($model, $entity) use ($data) {
 			$this->_generate($data);
 			return true;
 		};
 		return $process;
+	}
+
+	public function onExcelGenerate(Event $event, $writer, $settings) {
+		$requestData = json_decode($settings['process']['params']);
+		$locale = $requestData->locale;
+		I18n::locale($locale);
 	}
 
 	public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {
