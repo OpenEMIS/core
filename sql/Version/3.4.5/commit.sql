@@ -21,3 +21,9 @@ $$
 DELIMITER ;
 CALL updateSecurityRoleFunctions;
 DROP PROCEDURE IF EXISTS updateSecurityRoleFunctions;
+INSERT INTO `db_patches` VALUES ('PHPOE-1903', NOW());
+
+-- labels
+UPDATE `labels` SET `field_name`='Institution' WHERE `module` = 'InstitutionShifts' AND `field` = 'location_institution_id';
+
+UPDATE config_items SET value = '3.4.5' WHERE code = 'db_version';
