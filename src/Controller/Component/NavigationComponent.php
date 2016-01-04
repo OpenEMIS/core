@@ -478,6 +478,11 @@ class NavigationComponent extends Component {
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
 				'selected' => ['Students.Fees']],
+			'Students.Healths' => [
+				'title' => 'Health', 
+				'parent' => 'Institutions.Students.index',
+				'params' => ['plugin' => 'Student'],
+				'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
 		];
 		return $navigation;
 	}
@@ -517,6 +522,12 @@ class NavigationComponent extends Component {
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
 				'selected' => ['Staff.TrainingResults', 'Staff.TrainingNeeds'],
+			],
+			'Staff.Healths' => [
+				'title' => 'Health', 
+				'parent' => 'Institutions.Staff.index',
+				'params' => ['plugin' => 'Staff'],
+				'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']
 			],
 		];
 		return $navigation;
