@@ -493,6 +493,18 @@ class ValidationBehavior extends Behavior {
 		return $existingRecords <= 0;
 	}
 
+	public static function checkInstitutionLocation($field, array $globalData) {
+		$data = $globalData['data'];
+		if (array_key_exists('location_institution_id', $data)) {
+			if (empty($data['location_institution_id'])) {
+				return false;
+			}
+		} else {
+			return false;
+		}
+		return true;
+	}
+
 	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
 		$data = $globalData['data'];
 		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
