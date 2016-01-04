@@ -141,7 +141,8 @@ trait MessagesTrait {
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
-			'noClasses' => 'No Subjects',
+			'noClasses' => 'No Classes',
+			'noSubjects' => 'No Subjects',
 			'subjects' => 'Subjects',
 			'noPeriods' => 'No Available Periods',
 			'education_subject' => 'Subject',
@@ -149,6 +150,7 @@ trait MessagesTrait {
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
+			'studentRemovedFromInstitution' => 'This student was removed from the institution earlier',
 		],
 		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
