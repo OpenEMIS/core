@@ -6,7 +6,7 @@ use Cake\TestSuite\Fixture\TestFixture;
 
 class InstitutionsFixture extends TestFixture {
 
-	public $import = ['table' => 'institution_sites'];
+	public $import = ['table' => 'institutions'];
 	
 	public $records = [
 		[
@@ -27,16 +27,16 @@ class InstitutionsFixture extends TestFixture {
 			'year_closed' => 1990,
 			'longitude' => '100',
 			'latitude' => '1.32',
-			'institution_site_area_id' => null,
+			'institution_area_id' => null,
 			'area_id' => 1,
 			'area_administrative_id' => 1,
-			'institution_site_locality_id' => 83,
-			'institution_site_type_id' => 65,
-			'institution_site_ownership_id' => 72,
-			'institution_site_status_id' => 89,
-			'institution_site_sector_id' => 2,
-			'institution_site_provider_id' => 1,
-			'institution_site_gender_id' => 6,
+			'institution_locality_id' => 83,
+			'institution_type_id' => 65,
+			'institution_ownership_id' => 72,
+			'institution_status_id' => 89,
+			'institution_sector_id' => 2,
+			'institution_provider_id' => 1,
+			'institution_gender_id' => 6,
 			'security_group_id' => 0,
 			'modified_user_id' => 1,
 			'modified' => '2014-01-01 00:00:00',
@@ -62,16 +62,16 @@ class InstitutionsFixture extends TestFixture {
 			'year_closed' => 1990,
 			'longitude' => '100',
 			'latitude' => '1.32',
-			'institution_site_area_id' => null,
+			'institution_area_id' => null,
 			'area_id' => 1,
 			'area_administrative_id' => 1,
-			'institution_site_locality_id' => 83,
-			'institution_site_type_id' => 65,
-			'institution_site_ownership_id' => 72,
-			'institution_site_status_id' => 89,
-			'institution_site_sector_id' => 2,
-			'institution_site_provider_id' => 1,
-			'institution_site_gender_id' => 6,
+			'institution_locality_id' => 83,
+			'institution_type_id' => 65,
+			'institution_ownership_id' => 72,
+			'institution_status_id' => 89,
+			'institution_sector_id' => 2,
+			'institution_provider_id' => 1,
+			'institution_gender_id' => 6,
 			'security_group_id' => 0,
 			'modified_user_id' => 1,
 			'modified' => '2014-01-01 00:00:00',

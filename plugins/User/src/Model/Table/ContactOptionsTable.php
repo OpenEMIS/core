@@ -8,12 +8,12 @@ class ContactOptionsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->hasMany('ContactTypes', ['className' => 'User.ContactTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		//$this->hasMany('ContactTypes', ['className' => 'User.ContactTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsTo('ContactTypes', ['className' => 'FieldOption.ContactTypes']);
 	}
 
 	public function validationDefault(Validator $validator) {
 		
 		return $validator;
 	}
-
 }

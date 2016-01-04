@@ -15,7 +15,7 @@ class StaffController extends AppController {
 		$this->ControllerAction->model('Staff.Staff');
 
 		$this->ControllerAction->models = [
-			'Accounts'			=> ['className' => 'User.Accounts', 'actions' => ['view', 'edit']],
+			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts'			=> ['className' => 'User.Contacts'],
 			'Identities'		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -38,22 +38,32 @@ class StaffController extends AppController {
 			'Memberships'		=> ['className' => 'Staff.Memberships'],
 			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
-			'History'			=> ['className' => 'Staff.StaffActivities', 'actions' => ['index']],
+			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
+			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
+			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+			'Achievements'		=> ['className' => 'Staff.Achievements']
 		];
+
+		$this->loadComponent('Training.Training');
+		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Staff');
 	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->Navigation->addCrumb('Staff', ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
 		$session = $this->request->session();
+		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+		$institutionName = $session->read('Institution.Institutions.name');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $institutionId]);
+		$this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
 		$action = $this->request->params['action'];
 		$header = __('Staff');
 
 		if ($action == 'index') {
-			$session->delete('Staff.Staff.id');
-			$session->delete('Staff.Staff.name');
+			
 		} else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
@@ -61,13 +71,15 @@ class StaffController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Staff.Staff.id')) {
 				$id = $session->read('Staff.Staff.id');
+			} else if ($session->check('Institution.Staff.id')) {
+				$id = $session->read('Institution.Staff.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Staff->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'view', $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id]);
 			}
 		}
 		$this->set('contentHeader', $header);
@@ -116,11 +128,37 @@ class StaffController extends AppController {
 						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
 					}
 				}
+			} else if ($model->hasField('staff_id')) {
+				$model->fields['staff_id']['type'] = 'hidden';
+				$model->fields['staff_id']['value'] = $userId;
+
+				if (count($this->request->pass) > 1) {
+					$modelId = $this->request->pass[1]; // id of the sub model
+
+					$exists = $model->exists([
+						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField('staff_id') => $userId
+					]);
+					
+					/**
+					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+					 */
+					if (!$exists) {
+						$this->Alert->warning('general.notExists');
+						return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $alias]);
+					}
+				}
 			}
 		} else {
-			$this->Alert->warning('general.notExists');
-			$event->stopPropagation();
-			return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+			if ($model->alias() == 'ImportStaff') {
+				$this->Navigation->addCrumb($model->getHeader($model->alias()));
+				$header = __('Staff') . ' - ' . $model->getHeader($model->alias());
+				$this->set('contentHeader', $header);
+			} else {
+				$this->Alert->warning('general.notExists');
+				$event->stopPropagation();
+				return $this->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
+			}
 		}
 	}
 
@@ -146,5 +184,90 @@ class StaffController extends AppController {
 	public function excel($id=0) {
 		$this->Staff->excel($id);
 		$this->autoRender = false;
+	}
+
+	public function getUserTabElements($options = []) {
+		$session = $this->request->session();
+		$tabElements = $session->read('Institution.Staff.tabElements');
+		return $tabElements;
+	}
+
+	public function getCareerTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Employments' => ['text' => __('Employments')],
+			'Positions' => ['text' => __('Positions')],
+			'Sections' => ['text' => __('Classes')],
+			'Classes' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Leaves' => ['text' => __('Leaves')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Awards' => ['text' => __('Awards')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getProfessionalDevelopmentTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Qualifications' => ['text' => __('Qualifications')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Memberships' => ['text' => __('Memberships')],
+			'Licenses' => ['text' => __('Licenses')],
+			'Trainings' => ['text' => __('Trainings')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getFinanceTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'BankAccounts' => ['text' => __('Bank Accounts')],
+			'Salaries' => ['text' => __('Salaries')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getTrainingTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'TrainingResults' => ['text' => __('Training Results')],
+			'TrainingNeeds' => ['text' => __('Training Needs')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
+
+	public function getImage($id) {
+		$this->autoRender = false;
+		$this->ControllerAction->autoRender = false;
+		$this->Image->getUserImage($id);
 	}
 }

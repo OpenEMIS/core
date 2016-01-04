@@ -12,8 +12,9 @@ class WorkflowsController extends AppController
 		parent::initialize();
 
         $this->ControllerAction->models = [
-            'Workflows' => ['className' => 'Workflow.Workflows'],
-            'Steps' => ['className' => 'Workflow.WorkflowSteps']
+            'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
+            'Steps' => ['className' => 'Workflow.WorkflowSteps'],
+            'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
 		$this->loadComponent('Paginator');
     }
@@ -21,16 +22,36 @@ class WorkflowsController extends AppController
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
 
-        $tabElements = [
-            'Workflows' => [
+        $tabElements = [];
+        if ($this->AccessControl->check([$this->name, 'Workflows', 'view'])) {
+            $tabElements['Workflows'] = [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Workflows'],
                 'text' => __('Workflows')
-            ],
-            'Steps' => [
+            ];
+        }
+
+        if ($this->AccessControl->check([$this->name, 'Steps', 'view'])) {
+            $tabElements['Steps'] = [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'],
                 'text' => __('Steps')
-            ]
-        ];
+            ];
+        }
+
+        if ($this->AccessControl->check([$this->name, 'Statuses', 'view'])) {
+            $tabElements['Statuses'] = [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Statuses'],
+                'text' => __('Statuses')
+            ];
+        }
+
+        $selectedAction = $this->request->action;
+        if (!$this->AccessControl->check([$this->name, 'Workflows', 'view'])) {
+            if ($this->AccessControl->check([$this->name, 'Steps', 'view'])) {
+                $selectedAction = 'Steps';
+            } elseif ($this->AccessControl->check([$this->name, 'Statuses', 'view'])) {
+                $selectedAction = 'Statuses';
+            }
+        }
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
