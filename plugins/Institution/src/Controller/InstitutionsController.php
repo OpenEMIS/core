@@ -277,6 +277,21 @@ class InstitutionsController extends AppController  {
 		}
 	}
 
+	//autocomplete used for InstitutionSiteShift
+	public function ajaxInstitutionAutocomplete() {
+		$this->ControllerAction->autoRender = false;
+		$data = [];
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		if ($this->request->is(['ajax'])) {
+			$term = trim($this->request->query['term']);
+			if (!empty($term)) 
+				$data = $Institutions->autocomplete($term);
+				
+			echo json_encode($data);
+			die;
+		}
+	}
+
 	public function getUserTabElements($options = []) {
 		$userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
 		$action = (array_key_exists('action', $options))? $options['action']: 'add';

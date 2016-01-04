@@ -1,3 +1,9 @@
+v3.4.4
+- Added new feature to import students in classes
+- Fixed a bug that caused duplicate records when editing Training Courses
+- Fixed a bug that displays multiple records when user is creating multi-grade
+classes
+
 v3.4.3
 - Fixed a bug that caused 404 page when adding users to groups
 - Start Date of Student Transfer is defaulted to current date now
@@ -11,6 +17,8 @@ v3.4.2
 - Added new field called Network Connectivity in Institutions
 - Fixed a bug that prevent user from entering 0 as value on Student admission age plus/minus
 - Added new permissions for Import features
+- Added two new reports in Institutions for generating Students and Staff
+records
 
 v3.4.1
 - Reorganised navigations to move existing pages into tabbed view
@@ -83,3 +91,4 @@ v3.2.7
 v3.2.6
 - Added workflows to institution's survey
 - Added workflow statuses mapping so that customised statuses of survey can be mapped to workflow's steps for reporting purposes
+
