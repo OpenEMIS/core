@@ -13,7 +13,7 @@ class StaffIdentitiesTable extends AppTable  {
 		$this->table('user_identities');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
 		
 		$this->addBehavior('Excel', [

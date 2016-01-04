@@ -47,9 +47,9 @@ class StudentsTable extends AppTable {
 			'filterKey' => 'student_custom_filter_id',
 			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'student_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
@@ -69,59 +69,22 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByGender'
 			]
 		]);
+        $this->addBehavior('Import.ImportLink');
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->allowEmpty('photo_content')
-			;
-
-		$this->setValidationCode('first_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('first_name.ruleNotBlank', 'User.Users');
-		$this->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
-		$this->setValidationCode('openemis_no.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleUnique', 'User.Users');
-		$this->setValidationCode('username.ruleAlphanumeric', 'User.Users');
-		return $validator;
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// to set the student name in headers
 		$this->Session->write('Student.Students.name', $entity->name);
+		$this->request->data[$this->alias()]['student_id'] = $entity->id;
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
@@ -152,6 +115,7 @@ class StudentsTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			$query->innerJoin(
 				['InstitutionStudent' => 'institution_students'],
 				[
@@ -192,9 +156,10 @@ class StudentsTable extends AppTable {
 			foreach ($results as $key => $obj) {
 				$institutionArr[$obj->institution->id] = $obj->institution->name;
 			}
-
 			$value = implode('<BR>', $institutionArr);
-			$entity->student_status = $query->first()->_matchingData['StudentStatuses']->name;
+			$studentStatus = $query->first()->_matchingData['StudentStatuses'];
+			$entity->student_status = $studentStatus->name;
+			$entity->status_code = $studentStatus->code;
 		}
 		return $value;
 	}
@@ -207,6 +172,51 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		switch ($action) {
+			case 'view':
+				if (!$this->AccessControl->isAdmin()) {
+					$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+					$studentId = $this->request->data[$this->alias()]['student_id'];
+					$enrolledStatus = false;
+					$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+					foreach ($institutionIds as $id) {
+						$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
+						if ($enrolledStatus) {
+							break;
+						}
+					}
+					if (! $enrolledStatus) {
+						if (isset($toolbarButtons['edit'])) {
+							unset($toolbarButtons['edit']);
+						}
+					}
+				}
+				break;
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (!$this->AccessControl->isAdmin()) {
+			if ($entity->status_code != 'CURRENT') {
+				if (isset($buttons['edit'])) {
+					unset($buttons['edit']);
+				}
+				if (isset($buttons['remove'])) {
+					unset($buttons['remove']);
+				}
+			}
+		}
+		return $buttons;
+	}
+
 	public function addBeforeAction(Event $event) {
 		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
 		$this->ControllerAction->field('openemis_no', [ 
@@ -215,8 +225,21 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 71]);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => false]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {

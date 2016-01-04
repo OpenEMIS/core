@@ -9,6 +9,6 @@ class StaffTrainingCategoriesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOptions']);
-		$this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'dependent' => true]);
+		$this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_training_category_id']);
 	}
 }
