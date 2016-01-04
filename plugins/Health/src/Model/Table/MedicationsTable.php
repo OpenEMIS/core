@@ -18,6 +18,7 @@ class MedicationsTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 		
 		return $validator
+			->allowEmpty('end_date')
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
 			]);

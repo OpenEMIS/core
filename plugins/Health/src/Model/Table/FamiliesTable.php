@@ -21,6 +21,11 @@ class FamiliesTable extends AppTable {
 		$this->addBehavior('Health.Health');
 	}
 
+	public function onGetCurrent(Event $event, Entity $entity) {
+		$currentOptions = $this->getSelectOptions('general.yesno');
+		return $currentOptions[$entity->current];
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
 	}

@@ -8,5 +8,11 @@ trait FieldOptionsTrait {
 		'FieldOption.Banks' => 		['behavior' => 'Display'],
 		'FieldOption.Countries' => 	['behavior' => 'Countries'],
 		'Institution.NetworkConnectivities' => 		['behavior' => 'Display'],
+		'Health.AllergyTypes' => ['behavior' => 'Display'],
+		'Health.ConsultationTypes' => ['behavior' => 'Display'],
+		'Health.Relationships' => ['behavior' => 'Display'],
+		'Health.Conditions' => ['behavior' => 'Display'],
+		'Health.ImmunizationTypes' => ['behavior' => 'Display'],
+		'Health.TestTypes' => ['behavior' => 'Display']
 	];
 }
