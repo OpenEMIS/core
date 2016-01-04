@@ -43,21 +43,11 @@ class LicensesTable extends AppTable {
 		$table = $params['table'];
 
 		$StaffTableQuery = clone $query;
-		$staffIds = $StaffTableQuery->select([$table->aliasField('staff_id')]);
-		$institutionId = 0;
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];	
+		$staffTableInnerJoinQuery = $StaffTableQuery->select([$table->aliasField('staff_id')]);
 		$staffTable = TableRegistry::get('Institution.Staff');
 		$innerJoinArray = [
 			'StaffUser.Staff__staff_id = '. $this->aliasField('staff_id'),
 			];
-		$innerJoinArraySize = count($innerJoinArray);
-		foreach ($conditions as $key => $value) {
-			 $_conditions[$innerJoinArraySize++] = 'StaffUser.'.$key.' = '.$value;
-		}
-		$innerJoinArray = array_merge($innerJoinArray, $_conditions);
-		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
-		$periodId = isset($params['academicPeriod']) ? $params['academicPeriod'] : [];
 		$licenseRecord = $this->find();
 		$licenseCount = $licenseRecord
 			->contain(['Users', 'LicenseTypes'])
@@ -65,10 +55,9 @@ class LicensesTable extends AppTable {
 				'license' => 'LicenseTypes.name',
 				'count' => $licenseRecord->func()->count($this->aliasField('staff_id'))
 			])
-			->where($searchConditions)
 			->join([
 				'StaffUser' => [
-					'table' => $staffIds,
+					'table' => $staffTableInnerJoinQuery,
 					'type' => 'INNER',
 					'conditions' => $innerJoinArray
 				]
