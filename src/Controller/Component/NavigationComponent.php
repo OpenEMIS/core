@@ -223,14 +223,14 @@ class NavigationComponent extends Component {
 				'title' => 'Institutions', 
 				'icon' => '<span><i class="fa kd-institutions"></i></span>',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.add']
+				'selected' => ['Institutions.add', 'Institutions.ImportInstitutions.add', 'Institutions.ImportInstitutions.results']
 			],
 
 			'Directories.index' => [
 				'title' => 'Directory', 
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
 				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.add']
+				'selected' => ['Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
 			],
 
 			'Reports' => [
@@ -324,8 +324,9 @@ class NavigationComponent extends Component {
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 
-					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add'],
+				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 
+					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add', 
+					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']
 			],
 
@@ -345,14 +346,14 @@ class NavigationComponent extends Component {
 				'Institutions.StudentAttendances.index' => [
 					'title' => 'Students',
 					'parent' => 'Institution.Attendance',
-					'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences'],
+					'selected' => ['Institutions.StudentAttendances', 'Institutions.StudentAbsences', 'Institutions.ImportStudentAttendances'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.StaffAttendances.index' => [
 					'title' => 'Staff',
 					'parent' => 'Institution.Attendance',
-					'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences'],
+					'selected' => ['Institutions.StaffAttendances', 'Institutions.StaffAbsences', 'Institutions.ImportStaffAttendances'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -433,7 +434,7 @@ class NavigationComponent extends Component {
 					'title' => 'Forms',
 					'parent' => 'Survey', 
 					'params' => ['plugin' => 'Institution'],
-					'selected' => ['Institutions.Surveys'],
+					'selected' => ['Institutions.Surveys', 'Institutions.ImportInstitutionSurveys'],
 				],
 
 				'Institutions.Rubrics' => [
@@ -818,7 +819,7 @@ class NavigationComponent extends Component {
 			],
 
 				'Trainings.Courses' => [
-					'title' => 'Logs',
+					'title' => 'Courses',
 					'parent' => 'Administration.Training',
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Courses']
