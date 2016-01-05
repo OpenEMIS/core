@@ -380,6 +380,7 @@ trait MessagesTrait {
 			'rows_updated' => 'Rows Updated:',
 			'rows_failed' => 'Rows Failed:',
 			'download_failed_records' => 'Download Failed Records',
+			'download_passed_records' => 'Download Passed Records',
 			'row_number' => 'Row Number',
 			'error_message' => 'Error Message',
 			'invalid_code' => 'Invalid Code',
