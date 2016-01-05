@@ -32,8 +32,7 @@ class SecurityRolesTable extends AppTable {
 		]);
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
-					'filter' => 'security_group_id',
-					'filterValues' => [-1, 0]
+					'filter' => 'security_group_id'
 				]);
 		}
 	}
@@ -79,6 +78,30 @@ class SecurityRolesTable extends AppTable {
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
+		} else if ($selectedAction == 'user') {
+			// for all other actions for user group
+			$securityGroupId = $this->request->query('security_group_id');
+			if ($this->behaviors()->has('Reorder')) {
+				$this->behaviors()->get('Reorder')->config([
+						'filterValues' => [$securityGroupId]
+					]);
+			}
+		} else {
+			if ($this->behaviors()->has('Reorder')) {
+				$this->behaviors()->get('Reorder')->config([
+						'filterValues' => [-1, 0]
+					]);
+			}
+		}
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($this->behaviors()->has('Reorder')) {
+			if (isset($data[$this->alias()]['security_group_id'])) {
+				$this->behaviors()->get('Reorder')->config([
+					'filterValues' => [$data[$this->alias()]['security_group_id']]
+				]);
+			}	
 		}
 	}
 
@@ -105,10 +128,21 @@ class SecurityRolesTable extends AppTable {
 
 		$viewType = $attr['viewType'];
 		if ($viewType == 'user') {
-			// TODO-jeff: need to restrict to roles that have access to their groups
-			$groupOptions = $this->SecurityGroups->find('list')
-				->find('byUser', ['userId' => $this->Auth->user('id')])
-				->toArray();
+			
+			if ($this->Auth->user('super_admin') != 1) {
+				$groupOptions = $this->SecurityGroups->find('list')
+					->find('byUser', ['userId' => $this->Auth->user('id')])
+					->toArray();
+			} else {
+				$SecurityGroupsTable = $this->SecurityGroups;
+				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
+				$institutionSecurityGroup = $InstitutionsTable->find('list');
+				$groupOptions = $SecurityGroupsTable->find('list')->where([
+						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
+					])
+					->toArray();
+			}
+			
 
 			$selectedGroup = $this->queryString('security_group_id', $groupOptions);
 			$this->advancedSelectOptions($groupOptions, $selectedGroup);
@@ -175,7 +209,7 @@ class SecurityRolesTable extends AppTable {
 		$permissionBtn = ['permissions' => $buttons['view']];
 		$permissionBtn['permissions']['url']['action'] = 'Permissions';
 		$permissionBtn['permissions']['url'][0] = 'index';
-		$permissionBtn['permissions']['label'] = __('Permissions');
+		$permissionBtn['permissions']['label'] = '<i class="fa fa-key"></i>' . __('Permissions');
 
 		// foreach ($permissionBtn['permissions']['url'] as $key => $val) {
 		// 	if (!in_array($key, $attr)) {
@@ -223,7 +257,7 @@ class SecurityRolesTable extends AppTable {
 
 	// this function will return all roles (system roles & user roles) that has lower
 	// privileges than the current role of the user in a specific group
-	public function getPrivilegedRoleOptionsByGroup($groupId=null, $userId=null) {
+	public function getPrivilegedRoleOptionsByGroup($groupId=null, $userId=null, $createUserGroup=false) {
 		$roleOptions = [];
 
 		// -1 is system defined roles (not editable)
@@ -237,11 +271,56 @@ class SecurityRolesTable extends AppTable {
 			$systemRoleOptions = [];
 
 			$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+
+			if (!$createUserGroup) {
+				// Get the highest system role
+				$highestSystemRole = $this->find()
+				->matching('GroupUsers')
+				->where([
+					'SecurityGroupUsers.security_user_id' => $userId,
+					$this->aliasField('security_group_id') . ' IN ' => $groupIds,
+					'SecurityGroupUsers.security_group_id' => $groupId
+				])
+				->order([$this->aliasField('order')])
+				->first();
+			} else {
+				// If the user is a restricted user and is creating a user group
+				$highestSystemRole = $this->find()->where([$this->aliasField('name') => 'Group Administrator'])->first();
+			}
+			
+
+			// If the user has a system role, then populate the system role options
+			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
+			if (!empty($highestSystemRole)) {
+				$systemRoleOptions = $this
+					->find('list')
+					->find('visible')
+					->where([
+						$this->aliasField('security_group_id'). ' IN ' => $groupIds,
+						$this->aliasField('order') . ' > ' => $highestSystemRole['order'], // the greater the order value, the lower privilege the role is
+					])
+					->order([$this->aliasField('order')])
+					->toArray();
+
+				// If the user has system role and has access to add role, then the user will be able to see the user group roles also,
+				// however, if the users they have their own user group role, then they can only see their own user group role below their own, this is overwritten in the code below
+				$userRoleOptions = $this
+					->find('list')
+					->find('visible')
+					->where([
+						$this->aliasField('security_group_id') => $groupId,
+					])
+					->order([$this->aliasField('order')])
+					->toArray();
+			}
+
 			// this will show only roles of the user in the specified group ($groupId)
 			$highestUserRole = $GroupRoles
 				->find()
-				->contain('SecurityRoles')
-				->order(['SecurityRoles.order'])
+				->contain(['SecurityRoles'=> function ($q) {
+							return $q->where(['SecurityRoles.security_group_id NOT IN ' => [-1, 0]]);
+						}])
+				->order(['SecurityRoles.order']) // if user is assigned more than one role, therefore the ordering is necessary
 				->where([
 					$GroupRoles->aliasField('security_group_id') => $groupId,
 					$GroupRoles->aliasField('security_user_id') => $userId
@@ -250,7 +329,7 @@ class SecurityRolesTable extends AppTable {
 
 			// If the user has a user role, then populate the user role options
 			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
-			if (!empty($highestUserRole)) {
+			if (!empty($highestUserRole['security_role'])) {
 				$userRoleOptions = $this
 					->find('list')
 					->find('visible')
@@ -261,42 +340,22 @@ class SecurityRolesTable extends AppTable {
 					->order([$this->aliasField('order')])
 					->toArray();
 			}
-			
-			// Get the highest system role
-			$highestSystemRole = $this->find()
-				->matching('GroupUsers')
-				->where([
-					'SecurityGroupUsers.security_user_id' => $userId,
-					$this->aliasField('security_group_id') . ' IN ' => $groupIds
-				])
-				->order([$this->aliasField('order')])
-				->first();
-
-			// If the user has a system role, then populate the system role options
-			// find the list of roles with lower privilege than the current highest privilege role assigned to this user
-			if (!empty($highestSystemRole)) {
-				$systemRoleOptions = $this
-					->find('list')
-					->find('visible')
-					->where([
-						$this->aliasField('security_group_id'). ' IN ' => $groupIds,
-						$this->aliasField('order') . ' > ' => $highestSystemRole['order'],
-					])
-					->order([$this->aliasField('order')])
-					->toArray();
-			}
-
 			// Merge the permission of the user's system role and user role
 			$roleOptions = $systemRoleOptions + $userRoleOptions;
 
 		} else { // super admin will show all roles of system and group specific
+
+			// adding the user role group in
+			if (!is_null($groupId)) {
+				array_push($groupIds, $groupId);
+			}
+
 			$roleOptions = $this
 				->find('list')
 				->find('visible')
 				->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
-				->order([$this->aliasField('order')])
-				->toArray()
-			;
+				->order([$this->aliasField('security_group_id'), $this->aliasField('order')])
+				->toArray();
 		}
 		return $roleOptions;
 	}
