@@ -284,8 +284,11 @@ class InstitutionsController extends AppController  {
 		$Institutions = TableRegistry::get('Institution.Institutions');
 		if ($this->request->is(['ajax'])) {
 			$term = trim($this->request->query['term']);
+			$session = $this->request->session();
+			$institutionId = $session->read('Institution.Institutions.id');
+			$params['conditions'] = [$Institutions->aliasField('id').' IS NOT ' => $institutionId];
 			if (!empty($term)) 
-				$data = $Institutions->autocomplete($term);
+				$data = $Institutions->autocomplete($term, $params);
 				
 			echo json_encode($data);
 			die;
