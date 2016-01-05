@@ -843,7 +843,7 @@ class NavigationComponent extends Component {
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
-				'selected' => ['Workflow.Workflows', 'Workflow.Steps']
+				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
 			],
 		];
 		return $navigation;
