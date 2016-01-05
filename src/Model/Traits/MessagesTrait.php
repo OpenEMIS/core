@@ -494,6 +494,11 @@ trait MessagesTrait {
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
+			'InstitutionShifts' => [
+				'institution_name' => [
+					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				]
+			],
 			'StudentGuardians' => [
 				'guardianRelationId' => 'You need to configure Guardian Relations first.',
 				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
@@ -512,7 +517,7 @@ trait MessagesTrait {
 			'Students' => [
 				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.',
-					'ruleCheckAdmissionAgeWithEducationCycle' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				]
 			],

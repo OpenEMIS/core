@@ -22,8 +22,6 @@ class AssessmentsTable extends AppTable {
 		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionAssessments', ['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
-
-		$this->addBehavior('Reorder');
 	}
 
 	public function beforeAction(Event $event) {
@@ -50,6 +48,10 @@ class AssessmentsTable extends AppTable {
 			'code', 'name', 'description', 'visible',
 			'education_grade_id', 'assessment_items'
 		]);
+
+		$selectedGrade = $entity->education_grade_id;
+		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
+		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -91,22 +93,9 @@ class AssessmentsTable extends AppTable {
 			'code', 'name', 'description', 'visible',
 			'education_programmes', 'education_grade_id', 'assessment_items'
 		]);
-	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$selectedGrade = $entity->education_grade_id;
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
 		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
-	}
-
-	public function editAfterAction(Event $event, Entity $entity) {
-		if ($this->request->is(['post', 'put'])) {
-			$selectedGrade = $entity->education_grade_id;
-			if ($selectedGrade != $entity->getOriginal('education_grade_id')) {
-				$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
-				$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
-			}
-		}
 	}
 
 	public function onUpdateFieldEducationProgrammes(Event $event, array $attr, $action, Request $request) {
@@ -163,32 +152,52 @@ class AssessmentsTable extends AppTable {
 	public function populateAssessmentItems($entity, $gradeId, $options=[]) {
 		$gradingTypeOptions = $options['gradingTypeOptions'];
 
-		$obj = $this->EducationGrades
-			->findById($gradeId)
-			->contain(['EducationSubjects'])
-			// ->contain([
-			// 	'EducationGradesSubjects.EducationSubjects',
-			// 	'EducationGradesSubjects' => function ($q) {
-			// 		return $q->find('visible');
-			// 	}
-			// ])
-			->first();
+		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+		$query = $EducationGradesSubjects
+			->find()
+			->find('visible')
+			->matching('EducationSubjects')
+			->select([
+				$this->AssessmentItems->aliasField('id'),
+				$this->AssessmentItems->aliasField('pass_mark'),
+				$this->AssessmentItems->aliasField('max'),
+				$this->AssessmentItems->aliasField('result_type'),
+				$this->AssessmentItems->aliasField('visible'),
+				$this->AssessmentItems->aliasField('education_subject_id'),
+				$this->AssessmentItems->aliasField('assessment_grading_type_id')
+			])
+			->leftJoin(
+				[$this->AssessmentItems->alias() => $this->AssessmentItems->table()],
+				[
+					$this->AssessmentItems->aliasField('education_subject_id = ') . $EducationGradesSubjects->aliasField('education_subject_id'),
+					$this->AssessmentItems->aliasField('assessment_id') => $entity->id
+				]
+			)
+			->where([
+				$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId
+			])
+			->autoFields(true);
+
+		$results = $query->toArray();
 
 		$assessmentItems = [];
-		foreach ($obj->education_subjects as $subject) {
-			if ($subject->_joinData->visible == 1) {
+		foreach ($results as $obj) {
+			if (isset($obj->AssessmentItems['id'])) {
+				// Existing record
+				$item = $obj->AssessmentItems;
+			} else {
+				// New record
 				$item = [
 					'id' => '',
-					'visible' => 1,
-					'education_subject_id' => $subject->id,
-					'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
 					'pass_mark' => 50,
 					'max' => 100,
-					'assessment_grading_type_id' => key($gradingTypeOptions),
-					'education_subject' => $subject
+					'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
+					'visible' => 0,
+					'education_subject_id' => $obj->education_subject_id,
 				];
-				$assessmentItems[] = $item;
 			}
+			$item['education_subject'] = $obj->_matchingData['EducationSubjects'];
+			$assessmentItems[] = $item;
 		}
 
 		return $assessmentItems;

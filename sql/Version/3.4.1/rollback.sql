@@ -260,12 +260,6 @@ ALTER TABLE `student_guardians`
 DROP INDEX `student_id` ,
 ADD INDEX `security_user_id` (`student_id`);
 
--- staff_activities
-ALTER TABLE `staff_activities` 
-CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '',
-DROP INDEX `staff_id` ,
-ADD INDEX `security_user_id` (`security_user_id`);
-
 -- staff_custom_field_values
 ALTER TABLE `staff_custom_field_values` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '',
@@ -328,12 +322,6 @@ ADD INDEX `security_user_id` (`security_user_id`);
 ALTER TABLE `student_custom_table_cells` 
 CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
--- guardian_activities
-ALTER TABLE `guardian_activities` 
-CHANGE COLUMN `guardian_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
-DROP INDEX `guardian_id` ,
-ADD INDEX `security_user_id` (`security_user_id`);
-
 -- assessment_item_results
 ALTER TABLE `assessment_item_results` 
 DROP INDEX `student_id` ,
@@ -373,9 +361,21 @@ RENAME TO  `student_activities` ;
 ALTER TABLE `z_2193_staff_activities` 
 RENAME TO  `staff_activities` ;
 
+-- staff_activities
+ALTER TABLE `staff_activities` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '',
+DROP INDEX `staff_id` ,
+ADD INDEX `security_user_id` (`security_user_id`);
+
 -- guardian_activities
 ALTER TABLE `z_2193_guardian_activities` 
 RENAME TO  `guardian_activities` ;
+
+-- guardian_activities
+ALTER TABLE `guardian_activities` 
+CHANGE COLUMN `guardian_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `guardian_id` ,
+ADD INDEX `security_user_id` (`security_user_id`);
 
 -- security_functions
 UPDATE `security_functions` SET `module`='Students', `category`='General' WHERE `id`=2000;
