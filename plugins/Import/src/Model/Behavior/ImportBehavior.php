@@ -317,8 +317,8 @@ class ImportBehavior extends Behavior {
 			$totalImported = 0;
 			$totalUpdated = 0;
 			$importedUniqueCodes = new ArrayObject;
-			$dataFailed = ['type'=>'failed'];
-			$dataPassed = ['type'=>'passed'];
+			$dataFailed = [];
+			$dataPassed = [];
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 
@@ -455,8 +455,8 @@ class ImportBehavior extends Behavior {
 				'totalUpdated' => $totalUpdated,
 				'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
 				'header' => $header,
-				'failedExcelFile' => $this->_generateDownloadableFile( $dataFailed, $header, $systemDateFormat ),
-				'passedExcelFile' => $this->_generateDownloadableFile( $dataPassed, $header, $systemDateFormat ),
+				'failedExcelFile' => $this->_generateDownloadableFile( $dataFailed, 'failed', $header, $systemDateFormat ),
+				'passedExcelFile' => $this->_generateDownloadableFile( $dataPassed, 'passed', $header, $systemDateFormat ),
 				'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
 			];
 			$session->write($this->sessionKey, $completedData);
@@ -551,23 +551,13 @@ class ImportBehavior extends Behavior {
 		$array = [];
 		foreach ($columns as $property) {
 			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $entity->$property;
-			$array[$property] = $value;
+			$array[] = $value;
 		}
 		return $array;
 	}
 
-	private function _generateDownloadableFile( $data, $header, $systemDateFormat ) {
-		// $data will always have at least one record which is 'type'.
-		// 'type' holds the value of either "passed" or "failed"
-		// and it must exists!
-		if (!array_key_exists('type', $data)) {
-			$this->_table->log('type is missing from $data for '.$this->config('model').' import @ ImportBehavior: Line '.__LINE__ , 'debug');
-			return null;
-		}
-
-		if (count($data) > 1) {
-			$type = $data['type'];
-			unset($data['type']);
+	private function _generateDownloadableFile( $data, $type, $header, $systemDateFormat ) {
+		if (!empty($data)) {
 			$downloadFolder = $this->prepareDownload();
 			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
 					$this->getExcelLabel( 'general', 'import' ), 
@@ -585,11 +575,10 @@ class ImportBehavior extends Behavior {
 			}
 			$dataSheetName = $this->getExcelLabel('general', 'data');
 			$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-			// pr($data);die;
 			foreach($data as $record) {
 				if ($type == 'failed') {
-					$record['data'][] = $record['error'];
 					$values = array_values($record['data']->getArrayCopy());
+					$values[] = $record['error'];
 				} else {
 					$values = $record['data'];
 				}

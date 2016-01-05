@@ -31,10 +31,10 @@
 	</div>
 </div>
 
-<?php $passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-default", 'escape'=>false]); ?>
+<?php $passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-success", 'escape'=>false]); ?>
 
 <?php 
-if(!empty($attr['results']['excelFile'])):
+if(!empty($attr['results']['failedExcelFile'])):
 ?>
 
 <div class="table-wrapper">
@@ -60,9 +60,7 @@ if(!empty($attr['results']['excelFile'])):
 					<td class="tooltip-red">
 						<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
 					</td>
-					<td>
-						<?= $row['row_number']; ?>
-					</td>
+					<td><?= $row['row_number']; ?></td>
 					<?php 
 					foreach ($row['data'] as $key=>$col):
 						if ($key == count($row['data'])-1) {
@@ -71,6 +69,7 @@ if(!empty($attr['results']['excelFile'])):
 						echo sprintf('<td>%s</td>', $col);
 					endforeach;
 					?>
+					<td></td>
 				</tr>
 				<?php 
 				endforeach;
