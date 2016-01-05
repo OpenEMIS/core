@@ -1,15 +1,34 @@
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-1227', NOW());
 
+-- backup tables
+RENAME TABLE `staff_healths` TO `z_1227_staff_healths`;
+RENAME TABLE `staff_health_allergies` TO `z_1227_staff_health_allergies`;
+RENAME TABLE `staff_health_consultations` TO `z_1227_staff_health_consultations`;
+RENAME TABLE `staff_health_families` TO `z_1227_staff_health_families`;
+RENAME TABLE `staff_health_histories` TO `z_1227_staff_health_histories`;
+RENAME TABLE `staff_health_immunizations` TO `z_1227_staff_health_immunizations`;
+RENAME TABLE `staff_health_medications` TO `z_1227_staff_health_medications`;
+RENAME TABLE `staff_health_tests` TO `z_1227_staff_health_tests`;
+
+RENAME TABLE `student_healths` TO `z_1227_student_healths`;
+RENAME TABLE `student_health_allergies` TO `z_1227_student_health_allergies`;
+RENAME TABLE `student_health_consultations` TO `z_1227_student_health_consultations`;
+RENAME TABLE `student_health_families` TO `z_1227_student_health_families`;
+RENAME TABLE `student_health_histories` TO `z_1227_student_health_histories`;
+RENAME TABLE `student_health_immunizations` TO `z_1227_student_health_immunizations`;
+RENAME TABLE `student_health_medications` TO `z_1227_student_health_medications`;
+RENAME TABLE `student_health_tests` TO `z_1227_student_health_tests`;
+
 -- Add new tables
 
 -- user_healths
 DROP TABLE IF EXISTS `user_healths`;
 CREATE TABLE IF NOT EXISTS `user_healths` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `blood_type` varchar(3) NOT NULL,
   `doctor_name` varchar(150) NOT NULL,
   `doctor_contact` varchar(11) NOT NULL,
-  `blood_type` varchar(3) NOT NULL,
   `medical_facility` varchar(200) DEFAULT NULL,
   `health_insurance` int(1) NOT NULL DEFAULT '0',
   `security_user_id` int(11) NOT NULL,
@@ -26,10 +45,10 @@ CREATE TABLE IF NOT EXISTS `user_healths` (
 -- user_health_allergies
 DROP TABLE IF EXISTS `user_health_allergies`;
 CREATE TABLE IF NOT EXISTS `user_health_allergies` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `comment` text DEFAULT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,  
   `description` varchar(200) NOT NULL,
   `severe` int(1) NOT NULL DEFAULT '0',
+  `comment` text DEFAULT NULL,
   `health_allergy_type_id` int(11) NOT NULL,
   `security_user_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -47,9 +66,9 @@ CREATE TABLE IF NOT EXISTS `user_health_allergies` (
 DROP TABLE IF EXISTS `user_health_consultations`;
 CREATE TABLE IF NOT EXISTS `user_health_consultations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
   `description` text DEFAULT NULL,
   `treatment` text DEFAULT NULL,
-  `date` date NOT NULL,
   `health_consultation_type_id` int(11) NOT NULL,
   `security_user_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -67,8 +86,8 @@ CREATE TABLE IF NOT EXISTS `user_health_consultations` (
 DROP TABLE IF EXISTS `user_health_families`;
 CREATE TABLE IF NOT EXISTS `user_health_families` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `comment` text DEFAULT NULL,
   `current` int(1) NOT NULL DEFAULT '0',
+  `comment` text DEFAULT NULL,
   `health_relationship_id` int(4) NOT NULL,
   `health_condition_id` int(6) NOT NULL,
   `security_user_id` int(11) NOT NULL,
@@ -88,9 +107,9 @@ CREATE TABLE IF NOT EXISTS `user_health_families` (
 DROP TABLE IF EXISTS `user_health_histories`;
 CREATE TABLE IF NOT EXISTS `user_health_histories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `comment` text DEFAULT NULL,
   `current` int(1) NOT NULL DEFAULT '0',
-  `health_condition_id` int(6) NOT NULL,
+  `comment` text DEFAULT NULL,
+  `health_condition_id` int(11) NOT NULL,
   `security_user_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -107,9 +126,9 @@ CREATE TABLE IF NOT EXISTS `user_health_histories` (
 DROP TABLE IF EXISTS `user_health_immunizations`;
 CREATE TABLE IF NOT EXISTS `user_health_immunizations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `comment` text DEFAULT NULL,
-  `dosage` varchar(20) NOT NULL,
   `date` date NOT NULL,
+  `dosage` varchar(20) NOT NULL,
+  `comment` text DEFAULT NULL,  
   `health_immunization_type_id` int(11) NOT NULL,
   `security_user_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -146,9 +165,9 @@ CREATE TABLE IF NOT EXISTS `user_health_medications` (
 DROP TABLE IF EXISTS `user_health_tests`;
 CREATE TABLE IF NOT EXISTS `user_health_tests` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `comment` text DEFAULT NULL,
-  `result` text DEFAULT NULL,
   `date` date NOT NULL,
+  `result` text DEFAULT NULL,
+  `comment` text DEFAULT NULL,
   `health_test_type_id` int(11) NOT NULL,
   `security_user_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -293,19 +312,19 @@ INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `orde
 
 SET @ordering := @ordering +1;
 INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
-('Health', 'ConsultationTypes', 'Consultation Types', 'Health', '{"model":"Health.ConsultationTypes"}', @ordering, 1, 1, NOW());
-
-SET @ordering := @ordering +1;
-INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
-('Health', 'Relationships', 'Relationships', 'Health', '{"model":"Health.Relationships"}', @ordering, 1, 1, NOW());
-
-SET @ordering := @ordering +1;
-INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
 ('Health', 'Conditions', 'Conditions', 'Health', '{"model":"Health.Conditions"}', @ordering, 1, 1, NOW());
 
 SET @ordering := @ordering +1;
 INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
+('Health', 'ConsultationTypes', 'Consultation Types', 'Health', '{"model":"Health.ConsultationTypes"}', @ordering, 1, 1, NOW());
+
+SET @ordering := @ordering +1;
+INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
 ('Health', 'ImmunizationTypes', 'Immunization Types', 'Health', '{"model":"Health.ImmunizationTypes"}', @ordering, 1, 1, NOW());
+
+SET @ordering := @ordering +1;
+INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES
+('Health', 'Relationships', 'Relationships', 'Health', '{"model":"Health.Relationships"}', @ordering, 1, 1, NOW());
 
 SET @ordering := @ordering +1;
 INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `created_user_id`, `created`) VALUES

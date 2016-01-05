@@ -15,6 +15,25 @@ DROP TABLE IF EXISTS `health_conditions`;
 DROP TABLE IF EXISTS `health_immunization_types`;
 DROP TABLE IF EXISTS `health_test_types`;
 
+-- restore tables
+RENAME TABLE `z_1227_staff_healths` TO `staff_healths`;
+RENAME TABLE `z_1227_staff_health_allergies` TO `staff_health_allergies`;
+RENAME TABLE `z_1227_staff_health_consultations` TO `staff_health_consultations`;
+RENAME TABLE `z_1227_staff_health_families` TO `staff_health_families`;
+RENAME TABLE `z_1227_staff_health_histories` TO `staff_health_histories`;
+RENAME TABLE `z_1227_staff_health_immunizations` TO `staff_health_immunizations`;
+RENAME TABLE `z_1227_staff_health_medications` TO `staff_health_medications`;
+RENAME TABLE `z_1227_staff_health_tests` TO `staff_health_tests`;
+
+RENAME TABLE `z_1227_student_healths` TO `student_healths`;
+RENAME TABLE `z_1227_student_health_allergies` TO `student_health_allergies`;
+RENAME TABLE `z_1227_student_health_consultations` TO `student_health_consultations`;
+RENAME TABLE `z_1227_student_health_families` TO `student_health_families`;
+RENAME TABLE `z_1227_student_health_histories` TO `student_health_histories`;
+RENAME TABLE `z_1227_student_health_immunizations` TO `student_health_immunizations`;
+RENAME TABLE `z_1227_student_health_medications` TO `student_health_medications`;
+RENAME TABLE `z_1227_student_health_tests` TO `student_health_tests`;
+
 -- field_options
 DELETE FROM `field_options` WHERE `parent` = 'Health';
 
