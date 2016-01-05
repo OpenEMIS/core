@@ -317,7 +317,8 @@ class ImportBehavior extends Behavior {
 			$totalImported = 0;
 			$totalUpdated = 0;
 			$importedUniqueCodes = new ArrayObject;
-			$dataFailed = [];
+			$dataFailed = ['type'=>'failed'];
+			$dataPassed = ['type'=>'passed'];
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 
@@ -417,6 +418,13 @@ class ImportBehavior extends Behavior {
 						$model->log($rowCodeError, 'debug');
 
 						continue;
+					} else {
+						$clonedEntity = clone $tableEntity;
+						$clonedEntity->virtualProperties([]);
+						$dataPassed[] = [
+							'row_number' => $row,
+							'data' => $this->_getReorderedEntityArray($clonedEntity, $columns, $systemDateFormat)
+						];
 					}
 
 					$isNew = $tableEntity->isNew();
@@ -439,48 +447,6 @@ class ImportBehavior extends Behavior {
 				break; // only process first sheet
 			} // foreach ($worksheets as $sheet)
 
-			if (!empty($dataFailed)) {
-				$downloadFolder = $this->prepareDownload();
-				$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
-						$this->getExcelLabel('general', 'import'), 
-						$this->getExcelLabel('general',  $this->config('plugin')), 
-						$this->getExcelLabel('general',  $this->config('model')), 
-						$this->getExcelLabel('general', 'failed'),
-						time()
-				);
-				$excelPath = $downloadFolder . DS . $excelFile;
-
-				$writer = new \XLSXWriter();
-				$newHeader = $header;
-				$newHeader[] = $this->getExcelLabel('general', 'errors');
-				$dataSheetName = $this->getExcelLabel('general', 'data');
-				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-				foreach($dataFailed as $record) {
-					$record['data'][] = $record['error'];
-					$writer->writeSheetRow($dataSheetName, array_values($record['data']->getArrayCopy()));
-				}
-				
-				$codesData = $this->excelGetCodesData($this->_table);
-				foreach($codesData as $modelName => $modelArr) {
-					// added this check to support rows on sheets that require a specific format.
-					// default cell format is 'string'
-					if (array_key_exists('formats', $modelArr)) {
-						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
-					} else {
-						foreach($modelArr as $row) {
-							$writer->writeSheetRow($modelName, array_values($row));
-						}
-					}
-				}
-				
-				$writer->writeToFile($excelPath);
-				$downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
-				$downloadUrl[] = $excelFile;
-				$excelFile = $downloadUrl;
-			} else {
-				$excelFile = null;
-			}
-
 			$session = $this->_table->Session;
 			$completedData = [
 				'uploadedName' => $uploadedName,
@@ -489,7 +455,8 @@ class ImportBehavior extends Behavior {
 				'totalUpdated' => $totalUpdated,
 				'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
 				'header' => $header,
-				'excelFile' => $excelFile,
+				'failedExcelFile' => $this->_generateDownloadableFile( $dataFailed, $header, $systemDateFormat ),
+				'passedExcelFile' => $this->_generateDownloadableFile( $dataPassed, $header, $systemDateFormat ),
 				'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
 			];
 			$session->write($this->sessionKey, $completedData);
@@ -541,6 +508,11 @@ class ImportBehavior extends Behavior {
 		die;
 	}
 
+	public function downloadPassed($excelFile) {
+		$this->performDownload($excelFile);
+		die;
+	}
+
 	public function results() {
 		$session = $this->_table->Session;
 		if ($session->check($this->sessionKey)) {
@@ -555,7 +527,7 @@ class ImportBehavior extends Behavior {
 				'results' => $completedData
 			]);
 			$session->delete($this->sessionKey);
-			if (!empty($completedData['excelFile'])) {
+			if (!empty($completedData['failedExcelFile'])) {
 				$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
 				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			} else {
@@ -570,12 +542,86 @@ class ImportBehavior extends Behavior {
 		}
 	}
 
-
 /******************************************************************************************************************
 **
 ** Import Functions
 **
 ******************************************************************************************************************/
+	private function _getReorderedEntityArray( $entity, $columns, $systemDateFormat ) {
+		$array = [];
+		foreach ($columns as $property) {
+			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $entity->$property;
+			$array[$property] = $value;
+		}
+		return $array;
+	}
+
+	private function _generateDownloadableFile( $data, $header, $systemDateFormat ) {
+		// $data will always have at least one record which is 'type'.
+		// 'type' holds the value of either "passed" or "failed"
+		// and it must exists!
+		if (!array_key_exists('type', $data)) {
+			$this->_table->log('type is missing from $data for '.$this->config('model').' import @ ImportBehavior: Line '.__LINE__ , 'debug');
+			return null;
+		}
+
+		if (count($data) > 1) {
+			$type = $data['type'];
+			unset($data['type']);
+			$downloadFolder = $this->prepareDownload();
+			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
+					$this->getExcelLabel( 'general', 'import' ), 
+					$this->getExcelLabel( 'general',  $this->config('plugin') ), 
+					$this->getExcelLabel( 'general',  $this->config('model') ), 
+					$this->getExcelLabel( 'general', $type ),
+					time()
+			);
+			$excelPath = $downloadFolder . DS . $excelFile;
+
+			$writer = new \XLSXWriter();
+			$newHeader = $header;
+			if ($type == 'failed') {
+				$newHeader[] = $this->getExcelLabel('general', 'errors');
+			}
+			$dataSheetName = $this->getExcelLabel('general', 'data');
+			$writer->writeSheetRow($dataSheetName, array_values($newHeader));
+			// pr($data);die;
+			foreach($data as $record) {
+				if ($type == 'failed') {
+					$record['data'][] = $record['error'];
+					$values = array_values($record['data']->getArrayCopy());
+				} else {
+					$values = $record['data'];
+				}
+				$writer->writeSheetRow($dataSheetName, $values);
+			}
+			
+			if ($type == 'failed') {
+				$codesData = $this->excelGetCodesData($this->_table);
+				foreach($codesData as $modelName => $modelArr) {
+					// added this check to support rows on sheets that require a specific format.
+					// default cell format is 'string'
+					if (array_key_exists('formats', $modelArr)) {
+						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
+					} else {
+						foreach($modelArr as $row) {
+							$writer->writeSheetRow($modelName, array_values($row));
+						}
+					}
+				}
+			}
+			
+			$writer->writeToFile($excelPath);
+			$downloadUrl = $this->_table->ControllerAction->url( 'download' . ucwords($type) );
+			$downloadUrl[] = $excelFile;
+			$excelFile = $downloadUrl;
+		} else {
+			$excelFile = null;
+		}
+
+		return $excelFile;
+	}
+
 	/**
 	 * Check if all the columns in the row is not empty
 	 * @param  WorkSheet $sheet      The worksheet object

@@ -31,6 +31,8 @@
 	</div>
 </div>
 
+<?php $passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-default", 'escape'=>false]); ?>
+
 <?php 
 if(!empty($attr['results']['excelFile'])):
 ?>
@@ -79,8 +81,19 @@ if(!empty($attr['results']['excelFile'])):
 </div>
 
 <div class="form-buttons">
-	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['excelFile'], ['class'=>"btn btn-default", 'escape'=>false]); ?>
+	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['failedExcelFile'], ['class'=>"btn btn-danger", 'style'=>"text-decoration:none;", 'escape'=>false]); ?>
+	<?= $passedRecordsLink; ?>
 </div>
+
+<?php
+else:
+?>
+
+<div class="form-buttons">
+	<?= $passedRecordsLink; ?>
+</div>
+
 <?php
 endif;
 ?>
+
