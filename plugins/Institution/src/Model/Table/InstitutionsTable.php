@@ -14,6 +14,8 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
+	private $dashboardQuery = null;
+
 	public function initialize(array $config) {
 		$this->table('institutions');
         parent::initialize($config);
@@ -257,21 +259,12 @@ class InstitutionsTable extends AppTable  {
 			$institutionCount = $this->find();
 			$conditions = [];
 
-			if (! $this->AccessControl->isAdmin()) {
-
-				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-
-				// Total Institutions: number
-				$institutionCount = $institutionCount
-					->where([$this->aliasField('id').' IN' => $institutionIds]);
-
-				$conditions['id IN'] = $institutionIds;
-			}
+			$institutionCount = clone $this->dashboardQuery;
 
 			$models = [
-				['Types', 'institution_type_id', 'Type', 'conditions' => $conditions],
-				['Sectors', 'institution_sector_id', 'Sector', 'conditions' => $conditions],
-				['Localities', 'institution_locality_id', 'Locality', 'conditions' => $conditions],
+				['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
+				['Sectors', 'institution_sector_id', 'Sector', 'query' => $this->dashboardQuery],
+				['Localities', 'institution_locality_id', 'Locality', 'query' => $this->dashboardQuery],
 			];
 
 			foreach ($models as $key => $model) {
@@ -279,11 +272,13 @@ class InstitutionsTable extends AppTable  {
 			}
 
 			$indexDashboard = 'dashboard';
+			$count = $institutionCount->count();
+			unset($institutionCount);
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [ 
 	            	'model' => 'institutions',
-	            	'modelCount' => $institutionCount->count(),
+	            	'modelCount' => $count,
 	            	'modelArray' => $institutionArray,
 	            ],
 	            'options' => [],
@@ -296,19 +291,14 @@ class InstitutionsTable extends AppTable  {
 	public function getNumberOfInstitutionsByModel($params=[]) {
 
 		if (!empty($params)) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
+			$query = $params['query'];
 
 			$modelName = $params[0];
 			$modelId = $params[1];
 			$key = $params[2];
 			$params['key'] = __($key);
 
-			foreach ($conditions as $key => $value) {
-				$_conditions[$this->aliasField($key)] = $value;
-			}
-
-			$institutionRecords = $this->find();
+			$institutionRecords = clone $query;
 			
 			$selectString = $modelName.'.name';
 			$institutionTypesCount = $institutionRecords
@@ -318,17 +308,19 @@ class InstitutionsTable extends AppTable  {
 					'name' => $selectString
 				])
 				->group($modelId)
-				->where($_conditions)
-				->toArray();
+				;
+
+			$this->advancedSearchQuery($this->request, $institutionTypesCount);
 
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionTypesCount as $key => $value) {
+			foreach ($institutionTypesCount->toArray() as $key => $value) {
 	            // Compile the dataset
 				$dataSet[] = [__($value['name']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}
+		unset($institutionRecords);
 		return $params;
 	}
 
@@ -417,6 +409,8 @@ class InstitutionsTable extends AppTable  {
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}
+
+		$this->dashboardQuery = clone $query;
 	}
 
 	public function indexAfterAction(Event $event, $data) {
