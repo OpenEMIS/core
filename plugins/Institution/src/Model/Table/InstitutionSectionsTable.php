@@ -74,7 +74,8 @@ class InstitutionSectionsTable extends AppTable {
 			->toArray();
 		if (!empty($exists)) {
 			foreach ($exists as $key => $value) {
-				if ($value->id == $data['id']) {
+				if (array_key_exists('id', $data) && $value->id == $data['id']) {
+					// if editing an existing value
 					return true;
 					break;
 				}
@@ -286,7 +287,9 @@ class InstitutionSectionsTable extends AppTable {
 							'InstitutionSectionGrades.institution_section_id = InstitutionSections.id'
 						]
 					]
-				]);
+				])
+				->group(['InstitutionSectionGrades.institution_section_id'])
+				;
 		}
     }
 
@@ -391,7 +394,10 @@ class InstitutionSectionsTable extends AppTable {
 			 * education_grade field setup
 			 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
 			 */
-			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+			$gradeOptions = [];
+			if (!empty($this->_selectedAcademicPeriodId)) {
+				$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+			}
 			if ($this->_selectedEducationGradeId != 0) {
 				if (!array_key_exists($this->_selectedEducationGradeId, $gradeOptions)) {
 					$this->_selectedEducationGradeId = key($gradeOptions);
