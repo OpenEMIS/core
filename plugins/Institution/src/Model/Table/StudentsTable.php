@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
+use Cake\ORM\ResultSet;
 
 class StudentsTable extends AppTable {
 
@@ -378,7 +379,10 @@ class StudentsTable extends AppTable {
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+	}
 
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
+		$query = $resultSet->__debugInfo()['query'];
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -437,7 +441,7 @@ class StudentsTable extends AppTable {
 		if ($this->action == 'index') {
 			$InstitutionArray = [];
 			$institutionStudentQuery = clone $this->dashboardQuery;
-			$studentCount = $institutionStudentQuery->count();
+			$studentCount = $institutionStudentQuery->group([$this->aliasField('student_id')])->count();
 			unset($institutionStudentQuery);
 
 			//Get Gender
@@ -1164,7 +1168,7 @@ class StudentsTable extends AppTable {
 				'count' => $InstitutionRecords->func()->count('DISTINCT student_id'),	
 				'gender' => 'Genders.name'
 			])
-			->group('gender');
+			->group(['gender']);
 			
 		// Creating the data set		
 		$dataSet = [];
