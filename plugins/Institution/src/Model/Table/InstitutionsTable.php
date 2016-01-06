@@ -158,6 +158,29 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$cloneFields = $fields->getArrayCopy();
+		$newFields = [];
+		foreach ($cloneFields as $key => $value) {
+			$newFields[] = $value;
+			if ($value['field'] == 'area_id') {
+				$newFields[] = [
+					'key' => 'Areas.code',
+					'field' => 'area_code',
+					'type' => 'string',
+					'label' => ''
+				];
+			}
+		}
+		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$query
+			->contain(['Areas'])
+			->select(['area_code' => 'Areas.code']);
+	}
+
 	public function onGetName(Event $event, Entity $entity) {
 		$name = $entity->name;
 
