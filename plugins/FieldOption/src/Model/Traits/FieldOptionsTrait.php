@@ -8,5 +8,6 @@ trait FieldOptionsTrait {
 		'FieldOption.Banks' => 		['behavior' => 'Display'],
 		'FieldOption.Countries' => 	['behavior' => 'Countries'],
 		'Institution.NetworkConnectivities' => 		['behavior' => 'Display'],
+		'FieldOption.QualityVisitTypes' => ['behavior' => 'Display'],
 	];
 }
