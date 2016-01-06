@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\ORM\ResultSet;
 
 use App\Model\Table\AppTable;
 
@@ -260,6 +261,7 @@ class InstitutionsTable extends AppTable  {
 			$conditions = [];
 
 			$institutionCount = clone $this->dashboardQuery;
+			$cloneClass = clone $this->dashboardQuery;
 
 			$models = [
 				['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
@@ -409,7 +411,10 @@ class InstitutionsTable extends AppTable  {
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			$query->order([$this->aliasField('name') => 'asc']);
 		}
+	}
 
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
+		$query = $resultSet->__debugInfo()['query'];
 		$this->dashboardQuery = clone $query;
 	}
 
