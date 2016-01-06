@@ -19,6 +19,8 @@ use DateTime;
 class StaffTable extends AppTable {
 	use OptionsTrait;
 
+	private $dashboardQuery = null;
+
 	public function initialize(array $config) {
 		$this->table('institution_staff');
 		parent::initialize($config);
@@ -151,6 +153,8 @@ class StaffTable extends AppTable {
 					->count();
 			}
 		]);
+		$request->query['academic_period_id'] = $selectedPeriod;
+
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
@@ -165,6 +169,8 @@ class StaffTable extends AppTable {
 		}
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
+
+		$this->dashboardQuery = clone $query;
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -514,25 +520,24 @@ class StaffTable extends AppTable {
 
 			$positionId = $this->request->query('position');
 
-			// Get Number of staff in an institution
-			$staffCount = $this->find()
-				->find('academicPeriod', ['academic_period_id' => $periodId])
-				->where([$this->aliasField('institution_id') => $institutionId])
-				->distinct(['staff_id']);
+			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->data['Search']['searchField']));
 
-			if ($positionId != 0) {
-				$staffCount->where([$this->aliasField('institution_position_id') => $positionId]);
-				$conditions = array_merge($conditions, ['institution_position_id' => $positionId])	;
-			}
+			$institutionStaffQuery = clone $this->dashboardQuery;
+			// Get Number of staff in an institution
+			$staffCount = $institutionStaffQuery->count();
+
+			unset($institutionStaffQuery);
+
 			// Get Gender
 			$InstitutionArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['conditions' => $conditions, 'key' => __('Gender')]);
+				['query' => $this->dashboardQuery, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
 			// Revisit here in awhile
 			$InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['conditions' => $conditions, 'key' => __('Licenses')]);
+				['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
@@ -540,7 +545,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount->count(['staff_id']),
+	            	'modelCount' => $staffCount,
 	            	'modelArray' => $InstitutionArray,
 	            ],
 	            'options' => [],
@@ -655,6 +660,33 @@ class StaffTable extends AppTable {
 			$classIdsDuringStaffPeriod[] = $value->id;
 		}
 
+		// Staff behavior associated to institution must be deleted.
+		$StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
+		$StaffBehaviours->deleteAll([
+			$StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
+			$StaffBehaviours->aliasField('institution_id') => $entity->institution_id,
+		]);
+
+		// Staff absence associated to institution must be deleted.
+		$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+		$StaffAbsences->deleteAll([
+			$StaffAbsences->aliasField('staff_id') => $entity->staff_id,
+			$StaffAbsences->aliasField('institution_id') => $entity->institution_id,
+		]);
+
+		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
+		// association cascade deletes institution_site_quality_rubric_answers
+		$InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
+		$institutionRubricsQuery = $InstitutionRubrics->find()
+			->where([
+				$InstitutionRubrics->aliasField('staff_id') => $entity->staff_id,
+				$InstitutionRubrics->aliasField('institution_id') => $entity->institution_id,
+			])
+		;
+		foreach ($institutionRubricsQuery as $key => $value) {
+			$InstitutionRubrics->delete($value);
+		}
+
 		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 
 		$InstitutionClassStaff->deleteAll([
@@ -663,9 +695,6 @@ class StaffTable extends AppTable {
 		]);
 
 		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
-
-
-
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
 
@@ -712,30 +741,26 @@ class StaffTable extends AppTable {
 
 	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
-			foreach ($conditions as $key => $value) {
-				$_conditions[$this->alias().'.'.$key] = $value;
-			}
+		$query = $params['query'];
+		$InstitutionRecords = clone $query;
+		$InstitutionStaffCount = $InstitutionRecords
+			->matching('Users.Genders')
+			->select([
+				'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
+				'gender' => 'Genders.name'
+			])
+			->group('gender_id');
 
-			$InstitutionRecords = $this->find();
-			$InstitutionStaffCount = $InstitutionRecords
-				->contain(['Users', 'Users.Genders'])
-				->select([
-					'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
-					'gender' => 'Genders.name'
-				])
-				->where($_conditions)
-				->group('gender_id');
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($InstitutionStaffCount->toArray() as $value) {
+            //Compile the dataset
+			$dataSet[] = [__($value['gender']), $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		
+		unset($InstitutionRecords);
 
-			// Creating the data set		
-			$dataSet = [];
-			foreach ($InstitutionStaffCount->toArray() as $value) {
-	            //Compile the dataset
-				$dataSet[] = [__($value['gender']), $value['count']];
-			}
-			$params['dataSet'] = $dataSet;
-		//}
 		return $params;
 	}
 
