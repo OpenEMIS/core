@@ -31,9 +31,13 @@
 	</div>
 </div>
 
-<?php $passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-success", 'escape'=>false]); ?>
-
 <?php 
+if(!empty($attr['results']['passedExcelFile'])) {
+	$passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-success", 'escape'=>false]);
+} else {
+	$passedRecordsLink = '';
+}
+
 if(!empty($attr['results']['failedExcelFile'])):
 ?>
 
