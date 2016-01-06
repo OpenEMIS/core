@@ -13,6 +13,7 @@ use Cake\Controller\Controller;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Inflector;
+use Cake\ORM\ResultSet;
 use DateTime;
 
 
@@ -169,7 +170,10 @@ class StaffTable extends AppTable {
 		}
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
+	}
 
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
+		$query = $resultSet->__debugInfo()['query'];
 		$this->dashboardQuery = clone $query;
 	}
 
