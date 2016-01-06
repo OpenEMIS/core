@@ -320,4 +320,12 @@ class ImportStudentsTable extends AppTable {
 
 		return true;
 	}
+
+	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+		$flipped = array_flip($columns);
+		$original = $originalRow->getArrayCopy();
+		$key = $flipped['student_id'];
+		$tempPassedRecord['data'][$key] = $originalRow[$key];
+	}
+
 }
