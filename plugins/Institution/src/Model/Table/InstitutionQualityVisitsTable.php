@@ -17,7 +17,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$this->table('institution_quality_visits');
 		parent::initialize($config);
 
-		$this->belongsTo('QualityVisitTypes', ['className' => 'FieldOption.QualityVisitTypes']);
+		$this->belongsTo('QualityVisitTypes', ['className' => 'FieldOption.QualityVisitTypes', 'foreignKey' => 'quality_visit_type_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
