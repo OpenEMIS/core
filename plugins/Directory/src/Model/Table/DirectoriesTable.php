@@ -40,7 +40,6 @@ class DirectoriesTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportUsers']);
-
 		// $this->addBehavior('Excel', [
 		// 	'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
 		// 	'filename' => 'Students',
@@ -509,15 +508,17 @@ class DirectoriesTable extends AppTable {
 		$staffInstitutions = [];
 		if ($isStaff) {
 			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+			$today = date('Y-m-d');
 			$staffInstitutions = $InstitutionStaffTable->find('list', [
 					'keyField' => 'id',
-					'valueField' => 'name'
+					'valueField' => 'institutionName'
 				])
+				->find('inDateRange', ['start_date' => $today, 'end_date' => $today])
 				->matching('Institutions')
-				->select(['Institutions.name'])
 				->where([$InstitutionStaffTable->aliasField('staff_id') => $userId])
-				->andWhere([$InstitutionStaffTable->aliasField('end_date').' IS NULL'])
-				->select(['id' => 'Institutions.id', 'name' => 'Institutions.name'])
+				->select(['id' => 'Institutions.id', 'institutionName' => 'Institutions.name'])
+				->group(['Institutions.id'])
+				->order(['Institutions.name'])
 				->toArray();
 			return implode('<BR>', $staffInstitutions);
 		}
