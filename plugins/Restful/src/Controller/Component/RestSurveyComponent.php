@@ -530,6 +530,7 @@ class RestSurveyComponent extends Component {
 
 											$fieldOptionResults = $this->FieldOption
 												->find()
+												->find('visible')
 												->find('order')
 												->where([
 													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
@@ -553,6 +554,7 @@ class RestSurveyComponent extends Component {
 
 											$fieldOptionResults = $this->FieldOption
 												->find()
+												->find('visible')
 												->find('order')
 												->where([
 													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
@@ -587,6 +589,7 @@ class RestSurveyComponent extends Component {
 
 										$tableColumnResults = $this->TableColumn
 											->find()
+											->find('visible')
 											->find('order')
 											->where([
 												$this->TableColumn->aliasField($this->fieldKey) => $field->field_id
@@ -595,6 +598,7 @@ class RestSurveyComponent extends Component {
 
 										$tableRowResults = $this->TableRow
 											->find()
+											->find('visible')
 											->find('order')
 											->where([
 												$this->TableRow->aliasField($this->fieldKey) => $field->field_id
