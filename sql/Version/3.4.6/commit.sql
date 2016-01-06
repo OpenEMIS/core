@@ -20,6 +20,12 @@ INSERT INTO `import_mapping`
 ALTER TABLE `import_mapping`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=82;
 
+UPDATE `security_functions` SET `_execute` = 'ImportInstitutionSurveys.add|ImportInstitutionSurveys.template|ImportInstitutionSurveys.results|ImportInstitutionSurveys.downloadFailed|ImportInstitutionSurveys.downloadPassed' WHERE `security_functions`.`id` = 1024;
+UPDATE `security_functions` SET `_execute` = 'ImportInstitutions.add|ImportInstitutions.template|ImportInstitutions.results|ImportInstitutions.downloadFailed|ImportInstitutions.downloadPassed' WHERE `security_functions`.`id` = 1034;
+UPDATE `security_functions` SET `_execute` = 'ImportStudents.add|ImportStudents.template|ImportStudents.results|ImportStudents.downloadFailed|ImportStudents.downloadPassed' WHERE `security_functions`.`id` = 1035;
+UPDATE `security_functions` SET `_execute` = 'ImportStudentAttendances.add|ImportStudentAttendances.template|ImportStudentAttendances.results|ImportStudentAttendances.downloadFailed|ImportStudentAttendances.downloadPassed' WHERE `security_functions`.`id` = 1036;
+UPDATE `security_functions` SET `_execute` = 'ImportStaffAttendances.add|ImportStaffAttendances.template|ImportStaffAttendances.results|ImportStaffAttendances.downloadFailed|ImportStaffAttendances.downloadPassed' WHERE `security_functions`.`id` = 1037;
+UPDATE `security_functions` SET `_execute` = 'ImportUsers.add|ImportUsers.template|ImportUsers.results|ImportUsers.downloadFailed|ImportUsers.downloadPassed' WHERE `security_functions`.`id` = 7036;
 
 
 UPDATE config_items SET value = '3.4.6' WHERE code = 'db_version';
