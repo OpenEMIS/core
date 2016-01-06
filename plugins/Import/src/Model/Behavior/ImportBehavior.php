@@ -318,6 +318,7 @@ class ImportBehavior extends Behavior {
 			$totalUpdated = 0;
 			$importedUniqueCodes = new ArrayObject;
 			$dataFailed = [];
+			$dataPassed = [];
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 
@@ -417,6 +418,21 @@ class ImportBehavior extends Behavior {
 						$model->log($rowCodeError, 'debug');
 
 						continue;
+					} else {
+						$clonedEntity = clone $tableEntity;
+						$clonedEntity->virtualProperties([]);
+
+						$tempPassedRecord = [
+							'row_number' => $row,
+							'data' => $this->_getReorderedEntityArray($clonedEntity, $columns, $systemDateFormat)
+						];
+						$tempPassedRecord = new ArrayObject($tempPassedRecord);
+
+						// individual import models can specifically define the passed record values which are to be exported
+						$params = [$clonedEntity, $columns, $tempPassedRecord, $originalRow];
+						$this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
+
+						$dataPassed[] = $tempPassedRecord->getArrayCopy();
 					}
 
 					$isNew = $tableEntity->isNew();
@@ -439,48 +455,6 @@ class ImportBehavior extends Behavior {
 				break; // only process first sheet
 			} // foreach ($worksheets as $sheet)
 
-			if (!empty($dataFailed)) {
-				$downloadFolder = $this->prepareDownload();
-				$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
-						$this->getExcelLabel('general', 'import'), 
-						$this->getExcelLabel('general',  $this->config('plugin')), 
-						$this->getExcelLabel('general',  $this->config('model')), 
-						$this->getExcelLabel('general', 'failed'),
-						time()
-				);
-				$excelPath = $downloadFolder . DS . $excelFile;
-
-				$writer = new \XLSXWriter();
-				$newHeader = $header;
-				$newHeader[] = $this->getExcelLabel('general', 'errors');
-				$dataSheetName = $this->getExcelLabel('general', 'data');
-				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-				foreach($dataFailed as $record) {
-					$record['data'][] = $record['error'];
-					$writer->writeSheetRow($dataSheetName, array_values($record['data']->getArrayCopy()));
-				}
-				
-				$codesData = $this->excelGetCodesData($this->_table);
-				foreach($codesData as $modelName => $modelArr) {
-					// added this check to support rows on sheets that require a specific format.
-					// default cell format is 'string'
-					if (array_key_exists('formats', $modelArr)) {
-						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
-					} else {
-						foreach($modelArr as $row) {
-							$writer->writeSheetRow($modelName, array_values($row));
-						}
-					}
-				}
-				
-				$writer->writeToFile($excelPath);
-				$downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
-				$downloadUrl[] = $excelFile;
-				$excelFile = $downloadUrl;
-			} else {
-				$excelFile = null;
-			}
-
 			$session = $this->_table->Session;
 			$completedData = [
 				'uploadedName' => $uploadedName,
@@ -489,7 +463,8 @@ class ImportBehavior extends Behavior {
 				'totalUpdated' => $totalUpdated,
 				'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
 				'header' => $header,
-				'excelFile' => $excelFile,
+				'failedExcelFile' => $this->_generateDownloadableFile( $dataFailed, 'failed', $header, $systemDateFormat ),
+				'passedExcelFile' => $this->_generateDownloadableFile( $dataPassed, 'passed', $header, $systemDateFormat ),
 				'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
 			];
 			$session->write($this->sessionKey, $completedData);
@@ -541,6 +516,11 @@ class ImportBehavior extends Behavior {
 		die;
 	}
 
+	public function downloadPassed($excelFile) {
+		$this->performDownload($excelFile);
+		die;
+	}
+
 	public function results() {
 		$session = $this->_table->Session;
 		if ($session->check($this->sessionKey)) {
@@ -555,7 +535,7 @@ class ImportBehavior extends Behavior {
 				'results' => $completedData
 			]);
 			$session->delete($this->sessionKey);
-			if (!empty($completedData['excelFile'])) {
+			if (!empty($completedData['failedExcelFile'])) {
 				$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
 				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			} else {
@@ -570,12 +550,82 @@ class ImportBehavior extends Behavior {
 		}
 	}
 
-
 /******************************************************************************************************************
 **
 ** Import Functions
 **
 ******************************************************************************************************************/
+	/**
+	 * Set a record columns value based on what is being saved in the table.
+	 * @param  Entity $entity           Cloned entity. The actual entity is not saved yet but already validated but we are using a cloned entity in case it might be messed up.
+	 * @param  Array  $columns          Target Model columns defined in import_mapping table.
+	 * @param  string $systemDateFormat System Date Format which varies across deployed environments.
+	 * @return Array                   	The columns value that will be written to a downloadable excel file.
+	 */
+	private function _getReorderedEntityArray( Entity $entity, Array $columns, $systemDateFormat ) {
+		$array = [];
+		foreach ($columns as $property) {
+			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $entity->$property;
+			$array[] = $value;
+		}
+		return $array;
+	}
+
+	private function _generateDownloadableFile( $data, $type, $header, $systemDateFormat ) {
+		if (!empty($data)) {
+			$downloadFolder = $this->prepareDownload();
+			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
+					$this->getExcelLabel( 'general', 'import' ), 
+					$this->getExcelLabel( 'general',  $this->config('plugin') ), 
+					$this->getExcelLabel( 'general',  $this->config('model') ), 
+					$this->getExcelLabel( 'general', $type ),
+					time()
+			);
+			$excelPath = $downloadFolder . DS . $excelFile;
+
+			$writer = new \XLSXWriter();
+			$newHeader = $header;
+			if ($type == 'failed') {
+				$newHeader[] = $this->getExcelLabel('general', 'errors');
+			}
+			$dataSheetName = $this->getExcelLabel('general', 'data');
+			$writer->writeSheetRow($dataSheetName, array_values($newHeader));
+			foreach($data as $record) {
+				if ($type == 'failed') {
+					$values = array_values($record['data']->getArrayCopy());
+					$values[] = $record['error'];
+				} else {
+					$values = $record['data'];
+				}
+				$writer->writeSheetRow($dataSheetName, $values);
+			}
+			
+			if ($type == 'failed') {
+				$codesData = $this->excelGetCodesData($this->_table);
+				foreach($codesData as $modelName => $modelArr) {
+					// added this check to support rows on sheets that require a specific format.
+					// default cell format is 'string'
+					if (array_key_exists('formats', $modelArr)) {
+						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
+					} else {
+						foreach($modelArr as $row) {
+							$writer->writeSheetRow($modelName, array_values($row));
+						}
+					}
+				}
+			}
+			
+			$writer->writeToFile($excelPath);
+			$downloadUrl = $this->_table->ControllerAction->url( 'download' . ucwords($type) );
+			$downloadUrl[] = $excelFile;
+			$excelFile = $downloadUrl;
+		} else {
+			$excelFile = null;
+		}
+
+		return $excelFile;
+	}
+
 	/**
 	 * Check if all the columns in the row is not empty
 	 * @param  WorkSheet $sheet      The worksheet object
@@ -937,18 +987,23 @@ class ImportBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function getAcademicPeriodByStartDate($date) {
+		if (empty($date)) {
+			// die('date is empty');
+			return false;
+		}
+
 		if ($date instanceof DateTime) {
 			$date = $date->format('Y-m-d');
 		}
-		return $this->AcademicPeriods
+		$period = $this->AcademicPeriods
 					->find()
 					->where([
 						"date(start_date) <= date '".$date."'",
 						"date(end_date) >= date '".$date."'",
-						'parent_id <> 0'
-					])
-					->first()
-					;
+						'parent_id <> 0',
+						'visible = 1'
+					]);
+		return $period->toArray();
 	}
 
 	private function eventKey($key) {
