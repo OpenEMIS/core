@@ -198,18 +198,21 @@ class ImportStudentAttendancesTable extends AppTable {
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
-		$period = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
-		if (!$period) {
-			$tempRow['duplicates'] = __('No matching academic period');
+		$periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
+		if (!$periods) {
+			$tempRow['duplicates'] = __('No matching academic period based on the start date');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
-		if ($period->id != $currentPeriodId) {
+		$periods = new Collection($periods);
+		$periodIds = $periods->extract('id');
+		$periodIds = $periodIds->toArray();
+		if (!in_array($currentPeriodId, $periodIds)) {
 			$tempRow['duplicates'] = __('Date is not within current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
-		$tempRow['academic_period_id'] = $period->id;
+		$tempRow['academic_period_id'] = $currentPeriodId;
 
 		$student = $this->Students->find()->where([
 			'academic_period_id' => $tempRow['academic_period_id'],
@@ -224,4 +227,12 @@ class ImportStudentAttendancesTable extends AppTable {
 		
 		return true;
 	}
+
+	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+		$flipped = array_flip($columns);
+		$original = $originalRow->getArrayCopy();
+		$key = $flipped['student_id'];
+		$tempPassedRecord['data'][$key] = $originalRow[$key];
+	}
+
 }
