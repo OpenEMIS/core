@@ -247,7 +247,24 @@ class InstitutionsTable extends AppTable  {
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
+			} else if (in_array($feature, ['Report.StaffAbsences'])) {
+				$academicPeriodOptions = [];
+				$academicPeriodOptions[0] = __('All Academic Periods');
+				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$periodOptions = $AcademicPeriodTable->getList();
+
+				$academicPeriodOptions = $academicPeriodOptions + $periodOptions;
+
+				// $attr['onChangeReload'] = true;
+				$attr['options'] = $academicPeriodOptions;
+				$attr['type'] = 'select';
+
+				if (empty($request->data[$this->alias()]['academic_period_id'])) {
+					reset($academicPeriodOptions);
+					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
+				return $attr;
+			}
 		}
 	}
 
