@@ -421,10 +421,18 @@ class ImportBehavior extends Behavior {
 					} else {
 						$clonedEntity = clone $tableEntity;
 						$clonedEntity->virtualProperties([]);
-						$dataPassed[] = [
+
+						$tempPassedRecord = [
 							'row_number' => $row,
 							'data' => $this->_getReorderedEntityArray($clonedEntity, $columns, $systemDateFormat)
 						];
+						$tempPassedRecord = new ArrayObject($tempPassedRecord);
+
+						// individual import models can specifically define the passed record values which are to be exported
+						$params = [$clonedEntity, $columns, $tempPassedRecord, $originalRow];
+						$this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
+
+						$dataPassed[] = $tempPassedRecord->getArrayCopy();
 					}
 
 					$isNew = $tableEntity->isNew();
@@ -547,7 +555,14 @@ class ImportBehavior extends Behavior {
 ** Import Functions
 **
 ******************************************************************************************************************/
-	private function _getReorderedEntityArray( $entity, $columns, $systemDateFormat ) {
+	/**
+	 * Set a record columns value based on what is being saved in the table.
+	 * @param  Entity $entity           Cloned entity. The actual entity is not saved yet but already validated but we are using a cloned entity in case it might be messed up.
+	 * @param  Array  $columns          Target Model columns defined in import_mapping table.
+	 * @param  string $systemDateFormat System Date Format which varies across deployed environments.
+	 * @return Array                   	The columns value that will be written to a downloadable excel file.
+	 */
+	private function _getReorderedEntityArray( Entity $entity, Array $columns, $systemDateFormat ) {
 		$array = [];
 		foreach ($columns as $property) {
 			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $entity->$property;
@@ -972,18 +987,23 @@ class ImportBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function getAcademicPeriodByStartDate($date) {
+		if (empty($date)) {
+			// die('date is empty');
+			return false;
+		}
+
 		if ($date instanceof DateTime) {
 			$date = $date->format('Y-m-d');
 		}
-		return $this->AcademicPeriods
+		$period = $this->AcademicPeriods
 					->find()
 					->where([
 						"date(start_date) <= date '".$date."'",
 						"date(end_date) >= date '".$date."'",
-						'parent_id <> 0'
-					])
-					->first()
-					;
+						'parent_id <> 0',
+						'visible = 1'
+					]);
+		return $period->toArray();
 	}
 
 	private function eventKey($key) {
