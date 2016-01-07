@@ -146,8 +146,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			'field' => 'AcademicPeriod',
 			'type' => 'AcademicPeriod',
 			'label' => 'Academic Period',
-			'academic_period_name' => $currAcademicPeriodName,
-			'recordObj' => $recordObj
+			'academic_period_name' => $currAcademicPeriodName
 		];
 
 		$extraField[] = [
