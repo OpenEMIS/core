@@ -286,9 +286,9 @@ class ExcelBehavior extends Behavior {
 			if (empty($field['label'])) {
 				$key = explode('.', $field['key']);
 				$module = $key[0];
-
+				$column = $key[1];
 				// Redispatch get label
-				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $field['field'], $language], true);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
 				if (strlen($event->result)) {
 					$field['label'] = $event->result;
 				}
