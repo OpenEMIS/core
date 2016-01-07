@@ -63,7 +63,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
   		return $count;
   	}
 
-  	public function onExcelRenderStaffCount(Event $event, EnperiodStartDatetity $entity, $attr) {
+  	public function onExcelRenderTeacherCount(Event $event, EnperiodStartDatetity $entity, $attr) {
 		// get all institution Staff where institution area id = that
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$institutionId = $entity->id;
@@ -72,20 +72,28 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			return $q->where(['Institutions.id' => $institutionId]);
 		});
 		
-		$query->select(['totalStaff' => $query->func()->count('DISTINCT '.$InstitutionStaff->aliasField('Staff_id'))]);
+		$query->select(['totalTeacher' => $query->func()->count('DISTINCT '.$InstitutionStaff->aliasField('Staff_id'))]);
 		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
 			$academic_period_id = $attr['academic_period_id'];
 			$query->find('AcademicPeriod', ['academic_period_id' => $academic_period_id]);
 		}
 
+		$query->matching('Positions', function($q) {
+			return $q
+				->where([
+					'Positions.type' => 1
+				]);
+		});
+
+
 		$query->group('Institutions.id');
 
 		$count = $query->first();
-		$count = $count['totalStaff'];
+		$count = $count['totalTeacher'];
 
 		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
 			$recordObj = $attr['recordObj'];
-			$recordObj['staffCount'] = $count;
+			$recordObj['teacherCount'] = $count;
 		}
 
   		return $count;
@@ -101,9 +109,9 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 
 	public function onExcelRenderStudentTeacherRatio(Event $event, Entity $entity, $attr) {
 		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
-			if (!empty($attr['recordObj']['studentCount']) && !empty($attr['recordObj']['staffCount'])) {
-				$gcd = $this->gCD($attr['recordObj']['studentCount'],$attr['recordObj']['staffCount']);
-				return $attr['recordObj']['studentCount']/$gcd .':'.$attr['recordObj']['staffCount']/$gcd;
+			if (!empty($attr['recordObj']['studentCount']) && !empty($attr['recordObj']['teacherCount'])) {
+				$gcd = $this->gCD($attr['recordObj']['studentCount'],$attr['recordObj']['teacherCount']);
+				return $attr['recordObj']['studentCount']/$gcd .':'.$attr['recordObj']['teacherCount']/$gcd;
 			}
 		}
 		// if missing information, or zero in a single field, return nothing
@@ -133,10 +141,10 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		];
 
 		$extraField[] = [
-			'key' => 'StaffCount',
-			'field' => 'StaffCount',
-			'type' => 'StaffCount',
-			'label' => 'Staff Count',
+			'key' => 'TeacherCount',
+			'field' => 'TeacherCount',
+			'type' => 'TeacherCount',
+			'label' => 'Teacher Count',
 			'academic_period_id' => $academicPeriodId,
 			'recordObj' => $recordObj
 		];
