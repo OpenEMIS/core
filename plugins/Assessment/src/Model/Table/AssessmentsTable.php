@@ -10,10 +10,12 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
+use App\Model\Traits\HtmlTrait;
 
 class AssessmentsTable extends AppTable {
 	private $_contain = ['AssessmentItems'];
 
+	use HtmlTrait;
 	use OptionsTrait;
 	use MessagesTrait;
 
@@ -283,9 +285,9 @@ class AssessmentsTable extends AppTable {
 							->count();
 					}
 					if (!empty($resultCount)) {
-						$rowData[] = '<div class="tooltip-blue"><i class="fa fa-exclamation-circle fa-lg icon-blue" data-placement="right" data-toggle="tooltip" data-original-title="Associated results exist. Delete function disabled."></i></div>';
+						$rowData[] = $this->getInfoIcon(__('Associated results exist. Delete function disabled.'));
 					} else {
-						$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+						$rowData[] = $this->getDeleteButton();
 					}
 
 					$rowData[] = $hiddenData;
