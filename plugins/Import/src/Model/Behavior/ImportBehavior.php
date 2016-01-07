@@ -484,7 +484,7 @@ class ImportBehavior extends Behavior {
 		$modelName = $this->config('model');
 		$modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
 		// Do not lcalize file name as certain non-latin characters might cause issue 
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this>config('plugin'), $modelName, 'Template');
+		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this->config('plugin'), $modelName, 'Template');
 
 		$excelPath = $folder . DS . $excelFile;
 
