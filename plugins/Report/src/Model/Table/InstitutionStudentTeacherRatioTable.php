@@ -132,6 +132,17 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		
 		$recordObj = new ArrayObject([]);
 		$extraField[] = [
+			'key' => 'AcademicPeriod',
+			'field' => 'AcademicPeriod',
+			'type' => 'AcademicPeriod',
+			'label' => 'Academic Period',
+			'academic_period_name' => $currAcademicPeriodName
+		];
+
+		$newFields = array_merge($extraField, $fields->getArrayCopy());
+		$extraField = [];
+
+		$extraField[] = [
 			'key' => 'StudentCount',
 			'field' => 'StudentCount',
 			'type' => 'StudentCount',
@@ -150,22 +161,14 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		];
 
 		$extraField[] = [
-			'key' => 'AcademicPeriod',
-			'field' => 'AcademicPeriod',
-			'type' => 'AcademicPeriod',
-			'label' => 'Academic Period',
-			'academic_period_name' => $currAcademicPeriodName
-		];
-
-		$extraField[] = [
 			'key' => 'StudentTeacherRatio',
 			'field' => 'StudentTeacherRatio',
 			'type' => 'StudentTeacherRatio',
 			'label' => 'Student Teacher Ratio',
 			'recordObj' => $recordObj
 		];
-
-		$newFields = array_merge($extraField, $fields->getArrayCopy());
+		$newFields = array_merge($newFields, $extraField);
+		
 		$fields->exchangeArray($newFields);
 	}
 }
