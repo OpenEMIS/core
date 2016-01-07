@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.11
+ControllerActionComponent - Current Version 3.1.12
+3.1.12 (Zack) - added new event onGetConvertOptions to add additional condition to the query to generate the convert options for delete and transfer
 3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
 3.1.10 (Thed) - added new event onDeleteTransfer
 3.1.9 (Malcolm) - Added 'getTriggerFrom()' get method
@@ -1161,6 +1162,11 @@ class ControllerActionComponent extends Component {
 				}
 				$query->find('list', $listOptions->getArrayCopy())->where([$idKey . ' <> ' => $id]);
 
+				// Event: deleteUpdateCovertOptions
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
+				if ($event->isStopped()) { return $event->result; }
+
 				$convertOptions = $query->toArray();
 				if (empty($convertOptions)) {
 					$convertOptions[''] = __('No Available Options');
@@ -1170,7 +1176,7 @@ class ControllerActionComponent extends Component {
 				foreach ($model->associations() as $assoc) {
 					if (!$assoc->dependent()) {
 						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-							if (!array_key_exists($assoc->table(), $associations)) {
+							if (!array_key_exists($assoc->alias(), $associations)) {
 								$count = 0;
 								if($assoc->type() == 'oneToMany') {
 									$count = $assoc->find()
@@ -1186,7 +1192,7 @@ class ControllerActionComponent extends Component {
 								if ($title == '[Message Not Found]') {
 									$title = $assoc->name();
 								}
-								$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
+								$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
 							}
 						}
 					}
@@ -1237,7 +1243,7 @@ class ControllerActionComponent extends Component {
 					$associations = [];
 					foreach ($model->associations() as $assoc) {
 						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-							if (!in_array($assoc->table(), $associations)) {
+							if (!array_key_exists($assoc->alias(), $associations)) {
 								$count = 0;
 								if($assoc->type() == 'oneToMany') {
 									$count = $assoc->find()
@@ -1251,7 +1257,7 @@ class ControllerActionComponent extends Component {
 										->count();
 									$totalCount = $totalCount + $count;
 								}
-								$associations[] = $assoc->table();
+								$associations[$assoc->alias()] = $assoc->table();
 							}
 						}
 					}
@@ -1263,9 +1269,9 @@ class ControllerActionComponent extends Component {
 					$associations = [];
 					foreach ($model->associations() as $assoc) {
 						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-							if (!array_key_exists($assoc->table(), $associations)) {
+							if (!array_key_exists($assoc->alias(), $associations)) {
 								// $assoc->dependent(false);
-								$associations[$assoc->table()] = $assoc;
+								$associations[$assoc->alias()] = $assoc;
 							}
 						}
 					}

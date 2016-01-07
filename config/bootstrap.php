@@ -223,6 +223,7 @@ Plugin::load('Import', ['routes' => true, 'autoload' => true]);
 Plugin::load('API', ['routes' => true, 'autoload' => true]);
 Plugin::load('Log', ['routes' => true, 'autoload' => true]);
 Plugin::load('Training', ['routes' => true, 'autoload' => true]);
+Plugin::load('Health', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
