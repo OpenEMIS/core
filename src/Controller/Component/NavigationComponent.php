@@ -236,7 +236,8 @@ class NavigationComponent extends Component {
 			'Reports' => [
 				'title' => 'Reports', 
 				'icon' => '<span><i class="fa kd-reports"></i></span>',
-				'link' => false
+				'link' => false,
+				// 'selected' => ['Maps.index']
 			],
 			
 			'Administration' => [
@@ -643,6 +644,11 @@ class NavigationComponent extends Component {
 				'title' => 'Audit',
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
+			],
+			'Maps.index' => [
+				'title' => 'Maps',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Map'],
 			],
 		];
 		return $navigation;
