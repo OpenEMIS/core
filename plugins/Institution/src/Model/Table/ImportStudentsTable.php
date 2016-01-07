@@ -241,13 +241,21 @@ class ImportStudentsTable extends AppTable {
 			return false;
 		}
 
-		$period = $this->getAcademicPeriodByStartDate($tempRow['start_date']->format('Y-m-d'));
-		if (!$period) {
-			$tempRow['duplicates'] = __('No matching academic period.');
+		$periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']->format('Y-m-d'));
+		if (!$periods) {
+			$tempRow['duplicates'] = __('No matching academic period based on the start date');
 			return false;
 		}
-		if ($period->id != $tempRow['academic_period_id']) {
+		$period='';
+		foreach ($periods as $value) {
+			if ($value->id == $tempRow['academic_period_id']) {
+				$period = $value;
+				break;
+			}
+		}
+		if (empty($period)) {
 			$tempRow['duplicates'] = __('Start date is not within selected academic period.');
+			return false;
 		}
 		if (!$period->start_date instanceof Time) {
 			$tempRow['duplicates'] = __('Please check the selected academic period start date in Administration.');
@@ -320,4 +328,12 @@ class ImportStudentsTable extends AppTable {
 
 		return true;
 	}
+
+	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+		$flipped = array_flip($columns);
+		$original = $originalRow->getArrayCopy();
+		$key = $flipped['student_id'];
+		$tempPassedRecord['data'][$key] = $originalRow[$key];
+	}
+
 }
