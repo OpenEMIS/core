@@ -381,6 +381,7 @@ trait MessagesTrait {
 			'rows_updated' => 'Rows Updated:',
 			'rows_failed' => 'Rows Failed:',
 			'download_failed_records' => 'Download Failed Records',
+			'download_passed_records' => 'Download Successful Records',
 			'row_number' => 'Row Number',
 			'error_message' => 'Error Message',
 			'invalid_code' => 'Invalid Code',
@@ -399,6 +400,7 @@ trait MessagesTrait {
 			'failed' => 'failed to import.',
 			'survey_not_found' => 'No identifiable survey found',
 			'no_answers' => 'No answers were found in the file imported.',
+			'institution_network_connectivity_id' => 'code'
 		],
 		'TrainingSessions' => [
 			'trainer_type' => 'Type',

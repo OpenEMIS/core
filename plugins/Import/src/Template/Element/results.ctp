@@ -32,7 +32,13 @@
 </div>
 
 <?php 
-if(!empty($attr['results']['excelFile'])):
+if(!empty($attr['results']['passedExcelFile'])) {
+	$passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-success", 'escape'=>false]);
+} else {
+	$passedRecordsLink = '';
+}
+
+if(!empty($attr['results']['failedExcelFile'])):
 ?>
 
 <div class="table-wrapper">
@@ -58,9 +64,7 @@ if(!empty($attr['results']['excelFile'])):
 					<td class="tooltip-red">
 						<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
 					</td>
-					<td>
-						<?= $row['row_number']; ?>
-					</td>
+					<td><?= $row['row_number']; ?></td>
 					<?php 
 					foreach ($row['data'] as $key=>$col):
 						if ($key == count($row['data'])-1) {
@@ -69,6 +73,7 @@ if(!empty($attr['results']['excelFile'])):
 						echo sprintf('<td>%s</td>', $col);
 					endforeach;
 					?>
+					<td></td>
 				</tr>
 				<?php 
 				endforeach;
@@ -79,8 +84,19 @@ if(!empty($attr['results']['excelFile'])):
 </div>
 
 <div class="form-buttons">
-	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['excelFile'], ['class'=>"btn btn-default", 'escape'=>false]); ?>
+	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['failedExcelFile'], ['class'=>"btn btn-danger", 'style'=>"text-decoration:none;", 'escape'=>false]); ?>
+	<?= $passedRecordsLink; ?>
 </div>
+
+<?php
+else:
+?>
+
+<div class="form-buttons">
+	<?= $passedRecordsLink; ?>
+</div>
+
 <?php
 endif;
 ?>
+
