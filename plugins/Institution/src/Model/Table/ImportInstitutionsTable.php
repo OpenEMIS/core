@@ -27,6 +27,7 @@ class ImportInstitutionsTable extends AppTable {
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 			'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
 			'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
+			'Model.import.onImportPopulateNetworkConnectivitiesData' => 'onImportPopulateNetworkConnectivitiesData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 		];
 		$events = array_merge($events, $newEvent);
@@ -91,6 +92,30 @@ class ImportInstitutionsTable extends AppTable {
 								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			foreach($modelData->toArray() as $row) {
+				$data[$sheetName][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
+	}
+
+	public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+		// die('onImportPopulateNetworkConnectivitiesData');
+		$order = [$lookupModel.'.order'];
+
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$selectFields = ['name', $lookupColumn];
+		$modelData = $lookedUpTable->find('all')
+								->select($selectFields)
+								->order($order)
+								;
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$translatedCol = $this->getExcelLabel('Import', 'institution_network_connectivity_id');
 		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
