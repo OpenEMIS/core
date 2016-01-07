@@ -226,7 +226,9 @@ class InstitutionsTable extends AppTable  {
 			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentTeacherRatio', 'Report.InstitutionStudentClassroomRatio'])) {
 				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 				$academicPeriodOptions = [];
-				$academicPeriodOptions[0] = __('All Academic Periods');
+				if (in_array($feature, ['Report.InstitutionStudents'])) {
+					$academicPeriodOptions[0] = __('All Academic Periods');
+				}
 				$academicPeriodData = $InstitutionStudentsTable->find()
 					->matching('AcademicPeriods')
 					->select(['id' => $InstitutionStudentsTable->aliasField('academic_period_id'), 'name' => 'AcademicPeriods.name'])

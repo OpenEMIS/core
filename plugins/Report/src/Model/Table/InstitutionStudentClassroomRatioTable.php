@@ -8,8 +8,11 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 class InstitutionStudentClassroomRatioTable extends AppTable  {
+	use UtilityTrait;
+
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
@@ -49,6 +52,12 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 		}
 		$count = $query->first();
 		$count = $count['totalStudents'];
+
+		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
+			$recordObj = $attr['recordObj'];
+			$recordObj['studentCount'] = $count;
+		}
+
   		return $count;
   	}
 
@@ -72,19 +81,54 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 
 		$count = $query->first();
 		$count = $count['totalClasses'];
+
+		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
+			$recordObj = $attr['recordObj'];
+			$recordObj['totalClasses'] = $count;
+		}
+
   		return $count;
   	}
+
+  	public function onExcelRenderAcademicPeriod(Event $event, Entity $entity, $attr) {
+		if (array_key_exists('academic_period_name', $attr) && !empty($attr['academic_period_name'])) {
+			return $attr['academic_period_name'];
+		} else {
+			return '';
+		}
+	}
+
+	public function onExcelRenderStudentClassRatio(Event $event, Entity $entity, $attr) {
+		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
+			if (!empty($attr['recordObj']['studentCount']) && !empty($attr['recordObj']['totalClasses'])) {
+				$gcd = $this->gCD($attr['recordObj']['studentCount'],$attr['recordObj']['totalClasses']);
+				return $attr['recordObj']['studentCount']/$gcd .':'.$attr['recordObj']['totalClasses']/$gcd;
+			}
+		}
+		// if missing information, or zero in a single field, return nothing
+		return '';
+	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$requestData = json_decode($settings['process']['params']);
 		$academicPeriodId = $requestData->academic_period_id;
 
+		// get the name of the academic period id
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currAcademicPeriod = $AcademicPeriod->find()
+				->where([$AcademicPeriod->aliasField($AcademicPeriod->primaryKey()) => $academicPeriodId])
+				->first()
+				;
+		$currAcademicPeriodName = ($currAcademicPeriod->has('name'))? $currAcademicPeriod->name: '';
+
+		$recordObj = new ArrayObject([]);
 		$extraField[] = [
 			'key' => 'StudentCount',
 			'field' => 'StudentCount',
 			'type' => 'StudentCount',
 			'label' => 'Student Count',
-			'academic_period_id' => $academicPeriodId
+			'academic_period_id' => $academicPeriodId,
+			'recordObj' => $recordObj
 		];
 
 		$extraField[] = [
@@ -92,7 +136,24 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 			'field' => 'ClassCount',
 			'type' => 'ClassCount',
 			'label' => 'Class Count',
-			'academic_period_id' => $academicPeriodId
+			'academic_period_id' => $academicPeriodId,
+			'recordObj' => $recordObj
+		];
+
+		$extraField[] = [
+			'key' => 'AcademicPeriod',
+			'field' => 'AcademicPeriod',
+			'type' => 'AcademicPeriod',
+			'label' => 'Academic Period',
+			'academic_period_name' => $currAcademicPeriodName
+		];
+
+		$extraField[] = [
+			'key' => 'StudentClassRatio',
+			'field' => 'StudentClassRatio',
+			'type' => 'StudentClassRatio',
+			'label' => 'Student Class Ratio',
+			'recordObj' => $recordObj
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());
