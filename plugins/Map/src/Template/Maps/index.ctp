@@ -11,15 +11,6 @@ $this->start('panelBody');
 ?>
 	<div class="row dashboard-container">
 		<div>
-			<h5><?php echo __('Notices'); ?></h5>
-			<div class="dashboard-content">
-				
-			</div>
-		</div>
-	</div>
-
-	<div class="row dashboard-container">
-		<div>
 			<h5><?php echo __('Institution Type'); ?></h5>
 			<div class="dashboard-content">
 
