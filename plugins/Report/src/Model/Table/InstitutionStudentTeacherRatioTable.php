@@ -8,8 +8,11 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 class InstitutionStudentTeacherRatioTable extends AppTable  {
+	use UtilityTrait;
+
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
@@ -21,6 +24,8 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			'excludes' => ['alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
 			'pages' => false
 		]);
+
+		$this->addBehavior('AcademicPeriod.Period');
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -49,22 +54,16 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		}
 		$count = $query->first();
 		$count = $count['totalStudents'];
+
+		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
+			$recordObj = $attr['recordObj'];
+			$recordObj['studentCount'] = $count;
+		}
+
   		return $count;
   	}
 
-  	public function onExcelRenderStaffCount(Event $event, Entity $entity, $attr) {
-  		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
-  			$academic_period_id = $attr['academic_period_id'];
-  			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-  			$currAcademicPeriod = $AcademicPeriod->find()
-  				->where([$AcademicPeriod->aliasField($AcademicPeriod->primaryKey()) => $academic_period_id])
-  				->first()
-  				;
-  			if(!empty($currAcademicPeriod)) {
-  				$periodStartDate = $currAcademicPeriod->start_date->format('Y-m-d');
-  				$periodEndDate = $currAcademicPeriod->end_date->format('Y-m-d');
-  			}
-  		}
+  	public function onExcelRenderStaffCount(Event $event, EnperiodStartDatetity $entity, $attr) {
 		// get all institution Staff where institution area id = that
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$institutionId = $entity->id;
@@ -74,52 +73,63 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		});
 		
 		$query->select(['totalStaff' => $query->func()->count('DISTINCT '.$InstitutionStaff->aliasField('Staff_id'))]);
-
-		if(!empty($currAcademicPeriod)) {
-			$overlapDateCondition = [];
-			$overlapDateCondition['OR'] = [
-				'OR' => [
-					[
-						$InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-						$InstitutionStaff->aliasField('start_date') . ' <=' => $periodStartDate,
-						$InstitutionStaff->aliasField('end_date') . ' >=' => $periodStartDate
-					],
-					[
-						$InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-						$InstitutionStaff->aliasField('start_date') . ' <=' => $periodEndDate,
-						$InstitutionStaff->aliasField('end_date') . ' >=' => $periodEndDate
-					],
-					[
-						$InstitutionStaff->aliasField('end_date') . ' IS NOT NULL',
-						$InstitutionStaff->aliasField('start_date') . ' >=' => $periodStartDate,
-						$InstitutionStaff->aliasField('end_date') . ' <=' => $periodEndDate
-					]
-				],
-				[
-					$InstitutionStaff->aliasField('end_date') . ' IS NULL',
-					$InstitutionStaff->aliasField('start_date') . ' <=' => $periodEndDate
-				]
-			];
-			$query->where($overlapDateCondition);
+		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
+			$academic_period_id = $attr['academic_period_id'];
+			$query->find('AcademicPeriod', ['academic_period_id' => $academic_period_id]);
 		}
 
 		$query->group('Institutions.id');
 
 		$count = $query->first();
 		$count = $count['totalStaff'];
+
+		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
+			$recordObj = $attr['recordObj'];
+			$recordObj['staffCount'] = $count;
+		}
+
   		return $count;
   	}
+
+	public function onExcelRenderAcademicPeriod(Event $event, Entity $entity, $attr) {
+		if (array_key_exists('academic_period_name', $attr) && !empty($attr['academic_period_name'])) {
+			return $attr['academic_period_name'];
+		} else {
+			return '';
+		}
+	}
+
+	public function onExcelRenderStudentTeacherRatio(Event $event, Entity $entity, $attr) {
+		if (array_key_exists('recordObj', $attr) && !empty($attr['recordObj'])) {
+			if (!empty($attr['recordObj']['studentCount']) && !empty($attr['recordObj']['staffCount'])) {
+				$gcd = $this->gCD($attr['recordObj']['studentCount'],$attr['recordObj']['staffCount']);
+				return $attr['recordObj']['studentCount']/$gcd .':'.$attr['recordObj']['staffCount']/$gcd;
+			}
+		}
+		// if missing information, or zero in a single field, return nothing
+		return '';
+	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$requestData = json_decode($settings['process']['params']);
 		$academicPeriodId = $requestData->academic_period_id;
 
+		// get the name of the academic period id
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currAcademicPeriod = $AcademicPeriod->find()
+				->where([$AcademicPeriod->aliasField($AcademicPeriod->primaryKey()) => $academicPeriodId])
+				->first()
+				;
+		$currAcademicPeriodName = ($currAcademicPeriod->has('name'))? $currAcademicPeriod->name: '';
+		
+		$recordObj = new ArrayObject([]);
 		$extraField[] = [
 			'key' => 'StudentCount',
 			'field' => 'StudentCount',
 			'type' => 'StudentCount',
 			'label' => 'Student Count',
-			'academic_period_id' => $academicPeriodId
+			'academic_period_id' => $academicPeriodId,
+			'recordObj' => $recordObj
 		];
 
 		$extraField[] = [
@@ -127,7 +137,25 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			'field' => 'StaffCount',
 			'type' => 'StaffCount',
 			'label' => 'Staff Count',
-			'academic_period_id' => $academicPeriodId
+			'academic_period_id' => $academicPeriodId,
+			'recordObj' => $recordObj
+		];
+
+		$extraField[] = [
+			'key' => 'AcademicPeriod',
+			'field' => 'AcademicPeriod',
+			'type' => 'AcademicPeriod',
+			'label' => 'Academic Period',
+			'academic_period_name' => $currAcademicPeriodName,
+			'recordObj' => $recordObj
+		];
+
+		$extraField[] = [
+			'key' => 'StudentTeacherRatio',
+			'field' => 'StudentTeacherRatio',
+			'type' => 'StudentTeacherRatio',
+			'label' => 'Student Teacher Ratio',
+			'recordObj' => $recordObj
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());
