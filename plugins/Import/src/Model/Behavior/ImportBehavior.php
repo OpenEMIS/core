@@ -483,7 +483,8 @@ class ImportBehavior extends Behavior {
 		$folder = $this->prepareDownload();
 		$modelName = $this->config('model');
 		$modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this->config('plugin'), $modelName, 'Template');
+		// Do not lcalize file name as certain non-latin characters might cause issue 
+		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this>config('plugin'), $modelName, 'Template');
 
 		$excelPath = $folder . DS . $excelFile;
 
@@ -574,11 +575,12 @@ class ImportBehavior extends Behavior {
 	private function _generateDownloadableFile( $data, $type, $header, $systemDateFormat ) {
 		if (!empty($data)) {
 			$downloadFolder = $this->prepareDownload();
+			// Do not lcalize file name as certain non-latin characters might cause issue 
 			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
-					$this->getExcelLabel( 'general', 'import' ), 
-					$this->getExcelLabel( 'general',  $this->config('plugin') ), 
-					$this->getExcelLabel( 'general',  $this->config('model') ), 
-					$this->getExcelLabel( 'general', $type ),
+					'Import', 
+					$this->config('plugin'),
+					$this->config('model'),
+					ucwords($type), 
 					time()
 			);
 			$excelPath = $downloadFolder . DS . $excelFile;
