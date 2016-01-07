@@ -20,7 +20,7 @@
 	?>
 	<div class="clearfix"></div>
 		<hr>
-		<h3><?= __('AssessmentItems')?></h3>
+		<h3><?= $this->Label->get('Assessments.assessmentItems'); ?></h3>
 		<div class="clearfix">
 			<?= 
 				// pr($options);
