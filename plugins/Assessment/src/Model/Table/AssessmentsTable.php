@@ -55,10 +55,7 @@ class AssessmentsTable extends AppTable {
 
 		$selectedGrade = $entity->education_grade_id;
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
-		// pr($entity->assessment_items);
 		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
-		// pr($entity->assessment_items);
-		// die;
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -112,10 +109,7 @@ class AssessmentsTable extends AppTable {
 		]);
 
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
-		// pr($entity->assessment_items);
 		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
-		// pr($entity->assessment_items);
-		// die;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
