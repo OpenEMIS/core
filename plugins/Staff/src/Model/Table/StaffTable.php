@@ -119,15 +119,29 @@ class StaffTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$query->innerJoin(
-				['InstitutionStaff' => 'institution_staff'],
-				[
-					'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStaff.institution_id IN ' => $institutionIds
-				]
-			)
-			->group([$this->aliasField('id')]);
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+			$this->joinInstitutionStaffs($institutionIds, $query);
+			$query->group([$this->aliasField('id')]);
+
+			// $query->innerJoin(
+			// 	['InstitutionStaff' => 'institution_staff'],
+			// 	[
+			// 		'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
+			// 		'InstitutionStaff.institution_id IN ' => $institutionIds
+			// 	]
+			// )
+			// ->group([$this->aliasField('id')]);
 		}
+	}
+
+	private function joinInstitutionStaffs(array $institutionIds, Query $query) {
+		$query->innerJoin(
+			['InstitutionStaff' => 'institution_site_staff'],
+			[
+				'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+				'InstitutionStaff.institution_site_id IN ' => $institutionIds
+			]
+		);
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
@@ -199,19 +213,30 @@ class StaffTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
+
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this, $this->request->data['Search']['searchField']));
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_staff') => 1])->count();
+			$count = $this->find()
+				->where([$this->aliasField('is_staff') => 1])
+				->where($searchConditions);
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$this->joinInstitutionStaffs($institutionIds, $count);
+				$count->group([$this->aliasField('id')]);
+			}
+			$this->advancedSearchQuery($this->request, $count);
 
 			// Get the gender for all students
 			$data = [];
-			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
+			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['searchConditions' => $searchConditions, 'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $count,
+	            	'modelCount' => $count->count(),
 	            	'modelArray' => $data,
 	            ],
 	            'options' => [],
@@ -227,16 +252,24 @@ class StaffTable extends AppTable {
 
 	// Function use by the mini dashboard (For Staff.Staff)
 	public function getNumberOfStaffByGender($params=[]) {
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$query = $this->find();
 		$query
-		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
-		->where([$this->aliasField('is_staff') => 1])
-		->group('gender_id')
-		;
+			->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
+			->where([$this->aliasField('is_staff') => 1])
+			->where($searchConditions)
+			->group('gender_id')
+			;
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStaffs($institutionIds, $query);
+		}
+		$this->advancedSearchQuery($this->request, $query);
 
 		$genders = $this->Genders->getList()->toArray();
 
 		$resultSet = $query->all();
+		$dataSet = [];
 		foreach ($resultSet as $entity) {
 			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}
