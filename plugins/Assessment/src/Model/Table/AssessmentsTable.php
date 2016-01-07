@@ -12,6 +12,8 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 
 class AssessmentsTable extends AppTable {
+	private $_contain = ['AssessmentItems'];
+
 	use OptionsTrait;
 	use MessagesTrait;
 
@@ -51,7 +53,21 @@ class AssessmentsTable extends AppTable {
 
 		$selectedGrade = $entity->education_grade_id;
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
+		// pr($entity->assessment_items);
 		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
+		// pr($entity->assessment_items);
+		// die;
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		// after add redirect to edit
+		if ($entity->isNew()) {
+			$url = $this->ControllerAction->url('edit');
+			$url[1] = $entity->{$this->primaryKey()};
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+			
+		}
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -62,18 +78,17 @@ class AssessmentsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (array_key_exists($this->alias(), $data)) {
-			if (array_key_exists('assessment_items', $data[$this->alias()])) {
-				foreach ($data[$this->alias()]['assessment_items'] as $i => $item) {
-					if (strlen($item['pass_mark']) == 0) {
-						$data[$this->alias()]['assessment_items'][$i]['pass_mark'] = 50;
-					}
-					if (strlen($item['max']) == 0) {
-						$data[$this->alias()]['assessment_items'][$i]['max'] = 100;
-					}
-				}
-			}
+		if (!array_key_exists('education_subjects', $data[$this->alias()])) {
+			$data[$this->alias()]['education_subjects'] = [];
 		}
+
+		// Required by patchEntity for associated data
+		$newOptions = [];
+		$newOptions['associated'] = $this->_contain;
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
@@ -95,27 +110,246 @@ class AssessmentsTable extends AppTable {
 		]);
 
 		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
+		// pr($entity->assessment_items);
 		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
+		// pr($entity->assessment_items);
+		// die;
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->fields['education_programmes']['type'] = 'readonly';
+		$this->fields['education_programmes']['attr']['value'] = $this->fields['education_programmes']['options'][$entity->education_programmes]['text'];
+		$this->fields['education_grade_id']['type'] = 'readonly';
+		$this->fields['education_grade_id']['attr']['value'] = $this->fields['education_grade_id']['options'][$entity->education_grade_id]['text'];
+
 	}
 
 	public function onUpdateFieldEducationProgrammes(Event $event, array $attr, $action, Request $request) {
 		$attr['onChangeReload'] = 'changeProgramme';
-
 		return $attr;
 	}
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
 		$attr['onChangeReload'] = 'changeGrade';
-
 		return $attr;
 	}
 
 	public function onUpdateFieldAssessmentItems(Event $event, array $attr, $action, Request $request) {
-		$attr['type'] = 'element';
+		$attr['type'] = 'customAssessmentItems';
 		$attr['element'] = 'Assessment.Assessments/subjects';
 		$attr['valueClass'] = 'table-full-width';
-
+		
 		return $attr;
+	}
+
+	public function onGetCustomAssessmentItemsElement(Event $event, $action, $entity, $attr, $options=[]) {
+		$gradingTypeOptions = $this->AssessmentItems->GradingTypes->getList()->toArray();
+		$tableHeaders = [__('Code'), __('Name'), __('Type'), __('Pass'), __('Max'), __('Grading Types'), 'Delete', ''];
+
+		switch ($action) {
+			case 'index':
+				// no code required
+				break;
+
+			case 'view':
+				$tableHeaders = [__('Code'), __('Name'), __('Type'), __('Pass'), __('Max'), __('Grading Types')];
+				foreach ($entity['assessment_items'] as $key => $value) {
+					$rowData = [];
+
+					$rowData[] = (array_key_exists('education_subject', $value) && !empty($value['education_subject']))? $value['education_subject']['code']: '';
+					$rowData[] = (array_key_exists('education_subject', $value) && !empty($value['education_subject']))? $value['education_subject']['name']: '';
+					$rowData[] = (array_key_exists('result_type', $value))? $value['result_type']: '';
+					$rowData[] = (array_key_exists('pass_mark', $value))? $value['pass_mark']: '';
+					$rowData[] = (array_key_exists('max', $value))? $value['max']: '';
+					$gradingTypeId = (array_key_exists('assessment_grading_type_id', $value))? $value['assessment_grading_type_id']: '';
+					$rowData[] = (array_key_exists($gradingTypeId, $gradingTypeOptions))? $gradingTypeOptions[$gradingTypeId]: '';
+
+					$tableCells[] = $rowData;
+				}
+				break;
+
+			case 'edit':
+				$tableHeaders = [__('Code'), __('Name'), __('Type'), __('Pass'), __('Max'), __('Grading Types'), 'Delete', ''];
+				$markTypeOptions = $this->getSelectOptions($this->aliasField('mark_types'));
+
+				$AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+				$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+				$subjectData = $EducationGradesSubjects->find()
+					->contain('EducationSubjects')
+					->where([$EducationGradesSubjects->aliasField('education_grade_id') .' = '. $entity->education_grade_id]);
+
+				$educationSubjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					if (!empty($value->education_subject)) {
+						$educationSubjectOptions[$value->education_subject->id] = $value->education_subject->name;
+					}
+				}
+				$cellCount = 0;
+
+				// new inserted logic
+				$arraySubjects = [];
+				if ($this->request->is(['get'])) {
+					$educationSubjects = $entity->assessment_items;
+					foreach ($educationSubjects as $key => $obj) {
+						if (array_key_exists('education_subject', $obj)) {
+							$arraySubjects[] = [
+								'id' => $obj['id'],
+								'education_subject_id' => $obj['education_subject']->id,
+								'name' => $obj['education_subject']->name,
+								'result_type' =>$obj['result_type'],
+								'code' => $obj['education_subject']->code,
+								'pass_mark' => $obj['pass_mark'],
+								'max' => $obj['max'],
+								'assessment_grading_type_id' => $obj['assessment_grading_type_id'],
+								'education_grade_id' => $entity->education_grade_id
+							];
+						}
+						
+					}
+				} else if ($this->request->is(['post', 'put'])) {
+					$requestData = $this->request->data;
+					if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['assessment_items'] as $key => $obj) {
+							$arraySubjects[] = $obj;
+						}
+					}
+
+					if (array_key_exists('new_education_subject_id', $requestData[$this->alias()])) {
+						$subjectId = $requestData[$this->alias()]['new_education_subject_id'];
+
+						$subjectsToBeAdded = [];
+						if ($subjectId == 'ALL') {
+							$currSubjects = [];
+							foreach ($arraySubjects as $key => $value) {
+								$currSubjects[] = $value['education_subject_id'];
+							}
+							$subjectsToBeAdded = array_diff(array_keys($educationSubjectOptions), $currSubjects);
+						} else {
+							$subjectsToBeAdded[] = $subjectId;
+						}
+						
+						foreach ($subjectsToBeAdded as $key => $value) {
+							$subjectObj = $this->EducationGrades->EducationSubjects
+								->findById($value)
+								->first();
+
+							$arraySubjects[] = [
+								'name' => $subjectObj->name,
+								'education_subject_id' => $subjectObj->id,
+								'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
+								'code' => $subjectObj->code,
+								'pass_mark' => 50,
+								'max' => 100,
+								'assessment_grading_type_id' => key($gradingTypeOptions),
+								'education_grade_id' => $entity->education_grade_id
+							];
+						}						
+					}
+				}
+
+				foreach ($arraySubjects as $key => $value) {
+					$fieldPrefix = $attr['model'] . '.assessment_items.' . $cellCount++;
+					$assessmentItemId = array_key_exists('id', $value)? $value['id']: null;
+					$subjectCode = $value['code'];
+					$subjectName = $value['name'];
+
+					$hiddenData = "";
+					$form = $event->subject()->Form;
+					if (!is_null($assessmentItemId)) $hiddenData .= $form->hidden($fieldPrefix.".id", ['value' => $assessmentItemId]);
+					$hiddenData .= $form->hidden($fieldPrefix.".education_subject_id", ['value' => $value['education_subject_id']]);
+					$hiddenData .= $form->hidden($fieldPrefix.".name", ['value' => $subjectName]);
+					$hiddenData .= $form->hidden($fieldPrefix.".code", ['value' => $subjectCode]);
+					$hiddenData .= $form->hidden($fieldPrefix.".education_grade_id", ['value' => $value['education_grade_id']]);
+
+					if (isset($value['id'])) {
+						$hiddenData .= $form->hidden($fieldPrefix.".id", ['value' => $value['id']]);
+					}
+
+					$rowData = [];
+					$rowData[] = (array_key_exists('code', $value))? $value['code']: '';
+					$rowData[] = (array_key_exists('name', $value))? $value['name']: '';
+
+					// options
+					$rowData[] = $form->input($fieldPrefix.".result_type", ['options' => $markTypeOptions, 'label' => false]);
+					$rowData[] = $form->input($fieldPrefix.".pass_mark", ['label' => false, 'default' => 50]);
+					$rowData[] = $form->input($fieldPrefix.".max", ['label' => false, 'default' => 100]);
+					$rowData[] = $form->input($fieldPrefix.".assessment_grading_type_id", ['options' => $gradingTypeOptions, 'label' => false]);
+
+					$resultCount = 0;
+					if (!is_null($assessmentItemId)) {
+						// need to find out if assessment_items are linked to any results
+						$resultCount = $AssessmentItemResults->find()
+							->where([$AssessmentItemResults->aliasField('assessment_item_id') .' = '. $assessmentItemId])
+							->count();
+					}
+					if (!empty($resultCount)) {
+						$rowData[] = '<div class="tooltip-blue"><i class="fa fa-exclamation-circle fa-lg icon-blue" data-placement="right" data-toggle="tooltip" data-original-title="Associated results exist. Delete function disabled."></i></div>';
+					} else {
+						$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+					}
+
+					$rowData[] = $hiddenData;
+					$tableCells[] = $rowData;
+
+					if (array_key_exists('education_subject_id', $value) && !empty($value['education_subject_id'])) {
+						unset($educationSubjectOptions[$value['education_subject_id']]);
+					}
+				}
+
+				ksort($educationSubjectOptions);
+				$sortedEducationSubjectOptions = [];
+				$sortedEducationSubjectOptions[0] = "-- ".__('Add Assessment Item') ." --";
+				if (!empty($educationSubjectOptions)) $sortedEducationSubjectOptions['ALL'] = "-- ".__('Add All Assessment Items') ." --";
+				$sortedEducationSubjectOptions = array_merge($sortedEducationSubjectOptions, $educationSubjectOptions);
+				
+				$attr['options'] = $sortedEducationSubjectOptions;
+				break;
+			
+			default:
+				// no code required
+				break;
+		}
+
+		$attr['tableHeaders'] = (!empty($tableHeaders))? $tableHeaders: [];
+		$attr['tableCells'] = (!empty($tableCells))? $tableCells: [];
+
+		return $event->subject()->renderElement('Assessment.Assessments/subjects', ['attr' => $attr]);
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->has('assessment_items')) {
+			$originalIds = [];
+			foreach ($entity->getOriginal('assessment_items') as $key => $value) {
+				$originalIds[] = $value->id;
+			}
+			$currentIds = [];
+			foreach ($entity->assessment_items as $key => $value) {
+				$currentIds[] = $value->id;
+			}
+
+			$deleteIds = array_diff($originalIds, $currentIds);
+
+			// have to reconfirm that all these ids do not have results before deletion
+			if (!empty($deleteIds)) {
+				$AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+				$validatedDeleteIds = [];
+				foreach ($deleteIds as $key => $value) {
+					$resultCount = $AssessmentItemResults->find()
+						->where([$AssessmentItemResults->aliasField('assessment_item_id') .' = '. $value])
+						->count();
+
+					if (empty($resultCount)) {
+						$validatedDeleteIds[] = $value;
+					}
+				}
+
+				if (!empty($validatedDeleteIds)) {
+					$this->AssessmentItems->deleteAll([
+						$this->AssessmentItems->aliasField($this->AssessmentItems->primaryKey()).' IN ' => $validatedDeleteIds
+					]);
+				}
+			}
+		}
 	}
 
 	public function addEditOnChangeProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -162,7 +396,6 @@ class AssessmentsTable extends AppTable {
 				$this->AssessmentItems->aliasField('pass_mark'),
 				$this->AssessmentItems->aliasField('max'),
 				$this->AssessmentItems->aliasField('result_type'),
-				$this->AssessmentItems->aliasField('visible'),
 				$this->AssessmentItems->aliasField('education_subject_id'),
 				$this->AssessmentItems->aliasField('assessment_grading_type_id')
 			])
@@ -185,19 +418,9 @@ class AssessmentsTable extends AppTable {
 			if (isset($obj->AssessmentItems['id'])) {
 				// Existing record
 				$item = $obj->AssessmentItems;
-			} else {
-				// New record
-				$item = [
-					'id' => '',
-					'pass_mark' => 50,
-					'max' => 100,
-					'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
-					'visible' => 0,
-					'education_subject_id' => $obj->education_subject_id,
-				];
+				$item['education_subject'] = $obj->_matchingData['EducationSubjects'];
+				$assessmentItems[] = $item;
 			}
-			$item['education_subject'] = $obj->_matchingData['EducationSubjects'];
-			$assessmentItems[] = $item;
 		}
 
 		return $assessmentItems;

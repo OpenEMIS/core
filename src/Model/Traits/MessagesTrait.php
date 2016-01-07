@@ -10,7 +10,8 @@ trait MessagesTrait {
 		],
 		'Assessments' => [
 			'noGrades' => 'No Available Grades',
-			'noGradingTypes' => 'You need to configure Grading Types first.'
+			'noGradingTypes' => 'You need to configure Grading Types first.',
+			'addAssessmentItem' => 'Add Assessment Item',
 		],
 		'CustomGroups' => [
 			'custom_modules' => 'Module'
