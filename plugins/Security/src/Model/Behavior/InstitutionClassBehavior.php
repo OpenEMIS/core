@@ -34,7 +34,7 @@ class InstitutionClassBehavior extends Behavior {
 		if (!$this->checkAllClassesEditPermission()) {
 			if ($this->checkMyClassesEditPermission()) {
 				$userId = $this->_table->Auth->user('id');
-				if ($userId != $entity->security_user_id) {
+				if ($userId != $entity->staff_id) {
 					$urlParams = $this->_table->ControllerAction->url('view');
 					$event->stopPropagation();
 					$this->_table->Alert->error('security.noAccess');
@@ -61,7 +61,7 @@ class InstitutionClassBehavior extends Behavior {
 		if (!$this->checkAllClassesEditPermission()) {
 			if ($this->checkMyClassesEditPermission()) {
 				$userId = $this->_table->Auth->user('id');
-				if ($userId != $entity->security_user_id) {
+				if ($userId != $entity->staff_id) {
 					if (isset($buttons['edit'])) {
 						unset($buttons['edit']);
 						return $buttons;
@@ -94,7 +94,7 @@ class InstitutionClassBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->_table->request->data[$this->_table->alias()]['security_user_id'] = $entity->security_user_id;
+		$this->_table->request->data[$this->_table->alias()]['staff_id'] = $entity->staff_id;
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -105,7 +105,7 @@ class InstitutionClassBehavior extends Behavior {
 					// If there is no permission to edit my classes
 					if ($this->checkMyClassesEditPermission()) {
 						$userId = $this->_table->Auth->user('id');
-						$entityUserId = $this->_table->request->data[$this->_table->alias()]['security_user_id'];
+						$entityUserId = $this->_table->request->data[$this->_table->alias()]['staff_id'];
 						// Remove the edit button from those records who does not belong to the user
 						if ($userId != $entityUserId) {
 							if (isset($toolbarButtons['edit'])) {
