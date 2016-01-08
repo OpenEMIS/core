@@ -21,8 +21,8 @@ class MapsController extends AppController {
 	public function index() {
 		$model = TableRegistry::get('Institution.Institutions');
 		$institutions = $model->find('all')
-							->contain(['Types'])
-							->limit(1000)
+							// ->contain(['Types'])
+							// ->limit(1000)
 							// ->order(['code' => 'DESC'])
 							->toArray()
 							;
@@ -38,14 +38,18 @@ class MapsController extends AppController {
 			$filtered = $institutionCollection->filter(function ($value, $key, $iterator) use ($id) {
 			    return $value->institution_type_id == $id;
 			});
-			// pr($filtered->toArray());die;
 			$institutionByType[$id] = $filtered->toArray();
 			$institutionTypeTotal[$id] = count($filtered->toArray());
 			$totalKnownType = $totalKnownType + $institutionTypeTotal[$id];
-		}
-		$institutionTypeTotal['default'] = count($institutions) - $totalKnownType;
 
-		// pr($institutionTypeTotal);die;
+		}
+	
+		$filtered = $institutionCollection->filter(function ($value, $key, $iterator) use ($institutionTypes) {
+			return !array_key_exists($value->institution_type_id, $institutionTypes);
+		});
+		$institutionByType['default'] = $filtered->toArray();
+		$institutionTypeTotal['default'] = count($filtered->toArray());
+	
 		$iconColors = [
 			'#2b5cac',
 			'#ff8338',
@@ -73,15 +77,15 @@ class MapsController extends AppController {
 		$this->set( 'institutionTypeTotal', $institutionTypeTotal );
 	}
 
-	public function getMarkersData() {
-		$model = TableRegistry::get('Institution.Institutions');
-		$institutions = $model->find('all')->contain(['Types'])->limit(1000)->order(['code' => 'DESC'])->toArray();
-		// $this->ControllerAction->autoRender = false;
-		$this->autoRender = false;
-		$this->getView()->layout = 'ajax';
-		$this->response->type('json');
-		$json = json_encode($institutions);
-		$this->response->body($json);
-	}
+	// public function getMarkersData() {
+	// 	$model = TableRegistry::get('Institution.Institutions');
+	// 	$institutions = $model->find('all')->contain(['Types'])->limit(1000)->order(['code' => 'DESC'])->toArray();
+	// 	// $this->ControllerAction->autoRender = false;
+	// 	$this->autoRender = false;
+	// 	$this->getView()->layout = 'ajax';
+	// 	$this->response->type('json');
+	// 	$json = json_encode($institutions);
+	// 	$this->response->body($json);
+	// }
 
 }
