@@ -37,7 +37,7 @@ $this->start('panelBody');
 					<input type="checkbox" class="icheck-input" style="float: left;display: block;" name="" value="default" checked />
 					<span style="float: right;display: block;margin-top: 2px;">
 						<i class="fa kd-institutions"
-							data-icon-style-scale="0.5" 
+							data-icon-style-scale="0.3" 
 							data-icon-style-stroke-weight="0.5" 
 							data-icon-style-stroke-color="black" 
 							data-icon-style-stroke-opacity="1" 
@@ -55,7 +55,7 @@ $this->start('panelBody');
 					<input type="checkbox" class="icheck-input" style="float: left;display: block;" name="" value="<?= $key?>" checked />
 					<span style="float: right;display: block;margin-top: 2px;">
 						<i class="fa kd-institutions" style="color: <?= $iconColors[$colorCount]?>;"
-							data-icon-style-scale="0.5" 
+							data-icon-style-scale="0.3" 
 							data-icon-style-stroke-weight="0.5" 
 							data-icon-style-stroke-color="black" 
 							data-icon-style-stroke-opacity="1" 
@@ -70,24 +70,24 @@ $this->start('panelBody');
 				?>
 			
 			</div>
-			<h6>Total Institutions: (<?= $totalInstitutions ?>)</h6>
+			<h6><?= __('Total Institutions: '). $totalInstitutions ?></h6>
 		</div>
 	</div>
 
-	<div id="map" class="large"></div>
+	<div id="map"></div>
 
 	<div class="clearfix"><br/></div>
 
-	<div class="hidden">
+	<!-- <div class="hidden"> -->
 		<?php
 			$json = json_encode($institutionByType);
 			echo '<script>';
-			echo 'var markers = ';print_r($json);
-			echo '</script>'
+			echo 'var institutionsData = ';print_r($json);
+			echo '</script>';
 		?>
-	</div>
+	<!-- </div> -->
 
-	<div class="table-wrapper full-width">
+	<div class="table-wrapper full-width hidden">
 		<div class="table-responsive">
 		    <table class="table table-curved table-checkable table-input">
 				<thead>
