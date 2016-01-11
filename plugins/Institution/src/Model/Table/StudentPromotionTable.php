@@ -205,11 +205,10 @@ class StudentPromotionTable extends AppTable {
 			} else {
 				$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
 			}
-			
 			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = true;
-			if (empty($request->data[$this->alias()]['student_status_id'])) {
+			if (empty($request->data[$this->alias()]['student_status_id']) || !array_key_exists($request->data[$this->alias()]['student_status_id'], $options)) {
 				reset($options);
 				$request->data[$this->alias()]['student_status_id'] = key($options);
 			}
@@ -471,9 +470,7 @@ class StudentPromotionTable extends AppTable {
 		$idKey = $model->aliasField($primaryKey);
 
 		if ($currentEntity) {
-
 			$entity = $currentEntity;
-
 			if (empty($entity)) {
 				$this->Alert->warning('general.notExists');
 				return $this->controller->redirect($this->url('index'));
@@ -481,11 +478,6 @@ class StudentPromotionTable extends AppTable {
 			
 			if ($this->request->is(['get'])) {
 			} else if ($this->request->is(['post', 'put'])) {
-
-				// $currentEntity = $this->Session->read($sessionKey);
-				// $currentData = $this->Session->read($sessionKey.'Data');
-
-
 				$patchOptions = new ArrayObject([]);
 				$entity = $currentEntity;
 				$requestData = new ArrayObject($currentData);
@@ -522,6 +514,4 @@ class StudentPromotionTable extends AppTable {
 				break;
 		}
 	}
-
-
 }
