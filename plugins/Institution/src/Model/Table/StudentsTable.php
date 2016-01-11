@@ -951,9 +951,9 @@ class StudentsTable extends AppTable {
 				$toolbarButtons['back']['type'] = null;
 			}
 
-			if ($this->AccessControl->check(['Institutions', 'StudentActions', 'add'])) {
+			if ($this->AccessControl->check(['Institutions', 'UndoStudentStatus', 'add'])) {
 				$undoButton = $buttons['index'];
-				$undoButton['url']['action'] = 'StudentActions';
+				$undoButton['url']['action'] = 'UndoStudentStatus';
 				$undoButton['url'][0] = 'add';
 				$undoButton['type'] = 'button';
 				$undoButton['label'] = '<i class="fa fa-undo"></i>';
