@@ -13,10 +13,10 @@ class AreasController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Levels' => ['className' => 'Area.AreaLevels'],
-			'Areas' => ['className' => 'Area.Areas'],
-			'AdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels'],
-			'Administratives' => ['className' => 'Area.AreaAdministratives']
+			'Levels' => ['className' => 'Area.AreaLevels', 'options' => ['deleteStrategy' => 'transfer']],
+			'Areas' => ['className' => 'Area.Areas', 'options' => ['deleteStrategy' => 'transfer']],
+			'AdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels', 'options' => ['deleteStrategy' => 'transfer']],
+			'Administratives' => ['className' => 'Area.AreaAdministratives', 'options' => ['deleteStrategy' => 'transfer']]
 		];
 		$this->loadComponent('Paginator');
 	}

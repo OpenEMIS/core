@@ -1,3 +1,16 @@
+v3.4.7
+- Enabled the Health module for Users
+- Administrative Boundaries can now be deleted and reassociate with another record
+- Fixed a bug that caused permissions (All Classes, My Classes) not working correctly
+- Added Area codes to Institution Reports
+
+v3.4.6
+- Fixed a bug that caused Institution column in Directory for Staff not displaying any information
+- Fixed a bug that caused Institution Listing to display same school in every page for a non-admin user
+- Mini dashboards are now reflecting the correct values in charts when user searches or selected options from the filters
+- Staff and Student reports are showing complete information now
+- After importing records, there is a 'Download Successful Records' button available for the users
+
 v3.4.5
 - Fixed a bug that caused 404 error page when saving area administrative in institutions
 - Fixed a bug that caused user not able to see the roles when adding users into groups
