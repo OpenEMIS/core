@@ -19,12 +19,15 @@
 							<tr>
 								<td class="checkbox-column">
 									<?php
-										$alias = $ControllerAction['table']->alias();
-										$fieldPrefix = "$alias.students.$i";
+										if (isset($obj->info_message)) {
+											echo '<i class="fa fa-info-circle" data-toggle="tooltip" data-original-title="' .$obj->info_message. '"></i>';
+										} else {
+											$alias = $ControllerAction['table']->alias();
+											$fieldPrefix = "$alias.students.$i";
 
-										$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
-										echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
-										echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+											$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false, 'value' => $obj->student_id];
+											echo $this->Form->input("$fieldPrefix.id", $checkboxOptions);
+										}
 									?>
 								</td>
 								<td><?= $obj->_matchingData['Users']->openemis_no ?></td>

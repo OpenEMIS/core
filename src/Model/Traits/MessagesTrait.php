@@ -356,10 +356,17 @@ trait MessagesTrait {
 			'noData' => 'There are no available Students for Transfer.',
 			'success' => 'Students have been transferred.'
 		],
-		'StudentActions' => [
+		'UndoStudentStatus' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
-			'noData' => 'There are no available Students for Undo actions.',
+			'noData' => 'There are no available Students for Undo Student Status.',
+			'notUndo' => 'Student is not available to Undo Student Status.',
+			'success' => [
+				'current' => 'Enrolled Students have been deleted successfully.',
+				'graduated' => 'Graduated Students have been undo successfully.',
+				'promoted' => 'Promoted Students have been undo successfully.',
+				'repeated' => 'Repeated Students have been undo successfully.'
+			],
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
