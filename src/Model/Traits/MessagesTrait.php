@@ -149,6 +149,7 @@ trait MessagesTrait {
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
+			'noSubjects' => 'There are no available Education Subjects.',
 		],
 		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
