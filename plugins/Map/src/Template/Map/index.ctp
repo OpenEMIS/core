@@ -43,11 +43,11 @@ $this->start('panelBody');
 					<span style="float: right;display: block;margin-top: 2px;">
 						<i class="fa fa-map-marker fa-lg" style="color: <?= $iconColors[$colorCount]?>;"
 							data-icon-style-scale="0.4" 
-							data-icon-style-stroke-weight="0.5" 
-							data-icon-style-stroke-color="black" 
-							data-icon-style-stroke-opacity="1" 
+							data-icon-style-stroke-weight="2" 
+							data-icon-style-stroke-color="#FFFFFF" 
+							data-icon-style-stroke-opacity="0.7" 
 							data-icon-style-fill-color="<?= $iconColors[$colorCount]?>" 
-							data-icon-style-fill-opacity="0.5"></i> <?= $type ?> (<?= $institutionTypeTotal[$key]?>)
+							data-icon-style-fill-opacity="0.9"></i> <?= $type ?> (<?= $institutionTypeTotal[$key]?>)
 					</span>
 				</div>
 				
