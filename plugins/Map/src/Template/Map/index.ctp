@@ -4,7 +4,7 @@ $this->extend('OpenEmis./Layout/Panel');
 $this->start('panelBody');
 
 	echo $this->Html->css('Map.map', ['block' => true]);
-	echo $this->Html->script('http://maps.google.com/maps/api/js', ['block' => true]); 
+	echo $this->Html->script('//maps.google.com/maps/api/js', ['block' => true]); 
 	echo $this->Html->script('Map./js/gmaps/gmaps.min', ['block' => true]);
 	echo $this->Html->script('Map./js/fontawesome-markers/fontawesome-markers.min', ['block' => true]);
 	echo $this->Html->script('Map.map', ['block' => true]);
