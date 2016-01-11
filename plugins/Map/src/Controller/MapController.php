@@ -1,6 +1,7 @@
 <?php
 namespace Map\Controller;
 
+use ArrayObject;
 use Map\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
@@ -20,16 +21,12 @@ class MapController extends AppController {
 
 	public function index() {
 		$Config = TableRegistry::get('ConfigItems');
-		$centerLng = $Config->value('where_is_my_school_start_long');
-		$centerLat = $Config->value('where_is_my_school_start_lat');
-		$defaultZoom = 8;
-		// pr($centerLat);die;
+		$centerLng = $Config->value('google_map_center_longitude');
+		$centerLat = $Config->value('google_map_center_latitude');
+		$defaultZoom = $Config->value('google_map_zoom');
 
 		$model = TableRegistry::get('Institution.Institutions');
 		$institutions = $model->find('all')
-							// ->contain(['Types'])
-							// ->limit(1000)
-							// ->order(['code' => 'DESC'])
 							->toArray()
 							;
 		$InstitutionTypes = TableRegistry::get('Institution.Types');
@@ -53,31 +50,29 @@ class MapController extends AppController {
 		$filtered = $institutionCollection->filter(function ($value, $key, $iterator) use ($institutionTypes) {
 			return !array_key_exists($value->institution_type_id, $institutionTypes);
 		});
-		// array_unshift($institutionTypes, '');
 		$institutionTypes['default'] = 'Unknown';
 		$institutionByType['default'] = $filtered->toArray();
 		$institutionTypeTotal['default'] = count($filtered->toArray());
 	
 		$iconColors = [
-			'#2b5cac',
-			'#ff8338',
-			'#049487',
-			'#9d2979',
-			'#3cc4cb',
-			'#d7206f',
-			'#c2cb95',
-			'#93a8b2',
-			'#338ff8',
-			'#487049',
-			'#9799d2',
-			'#4cb3cc',
-			'#2044ab',
-			'#06fd72',
-			'#48781b'
+			'#DD1B4F',
+			'#336600',
+			'#0B0BF2',
+			'#FF4200',
+			'#663399',
+			'#00CCFF',
+			'#990000',
+			'#0ABE17',
+			'#FF00CC',
+			'#993366'
 		];
+		$iconColors = new ArrayObject($iconColors);
+		if ( count($institutionTypes) > count($iconColors) ) {
+			$this->generateRandomColorHex( count($institutionTypes), $iconColors );
+		}
 
 		$this->set( 'model', $model );
-		$this->set( 'iconColors', $iconColors );
+		$this->set( 'iconColors', $iconColors->getArrayCopy() );
 		$this->set( 'institutions', $institutions );
 		$this->set( 'totalInstitutions', count($institutions) );
 		$this->set( 'institutionTypes', $institutionTypes );
@@ -88,15 +83,19 @@ class MapController extends AppController {
 		$this->set( 'defaultZoom', $defaultZoom );
 	}
 
-	// public function getMarkersData() {
-	// 	$model = TableRegistry::get('Institution.Institutions');
-	// 	$institutions = $model->find('all')->contain(['Types'])->limit(1000)->order(['code' => 'DESC'])->toArray();
-	// 	// $this->ControllerAction->autoRender = false;
-	// 	$this->autoRender = false;
-	// 	$this->getView()->layout = 'ajax';
-	// 	$this->response->type('json');
-	// 	$json = json_encode($institutions);
-	// 	$this->response->body($json);
-	// }
+	function generateRandomColorHex( $quantity, ArrayObject $iconColors ) {
+	    $characters = '0123456789ABCDEF';
+	    $charactersLength = strlen($characters);
+	    for ( $i = count($iconColors); $i < $quantity; $i++ ) {
+		    $randomString = '#';
+		    for ( $ii = 0; $ii < 6; $ii++ ) {
+		        $randomString .= $characters[rand(0, $charactersLength - 1)];
+		    }
+		    if ( in_array( $randomString, $iconColors->getArrayCopy() ) ) {
+		    	$this->generateRandomColorHex( $quantity, $iconColors );
+		    }
+		    $iconColors[] = $randomString;
+		}
+	}
 
 }
