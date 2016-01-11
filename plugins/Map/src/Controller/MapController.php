@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 
-class MapsController extends AppController {
+class MapController extends AppController {
 	public function initialize() {
 		parent::initialize();
 	}
@@ -19,6 +19,12 @@ class MapsController extends AppController {
     }
 
 	public function index() {
+		$Config = TableRegistry::get('ConfigItems');
+		$centerLng = $Config->value('where_is_my_school_start_long');
+		$centerLat = $Config->value('where_is_my_school_start_lat');
+		$defaultZoom = 8;
+		// pr($centerLat);die;
+
 		$model = TableRegistry::get('Institution.Institutions');
 		$institutions = $model->find('all')
 							// ->contain(['Types'])
@@ -47,6 +53,8 @@ class MapsController extends AppController {
 		$filtered = $institutionCollection->filter(function ($value, $key, $iterator) use ($institutionTypes) {
 			return !array_key_exists($value->institution_type_id, $institutionTypes);
 		});
+		// array_unshift($institutionTypes, '');
+		$institutionTypes['default'] = 'Unknown';
 		$institutionByType['default'] = $filtered->toArray();
 		$institutionTypeTotal['default'] = count($filtered->toArray());
 	
@@ -75,6 +83,9 @@ class MapsController extends AppController {
 		$this->set( 'institutionTypes', $institutionTypes );
 		$this->set( 'institutionByType', $institutionByType );
 		$this->set( 'institutionTypeTotal', $institutionTypeTotal );
+		$this->set( 'centerLng', $centerLng );
+		$this->set( 'centerLat', $centerLat );
+		$this->set( 'defaultZoom', $defaultZoom );
 	}
 
 	// public function getMarkersData() {

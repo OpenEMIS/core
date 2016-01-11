@@ -13,9 +13,9 @@ $this->start('panelBody');
 	<div id="config" class="hidden">
 		
 		<span class="default">
-			<meta class="lat" data-value="0"/>
-			<meta class="lng" data-value="0"/>
-			<meta class="zoom" data-value="3"/>
+			<meta class="lat" data-value="<?= $centerLat?>"/>
+			<meta class="lng" data-value="<?= $centerLng?>"/>
+			<meta class="zoom" data-value="<?= $defaultZoom?>"/>
 		</span>
 
 		<div class="marker-body">
@@ -24,7 +24,7 @@ $this->start('panelBody');
 			<?= $this->Html->link(__('View Details'), ['plugin'=>'Institution', 'controller'=>'Institutions', 'action'=>'view'])?>
 		</div>
 
-		<?= $this->Html->link('', ['plugin'=>'Map', 'controller'=>'Maps'], ['class'=>'plugin-url'])?>
+		<?= $this->Html->link('', ['plugin'=>'Map', 'controller'=>'Map'], ['class'=>'plugin-url'])?>
 	</div>
 	
 
@@ -33,19 +33,6 @@ $this->start('panelBody');
 			<h5><?php echo __('Institution Types'); ?></h5>
 			<div class="dashboard-content" id="institution-types">
 
-				<div style="float: left;display: block;margin-right: 5px;margin-left: 5px;margin-top: 5px;margin-bottom: 5px;padding: 5px;" class="institution-type" data-type-code="default">		
-					<input type="checkbox" class="icheck-input" style="float: left;display: block;" name="" value="default" checked />
-					<span style="float: right;display: block;margin-top: 2px;">
-						<i class="fa kd-institutions"
-							data-icon-style-scale="0.3" 
-							data-icon-style-stroke-weight="0.5" 
-							data-icon-style-stroke-color="black" 
-							data-icon-style-stroke-opacity="1" 
-							data-icon-style-fill-color="" 
-							data-icon-style-fill-opacity="0.8"></i> Unknown (<?= $institutionTypeTotal['default']?>)
-					</span>
-				</div>
-				
 				<?php 
 				$colorCount = 0;
 				foreach ($institutionTypes as $key=>$type):
@@ -54,13 +41,13 @@ $this->start('panelBody');
 				<div style="float: left;display: block;margin-right: 5px;margin-left: 5px;margin-top: 5px;margin-bottom: 5px;padding: 5px;" class="institution-type" data-type-code="<?= $key?>">		
 					<input type="checkbox" class="icheck-input" style="float: left;display: block;" name="" value="<?= $key?>" checked />
 					<span style="float: right;display: block;margin-top: 2px;">
-						<i class="fa kd-institutions" style="color: <?= $iconColors[$colorCount]?>;"
-							data-icon-style-scale="0.3" 
+						<i class="fa fa-map-marker fa-lg" style="color: <?= $iconColors[$colorCount]?>;"
+							data-icon-style-scale="0.4" 
 							data-icon-style-stroke-weight="0.5" 
 							data-icon-style-stroke-color="black" 
 							data-icon-style-stroke-opacity="1" 
 							data-icon-style-fill-color="<?= $iconColors[$colorCount]?>" 
-							data-icon-style-fill-opacity="0.8"></i> <?= $type ?> (<?= $institutionTypeTotal[$key]?>)
+							data-icon-style-fill-opacity="0.5"></i> <?= $type ?> (<?= $institutionTypeTotal[$key]?>)
 					</span>
 				</div>
 				
