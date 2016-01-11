@@ -43,7 +43,7 @@ var Map = {
             }
             // all markers will use the same icon but different color
             Map.iconStyles[$(this).data('typeCode')] = {
-                path: fontawesome.markers.UNIVERSITY,
+                path: fontawesome.markers.MAP_MARKER,
                 scale: iconSettings.iconStyleScale,
                 strokeWeight: iconSettings.iconStyleStrokeWeight,
                 strokeColor: iconSettings.iconStyleStrokeColor,
