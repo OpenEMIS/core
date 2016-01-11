@@ -242,7 +242,8 @@ class StudentPromotionTable extends AppTable {
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
 		$studentStatusId = $request->data[$this->alias()]['student_status_id'];
 		$statuses = $this->statuses;
-		if ($studentStatusId != $statuses['REPEATED']) {
+
+		if (!in_array($studentStatusId, [$statuses['REPEATED'], $statuses['GRADUATED']])) {
 			$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
 			$institutionId = $this->institutionId;
 			
@@ -321,13 +322,28 @@ class StudentPromotionTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'add') {
-			$toolbarButtons['back'] = $buttons['back'];
-			$toolbarButtons['back']['type'] = 'button';
-			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-			$toolbarButtons['back']['attr'] = $attr;
-			$toolbarButtons['back']['attr']['title'] = __('Back');
-			$toolbarButtons['back']['url']['action'] = 'Students';
+		switch ($action) {
+			case 'add':
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = 'button';
+				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+				$toolbarButtons['back']['attr'] = $attr;
+				$toolbarButtons['back']['attr']['title'] = __('Back');
+				$toolbarButtons['back']['url']['action'] = 'Students';
+				break;
+
+			case 'reconfirm':
+				$toolbarButtons['back'] = $buttons['add'];
+				$toolbarButtons['back']['type'] = 'button';
+				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+				$toolbarButtons['back']['attr'] = $attr;
+				$toolbarButtons['back']['attr']['title'] = __('Back');
+				$toolbarButtons['back']['attr']['onclick'] = "history.go(-1);";
+				break;
+			
+			default:
+				# code...
+				break;
 		}
 	}
 
@@ -339,12 +355,14 @@ class StudentPromotionTable extends AppTable {
 			$this->currentEntity = $entity;
 			$session = $this->Session;
 			$session->write($this->registryAlias().'.confirm', $entity);
+			$session->write($this->registryAlias().'.confirmData', $data);
+			$this->currentEvent = $event;
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
 		}
 	}
 
-	public function savePromotion() {
+	public function savePromotion(Entity $entity, ArrayObject $data) {
 		$nextAcademicPeriodId = null;
 		$nextEducationGradeId = null;
 		$currentAcademicPeriod = null;
@@ -410,7 +428,7 @@ class StudentPromotionTable extends AppTable {
 					}
 				}
 				$url = $this->ControllerAction->url('add');
-				$event->stopPropagation();
+
 				return $this->controller->redirect($url);
 			}
 		}
@@ -421,11 +439,12 @@ class StudentPromotionTable extends AppTable {
 
 		$sessionKey = $this->registryAlias() . '.confirm';
 		if ($this->Session->check($sessionKey)) {
-			$currentData = $this->Session->read($sessionKey);
+			$currentEntity = $this->Session->read($sessionKey);
+			$currentData = $this->Session->read($sessionKey.'Data');
 		}
 		$academicPeriodData = $this->AcademicPeriods
 			->find()
-			->where([$this->AcademicPeriods->aliasField($this->AcademicPeriods->primaryKey()) => $currentData->current_academic_period_id])
+			->where([$this->AcademicPeriods->aliasField($this->AcademicPeriods->primaryKey()) => $currentEntity->current_academic_period_id])
 			->select([$this->AcademicPeriods->aliasField('name')])
 			->first();
 		$academicPeriodName = (!empty($academicPeriodData))? $academicPeriodData['name']: '';
@@ -438,7 +457,10 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->field('grade_to_promote', ['type' => 'readonly', 'order' => $order++]);
 		$this->ControllerAction->field('next_academic_period_id', ['type' => 'readonly', 'order' => $order++]);
 		$this->ControllerAction->field('student_status', ['type' => 'readonly', 'order' => $order++]);
-		$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'order' => $order++]);
+		$statuses = $this->statuses;
+		if (!in_array($currentData[$this->alias()]['student_status_id'], [$statuses['REPEATED'], $statuses['GRADUATED']])) {
+			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'order' => $order++]);
+		}
 		$this->ControllerAction->field('students', ['type' => 'readonly', 'order' => $order++]);
 		
 		
@@ -448,9 +470,9 @@ class StudentPromotionTable extends AppTable {
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
 
-		if ($currentData) {
+		if ($currentEntity) {
 
-			$entity = $currentData;
+			$entity = $currentEntity;
 
 			if (empty($entity)) {
 				$this->Alert->warning('general.notExists');
@@ -459,35 +481,26 @@ class StudentPromotionTable extends AppTable {
 			
 			if ($this->request->is(['get'])) {
 			} else if ($this->request->is(['post', 'put'])) {
-				pr($currentData);
-				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+
+				// $currentEntity = $this->Session->read($sessionKey);
+				// $currentData = $this->Session->read($sessionKey.'Data');
+
 
 				$patchOptions = new ArrayObject([]);
-				$requestData = new ArrayObject($request->data);
+				$entity = $currentEntity;
+				$requestData = new ArrayObject($currentData);
 
 				$params = [$entity, $requestData, $patchOptions];
 
-				if ($submit == 'save') {
-					$patchOptionsArray = $patchOptions->getArrayCopy();
-					$request->data = $requestData->getArrayCopy();
-					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+				$patchOptionsArray = $patchOptions->getArrayCopy();
+				$currentData = $requestData->getArrayCopy();
+				$entity = $model->patchEntity($entity, $currentData, $patchOptionsArray);
 
-					$process = function ($model, $entity) {
-						return $model->save($entity);
-					};
+				$process = function ($model, $entity) {
+					return $model->save($entity);
+				};
 
-					//add.beforeSave
-					if ($process($model, $entity)) {
-						// event: onSaveSuccess
-						$this->Alert->success('general.edit.success');
-						
-						return $this->controller->redirect($this->url('view'));
-					} else {
-						// event: onSaveFailed
-						$this->log($entity->errors(), 'debug');
-						$this->Alert->error('general.edit.failed');
-					}
-				}
+				return $this->savePromotion($currentEntity, new ArrayObject($currentData));
 			}
 			$this->controller->set('data', $entity);
 		} else {
@@ -495,9 +508,20 @@ class StudentPromotionTable extends AppTable {
 			return $this->controller->redirect($this->url('index'));
 		}
 
-		
 		$this->ControllerAction->renderView('/ControllerAction/edit');
-		
-
 	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		switch ($this->action) {
+			case 'add':
+				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Review');
+				break;
+			
+			default:
+				# code...
+				break;
+		}
+	}
+
+
 }
