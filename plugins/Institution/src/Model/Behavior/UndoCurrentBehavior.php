@@ -18,13 +18,7 @@ class UndoCurrentBehavior extends UndoBehavior {
 	}
 
 	public function beforeSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) {
-		$institutionId = $entity->institution_id;
-		$selectedPeriod = $entity->academic_period_id;
-		$selectedGrade = $entity->education_grade_id;
-		$selectedStatus = $entity->student_status_id;
-
 		$studentIds = [];
-		$this->Students = $this->_table->getStudentModel();
 
 		if (isset($entity->students)) {
 			foreach ($entity->students as $key => $obj) {
@@ -32,21 +26,11 @@ class UndoCurrentBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->Students->deleteAll([
-						'institution_id' => $institutionId,
-						'academic_period_id' => $selectedPeriod,
-						'education_grade_id' => $selectedGrade,
-						'student_status_id' => $selectedStatus,
-						'student_id' => $studentId
-					]);
+					$this->deleteEnrolledStudents($studentId);
 				}
 			}
 		}
 
-		if (empty($studentIds)) {
-			$this->_table->Alert->warning('general.notSelected', ['reset' => true]);
-		} else {
-			$this->_table->Alert->success('UndoStudentStatus.success.current', ['reset' => true]);
-		}
+		return $studentIds;
 	}
 }
