@@ -347,7 +347,10 @@ trait MessagesTrait {
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.',
-			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.',
+			'reconfirm' => 'Please review the information before proceeding with the operation.',
+			'noStudentSelected' => 'There are no students selected.',
+			'noAvailableGrades' => 'No Available Grades in this Institution',
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
