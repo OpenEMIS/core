@@ -17,10 +17,10 @@
 					<tbody>
 						<?php foreach ($attr['data'] as $i => $obj) : ?>
 							<tr>
-								<td class="checkbox-column tooltip-red">
+								<td class="checkbox-column tooltip-blue">
 									<?php
 										if (isset($obj->info_message)) {
-											echo '<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="' .$obj->info_message. '"></i>';
+											echo '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$obj->info_message. '"></i>';
 										} else {
 											$alias = $ControllerAction['table']->alias();
 											$fieldPrefix = "$alias.students.$i";
