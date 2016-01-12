@@ -14,18 +14,12 @@ class SSOComponent extends Component {
 	public function initialize(array $config) {
 		$controller = $this->_registry->getController();
 		$this->controller = $controller;
-
-		$type = 'local';
-		// get the type from system config
-		$type = 'OpenEmis.' . ucfirst($type) . 'Auth';
+		
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
-		$authType = $ConfigItems->value('auth_type');
+		$authType = $ConfigItems->value('authentication_type');
 
-		if ($authType != $type) {
-			$type = $authType;
-			$this->components = [$type];
-		}
+		$type = 'OpenEmis.' . ucfirst($authType) . 'Auth';
 
 		foreach ($this->components as $component) {
 			if ($component == $type) {
