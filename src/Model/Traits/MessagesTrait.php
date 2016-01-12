@@ -359,6 +359,13 @@ trait MessagesTrait {
 			'noData' => 'There are no available Students for Transfer.',
 			'success' => 'Students have been transferred.'
 		],
+		'UndoStudentStatus' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noData' => 'There are no available Students for revert Student Status.',
+			'notUndo' => 'Not available to revert.',
+			'success' => 'Student records have been reverted successfully.'
+		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
 		],
