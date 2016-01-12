@@ -350,6 +350,11 @@ trait MessagesTrait {
 			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.',
 			'reconfirm' => 'Please review the information before proceeding with the operation.',
 			'noStudentSelected' => 'There are no students selected.',
+			'fromAcademicPeriod' => 'From Academic Period',
+			'toAcademicPeriod' => 'To Academic Period',
+			'fromGrade' => 'From Grade',
+			'toGrade' => 'To Grade',
+			'status' => 'Status',
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',

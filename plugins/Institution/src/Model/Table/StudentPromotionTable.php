@@ -51,14 +51,14 @@ class StudentPromotionTable extends AppTable {
 
 	public function addAfterAction() {
 		$this->fields = [];
-		$this->ControllerAction->field('current_academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->currentPeriod->name], 'value' => $this->currentPeriod->id]);
-		$this->ControllerAction->field('next_academic_period_id');
-		$this->ControllerAction->field('grade_to_promote');
-		$this->ControllerAction->field('student_status_id');
-		$this->ControllerAction->field('education_grade_id');
+		$this->ControllerAction->field('current_academic_period_id', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('fromAcademicPeriod')), 'value' => $this->currentPeriod->name], 'value' => $this->currentPeriod->id]);
+		$this->ControllerAction->field('next_academic_period_id', ['attr' => ['label' => $this->getMessage($this->aliasField('toAcademicPeriod'))]]);
+		$this->ControllerAction->field('grade_to_promote', ['attr' => ['label' => $this->getMessage($this->aliasField('fromGrade'))]]);
+		$this->ControllerAction->field('student_status_id', ['attr' => ['label' => $this->getMessage($this->aliasField('status'))]]);
+		$this->ControllerAction->field('education_grade_id', ['attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
 		$this->ControllerAction->field('students');
 		
-		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'grade_to_promote', 'next_academic_period_id', 'student_status_id', 'education_grade_id', 'students']);
+		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote',  'education_grade_id','student_status_id',  'students']);
 	}
 
 	public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
@@ -451,16 +451,18 @@ class StudentPromotionTable extends AppTable {
 		foreach ($this->fields as $key => $value) {
 			$this->fields[$key]['visible'] = false;
 		}
-		$order = 0;
-		$this->ControllerAction->field('current_academic_period_id', ['type' => 'readonly', 'order' => $order++, 'attr' => ['value' => $academicPeriodName]]);
-		$this->ControllerAction->field('grade_to_promote', ['type' => 'readonly', 'order' => $order++]);
-		$this->ControllerAction->field('next_academic_period_id', ['type' => 'readonly', 'order' => $order++]);
-		$this->ControllerAction->field('student_status', ['type' => 'readonly', 'order' => $order++]);
+
+		$this->ControllerAction->field('current_academic_period_id', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('fromAcademicPeriod')), 'value' => $academicPeriodName]]);
+		$this->ControllerAction->field('grade_to_promote', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('fromGrade'))]]);
+		$this->ControllerAction->field('next_academic_period_id', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toAcademicPeriod'))]]);
+		$this->ControllerAction->field('student_status', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('status'))]]);
 		$statuses = $this->statuses;
 		if (!in_array($currentData[$this->alias()]['student_status_id'], [$statuses['REPEATED'], $statuses['GRADUATED']])) {
-			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'order' => $order++]);
+			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
 		}
-		$this->ControllerAction->field('students', ['type' => 'readonly', 'order' => $order++]);
+		$this->ControllerAction->field('students', ['type' => 'readonly']);
+
+		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote',  'next_grade','student_status',  'students']);
 		
 		
 		$model = $this;
