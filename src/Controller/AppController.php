@@ -63,7 +63,7 @@ class AppController extends Controller {
 						'className' => 'Fallback',
 						'hashers' => ['Default', 'Legacy']
 					]
-				]
+				],
 			],
 			'logoutRedirect' => [
 				'plugin' => 'User',
@@ -88,6 +88,7 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('Workflow.Workflow');
+		$this->loadComponent('OpenEmis.SSO'); // for single sign on authentication
 	}
 
 	public function beforeFilter(Event $event) {
