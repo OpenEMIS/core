@@ -56,8 +56,6 @@ class UndoStudentStatusTable extends AppTable {
 		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
 		$Navigation->substituteCrumb('Undo', 'Students', $url);
 		$Navigation->addCrumb('Undo');
-		// $Navigation->substituteCrumb('Undo Student Status', 'Students', $url);
-		// $Navigation->addCrumb('Undo Student Status');
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -127,8 +125,7 @@ class UndoStudentStatusTable extends AppTable {
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		// unset buttons if no students found
 		if (empty($this->dataCount)) {
-			$buttons->offsetUnset(0);
-			$buttons->offsetUnset(1);
+			$buttons->exchangeArray([]);
 		}
 	}
 
