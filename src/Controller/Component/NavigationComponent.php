@@ -324,7 +324,7 @@ class NavigationComponent extends Component {
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.UndoStudentStatus',
+				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
 					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add', 
 					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']

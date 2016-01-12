@@ -53,7 +53,7 @@ class InstitutionsController extends AppController  {
 			'DropoutRequests' 	=> ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
 			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
-			'UndoStudentStatus' => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['add']],
+			'Undo' 				=> ['className' => 'Institution.UndoStudentStatus', 'actions' => ['add']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
