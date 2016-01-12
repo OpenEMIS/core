@@ -16,6 +16,10 @@ class AreaAdministrativesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Area.AreaAdministratives']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
+		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
+		$this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
 		$this->addBehavior('Tree');
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
@@ -57,6 +61,52 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$transferTo = $this->request->data['transfer_to'];
+		$transferFrom = $id;
+		// Require to update the parent id of the children before removing the node from the tree
+		$this->updateAll(
+				[
+					'parent_id' => $transferTo, 
+					'lft' => null,
+					'rght' => null
+				],
+				['parent_id' => $transferFrom]
+			);
+
+		$entity = $this->get($id);
+		$left = $entity->lft;
+		$right = $entity->rght;
+
+		// The left and right value of the children will all have to be rebuilt
+		$this->updateAll(
+				[
+					'lft' => null,
+					'rght' => null
+				],
+				[ 
+					'lft > ' => $left, 
+					'rght < ' => $right
+				]
+			);
+
+		$this->rebuildLftRght();
+
+		$process = function($model, $id, $options) {
+			$entity = $model->get($id);
+			$model->removeFromTree($entity);
+			return $model->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
+	}
+
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_administrative_level_id;
+		$query->where([
+				$this->aliasField('area_administrative_level_id') => $level
+			]);
 	}
 
 	public function indexBeforeAction(Event $event) {
