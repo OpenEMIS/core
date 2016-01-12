@@ -484,7 +484,7 @@ class ImportBehavior extends Behavior {
 		$modelName = $this->config('model');
 		$modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
 		// Do not lcalize file name as certain non-latin characters might cause issue 
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this->config('plugin'), $modelName, 'Template');
+		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'OpenEMIS', 'Core', $modelName, 'Template');
 
 		$excelPath = $folder . DS . $excelFile;
 
@@ -492,7 +492,11 @@ class ImportBehavior extends Behavior {
 		
 		$mapping = $this->getMapping();
 		$header = $this->getHeader($mapping);
+		// $formats = array_flip($header);
+		// $formats = array_fill_keys(array_keys($formats), 'date');
+		// pr($formats);die;
 		$writer->writeSheetRow(__('Data'), array_values($header));
+		// $writer->writeSheet([$header], __('Data'), $formats);
 		
 		$codesData = $this->excelGetCodesData($this->_table);
 		foreach($codesData as $modelName => $modelArr) {
@@ -577,8 +581,8 @@ class ImportBehavior extends Behavior {
 			$downloadFolder = $this->prepareDownload();
 			// Do not lcalize file name as certain non-latin characters might cause issue 
 			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
-					'Import', 
-					$this->config('plugin'),
+					'OpenEMIS',
+					'Core',
 					$this->config('model'),
 					ucwords($type), 
 					time()
