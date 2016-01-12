@@ -58,7 +58,7 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->field('education_grade_id', ['attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
 		$this->ControllerAction->field('students');
 		
-		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote',  'education_grade_id','student_status_id',  'students']);
+		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'student_status_id', 'education_grade_id','students']);
 	}
 
 	public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
@@ -121,7 +121,7 @@ class StudentPromotionTable extends AppTable {
 				->where([$this->EducationGrades->aliasField($this->EducationGrades->primaryKey()) => $currentData->education_grade_id])
 				->select([$this->EducationGrades->aliasField('education_programme_id'), $this->EducationGrades->aliasField('name')])
 				->first();
-			$gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: '';
+			$gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
 		}
 
 		$attr['type'] = 'readonly';
@@ -242,7 +242,7 @@ class StudentPromotionTable extends AppTable {
 		$studentStatusId = $request->data[$this->alias()]['student_status_id'];
 		$statuses = $this->statuses;
 
-		if (!in_array($studentStatusId, [$statuses['REPEATED'], $statuses['GRADUATED']])) {
+		if (!in_array($studentStatusId, [$statuses['REPEATED']])) {
 			$educationGradeId = $request->data[$this->alias()]['grade_to_promote'];
 			$institutionId = $this->institutionId;
 			
@@ -262,7 +262,7 @@ class StudentPromotionTable extends AppTable {
 			$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
 			if (count($options) == 0) {
-				$options = [0 => __('No Available Grades in this Institution')];
+				$options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
 			}
 			$attr['type'] = 'select';
 			$attr['options'] = $options;
@@ -332,12 +332,13 @@ class StudentPromotionTable extends AppTable {
 				break;
 
 			case 'reconfirm':
-				$toolbarButtons['back'] = $buttons['add'];
-				$toolbarButtons['back']['type'] = 'button';
-				$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-				$toolbarButtons['back']['attr'] = $attr;
-				$toolbarButtons['back']['attr']['title'] = __('Back');
-				$toolbarButtons['back']['attr']['onclick'] = "history.go(-1);";
+				unset($toolbarButtons['back']);
+				// $toolbarButtons['back'] = $buttons['add'];
+				// $toolbarButtons['back']['type'] = 'button';
+				// $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+				// $toolbarButtons['back']['attr'] = $attr;
+				// $toolbarButtons['back']['attr']['title'] = __('Back');
+				// $toolbarButtons['back']['attr']['onclick'] = "history.go(-1);";
 				break;
 			
 			default:
@@ -457,14 +458,14 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->field('next_academic_period_id', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toAcademicPeriod'))]]);
 		$this->ControllerAction->field('student_status', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('status'))]]);
 		$statuses = $this->statuses;
-		if (!in_array($currentData[$this->alias()]['student_status_id'], [$statuses['REPEATED'], $statuses['GRADUATED']])) {
-			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
-		}
 		$this->ControllerAction->field('students', ['type' => 'readonly']);
+		if (!in_array($currentData[$this->alias()]['student_status_id'], [$statuses['REPEATED']])) {
+			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
+			$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'student_status', 'next_grade',  'students']);
+		} else {
+			$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'student_status',  'students']);
+		}
 
-		$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote',  'next_grade','student_status',  'students']);
-		
-		
 		$model = $this;
 		$request = $this->request;
 
@@ -508,7 +509,13 @@ class StudentPromotionTable extends AppTable {
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		switch ($this->action) {
 			case 'add':
-				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Review');
+				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
+				break;
+
+			case 'reconfirm':
+				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
+				$buttons[1]['url'] = $this->ControllerAction->url('index');
+				$buttons[1]['url']['action'] = 'Students';
 				break;
 			
 			default:
