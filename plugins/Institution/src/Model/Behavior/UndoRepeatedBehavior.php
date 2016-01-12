@@ -14,7 +14,7 @@ class UndoRepeatedBehavior extends UndoBehavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Undo.'.'get'.$this->undoAction.'Students'] = 'onGet'.$this->undoAction.'Students';
-		$events['Undo.'.'beforeSave'.$this->undoAction.'Students'] = 'beforeSave'.$this->undoAction.'Students';
+		$events['Undo.'.'processSave'.$this->undoAction.'Students'] = 'processSave'.$this->undoAction.'Students';
 		return $events;
 	}
 
@@ -22,7 +22,7 @@ class UndoRepeatedBehavior extends UndoBehavior {
 		return $this->getStudents($data);
 	}
 
-	public function beforeSaveRepeatedStudents(Event $event, Entity $entity, ArrayObject $data) {
+	public function processSaveRepeatedStudents(Event $event, Entity $entity, ArrayObject $data) {
 		$studentIds = [];
 
 		$institutionId = $entity->institution_id;
