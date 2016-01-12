@@ -103,7 +103,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 	public function template() {
 		$folder = $this->prepareDownload();
 		$modelName = $this->alias();
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', 'Institution', $modelName, 'Template');
+		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'OpenEMIS', 'Core', $modelName, 'Template');
 
 		$excelPath = $folder . DS . $excelFile;
 
@@ -510,7 +510,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 		if (!empty($data)) {
 			$downloadFolder = $this->prepareDownload();
 			$modelName = $this->alias();
-			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 'Import', 'Institution', 'Surveys', ucwords($type), time());
+			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 'OpenEMIS', 'Core', $modelName, ucwords($type), time());
 			$excelPath = $downloadFolder . DS . $excelFile;
 			
 			$writer = new \XLSXWriter();
