@@ -950,6 +950,21 @@ class StudentsTable extends AppTable {
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}
+
+			if ($this->AccessControl->check(['Institutions', 'Undo', 'add'])) {
+				$undoButton = $buttons['index'];
+				$undoButton['url']['action'] = 'Undo';
+				$undoButton['url'][0] = 'add';
+				$undoButton['type'] = 'button';
+				$undoButton['label'] = '<i class="fa fa-undo"></i>';
+				$undoButton['attr'] = $attr;
+				$undoButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$undoButton['attr']['title'] = __('Undo');
+
+				$toolbarButtons['undo'] = $undoButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
 		} else if ($action == 'view') { // for transfer button in view page
 			$statuses = $this->StudentStatuses->findCodeList();
 			$id = $this->request->params['pass'][1];

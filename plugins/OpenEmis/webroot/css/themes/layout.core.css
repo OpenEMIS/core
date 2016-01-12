@@ -244,3 +244,97 @@ textarea[disabled="disabled"] {
 .bootstrap-timepicker-widget {
     z-index: 10 !important;
 }
+
+/* To update in styleguide version after 2.2.2 PHPOE-2435 tooltip */
+.tooltip {
+    z-index: 9999 !important;
+}
+
+.icon-blue {
+    color: #5C82CC;
+}
+
+.tooltip-blue .fa-exclamation-circle[data-toggle="tooltip"] {
+    cursor: pointer;
+}
+
+.tooltip-blue .tooltip {
+    margin-left: 53px !important;
+    white-space: normal;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip {
+    margin-top: 45px !important;
+    margin-left: 120px !important;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip-arrow {
+    top: 50% !important;
+    left: -2px !important;
+    -ms-transform: rotate(90deg) !important; /* IE 9 */
+    -webkit-transform: rotate(90deg) !important; /* Chrome, Safari, Opera */
+    transform: rotate(90deg) !important;
+}
+
+.tooltip-blue .tooltip-arrow {
+    left: 16px !important;
+}
+
+.tooltip-blue {
+    width: 40px;
+    text-align: center;
+}
+
+.tooltip-blue i {
+    transition: all .1s ease-in-out;
+    animation: pulse 1s infinite;
+    animation-play-state: running;
+    animation-delay: 0;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.tooltip-blue .tooltip-inner {
+    background-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip.top .tooltip-arrow {
+    border-top-color: #5C82CC !important;
+}
+
+
+/* RTL v.1.0.0 */
+
+.rtl .tooltip-blue .tooltip {
+    margin-left: -50px !important;
+}
+
+.rtl .tooltip-blue .tooltip-arrow {
+    left: auto !important;
+    right: 13px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip {
+    margin-left: -120px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip-arrow {
+    right: -7px !important;
+    left: auto !important;
+    -ms-transform: rotate(-90deg) !important; /* IE 9 */
+    -webkit-transform: rotate(-90deg) !important; /* Chrome, Safari, Opera */
+    transform: rotate(-90deg) !important;
+}
