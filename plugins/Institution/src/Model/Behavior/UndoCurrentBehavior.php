@@ -13,11 +13,11 @@ class UndoCurrentBehavior extends UndoBehavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['Undo.'.'beforeSave'.$this->undoAction.'Students'] = 'beforeSave'.$this->undoAction.'Students';
+		$events['Undo.'.'processSave'.$this->undoAction.'Students'] = 'processSave'.$this->undoAction.'Students';
 		return $events;
 	}
 
-	public function beforeSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) {
+	public function processSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) {
 		$studentIds = [];
 
 		if (isset($entity->students)) {

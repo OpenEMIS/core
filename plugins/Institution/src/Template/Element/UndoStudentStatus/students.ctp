@@ -1,6 +1,39 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
-<?php if ($action == 'add') : ?>
+<?php if ($action == 'reconfirm') : ?>
+	<div class="input clearfix">
+		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
+		<div class="table-in-view">
+			<table class="table">
+				<thead>
+					<tr>
+						<th><?= __('OpenEmis ID') ?></th>
+						<th><?= __('Student') ?></th>
+						<th><?= __('Current Grade') ?></th>
+					</tr>
+				</thead>
+				<?php if (isset($attr['data'])) : ?>
+					<tbody>
+						<?php foreach ($attr['data'] as $i => $obj) : ?>
+							<tr>
+								<td>
+									<?php
+										$alias = $ControllerAction['table']->alias();
+										$fieldPrefix = "$alias.students.$i";
+										echo $obj->_matchingData['Users']->openemis_no;
+										echo $this->Form->hidden("$fieldPrefix.id", ['value' => $obj->student_id]);
+									?>
+								</td>
+								<td><?= $obj->_matchingData['Users']->name ?></td>
+								<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
+							</tr>
+						<?php endforeach ?>
+					</tbody>
+				<?php endif ?>
+			</table>
+		</div>
+	</div>
+<?php elseif ($action == 'add') : ?>
 	<div class="input clearfix">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="table-in-view">
