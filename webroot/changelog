@@ -1,3 +1,12 @@
+v3.4.7
+- Enabled the Health module for Users
+- Administrative Boundaries can now be deleted and reassociate with another record
+- Fixed a bug that caused permissions (All Classes, My Classes) not working correctly
+- Added Area codes to Institution Reports
+- Added Map under Reports to show the location of all Institutions with a valid longitude and latitude
+- Fixed a bug that caused a repair popup prompt to appear when downloading reports
+- During promotion/graduation, user will be able to review the changes in a confirmation page before proceeding with the actual operation
+
 v3.4.6
 - Fixed a bug that caused Institution column in Directory for Staff not displaying any information
 - Fixed a bug that caused Institution Listing to display same school in every page for a non-admin user
