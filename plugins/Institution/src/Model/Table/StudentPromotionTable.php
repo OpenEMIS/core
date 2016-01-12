@@ -514,8 +514,7 @@ class StudentPromotionTable extends AppTable {
 
 			case 'reconfirm':
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-				$buttons[1]['url'] = $this->ControllerAction->url('index');
-				$buttons[1]['url']['action'] = 'Students';
+				$buttons[1]['url'] = $this->ControllerAction->url('add');
 				break;
 			
 			default:
