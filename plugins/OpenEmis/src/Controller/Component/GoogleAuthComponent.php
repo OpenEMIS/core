@@ -56,7 +56,7 @@ class GoogleAuthComponent extends Component {
     	$client->setClientId($this->clientId);
     	$client->setClientSecret($this->clientSecret);
         $client->setRedirectUri($this->redirectUri);
-        $client->setScopes(['openid', 'email']);
+        $client->setScopes(['openid', 'email', 'profile']);
         $client->setAccessType('offline');
         $client->setHostedDomain($this->hostedDomain);
         $controller = $this->_registry->getController();
@@ -105,10 +105,16 @@ class GoogleAuthComponent extends Component {
         }
 
         if (isset($tokenData)) {
-        	if ($tokenData['payload']['hd'] == $this->hostedDomain) {
-        		$session->write('Google.tokenData', $tokenData);
-        		$session->write('Google.client', $client);
-        	}
+            if (isset($tokenData['payload']['hd'])) {
+                if ($tokenData['payload']['hd'] == $this->hostedDomain) {
+                    $session->write('Google.tokenData', $tokenData);
+                    $session->write('Google.client', $client);
+                } else {
+                    // return $controller->redirect($controller->Auth->logout());
+                }
+            } else {
+                // return $controller->redirect($controller->Auth->logout());
+            }
         } else {
         	$session->delete('Google.tokenData');
         	$session->delete('Google.client', $client);
@@ -128,7 +134,7 @@ class GoogleAuthComponent extends Component {
 	        }
 			return $this->checkLogin($username);
 		} else {
-			return $controller->redirect($this->Auth->logout());
+			return $controller->redirect($controller->Auth->logout());
 		}
     }
 
@@ -142,7 +148,7 @@ class GoogleAuthComponent extends Component {
 				$this->Alert->error('security.login.inactive');
 				return $controller->redirect(['action' => 'login']);
 			}
-			$this->Auth->setUser($user);
+			$controller->Auth->setUser($user);
 			$labels = TableRegistry::get('Labels');
 			$labels->storeLabelsInCache();
 			// Support Url
@@ -152,7 +158,7 @@ class GoogleAuthComponent extends Component {
 			// End
 			return true;
 		} else {
-			$this->Alert->error('security.login.fail');
+			$controller->Alert->error('security.login.fail');
 			return false;
 		}
 	}

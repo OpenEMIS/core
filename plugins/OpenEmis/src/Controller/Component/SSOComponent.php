@@ -20,13 +20,7 @@ class SSOComponent extends Component {
 		$authType = $ConfigItems->value('authentication_type');
 
 		$type = 'OpenEmis.' . ucfirst($authType) . 'Auth';
-
-		foreach ($this->components as $component) {
-			if ($component == $type) {
-				$this->controller->loadComponent($component);
-				break;
-			}
-		}
+		$this->controller->loadComponent($type);
 	}
 
 	public function implementedEvents() {
