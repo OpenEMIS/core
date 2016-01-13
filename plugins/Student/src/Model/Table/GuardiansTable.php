@@ -37,7 +37,7 @@ class GuardiansTable extends AppTable {
 	}
 
 	private function setupTabElements($entity=null) {
-		if ($this->action == 'index') {
+		if ($this->action != 'view') {
 			if ($this->controller->name == 'Directories') {
 				$options['type'] = 'student';
 				$tabElements = $this->controller->getStudentGuardianTabElements($options);
@@ -67,8 +67,10 @@ class GuardiansTable extends AppTable {
 		}
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		$this->setupTabElements();
+	public function afterAction(Event $event, $data) {
+		if ($this->action != 'view') {
+			$this->setupTabElements();
+		}
 	}
 
 	public function onGetGuardianId(Event $event, Entity $entity) {
@@ -78,7 +80,12 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $this->Session->read('Student.Students.id')]);
+		if ($this->controller->name == 'Directories') {
+			$studentId = $this->Session->read('Directory.Directories.id');
+		} else {
+			$studentId = $this->Session->read('Student.Students.id');
+		}
+		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
 		$this->ControllerAction->field('guardian_id');
 		$this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
 	}
@@ -155,6 +162,9 @@ class GuardiansTable extends AppTable {
 		$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
 		$event->stopPropagation();
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
+		if ($this->controller->name == 'Directories') {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+		}
 		return $this->controller->redirect($action);
 	}
 
@@ -179,7 +189,7 @@ class GuardiansTable extends AppTable {
 				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
 				$data[] = ['label' => $label, 'value' => $obj->id];
 			}
-
+			
 			echo json_encode($data);
 			die;
 		}

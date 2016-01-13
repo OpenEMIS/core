@@ -347,7 +347,10 @@ trait MessagesTrait {
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
 			'success' => 'Students have been promoted.',
-			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.'
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.',
+			'reconfirm' => 'Please review the information before proceeding with the operation.',
+			'noStudentSelected' => 'There are no students selected.',
+			'noAvailableGrades' => 'No Available Grades in this Institution',
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -355,6 +358,13 @@ trait MessagesTrait {
 			'noInstitutions' => 'No Available Institutions',
 			'noData' => 'There are no available Students for Transfer.',
 			'success' => 'Students have been transferred.'
+		],
+		'UndoStudentStatus' => [
+			'noGrades' => 'No Available Grades',
+			'noStudents' => 'No Available Students',
+			'noData' => 'There are no available Students for revert Student Status.',
+			'notUndo' => 'Not available to revert.',
+			'success' => 'Student records have been reverted successfully.'
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
@@ -380,6 +390,7 @@ trait MessagesTrait {
 			'rows_updated' => 'Rows Updated:',
 			'rows_failed' => 'Rows Failed:',
 			'download_failed_records' => 'Download Failed Records',
+			'download_passed_records' => 'Download Successful Records',
 			'row_number' => 'Row Number',
 			'error_message' => 'Error Message',
 			'invalid_code' => 'Invalid Code',
@@ -398,6 +409,7 @@ trait MessagesTrait {
 			'failed' => 'failed to import.',
 			'survey_not_found' => 'No identifiable survey found',
 			'no_answers' => 'No answers were found in the file imported.',
+			'institution_network_connectivity_id' => 'code'
 		],
 		'TrainingSessions' => [
 			'trainer_type' => 'Type',
@@ -494,6 +506,11 @@ trait MessagesTrait {
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
+			'InstitutionShifts' => [
+				'institution_name' => [
+					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				]
+			],
 			'StudentGuardians' => [
 				'guardianRelationId' => 'You need to configure Guardian Relations first.',
 				'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
@@ -512,7 +529,7 @@ trait MessagesTrait {
 			'Students' => [
 				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.',
-					'ruleCheckAdmissionAgeWithEducationCycle' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				]
 			],
@@ -927,7 +944,14 @@ trait MessagesTrait {
 					'ruleUnique' => 'This code already exists in the system'
 				]
 			]
-		]
+		],
+		'Health' => [
+			'Medications' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
+		],
 	];
 
 	public function getMessage($code) {

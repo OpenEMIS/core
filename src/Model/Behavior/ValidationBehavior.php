@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Network\Session;
 use App\Model\Traits\MessagesTrait;
 
 class ValidationBehavior extends Behavior {
@@ -65,15 +66,18 @@ class ValidationBehavior extends Behavior {
 
     public static function checkAuthorisedArea($check, array $globalData) {
         $isValid = false;
-        $AccessControl = $globalData['providers']['table']->AccessControl;
-        if ($AccessControl->isAdmin()) {
+        $session = new Session();
+        if ($session->read('Auth.User.super_admin') == 1) {
         	$isValid = true;
         } else {
         	$condition = [];
         	$areaCondition = [];
 
+			$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
         	$Areas = TableRegistry::get('Area.Areas');
-        	foreach($AccessControl->getAreasByUser() as $area) {
+        	// get areas from security group areas
+        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+        	foreach($areasByUser as $area) {
         		$areaCondition[] = [
 					$Areas->aliasField('lft').' >= ' => $area['lft'],
 					$Areas->aliasField('rght').' <= ' => $area['rght']
@@ -489,18 +493,31 @@ class ValidationBehavior extends Behavior {
 		return $existingRecords <= 0;
 	}
 
-	public static function checkAdmissionAgeWithEducationCycle($field, array $globalData) {
+	public static function checkInstitutionLocation($field, array $globalData) {
+		$data = $globalData['data'];
+		if (array_key_exists('location_institution_id', $data)) {
+			if (empty($data['location_institution_id'])) {
+				return false;
+			}
+		} else {
+			return false;
+		}
+		return true;
+	}
+
+	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
 		$data = $globalData['data'];
 		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
 			// getting admission  age
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
 			$educationGradeQuery = $EducationGrades->find()
-				->select(['EducationCycles.name', 'EducationCycles.admission_age'])
+				->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
 				->contain('EducationProgrammes.EducationCycles')
 				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $data['education_grade_id']])
 				->first()
 				;
 			$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
+			$cycleId = $educationGradeQuery->EducationCycles->id;
 
 			// getting age fo student
 			$Students = TableRegistry::get('Student.Students');
@@ -518,10 +535,25 @@ class ValidationBehavior extends Behavior {
 			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
 			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
+			// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
+			$EducationGrades = TableRegistry::get('Education.EducationGrades');
+			$gradeInCycleList = $EducationGrades->find('list')
+				->contain('EducationProgrammes.EducationCycles')
+				->where(['EducationCycles.id' => $cycleId])
+				->find('order');
+
+			$yearIncrement = 0;
+			foreach ($gradeInCycleList as $key => $value) {
+				if ($key == $data['education_grade_id']) break;
+				$yearIncrement++;
+			}
+
+			$enrolmentMinimumAge += $yearIncrement;
+			$enrolmentMaximumAge += $yearIncrement;
+
 			// pr('ageOfStudent: '.$ageOfStudent);
-			// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
-			// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
-			// die;
+			// pr('enrolmentMinimumAge: '.($enrolmentMinimumAge));
+			// pr('enrolmentMaximumAge: '.($enrolmentMaximumAge));
 
 			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
 		}
