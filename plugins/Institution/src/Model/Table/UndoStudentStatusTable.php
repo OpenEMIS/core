@@ -180,9 +180,10 @@ class UndoStudentStatusTable extends AppTable {
 			if (!is_null($selectedPeriod)) {
 				$gradeOptions = $this->Grades
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-					->contain(['EducationGrades'])
+					->contain(['EducationGrades.EducationProgrammes'])
 					->where([$this->Grades->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+					->order(['EducationProgrammes.order', 'EducationGrades.order'])
 					->toArray();
 				$selectedGrade = $request->query['grade'];
 				$gradeOptions = ['-1' => '-- Select Grade --'] + $gradeOptions;
