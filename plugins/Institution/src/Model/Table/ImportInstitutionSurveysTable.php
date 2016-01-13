@@ -10,6 +10,8 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\Collection\Collection;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportInstitutionSurveysTable extends AppTable {
@@ -43,7 +45,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 	public function beforeAction($event) {
 		if ($this->action != 'downloadFailed') {
-			$session = $this->request->session();
+			$session = $this->Session;
 			if (!empty($this->request->pass) && isset($this->request->pass[1])) {
 				$this->institutionSurveyId = $this->request->pass[1];
 			}
@@ -86,8 +88,16 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$events = parent::implementedEvents();
 		$newEvent = [];
 		$newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$newEvent['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$crumbTitle = $this->getHeader($this->alias());
+		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'];
+		$Navigation->substituteCrumb($crumbTitle, 'Surveys', $url);
+		$Navigation->addCrumb($crumbTitle);
 	}
 
 	public function template() {
@@ -221,6 +231,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$totalUpdated = 0;
 			$importedUniqueCodes = new ArrayObject;
 			$dataFailed = [];
+			$dataPassed = [];
 
 			$sheetName = $sheet->getTitle();
 			// get code from sheetname which is within a pair of brackets "()".
@@ -449,6 +460,12 @@ class ImportInstitutionSurveysTable extends AppTable {
 				}
 
 				if (!$rowFailed) {
+
+					$dataPassed[] = [
+						'row_number' => $row,
+						'data' => $originalRow
+					];
+
 					$this->InstitutionSurveyAnswers->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
 					foreach ($tempRow as $entity) {
 						$this->InstitutionSurveyAnswers->save($entity);
@@ -461,49 +478,18 @@ class ImportInstitutionSurveysTable extends AppTable {
 				} else {
 					$rowCodeError = $this->getExcelLabel('Import', 'invalid_code').': ';
 					$rowCodeError .= implode(', ', $rowInvalidCodeCols);
-					$dataFailed[] = array(
+					$dataFailed[] = [
 						'row_number' => $row,
 						'error' => $rowCodeError,
 						'data' => $originalRow
-					);
+					];
 					$model->log('ImportBehavior @ line '.__LINE__, 'debug');
 					$model->log($rowCodeError, 'debug');
 					continue;
 				}
 			} // for ($row = 1; $row <= $highestRow; ++$row)
 
-			if (!empty($dataFailed)) {
-				$downloadFolder = $this->prepareDownload();
-				$modelName = $this->alias();
-				$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 'Import', 'Institution', $modelName, 'Failed', time());
-				$excelPath = $downloadFolder . DS . $excelFile;
-				
-				$writer = new \XLSXWriter();
-				$newHeader = $header;
-				$newHeader[] = $this->getExcelLabel('general', 'errors');
-				$dataSheetName = $this->getExcelLabel('general', 'data');
-				$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-				foreach($dataFailed as $record) {
-					$record['data'][] = $record['error'];
-					$writer->writeSheetRow($dataSheetName, array_values($record['data']->getArrayCopy()));
-				}
-				
-				$codesData = $this->excelGetCodesData($this);
-				foreach($codesData as $modelName => $modelArr) {
-					foreach($modelArr as $row) {
-						$writer->writeSheetRow($modelName, array_values($row));
-					}
-				}
-				
-				$writer->writeToFile($excelPath);
-				$downloadUrl = $this->ControllerAction->url('downloadFailed');
-				$downloadUrl[1] = $excelFile;
-				$excelFile = $downloadUrl;
-			} else {
-				$excelFile = null;
-			}
-
-			$session = $model->controller->request->session();
+			$session = $this->Session;
 			$completedData = [
 				'uploadedName' => $uploadedName,
 				'dataFailed' => $dataFailed,
@@ -511,7 +497,8 @@ class ImportInstitutionSurveysTable extends AppTable {
 				'totalUpdated' => 0,
 				'totalRows' => count($dataFailed) + $totalImported,
 				'header' => $header,
-				'excelFile' => $excelFile,
+				'failedExcelFile' => $this->_generateDownloadableFile( $dataFailed, 'failed', $header, $systemDateFormat ),
+				'passedExcelFile' => $this->_generateDownloadableFile( $dataPassed, 'passed', $header, $systemDateFormat ),
 				'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
 			];
 			$session->write($this->sessionKey, $completedData);
@@ -519,8 +506,53 @@ class ImportInstitutionSurveysTable extends AppTable {
 		};
 	}
 
+	private function _generateDownloadableFile( $data, $type, $header, $systemDateFormat ) {
+		if (!empty($data)) {
+			$downloadFolder = $this->prepareDownload();
+			$modelName = $this->alias();
+			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 'Import', 'Institution', 'Surveys', ucwords($type), time());
+			$excelPath = $downloadFolder . DS . $excelFile;
+			
+			$writer = new \XLSXWriter();
+			$newHeader = $header;
+			if ($type == 'failed') {
+				$newHeader[] = $this->getExcelLabel('general', 'errors');
+			}
+			$surveyForm = $this->institutionSurvey->survey_form;
+			$dataSheetName = Text::truncate('(' . $surveyForm->code .') '.$surveyForm->name, 31, ['ellipsis' => '']);
+			$writer->writeSheetRow($dataSheetName, array_values($newHeader));
+			foreach($data as $record) {
+				if ($type == 'failed') {
+					$values = array_values($record['data']->getArrayCopy());
+					$values[] = $record['error'];
+				} else {
+					$values = $record['data'];
+				}
+				$writer->writeSheetRow($dataSheetName, $values);
+			}
+			
+			if ($type == 'failed') {
+				$codesData = $this->excelGetCodesData($this);
+				foreach($codesData as $modelName => $modelArr) {
+					foreach($modelArr as $row) {
+						$writer->writeSheetRow($modelName, array_values($row));
+					}
+				}
+			}
+			
+			$writer->writeToFile($excelPath);
+			$downloadUrl = $this->ControllerAction->url('downloadFailed');
+			$downloadUrl[1] = $excelFile;
+			$excelFile = $downloadUrl;
+		} else {
+			$excelFile = null;
+		}
+
+		return $excelFile;
+	}
+
 	public function results() {
-		$session = $this->controller->request->session();
+		$session = $this->Session;
 		if ($session->check($this->sessionKey)) {
 			$completedData = $session->read($this->sessionKey);
 			$this->ControllerAction->field('select_file', ['visible' => false]);
@@ -533,7 +565,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 				'results' => $completedData
 			]);
 			$session->delete($this->sessionKey);
-			if (!empty($completedData['excelFile'])) {
+			if (!empty($completedData['failedExcelFile'])) {
 				$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
 				$this->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			} else {

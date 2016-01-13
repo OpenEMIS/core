@@ -53,7 +53,7 @@ class AwardsTable extends AppTable {
 		}
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function afterAction(Event $event) {
 		$this->setupTabElements();
 	}
 

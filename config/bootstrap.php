@@ -172,6 +172,7 @@ Request::addDetector('tablet', function ($request) {
  * Inflector::rules('uninflected', ['dontinflectme']);
  * Inflector::rules('transliteration', ['/å/' => 'aa']);
  */
+ Inflector::rules('plural', ['/(S|s)taff$/i' => '\1taff']);
 
 /**
  * Plugins need to be loaded manually, you can either load them one by one or all of them in a single call
@@ -222,6 +223,8 @@ Plugin::load('Import', ['routes' => true, 'autoload' => true]);
 Plugin::load('API', ['routes' => true, 'autoload' => true]);
 Plugin::load('Log', ['routes' => true, 'autoload' => true]);
 Plugin::load('Training', ['routes' => true, 'autoload' => true]);
+Plugin::load('Map', ['routes' => true, 'autoload' => true]);
+Plugin::load('Health', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system

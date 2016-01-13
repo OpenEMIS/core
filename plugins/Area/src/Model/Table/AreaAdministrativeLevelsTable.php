@@ -11,7 +11,7 @@ class AreaAdministrativeLevelsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Countries', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_id']);
-		$this->hasMany('Areas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Areas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_level_id']);
 	}
 
 	public function beforeAction(Event $event) {

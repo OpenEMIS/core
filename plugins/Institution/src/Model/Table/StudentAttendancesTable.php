@@ -70,6 +70,7 @@ class StudentAttendancesTable extends AppTable {
 				'endDate' => $endDate,
 				'institutionId' => $institutionId,
 				'sectionId' => $sectionId,
+				'orientation' => 'landscape'
  			];
 		}
 	}
