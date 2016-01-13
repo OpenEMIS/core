@@ -92,16 +92,32 @@ class InstitutionsTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$feature = $requestData->feature;
 		$filter = $requestData->institution_filter;
+
+		$cloneFields = $fields->getArrayCopy();
+		$newFields = [];
+		foreach ($cloneFields as $key => $value) {
+			$newFields[] = $value;
+			if ($value['field'] == 'area_id') {
+				$newFields[] = [
+					'key' => 'Areas.code',
+					'field' => 'area_code',
+					'type' => 'string',
+					'label' => ''
+				];
+			}
+		}
+
+		$fields->exchangeArray($newFields);
+
 		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
 			// Stop the customfieldlist behavior onExcelUpdateFields function
-			$copyField = $fields->getArrayCopy();
-			$includedFields = ['name', 'alternative_name', 'code', 'area_id'];
-			foreach ($copyField as $key => $value) {
+			$includedFields = ['name', 'alternative_name', 'code', 'area_code', 'area_id'];
+			foreach ($newFields as $key => $value) {
 				if (!in_array($value['field'], $includedFields)) {
-					unset($copyField[$key]);
+					unset($newFields[$key]);
 				}
 			}
-			$fields->exchangeArray($copyField);
+			$fields->exchangeArray($newFields);
 			$event->stopPropagation();
 		}
 	}
@@ -254,6 +270,9 @@ class InstitutionsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$requestData = json_decode($settings['process']['params']);
 		$filter = $requestData->institution_filter;
+		$query
+			->contain(['Areas'])
+			->select(['area_code' => 'Areas.code']);
 		switch ($filter) {
 			case self::NO_STUDENT:
 				$query
