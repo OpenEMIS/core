@@ -136,10 +136,9 @@ class AccessControlComponent extends Component {
 		if ($superAdmin) {
 			return true;
 		}
-
 		// we only need controller and action
 		foreach ($url as $i => $val) {
-			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val)) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
 				unset($url[$i]);
 			}
 		}
@@ -170,6 +169,14 @@ class AccessControlComponent extends Component {
 			}
 		}
 		return false;
+	}
+
+	private function isUuid($input) {
+		if (preg_match('/^\{?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}?$/', strtolower($input))) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public function isAdmin() {

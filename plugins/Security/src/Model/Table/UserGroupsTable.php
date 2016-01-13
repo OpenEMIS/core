@@ -353,7 +353,7 @@ class UserGroupsTable extends AppTable {
 	}
 
 	public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options=[]) {
-		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Role')];
+		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Role')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'users';
@@ -409,20 +409,22 @@ class UserGroupsTable extends AppTable {
 						];
 					}
 				} else {
-					$groupAdmin = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first();
-					$groupAdminId = $groupAdmin->id;
-					$UserTable = TableRegistry::get('Users');
-					$user = $UserTable->get($userId);
-					if (empty($this->request->data[$alias][$key])) {
-						$this->request->data[$alias][$key][] = [
-							'id' => $userId,
-							'_joinData' => [
-								'openemis_no' => $user->openemis_no, 
-								'security_user_id' => $userId, 
-								'name' => $user->name,
-								'security_role_id' => $groupAdminId
-							]
-						];
+					if (!$this->AccessControl->isAdmin()) {
+						$groupAdmin = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first();
+						$groupAdminId = $groupAdmin->id;
+						$UserTable = TableRegistry::get('Users');
+						$user = $UserTable->get($userId);
+						if (empty($this->request->data[$alias][$key])) {
+							$this->request->data[$alias][$key][] = [
+								'id' => $userId,
+								'_joinData' => [
+									'openemis_no' => $user->openemis_no, 
+									'security_user_id' => $userId, 
+									'name' => $user->name,
+									'security_role_id' => $groupAdminId
+								]
+							];
+						}	
 					}
 				}
 			}
