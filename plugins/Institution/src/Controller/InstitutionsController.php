@@ -53,6 +53,7 @@ class InstitutionsController extends AppController  {
 			'DropoutRequests' 	=> ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
 			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
+			'Undo' 				=> ['className' => 'Institution.UndoStudentStatus', 'actions' => ['add']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
@@ -66,10 +67,11 @@ class InstitutionsController extends AppController  {
 			'RubricAnswers' 	=> ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits'],
 
-			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['index', 'add']],
-			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['index', 'add']],
-			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['index', 'add']],
-			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['index', 'add']],
+			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
+			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
+			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
 	}
 
@@ -112,7 +114,7 @@ class InstitutionsController extends AppController  {
 			if (!empty($id)) {
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
-				if ($action == 'dashboard') {
+				if ($action == 'dashboard' || $action == 'edit') {
 					$session->write('Institution.Institutions.id', $id);
 					$session->write('Institution.Institutions.name', $name);
 				}
@@ -140,41 +142,39 @@ class InstitutionsController extends AppController  {
 				$action = $params['pass'][0];
 			}
 
-			$persona = false;
 			$alias = $model->alias;
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
 
+			$crumbTitle = $model->getHeader($alias);
+			$crumbOptions = [];
 			if ($action) {
-				/**
-				 * replaced 'action' => $alias to 'action' => $model->alias,
-				 * since only the name changes but not url
-				 */
-				$this->Navigation->addCrumb($model->getHeader($alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-				if (strtolower($action) != 'index')	{
-					if (in_array('Staff', $model->behaviors()->loaded()) || in_array('Student', $model->behaviors()->loaded())) {
-						if (isset($params['pass'][1])) {
-							$persona = $model->get($params['pass'][1]);
-							if (is_object($persona)) {
-								$this->Navigation->addCrumb($persona->name);
-							}
-						}
-					} else {
-						$this->Navigation->addCrumb(ucwords($action));
-					}
+				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
+			}
+			$this->Navigation->addCrumb($crumbTitle, $crumbOptions);
+
+			$persona = false;
+			$requestQuery = $this->request->query;
+			if (isset($params['pass'][1])) {
+				if ($model->table() == 'security_users') {
+					$persona = $model->get($params['pass'][1]);
 				}
-			} else {
-				$this->Navigation->addCrumb($model->getHeader($alias));
+			} else if (isset($requestQuery['user_id'][1])) {
+				$persona = $model->Users->get($requestQuery['user_id']);
 			}
 
 			$header = $this->activeObj->name;
-			if ($persona) {
-				$header .= ' - ' . $persona->name;
+			if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
+				$header = $persona->name . ' - ' . $model->getHeader($alias);
+				$model->addBehavior('Institution.InstitutionUserBreadcrumbs');
 			} else {
 				$header .= ' - ' . $model->getHeader($alias);
 			}
 
+			$event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+			$event = $model->eventManager()->dispatch($event);
+			
 			if ($model->hasField('institution_id')) {
 				if (!in_array($model->alias(), ['TransferRequests'])) {
 					$model->fields['institution_id']['type'] = 'hidden';
@@ -184,10 +184,17 @@ class InstitutionsController extends AppController  {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
-						$model->aliasField('institution_id') => $institutionId
-					]);
+					if (in_array($model->alias(), ['TransferRequests'])) {
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField('previous_institution_id') => $institutionId
+						]);
+					} else {
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField('institution_id') => $institutionId
+						]);
+					}
 				
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -203,7 +210,6 @@ class InstitutionsController extends AppController  {
 
 			$this->set('contentHeader', $header);
 		} else {
-			// pr($model->alias());die;
 			if ($model->alias() == 'ImportInstitutions') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
@@ -269,6 +275,24 @@ class InstitutionsController extends AppController  {
 
 		} else {
 			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+		}
+	}
+
+	//autocomplete used for InstitutionSiteShift
+	public function ajaxInstitutionAutocomplete() {
+		$this->ControllerAction->autoRender = false;
+		$data = [];
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		if ($this->request->is(['ajax'])) {
+			$term = trim($this->request->query['term']);
+			$session = $this->request->session();
+			$institutionId = $session->read('Institution.Institutions.id');
+			$params['conditions'] = [$Institutions->aliasField('id').' IS NOT ' => $institutionId];
+			if (!empty($term)) 
+				$data = $Institutions->autocomplete($term, $params);
+				
+			echo json_encode($data);
+			die;
 		}
 	}
 

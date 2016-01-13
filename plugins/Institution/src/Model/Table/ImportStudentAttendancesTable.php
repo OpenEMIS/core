@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportStudentAttendancesTable extends AppTable {
@@ -41,9 +43,15 @@ class ImportStudentAttendancesTable extends AppTable {
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
 			'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+	    	'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+		$crumbTitle = $this->getHeader($this->alias());
+		$Navigation->substituteCrumb($crumbTitle, $crumbTitle);
 	}
 
 	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
@@ -166,7 +174,8 @@ class ImportStudentAttendancesTable extends AppTable {
 	// }
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-		if (empty($tempRow['security_user_id'])) {
+		if (empty($tempRow['student_id'])) {
+			$tempRow['duplicates'] = __('OpenEMIS ID was not defined.');
 			return false;
 		}
 
@@ -189,30 +198,41 @@ class ImportStudentAttendancesTable extends AppTable {
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
-		$period = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
-		if (!$period) {
-			$tempRow['duplicates'] = __('No matching academic period');
+		$periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
+		if (!$periods) {
+			$tempRow['duplicates'] = __('No matching academic period based on the start date');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
-		if ($period->id != $currentPeriodId) {
+		$periods = new Collection($periods);
+		$periodIds = $periods->extract('id');
+		$periodIds = $periodIds->toArray();
+		if (!in_array($currentPeriodId, $periodIds)) {
 			$tempRow['duplicates'] = __('Date is not within current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
-		$tempRow['academic_period_id'] = $period->id;
+		$tempRow['academic_period_id'] = $currentPeriodId;
 
 		$student = $this->Students->find()->where([
 			'academic_period_id' => $tempRow['academic_period_id'],
 			'institution_id' => $tempRow['institution_id'],
-			'student_id' => $tempRow['security_user_id'],
+			'student_id' => $tempRow['student_id'],
 		])->first();
 		if (!$student) {
 			$tempRow['duplicates'] = __('No such student in the institution');
-			$tempRow['security_user_id'] = false;
+			$tempRow['student_id'] = false;
 			return false;
 		}
 		
 		return true;
 	}
+
+	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+		$flipped = array_flip($columns);
+		$original = $originalRow->getArrayCopy();
+		$key = $flipped['student_id'];
+		$tempPassedRecord['data'][$key] = $originalRow[$key];
+	}
+
 }

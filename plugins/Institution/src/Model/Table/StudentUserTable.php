@@ -129,9 +129,6 @@ class StudentUserTable extends UserTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 			unset($toolbarButtons['back']);
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $this->request->query('id');
 			if (!empty($id)) {

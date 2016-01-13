@@ -35,9 +35,19 @@ class StudentsController extends AppController {
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'StudentFees' 		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
+			'Fees' 				=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
+
+			// Healths
+			'Healths' 				=> ['className' => 'Health.Healths'],
+			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
+			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
+			'HealthFamilies' 		=> ['className' => 'Health.Families'],
+			'HealthHistories' 		=> ['className' => 'Health.Histories'],
+			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
+			'HealthMedications' 	=> ['className' => 'Health.Medications'],
+			'HealthTests' 			=> ['className' => 'Health.Tests']
 		];
 
 		$this->loadComponent('User.Image');
@@ -57,8 +67,7 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			$session->delete('Student.Students.id');
-			$session->delete('Student.Students.name');
+			
 		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
@@ -66,14 +75,15 @@ class StudentsController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Student.Students.id')) {
 				$id = $session->read('Student.Students.id');
+			} else if ($session->check('Institution.Students.id')) {
+				$id = $session->read('Institution.Students.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$studentId = $session->read('Institution.Students.id');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students', 'view', $studentId]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}
 		$this->set('contentHeader', $header);
@@ -248,8 +258,6 @@ class StudentsController extends AppController {
 
 		foreach ($studentTabElements as $key => $tab) {
 			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
 		return $tabElements;
 	}
@@ -262,7 +270,7 @@ class StudentsController extends AppController {
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
 			'BankAccounts' => ['text' => __('Bank Accounts')],
-			'StudentFees' => ['text' => __('Fees')],
+			'Fees' => ['text' => __('Fees')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

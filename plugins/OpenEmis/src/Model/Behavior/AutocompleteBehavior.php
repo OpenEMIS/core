@@ -30,7 +30,7 @@ class AutocompleteBehavior extends Behavior {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-
+			
 			$options['type'] = 'text';
 			$options['class'] = 'autocomplete';
 			$options['autocomplete-url'] = $url;

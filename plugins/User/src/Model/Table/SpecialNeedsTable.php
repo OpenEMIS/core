@@ -63,7 +63,7 @@ class SpecialNeedsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function afterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
 }
