@@ -159,10 +159,12 @@ class StudentPromotionTable extends AppTable {
 				$statuses = $this->statuses;
 				$gradeOptions = $InstitutionGradesTable
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-					->contain(['EducationGrades'])
+					->contain(['EducationGrades.EducationProgrammes'])
 					->where([$InstitutionGradesTable->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+					->order(['EducationProgrammes.order', 'EducationGrades.order'])
 					->toArray();
+
 				$attr['type'] = 'select';
 				$selectedGrade = $request->query('grade_to_promote');
 				$GradeStudents = $this;
@@ -254,8 +256,9 @@ class StudentPromotionTable extends AppTable {
 				->find('list', [
 					'keyField' => 'education_grade_id', 
 					'valueField' => 'education_grade.programme_grade_name'])
-				->contain(['EducationGrades'])
+				->contain(['EducationGrades.EducationProgrammes'])
 				->where([$this->InstitutionGrades->aliasField('institution_id') => $institutionId])
+				->order(['EducationProgrammes.order', 'EducationGrades.order'])
 				->toArray();
 
 			// Only display the options that are available in the institution and also linked to the current programme
@@ -514,8 +517,7 @@ class StudentPromotionTable extends AppTable {
 
 			case 'reconfirm':
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-				$buttons[1]['url'] = $this->ControllerAction->url('index');
-				$buttons[1]['url']['action'] = 'Students';
+				$buttons[1]['url'] = $this->ControllerAction->url('add');
 				break;
 			
 			default:
