@@ -1,3 +1,7 @@
+v3.4.8
+- Added new feature to Undo a student status. This feature can be accessible in Institutions -> Students -> Undo
+- Fixed a bug that caused classes and subjects information not removed when the student is removed from the grade in a school
+
 v3.4.7
 - Enabled the Health module for Users
 - Administrative Boundaries can now be deleted and reassociate with another record
