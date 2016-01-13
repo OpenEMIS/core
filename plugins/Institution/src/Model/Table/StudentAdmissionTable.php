@@ -28,9 +28,13 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+
+		$this->addBehavior('User.AdvancedNameSearch');
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
+
 		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
 		$typeToShow = [];
 
@@ -43,6 +47,14 @@ class StudentAdmissionTable extends AppTable {
 		}
 
 		$query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
+
+
+
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+		}
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -59,6 +71,7 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('previous_institution_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
     	$this->ControllerAction->field('type');
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+    	$this->ControllerAction->field('openemis_no');
     	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
     	$this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
@@ -137,6 +150,9 @@ class StudentAdmissionTable extends AppTable {
 				break;
 		}
 		return __($typeName);
+	}
+	public function onGetOpenemisNo(Event $event, Entity $entity){
+		return $entity->user->openemis_no;
 	}
 
 	public function onGetStudentId(Event $event, Entity $entity){
