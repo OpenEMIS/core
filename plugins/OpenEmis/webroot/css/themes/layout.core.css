@@ -254,7 +254,7 @@ textarea[disabled="disabled"] {
     color: #5C82CC;
 }
 
-.tooltip-blue .fa-exclamation-circle[data-toggle="tooltip"] {
+.tooltip-blue .fa-info-circle[data-toggle="tooltip"] {
     cursor: pointer;
 }
 
@@ -264,8 +264,8 @@ textarea[disabled="disabled"] {
 }
 
 tbody tr:first-child .tooltip-blue .tooltip {
-    margin-top: 45px !important;
-    margin-left: 120px !important;
+    margin-top: 20px !important;
+    margin-left: 80px !important;
 }
 
 tbody tr:first-child .tooltip-blue .tooltip-arrow {
@@ -328,7 +328,7 @@ tbody tr:first-child .tooltip-blue .tooltip-arrow {
 }
 
 .rtl tbody tr:first-child .tooltip-blue .tooltip {
-    margin-left: -120px !important;
+    margin-left: -80px !important;
 }
 
 .rtl tbody tr:first-child .tooltip-blue .tooltip-arrow {
