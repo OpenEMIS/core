@@ -654,7 +654,7 @@ class InstitutionClassesTable extends AppTable {
 ** essential functions
 **
 ******************************************************************************************************************/
-	public function createVirtualEntity($id, $entity, $persona) {
+	public function createVirtualEntity($id, $entity, $persona, $requestData = false) {
 		if (isset($entity->toArray()['institution_section_classes'])) {
 			$sectionId = $entity->toArray()['institution_section_classes'][0]['institution_section_id'];
 		} else {
@@ -670,6 +670,14 @@ class InstitutionClassesTable extends AppTable {
 				'status'=>1,
 				'user'=>[]
 			];
+			if (!empty($requestData)) {
+				if (array_key_exists('education_grade_id', $requestData)) {
+					$data['education_grade_id'] = $requestData['education_grade_id'];
+				}
+				if (array_key_exists('status', $requestData)) {
+					$data['status'] = $requestData['status'];
+				}
+			}
 		} else {
 			$userData = $this->Institutions->Staff->find()->contain(['Users'=>['Genders']])->where(['staff_id'=>$id])->first();
 			$data = [

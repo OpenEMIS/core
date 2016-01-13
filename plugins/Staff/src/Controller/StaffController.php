@@ -42,7 +42,17 @@ class StaffController extends AppController {
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
 			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
-			'Achievements'		=> ['className' => 'Staff.Achievements']
+			'Achievements'		=> ['className' => 'Staff.Achievements'],
+
+			// Healths
+			'Healths' 				=> ['className' => 'Health.Healths'],
+			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
+			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
+			'HealthFamilies' 		=> ['className' => 'Health.Families'],
+			'HealthHistories' 		=> ['className' => 'Health.Histories'],
+			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
+			'HealthMedications' 	=> ['className' => 'Health.Medications'],
+			'HealthTests' 			=> ['className' => 'Health.Tests']
 		];
 
 		$this->loadComponent('Training.Training');

@@ -12,8 +12,12 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
+use Cake\ORM\ResultSet;
 
 class StudentsTable extends AppTable {
+
+	private $dashboardQuery = null;
+	
 	public function initialize(array $config) {
 		$this->table('institution_students');
 		parent::initialize($config);
@@ -353,6 +357,8 @@ class StudentsTable extends AppTable {
 			}
 		]);
 
+		$request->query['academic_period_id'] = $selectedAcademicPeriod;
+
 		$this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
 
@@ -373,6 +379,11 @@ class StudentsTable extends AppTable {
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+	}
+
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
+		$query = $resultSet->__debugInfo()['query'];
+		$this->dashboardQuery = clone $query;
 	}
 
 	public function onGetStudentId(Event $event, Entity $entity) {
@@ -413,8 +424,7 @@ class StudentsTable extends AppTable {
 		)
 		->where([
 			$ClassStudents->aliasField('student_id') => $studentId,
-			$ClassStudents->aliasField('education_grade_id') => $educationGradeId,
-			$ClassStudents->aliasField('status') => 1
+			$ClassStudents->aliasField('education_grade_id') => $educationGradeId
 		])
 		->first();
 
@@ -429,51 +439,21 @@ class StudentsTable extends AppTable {
 
 		if ($this->action == 'index') {
 			$InstitutionArray = [];
-			$session = $this->Session;
-
-			$institutionId = $session->read('Institution.Institutions.id');
-			// Get number of student in institution
-			$periodId = $this->request->query['academic_period_id'];
-			$statusId = $this->request->query['status_id'];
-			$educationGradeId = $this->request->query['education_grade_id'];
-			$conditions['institution_id'] = $institutionId;
-			$conditions['academic_period_id'] = $periodId;
-
-			$studentCount = $this->find()
-				->where([
-					$this->aliasField('institution_id') => $institutionId,
-					$this->aliasField('academic_period_id') => $periodId
-				])
-				->group(['student_id']);
-			
-			if ($statusId != -1) {
-				$studentCount->where([
-					$this->aliasField('student_status_id') => $statusId
-				]);
-				$conditions['student_status_id'] = $statusId;
-			}
-			
-			if ($educationGradeId != -1) {
-				$studentCount->where([
-					$this->aliasField('education_grade_id') => $educationGradeId
-				]);
-				$conditions['education_grade_id'] = $educationGradeId;
-			}
-
-
+			$institutionStudentQuery = clone $this->dashboardQuery;
+			$studentCount = $institutionStudentQuery->group([$this->aliasField('student_id')])->count();
+			unset($institutionStudentQuery);
 
 			//Get Gender
 			$InstitutionArray[__('Gender')] = $this->getDonutChart('institution_student_gender', 
-				['conditions' => $conditions, 'key' => __('Gender')]);
+				['query' => $this->dashboardQuery, 'key' => __('Gender')]);
 			
 			// Get Age
 			$InstitutionArray[__('Age')] = $this->getDonutChart('institution_student_age', 
-				['conditions' => $conditions, 'key' => __('Age')]);
+				['query' => $this->dashboardQuery, 'key' => __('Age')]);
 
 			// Get Grades
 			$InstitutionArray[__('Grade')] = $this->getDonutChart('institution_section_student_grade', 
-				['conditions' => $conditions, 'key' => __('Grade')]);
-
+				['query' => $this->dashboardQuery, 'key' => __('Grade')]);
 
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
@@ -484,7 +464,7 @@ class StudentsTable extends AppTable {
 				'name' => $indexDashboard,
 				'data' => [
 					'model' => 'students',
-					'modelCount' => $studentCount->count(),
+					'modelCount' => $studentCount,
 					'modelArray' => $InstitutionArray,
 				],
 				'options' => [],
@@ -969,6 +949,21 @@ class StudentsTable extends AppTable {
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}
+
+			if ($this->AccessControl->check(['Institutions', 'Undo', 'add'])) {
+				$undoButton = $buttons['index'];
+				$undoButton['url']['action'] = 'Undo';
+				$undoButton['url'][0] = 'add';
+				$undoButton['type'] = 'button';
+				$undoButton['label'] = '<i class="fa fa-undo"></i>';
+				$undoButton['attr'] = $attr;
+				$undoButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$undoButton['attr']['title'] = __('Undo');
+
+				$toolbarButtons['undo'] = $undoButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
 		} else if ($action == 'view') { // for transfer button in view page
 			$statuses = $this->StudentStatuses->findCodeList();
 			$id = $this->request->params['pass'][1];
@@ -1179,27 +1174,15 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGender($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions[$this->alias().'.'.$key] = $value;
-		}
-		$studentsConditions = [
-			'Users.date_of_death IS NULL',
-		];
-		$studentsConditions = array_merge($studentsConditions, $_conditions);
-
-		$InstitutionRecords = $this->find();
+		$query = $params['query'];
+		$InstitutionRecords = clone $query;
 		$InstitutionStudentCount = $InstitutionRecords
-			->contain(['Users', 'Users.Genders'])
+			->matching('Users.Genders')
 			->select([
 				'count' => $InstitutionRecords->func()->count('DISTINCT student_id'),	
 				'gender' => 'Genders.name'
 			])
-			->where($studentsConditions)
-			->group('gender');
-
-
+			->group(['gender']);
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -1208,27 +1191,15 @@ class StudentsTable extends AppTable {
 			$dataSet[] = [__($value['gender']), $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
+		unset($InstitutionRecords);
 		return $params;
 	}
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByAge($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions[$this->alias().'.'.$key] = $value;
-		}
-
-		$studentsConditions = [
-			'Users.date_of_death IS NULL',
-		];
-
-		$studentsConditions = array_merge($studentsConditions, $_conditions);
-		$today = Time::today();
-
-		$InstitutionRecords = $this->find();
-		$query = $InstitutionRecords
-			->contain(['Users'])
+		$query = $params['query'];
+		$InstitutionRecords = clone $query;
+		$ageQuery = $InstitutionRecords
 			->select([
 				'age' => $InstitutionRecords->func()->dateDiff([
 					$InstitutionRecords->func()->now(),
@@ -1237,10 +1208,9 @@ class StudentsTable extends AppTable {
 				'student' => $this->aliasField('student_id')
 			])
 			->distinct(['student'])
-			->where($studentsConditions)
 			->order('age');
 
-		$InstitutionStudentCount = $query->toArray();
+		$InstitutionStudentCount = $ageQuery->toArray();
 
 		$convertAge = [];
 		
@@ -1268,24 +1238,15 @@ class StudentsTable extends AppTable {
 			$dataSet[] = [__('Age').' '.$value['age'], $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
+		unset($InstitutionRecords);
 		return $params;
 	}
 
 	// Function use by the mini dashboard (For Institution Students)
 	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
-		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$_conditions = [];
-		foreach ($conditions as $key => $value) {
-			$_conditions[$this->alias().'.'.$key] = $value;
-		}
-		$studentsByGradeConditions = [
-			$this->aliasField('education_grade_id').' IS NOT NULL',
-		];
-
-		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
-
-		$query = $this->find();
-		$studentByGrades = $query
+		$query = $params['query'];
+		$InstitutionRecords = clone $query;
+		$studentByGrades = $InstitutionRecords
 			->select([
 				'grade' => 'EducationGrades.name',
 				'count' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
@@ -1293,7 +1254,6 @@ class StudentsTable extends AppTable {
 			->contain([
 				'EducationGrades'
 			])
-			->where($studentsByGradeConditions)
 			->group([
 				$this->aliasField('education_grade_id'),
 			])
@@ -1304,7 +1264,7 @@ class StudentsTable extends AppTable {
 			$dataSet[] = [__($value['grade']), $value['count']];
 		}
 		$params['dataSet'] = $dataSet;
-
+		unset($InstitutionRecords);
 		return $params;
 	}
 

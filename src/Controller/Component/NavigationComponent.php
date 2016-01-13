@@ -236,7 +236,7 @@ class NavigationComponent extends Component {
 			'Reports' => [
 				'title' => 'Reports', 
 				'icon' => '<span><i class="fa kd-reports"></i></span>',
-				'link' => false
+				'link' => false,
 			],
 			
 			'Administration' => [
@@ -324,7 +324,7 @@ class NavigationComponent extends Component {
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 
+				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
 					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add', 
 					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']
@@ -478,6 +478,11 @@ class NavigationComponent extends Component {
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
 				'selected' => ['Students.Fees']],
+			'Students.Healths' => [
+				'title' => 'Health', 
+				'parent' => 'Institutions.Students.index',
+				'params' => ['plugin' => 'Student'],
+				'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
 		];
 		return $navigation;
 	}
@@ -518,6 +523,12 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Staff'], 
 				'selected' => ['Staff.TrainingResults', 'Staff.TrainingNeeds'],
 			],
+			'Staff.Healths' => [
+				'title' => 'Health', 
+				'parent' => 'Institutions.Staff.index',
+				'params' => ['plugin' => 'Staff'],
+				'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']
+			],
 		];
 		return $navigation;
 	}
@@ -530,6 +541,12 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Directory'], 
 				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments', 
 					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
+			],
+			'Directories.Healths' => [
+				'title' => 'Health',
+				'parent' => 'Directories.index',
+				'params' => ['plugin' => 'Directory'],
+				'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests']
 			]
 		];
 		return $navigation;
@@ -643,6 +660,11 @@ class NavigationComponent extends Component {
 				'title' => 'Audit',
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
+			],
+			'Map.index' => [
+				'title' => 'Map',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Map'],
 			],
 		];
 		return $navigation;
@@ -843,7 +865,7 @@ class NavigationComponent extends Component {
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
-				'selected' => ['Workflow.Workflows', 'Workflow.Steps']
+				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
 			],
 		];
 		return $navigation;
