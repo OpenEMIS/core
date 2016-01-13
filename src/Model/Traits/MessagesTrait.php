@@ -363,8 +363,10 @@ trait MessagesTrait {
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
 			'noData' => 'There are no available Students for revert Student Status.',
+			'reconfirm' => 'Please review the information before proceeding with the operation.',
 			'notUndo' => 'Not available to revert.',
-			'success' => 'Student records have been reverted successfully.'
+			'success' => 'Student records have been reverted successfully.',
+			'failed' => 'Failed to revert student records.'
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
