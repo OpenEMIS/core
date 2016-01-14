@@ -15,8 +15,8 @@ use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportInstitutionSurveysTable extends AppTable {
-	const RECORD_QUESTION = 1;
-	const FIRST_RECORD = 2;
+	const RECORD_QUESTION = 2;
+	const FIRST_RECORD = 3;
 
 	private $institutionSurveyId = false;
 	private $institutionSurvey = false;
@@ -44,7 +44,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-		if ($this->action != 'downloadFailed') {
+		if ($this->action != 'downloadFailed' && $this->action != 'downloadPassed') {
 			$session = $this->Session;
 			if (!empty($this->request->pass) && isset($this->request->pass[1])) {
 				$this->institutionSurveyId = $this->request->pass[1];
@@ -106,14 +106,14 @@ class ImportInstitutionSurveysTable extends AppTable {
 		$surveyForm = $this->institutionSurvey->survey_form;
 		$header = $this->_generateHeader($surveyForm->custom_fields);
 		// $surveySheetName = Text::truncate( '('. $surveyForm->code .') '. $surveyForm->name, 31, ['ellipsis' => ''] );
-		$surveySheetName = __('Data');
+		$dataSheetName = __('Data');
 
 		$excelFile = sprintf('OpenEMIS_Core_Import_Institution_Survey_%s_Template.xlsx', $surveyForm->code);
 		$excelPath = $folder . DS . $excelFile;
 
 		$objPHPExcel = new \PHPExcel();
 
-		$this->setImportDataTemplate( $objPHPExcel, $surveySheetName, $header );
+		$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header );
 		
 		$this->setCodesDataTemplate( $objPHPExcel );
 		
@@ -223,7 +223,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$sheet = $objPHPExcel->getSheet(0);
 			$maxRows = 2002;
 			$highestRow = $sheet->getHighestRow();
-			if ($highestRow > $maxRows) {
+			if ($highestRow > ($maxRows + 2)) {
 				$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
 				return false;
 			}
@@ -234,17 +234,15 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$dataFailed = [];
 			$dataPassed = [];
 
-			$sheetName = $sheet->getTitle();
-			// get code from sheetname which is within a pair of brackets "()".
-			// sheet name should have only one pair of brackets "()".
-			// preg_match("/(\([0-9a-zA-Z]{0,50}\))/", $sheetName, $output);
-			preg_match("/^\((\w{0,50})\)/", $sheetName, $output);
-			if (count($output)!=2) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_not_found')], true);
+			// $sheetName = $sheet->getTitle();
+			// get code from $uploadedName which is after "Survey_".
+			preg_match("/Survey_(\w{0,50})(_|)/", $uploadedName, $output);
+			if (count($output)<2) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_file_name_error')], true);
 				return false;
 			}
 
-			$surveyCode = (isset($output[1])) ? $output[1] : str_replace(')', '', str_replace('(', '', $output[0]));
+			$surveyCode = $output[1];
 			$survey = $this->SurveyForms
 				->find()
 				->contain([
@@ -280,7 +278,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$header = $this->_generateHeader($questions);
 			$totalColumns = count($header);
 
-			for ($row = 1; $row <= $highestRow; ++$row) {
+			for ($row = 2; $row <= $highestRow; ++$row) {
 				if ($row == self::RECORD_QUESTION) { // skip header but check if the uploaded template is correct
 					if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
 						$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')]);
@@ -536,7 +534,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 				foreach ($values as $key => $value) {
 					$alpha = $this->getExcelColumnAlpha($key);
 					$objPHPExcel->getActiveSheet()->SetCellValue( $alpha . ($index + 3), $value);
-					$objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
+					// $objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
 				}				
 			}
 
@@ -548,7 +546,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
 			$objWriter->save($excelPath);
 
-			$downloadUrl = $this->_table->ControllerAction->url( 'download' . ucwords($type) );
+			$downloadUrl = $this->ControllerAction->url( 'download' . ucwords($type) );
 			$downloadUrl[1] = $excelFile;
 			$excelFile = $downloadUrl;
 		} else {
