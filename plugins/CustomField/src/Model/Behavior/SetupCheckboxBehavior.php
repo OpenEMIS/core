@@ -14,10 +14,8 @@ class SetupCheckboxBehavior extends SetupBehavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
 		$events['ControllerAction.Model.addEdit.onChangeType'] = 'addEditOnChangeType';
 		$events['ControllerAction.Model.addEdit.onAddOption'] = 'addEditOnAddOption';
-		$events['Setup.'.'set'.$this->fieldType.'Elements'] = 'onSet'.$this->fieldType.'Elements';
 		return $events;
 	}
 
