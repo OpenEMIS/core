@@ -731,7 +731,6 @@ class ImportBehavior extends Behavior {
 			$excelFile = sprintf( 'OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->config('model'), ucwords($type), time() );
 			$excelPath = $downloadFolder . DS . $excelFile;
 
-			$writer = new \XLSXWriter();
 			$newHeader = $header;
 			if ($type == 'failed') {
 				$newHeader[] = $this->getExcelLabel('general', 'errors');
