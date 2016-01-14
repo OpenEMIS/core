@@ -352,16 +352,32 @@ class StudentPromotionTable extends AppTable {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		if (array_key_exists($this->alias(), $data)) {
-			// redirects to confirmation page
-			$url = $this->ControllerAction->url('view');
-			$url[0] = 'reconfirm';
-			$this->currentEntity = $entity;
-			$session = $this->Session;
-			$session->write($this->registryAlias().'.confirm', $entity);
-			$session->write($this->registryAlias().'.confirmData', $data);
-			$this->currentEvent = $event;
-			$event->stopPropagation();
-			return $this->controller->redirect($url);
+			$selectedStudent = false;
+			if (array_key_exists('students', $data[$this->alias()])) {
+				foreach ($data[$this->alias()]['students'] as $key => $value) {
+					if ($value['selected'] != 0) {
+						$selectedStudent = true;
+					}
+				}
+			}
+			
+			if ($selectedStudent) {
+				// redirects to confirmation page
+				$url = $this->ControllerAction->url('view');
+				$url[0] = 'reconfirm';
+				$this->currentEntity = $entity;
+				$session = $this->Session;
+				$session->write($this->registryAlias().'.confirm', $entity);
+				$session->write($this->registryAlias().'.confirmData', $data);
+				$this->currentEvent = $event;
+				$event->stopPropagation();
+				return $this->controller->redirect($url);
+			} else {
+				$this->Alert->warning($this->alias().'.noStudentSelected');
+				$url = $this->ControllerAction->url('add');
+				$event->stopPropagation();
+				return $this->controller->redirect($url);
+			}
 		}
 	}
 
