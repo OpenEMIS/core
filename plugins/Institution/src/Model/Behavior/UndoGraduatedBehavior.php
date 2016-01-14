@@ -14,7 +14,7 @@ class UndoGraduatedBehavior extends UndoBehavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Undo.'.'get'.$this->undoAction.'Students'] = 'onGet'.$this->undoAction.'Students';
-		$events['Undo.'.'beforeSave'.$this->undoAction.'Students'] = 'beforeSave'.$this->undoAction.'Students';
+		$events['Undo.'.'processSave'.$this->undoAction.'Students'] = 'processSave'.$this->undoAction.'Students';
 		return $events;
 	}
 
@@ -22,7 +22,7 @@ class UndoGraduatedBehavior extends UndoBehavior {
 		return $this->getStudents($data);
 	}
 
-	public function beforeSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) {
+	public function processSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) {
 		$studentIds = [];
 
 		$institutionId = $entity->institution_id;
