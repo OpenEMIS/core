@@ -28,7 +28,7 @@ trait MessagesTrait {
 		'general' => [
 			'notExists' => 'The record does not exist.',
 			'notEditable' => 'This record is not editable',
-			'exists' => 'The record is exists in the system.',
+			'exists' => 'The record exists in the system.',
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
@@ -363,8 +363,10 @@ trait MessagesTrait {
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
 			'noData' => 'There are no available Students for revert Student Status.',
+			'reconfirm' => 'Please review the information before proceeding with the operation.',
 			'notUndo' => 'Not available to revert.',
-			'success' => 'Student records have been reverted successfully.'
+			'success' => 'Student records have been reverted successfully.',
+			'failed' => 'Failed to revert student records.'
 		],
 		'EducationProgrammes' => [
 			'add_next_programme' => 'Add Next Programme'
@@ -589,7 +591,8 @@ trait MessagesTrait {
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
-					'ruleMinLength' => 'Password must be at least 6 characters'
+					'ruleMinLength' => 'Password must be at least 6 characters',
+					'ruleNoSpaces' => 'Password should not contain spaces'	
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
@@ -617,7 +620,8 @@ trait MessagesTrait {
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
-					'ruleMinLength' => 'Password must be at least 6 characters'
+					'ruleMinLength' => 'Password must be at least 6 characters',
+					'ruleNoSpaces' => 'Password should not contain spaces'	
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',

@@ -106,11 +106,7 @@ class InstitutionsTable extends AppTable  {
 			->add('date_opened', [
 					'ruleCompare' => [
 						'rule' => ['comparison', 'notequal', '0000-00-00'],
-					],
-					'ruleCheckDateInput' => [
-			            'rule' => ['checkDateInput'],
-		        		'last' => true
-		    	    ]
+					]
 				])
 
 	        ->allowEmpty('date_closed')
