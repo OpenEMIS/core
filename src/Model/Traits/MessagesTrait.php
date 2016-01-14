@@ -28,7 +28,7 @@ trait MessagesTrait {
 		'general' => [
 			'notExists' => 'The record does not exist.',
 			'notEditable' => 'This record is not editable',
-			'exists' => 'The record is exists in the system.',
+			'exists' => 'The record exists in the system.',
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
@@ -591,7 +591,8 @@ trait MessagesTrait {
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
-					'ruleMinLength' => 'Password must be at least 6 characters'
+					'ruleMinLength' => 'Password must be at least 6 characters',
+					'ruleNoSpaces' => 'Password should not contain spaces'	
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
@@ -619,7 +620,8 @@ trait MessagesTrait {
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
-					'ruleMinLength' => 'Password must be at least 6 characters'
+					'ruleMinLength' => 'Password must be at least 6 characters',
+					'ruleNoSpaces' => 'Password should not contain spaces'	
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
