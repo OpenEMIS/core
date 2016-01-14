@@ -2,6 +2,8 @@
 namespace CustomField\Model\Behavior;
 
 use Cake\Utility\Inflector;
+use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 
 class SetupBehavior extends Behavior {
@@ -20,6 +22,22 @@ class SetupBehavior extends Behavior {
 		$this->fieldTypeCode = $code;
 		$this->fieldType = $class;
     }
+
+    public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$eventMap = [
+            'Setup.'.'set'.$this->fieldType.'Elements' => 'onSet'.$this->fieldType.'Elements',
+            'ControllerAction.Model.viewEdit.beforeQuery' => 'viewEditBeforeQuery'
+        ];
+
+        foreach ($eventMap as $event => $method) {
+            if (!method_exists($this, $method)) {
+                continue;
+            }
+            $events[$event] = $method;
+        }
+		return $events;
+	}
 
     protected function sortFieldOrder($field=null) {
     	$fields = $this->_table->fields;
