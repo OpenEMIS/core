@@ -527,8 +527,10 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
-			$ageOfStudent = Time::fromNow($dateOfBirth);
-			$ageOfStudent = $ageOfStudent->y;
+
+			$birthYear = $dateOfBirth->format('Y');
+			$nowYear = Time::now()->format('Y');
+			$ageOfStudent = $nowYear - $birthYear;
 
 
 			$ConfigItems = TableRegistry::get('ConfigItems');
@@ -550,10 +552,6 @@ class ValidationBehavior extends Behavior {
 
 			$enrolmentMinimumAge += $yearIncrement;
 			$enrolmentMaximumAge += $yearIncrement;
-
-			// pr('ageOfStudent: '.$ageOfStudent);
-			// pr('enrolmentMinimumAge: '.($enrolmentMinimumAge));
-			// pr('enrolmentMaximumAge: '.($enrolmentMaximumAge));
 
 			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
 		}
