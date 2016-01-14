@@ -186,18 +186,21 @@ class ImportInstitutionSurveysTable extends AppTable {
 				$sheetName = $question->code;
 				$columnOrder = $question->_joinData->order;
 				$data[$columnOrder] = [
-					'data'=>[], 
-					'sheetName'=>$sheetName
+					'data' => [],
+					'sheetName' => '( '. $question->code .' ) '. $question->name . "\n\n"
 				];
 				$data[$columnOrder]['lookupColumn'] = 2;
 				$data[$columnOrder]['data'][] = [__('Answer Name'), __('Answer Code')];
 				if ($question->field_type == 'DROPDOWN') {
+					$data[$columnOrder]['sheetName'] .= __('(Use only one of the answer codes)');
 					foreach($question->custom_field_options as $key=>$row) {
 						if ($row->visible) {
 							$data[$columnOrder]['data'][] = [$row->name, $row->id];
 						}
 					}
 				} elseif ($question->field_type == 'CHECKBOX') {
+					$data[$columnOrder]['sheetName'] .= __('(Multiple codes can be selected and seperated by comma and a space. Example: 1, 2)');
+					$data[$columnOrder]['noDropDownList'] = true;
 					foreach($question->custom_field_options as $key=>$row) {
 						if ($row->visible) {
 							$data[$columnOrder]['data'][] = [$row->name, $row->id];
