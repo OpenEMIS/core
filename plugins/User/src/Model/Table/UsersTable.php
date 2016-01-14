@@ -436,11 +436,6 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('photo_content')
-			->add('date_of_birth', [
-					'ruleValidDate' => [
-						'rule' => ['date', 'dmy']
-					]
-				])
 			;
 
 		$thisModel = ($thisModel == null)? $this: $thisModel;
