@@ -591,7 +591,8 @@ trait MessagesTrait {
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
-					'ruleMinLength' => 'Password must be at least 6 characters'
+					'ruleMinLength' => 'Password must be at least 6 characters',
+					'ruleNoSpaces' => 'Password should not contain spaces'	
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
@@ -619,7 +620,8 @@ trait MessagesTrait {
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
-					'ruleMinLength' => 'Password must be at least 6 characters'
+					'ruleMinLength' => 'Password must be at least 6 characters',
+					'ruleNoSpaces' => 'Password should not contain spaces'	
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
