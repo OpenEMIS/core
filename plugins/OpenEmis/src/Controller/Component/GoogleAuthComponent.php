@@ -83,7 +83,14 @@ class GoogleAuthComponent extends Component {
           requests, else we generate an authentication URL.
          ************************************************/
         if ($session->check('Google.accessToken') && $session->read('Google.accessToken')) {
-            $client->setAccessToken($session->read('Google.accessToken'));
+            if ($this->Auth->user()) {
+                pr($session->read('Google.accessToken'));die;
+                $client->setAccessToken($session->read('Google.accessToken'));
+            } else {
+                $client->revokeToken($session->read('Google.accessToken'));
+                $session->delete('Google.accessToken');
+                $authUrl = $client->createAuthUrl();
+            }
         } else {
             $authUrl = $client->createAuthUrl();
         }
@@ -109,11 +116,7 @@ class GoogleAuthComponent extends Component {
                 if ($tokenData['payload']['hd'] == $this->hostedDomain) {
                     $session->write('Google.tokenData', $tokenData);
                     $session->write('Google.client', $client);
-                } else {
-                    // return $controller->redirect($controller->Auth->logout());
                 }
-            } else {
-                // return $controller->redirect($controller->Auth->logout());
             }
         } else {
         	$session->delete('Google.tokenData');
