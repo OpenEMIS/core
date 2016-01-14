@@ -61,12 +61,10 @@ class GoogleAuthComponent extends Component {
         $client->setHostedDomain($this->hostedDomain);
         $controller = $this->_registry->getController();
 
-        /************************************************
-          If we have a code back from the OAuth 2.0 flow,
-          we need to exchange that with the authenticate()
-          function. We store the resultant access token
-          bundle in the session, and redirect to ourself.
-         ************************************************/
+        /************************************************************************************************
+          If we have a code back from the OAuth 2.0 flow, we need to exchange that with the authenticate()
+          function. We store the resultant access token bundle in the session, and redirect to ourself.
+         ************************************************************************************************/
         if (($this->request->query('code'))) {
         	try {
         		$client->authenticate($this->request->query('code'));
@@ -74,14 +72,17 @@ class GoogleAuthComponent extends Component {
         		return $controller->redirect(['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index']);
         	}
             $session->write('Google.accessToken', $client->getAccessToken());
-            $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+            if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
+               $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
+            } else {
+                $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+            }
             $controller->redirect($redirect);
         }
 
-        /************************************************
-          If we have an access token, we can make
-          requests, else we generate an authentication URL.
-         ************************************************/
+        /************************************************************************************************
+          If we have an access token, we can make requests, else we generate an authentication URL.
+         ************************************************************************************************/
         if ($session->check('Google.accessToken') && $session->read('Google.accessToken')) {
             if ($this->Auth->user()) {
                 $client->setAccessToken($session->read('Google.accessToken'));
@@ -89,20 +90,16 @@ class GoogleAuthComponent extends Component {
                 // revoke the access token if the user is not authorised
                 $client->revokeToken($session->read('Google.accessToken'));
                 $session->delete('Google.accessToken');
-                return $controller->redirect(['plugin' => 'Error', 'controller' => 'Errors', 'action' => 'error403']);
+                $controller->redirect(['plugin' => 'Error', 'controller' => 'Errors', 'action' => 'error403']);
             }
         } else {
             $authUrl = $client->createAuthUrl();
         }
-		/************************************************
-          If we're signed in we can go ahead and retrieve
-          the ID token, which is part of the bundle of
-          data that is exchange in the authenticate step
-          - we only need to do a network call if we have
-          to retrieve the Google certificate to verify it,
-          and that can be cached.
-         ************************************************/
-
+		/************************************************************************************************
+          If we're signed in we can go ahead and retrieve the ID token, which is part of the bundle of
+          data that is exchange in the authenticate step - we only need to do a network call if we have
+          to retrieve the Google certificate to verify it, and that can be cached.
+         ************************************************************************************************/
 
         if ($client->getAccessToken()) {
             // Check if the access token is expired, if it is expired reauthenticate
@@ -118,6 +115,11 @@ class GoogleAuthComponent extends Component {
             $controller->redirect($authUrl);
         }
 
+        /************************************************************************************************
+          We check if payload of the token data that was sent back to us. As an additional precaution, we
+          verify if the hosted domain is the one that we have set. We will set the session for the token
+          data only if the hosted domain matches our setting.
+         ************************************************************************************************/
         if (isset($tokenData)) {
             if (isset($tokenData['payload']['hd'])) {
                 if ($tokenData['payload']['hd'] == $this->hostedDomain) {
@@ -168,7 +170,7 @@ class GoogleAuthComponent extends Component {
 			// End
 			return true;
 		} else {
-			$controller->Alert->error('security.login.fail');
+			// $controller->Alert->error('security.login.fail');
 			return false;
 		}
 	}
