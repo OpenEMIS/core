@@ -10,6 +10,7 @@ class ErrorsController extends AppController{
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
         $this->Auth->allow('error404');
+        $this->Auth->allow('error403');
     }
 
     public function error404() {
