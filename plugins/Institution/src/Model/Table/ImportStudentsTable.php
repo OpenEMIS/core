@@ -103,23 +103,18 @@ class ImportStudentsTable extends AppTable {
 		$importedUniqueCodes[] = $entity->student_id;
 	}
 
-	public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
 		$endDateLabel = $this->getExcelLabel($lookedUpTable, 'end_date');
-		$data[$sheetName]['formats'] = [
-			$translatedReadableCol=>'string',
-			$startDateLabel.'(Y-M-D)'=>'date',
-			$endDateLabel.'(Y-M-D)'=>'date',
-			$translatedCol=>'string'
-		];
-		$data[$sheetName]['data'] = [];
+		$data[$columnOrder]['lookupColumn'] = 4;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData as $row) {
 				$date = $row->start_date;
-				$data[$sheetName]['data'][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->start_date->format('Y-m-d H:i:s'),
 					$row->end_date->format('Y-m-d H:i:s'),
@@ -129,7 +124,7 @@ class ImportStudentsTable extends AppTable {
 		}
 	}
 
-	public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')
 								->contain(['EducationProgrammes'])
@@ -146,10 +141,11 @@ class ImportStudentsTable extends AppTable {
 								]);
 		$programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 3;
+		$data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->education_programme->name,
 					$row->name,
 					$row->$lookupColumn
@@ -158,7 +154,11 @@ class ImportStudentsTable extends AppTable {
 		}
 	}
 	
-	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateStudentsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		unset($data[$columnOrder]);
+	}
+
+	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		try {
 			$institution = $this->Institutions->get($this->institutionId);
 			$modelData = $this->populateInstitutionSectionsData();
@@ -168,9 +168,11 @@ class ImportStudentsTable extends AppTable {
 			$classNameLabel = $this->getExcelLabel($lookupModel, 'name');
 			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_sections_code');
 			
-			unset($data[$sheetName]);
+			// unset($data[$sheetName]);
 			$sheetName = $this->getExcelLabel('Imports', $lookupModel);
-			$data[$sheetName][] = [
+			$data[$columnOrder]['sheetName'] = $sheetName;
+			$data[$columnOrder]['lookupColumn'] = 4;
+			$data[$columnOrder]['data'][] = [
 				$institutionNameLabel,
 				$academicPeriodCodeLabel,
 				$classNameLabel,
@@ -180,7 +182,7 @@ class ImportStudentsTable extends AppTable {
 				foreach($modelData as $periodCode=>$periodClasses) {
 					if (!empty($periodClasses)) {
 						foreach($periodClasses as $id=>$name) {
-							$data[$sheetName][] = [
+							$data[$columnOrder]['data'][] = [
 								$institution->name,
 								$periodCode,
 								$name,
