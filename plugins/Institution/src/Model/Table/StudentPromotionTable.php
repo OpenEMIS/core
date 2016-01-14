@@ -357,14 +357,14 @@ class StudentPromotionTable extends AppTable {
 				foreach ($data[$this->alias()]['students'] as $key => $value) {
 					if ($value['selected'] != 0) {
 						$selectedStudent = true;
+						break;
 					}
 				}
 			}
 			
 			if ($selectedStudent) {
 				// redirects to confirmation page
-				$url = $this->ControllerAction->url('view');
-				$url[0] = 'reconfirm';
+				$url = $this->ControllerAction->url('reconfirm');
 				$this->currentEntity = $entity;
 				$session = $this->Session;
 				$session->write($this->registryAlias().'.confirm', $entity);
