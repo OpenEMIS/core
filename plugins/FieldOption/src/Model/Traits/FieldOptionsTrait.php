@@ -13,6 +13,7 @@ trait FieldOptionsTrait {
 		'Health.Relationships' => ['behavior' => 'Display'],
 		'Health.Conditions' => ['behavior' => 'Display'],
 		'Health.ImmunizationTypes' => ['behavior' => 'Display'],
-		'Health.TestTypes' => ['behavior' => 'Display']
+		'Health.TestTypes' => ['behavior' => 'Display'],
+		'FieldOption.QualityVisitTypes' => ['behavior' => 'Display'],
 	];
 }
