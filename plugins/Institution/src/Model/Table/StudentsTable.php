@@ -424,8 +424,7 @@ class StudentsTable extends AppTable {
 		)
 		->where([
 			$ClassStudents->aliasField('student_id') => $studentId,
-			$ClassStudents->aliasField('education_grade_id') => $educationGradeId,
-			$ClassStudents->aliasField('status') => 1
+			$ClassStudents->aliasField('education_grade_id') => $educationGradeId
 		])
 		->first();
 
@@ -947,6 +946,21 @@ class StudentsTable extends AppTable {
 				$transferButton['attr']['title'] = __('Transfer');
 
 				$toolbarButtons['transfer'] = $transferButton;
+				$toolbarButtons['back'] = $buttons['back'];
+				$toolbarButtons['back']['type'] = null;
+			}
+
+			if ($this->AccessControl->check(['Institutions', 'Undo', 'add'])) {
+				$undoButton = $buttons['index'];
+				$undoButton['url']['action'] = 'Undo';
+				$undoButton['url'][0] = 'add';
+				$undoButton['type'] = 'button';
+				$undoButton['label'] = '<i class="fa fa-undo"></i>';
+				$undoButton['attr'] = $attr;
+				$undoButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$undoButton['attr']['title'] = __('Undo');
+
+				$toolbarButtons['undo'] = $undoButton;
 				$toolbarButtons['back'] = $buttons['back'];
 				$toolbarButtons['back']['type'] = null;
 			}

@@ -33,7 +33,6 @@
 				<tbody>
 				<?php 
 				foreach($attr['data']['students'] as $i => $obj) : 
-					if ($obj->status == 0) continue;
 
 					if ($action=='edit') :
 						$n = $obj->student_id;
@@ -43,13 +42,12 @@
 						<?php
 						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.id", [ 'value'=> $obj->id ]);
 						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.student_id", [ 'value'=> $obj->student_id ]);
-						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.status", [ 'value' => $obj->status ]);
 						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.institution_section_id", [ 'value'=> $obj->institution_section_id ]);
 						?>
 						<td><?= $obj->user->openemis_no ?></td>
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
-						<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
+						<td><?= (!empty($obj->user->date_of_birth))? $ControllerAction['table']->formatDate($obj->user->date_of_birth): ''; ?></td>
 						<td>
 							<?php
 							echo $this->Form->input("InstitutionSections.institution_section_students.$n.education_grade_id", array(
@@ -73,7 +71,7 @@
 						<td><?= $obj->user->openemis_no ?></td>
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
-						<td><?= $ControllerAction['table']->formatDate($obj->user->date_of_birth) ?></td>
+						<td><?= (!empty($obj->user->date_of_birth))? $ControllerAction['table']->formatDate($obj->user->date_of_birth): ''; ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 					</tr>
 
