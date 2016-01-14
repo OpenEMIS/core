@@ -20,6 +20,8 @@ class GoogleAuthenticate extends BaseAuthenticate
         $session = $request->session();
         if ($session->check('Google.tokenData')) {
         	$tokenData = $session->read('Google.tokenData');
+            // Remove session for the token data after it has been used.
+            $session->delete('Google.tokenData');
             $email = $tokenData['payload']['email'];
             $emailArray = explode('@', $tokenData['payload']['email']);
             $userName = $emailArray[0];
@@ -44,6 +46,9 @@ class GoogleAuthenticate extends BaseAuthenticate
 					$firstName = $me->getGivenName();
 					$gender = $me->getGender();
 					$openemisNo = $this->getUniqueOpenemisId();
+
+                    // Remove the client session
+                    $session->delete('Google.client');
 
                     $GenderTable = TableRegistry::get('User.Genders');
                     $genderList = $GenderTable->find('list')->toArray();
