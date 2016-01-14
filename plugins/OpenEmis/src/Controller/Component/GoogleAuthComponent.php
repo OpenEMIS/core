@@ -84,12 +84,12 @@ class GoogleAuthComponent extends Component {
          ************************************************/
         if ($session->check('Google.accessToken') && $session->read('Google.accessToken')) {
             if ($this->Auth->user()) {
-                pr($session->read('Google.accessToken'));die;
                 $client->setAccessToken($session->read('Google.accessToken'));
             } else {
+                // revoke the access token if the user is not authorised
                 $client->revokeToken($session->read('Google.accessToken'));
                 $session->delete('Google.accessToken');
-                $authUrl = $client->createAuthUrl();
+                return $controller->redirect(['plugin' => 'Error', 'controller' => 'Errors', 'action' => 'error403']);
             }
         } else {
             $authUrl = $client->createAuthUrl();
@@ -102,9 +102,16 @@ class GoogleAuthComponent extends Component {
           to retrieve the Google certificate to verify it,
           and that can be cached.
          ************************************************/
+
+
         if ($client->getAccessToken()) {
-            $session->write('Google.accessToken', $client->getAccessToken());
-			$tokenData = $client->verifyIdToken()->getAttributes();
+            // Check if the access token is expired, if it is expired reauthenticate
+            if (!$client->isAccessTokenExpired()) {
+                $session->write('Google.accessToken', $client->getAccessToken());
+                $tokenData = $client->verifyIdToken()->getAttributes();
+            } else {
+                $authUrl = $client->createAuthUrl();
+            }
         }
 
         if (isset($authUrl)) {
