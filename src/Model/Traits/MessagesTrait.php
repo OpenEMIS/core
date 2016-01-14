@@ -28,7 +28,7 @@ trait MessagesTrait {
 		'general' => [
 			'notExists' => 'The record does not exist.',
 			'notEditable' => 'This record is not editable',
-			'exists' => 'The record is exists in the system.',
+			'exists' => 'The record exists in the system.',
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
