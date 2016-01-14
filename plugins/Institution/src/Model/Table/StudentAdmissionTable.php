@@ -71,7 +71,9 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('previous_institution_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
     	$this->ControllerAction->field('type');
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
-    	$this->ControllerAction->field('openemis_no');
+    	if ($this->action == 'index') {
+    		$this->ControllerAction->field('openemis_no');
+    	}
     	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
     	$this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
