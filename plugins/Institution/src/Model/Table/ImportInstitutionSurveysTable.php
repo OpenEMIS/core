@@ -102,15 +102,36 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 	public function template() {
 		$folder = $this->prepareDownload();
-		$modelName = $this->alias();
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'OpenEMIS', 'Core', $modelName, 'Template');
+		$excelFile = 'OpenEMIS_Core_Import_Institution_Survey_Template.xlsx';
+		$excelPath = $folder . DS . $excelFile;
 
+		$surveyForm = $this->institutionSurvey->survey_form;
+		$header = $this->_generateHeader($surveyForm->custom_fields);
+		$surveySheetName = Text::truncate( '('. $surveyForm->code .') '. $surveyForm->name, 31, ['ellipsis' => ''] );
+
+		$objPHPExcel = new \PHPExcel();
+
+		$this->setImportDataTemplate( $objPHPExcel, $surveySheetName, $header );
+		
+		$this->setCodesDataTemplate( $objPHPExcel );
+		
+		$objPHPExcel->setActiveSheetIndex(0);
+		$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+		$objWriter->save($excelPath);
+
+		$this->performDownload($excelFile);
+		die;
+	}
+
+	public function template_ori() {
+		$folder = $this->prepareDownload();
+		$excelFile = 'OpenEMIS_Core_Import_Institution_Survey_Template.xlsx';
 		$excelPath = $folder . DS . $excelFile;
 
 		$writer = new \XLSXWriter();
 		
 		$surveyForm = $this->institutionSurvey->survey_form;
-		$header = $this->generateHeader($surveyForm->custom_fields);
+		$header = $this->_generateHeader($surveyForm->custom_fields);
 		$surveySheetName = Text::truncate('(' . $surveyForm->code .') '.$surveyForm->name, 31, ['ellipsis' => '']);
 		$writer->writeSheetRow($surveySheetName, array_values($header));
 		
@@ -126,7 +147,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 		die;
 	}
 
-	private function generateHeader($surveyQuestions) {
+	private function _generateHeader($surveyQuestions) {
 		$header = [];
 		foreach ($surveyQuestions as $question) {
 			if ($question['field_type'] == 'TABLE') {
@@ -157,7 +178,38 @@ class ImportInstitutionSurveysTable extends AppTable {
 		return $header;
 	}
 
-	public function excelGetCodesData(Table $model) {
+	public function excelGetCodesData() {
+		$questions = $this->institutionSurvey->survey_form->custom_fields;
+		$data = [];
+		foreach ($questions as $question) {
+			if ($question->field_type == 'DROPDOWN' || $question->field_type == 'CHECKBOX') {
+				$sheetName = $question->code;
+				$columnOrder = $question->_joinData->order;
+				$data[$columnOrder] = [
+					'data'=>[], 
+					'sheetName'=>$sheetName
+				];
+				$data[$columnOrder]['lookupColumn'] = 2;
+				$data[$columnOrder]['data'][] = [__('Answer Name'), __('Answer Code')];
+				if ($question->field_type == 'DROPDOWN') {
+					foreach($question->custom_field_options as $key=>$row) {
+						if ($row->visible) {
+							$data[$columnOrder]['data'][] = [$row->name, $row->id];
+						}
+					}
+				} elseif ($question->field_type == 'CHECKBOX') {
+					foreach($question->custom_field_options as $key=>$row) {
+						if ($row->visible) {
+							$data[$columnOrder]['data'][] = [$row->name, $row->id];
+						}
+					}
+				}
+			}
+		}
+		return $data;
+	}
+
+	public function excelGetCodesDataOri(Table $model) {
 		$questions = $this->institutionSurvey->survey_form->custom_fields;
 		$data = [];
 		foreach ($questions as $question) {
@@ -276,7 +328,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			ksort($surveyFormQuestions);
 			$surveyFormQuestions = array_values($surveyFormQuestions);
 			$questions = $surveyFormQuestions;
-			$header = $this->generateHeader($questions);
+			$header = $this->_generateHeader($questions);
 			$totalColumns = count($header);
 
 			for ($row = 1; $row <= $highestRow; ++$row) {
