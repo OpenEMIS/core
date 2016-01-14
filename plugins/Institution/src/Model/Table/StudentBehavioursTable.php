@@ -300,8 +300,7 @@ class StudentBehavioursTable extends AppTable {
 						return $Students
 							->find()
 							->where([
-								$Students->aliasField('institution_section_id') => $id,
-								$Students->aliasField('status') => 1
+								$Students->aliasField('institution_section_id') => $id
 							])
 							->count();
 					}
