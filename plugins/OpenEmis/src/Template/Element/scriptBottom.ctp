@@ -15,7 +15,8 @@ $(document).ready(function() {
 
 	addScrollbarShadow('.table-responsive');
 	addScrollbarShadow('.table-in-view');
-
+	
+	$('#tabs').scrollTabs();
 });
 
 

@@ -154,7 +154,6 @@ class InstitutionSectionStudentsTable extends AppTable {
 			$autoInsertData->student_id = $securityUserId;
 			$autoInsertData->education_grade_id = $selectedGradeId;
 			$autoInsertData->institution_section_id = $selectedSectionId;
-			$autoInsertData->status = 1;
 
 			if ($this->save($autoInsertData)) {
 				$this->_autoInsertSubjectStudent($data);
