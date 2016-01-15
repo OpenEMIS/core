@@ -15,8 +15,8 @@ use Cake\Controller\Component;
 use App\Model\Table\AppTable;
 
 class ImportInstitutionSurveysTable extends AppTable {
-	const RECORD_QUESTION = 1;
-	const FIRST_RECORD = 2;
+	const RECORD_QUESTION = 2;
+	const FIRST_RECORD = 3;
 
 	private $institutionSurveyId = false;
 	private $institutionSurvey = false;
@@ -44,7 +44,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
-		if ($this->action != 'downloadFailed') {
+		if ($this->action != 'downloadFailed' && $this->action != 'downloadPassed') {
 			$session = $this->Session;
 			if (!empty($this->request->pass) && isset($this->request->pass[1])) {
 				$this->institutionSurveyId = $this->request->pass[1];
@@ -102,31 +102,30 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 	public function template() {
 		$folder = $this->prepareDownload();
-		$modelName = $this->alias();
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', 'Institution', $modelName, 'Template');
 
+		$surveyForm = $this->institutionSurvey->survey_form;
+		$header = $this->_generateHeader($surveyForm->custom_fields);
+		// $surveySheetName = Text::truncate( '('. $surveyForm->code .') '. $surveyForm->name, 31, ['ellipsis' => ''] );
+		$dataSheetName = __('Data');
+
+		$excelFile = sprintf('OpenEMIS_Core_Import_Institution_Survey_%s_Template.xlsx', $surveyForm->code);
 		$excelPath = $folder . DS . $excelFile;
 
-		$writer = new \XLSXWriter();
+		$objPHPExcel = new \PHPExcel();
+
+		$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header );
 		
-		$surveyForm = $this->institutionSurvey->survey_form;
-		$header = $this->generateHeader($surveyForm->custom_fields);
-		$surveySheetName = Text::truncate('(' . $surveyForm->code .') '.$surveyForm->name, 31, ['ellipsis' => '']);
-		$writer->writeSheetRow($surveySheetName, array_values($header));
+		$this->setCodesDataTemplate( $objPHPExcel );
 		
-		$codesData = $this->excelGetCodesData($this);
-		foreach($codesData as $modelName => $modelArr) {
-			foreach($modelArr as $row) {
-				$writer->writeSheetRow($modelName, array_values($row));
-			}
-		}
-		
-		$writer->writeToFile($excelPath);
+		$objPHPExcel->setActiveSheetIndex(0);
+		$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+		$objWriter->save($excelPath);
+
 		$this->performDownload($excelFile);
 		die;
 	}
 
-	private function generateHeader($surveyQuestions) {
+	private function _generateHeader($surveyQuestions) {
 		$header = [];
 		foreach ($surveyQuestions as $question) {
 			if ($question['field_type'] == 'TABLE') {
@@ -157,33 +156,44 @@ class ImportInstitutionSurveysTable extends AppTable {
 		return $header;
 	}
 
-	public function excelGetCodesData(Table $model) {
-		$questions = $this->institutionSurvey->survey_form->custom_fields;
+	public function excelGetCodesData() {
+		$survey_form = $this->institutionSurvey->survey_form;
+		$questions = $survey_form->custom_fields;
 		$data = [];
+		$data[0] = [
+			'data' => [
+				[__('Name'), __('Code')],
+				[$survey_form->name, $survey_form->code]
+			],
+			'sheetName' => __('Survey Form'),
+			'noDropDownList' => true
+		];
 		foreach ($questions as $question) {
-			$sheetName = $question->code;
-			if ($question->field_type == 'DROPDOWN') {
-				$data[$sheetName][] = [__('Answer Code'), __('Answer Name'), '', __('Question')];
-				foreach($question->custom_field_options as $key=>$row) {
-					if ($row->visible) {
-						$data[$sheetName][] = [$row->id, $row->name];
+			if ($question->field_type == 'DROPDOWN' || $question->field_type == 'CHECKBOX') {
+				$sheetName = $question->code;
+				$columnOrder = $question->_joinData->order;
+				$data[$columnOrder] = [
+					'data' => [],
+					'sheetName' => '( '. $question->code .' ) '. $question->name . "\n\n"
+				];
+				$data[$columnOrder]['lookupColumn'] = 2;
+				$data[$columnOrder]['data'][] = [__('Answer Name'), __('Answer Code')];
+				if ($question->field_type == 'DROPDOWN') {
+					$data[$columnOrder]['sheetName'] .= __('(Use only one of the answer codes)');
+					foreach($question->custom_field_options as $key=>$row) {
+						if ($row->visible) {
+							$data[$columnOrder]['data'][] = [$row->name, $row->id];
+						}
+					}
+				} elseif ($question->field_type == 'CHECKBOX') {
+					$data[$columnOrder]['sheetName'] .= __('(Multiple codes can be selected and seperated by comma and a space. Example: 1, 2)');
+					$data[$columnOrder]['noDropDownList'] = true;
+					foreach($question->custom_field_options as $key=>$row) {
+						if ($row->visible) {
+							$data[$columnOrder]['data'][] = [$row->name, $row->id];
+						}
 					}
 				}
-				$data[$sheetName][1][4] = '';
-				$data[$sheetName][1][5] = $question->name;
-				$data[$sheetName][2][4] = '';
-				$data[$sheetName][2][5] = __('(Use only one of the answer codes)');
-			} elseif ($question->field_type == 'CHECKBOX') {
-				$data[$sheetName][] = [__('Answer Code'), __('Answer Name'), '', __('Question')];
-				foreach($question->custom_field_options as $key=>$row) {
-					if ($row->visible) {
-						$data[$sheetName][] = [$row->id, $row->name];
-					}
-				}
-				$data[$sheetName][1][4] = '';
-				$data[$sheetName][1][5] = $question->name;
-				$data[$sheetName][2][4] = '';
-				$data[$sheetName][2][5] = __('(Multiple codes can be selected and seperated by comma and a space. Example: 1, 2)');
 			}
 		}
 		return $data;
@@ -222,7 +232,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$sheet = $objPHPExcel->getSheet(0);
 			$maxRows = 2002;
 			$highestRow = $sheet->getHighestRow();
-			if ($highestRow > $maxRows) {
+			if ($highestRow > ($maxRows + 2)) {
 				$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
 				return false;
 			}
@@ -233,17 +243,14 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$dataFailed = [];
 			$dataPassed = [];
 
-			$sheetName = $sheet->getTitle();
-			// get code from sheetname which is within a pair of brackets "()".
-			// sheet name should have only one pair of brackets "()".
-			// preg_match("/(\([0-9a-zA-Z]{0,50}\))/", $sheetName, $output);
-			preg_match("/^\((\w{0,50})\)/", $sheetName, $output);
-			if (count($output)!=2) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_not_found')], true);
+			$references = $objPHPExcel->getSheet(1);
+			// get code from references sheet at it is located at cell B4
+			$surveyCode = $references->getCell( "B4" )->getValue();
+			if (empty($surveyCode)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_code_not_found')], true);
 				return false;
 			}
 
-			$surveyCode = (isset($output[1])) ? $output[1] : str_replace(')', '', str_replace('(', '', $output[0]));
 			$survey = $this->SurveyForms
 				->find()
 				->contain([
@@ -276,10 +283,10 @@ class ImportInstitutionSurveysTable extends AppTable {
 			ksort($surveyFormQuestions);
 			$surveyFormQuestions = array_values($surveyFormQuestions);
 			$questions = $surveyFormQuestions;
-			$header = $this->generateHeader($questions);
+			$header = $this->_generateHeader($questions);
 			$totalColumns = count($header);
 
-			for ($row = 1; $row <= $highestRow; ++$row) {
+			for ($row = 2; $row <= $highestRow; ++$row) {
 				if ($row == self::RECORD_QUESTION) { // skip header but check if the uploaded template is correct
 					if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
 						$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')]);
@@ -510,38 +517,44 @@ class ImportInstitutionSurveysTable extends AppTable {
 		if (!empty($data)) {
 			$downloadFolder = $this->prepareDownload();
 			$modelName = $this->alias();
-			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 'Import', 'Institution', 'Surveys', ucwords($type), time());
-			$excelPath = $downloadFolder . DS . $excelFile;
 			
-			$writer = new \XLSXWriter();
+			$surveyForm = $this->institutionSurvey->survey_form;
+			$excelFile = sprintf('OpenEMIS_Core_Import_Institution_Survey_%s_%s_%s.xlsx', $surveyForm->code, ucwords($type), time());
+			$excelPath = $downloadFolder . DS . $excelFile;
+
 			$newHeader = $header;
 			if ($type == 'failed') {
 				$newHeader[] = $this->getExcelLabel('general', 'errors');
 			}
-			$surveyForm = $this->institutionSurvey->survey_form;
-			$dataSheetName = Text::truncate('(' . $surveyForm->code .') '.$surveyForm->name, 31, ['ellipsis' => '']);
-			$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-			foreach($data as $record) {
+			$dataSheetName = __('Data');
+
+			$objPHPExcel = new \PHPExcel();
+
+			$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $newHeader );
+
+			foreach($data as $index => $record) {
 				if ($type == 'failed') {
 					$values = array_values($record['data']->getArrayCopy());
 					$values[] = $record['error'];
 				} else {
 					$values = $record['data'];
 				}
-				$writer->writeSheetRow($dataSheetName, $values);
+				foreach ($values as $key => $value) {
+					$alpha = $this->getExcelColumnAlpha($key);
+					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
+					// $objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
+				}				
 			}
-			
+
 			if ($type == 'failed') {
-				$codesData = $this->excelGetCodesData($this);
-				foreach($codesData as $modelName => $modelArr) {
-					foreach($modelArr as $row) {
-						$writer->writeSheetRow($modelName, array_values($row));
-					}
-				}
+				$this->setCodesDataTemplate( $objPHPExcel );
 			}
 			
-			$writer->writeToFile($excelPath);
-			$downloadUrl = $this->ControllerAction->url('downloadFailed');
+			$objPHPExcel->setActiveSheetIndex(0);
+			$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+			$objWriter->save($excelPath);
+
+			$downloadUrl = $this->ControllerAction->url( 'download' . ucwords($type) );
 			$downloadUrl[1] = $excelFile;
 			$excelFile = $downloadUrl;
 		} else {
