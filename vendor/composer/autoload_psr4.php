@@ -14,6 +14,7 @@ return array(
     'ControllerAction\\' => array($baseDir . '/plugins/ControllerAction/src'),
     'Cake\\Composer\\' => array($vendorDir . '/cakephp/plugin-installer/src'),
     'Cake\\' => array($vendorDir . '/cakephp/cakephp/src'),
+    'Box\\Spout\\' => array($vendorDir . '/box/spout/src/Spout'),
     'Aura\\Intl\\_Config\\' => array($vendorDir . '/aura/intl/config'),
     'App\\' => array($baseDir . '/src'),
 );

@@ -59,7 +59,7 @@ class ImportInstitutionsTable extends AppTable {
 		$importedUniqueCodes[] = $entity->code;
 	}
 
-	public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -70,10 +70,11 @@ class ImportInstitutionsTable extends AppTable {
 								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];
@@ -81,7 +82,7 @@ class ImportInstitutionsTable extends AppTable {
 		}
 	}
 
-	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
 
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -92,10 +93,11 @@ class ImportInstitutionsTable extends AppTable {
 								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];
@@ -103,7 +105,7 @@ class ImportInstitutionsTable extends AppTable {
 		}
 	}
 
-	public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		// die('onImportPopulateNetworkConnectivitiesData');
 		$order = [$lookupModel.'.order'];
 
@@ -116,10 +118,11 @@ class ImportInstitutionsTable extends AppTable {
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$translatedCol = $this->getExcelLabel('Import', 'institution_network_connectivity_id');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];

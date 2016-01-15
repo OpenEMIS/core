@@ -27,5 +27,13 @@ ALTER TABLE `z_2463_institution_section_students` RENAME `institution_section_st
 
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2463';
 
+-- 
+-- PHPOE-2436
+--
+
+DROP TABLE `import_mapping`;
+ALTER TABLE `z_2436_import_mapping` RENAME `import_mapping`;
+
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2436';
 
 UPDATE config_items SET value = '3.4.8' WHERE code = 'db_version';
