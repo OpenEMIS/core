@@ -724,7 +724,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						$query->innerJoin(
 							[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 							[
-								$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+								$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 								$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 								$this->SubjectStaff->aliasField('status') => 1
 							]
