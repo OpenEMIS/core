@@ -7,6 +7,7 @@ v3.4.9
 - Added validation rule to prevent user from adding spaces when changing passwords
 - Added Student Teacher ratio report and Student Class ratio report under Reports -> Institutions
 - Improved UI when entering data for Institutions -> Visits
+- Improved styles/formats for import templates, merged all references excel sheets into one sheet called References
 
 v3.4.8
 - Added new feature to Undo a student status. This feature can be accessible in Institutions -> Students -> Undo

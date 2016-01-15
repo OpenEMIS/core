@@ -409,8 +409,9 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
+			'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
 			'survey_not_found' => 'No identifiable survey found',
-			'no_answers' => 'No answers were found in the file imported.',
+			'no_answers' => 'No answers were found in the file imported',
 			'institution_network_connectivity_id' => 'code'
 		],
 		'TrainingSessions' => [
