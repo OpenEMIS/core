@@ -18,11 +18,16 @@ class GoogleAuthComponent extends Component {
 	public $components = ['Auth', 'Alert'];
 
 	public function initialize(array $config) {
-		$ConfigItems = TableRegistry::get('ConfigItems');
-		$this->clientId = $ConfigItems->value('client_id');
-		$this->clientSecret = $ConfigItems->value('client_secret');
-		$this->redirectUri = $ConfigItems->value('redirect_uri');
-		$this->hostedDomain = $ConfigItems->value('hd');
+		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+        $googleAttributes = $AuthenticationTypeAttributesTable->find('list', [
+                'groupField' => 'authentication_type',
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Google'])->toArray();
+		$this->clientId = $googleAttributes['Google']['client_id'];
+		$this->clientSecret = $googleAttributes['Google']['client_secret'];
+		$this->redirectUri = $googleAttributes['Google']['redirect_uri'];
+		$this->hostedDomain = $googleAttributes['Google']['hd'];
 		$session = $this->request->session();
 		$session->write('Google.hostedDomain', $this->hostedDomain);
 	}
