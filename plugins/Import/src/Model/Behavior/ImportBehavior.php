@@ -658,7 +658,6 @@ class ImportBehavior extends Behavior {
         } else {
 			$codesData = $this->excelGetCodesData($this->_table);
         }
-        $lookupColumn = -1;
         $lastColumn = -1;
 		$currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
 		foreach($codesData as $columnOrder => $modelArr) {
@@ -686,7 +685,7 @@ class ImportBehavior extends Behavior {
 			}
 		
 			if (count($modelData)>1 && !array_key_exists('noDropDownList', $modelArr)) {
-				$lookupColumn = $firstColumn + intval($modelArr['lookupColumn']);
+				$lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
 				$alpha = $this->getExcelColumnAlpha( $columnOrder - 1 );
 				$lookupColumnAlpha = $this->getExcelColumnAlpha( $lookupColumn );
 				for ($i=3; $i < 103; $i++) {
