@@ -32,11 +32,13 @@ class ConfigItemsTable extends AppTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($this->action == 'view') {
-			$key = $this->request->pass[0];
-			$configItem = $this->get($key);
-			if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-				if (isset($toolbarButtons['back'])) {
-					unset($toolbarButtons['back']);
+			$key = isset($this->request->pass[0]) ? $this->request->pass[0] : null;
+			if (!empty($key)) {
+				$configItem = $this->get($key);
+				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
+					if (isset($toolbarButtons['back'])) {
+						unset($toolbarButtons['back']);
+					}
 				}
 			}
 		}
@@ -44,17 +46,20 @@ class ConfigItemsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		if ($this->action == 'view' || $this->action == 'edit') {
-			$key = $this->request->pass[0];
-			$configItem = $this->get($key);
-			if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-				if (isset($this->request->data[$this->alias()]['value']) && !empty($this->request->data[$this->alias()]['value'])) {
-					$value = $this->request->data[$this->alias()]['value'];
-				} else {
-					$value = $configItem->value;
-					$this->request->data[$this->alias()]['value'] = $value;
-				}
-				if ($value != 'Local') {
-					$this->ControllerAction->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
+			$key = isset($this->request->pass[0]) ? $this->request->pass[0] : null;
+			if (!empty($key)) {
+				$configItem = $this->get($key);
+				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
+					if (isset($this->request->data[$this->alias()]['value']) && !empty($this->request->data[$this->alias()]['value'])) {
+						$value = $this->request->data[$this->alias()]['value'];
+					} else {
+						$value = $configItem->value;
+						$this->request->data[$this->alias()]['value'] = $value;
+					}
+
+					if ($value != 'Local') {
+						$this->ControllerAction->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
+					}
 				}
 			}
 		}
@@ -87,14 +92,20 @@ class ConfigItemsTable extends AppTable {
 		$this->buildSystemConfigFilters();
 	}
 
+	public function viewBeforeAction(Event $event) {
+		$this->buildSystemConfigFilters();
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$key = $this->request->pass[0];
-		$configItem = $this->get($key);
-		if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-			$this->ControllerAction->field('default_value', ['visible' => false]);
-			$value = $this->request->data[$this->alias()]['value'];
-			if ($value != 'Local') {
-				$this->ControllerAction->setFieldOrder(['type', 'label', 'value', 'custom_authentication']);
+		$key = isset($this->request->pass[0]) ? $this->request->pass[0] : null;
+		if (!empty($key)) {
+			$configItem = $this->get($key);
+			if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
+				$this->ControllerAction->field('default_value', ['visible' => false]);
+				$value = $this->request->data[$this->alias()]['value'];
+				if ($value != 'Local') {
+					$this->ControllerAction->setFieldOrder(['type', 'label', 'value', 'custom_authentication']);
+				}
 			}
 		}
 	}
