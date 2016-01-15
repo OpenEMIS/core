@@ -409,7 +409,7 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
-			'survey_file_name_error' => 'Survey file name should include survey form code. For example; "Survey_FormCode" or "Survey_FormCode_Template"',
+			'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
 			'survey_not_found' => 'No identifiable survey found',
 			'no_answers' => 'No answers were found in the file imported',
 			'institution_network_connectivity_id' => 'code'

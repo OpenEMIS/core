@@ -580,7 +580,7 @@ class ImportBehavior extends Behavior {
 
 		$headerLastAlpha = $this->getExcelColumnAlpha('last');
 		$activeSheet->getStyle( "A1:" . $headerLastAlpha . "1" )->getFont()->setBold(true)->setSize(16);
-		$activeSheet->SetCellValue( "C1", $title );
+		$activeSheet->setCellValue( "C1", $title );
 		$style = [
 	        'alignment' => [
 	            'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
@@ -619,7 +619,7 @@ class ImportBehavior extends Behavior {
 		$currentRowHeight = $activeSheet->getRowDimension(2)->getRowHeight();
 		foreach ($header as $key=>$value) {
 			$alpha = $this->getExcelColumnAlpha($key);
-			$activeSheet->SetCellValue( $alpha . "2", $value);
+			$activeSheet->setCellValue( $alpha . "2", $value);
 			if (strlen($value)<50) {
 				$activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
 			} else {
@@ -665,10 +665,9 @@ class ImportBehavior extends Behavior {
 			$modelData = $modelArr['data'];
 			$firstColumn = $lastColumn + 1;
 			$lastColumn = $firstColumn + count($modelArr['data'][0]) - 1;
-			$lookupColumn = $lookupColumn + intval($modelArr['lookupColumn']);
 
 			$objPHPExcel->getActiveSheet()->mergeCells( $this->getExcelColumnAlpha($firstColumn) ."2:". $this->getExcelColumnAlpha($lastColumn) ."2" );
-			$objPHPExcel->getActiveSheet()->SetCellValue( $this->getExcelColumnAlpha($firstColumn) ."2", $modelArr['sheetName'] );
+			$objPHPExcel->getActiveSheet()->setCellValue( $this->getExcelColumnAlpha($firstColumn) ."2", $modelArr['sheetName'] );
 			if (strlen($modelArr['sheetName'])<50) {
 				$objPHPExcel->getActiveSheet()->getColumnDimension( $this->getExcelColumnAlpha($firstColumn) )->setAutoSize(true);
 			} else {
@@ -681,12 +680,13 @@ class ImportBehavior extends Behavior {
 			foreach ($modelData as $index => $sets) {
 				foreach ($sets as $key => $value) {
 					$alpha = $this->getExcelColumnAlpha( ($key + $firstColumn) );
-					$objPHPExcel->getActiveSheet()->SetCellValue( $alpha . ($index + 3), $value);
+					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
 					$objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
 				}
 			}
 		
 			if (count($modelData)>1 && !array_key_exists('noDropDownList', $modelArr)) {
+				$lookupColumn = $firstColumn + intval($modelArr['lookupColumn']);
 				$alpha = $this->getExcelColumnAlpha( $columnOrder - 1 );
 				$lookupColumnAlpha = $this->getExcelColumnAlpha( $lookupColumn );
 				for ($i=3; $i < 103; $i++) {
@@ -750,7 +750,7 @@ class ImportBehavior extends Behavior {
 				}
 				foreach ($values as $key => $value) {
 					$alpha = $this->getExcelColumnAlpha($key);
-					$objPHPExcel->getActiveSheet()->SetCellValue( $alpha . ($index + 3), $value);
+					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
 					$objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
 				}				
 			}

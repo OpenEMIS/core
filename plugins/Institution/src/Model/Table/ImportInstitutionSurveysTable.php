@@ -157,8 +157,17 @@ class ImportInstitutionSurveysTable extends AppTable {
 	}
 
 	public function excelGetCodesData() {
-		$questions = $this->institutionSurvey->survey_form->custom_fields;
+		$survey_form = $this->institutionSurvey->survey_form;
+		$questions = $survey_form->custom_fields;
 		$data = [];
+		$data[0] = [
+			'data' => [
+				[__('Name'), __('Code')],
+				[$survey_form->name, $survey_form->code]
+			],
+			'sheetName' => __('Survey Form'),
+			'noDropDownList' => true
+		];
 		foreach ($questions as $question) {
 			if ($question->field_type == 'DROPDOWN' || $question->field_type == 'CHECKBOX') {
 				$sheetName = $question->code;
@@ -234,15 +243,14 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$dataFailed = [];
 			$dataPassed = [];
 
-			// $sheetName = $sheet->getTitle();
-			// get code from $uploadedName which is after "Survey_".
-			preg_match("/Survey_(\w{0,50})(_|)/", $uploadedName, $output);
-			if (count($output)<2) {
-				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_file_name_error')], true);
+			$references = $objPHPExcel->getSheet(1);
+			// get code from references sheet at it is located at cell B4
+			$surveyCode = $references->getCell( "B4" )->getValue();
+			if (empty($surveyCode)) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'survey_code_not_found')], true);
 				return false;
 			}
 
-			$surveyCode = $output[1];
 			$survey = $this->SurveyForms
 				->find()
 				->contain([
@@ -533,7 +541,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 				}
 				foreach ($values as $key => $value) {
 					$alpha = $this->getExcelColumnAlpha($key);
-					$objPHPExcel->getActiveSheet()->SetCellValue( $alpha . ($index + 3), $value);
+					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
 					// $objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
 				}				
 			}
