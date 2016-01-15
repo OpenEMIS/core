@@ -46,6 +46,8 @@ class ReportsController extends AppController {
 				'Report.InstitutionStaff' => __('Staff'),
 				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 				'Report.StaffAbsences' => __('Staff Absence'),
+				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
+				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
 			];
 		} else if ($module == 'Students') {
 			$options = [
