@@ -16,6 +16,8 @@ have received a copy of the GNU General Public License along with this program. 
 
 namespace ControllerAction\Model\Behavior;
 
+use ArrayObject;
+
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -24,12 +26,19 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 
 class DatePickerBehavior extends Behavior {
-	public function beforeSave(Event $event, Entity $entity) {
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		$format = 'Y-m-d';
 		foreach ($this->config() as $field) {
-			if (!empty($entity->$field)) {
-				if (!$entity->$field instanceof Time) {
-					$entity->$field = date($format, strtotime($entity->$field));
+			if (!empty($data[$field])) {
+				if (!$data[$field] instanceof Time) {
+					// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
+					$dateObj = date_create_from_format("d-m-Y",$data[$field]);
+					if ($dateObj === false) {
+						$dateObj = date_create_from_format("d-m-y",$data[$field]);
+					}
+					if ($dateObj !== false) {
+						$data[$field] = $dateObj->format($format);
+					}
 				}
 			}
 		}

@@ -14,7 +14,7 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->allow(['add', 'logout', 'postLogin', 'login_remote']);
+		$this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote']);
 	}
 
 	public function login() {

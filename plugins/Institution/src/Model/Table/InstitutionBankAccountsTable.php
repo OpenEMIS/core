@@ -36,7 +36,7 @@ class InstitutionBankAccountsTable extends AppTable {
 	public function beforeAction($event) {
 		$this->ControllerAction->field('account_name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('account_number', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-		$this->ControllerAction->field('active', ['type' => 'select', 'options' => $this->getSelectOptions('general.active'), 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('active', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('bank_branch_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('remarks', ['type' => 'text', 'visible' => ['view'=>true, 'edit'=>true]]);
 
@@ -143,6 +143,15 @@ class InstitutionBankAccountsTable extends AppTable {
 			->toArray();
 		$attr['options'] = $bankBranches;
 		return $attr;
+	}
+
+	public function onGetActive(Event $event, Entity $entity) {
+		$icons = [
+			0 => '<i class="fa kd-cross red"></i>', 
+			1 => '<i class="fa kd-check green"></i>'
+		];
+
+		return $icons[$entity->active];
 	}
 
 /******************************************************************************************************************
