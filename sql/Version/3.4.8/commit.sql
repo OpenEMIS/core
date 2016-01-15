@@ -17,3 +17,5 @@ INSERT INTO `db_patches` VALUES ('PHPOE-2435', NOW());
 DELETE FROM `security_functions` WHERE `id` = 1038;
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
 (1038, 'Undo Student Status', 'Institutions', 'Institutions', 'Students', 1000, NULL, NULL, NULL, NULL, 'Undo.index|Undo.add|Undo.reconfirm', 1038, 1, 1, '0000-00-00 00:00:00');
+
+UPDATE config_items SET value = '3.4.8' WHERE code = 'db_version';
