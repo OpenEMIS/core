@@ -61,6 +61,7 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('id_new', ['type' => 'hidden']);
 		$this->ControllerAction->field('parent_field_option_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
