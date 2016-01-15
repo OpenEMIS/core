@@ -2,6 +2,7 @@ v3.4.9
 - Fixed bugs related to date showing in arabic language
 - Fixed a bug that prompt user to repair excel worksheet after downloading
 - Fixed a bug that caused student report progress bar to always stay at 0%
+- Fixed a bug that cause 404 error page when importing students to school
 - Added Staff absence report
 - Added validation rule to prevent user from adding spaces when changing passwords
 - Added Student Teacher ratio report and Student Class ratio report under Reports -> Institutions
