@@ -53,6 +53,7 @@ class InstitutionsController extends AppController  {
 			'DropoutRequests' 	=> ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
 			'TransferRequests' 	=> ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
 			'StudentAdmission'	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view']],
+			'Undo' 				=> ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionFees'],
@@ -66,10 +67,11 @@ class InstitutionsController extends AppController  {
 			'RubricAnswers' 	=> ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 			'Visits' 			=> ['className' => 'Institution.InstitutionQualityVisits'],
 
-			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['index', 'add']],
-			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['index', 'add']],
-			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['index', 'add']],
-			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['index', 'add']],
+			'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+			'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
+			'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
+			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
 	}
 
@@ -273,6 +275,24 @@ class InstitutionsController extends AppController  {
 
 		} else {
 			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+		}
+	}
+
+	//autocomplete used for InstitutionSiteShift
+	public function ajaxInstitutionAutocomplete() {
+		$this->ControllerAction->autoRender = false;
+		$data = [];
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		if ($this->request->is(['ajax'])) {
+			$term = trim($this->request->query['term']);
+			$session = $this->request->session();
+			$institutionId = $session->read('Institution.Institutions.id');
+			$params['conditions'] = [$Institutions->aliasField('id').' IS NOT ' => $institutionId];
+			if (!empty($term)) 
+				$data = $Institutions->autocomplete($term, $params);
+				
+			echo json_encode($data);
+			die;
 		}
 	}
 

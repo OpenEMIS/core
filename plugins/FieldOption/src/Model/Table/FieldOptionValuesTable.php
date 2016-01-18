@@ -10,17 +10,14 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use FieldOption\Model\Traits\FieldOptionsTrait;
 use Cake\Utility\Inflector;
 
 class FieldOptionValuesTable extends AppTable {
 	use OptionsTrait;
+	use FieldOptionsTrait; //holds private $parentFieldOptionList required for migrating tables out of field_options
+
 	private $fieldOption = null;
-	private $parentFieldOptionList = [
-		'FieldOption.BankBranches' => 	['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
-		'User.ContactTypes' => 			['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
-		'FieldOption.Banks' => 		['behavior' => 'Display'],
-		'FieldOption.Countries' => 	['behavior' => 'Countries']
-	];
 
 	public $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
 	
@@ -28,8 +25,11 @@ class FieldOptionValuesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
-
-		$this->addBehavior('Reorder', ['filter' => 'field_option_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'field_option_id',
+			]);
+		}
 	}
 
 	public function onGetFieldOptionId(Event $event, Entity $entity) {
@@ -61,6 +61,7 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('id_new', ['type' => 'hidden']);
 		$this->ControllerAction->field('parent_field_option_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
@@ -254,6 +255,17 @@ class FieldOptionValuesTable extends AppTable {
 			}
 		}
 		return $result;
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$newButton = [];
+		foreach ($buttons as $button) {
+			$url = $button['url'];
+			$url[0] = $entity->id;
+			$button['url'] = $url;
+			$newButton[] = $button;
+		}
+		return $newButton;
 	}
 
 }

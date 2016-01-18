@@ -145,8 +145,10 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			$textValue = substr(Text::uuid(), 0, 8);
-			$attr['attr']['value'] = $textValue;
+			if (!$request->is('post')) {
+				$textValue = substr(Text::uuid(), 0, 8);
+				$attr['attr']['value'] = $textValue;
+			}
 			return $attr;
 		}
 	}
