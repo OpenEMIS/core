@@ -496,7 +496,8 @@ trait MessagesTrait {
 				'institutionGrades' => 'You need to configure Institution Grades first.',
 				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
-				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.'
+				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.',
+				'notInSchool' => '<Not In School>'
 			],
 			'InstitutionStaff' => [
 				'institutionPositionId' => 'You need to configure Institution Site Positions first.',
@@ -954,6 +955,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			]
+		],
+		'Report' => [
+			'InstitutionStudentsOutOfSchool' => [
+				'reportName' => 'Students Out of School'
 			]
 		],
 	];
