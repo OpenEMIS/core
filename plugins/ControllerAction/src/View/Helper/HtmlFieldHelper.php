@@ -375,9 +375,13 @@ class HtmlFieldHelper extends Helper {
 			$showRemoveButton = (!empty($tmp_file)) ? true : false; 
 
 			if(!is_array($data[$attr['field']])) {
-			  $imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
-			  $src = (!empty($imageContent)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImgView;
-			  $showRemoveButton = true;	
+				if (is_resource($data[$attr['field']])) {
+					$imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
+				} else {
+					$imageContent = !is_null($data[$attr['field']]) ? $data[$attr['field']] : "";
+				}
+				$src = (!empty($imageContent)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImgView;
+				$showRemoveButton = true;	
 			}
 
 			header('Content-Type: image/jpeg'); 
