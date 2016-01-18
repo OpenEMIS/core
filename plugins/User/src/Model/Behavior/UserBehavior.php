@@ -374,22 +374,13 @@ class UserBehavior extends Behavior {
 		$this->_table->controller->ControllerAction->autoRender = false;
 
 		$currModel = $this->_table;
-		if ($entity instanceof User) {
-			$photoData = $currModel->find()
-				->select([$currModel->aliasField('photo_content')])
-				->where([$currModel->aliasField($currModel->primaryKey()) => $id])
-				->first()
-				;
-			$phpResourceFile = $photoData->photo_content;
-		} {
-			$photoData = $currModel->find()
-				->contain('Users')
-				->select(['Users.photo_content'])
-				->where([$currModel->aliasField($currModel->primaryKey()) => $id])
-				->first()
-				;
-			$phpResourceFile = $photoData->Users->photo_content;
-		}
+		$photoData = $currModel->find()
+			->contain('Users')
+			->select(['Users.photo_content'])
+			->where([$currModel->aliasField($currModel->primaryKey()) => $id])
+			->first()
+			;
+		$phpResourceFile = $photoData->Users->photo_content;
 		
 		if ($base64Format) {
 			echo base64_encode(stream_get_contents($phpResourceFile));
