@@ -244,22 +244,16 @@ class InstitutionsTable extends AppTable  {
 				if (!$this->save($entity)) {
 					return false;
 				} else {
-					if ($this->Auth->user('super_admin') != 1) {
+					if (!$this->AccessControl->isAdmin()) {
 						$userId = $this->Auth->user('id');
 						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-						$groupAdmin = $SecurityRolesTable->find()
-							->where([
-								$SecurityRolesTable->aliasField('name') => 'Group Administrator'
-							])
-							->first();
-						$securityRoleId = $groupAdmin->id;
-						$securityGroupId = $securityGroup->id;
+						$groupAdmin = $SecurityRolesTable->getGroupAdministratorEntity();
 
 						$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 						$newEntity = $SecurityGroupUsers->newEntity([
-								'security_group_id' => $securityGroupId,
+								'security_group_id' => $securityGroup->id,
 								'security_user_id' => $userId,
-								'security_role_id' => $securityRoleId
+								'security_role_id' => $groupAdmin->id
 							]);
 						$SecurityGroupUsers->save($newEntity);
 					}
