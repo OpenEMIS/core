@@ -35,6 +35,7 @@ class AccountBehavior extends Behavior {
 	public function getAccountValidation(Validator $validator) {
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
+		$this->_table->setValidationCode('password.ruleNoSpaces', 'User.Accounts');
 		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
 		return $validator
@@ -49,6 +50,9 @@ class AccountBehavior extends Behavior {
 				]
 			])
 			->add('password' , [
+				'ruleNoSpaces' => [
+					'rule' => 'checkNoSpaces'
+				],
 				'ruleMinLength' => [
 					'rule' => ['minLength', 6],
 					'on' => 'update'
@@ -143,8 +147,19 @@ class AccountBehavior extends Behavior {
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// trimming passwords
+		$dataArray = $data->getArrayCopy();
+		if (array_key_exists($this->_table->alias(), $dataArray)) {
+			if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
+				$data[$this->_table->alias()]['username'] = trim($dataArray[$this->_table->alias()]['username']);
+			}
+		}
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query) {

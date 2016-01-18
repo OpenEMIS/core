@@ -375,11 +375,6 @@ class ConfigItemsTable extends AppTable {
 	];
 	   
 	private $validateStartTime = [
-		'dateInput' => [
-			'rule'	=> ['checkDateInput'],
-			'provider' => 'table',
-			'last' => true
-		],
 		'aPValue' => [
 			'rule'	=> ['amPmValue'],
 			'provider' => 'table',
@@ -455,12 +450,12 @@ class ConfigItemsTable extends AppTable {
   	private $validateStudentAdmissionAge = [
 		'num' => [
 			'rule'  => 'numeric',
-			'message' => 'Numeric Value should be between 0 to 101',
+			'message' => 'Numeric Value should be between -1 to 101',
 			'last' => true
 		],
 		'bet' => [
-			'rule'	=> ['range', 1, 100],
-			'message' => 'Numeric Value should be between 0 to 101',
+			'rule'	=> ['range', 0, 100],
+			'message' => 'Numeric Value should be between -1 to 101',
 			'last' => true
 		]
   	];
