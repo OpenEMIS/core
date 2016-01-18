@@ -976,123 +976,6 @@ class StudentsTable extends AppTable {
 			}
 			// End PHPOE-1897
 
-
-			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
-				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-				$studentData = $this->get($id);
-				$selectedStudent = $studentData->student_id;
-				$selectedPeriod = $studentData->academic_period_id;
-				$selectedGrade = $studentData->education_grade_id;
-				$this->Session->write($TransferRequests->registryAlias().'.id', $id);
-
-				// Show Transfer button only if the Student Status is Current
-				$institutionId = $this->Session->read('Institution.Institutions.id');
-				
-				$student = $StudentPromotion
-					->find()
-					->where([
-						$StudentPromotion->aliasField('institution_id') => $institutionId,
-						$StudentPromotion->aliasField('student_id') => $selectedStudent,
-						$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
-						$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
-					])
-					->first();
-
-				$checkIfCanTransfer = $this->checkIfCanTransfer($student);
-				// End
-
-				// Transfer button
-				$transferButton = $buttons['back'];
-				$transferButton['type'] = 'button';
-				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
-				$transferButton['attr'] = $attr;
-				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$transferButton['attr']['title'] = __('Transfer');
-				//End
-
-				$transferRequest = $TransferRequests
-						->find()
-						->where([
-							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
-							$TransferRequests->aliasField('student_id') => $selectedStudent,
-							$TransferRequests->aliasField('status') => 0
-						])
-						->first();
-
-				if (!empty($transferRequest)) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'edit',
-						$transferRequest->id
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				} else if ($checkIfCanTransfer) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'add'
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				} 
-			}
-
-			if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
-				// Institution student id
-				$id = $this->request->pass[1];
-				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-				$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
-				$studentData = $this->get($id);
-				// Check if the student is enrolled
-				if ($studentData->student_status_id == $enrolledStatus) {
-
-					$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
-					$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
-					$NEW = 0;
-					
-					$selectedStudent = $DropoutRequests->find()
-						->select(['institution_student_dropout_id' => 'id'])
-						->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
-								$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
-								$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
-								$DropoutRequests->aliasField('status') => $NEW
-							])
-						->first();
-
-					// Dropout button
-					$dropoutButton = $buttons['back'];
-					$dropoutButton['type'] = 'button';
-					$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
-					$dropoutButton['attr'] = $attr;
-					$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-					$dropoutButton['attr']['title'] = __('Dropout');
-
-					// If this is a new application
-					if (count($selectedStudent) == 0) {
-						$dropoutButton['url'] = [
-								'plugin' => $buttons['back']['url']['plugin'],
-								'controller' => $buttons['back']['url']['controller'],
-								'action' => 'DropoutRequests',
-								'add'
-							];
-					} 
-					// If the application is not new
-					else {
-						$dropoutButton['url'] = [
-								'plugin' => $buttons['back']['url']['plugin'],
-								'controller' => $buttons['back']['url']['controller'],
-								'action' => 'DropoutRequests',
-								'edit',
-								$selectedStudent->institution_student_dropout_id
-							];
-					}
-					$toolbarButtons['dropout'] = $dropoutButton;
-				}
-			}
-
 			if (isset($toolbarButtons['back'])) {
 				$refererUrl = $this->request->referer();
 				$toolbarButtons['back']['url'] = $refererUrl;
@@ -1100,7 +983,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	private function checkIfCanTransfer($student) {
+	public function checkIfCanTransfer($student) {
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$studentStatusList = array_flip($StudentStatuses->findCodeList());
 		
