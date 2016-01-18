@@ -10,8 +10,11 @@
         "mobiledetect/mobiledetectlib": "2.*",
         "cakephp/migrations": "~1.0",
         "cakephp/plugin-installer": "*",
-	"phpunit/phpunit": "*",
-	"cakephp/debug_kit": "~3.0"
+        "phpunit/phpunit": "*",
+        "cakephp/debug_kit": "~3.0",
+        "PHPOffice/PHPExcel": "dev-master",
+        "mk-j/php_xlsxwriter": "dev-master",
+        "box/spout": "^2.4"
     },
     "require-dev": {
         "psy/psysh": "@stable",

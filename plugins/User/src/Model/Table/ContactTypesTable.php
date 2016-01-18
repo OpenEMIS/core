@@ -7,10 +7,13 @@ use Cake\ORM\Query;
 
 class ContactTypesTable extends AppTable {
 	public function initialize(array $config) {
+		$this->addBehavior('ControllerAction.FieldOption');
+		$this->table('contact_types');
 		parent::initialize($config);
 
 		$this->belongsTo('ContactOptions', ['className' => 'User.ContactOptions']);
-		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'contact_type_id'])
+		;
 	}
 
 	public function findWithContactOptions(Query $query, array $options) {

@@ -47,14 +47,14 @@ class StudentBehavior extends Behavior {
 			if ($request->params['controller'] == 'Institutions') {
 				$session = $request->session();
 				$institutionId = $session->read('Institution.Institutions.id');
-				$query->andWhere(['InstitutionSiteStudents.institution_site_id' => $institutionId]);
+				$query->andWhere(['Students.institution_id' => $institutionId]);
 			}
 		}
 
 		// this part filters the list by institutions/areas granted to the group
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->_table->AccessControl->getInstitutionsByUser();
-			$query->where(['InstitutionSiteStudents.institution_site_id IN ' => $institutionIds]);
+			$query->where(['Students.institution_id IN ' => $institutionIds]);
 		}
 	}
 
@@ -84,11 +84,11 @@ class StudentBehavior extends Behavior {
 			$session = $event->subject()->request->session();
 			$institutionId = $session->read('Institutions.id');
 
-			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+			$InstitutionStudents = TableRegistry::get('Institution.Students');
 			$obj = $InstitutionStudents->find()
 				->contain('StudentStatuses')
 				->where([
-					$InstitutionStudents->aliasField('institution_site_id') => $institutionId,
+					$InstitutionStudents->aliasField('institution_id') => $institutionId,
 					$InstitutionStudents->aliasField('security_user_id') => $entity->id
 				])
 				->first();
@@ -103,7 +103,7 @@ class StudentBehavior extends Behavior {
 
 	public function addBeforeAction(Event $event) {
 		$name = $this->_table->alias();
-		$this->_table->ControllerAction->addField('institution_site_students.0.institution_site_id', [
+		$this->_table->ControllerAction->addField('institution_students.0.institution_id', [
 			'type' => 'hidden', 
 			'value' => 0
 		]);
@@ -111,7 +111,7 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$settings['model'] = 'Institution.InstitutionSiteStudents';
+		$settings['model'] = 'Institution.Students';
 
 		$this->_table->ControllerAction->field('name');
 		$this->_table->ControllerAction->field('default_identity_type');
@@ -130,18 +130,18 @@ class StudentBehavior extends Behavior {
 			if ($session->check($alias.'.add.'.$this->_table->request->query['new'])) {
 				$institutionStudentData = $session->read($alias.'.add.'.$this->_table->request->query['new']);
 				if (array_key_exists($alias, $data)) {
-					if (!array_key_exists('institution_site_students', $data[$alias])) {
-						$data[$alias]['institution_site_students'] = [];
-						$data[$alias]['institution_site_students'][0] = [];
+					if (!array_key_exists('institution_students', $data[$alias])) {
+						$data[$alias]['institution_students'] = [];
+						$data[$alias]['institution_students'][0] = [];
 					}
-					$data[$alias]['institution_site_students'][0]['institution_site_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['institution_site_id'];
+					$data[$alias]['institution_students'][0]['institution_id'] = $institutionStudentData[$alias]['institution_students'][0]['institution_id'];
 
-					$data[$alias]['institution_site_students'][0]['student_status_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['student_status_id'];
-					$data[$alias]['institution_site_students'][0]['education_programme_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['education_programme_id'];
+					$data[$alias]['institution_students'][0]['student_status_id'] = $institutionStudentData[$alias]['institution_students'][0]['student_status_id'];
+					$data[$alias]['institution_students'][0]['education_programme_id'] = $institutionStudentData[$alias]['institution_students'][0]['education_programme_id'];
 
 					// start and end (date and year) handling
-					$data[$alias]['institution_site_students'][0]['start_date'] = $institutionStudentData[$alias]['institution_site_students'][0]['start_date'];
-					$data[$alias]['institution_site_students'][0]['end_date'] = $institutionStudentData[$alias]['institution_site_students'][0]['end_date'];
+					$data[$alias]['institution_students'][0]['start_date'] = $institutionStudentData[$alias]['institution_students'][0]['start_date'];
+					$data[$alias]['institution_students'][0]['end_date'] = $institutionStudentData[$alias]['institution_students'][0]['end_date'];
 				}
 			}
 		}
@@ -149,18 +149,18 @@ class StudentBehavior extends Behavior {
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$newOptions = [];
-		$options['associated'] = ['InstitutionSiteStudents'];
+		$options['associated'] = ['Students'];
 
 		// Jeff: workaround, needs to redo this logic
 		$alias = $this->_table->alias();
-		if (isset($data[$alias]['institution_site_students'])) {
-			$students = $data[$alias]['institution_site_students'];
-			if (!empty($students) && isset($students[0]) && isset($students[0]['institution_site_id'])) {
-				if ($students[0]['institution_site_id'] == 0) {
-					$data[$alias]['institution_site_students'][0]['start_date'] = date('Y-m-d');
-					$data[$alias]['institution_site_students'][0]['end_date'] = date('Y-m-d', time()+86400);
-					$data[$alias]['institution_site_students'][0]['education_programme_id'] = 0;
-					$data[$alias]['institution_site_students'][0]['student_status_id'] = 0;
+		if (isset($data[$alias]['institution_students'])) {
+			$students = $data[$alias]['institution_students'];
+			if (!empty($students) && isset($students[0]) && isset($students[0]['institution_id'])) {
+				if ($students[0]['institution_id'] == 0) {
+					$data[$alias]['institution_students'][0]['start_date'] = date('Y-m-d');
+					$data[$alias]['institution_students'][0]['end_date'] = date('Y-m-d', time()+86400);
+					$data[$alias]['institution_students'][0]['education_programme_id'] = 0;
+					$data[$alias]['institution_students'][0]['student_status_id'] = 0;
 				}
 			}
 		}
@@ -181,11 +181,11 @@ class StudentBehavior extends Behavior {
 					$institutionStudentData = $this->_table->Session->read($sessionVar);
 					$sectionData = [];
 					$sectionData['student_id'] = $entity->id;
-					$sectionData['education_grade_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['education_grade'];
-					$sectionData['institution_site_section_id'] = $institutionStudentData[$alias]['institution_site_students'][0]['section'];
+					$sectionData['education_grade_id'] = $institutionStudentData[$alias]['institution_students'][0]['education_grade'];
+					$sectionData['institution_section_id'] = $institutionStudentData[$alias]['institution_students'][0]['section'];
 
-					$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-					$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);	
+					$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+					$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);	
 				}
 			}
 		}

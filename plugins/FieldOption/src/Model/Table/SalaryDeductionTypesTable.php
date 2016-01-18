@@ -9,6 +9,6 @@ class SalaryDeductionTypesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
 
-		$this->hasMany('StaffSalaryAdditions', ['className' => 'Staff.StaffSalaryAdditions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffSalaryDeductions', ['className' => 'Staff.SalaryDeductions', 'foreignKey' => 'salary_deduction_type_id']);
 	}
 }

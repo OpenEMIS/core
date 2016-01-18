@@ -4,7 +4,7 @@ $this->start('panelBody');
 ?>
 <tab heading="License">
 	<!-- License -->
-	<div id="license">
+	<div id="license" class="about-wrapper">
 		<div class="about-container">
 			<h3>GNU General Public License</h3>
 			<p>Version 2, June 1991</p>	

@@ -13,6 +13,10 @@ use App\Model\Table\AppTable;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
+
+	public function initialize(array $config) {
+		parent::initialize($config);
+	}
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
@@ -38,9 +42,9 @@ class StudentUserTable extends UserTable {
 						$sectionData = [];
 						$sectionData['student_id'] = $entity->id;
 						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-						$sectionData['institution_site_section_id'] = $class;
-						$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-						$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+						$sectionData['institution_section_id'] = $class;
+						$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+						$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
 					}
 				} else {
 					$validationErrors = [];
@@ -88,6 +92,12 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
+		$this->Session->write('Student.Students.id', $entity->id);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -106,7 +116,6 @@ class StudentUserTable extends UserTable {
 		];
 
 		$tabElements = $this->controller->getUserTabElements($options);
-
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
@@ -120,12 +129,12 @@ class StudentUserTable extends UserTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 			unset($toolbarButtons['back']);
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
-			
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$id = $this->request->query['id'];
+			$id = $this->request->query('id');
+			if (!empty($id)) {
+				$this->Session->write('Institution.Students.id', $id);
+			}
+			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
 			$studentId = $StudentTable->get($id)->student_id;
 			// Start PHPOE-1897
