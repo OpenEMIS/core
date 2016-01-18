@@ -410,8 +410,7 @@ class UserGroupsTable extends AppTable {
 					}
 				} else {
 					if (!$this->AccessControl->isAdmin()) {
-						$groupAdmin = $this->Roles->find()->where([$this->Roles->aliasField('name') => 'Group Administrator'])->first();
-						$groupAdminId = $groupAdmin->id;
+						$groupAdmin = $this->Roles->getGroupAdministratorEntity();
 						$UserTable = TableRegistry::get('Users');
 						$user = $UserTable->get($userId);
 						if (empty($this->request->data[$alias][$key])) {
@@ -421,7 +420,7 @@ class UserGroupsTable extends AppTable {
 									'openemis_no' => $user->openemis_no, 
 									'security_user_id' => $userId, 
 									'name' => $user->name,
-									'security_role_id' => $groupAdminId
+									'security_role_id' => $groupAdmin->id
 								]
 							];
 						}	
