@@ -368,7 +368,7 @@ class SecurityRolesTable extends AppTable {
 	public function getGroupAdministratorEntity() {
 		return $this->find()
 			->where([
-				$SecurityRolesTable->aliasField('name') => 'Group Administrator'
+				$this->aliasField('name') => 'Group Administrator'
 			])
 			->first();
 	}
