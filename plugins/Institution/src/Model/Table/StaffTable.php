@@ -38,7 +38,6 @@ class StaffTable extends AppTable {
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('User.AdvancedNationalIdSearch');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Excel', [
@@ -168,8 +167,6 @@ class StaffTable extends AppTable {
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
-			// function from AdvancedNationalIdSearchBehavior
-			$query = $this->addNationalIdSearchConditions($query, ['searchTerm' => $search]);
 		}
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
