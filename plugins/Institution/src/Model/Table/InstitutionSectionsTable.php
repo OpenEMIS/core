@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
@@ -74,7 +75,8 @@ class InstitutionSectionsTable extends AppTable {
 			->toArray();
 		if (!empty($exists)) {
 			foreach ($exists as $key => $value) {
-				if ($value->id == $data['id']) {
+				if (array_key_exists('id', $data) && $value->id == $data['id']) {
+					// if editing an existing value
 					return true;
 					break;
 				}
@@ -286,7 +288,9 @@ class InstitutionSectionsTable extends AppTable {
 							'InstitutionSectionGrades.institution_section_id = InstitutionSections.id'
 						]
 					]
-				]);
+				])
+				->group(['InstitutionSectionGrades.institution_section_id'])
+				;
 		}
     }
 
@@ -391,7 +395,10 @@ class InstitutionSectionsTable extends AppTable {
 			 * education_grade field setup
 			 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
 			 */
-			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+			$gradeOptions = [];
+			if (!empty($this->_selectedAcademicPeriodId)) {
+				$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+			}
 			if ($this->_selectedEducationGradeId != 0) {
 				if (!array_key_exists($this->_selectedEducationGradeId, $gradeOptions)) {
 					$this->_selectedEducationGradeId = key($gradeOptions);
@@ -747,18 +754,12 @@ class InstitutionSectionsTable extends AppTable {
 			$k = $record->student_id;
 			if (array_key_exists('institution_section_students', $data[$this->alias()])) {
 				if (!array_key_exists($k, $data[$this->alias()]['institution_section_students'])) {			
-					$data[$this->alias()]['institution_section_students'][$k] = [
-						'id' => $record->id,
-						'status' => 0 
-					];
+					// PHPOE-2338 - status no longer used, record will be deleted instead
 				} else {
 					$data[$this->alias()]['institution_section_students'][$k]['id'] = $record->id;
 				}
 			} else {
-				$data[$this->alias()]['institution_section_students'][$k] = [
-					'id' => $record->id,
-					'status' => 0 
-				];
+				// PHPOE-2338 - status no longer used, record will be deleted instead
 			}
 		}
 	}
@@ -779,7 +780,7 @@ class InstitutionSectionsTable extends AppTable {
 			 */
 			if (array_key_exists('institution_section_students', $this->request->data[$this->alias()])) {
 				foreach ($this->request->data[$this->alias()]['institution_section_students'] as $row) {
-					if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+					if (array_key_exists($row['student_id'], $studentOptions)) {
 						$id = $row['student_id'];
 						if ($id != 0) {
 							$students[] = $this->createVirtualStudentEntity($id, $entity);
@@ -803,7 +804,7 @@ class InstitutionSectionsTable extends AppTable {
 			 * Just unset the record from studentOptions on first page load
 			 */
 			foreach ($entity->institution_section_students as $row) {
-				if ($row->status == 1 && array_key_exists($row->student_id, $studentOptions)) {
+				if (array_key_exists($row->student_id, $studentOptions)) {
 					unset($studentOptions[$row->student_id]);
 				}
 			}
@@ -821,11 +822,29 @@ class InstitutionSectionsTable extends AppTable {
 			'InstitutionClasses.InstitutionSections', 
 			'InstitutionSectionStudents.Users'
 		])->where([$this->aliasField('id')=>$entity->id])->first();
+		
+		// finding removed student ids
+		$currentInstitutionSectionStudents = $entity->institution_section_students;
+		$currentStudentIds = [];
+		foreach ($currentInstitutionSectionStudents as $key => $value) {
+			$currentStudentIds[] = $value->student_id;
+		}
+		$originalInstitutionSectionStudents = $entity->getOriginal('institution_section_students');
+		$originalStudentIds = [];
+		foreach ($originalInstitutionSectionStudents as $key => $value) {
+			$originalStudentIds[] = $value->student_id;
+		}
+		$removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
+
 		$classes = [];
 		foreach ($record->institution_classes as $class) {
 			$students = [];
 			foreach($record->institution_section_students as $sectionStudent) {
-				$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students');
+				$requiredData = (array_key_exists($sectionStudent->user->id, $requestData[$this->alias()]['institution_section_students']))? $requestData[$this->alias()]['institution_section_students'][$sectionStudent->user->id]: null;
+				if (in_array($sectionStudent->user->id, $removedStudentIds)) {
+					$requiredData['status'] = 0;
+				}
+				$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students', $requiredData);
 			}
 			if (count($class->institution_class_students)>0) {
 				foreach($class->institution_class_students as $classStudent) {
@@ -835,9 +854,27 @@ class InstitutionSectionsTable extends AppTable {
 					}
 				}
 			}
+
 			$class->institution_class_students = $students;
 			$this->InstitutionClasses->save($class);
 		}
+
+		if (!empty($removedStudentIds)) {
+			// 'deleteAll will not trigger beforeDelete/afterDelete events. If you need those first load a collection of records and delete them.'
+			foreach ($removedStudentIds as $key => $value) {
+				$deleteSectionStudent = $this->InstitutionSectionStudents->find()
+					->where([
+						$this->InstitutionSectionStudents->aliasField('institution_section_id') => $entity->id,
+						$this->InstitutionSectionStudents->aliasField('student_id').' IN ' => $removedStudentIds
+					])
+					->toArray()
+					;
+				foreach ($deleteSectionStudent as $key => $value) {
+					$this->InstitutionSectionStudents->delete($value);
+				}
+			}
+		}
+		
 	}
 
 
@@ -992,8 +1029,7 @@ class InstitutionSectionsTable extends AppTable {
 						$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
 					])
 					->where([
-							$this->InstitutionSectionStudents->aliasField('student_id').' IN' => array_keys($studentOptions),
-							$this->InstitutionSectionStudents->aliasField('status') => 1
+							$this->InstitutionSectionStudents->aliasField('student_id').' IN' => array_keys($studentOptions)
 						]);
 		$sectionsWithStudents = $query->toArray();
 
@@ -1088,7 +1124,6 @@ class InstitutionSectionsTable extends AppTable {
 			'student_id'=>$id,
 			'institution_section_id'=>$entity->id,
 			'education_grade_id'=>0,
-			'status'=>1,
 			'user'=>[]
 		];
 		$student = $this->InstitutionSectionStudents->newEntity();
@@ -1098,7 +1133,7 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	protected function getExistingRecordId($securityId, $entity) {
-		$id = '';
+		$id = Text::uuid();
 		foreach ($entity->institution_section_students as $student) {
 			if ($student->student_id == $securityId) {
 				$id = $student->id;

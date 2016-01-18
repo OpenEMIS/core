@@ -42,6 +42,71 @@ class SystemGroupsTable extends AppTable {
 		}
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['security_group_id'] = $entity->id;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if (!$this->AccessControl->isAdmin()) {
+				$userId = $this->Auth->user('id');
+				$securityGroupId = $this->request->data[$this->alias()]['security_group_id'];
+				$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+				if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+					if (array_key_exists('edit', $toolbarButtons)) {
+						unset($toolbarButtons['edit']);
+					}
+				}
+			}
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$userId = $this->Auth->user('id');
+			$securityGroupId = $entity->id;
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+				$urlParams = $this->ControllerAction->url('index');
+				$event->stopPropagation();
+				return $this->controller->redirect($urlParams);
+			}
+		}
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		$userId = $this->Auth->user('id');
+		$securityGroupId = $entity->id;
+		// -1 = system roles, we are not allowing users to modify system roles
+		// removing all buttons from the menu
+		if (!$this->AccessControl->isAdmin()) {
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+				if (array_key_exists('edit', $buttons)) {
+					unset($buttons['edit']);
+				}
+			}
+
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_delete')) {
+				if (array_key_exists('remove', $buttons)) {
+					unset($buttons['remove']);
+				}
+			}
+		}
+		
+		return $buttons;
+	}
+
 	public function beforeAction(Event $event) {
 		$controller = $this->controller;
 		$tabElements = [
@@ -106,7 +171,7 @@ class SystemGroupsTable extends AppTable {
 	}
 
 	public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options=[]) {
-		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Role')];
+		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Role')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'users';
@@ -142,7 +207,6 @@ class SystemGroupsTable extends AppTable {
 				$userId = null;
 			}
 			$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId);
-
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
 					$this->request->data[$alias] = [$key => []];
