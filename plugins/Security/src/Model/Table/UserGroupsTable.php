@@ -410,7 +410,7 @@ class UserGroupsTable extends AppTable {
 					}
 				} else {
 					if (!$this->AccessControl->isAdmin()) {
-						$groupAdmin = $this->Roles->getGroupAdministratorEntity();;
+						$groupAdmin = $this->Roles->getGroupAdministratorEntity();
 						$UserTable = TableRegistry::get('Users');
 						$user = $UserTable->get($userId);
 						if (empty($this->request->data[$alias][$key])) {
