@@ -10,10 +10,13 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\ORM\ResultSet;
 
 use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
+	private $dashboardQuery = null;
+
 	public function initialize(array $config) {
 		$this->table('institutions');
         parent::initialize($config);
@@ -28,6 +31,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
 		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
 		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
+		$this->belongsTo('NetworkConnectivities', 			['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'institution_network_connectivity_id']);
 		/**
 		 * end fieldOption tables
 		 */
@@ -102,11 +106,7 @@ class InstitutionsTable extends AppTable  {
 			->add('date_opened', [
 					'ruleCompare' => [
 						'rule' => ['comparison', 'notequal', '0000-00-00'],
-					],
-					'ruleCheckDateInput' => [
-			            'rule' => ['checkDateInput'],
-		        		'last' => true
-		    	    ]
+					]
 				])
 
 	        ->allowEmpty('date_closed')
@@ -155,6 +155,29 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$cloneFields = $fields->getArrayCopy();
+		$newFields = [];
+		foreach ($cloneFields as $key => $value) {
+			$newFields[] = $value;
+			if ($value['field'] == 'area_id') {
+				$newFields[] = [
+					'key' => 'Areas.code',
+					'field' => 'area_code',
+					'type' => 'string',
+					'label' => ''
+				];
+			}
+		}
+		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$query
+			->contain(['Areas'])
+			->select(['area_code' => 'Areas.code']);
+	}
+
 	public function onGetName(Event $event, Entity $entity) {
 		$name = $entity->name;
 
@@ -185,6 +208,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_sector_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
 
@@ -255,21 +279,13 @@ class InstitutionsTable extends AppTable  {
 			$institutionCount = $this->find();
 			$conditions = [];
 
-			if (! $this->AccessControl->isAdmin()) {
-
-				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-
-				// Total Institutions: number
-				$institutionCount = $institutionCount
-					->where([$this->aliasField('id').' IN' => $institutionIds]);
-
-				$conditions['id IN'] = $institutionIds;
-			}
+			$institutionCount = clone $this->dashboardQuery;
+			$cloneClass = clone $this->dashboardQuery;
 
 			$models = [
-				['Types', 'institution_type_id', 'Type', 'conditions' => $conditions],
-				['Sectors', 'institution_sector_id', 'Sector', 'conditions' => $conditions],
-				['Localities', 'institution_locality_id', 'Locality', 'conditions' => $conditions],
+				['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
+				['Sectors', 'institution_sector_id', 'Sector', 'query' => $this->dashboardQuery],
+				['Localities', 'institution_locality_id', 'Locality', 'query' => $this->dashboardQuery],
 			];
 
 			foreach ($models as $key => $model) {
@@ -277,11 +293,13 @@ class InstitutionsTable extends AppTable  {
 			}
 
 			$indexDashboard = 'dashboard';
+			$count = $institutionCount->count();
+			unset($institutionCount);
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [ 
 	            	'model' => 'institutions',
-	            	'modelCount' => $institutionCount->count(),
+	            	'modelCount' => $count,
 	            	'modelArray' => $institutionArray,
 	            ],
 	            'options' => [],
@@ -294,19 +312,14 @@ class InstitutionsTable extends AppTable  {
 	public function getNumberOfInstitutionsByModel($params=[]) {
 
 		if (!empty($params)) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
+			$query = $params['query'];
 
 			$modelName = $params[0];
 			$modelId = $params[1];
 			$key = $params[2];
 			$params['key'] = __($key);
 
-			foreach ($conditions as $key => $value) {
-				$_conditions[$this->aliasField($key)] = $value;
-			}
-
-			$institutionRecords = $this->find();
+			$institutionRecords = clone $query;
 			
 			$selectString = $modelName.'.name';
 			$institutionTypesCount = $institutionRecords
@@ -316,17 +329,19 @@ class InstitutionsTable extends AppTable  {
 					'name' => $selectString
 				])
 				->group($modelId)
-				->where($_conditions)
-				->toArray();
+				;
+
+			$this->advancedSearchQuery($this->request, $institutionTypesCount);
 
 			// Creating the data set		
 			$dataSet = [];
-			foreach ($institutionTypesCount as $key => $value) {
+			foreach ($institutionTypesCount->toArray() as $key => $value) {
 	            // Compile the dataset
 				$dataSet[] = [__($value['name']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}
+		unset($institutionRecords);
 		return $params;
 	}
 
@@ -417,6 +432,11 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
+		$query = $resultSet->__debugInfo()['query'];
+		$this->dashboardQuery = clone $query;
+	}
+
 	public function indexAfterAction(Event $event, $data) {
 		$search = $this->ControllerAction->getSearchKey();
 		if (empty($search)) {
@@ -441,7 +461,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
-			'institution_ownership_id', 'institution_gender_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -468,7 +488,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
-			'institution_ownership_id', 'institution_gender_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -489,7 +509,8 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 	
 	// autocomplete used for UserGroups
-	public function autocomplete($search) {
+	public function autocomplete($search, $params = []) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$search = sprintf('%%%s%%', $search);
 
 		$list = $this
@@ -500,6 +521,7 @@ class InstitutionsTable extends AppTable  {
 					$this->aliasField('code') . ' LIKE' => $search
 				]
 			])
+			->where([$conditions])
 			->order([$this->aliasField('name')])
 			->all();
 		

@@ -26,8 +26,19 @@ class DirectoriesController extends AppController {
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
-					
-			
+
+
+			// Users - Health
+			'Healths' 				=> ['className' => 'Health.Healths'],
+			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
+			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
+			'HealthFamilies' 		=> ['className' => 'Health.Families'],
+			'HealthHistories' 		=> ['className' => 'Health.Histories'],
+			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
+			'HealthMedications' 	=> ['className' => 'Health.Medications'],
+			'HealthTests' 			=> ['className' => 'Health.Tests'],
+
+
 			// Student
 			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
 			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
@@ -40,8 +51,8 @@ class DirectoriesController extends AppController {
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
-			'StudentAwards' 		=> ['className' => 'User.Awards'],	
-			
+			'StudentAwards' 		=> ['className' => 'User.Awards'],
+
 
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
@@ -61,6 +72,8 @@ class DirectoriesController extends AppController {
 			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
+
+			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
 		];
 
 		$this->loadComponent('Training.Training');
@@ -107,24 +120,6 @@ class DirectoriesController extends AppController {
 		if ($session->check('Directory.Directories.id')) {
 			$header = '';
 			$userId = $session->read('Directory.Directories.id');
-
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $session->read('AccessControl.Institutions.ids');
-				$studentId = $session->read('Student.Students.id');
-				$enrolledStatus = false;
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				foreach ($institutionIds as $id) {
-					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-					if ($enrolledStatus) {
-						break;
-					}
-				}
-				if (! $enrolledStatus) {
-					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
-						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
-					}
-				}
-			}
 
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
@@ -202,9 +197,9 @@ class DirectoriesController extends AppController {
 				}
 			}
 		} else {
-			if ($model->alias() == 'ImportStudents') {
+			if ($model->alias() == 'ImportUsers') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
-				$header = __('Students') . ' - ' . $model->getHeader($model->alias());
+				$header = __('Users') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
 			} else {
 				$this->Alert->warning('general.notExists');
