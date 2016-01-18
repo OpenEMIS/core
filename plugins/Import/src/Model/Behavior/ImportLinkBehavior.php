@@ -16,7 +16,10 @@ class ImportLinkBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-		// pr($this->_table->ControllerAction);die;
+		$importModel = $this->config('import_model');
+		if (empty($importModel)) {
+			$this->config('import_model', 'Import'.$this->_table->alias());
+		};
 	}
 
 	public function implementedEvents() {
@@ -26,48 +29,56 @@ class ImportLinkBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		$customButton = [];
 		switch ($action) {
 			case 'index':
 				if ($buttons['index']['url']['action']=='Surveys') {
 					break;
 				}
-				$this->generateImportButton($toolbarButtons, $attr);
+				$customButton['url'] = $this->_table->request->params;
+				$customButton['url']['action'] = $this->config('import_model');
+
+				$this->generateImportButton($toolbarButtons, $attr, $customButton);
 				break;
 
 			case 'view':
-				if ($buttons['index']['url']['action']!='Surveys') {
+				if ($buttons['view']['url']['action']!='Surveys') {
 					break;
 				}
-				$import['url'] = $buttons['view']['url'];
-				$import['url']['action'] = 'Import'.$this->_table->alias();
-				$import['url'][0] = 'add';
-				$import['type'] = 'button';
-				$import['label'] = '<i class="fa kd-import"></i>';
-				$import['attr'] = $attr;
-				$import['attr']['title'] = __('Import');
-				unset($import['url']['filter']);
+				$customButton['url'] = $buttons['view']['url'];
+				$customButton['url']['action'] = 'Import'.$this->_table->alias();
 
-				$toolbarButtons['import'] = $import;
+				$this->generateImportButton($toolbarButtons, $attr, $customButton);
 				break;
 		}
 	}
 
-	private function generateImportButton(ArrayObject $toolbarButtons, array $attr) {
-		$url = $this->_table->request->params;
-		unset($url['_ext']);
-		unset($url['pass']);
-		if (array_key_exists('paging', $url)) {
-			unset($url['paging']);
+	private function generateImportButton(ArrayObject $toolbarButtons, array $attr, array $customButton) {
+		if (array_key_exists('_ext', $customButton['url'])) {
+			unset($customButton['url']['_ext']);
+		}
+		if (array_key_exists('pass', $customButton['url'])) {
+			unset($customButton['url']['pass']);
+		}
+		if (array_key_exists('paging', $customButton['url'])) {
+			unset($customButton['url']['paging']);
+		}
+		if (array_key_exists('filter', $customButton['url'])) {
+			unset($customButton['url']['filter']);
+		}
+		$customButton['url'][0] = 'add';
+
+		$AccessControl = $this->_table->controller->AccessControl;
+		$permission = $AccessControl->check($customButton['url']);
+		if ($permission) {
+			$customButton['type'] = 'button';
+			$customButton['label'] = '<i class="fa kd-import"></i>';
+			$customButton['attr'] = $attr;
+			$customButton['attr']['title'] = __('Import');
+
+			$toolbarButtons['import'] = $customButton;
 		}
 
-		$import['url'] = $url;
-		$import['url']['action'] = 'Import'.$this->_table->alias();
-		$import['type'] = 'button';
-		$import['label'] = '<i class="fa kd-import"></i>';
-		$import['attr'] = $attr;
-		$import['attr']['title'] = __('Import');
-
-		$toolbarButtons['import'] = $import;
 	}
 
 }

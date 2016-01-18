@@ -32,7 +32,6 @@
 				<tbody>
 				<?php 
 				foreach($attr['data']['students'] as $i => $obj) : 
-					if ($obj->status == 0) continue;
 
 					if ($action=='edit') :
 						$n = $obj->student_id;
@@ -40,19 +39,16 @@
 
 					<tr>
 						<?php
-
-						echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.id", [ 'value'=> $obj->id ]);
-						echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.student_id", [ 'value'=> $obj->student_id ]);
-						echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.status", [ 'value' => $obj->status ]);
-						echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
-
+						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.id", [ 'value'=> $obj->id ]);
+						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.student_id", [ 'value'=> $obj->student_id ]);
+						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.institution_section_id", [ 'value'=> $obj->institution_section_id ]);
 						?>
 						<td><?= $obj->user->openemis_no ?></td>
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
 						<td>
 							<?php
-							echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.education_grade_id", array(
+							echo $this->Form->input("InstitutionSections.institution_section_students.$n.education_grade_id", array(
 								'label' => false,
 								'options' => $attr['data']['gradeOptions'],
 								'value' => $obj->education_grade_id
