@@ -67,6 +67,7 @@ class InstitutionBehavior extends Behavior {
 				['EXISTS ('.$institutionSecurity->sql().' WHERE '.$institutionTableClone2->aliasField('id').'='.$this->_table->aliasField('id').')']
 			]
 		]);
+
 		return $query;
 	}
 }
