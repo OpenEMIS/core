@@ -27,9 +27,9 @@ class InstitutionClassesTable extends AppTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('InstitutionSectionClasses', 	['className' => 'Institution.InstitutionSectionClasses']);
-		$this->hasMany('InstitutionClassStudents', 		['className' => 'Institution.InstitutionClassStudents']);
-		$this->hasMany('InstitutionClassStaff', 		['className' => 'Institution.InstitutionClassStaff']);
+		$this->hasMany('InstitutionSectionClasses', ['className' => 'Institution.InstitutionSectionClasses']);
+		$this->hasMany('InstitutionClassStudents', 	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
+		$this->hasMany('InstitutionClassStaff', 	['className' => 'Institution.InstitutionClassStaff']);
 
 		$this->belongsToMany('InstitutionSections', [
 			'className' => 'Institution.InstitutionSections',
@@ -44,6 +44,14 @@ class InstitutionClassesTable extends AppTable {
 			'conditions' => ['InstitutionClassStaff.status' => 1],
 			'foreignKey' => 'institution_class_id',
 			'targetForeignKey' => 'staff_id'
+		]);
+
+		$this->belongsToMany('Students', [
+			'className' => 'User.Users',
+			'through' => 'InstitutionClassStudents',
+			'foreignKey' => 'institution_class_id',
+			'targetForeignKey' => 'student_id',
+			'dependent' => true
 		]);
 
 		// this behavior restricts current user to see All Subjects or My Subjects
