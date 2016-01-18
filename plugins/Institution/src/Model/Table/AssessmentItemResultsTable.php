@@ -27,7 +27,7 @@ class AssessmentItemResultsTable extends AppTable {
 
 	}
 	
-	// public function getResultsByStudent($studentId, $institutionSiteId=0) {
+	// public function getResultsByStudent($studentId, $institutionId=0) {
 	// 	$fields = array(
 	// 		'EducationSubject.code', 'EducationSubject.name', 'EducationGrade.id', 'EducationGrade.name', 'EducationProgramme.name',
 	// 		'AssessmentItemResult.marks', 'AssessmentResultType.name', 'AssessmentItemType.id', 'AssessmentItemType.name'
@@ -73,16 +73,16 @@ class AssessmentItemResultsTable extends AppTable {
 		
 	// 	$conditions = array('AssessmentItemResult.student_id' => $studentId);
 		
-	// 	if($institutionSiteId==0) {
+	// 	if($institutionId==0) {
 	// 		$joins[] = array(
-	// 			'table' => 'institution_sites',
-	// 			'alias' => 'InstitutionSite',
-	// 			'conditions' => array('InstitutionSite.id = AssessmentItemResult.institution_site_id')
+	// 			'table' => 'institutions',
+	// 			'alias' => 'Institution',
+	// 			'conditions' => array('Institution.id = AssessmentItemResult.institution_id')
 	// 		);
 			
-	// 		$fields[] = 'InstitutionSite.name';
+	// 		$fields[] = 'Institution.name';
 	// 	} else {
-	// 		$conditions['AssessmentItemResult.institution_site_id'] = $institutionSiteId;
+	// 		$conditions['AssessmentItemResult.institution_id'] = $institutionId;
 	// 	}
 		
 	// 	$data = $this->find('all', array(
@@ -131,7 +131,7 @@ class AssessmentItemResultsTable extends AppTable {
 	// public function assessments($controller, $params) {
 	// 	$controller->Navigation->addCrumb('Assessments');
 
-	// 	$academicPeriodOptions = $this->AssessmentItem->AssessmentItemType->getAcademicPeriodListForAssessments($controller->institutionSiteId);
+	// 	$academicPeriodOptions = $this->AssessmentItem->AssessmentItemType->getAcademicPeriodListForAssessments($controller->institutionId);
 	// 	$defaultAcademicPeriodId = 0;
 	// 	if(!empty($academicPeriodOptions)){
 	// 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getCurrent();
@@ -147,7 +147,7 @@ class AssessmentItemResultsTable extends AppTable {
 	// 	if (empty($academicPeriodOptions)) {
 	// 		$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 	// 	} else {
-	// 		$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsByAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod);
+	// 		$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsByAcademicPeriod($controller->institutionId, $selectedAcademicPeriod);
 
 	// 		if (empty($data)) {
 	// 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
@@ -171,11 +171,11 @@ class AssessmentItemResultsTable extends AppTable {
 	// 		$educationGradeObj = $AssessmentItemType->getGradeNameByAssessment($assessmentId);
 	// 		$educationGradeName = $educationGradeObj[0]['EducationGrade']['name'];
 			
-	// 		$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
+	// 		$controller->Navigation->addCrumb('Assessments', array('controller' => 'Institutions', 'action' => 'assessments'));
 	// 		$controller->Navigation->addCrumb('Results');
 			
  //            if ($selectedAcademicPeriod != 0 && $assessmentId != 0) {
-	// 			$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod, $assessmentId);
+	// 			$classOptions = ClassRegistry::init('InstitutionClass')->getClassListWithAcademicPeriod($controller->institutionId, $selectedAcademicPeriod, $assessmentId);
 
  //                if(empty($classOptions)){
 	// 				$controller->Message->alert('Assessment.result.noClass');
@@ -188,8 +188,8 @@ class AssessmentItemResultsTable extends AppTable {
 	// 				}else{
 	// 					$selectedItem = isset($controller->params['pass'][3]) ? $controller->params['pass'][3] : key($itemOptions);
 					
-	// 					$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
-	// 					$data = $InstitutionSiteClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
+	// 					$InstitutionClassStudent = ClassRegistry::init('InstitutionClassStudent');
+	// 					$data = $InstitutionClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
 
 	// 					if (empty($data)) {
 	// 						$controller->Message->alert('Assessment.result.noStudent');
@@ -221,11 +221,11 @@ class AssessmentItemResultsTable extends AppTable {
 	// 		$educationGradeObj = $AssessmentItemType->getGradeNameByAssessment($assessmentId);
 	// 		$educationGradeName = $educationGradeObj[0]['EducationGrade']['name'];
 
-	// 		$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
+	// 		$controller->Navigation->addCrumb('Assessments', array('controller' => 'Institutions', 'action' => 'assessments'));
 	// 		$controller->Navigation->addCrumb('Results');
 
 	// 		if ($selectedAcademicPeriod != 0 && $assessmentId != 0) {
-	// 			$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod, $assessmentId);
+	// 			$classOptions = ClassRegistry::init('InstitutionClass')->getClassListWithAcademicPeriod($controller->institutionId, $selectedAcademicPeriod, $assessmentId);
 
 	// 			if (empty($classOptions)) {
 	// 				$controller->Message->alert('Assessment.result.noClass');
@@ -240,8 +240,8 @@ class AssessmentItemResultsTable extends AppTable {
 	// 				}
 	// 			}
 
-	// 			$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
-	// 			$data = $InstitutionSiteClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
+	// 			$InstitutionClassStudent = ClassRegistry::init('InstitutionClassStudent');
+	// 			$data = $InstitutionClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
 				
 	// 			$itemId = !empty($selectedItem) ? $selectedItem : 0;
 	// 			$assessmentItemResult = $this->AssessmentItem->findById($itemId);
@@ -270,7 +270,7 @@ class AssessmentItemResultsTable extends AppTable {
 	// 					$result = $controller->data['AssessmentItemResult'];
 	// 					foreach ($result as $key => &$obj) {
 	// 						$obj['assessment_item_id'] = $selectedItem;
-	// 						$obj['institution_site_id'] = $controller->institutionSiteId;
+	// 						$obj['institution_id'] = $controller->InstitutionId;
 	// 					}
 
 	// 					$dataAllValid = true;
@@ -330,11 +330,11 @@ class AssessmentItemResultsTable extends AppTable {
 	// }
 
 	// public function generateSheet($writer) {
-	// 	$institutionSiteId = CakeSession::read('InstitutionSite.id');
+	// 	$institutionId = CakeSession::read('Institution.id');
 	// 	$periodId = $this->selectedPeriod;
 	// 	$assessmentId = $this->assessmentId;
 		
-	// 	$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
+	// 	$InstitutionClassStudent = ClassRegistry::init('InstitutionClassStudent');
 		
 	// 	$commonHeader = array(
 	// 		__('OpenEMIS ID'),
@@ -343,7 +343,7 @@ class AssessmentItemResultsTable extends AppTable {
 	// 	);
 	// 	$footer = $this->excelGetFooter();
 
-	// 	$classOptions = ClassRegistry::init('InstitutionSiteClass')->getAssessmentClassList($institutionSiteId, $periodId, $assessmentId);
+	// 	$classOptions = ClassRegistry::init('InstitutionClass')->getAssessmentClassList($institutionId, $periodId, $assessmentId);
 	// 	foreach($classOptions as $classId => $className){
 	// 		$checkList = array();
 	// 		$subjectsHeader = array();
@@ -354,7 +354,7 @@ class AssessmentItemResultsTable extends AppTable {
 	// 			$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Marks'));
 	// 			$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Grading'));
 
-	// 			$resultData = $InstitutionSiteClassStudent->getStudentAssessmentResults($classId, $subjectId, $assessmentId);
+	// 			$resultData = $InstitutionClassStudent->getStudentAssessmentResults($classId, $subjectId, $assessmentId);
 	// 			//pr($resultData);die;
 	// 			foreach($resultData as $row){
 	// 				$StudentObj = $row['Student'];
@@ -372,7 +372,7 @@ class AssessmentItemResultsTable extends AppTable {
 	// 		}
 	// 		//pr($checkList);die;
 			
-	// 		$studentsData = $InstitutionSiteClassStudent->getStudentsByClassAssessment($classId, $assessmentId);
+	// 		$studentsData = $InstitutionClassStudent->getStudentsByClassAssessment($classId, $assessmentId);
 	// 		//pr($studentsData);
 	// 		$sheetData = array();
 	// 		foreach($studentsData as $row){
