@@ -21,49 +21,12 @@ class ConfigItemsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
+		$this->addBehavior('Authentication');
+
 		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($this->action == 'view') {
-			$key = isset($this->request->pass[0]) ? $this->request->pass[0] : null;
-			if (!empty($key)) {
-				$configItem = $this->get($key);
-				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-					if (isset($toolbarButtons['back'])) {
-						unset($toolbarButtons['back']);
-					}
-				}
-			}
-		}
-	}
-
 	public function beforeAction(Event $event) {
-		if ($this->action == 'view' || $this->action == 'edit') {
-			$key = isset($this->request->pass[0]) ? $this->request->pass[0] : null;
-			if (!empty($key)) {
-				$configItem = $this->get($key);
-				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-					if (isset($this->request->data[$this->alias()]['value']) && !empty($this->request->data[$this->alias()]['value'])) {
-						$value = $this->request->data[$this->alias()]['value'];
-					} else {
-						$value = $configItem->value;
-						$this->request->data[$this->alias()]['value'] = $value;
-					}
-
-					if ($value != 'Local') {
-						$this->ControllerAction->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
-					}
-				}
-			}
-		}
-
 		$this->ControllerAction->field('visible', ['visible' => false]);
 		$this->ControllerAction->field('editable', ['visible' => false]);
 		$this->ControllerAction->field('field_type', ['visible' => false]);
@@ -92,118 +55,7 @@ class ConfigItemsTable extends AppTable {
 		$this->buildSystemConfigFilters();
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->buildSystemConfigFilters();
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$key = isset($this->request->pass[0]) ? $this->request->pass[0] : null;
-		if (!empty($key)) {
-			$configItem = $this->get($key);
-			if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-				$this->ControllerAction->field('default_value', ['visible' => false]);
-				$value = $this->request->data[$this->alias()]['value'];
-				if ($value != 'Local') {
-					$this->ControllerAction->setFieldOrder(['type', 'label', 'value', 'custom_authentication']);
-				}
-			}
-		}
-	}
-
-	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
-		switch ($action){
-			case "index":
-				// No implementation
-				break;
-
-			case "view":
-				$tableHeaders = [__('Attribute Name'), __('Value')];
-				$tableCells = [];
-
-				$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-				$authenticationType = $this->request->data[$this->alias()]['value'];
-				$attribute = [];
-
-				switch ($authenticationType) {
-					case 'Google':
-						$attribute['client_id'] = ['name' => 'Client ID'];
-						$attribute['client_secret'] = ['name' => 'Client Secret'];
-						$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
-						$attribute['hd'] = ['name' => 'Hosted Domain'];
-						break;
-				}
-				$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-				$attributeFieldsArray = $this->Navigation->array_column($attributesArray, 'attribute_field');
-				foreach ($attribute as $key => $values) {
-					$attributeValue = '';
-					if (array_search($key, $attributeFieldsArray) !== false) {
-						$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-					}
-					$attribute[$key]['value'] = $attributeValue;
-				}
-
-				foreach ($attribute as $key => $value) {
-					$row = [];
-					$row[] = $value['name'];
-					$row[] = $value['value'];
-					$tableCells[] = $row;
-				}
-				
-				$attr['tableHeaders'] = $tableHeaders;
-		    	$attr['tableCells'] = $tableCells;
-				break;
-
-			case "edit":
-				$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-				$authenticationType = $this->request->data[$this->alias()]['value'];
-				$attribute = [];
-
-				switch ($authenticationType) {
-					case 'Google':
-						$attribute['client_id'] = ['name' => 'Client ID'];
-						$attribute['client_secret'] = ['name' => 'Client Secret'];
-						$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
-						$attribute['hd'] = ['name' => 'Hosted Domain'];
-						break;
-				}
-				$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-				$attributeFieldsArray = $this->Navigation->array_column($attributesArray, 'attribute_field');
-				foreach ($attribute as $key => $values) {
-					$attributeValue = '';
-					if (array_search($key, $attributeFieldsArray) !== false) {
-						$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-					}
-					$attribute[$key]['value'] = $attributeValue;
-				}
-				$attr = $attribute;
-				break;
-
-		}
-		return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
-	}
-
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-		if ($data[$this->alias()]['value'] != 'Local') {
-			$authenticationType = $data[$this->alias()]['value'];
-			$AuthenticationTypeAttributesTable->deleteAll(
-				['authentication_type' => $authenticationType]
-			);
-
-			foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
-				$entityData = [
-					'authentication_type' => $authenticationType,
-					'attribute_field' => $key,
-					'attribute_name' => $value['name'],
-					'value' => $value['value']
-				];
-				$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
-				$AuthenticationTypeAttributesTable->save($entity);
-			}
-		}
-	}
-
-	private function buildSystemConfigFilters() {
+	public function buildSystemConfigFilters() {
 		$toolbarElements = [
 			['name' => 'Configurations/controls', 'data' => [], 'options' => []]
 		];
@@ -222,16 +74,6 @@ class ConfigItemsTable extends AppTable {
 			}
 		}
 		$this->request->query['type_value'] = $typeOptions[$selectedType]['text'];
-		
-		if ($this->request->query['type_value'] == 'Authentication') {
-			$urlParams = $this->ControllerAction->url('view');
-			$authenticationTypeId = $this->find()->where([$this->aliasField('type') => 'Authentication', $this->aliasField('code') => 'authentication_type'])->first()->id;
-			$urlParams[0] = $authenticationTypeId;
-			if (isset($this->request->pass[0]) && $this->request->pass[0] == $authenticationTypeId) {
-			} else {
-				$this->controller->redirect($urlParams);
-			}
-		}
 		
 		$this->controller->set('typeOptions', $typeOptions);
 	}
