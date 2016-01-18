@@ -48,8 +48,8 @@ class InstitutionClassesTable extends AppTable {
 
 		$this->belongsToMany('Students', [
 			'className' => 'User.Users',
-			'through' => 'InstitutionSiteClassStudents',
-			'foreignKey' => 'institution_site_class_id',
+			'through' => 'InstitutionClassStudents',
+			'foreignKey' => 'institution_class_id',
 			'targetForeignKey' => 'student_id',
 			'dependent' => true
 		]);
