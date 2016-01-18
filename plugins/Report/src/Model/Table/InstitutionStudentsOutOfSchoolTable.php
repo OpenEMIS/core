@@ -8,8 +8,11 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use App\Model\Traits\MessagesTrait;
 
 class InstitutionStudentsOutOfSchoolTable extends AppTable  {
+	use MessagesTrait;
+
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
@@ -25,6 +28,9 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 	}
 
 	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
 		$query->join([
 			'InstitutionStudent' => [
 				'type' => 'left',
@@ -38,7 +44,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 				'table' => 'institution_students',
 				'conditions' => [
 					$this->aliasField($this->primaryKey()) . ' = InstitutionStudentFilter.student_id',
-					'InstitutionStudentFilter.student_status_id = 1'
+					'InstitutionStudentFilter.student_status_id = '.$enrolled
 				],
 			],
 			'StudentStatus' => [
@@ -81,7 +87,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 		// omit all records who are 'enrolled'
 		$query->where([
 			'OR' => [
-					'InstitutionStudent.student_status_id != ' => 1,
+					'InstitutionStudent.student_status_id != ' => $enrolled,
 					'InstitutionStudent.student_status_id IS NULL'
 				]
 			]);
@@ -108,13 +114,13 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 	}
 
 	public function onExcelGetStudentStatus(Event $event, Entity $entity) {
-		return (!$entity->has('StudentStatus') || empty($entity->StudentStatus))? '<Not In School>': $entity->StudentStatus;
+		return (!$entity->has('StudentStatus') || empty($entity->StudentStatus))? $this->getMessage('Institution.InstitutionStudents.notInSchool'): $entity->StudentStatus;
 	}
 
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$sheets[] = [
-			'name' => __('Students Out of School'),
+			'name' => $this->getMessage('Report.InstitutionStudentsOutOfSchool.reportName'),
 			'table' => $this,
 			'query' => $this->find(),
 			'orientation' => 'landscape'
