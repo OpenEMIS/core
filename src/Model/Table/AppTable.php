@@ -20,6 +20,8 @@ class AppTable extends Table {
 	use LogTrait;
 
 	public function initialize(array $config) {
+		Time::$defaultLocale = 'en_US';
+		
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -48,6 +50,14 @@ class AppTable extends Table {
 
 		if (in_array('order', $columns)) {
 			$this->addBehavior('Reorder');
+			// to be removed after field_option_values is dropped
+			if ($this->table() == 'field_option_values') {
+				if ($this->behaviors()->has('Reorder')) {
+					$this->behaviors()->get('Reorder')->config([
+						'filter' => 'field_option_id',
+					]);
+				}
+			}
 		}
 
 		$dateFields = [];
@@ -66,6 +76,17 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
+		$this->attachWorkflow();
+	}
+
+	public function attachWorkflow($config=[]) {
+		// check for session and attach workflow behavior
+		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
+			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
+				$config = array_merge($config, ['model' => $this->registryAlias()]);
+				$this->addBehavior('Workflow.Workflow', $config);
+			}
+		}
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
@@ -102,11 +123,33 @@ class AppTable extends Table {
 	}
 
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
-	public function onExcelRenderDate(Event $event, Entity $entity, $field) {
-		if (!empty($entity->$field)) {
-			return $this->formatDate($entity->$field);
+	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Time($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
+			}
 		} else {
-			return $entity->$field;
+			return $entity->$attr['field'];
+		}
+	}
+
+	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				$date = new Time($entity->$attr['field']);
+				return $this->formatDate($date);
+			}
+		} else {
+			return $entity->$attr['field'];
 		}
 	}
 
@@ -184,12 +227,15 @@ class AppTable extends Table {
 				$label = str_replace(' Id', '', $label);
 			}
 		}
+		if (substr($label, -1) == ')') {
+			$label = $label.' ';
+		}
 		return $label;
 	}
 
 	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return $this->getFieldLabel($module, $col, $language);
+		return __($this->getFieldLabel($module, $col, $language));
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
@@ -295,7 +341,8 @@ class AppTable extends Table {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 
@@ -385,4 +432,46 @@ class AppTable extends Table {
 		return $selectedId;
 	}
 
+	public function isForeignKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public function getAssociatedTable($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$relatedModel = null;
+
+		foreach ($table->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					$relatedModel = $assoc;
+					break;
+				}
+			}
+		}
+		return $relatedModel;
+	}
+
+	public function getAssociatedKey($field, $table = null) {
+		if (is_null($table)) {
+			$table = $this;
+		}
+		$tableObj = $this->getAssociatedTable($field, $table);
+		$key = null;
+		if (is_object($tableObj)) {
+			$key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+		}
+		return $key;
+	}
 }

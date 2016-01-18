@@ -183,4 +183,15 @@ trait UtilityTrait {
 		
 		return $selected;
 	}
+
+	// greatest common denominator function
+	function gCD($a, $b) {
+		while ( $b != 0)
+		{
+			$remainder = $a % $b;
+			$a = $b;
+			$b = $remainder;
+		}
+		return abs ($a);
+	} 
 }

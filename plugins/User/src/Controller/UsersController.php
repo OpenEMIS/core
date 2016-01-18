@@ -14,7 +14,7 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->allow(['add', 'logout', 'postLogin', 'login_remote']);
+		$this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote']);
 	}
 
 	public function login() {
@@ -53,6 +53,7 @@ class UsersController extends AppController {
 		$this->autoRender = false;
 		if ($this->request->is('post')) {
 			if ($this->request->data['submit'] == 'login') {
+				$session = $this->request->session();
 				$username = $this->request->data('username');
 				$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
 				$user = $this->Auth->identify();
@@ -69,6 +70,11 @@ class UsersController extends AppController {
 						$user->password = $this->request->data('password');
 						$this->Users->save($user);
 					}
+					// Support Url
+					$ConfigItems = TableRegistry::get('ConfigItems');
+					$supportUrl = $ConfigItems->value('support_url');
+					$session->write('System.help', $supportUrl);
+					// End
 					return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 				} else {
 					$this->Alert->error('security.login.fail');
