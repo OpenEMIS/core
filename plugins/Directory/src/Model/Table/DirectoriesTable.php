@@ -145,11 +145,14 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$userId = $this->Auth->user('id');
+
 			$query->where([
 					'OR' => [
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
-						['EXISTS ('.$guardianAndOthers->sql().')']
+						['EXISTS ('.$guardianAndOthers->sql().')'],
+						[$this->aliasField('created_user_id') => $userId]
 					]
 				])
 				->group([$this->aliasField('id')])
