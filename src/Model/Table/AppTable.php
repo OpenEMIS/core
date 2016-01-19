@@ -84,6 +84,7 @@ class AppTable extends Table {
 		}
 		$this->addBehavior('Validation');
 		$this->attachWorkflow();
+		$this->addBehavior('Modification');
 	}
 
 	public function attachWorkflow($config=[]) {
@@ -396,27 +397,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-	
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$schema = $this->schema();
-		$columns = $schema->columns();
-		
-		$userId = null;
-		if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
-			$userId = $_SESSION['Auth']['User']['id'];
-		}
-		if (!is_null($userId)) {
-			if (!$entity->isNew()) {
-				if (in_array('modified_user_id', $columns)) {
-					$entity->modified_user_id = $userId;
-				}
-			} else {
-				if (in_array('created_user_id', $columns)) {
-					$entity->created_user_id = $userId;
-				}
-			}
-		}
 	}
 
 	public function checkIdInOptions($key, $options) {
