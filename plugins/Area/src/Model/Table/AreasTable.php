@@ -15,18 +15,91 @@ class AreasTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'Area.Areas']);
 		$this->belongsTo('Levels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Tree');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'parent_id',
+			]);
+		}
 	}
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('area_level_id');
-
+		$count = $this->find()->where([
+				'OR' => [
+					[$this->aliasField('lft').' IS NULL'],
+					[$this->aliasField('rght').' IS NULL']
+				]
+			])
+			->count();
+		if ($count) {
+			$this->rebuildLftRght();
+		}
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
 
+	public function rebuildLftRght() {
+		$this->updateAll(
+			['parent_id' => null],
+			['parent_id' => -1]
+		);
+		$this->recover();
+		$this->updateAll(
+			['parent_id' => -1],
+			['parent_id IS NULL']
+		);
+	}
+
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$transferTo = $this->request->data['transfer_to'];
+		$transferFrom = $id;
+		// Require to update the parent id of the children before removing the node from the tree
+		$this->updateAll(
+				[
+					'parent_id' => $transferTo, 
+					'lft' => null,
+					'rght' => null
+				],
+				['parent_id' => $transferFrom]
+			);
+
+		$entity = $this->get($id);
+		$left = $entity->lft;
+		$right = $entity->rght;
+
+		// The left and right value of the children will all have to be rebuilt
+		$this->updateAll(
+				[
+					'lft' => null,
+					'rght' => null
+				],
+				[ 
+					'lft > ' => $left, 
+					'rght < ' => $right
+				]
+			);
+
+		$this->rebuildLftRght();
+
+		$process = function($model, $id, $options) {
+			$entity = $model->get($id);
+			$model->removeFromTree($entity);
+			return $model->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
+	}
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_level_id;
+		$query->where([
+				$this->aliasField('area_level_id') => $level
+			]);
 	}
 
 	public function indexBeforeAction(Event $event) {

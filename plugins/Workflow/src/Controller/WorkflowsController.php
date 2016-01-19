@@ -12,7 +12,7 @@ class WorkflowsController extends AppController
 		parent::initialize();
 
         $this->ControllerAction->models = [
-            'Workflows' => ['className' => 'Workflow.Workflows'],
+            'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
