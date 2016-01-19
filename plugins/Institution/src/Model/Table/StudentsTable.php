@@ -505,8 +505,9 @@ class StudentsTable extends AppTable {
 
 		if ($code == 'DROPOUT' || $code == 'TRANSFERRED') {
 			$this->ControllerAction->field('reason', ['type' => 'custom_status_reason']);
+			$this->ControllerAction->field('comment');
 			$this->ControllerAction->setFieldOrder([
-				'photo_content', 'openemis_no', 'student_id', 'student_status_id', 'reason'
+				'photo_content', 'openemis_no', 'student_id', 'student_status_id', 'reason', 'comment'
 			]);
 		}
 	}
@@ -535,6 +536,9 @@ class StudentsTable extends AppTable {
 							$TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId
 						])
 						->first();
+
+					$entity->comment = $transferReason->comment;
+
 					return $transferReason->_matchingData['StudentTransferReasons']->name;
 					break;
 
@@ -550,9 +554,18 @@ class StudentsTable extends AppTable {
 							$DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId
 						])
 						->first();
+
+					$entity->comment = $dropoutReason->comment;
+
 					return $dropoutReason->_matchingData['StudentDropoutReasons']->name;
 					break;
 			}
+		}
+	}
+
+	public function onGetComment(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return nl2br($entity->comment);
 		}
 	}
 
