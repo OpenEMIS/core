@@ -246,14 +246,13 @@ class InstitutionsTable extends AppTable  {
 				} else {
 					$UsersTable = TableRegistry::get('Security.Users');
 					if (!$UsersTable->isAdmin($entity->created_user_id)) {
-						$userId = $this->Auth->user('id');
 						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
 						$groupAdmin = $SecurityRolesTable->getGroupAdministratorEntity();
 
 						$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 						$newEntity = $SecurityGroupUsers->newEntity([
 								'security_group_id' => $securityGroup->id,
-								'security_user_id' => $userId,
+								'security_user_id' => $entity->created_user_id,
 								'security_role_id' => $groupAdmin->id
 							]);
 						$SecurityGroupUsers->save($newEntity);
