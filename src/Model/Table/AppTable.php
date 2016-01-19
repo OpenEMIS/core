@@ -33,7 +33,14 @@ class AppTable extends Table {
 		$columns = $schema->columns();
 
 		if (in_array('modified', $columns) || in_array('created', $columns)) {
-			$this->addBehavior('Timestamp');
+			$this->addBehavior('Timestamp', [
+				'events' => [
+            		'Model.beforeSave' => [
+                		'created' => 'new',
+               			'modified' => 'existing'
+           			]
+        		]
+			]);
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
@@ -400,11 +407,14 @@ class AppTable extends Table {
 			$userId = $_SESSION['Auth']['User']['id'];
 		}
 		if (!is_null($userId)) {
-			if (in_array('modified_user_id', $columns)) {
-				$entity->modified_user_id = $userId;
-			}
-			if (in_array('created_user_id', $columns)) {
-				$entity->created_user_id = $userId;
+			if (!$entity->isNew()) {
+				if (in_array('modified_user_id', $columns)) {
+					$entity->modified_user_id = $userId;
+				}
+			} else {
+				if (in_array('created_user_id', $columns)) {
+					$entity->created_user_id = $userId;
+				}
 			}
 		}
 	}
