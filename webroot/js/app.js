@@ -233,9 +233,10 @@ var jsForm = {
 			}
 		}
 		var url = window.location.origin + $(obj).attr('url');
-		window.location.href = url+'?'+ret.join("&");
+		var separator = url.indexOf('?') == -1 ? '?' : '&';
+		window.location.href = url+separator+ret.join("&");
 	},
-	
+
 	linkVoid: function(id) {
 		var element = id!=undefined ? id + ' a.void' : 'a.void';
 		$(element).each(function() {

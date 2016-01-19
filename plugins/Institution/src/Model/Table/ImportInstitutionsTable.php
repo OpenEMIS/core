@@ -25,7 +25,9 @@ class ImportInstitutionsTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
+			'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
+			'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
+			'Model.import.onImportPopulateNetworkConnectivitiesData' => 'onImportPopulateNetworkConnectivitiesData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 		];
 		$events = array_merge($events, $newEvent);
@@ -57,29 +59,70 @@ class ImportInstitutionsTable extends AppTable {
 		$importedUniqueCodes[] = $entity->code;
 	}
 
-	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		if ($lookupModel == 'Areas') {
-			$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
-		} else if ($lookupModel == 'AreaAdministratives') {
-			$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
-		} else {
-			$order = [$lookupModel.'.order'];
-		}
+	public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$selectFields = ['name', $lookupColumn];
 		$modelData = $lookedUpTable->find('all')
-			->select($selectFields)
-			;
-		if ($lookedUpTable->hasField('order')) {
-			$modelData->order($order);
-		}
+								->select($selectFields)
+								->order($order)
+								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
+	}
+
+	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
+
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$selectFields = ['name', $lookupColumn];
+		$modelData = $lookedUpTable->find('all')
+								->select($selectFields)
+								->order($order)
+								;
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			foreach($modelData->toArray() as $row) {
+				$data[$columnOrder]['data'][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
+	}
+
+	public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		// die('onImportPopulateNetworkConnectivitiesData');
+		$order = [$lookupModel.'.order'];
+
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$selectFields = ['name', $lookupColumn];
+		$modelData = $lookedUpTable->find('all')
+								->select($selectFields)
+								->order($order)
+								;
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$translatedCol = $this->getExcelLabel('Import', 'institution_network_connectivity_id');
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			foreach($modelData->toArray() as $row) {
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];

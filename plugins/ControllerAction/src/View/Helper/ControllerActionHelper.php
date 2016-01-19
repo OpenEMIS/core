@@ -272,7 +272,7 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getPaginatorButtons($type='prev') {
-		$icon = array('prev' => '&laquo', 'next' => '&raquo');
+		$icon = array('prev' => '', 'next' => '');
 		$html = $this->Paginator->{$type}(
 			$icon[$type],
 			array('tag' => 'li', 'escape' => false),
@@ -382,6 +382,9 @@ class ControllerActionHelper extends Helper {
 					$_fieldAttr['label'] = __($_fieldAttr['label']);
 				}
 
+				if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
+					$html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
+				}
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
 			}
 		}

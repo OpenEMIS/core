@@ -20,8 +20,8 @@ class StudentListBehavior extends Behavior {
             'CustomForms' => 'Survey.SurveyForms',
             'CustomFormsFields' => 'Survey.SurveyFormsQuestions',
             'SurveyQuestionParams' => 'Survey.SurveyQuestionParams',
-            'Sections' => 'Institution.InstitutionSiteSections',
-            'SectionStudents' => 'Institution.InstitutionSiteSectionStudents',
+            'Sections' => 'Institution.InstitutionSections',
+            'SectionStudents' => 'Institution.InstitutionSectionStudents',
             'StudentSurveys' => 'Student.StudentSurveys',
             'StudentSurveyAnswers' => 'Student.StudentSurveyAnswers'
         ],
@@ -100,9 +100,12 @@ class StudentListBehavior extends Behavior {
     }
 
     public function onGetCustomStudentListElement(Event $event, $action, $entity, $attr, $options=[]) {
+    	$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+    	
         $value = '';
 
         $Form = $event->subject()->Form;
+        $fieldKey = 0;
         $sectionOptions = [];
         $tableHeaders = [];
         $tableCells = [];
@@ -149,103 +152,32 @@ class StudentListBehavior extends Behavior {
                 ->toArray();
 
             if (!empty($customFields)) {
-                $institutionId = $entity->institution_site_id;
+                $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
 
-                $sectionOptions = $this->Sections
+                // Classes Options
+                $sectionQuery = $this->Sections
                     ->find('list')
                     ->where([
-                        $this->Sections->aliasField('institution_site_id') => $institutionId,
+                        $this->Sections->aliasField('institution_id') => $institutionId,
                         $this->Sections->aliasField('academic_period_id') => $periodId
-                    ])
-                    ->toArray();
+                    ]);
 
-                // Set selectedSection to session and read it back.
-                $selectedSection = key($sectionOptions);
-                $session = $this->_table->request->session();
-                $plugin = $this->_table->controller->plugin;
-                $model = $this->_table->alias();
-                $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_site_section";
+                if ($this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
+                    // All Classes
+                    $sectionOptions = $sectionQuery->toArray();
+                } else if ($this->_table->AccessControl->check(['Institutions', 'Sections', 'index'])) {
+                    // My Classes
+                    $userId = $this->_table->Auth->user('id');
+                    $sectionQuery->where([
+                        $this->Sections->aliasField('staff_id') => $userId
+                    ]);
 
-                if ($this->_table->request->is(['get'])) {
-                    // Clear session if is not redirect from save
-                } else if ($this->_table->request->is(['post', 'put'])) {
-                    if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-                        if (array_key_exists($attr['field'], $this->_table->request->data[$this->_table->alias()]['custom_field_values'])) {
-                            if (array_key_exists('institution_site_section', $this->_table->request->data[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
-                                $session->write($sessionKey, $this->_table->request->data[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_site_section']);
-                            }
-                        }
-                    }
-                }
-
-                if ($session->check($sessionKey)) {
-                    $selectedSection = $session->read($sessionKey);
+                    $sectionOptions = $sectionQuery->toArray();
                 }
                 // End
 
-                $Sections = $this->Sections;
-                $userId = $this->_table->Auth->user('id');
-
-                $this->_table->advancedSelectOptions($sectionOptions, $selectedSection, [
-                    'message' => '{{label}} - ' . $this->_table->getMessage('InstitutionSurveys.noAccess'),
-                    'callable' => function($id) use ($Sections, $institutionId, $periodId, $userId) {
-                        if ($this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
-                            // User has access to AllClasses
-                            return 1;
-                        } else {
-                            $sectionResults = $Sections
-                                ->find()
-                                ->where([
-                                    $Sections->aliasField('id') => $id,
-                                    $Sections->aliasField('institution_site_id') => $institutionId,
-                                    $Sections->aliasField('academic_period_id') => $periodId,
-                                    $Sections->aliasField('security_user_id') => $userId
-                                ])
-                                ->first();
-
-                            if (!empty($sectionResults)) {
-                                // User has access to the Class
-                                return 1;
-                            } else {
-                                // Do not have access to the Class
-                                return 0;
-                            }
-                        }
-                    }
-                ]);
-
-                $studentQuery = $this->SectionStudents
-                    ->find()
-                    ->contain(['Users']);
-
-                if ($action == 'view') {
-                    // Filter section by staff if user do not have access to AllClasses
-                    $sectionConditions = [
-                        $this->Sections->aliasField('id = ') . $this->SectionStudents->aliasField('institution_site_section_id'),
-                        $this->Sections->aliasField('institution_site_id') => $institutionId,
-                        $this->Sections->aliasField('academic_period_id') => $periodId
-                    ];
-                    if (!$this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
-                        $sectionConditions[$this->Sections->aliasField('security_user_id')] = $userId;
-                    }
-
-                    $studentQuery
-                        ->innerJoin(
-                            [$this->Sections->alias() => $this->Sections->table()], $sectionConditions
-                        );
-
-                } else if ($action == 'edit') {
-                    $studentQuery
-                        ->where([
-                            $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
-                        ]);
-                }
-
-                $students = $studentQuery->toArray();
-
                 // Build table header
-                $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
                 $headerHtml = __('OpenEMIS ID');
                 $headerHtml .= $Form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
                 $tableHeaders[] = $headerHtml;
@@ -258,127 +190,179 @@ class StudentListBehavior extends Behavior {
                 }
                 // End
 
-                if (!empty($students)) {
-                    $fieldTypes = $this->CustomFieldTypes
-                        ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
-                        ->toArray();
+                if (!empty($sectionOptions)) {
+                    // Set selectedSection to session and read it back.
+                    $selectedSection = key($sectionOptions);
+                    $session = $this->_table->request->session();
+                    $plugin = $this->_table->controller->plugin;
+                    $model = $this->_table->alias();
+                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_section";
+                    $fieldKey = $customFieldObj->id;
 
-                    foreach ($students as $rowKey => $student) {
-                        $studentId = $student->student_id;
-                        $rowPrefix = $fieldPrefix . '.' . $this->StudentSurveys->alias() . '.' . $studentId;
-
-                        $rowData = [];
-                        $rowInput = "";
-                        $rowValue = "";
-
-                        // Record Id
-                        $recordId = null;
-                        $recordResults = $this->StudentSurveys
-                            ->find()
-                            ->where([
-                                $this->StudentSurveys->aliasField('institution_id') => $institutionId,
-                                $this->StudentSurveys->aliasField('academic_period_id') => $periodId,
-                                $this->StudentSurveys->aliasField('student_id') => $studentId,
-                                $this->StudentSurveys->aliasField('survey_form_id') => $formId
-                            ])
-                            ->all();
-                        if (!$recordResults->isEmpty()) {
-                            $recordId = $recordResults->first()->id;
-                        }
-                        // End
-
-                        if ($action == 'view') {
-                            $rowData[] = $student->user->openemis_no . $rowValue;
-                            $rowData[] = $student->user->name;
-                        } else if ($action == 'edit') {
-                            $rowInput .= $Form->hidden($rowPrefix.".institution_id", ['value' => $institutionId]);
-                            $rowInput .= $Form->hidden($rowPrefix.".academic_period_id", ['value' => $periodId]);
-                            $rowInput .= $Form->hidden($rowPrefix.".student_id", ['value' => $studentId]);
-                            $rowInput .= $Form->hidden($rowPrefix.".survey_form_id", ['value' => $formId]);
-
-                            if (!is_null($recordId)) {
-                                $rowInput .= $Form->hidden($rowPrefix.".id", ['value' => $recordId]);
+                    if ($this->_table->request->is(['get'])) {
+                        // Clear session if is not redirect from save
+                        $requestQuery = $this->_table->request->query;
+                        if (array_key_exists('field_id', $requestQuery) && array_key_exists('section_id', $requestQuery)) {
+                            if ($requestQuery['field_id'] == $customFieldObj->id) {
+                                $session->write($sessionKey, $requestQuery['section_id']);
                             }
-
-                            $rowData[] = $student->user->openemis_no . $rowInput;
-                            $rowData[] = $student->user->name;
                         }
-
-                        foreach ($customFields as $colKey => $customField) {
-                            $fieldId = $customField->custom_field->id;
-                            $fieldType = $customField->custom_field->field_type;
-
-                            $cellPrefix = $rowPrefix . '.custom_field_values.' . $cellCount++;
-                            $cellInput = "";
-                            $cellValue = "";
-                            $cellOptions = ['label' => false, 'value' => ''];
-                            $answerValue = null;
-
-                            if (!is_null($recordId)) {
-                                $answerResults = $this->StudentSurveyAnswers
-                                    ->find()
-                                    ->where([
-                                        $this->StudentSurveyAnswers->aliasField($this->config('recordKey')) => $recordId,
-                                        $this->StudentSurveyAnswers->aliasField($this->config('fieldKey')) => $fieldId
-                                    ])
-                                    ->all();
-
-                                if (!$answerResults->isEmpty()) {
-                                    $answerObj = $answerResults->first();
-                                    $answerId = $answerObj->id;
-                                    $answerValue = $answerObj->{$fieldTypes[$fieldType]};
-
-                                    $cellInput .= $Form->hidden($cellPrefix.".id", ['value' => $answerId]);
+                    } else if ($this->_table->request->is(['post', 'put'])) {
+                        $requestData = $this->_table->request->data;
+                        if (array_key_exists($this->_table->alias(), $requestData)) {
+                            if (array_key_exists($attr['field'], $requestData[$this->_table->alias()]['custom_field_values'])) {
+                                if (array_key_exists('institution_section', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
+                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_section']);
                                 }
                             }
+                        }
+                    }
 
-                            switch ($fieldType) {
-                                case 'TEXT':
-                                    $cellOptions['type'] = 'string';
-                                    $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+                    if ($session->check($sessionKey)) {
+                        $selectedSection = $session->read($sessionKey);
+                    }
+                    // End
+                    $this->_table->advancedSelectOptions($sectionOptions, $selectedSection);
 
-                                    $cellValue = !is_null($answerValue) ? $answerValue : '';
-                                    break;
-                                case 'NUMBER':
-                                    $cellOptions['type'] = 'number';
-                                    $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+                    // Students List
+                    $studentQuery = $this->SectionStudents
+                        ->find()
+                        ->contain(['Users']);
 
-                                    $cellValue = !is_null($answerValue) ? $answerValue : '';
-                                    break;
-                                case 'DROPDOWN':
-                                    $dropdownOptions = [];
-                                    $dropdownDefault = null;
-                                    foreach ($customField->custom_field->custom_field_options as $key => $obj) {
-                                        $dropdownOptions[$obj->id] = $obj->name;
-                                        if ($obj->is_default == 1) {
-                                            $dropdownDefault = $obj->id;
-                                        }
-                                    }
+                    if ($action == 'view' || $action == 'edit') {
+                        $studentQuery
+                            ->where([
+                                $this->SectionStudents->aliasField('institution_section_id') => $selectedSection
+                        ]);
+                    }
 
-                                    $cellOptions['type'] = 'select';
-                                    $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
-                                    $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
-                                    $cellOptions['options'] = $dropdownOptions;
+                    $students = $studentQuery->toArray();
+                    // End
 
-                                    $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : $dropdownOptions[$dropdownDefault];
-                                    break;
-                                default:
-                                    break;
+                    if (!empty($students)) {
+                        $fieldTypes = $this->CustomFieldTypes
+                            ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
+                            ->toArray();
+
+                        foreach ($students as $rowKey => $student) {
+                            $studentId = $student->student_id;
+                            $rowPrefix = $fieldPrefix . '.' . $this->StudentSurveys->alias() . '.' . $studentId;
+
+                            $rowData = [];
+                            $rowInput = "";
+                            $rowValue = "";
+
+                            // Record Id
+                            $recordId = null;
+                            $recordResults = $this->StudentSurveys
+                                ->find()
+                                ->where([
+                                    $this->StudentSurveys->aliasField('institution_id') => $institutionId,
+                                    $this->StudentSurveys->aliasField('academic_period_id') => $periodId,
+                                    $this->StudentSurveys->aliasField('student_id') => $studentId,
+                                    $this->StudentSurveys->aliasField('survey_form_id') => $formId
+                                ])
+                                ->all();
+                            if (!$recordResults->isEmpty()) {
+                                $recordId = $recordResults->first()->id;
                             }
-
-                            $cellInput .= $Form->input($cellPrefix.".".$fieldTypes[$fieldType], $cellOptions);
-                            $cellInput .= $Form->hidden($cellPrefix.".".$this->config('fieldKey'), ['value' => $fieldId]);
+                            // End
 
                             if ($action == 'view') {
-                                $rowData[$colKey+$colOffset] = $cellValue;
+                                $rowData[] = $student->user->openemis_no . $rowValue;
+                                $rowData[] = $student->user->name;
                             } else if ($action == 'edit') {
-                                $rowData[$colKey+$colOffset] = $cellInput;
+                                $rowInput .= $Form->hidden($rowPrefix.".institution_id", ['value' => $institutionId]);
+                                $rowInput .= $Form->hidden($rowPrefix.".academic_period_id", ['value' => $periodId]);
+                                $rowInput .= $Form->hidden($rowPrefix.".student_id", ['value' => $studentId]);
+                                $rowInput .= $Form->hidden($rowPrefix.".survey_form_id", ['value' => $formId]);
+
+                                if (!is_null($recordId)) {
+                                    $rowInput .= $Form->hidden($rowPrefix.".id", ['value' => $recordId]);
+                                }
+
+                                $rowData[] = $student->user->openemis_no . $rowInput;
+                                $rowData[] = $student->user->name;
                             }
+
+                            foreach ($customFields as $colKey => $customField) {
+                                $fieldId = $customField->custom_field->id;
+                                $fieldType = $customField->custom_field->field_type;
+
+                                $cellPrefix = $rowPrefix . '.custom_field_values.' . $cellCount++;
+                                $cellInput = "";
+                                $cellValue = "";
+                                $cellOptions = ['label' => false, 'value' => ''];
+                                $answerValue = null;
+
+                                if (!is_null($recordId)) {
+                                    $answerResults = $this->StudentSurveyAnswers
+                                        ->find()
+                                        ->where([
+                                            $this->StudentSurveyAnswers->aliasField($this->config('recordKey')) => $recordId,
+                                            $this->StudentSurveyAnswers->aliasField($this->config('fieldKey')) => $fieldId
+                                        ])
+                                        ->all();
+
+                                    if (!$answerResults->isEmpty()) {
+                                        $answerObj = $answerResults->first();
+                                        $answerId = $answerObj->id;
+                                        $answerValue = $answerObj->{$fieldTypes[$fieldType]};
+
+                                        $cellInput .= $Form->hidden($cellPrefix.".id", ['value' => $answerId]);
+                                    }
+                                }
+
+                                switch ($fieldType) {
+                                    case 'TEXT':
+                                        $cellOptions['type'] = 'string';
+                                        $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+
+                                        $cellValue = !is_null($answerValue) ? $answerValue : '';
+                                        break;
+                                    case 'NUMBER':
+                                        $cellOptions['type'] = 'number';
+                                        $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+
+                                        $cellValue = !is_null($answerValue) ? $answerValue : '';
+                                        break;
+                                    case 'DROPDOWN':
+                                        $dropdownOptions = [];
+                                        $dropdownDefault = null;
+                                        foreach ($customField->custom_field->custom_field_options as $key => $obj) {
+                                            $dropdownOptions[$obj->id] = $obj->name;
+                                            if ($obj->is_default == 1) {
+                                                $dropdownDefault = $obj->id;
+                                            }
+                                        }
+
+                                        $cellOptions['type'] = 'select';
+                                        $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
+                                        $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
+                                        $cellOptions['options'] = $dropdownOptions;
+
+                                        $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : $dropdownOptions[$dropdownDefault];
+                                        break;
+                                    default:
+                                        break;
+                                }
+
+                                $cellInput .= $Form->input($cellPrefix.".".$fieldTypes[$fieldType], $cellOptions);
+                                $cellInput .= $Form->hidden($cellPrefix.".".$this->config('fieldKey'), ['value' => $fieldId]);
+
+                                if ($action == 'view') {
+                                    $rowData[$colKey+$colOffset] = $cellValue;
+                                } else if ($action == 'edit') {
+                                    $rowData[$colKey+$colOffset] = $cellInput;
+                                }
+                            }
+                            $tableCells[$rowKey] = $rowData;
                         }
-                        $tableCells[$rowKey] = $rowData;
+                    } else {
+                        // No Student for the school in the academic period.
                     }
                 } else {
-                    // No Student for the school in the academic period.
+                    // No Classes of login user for the school in the academic period.
                 }
             } else {
                 // Survey Questions not setup for the form or not in the supported field type.
@@ -388,6 +372,7 @@ class StudentListBehavior extends Behavior {
         }
 
         $attr['alias'] = $fieldPrefix;
+        $attr['fieldKey'] = $fieldKey;
         $attr['sectionOptions'] = $sectionOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;

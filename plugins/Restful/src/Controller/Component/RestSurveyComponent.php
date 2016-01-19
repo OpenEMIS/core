@@ -153,7 +153,7 @@ class RestSurveyComponent extends Component {
 					$surveyResults = $SurveyRecords
 						->find()
 						->where([
-							$SurveyRecords->aliasField('institution_site_id') => $institutionId,
+							$SurveyRecords->aliasField('institution_id') => $institutionId,
 							$SurveyRecords->aliasField($this->formKey . ' IN') => $formIds,
 							$SurveyRecords->aliasField('status_id IN') => $statusIds	// Not Completed
 						])
@@ -227,7 +227,7 @@ class RestSurveyComponent extends Component {
 				$formAlias = $this->Form->alias();
 	    		$fieldAlias = $this->Field->alias();
 	    		// To use $this->recordKey when record table is changed to institution_surveys and foreign key will become institution_survey_id
-				$recordKey = 'institution_site_survey_id';
+				$recordKey = 'institution_survey_id';
 
 	    		$xmlResponse = $data['response'];
 	    		// line below is for testing
@@ -251,7 +251,7 @@ class RestSurveyComponent extends Component {
 	    		$formData = [];
 	    		$formData = [
 	    			$this->formKey => $formId,
-	    			'institution_site_id' => $institutionId,
+	    			'institution_id' => $institutionId,
 	    			'academic_period_id' => $periodId,
 	    			'created_user_id' => $createdUserId
 	    		];
@@ -260,7 +260,7 @@ class RestSurveyComponent extends Component {
 	    		$recordId = null;
 	    		$where = [
 					$CustomRecords->aliasField($this->formKey) => $formId,
-					$CustomRecords->aliasField('institution_site_id') => $institutionId,
+					$CustomRecords->aliasField('institution_id') => $institutionId,
 					$CustomRecords->aliasField('academic_period_id') => $periodId
 				];
 	    		$recordResults = $CustomRecords
@@ -333,7 +333,7 @@ class RestSurveyComponent extends Component {
 											$recordKey => $recordId,
 						    				$this->fieldKey => $fieldId,
 						    				$fieldColumnName => $answerValue,
-						    				'institution_site_id' => $institutionId,
+						    				'institution_id' => $institutionId,
 						    				'created_user_id' => $createdUserId
 						    			];
 
@@ -355,7 +355,7 @@ class RestSurveyComponent extends Component {
 												$recordKey => $recordId,
 												$this->fieldKey => $fieldId,
 						    					$fieldColumnName => $checkboxValue,
-						    					'institution_site_id' => $institutionId,
+						    					'institution_id' => $institutionId,
 							    				'created_user_id' => $createdUserId
 							    			];
 
@@ -383,7 +383,7 @@ class RestSurveyComponent extends Component {
 									    				$this->tableColumnKey => $colId,
 									    				$this->tableRowKey => $rowId,
 									    				$fieldColumnName => $cellValue,
-									    				'institution_site_id' => $institutionId,
+									    				'institution_id' => $institutionId,
 									    				'created_user_id' => $createdUserId
 									    			);
 
@@ -530,6 +530,7 @@ class RestSurveyComponent extends Component {
 
 											$fieldOptionResults = $this->FieldOption
 												->find()
+												->find('visible')
 												->find('order')
 												->where([
 													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
@@ -553,6 +554,7 @@ class RestSurveyComponent extends Component {
 
 											$fieldOptionResults = $this->FieldOption
 												->find()
+												->find('visible')
 												->find('order')
 												->where([
 													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
@@ -587,6 +589,7 @@ class RestSurveyComponent extends Component {
 
 										$tableColumnResults = $this->TableColumn
 											->find()
+											->find('visible')
 											->find('order')
 											->where([
 												$this->TableColumn->aliasField($this->fieldKey) => $field->field_id
@@ -595,6 +598,7 @@ class RestSurveyComponent extends Component {
 
 										$tableRowResults = $this->TableRow
 											->find()
+											->find('visible')
 											->find('order')
 											->where([
 												$this->TableRow->aliasField($this->fieldKey) => $field->field_id
