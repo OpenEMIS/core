@@ -12,4 +12,10 @@ DELETE FROM institution_class_students WHERE NOT EXISTS (SELECT id FROM institut
 -- SELECT * FROM institution_class_staff WHERE institution_class_id NOT IN (SELECT id FROM institution_classes);
 DELETE FROM institution_class_staff WHERE NOT EXISTS (SELECT id FROM institution_classes WHERE institution_classes.id = institution_class_staff.institution_class_id);
 
+
+INSERT INTO `db_patches` VALUES ('PHPOE-2433', NOW());
+
+UPDATE security_functions SET _execute = concat(_execute, '|StudentUser.excel')  WHERE id = 1012;
+UPDATE security_functions SET _execute = concat(_execute, '|StaffUser.excel')  WHERE id = 1016;
+
 UPDATE config_items SET value = '3.4.10' WHERE code = 'db_version';
