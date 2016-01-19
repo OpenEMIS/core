@@ -9,7 +9,9 @@ use ArrayObject;
 class ModificationBehavior extends Behavior
 {
     public function implementedEvents() {
-        $events = parent::implementedEvents();
+        $events =  [
+            'Model.beforeSave' => ['callable' => 'beforeSave', 'priority' => 5]
+        ];
         return $events;
     }
 
