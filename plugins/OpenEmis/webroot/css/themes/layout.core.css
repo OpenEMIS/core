@@ -238,6 +238,19 @@ textarea[disabled="disabled"] {
     background: #EEE;
 }
 
+/* To update in styleguide 2.2.2 under tooltip.css */
+.icon-blue {
+	color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip-inner {
+	background-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip .tooltip-arrow {
+	border-right-color: #5C82CC !important;
+}
+
 /* To update in styleguide version after 2.2.2 */
 /* Fixed calendar overlap by main header PHPOE-2375 */
 .datepicker,
