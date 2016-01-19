@@ -4,6 +4,8 @@ v3.4.10
 - Deleting an institution will now remove all students records properly
 - When adding student to school, the student age is calculated by year only (previously it is determined by month and year)
 - Fixed other UI related issues
+- Added Student Out of School Report
+- Fixed a bug that caused records not appearing after added by users with specific roles
 
 v3.4.9
 - Fixed bugs related to date showing in arabic language
