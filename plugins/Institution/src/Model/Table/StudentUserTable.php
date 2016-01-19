@@ -171,7 +171,7 @@ class StudentUserTable extends UserTable {
 					])
 					->first();
 					
-				$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($student);
+				$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($student, $institutionId);
 				// End
 
 				// Transfer button

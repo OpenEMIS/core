@@ -983,7 +983,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function checkIfCanTransfer($student) {
+	public function checkIfCanTransfer($student, $institutionId) {
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$studentStatusList = array_flip($StudentStatuses->findCodeList());
 		
@@ -1028,8 +1028,7 @@ class StudentsTable extends AppTable {
 			$studentEducationGradeOrder = [];
 			if (!empty($studentEducationGrade)) {
 				$studentEducationGradeOrder = $studentEducationGrade->order;
-			}					
-			$institutionId = $this->Session->read('Institution.Institutions.id');
+			}
 	
 			$advancedGradeOptionsLeft = $InstitutionEducationGrades
 				->find('list', [
