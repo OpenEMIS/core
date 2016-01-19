@@ -6,6 +6,7 @@ v3.4.10
 - Fixed other UI related issues
 - Added Student Out of School Report
 - Fixed a bug that caused records not appearing after added by users with specific roles
+- Improved UI of System Setup -> Assessments
 
 v3.4.9
 - Fixed bugs related to date showing in arabic language
