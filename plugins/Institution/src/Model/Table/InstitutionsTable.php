@@ -246,7 +246,6 @@ class InstitutionsTable extends AppTable  {
 				} else {
 					$UsersTable = TableRegistry::get('Security.Users');
 					if (!$UsersTable->isAdmin($entity->created_user_id)) {
-						$userId = $this->Auth->user('id');
 						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
 						$groupAdmin = $SecurityRolesTable->getGroupAdministratorEntity();
 
