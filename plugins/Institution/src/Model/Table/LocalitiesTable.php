@@ -10,6 +10,6 @@ class LocalitiesTable extends AppTable {
         parent::initialize($config);
 		
 		// $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_locality_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_locality_id']);
 	}
 }

@@ -8,14 +8,14 @@ use Cake\ORM\Entity;
 
 class PositionsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_staff');
+		$this->table('institution_staff');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
-		$this->belongsTo('InstitutionSitePositions', ['className' => 'Institution.InstitutionSitePositions']);
-		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -25,8 +25,8 @@ class PositionsTable extends AppTable {
 		$this->fields['staff_type_id']['visible'] = false;
 
 		$order = 0;
-		$this->ControllerAction->setFieldOrder('institution_site_id', $order++);
-		$this->ControllerAction->setFieldOrder('institution_site_position_id', $order++);
+		$this->ControllerAction->setFieldOrder('institution_id', $order++);
+		$this->ControllerAction->setFieldOrder('institution_position_id', $order++);
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('end_date', $order++);
 		$this->ControllerAction->setFieldOrder('staff_status_id', $order++);
@@ -36,7 +36,7 @@ class PositionsTable extends AppTable {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
 		
 		if (array_key_exists('view', $buttons)) {
-			$institutionId = $entity->institution_site->id;
+			$institutionId = $entity->institution->id;
 			$url = [
 				'plugin' => 'Institution', 
 				'controller' => 'Institutions', 
@@ -47,5 +47,16 @@ class PositionsTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }
