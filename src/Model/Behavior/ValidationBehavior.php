@@ -515,6 +515,7 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			if (is_null($dateOfBirth)) return false;
 
 			$birthYear = $dateOfBirth->format('Y');
 			$nowYear = Time::now()->format('Y');
