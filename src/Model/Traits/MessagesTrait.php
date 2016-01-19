@@ -151,6 +151,7 @@ trait MessagesTrait {
 			'students' => 'Students',
 			'teachers' => 'Teachers',
 			'studentRemovedFromInstitution' => 'This student was removed from the institution earlier',
+			'noSubjects' => 'There are no available Education Subjects.',
 		],
 		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
