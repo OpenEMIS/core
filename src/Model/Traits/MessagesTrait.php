@@ -511,7 +511,6 @@ trait MessagesTrait {
 				'FTE' => 'There are no available FTE for this position.',
 				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
 				'noInstitutionPosition' => 'There are no position available.',
-				'staffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
@@ -547,7 +546,10 @@ trait MessagesTrait {
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				],
 				'institution_position_id' => [
-					'ruleCheckFTE' => 'No available FTE.'
+					'ruleCheckFTE' => 'No available FTE.',
+				],
+				'start_date' => [
+					'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
 				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
