@@ -1,50 +1,85 @@
-
 /* CUSTOMIZED THEME */
+
 .body-wrapper {
- 	background-image: url('../../img/core-login-bg.jpg') !important;
+    background-image: url('../../img/core-login-bg.jpg') !important;
 }
 
- /* PRODUCT COLOR */
+
+/* PRODUCT COLOR */
+
 .login-box .btn-login,
 .navbar,
-.login-box .title {
-	background-color: #6699CC;
+.login-box .title,
+.progress-bar,
+.input-slider .slider-selection,
+.rtl .input-slider .slider-track-high {
+    background-color: #6699CC;
 }
 
-.panel-breadcrumb .active,
-.panel-breadcrumb a:hover,
-.panel-breadcrumb i:hover {
-	color: #6699CC;
+a,
+a:active,
+a:focus,
+.panel-breadcrumb li a,
+.panel-breadcrumb i {
+    color: #6699CC;
 }
 
-.pagination > .active > a,
-.pagination > .active > a:hover,
 .toggle-btn i,
 .input-group-addon,
 .selected {
-	background-color: #6699CC;
-	color: #FFF;
-	border: 1px solid #6699CC;
+    background-color: #6699CC;
+    color: #FFF;
+    border: 1px solid #6699CC;
 }
 
 .btn-default,
 .pagination > .active > a:focus,
-.pagination > li > a:hover {
-	background-color: #6699CC !important;
-	color: #FFF !important;
-	border: 1px solid #6699CC;
+.pagination > li > a:hover,
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination>li>a:focus {
+    background-color: #6699CC !important;
+    color: #FFF !important;
+    border: 1px solid #6699CC;
+    z-index: 1 !important;
+}
+
+.spinner,
+.loader {
+    border-left: 6px solid #6699CC;
+    border-right: 6px solid #6699CC;
+    border-bottom: 6px solid #6699CC;
+}
+
+.fuelux .wizard > ul.steps li.active .chevron::before,
+.fuelux .wizard > .steps-container > ul.steps li.active .chevron::before {
+    border-left: 14px solid #6699CC;
+}
+
+.fuelux .wizard > ul.steps li.active,
+.fuelux .wizard > .steps-container > ul.steps li.active {
+    background-color: #6699CC;
+}
+
+.rtl .fuelux .wizard > ul.steps li.active .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.active .chevron:before {
+    border-right: 14px solid #6699CC;
 }
 
 /* DARK SHADES */
 
+a:hover,
 .pagination > li > a,
-.panel-breadcrumb li a,
-.panel-breadcrumb i {
-	color: #476B8F;
+.panel-breadcrumb .active,
+.panel-breadcrumb a:hover,
+.panel-breadcrumb i:hover,
+.ellipsis,
+.btn-outline {
+    color: #476B8F;
 }
 
 .ui-menu-item:hover {
-	color: #FFF !important;
+    color: #FFF !important;
 }
 
 .btn-default,
@@ -57,27 +92,30 @@
 .input-group-addon,
 .selected,
 .btn-single-action:hover,
-.ui-menu-item:hover {
-	border: 1px solid #476B8F !important;
+.ui-menu-item:hover,
+.btn-outline:hover,
+.pagination>li>a:focus {
+    border: 1px solid #476B8F !important;
 }
 
-.rtl a.btn-file-cancel, {
-	border-right: 1px solid #476B8F !important;
+.rtl a.btn-file-cancel {
+    border-right: 1px solid #476B8F !important;
 }
 
+.input-slider .slider-handle,
 .header-navigation .btn-group .btn:hover {
-	background-color: #476B8F;	
+    background-color: #476B8F;
 }
 
 .table-in-view::-webkit-scrollbar-thumb {
-	background-color: #476B8F;
+    background-color: #476B8F;
 }
 
 .btn-default:hover,
-.btn-outline:hover, 
-.btn-outline:active, 
+.btn-outline:hover,
+.btn-outline:active,
 .btn-outline:focus,
-.more-menu-item a:hover, 
+.more-menu-item a:hover,
 #action-menu:hover,
 .horizontal-tabs span a:hover,
 .nav > li > a:hover,
@@ -89,12 +127,12 @@
 .btn-bold:hover,
 .btn-italic:hover,
 .input-group-addon:hover,
-.datepicker table tr td.active, 
-.datepicker table tr td.active:hover, 
-.datepicker table tr td.active.disabled, 
+.datepicker table tr td.active,
+.datepicker table tr td.active:hover,
+.datepicker table tr td.active.disabled,
 .datepicker table tr td.active.disabled:hover,
-.mce-menu-item:hover, 
-.mce-menu-item.mce-selected, 
+.mce-menu-item:hover,
+.mce-menu-item.mce-selected,
 .mce-menu-item:focus,
 .selected-size,
 .btn-single-action:hover,
@@ -107,8 +145,209 @@
 .chosen-container .chosen-results li.active-result:hover,
 .ui-state-focus,
 .ui-widget-content .ui-state-focus,
-.ui-widget-header .ui-state-focus {
-	background-color: #476B8F !important;
-	color: #FFF !important;
-	background-image: none !important;	
+.ui-widget-header .ui-state-focus,
+.pagination > li > a:hover,
+.btn-dropdown:hover {
+    background-color: #476B8F !important;
+    color: #FFF !important;
+    background-image: none !important;
+}
+
+.horizontal-tabs span a:hover,
+.btn-dropdown:hover {
+    border-color: #476B8F;
+}
+
+.fuelux .wizard > ul.steps li.complete,
+.fuelux .wizard > .steps-container > ul.steps li.complete {
+    border-color: #476B8F !important;
+    color: #476B8F;
+}
+
+.rtl .fuelux .wizard > ul.steps li.complete:hover .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
+    border-right: 14px solid #476B8F;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover,
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover {
+    background-color: #476B8F !important;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
+    border-left: 14px solid #476B8F;
+}
+
+
+/* To update in styleguide version after 2.1.4 */
+.form-horizontal input, 
+.form-horizontal textarea, 
+.form-horizontal .chosen-choices {
+    font-size: 12px;
+}
+
+.table-full-width {
+    display: inline-block;    
+    width: -webkit-calc(80% - 15px);
+    width: -moz-calc(80% - 15px);
+    width: calc(80% - 15px);
+}
+
+table .input-group {
+    width: inherit !important;
+}
+
+.table-in-view {
+    -webkit-border-radius: 5px;
+            border-radius: 5px;
+}
+
+.table-in-view input {
+    padding-right: 30px;
+}
+
+.rtl .table-in-view input {
+    padding-left: 30px;
+    padding-right: 0 !important;
+}
+
+.full-width {
+    width: 100% !important;
+}
+
+table thead {
+    white-space: nowrap;
+}
+
+.fileinput-preview .btn-default {
+    margin-right: 10px;
+}
+
+.rtl .fileinput-preview .btn-default {
+    margin-right: 0 !important;
+    margin-left: 10px;
+}
+
+.login .form-horizontal input {
+    font-size: 14px;
+}
+
+input[disabled="disabled"],
+textarea[disabled="disabled"] {
+    background: #EEE;
+}
+
+/* To update in styleguide 2.2.2 under tooltip.css */
+.icon-blue {
+	color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip-inner {
+	background-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip .tooltip-arrow {
+	border-right-color: #5C82CC !important;
+}
+
+/* To update in styleguide version after 2.2.2 */
+/* Fixed calendar overlap by main header PHPOE-2375 */
+.datepicker,
+.bootstrap-timepicker-widget {
+    z-index: 10 !important;
+}
+
+/* To update in styleguide version after 2.2.2 PHPOE-2435 tooltip */
+.tooltip {
+    z-index: 9999 !important;
+}
+
+.icon-blue {
+    color: #5C82CC;
+}
+
+.tooltip-blue .fa-info-circle[data-toggle="tooltip"] {
+    cursor: pointer;
+}
+
+.tooltip-blue .tooltip {
+    margin-left: 53px !important;
+    white-space: normal;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip {
+    margin-top: 20px !important;
+    margin-left: 80px !important;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip-arrow {
+    top: 50% !important;
+    left: -2px !important;
+    -ms-transform: rotate(90deg) !important; /* IE 9 */
+    -webkit-transform: rotate(90deg) !important; /* Chrome, Safari, Opera */
+    transform: rotate(90deg) !important;
+}
+
+.tooltip-blue .tooltip-arrow {
+    left: 16px !important;
+}
+
+.tooltip-blue {
+    width: 40px;
+    text-align: center;
+}
+
+.tooltip-blue i {
+    transition: all .1s ease-in-out;
+    animation: pulse 1s infinite;
+    animation-play-state: running;
+    animation-delay: 0;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.tooltip-blue .tooltip-inner {
+    background-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip.top .tooltip-arrow {
+    border-top-color: #5C82CC !important;
+}
+
+
+/* RTL v.1.0.0 */
+
+.rtl .tooltip-blue .tooltip {
+    margin-left: -50px !important;
+}
+
+.rtl .tooltip-blue .tooltip-arrow {
+    left: auto !important;
+    right: 13px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip {
+    margin-left: -80px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip-arrow {
+    right: -7px !important;
+    left: auto !important;
+    -ms-transform: rotate(-90deg) !important; /* IE 9 */
+    -webkit-transform: rotate(-90deg) !important; /* Chrome, Safari, Opera */
+    transform: rotate(-90deg) !important;
 }
