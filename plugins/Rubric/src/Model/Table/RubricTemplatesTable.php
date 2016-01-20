@@ -35,7 +35,6 @@ class RubricTemplatesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		//Auto insert default rubric_template_options when add
 		if ($entity->isNew()) {
 			$data = [

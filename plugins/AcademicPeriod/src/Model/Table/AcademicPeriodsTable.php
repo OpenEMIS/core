@@ -36,7 +36,6 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		$entity->start_year = date("Y", strtotime($entity->start_date));
 		$entity->end_year = date("Y", strtotime($entity->end_date));
 		if ($entity->current == 1) {
