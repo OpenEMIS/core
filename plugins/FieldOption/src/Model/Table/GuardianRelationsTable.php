@@ -9,6 +9,6 @@ class GuardianRelationsTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
 
-		$this->hasMany('Guardians', ['className' => 'Student.Guardians', 'dependent' => true]);
+		$this->hasMany('Guardians', ['className' => 'Student.Guardians', 'foreignKey' => 'guardian_relation_id']);
 	}
 }

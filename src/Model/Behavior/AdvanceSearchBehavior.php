@@ -17,11 +17,12 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $modelAlias = '';
 	protected $data = '';
 	protected $_defaultConfig = [
-		'' => ''
+		'' => '',
+		'display_country' => true,
 	];
 
 	public function initialize(array $config) {
-
+		$this->_table->addBehavior('Area.Area');
 	}
 	
 
@@ -55,6 +56,7 @@ class AdvanceSearchBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$language = $session->read('System.language');
 			$fields = $this->model->schema()->columns();
+
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->_exclude)) {
 					if ($this->isForeignKey($key)) {
@@ -69,6 +71,21 @@ class AdvanceSearchBehavior extends Behavior {
 							'options' => $relatedModel->getList(),
 							'selected' => $selected
 						];
+						$relatedModelTable = $relatedModel->table();
+						if ($relatedModelTable == 'area_administratives') {
+							if (!$this->config('display_country')) {
+								$worldId = $relatedModel->find()->where([$relatedModel->aliasField('code') => 'World'])->first()->id;
+								$options = $relatedModel->find('list')
+									->where([
+										'OR' => [
+											[$relatedModel->aliasField('is_main_country') => 1],
+											[$relatedModel->aliasField('parent_id').' IS NOT ' => $worldId]
+										],
+										[$relatedModel->aliasField('id').' IS NOT ' => $worldId]
+									]);
+								$filters[$key]['options'] = $options;
+							}
+						}
 					}
 				}
 			}
@@ -101,16 +118,49 @@ class AdvanceSearchBehavior extends Behavior {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
+		$conditions = $this->advancedSearchQuery ($request, $query);
+	}
+
+	public function advancedSearchQuery ($request, $query) {
 		$conditions = '';
-		foreach ($this->data as $key => $value) {
+		$advancedSearch = [];
+		
+		if (isset($request->data['AdvanceSearch'])) {
+			$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
+		}
+		$areaKeys[] = 'area_id';
+		$areaKeys[] = 'area_administrative_id';
+		$areaKeys[] = 'birthplace_area_id';
+		$areaKeys[] = 'address_area_id';
+
+		foreach ($advancedSearch as $key=>$value) {
 			if (!empty($value) && $value>0) {
-				$conditions[$this->model->aliasField($key)] = $value;
+				if(in_array($key, $areaKeys)){
+					switch ($key) {
+						case 'area_id':
+							$tableName = 'areas';
+							$id = $advancedSearch[$key];
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+							break;
+
+						case 'area_administrative_id':
+						case 'birthplace_area_id':
+						case 'address_area_id':
+							$tableName = 'area_administratives';
+							$id = $advancedSearch[$key];
+							$AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
+							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
+							break;
+					}
+				} else {
+					$conditions[$this->model->aliasField($key)] = $value;
+				}
         	}
         }
-
         if (!empty($conditions)) {
         	$query->where($conditions);
         }
+        return $query;
 	}
 
 

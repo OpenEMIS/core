@@ -43,7 +43,13 @@ foreach ($data as $entity) {
 	$tableData[] = $row;
 }
 
-$tableClass = 'table table-striped table-hover table-bordered table-sortable table-checkable';
+$tableClass = 'table table-curved table-sortable table-checkable';
+if (isset($tabElements)) {
+	if (isset($toolbarElements)) {
+	} else {
+		$tableClass = 'table table-sortable table-checkable';
+	}
+}
 
 $url = [
 	'plugin' => $this->request->params['plugin'],
@@ -62,9 +68,11 @@ $this->ControllerAction->HtmlField->includes($table, 'index');
 $baseUrl = $this->Url->build($url);
 ?>
 
-<div class="table-responsive">
-	<table class="<?= $tableClass ?>" <?= $displayReorder ? 'id="sortable" url="' . $baseUrl . '"' : '' ?>>
-		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-		<tbody <?= $displayAction ? 'data-link="row"' : '' ?>><?php echo $this->Html->tableCells($tableData) ?></tbody>
-	</table>
+<div class="table-wrapper">
+	<div class="table-responsive">
+		<table class="<?= $tableClass ?>" <?= $displayReorder ? 'id="sortable" url="' . $baseUrl . '"' : '' ?>>
+			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+			<tbody <?= $displayAction ? 'data-link="row"' : '' ?>><?php echo $this->Html->tableCells($tableData) ?></tbody>
+		</table>
+	</div>
 </div>

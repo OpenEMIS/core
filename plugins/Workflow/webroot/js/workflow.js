@@ -31,6 +31,7 @@ var Workflow = {
 		$('.workflowtransition-action-id').val(jsonObj.id);
 		$('.workflowtransition-action-name').val(jsonObj.name);
 		$('.workflowtransition-step-id').val(jsonObj.next_step_id);
+		$('.workflowtransition-step-name').val(jsonObj.next_step_name);
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 	},
 

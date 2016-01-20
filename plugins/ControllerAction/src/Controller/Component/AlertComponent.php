@@ -24,7 +24,8 @@ class AlertComponent extends Component {
 
 		$_options = [
 			'type' => 'code',
-			'closeButton' => true
+			'closeButton' => true,
+			'reset' => false
 		];
 
 		if (isset($args[1]) && is_array($args[1])) {
@@ -42,10 +43,20 @@ class AlertComponent extends Component {
 			}
 			$_options['class'] = $class;
 			$_options['message'] = $message;
+			
 			$session = $this->request->session();
-			if (!$session->check('_alert')) {
-				$session->write('_alert', $_options);
+			$alerts = [];
+
+			if ($_options['reset'] && $session->check('_alert')) {
+				$session->delete('_alert');
 			}
+
+			if ($session->check('_alert')) {
+				$alerts = $session->read('_alert');
+			}
+
+			$alerts[] = $_options;
+			$session->write('_alert', $alerts);
 		}
 	}
 }
