@@ -43,7 +43,7 @@ class InstitutionStudentsTable extends AppTable  {
 
 		if ($academicPeriodId!=0) {
 			$query->where([
-				$this->aliasField('academic_period_id') => $statusId
+				$this->aliasField('academic_period_id') => $academicPeriodId
 			]);
 		}
 

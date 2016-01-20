@@ -20,7 +20,6 @@ class StudentSectionsTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		$this->fields['education_grade_id']['visible'] = false;
-		$this->fields['status']['visible'] = false;
 
 		$this->ControllerAction->addField('academic_period', []);
 		$this->ControllerAction->addField('institution', []);
