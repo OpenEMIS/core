@@ -36,7 +36,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 				]);
 			$query->orWhere(['Identities.number LIKE' =>  $searchString]);
 		}
-		// pr($query->sql());die;
+
 		return $query;
 	}	
 
