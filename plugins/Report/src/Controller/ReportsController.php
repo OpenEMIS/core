@@ -109,7 +109,11 @@ class ReportsController extends AppController {
 			} else {
 				$data['percent'] = 0;
 			}
-			$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+			if (is_null($entity->modified)) {
+				$data['modified'] = $ReportProgress->formatDateTime($entity->created);
+			} else {
+				$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+			}
 			$data['status'] = $entity->status;
 		}
 		echo json_encode($data);
