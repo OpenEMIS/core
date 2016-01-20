@@ -33,6 +33,7 @@ class DirectoriesTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AdvanceSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
