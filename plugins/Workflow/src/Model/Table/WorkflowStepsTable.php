@@ -49,7 +49,6 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
 			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {

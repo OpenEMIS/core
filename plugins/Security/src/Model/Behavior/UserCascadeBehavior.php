@@ -29,7 +29,7 @@ class UserCascadeBehavior extends Behavior {
 
 		// will update this table to set value to 0 instead of deleting
 		$excludes = ['institution_sections'];
-		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id'];
+		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id', 'trainee_id'];
 
 		foreach ($tables as $key => $table) {
 			try {
