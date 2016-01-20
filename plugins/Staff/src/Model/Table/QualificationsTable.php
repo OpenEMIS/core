@@ -15,7 +15,7 @@ class QualificationsTable extends AppTable {
 
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
 		$this->belongsTo('QualificationInstitutions', ['className' => 'Staff.QualificationInstitutions']);
 		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);
@@ -43,7 +43,8 @@ class QualificationsTable extends AppTable {
 
 		// temporary disable
 		$this->ControllerAction->field('file_name', 			['visible' => false]);
-		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
+		// file_content is a required field
+		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true], 'null'=>false]);
 
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
@@ -97,19 +98,11 @@ class QualificationsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->fields['document_no']['type'] = 'download';
-		$this->fields['document_no']['attr']['url'] = $action = $this->ControllerAction->url('download');//$this->ControllerAction->buttons['download']['url'];
 
 		$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
 		if (!empty($entity->modified_user_id)) {
 			$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
 		}
-
-		$viewVars = $this->ControllerAction->vars();
-		if(!is_null($viewVars['toolbarButtons']['download'])) {
-			$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
-		}
-
 		return $entity;
 	}
 
@@ -129,7 +122,7 @@ class QualificationsTable extends AppTable {
 			$attr['target'] = ['key' => 'qualification_institution_id', 'name' => $this->aliasField('qualification_institution_id')];
 			$attr['noResults'] = 'false';
 			$attr['attr'] = ['placeholder' => __('Institution')];
-			$attr['url'] = ['controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
+			$attr['url'] = ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
 		}
 		return $attr;
 	}
@@ -161,5 +154,34 @@ class QualificationsTable extends AppTable {
 
 	public function onGetFileType(Event $event, Entity $entity) {
 		return $this->getFileTypeForView($entity->file_name);
+	}
+
+	private function setupTabElements() {
+		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
+	}
+	
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
+		if ($action == "view") {
+			$toolbarButtons['download']['type'] = 'button';
+			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+			$toolbarButtons['download']['attr'] = $attr;
+			$toolbarButtons['download']['attr']['title'] = __('Download');
+			$url = $this->ControllerAction->url('download');
+			if (!empty($url['action'])) {
+				$toolbarButtons['download']['url'] = $url;
+			}
+		}
 	}
 }
