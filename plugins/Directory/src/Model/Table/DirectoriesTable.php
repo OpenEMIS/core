@@ -33,6 +33,7 @@ class DirectoriesTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AdvanceSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -123,11 +124,23 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$allInstitutionStudents = $InstitutionStudentTable->find()
+				->where([
+					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
 			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
 					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
+			$allInstitutionStaff = $InstitutionStaffTable->find()
+				->where([
 					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
 				])
 				->bufferResults(false);
@@ -149,14 +162,16 @@ class DirectoriesTable extends AppTable {
 
 			$query->where([
 					'OR' => [
+						['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
+						['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
 						['EXISTS ('.$guardianAndOthers->sql().')'],
-						[$this->aliasField('created_user_id') => $userId]
 					]
 				])
 				->group([$this->aliasField('id')])
 				;
+			// pr($query->sql());die;
 		}
 		
 		$this->dashboardQuery = clone $query;

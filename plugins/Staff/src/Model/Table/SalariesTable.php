@@ -25,7 +25,6 @@ class SalariesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 
 		$totalAddition = 0;
 		$totalDeduction = 0;

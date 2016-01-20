@@ -515,6 +515,7 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			if (is_null($dateOfBirth)) return false;
 
 			$birthYear = $dateOfBirth->format('Y');
 			$nowYear = Time::now()->format('Y');
@@ -686,6 +687,73 @@ class ValidationBehavior extends Behavior {
 			// return false;
 		// pr($found == 0);
 		return ($found == 0);
+	}
+
+	public static function checkStaffExistWithinPeriod($field, array $globalData) {
+		// The logic below will prevent duplicate record that will be produce if the user amend the start or end date for a staff that is inactive when there is an active staff
+		// in the same institution
+		
+		$recordId = $globalData['data']['id'];
+		$institutionId = $globalData['data']['institution_id'];
+		$newEndDate = strtotime($globalData['data']['end_date']);
+		$newStartDate = strtotime($globalData['data']['start_date']);
+		$staffId = $globalData['data']['staff_id'];
+		$positionId = $globalData['data']['institution_position_id'];
+
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+
+		$condition = [
+			$InstitutionStaffTable->aliasField('staff_id') => $staffId,
+			$InstitutionStaffTable->aliasField('institution_position_id') => $positionId,
+			$InstitutionStaffTable->aliasField('id').' IS NOT' => $recordId,
+			$InstitutionStaffTable->aliasField('institution_id') => $institutionId
+		];
+		$count = 0;
+
+		if ($newStartDate !== false) {
+			if (empty($newEndDate)) {
+				$count = $InstitutionStaffTable->find()
+					->where($condition)
+					->where([
+							'OR' => [
+								[$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate, 
+								]
+							]
+						]);
+			} else {
+				$count = $InstitutionStaffTable->find()
+					->where($condition)
+					->where([
+							'OR' => [
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
+									$InstitutionStaffTable->aliasField('end_date').' IS NULL'
+								],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
+									$InstitutionStaffTable->aliasField('end_date').' IS NULL'
+								],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
+									$InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
+								],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
+									$InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
+								],
+							]
+						]);
+			}
+			if ($count->count() > 0) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
 	}
 
 	public static function checkFTE($field, array $globalData) {

@@ -223,4 +223,8 @@ class UsersTable extends AppTable {
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
+
+	public function isAdmin($userId) {
+		return $this->get($userId)->super_admin;
+	}
 }
