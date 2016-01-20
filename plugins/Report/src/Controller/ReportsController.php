@@ -17,6 +17,7 @@ class ReportsController extends AppController {
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
 			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+			'Standard' => ['className' => 'Report.StandardReport', 'actions'=> ['index', 'view']],
 		];
 	}
 
