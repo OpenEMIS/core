@@ -7,6 +7,7 @@ v3.4.10
 - Added Student Out of School Report
 - Fixed a bug that caused records not appearing after added by users with specific roles
 - Improved UI of System Setup -> Assessments
+- Transfer and Dropout button now appears in Student -> Overview (Only for Enrolled students)
 
 v3.4.9
 - Fixed bugs related to date showing in arabic language
