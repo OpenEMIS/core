@@ -29,7 +29,7 @@ use Cake\Utility\Inflector;
 		foreach ($searchables as $key=>$searchable) :
 	?>
 
-		<div class="input text">
+		<div class="input text" style="margin-bottom:10px;">
 			<label for="advancesearch-directories-identity-number" class="form-label"><?= $searchable['label'] ?>:</label>
 
 			<input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
