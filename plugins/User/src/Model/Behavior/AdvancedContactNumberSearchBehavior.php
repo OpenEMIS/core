@@ -51,7 +51,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 			'label' => __('Contact Number'),
 			'value' => isset($advanceSearchModelData['hasMany']) ? $advanceSearchModelData['hasMany']['contact_number'] : '',
 		];
-		$this->_table->ControllerAction->field('contact_numbers', ['order' => 52]);
+		// $this->_table->ControllerAction->field('contact_numbers', ['order' => 52]);
 	}
 
 	public function onGetContactNumbers(Event $event, Entity $entity) {
