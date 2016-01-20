@@ -34,6 +34,7 @@ class DirectoriesTable extends AppTable {
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('AdvanceSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 		$this->addBehavior('User.AdvancedIdentitySearch');
 		$this->addBehavior('User.AdvancedContactNumberSearch');
 		$this->addBehavior('User.AdvancedPositionSearch');
@@ -127,11 +128,23 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$allInstitutionStudents = $InstitutionStudentTable->find()
+				->where([
+					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
 			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
 					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
+			$allInstitutionStaff = $InstitutionStaffTable->find()
+				->where([
 					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
 				])
 				->bufferResults(false);
@@ -149,15 +162,20 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$userId = $this->Auth->user('id');
+
 			$query->where([
 					'OR' => [
+						['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
+						['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
-						['EXISTS ('.$guardianAndOthers->sql().')']
+						['EXISTS ('.$guardianAndOthers->sql().')'],
 					]
 				])
 				->group([$this->aliasField('id')])
 				;
+			// pr($query->sql());die;
 		}
 		
 		$this->dashboardQuery = clone $query;
