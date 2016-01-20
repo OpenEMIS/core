@@ -154,7 +154,11 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
