@@ -392,7 +392,12 @@ class TransferApprovalsTable extends AppTable {
 					$obj->id
 				];
 
-				$receivedDate = $this->formatDate($obj->modified);
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
+				}
+				
 				$data[] = [
 					'request_title' => ['title' => $requestTitle, 'url' => $url],
 					'receive_date' => $receivedDate,
