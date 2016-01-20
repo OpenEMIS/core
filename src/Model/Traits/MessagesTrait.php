@@ -514,6 +514,11 @@ trait MessagesTrait {
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
+			'InstitutionPositions' => [
+				'position_no' => [
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+				]
+			],
 			'InstitutionShifts' => [
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
