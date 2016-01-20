@@ -72,6 +72,9 @@ CREATE TABLE `qualification_specialisation_subjects` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+ALTER TABLE `qualification_specialisation_subjects`
+  ADD PRIMARY KEY (`id`);
+
 --
 -- Indexes for dumped tables
 --
