@@ -1,8 +1,18 @@
+v3.4.10
+- Fixed a bug that caused 404 error page when Promoting students but no students are selected
+- Added Search in Student Admission Page (Institutions -> Students -> <Select Pending Admission>)
+- Deleting an institution will now remove all students records properly
+- When adding student to school, the student age is calculated by year only (previously it is determined by month and year)
+- Fixed other UI related issues
+- Added Student Out of School Report
+- Fixed a bug that caused records not appearing after added by users with specific roles
+- Improved UI of System Setup -> Assessments
+
 v3.4.9
 - Fixed bugs related to date showing in arabic language
 - Fixed a bug that prompt user to repair excel worksheet after downloading
 - Fixed a bug that caused student report progress bar to always stay at 0%
-- Fixed a bug that cause 404 error page when importing students to school
+- Fixed a bug that caused 404 error page when importing students to school
 - Added Staff absence report
 - Added validation rule to prevent user from adding spaces when changing passwords
 - Added Student Teacher ratio report and Student Class ratio report under Reports -> Institutions
