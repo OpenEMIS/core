@@ -1,7 +1,11 @@
 <?php
 namespace FieldOption\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 class QualificationSpecialisationsTable extends AppTable {
@@ -19,6 +23,61 @@ class QualificationSpecialisationsTable extends AppTable {
 			'through' => 'Education.QualificationSpecialisationSubjects',
 			'dependent' => false
 		]);
+
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+
+		$fieldOptionValueData = $this->ControllerAction->request->data;
+		// pr($fieldOptionValueData);
+		// die;
+		if (array_key_exists('FieldOptionValues', $fieldOptionValueData) && 
+			array_key_exists('education_subjects', $fieldOptionValueData['FieldOptionValues']) &&
+			array_key_exists('_ids', $fieldOptionValueData['FieldOptionValues']['education_subjects'])
+			 ) {
+			$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+			$QualificationSpecialisationSubjects = TableRegistry::get('Staff.QualificationSpecialisationSubjects');
+			$currEducationSubject = (!empty($fieldOptionValueData['FieldOptionValues']['education_subjects']['_ids']))? $fieldOptionValueData['FieldOptionValues']['education_subjects']['_ids']: [];
+
+			$prevEducationSubjectData = $QualificationSpecialisationSubjects->find()
+				->select([])
+				->where([
+					$QualificationSpecialisationSubjects->aliasField('qualification_specialisation_id') => $entity->id
+				])
+				;
+			$prevEducationSubject = [];
+			foreach ($prevEducationSubjectData->toArray() as $key => $value) {
+				$prevEducationSubject[] = $value->education_subject_id;
+			}
+
+			$newEducationSubject = array_diff($currEducationSubject, $prevEducationSubject);
+
+			foreach ($newEducationSubject as $key => $value) {
+				$newRecord = $QualificationSpecialisationSubjects->newEntity(['qualification_specialisation_id' => $entity->id, 'education_subject_id' => $value]);
+				$QualificationSpecialisationSubjects->save($newRecord);
+			}
+		}
+	}
+
+	public function onGetEducationSubjects(Event $event, Entity $entity) {
+		if (!$entity->has('education_subjects')) {
+			$query = $this->find()
+			->where([$this->aliasField($this->primaryKey()) => $entity->id])
+			->contain(['EducationSubjects'])
+			;
+			$data = $query->first();
+		}
+		else {
+			$data = $entity;
+		}
+
+		$educationSubjects = [];
+		if ($data->has('education_subjects')) {
+			foreach ($data->education_subjects as $key => $value) {
+				$educationSubjects[] = $value->name;
+			}
+		}
+		return implode(', ', $educationSubjects);
 
 	}
 }
