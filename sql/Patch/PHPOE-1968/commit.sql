@@ -96,9 +96,9 @@ ALTER TABLE `qualification_specialisation_subjects`
 --
 SET @fieldOptionId := 0;
 SELECT `id` INTO @fieldOptionId FROM field_options WHERE code = 'QualificationSpecialisations';
-ALTER TABLE `qualification_specialisations` ADD `old_id` INT NOT NULL AFTER `created`;
 
 INSERT INTO qualification_specialisations (
+	`id`,
 	`name`, 
 	`order`, 
 	`visible`, 
@@ -109,10 +109,10 @@ INSERT INTO qualification_specialisations (
 	`modified_user_id`, 
 	`modified`, 
 	`created_user_id`, 
-	`created`, 
-	`old_id`
+	`created`
 )
 SELECT 
+	`id`,
 	`name`, 
 	`order`, 
 	`visible`, 
@@ -123,29 +123,18 @@ SELECT
 	`modified_user_id`, 
 	`modified`, 
 	`created_user_id`, 
-	`created`, 
-	`id`
+	`created`
 FROM field_option_values WHERE `field_option_id` = @fieldOptionId;
 UPDATE field_option_values SET visible = 0 WHERE field_option_id = @fieldOptionId;
-
--- backup the table
-CREATE TABLE z1968_qualification_specialisations LIKE qualification_specialisations;
-INSERT INTO z1968_qualification_specialisations SELECT * FROM qualification_specialisations;
-
--- perform the transfer
-UPDATE staff_qualifications LEFT JOIN qualification_specialisations ON (staff_qualifications.qualification_specialisation_id = qualification_specialisations.old_id) SET staff_qualifications.qualification_specialisation_id = qualification_specialisations.id;
--- cleanup
-ALTER TABLE `qualification_specialisations` DROP `old_id`;
-
 
 --
 -- Migration for QualificationLevels
 --
 SET @fieldOptionId := 0;
 SELECT `id` INTO @fieldOptionId FROM field_options WHERE code = 'QualificationLevels';
-ALTER TABLE `qualification_levels` ADD `old_id` INT NOT NULL AFTER `created`;
 
 INSERT INTO qualification_levels (
+	`id`,
 	`name`, 
 	`order`, 
 	`visible`, 
@@ -156,10 +145,10 @@ INSERT INTO qualification_levels (
 	`modified_user_id`, 
 	`modified`, 
 	`created_user_id`, 
-	`created`, 
-	`old_id`
+	`created`
 )
 SELECT 
+	`id`,
 	`name`, 
 	`order`, 
 	`visible`, 
@@ -170,19 +159,9 @@ SELECT
 	`modified_user_id`, 
 	`modified`, 
 	`created_user_id`, 
-	`created`, 
-	`id`
+	`created`
 FROM field_option_values WHERE `field_option_id` = @fieldOptionId;
 UPDATE field_option_values SET visible = 0 WHERE field_option_id = @fieldOptionId;
-
--- backup the table
-CREATE TABLE z1968_qualification_levels LIKE qualification_levels;
-INSERT INTO z1968_qualification_levels SELECT * FROM qualification_levels;
-
--- perform the transfer
-UPDATE staff_qualifications LEFT JOIN qualification_levels ON (staff_qualifications.qualification_level_id = qualification_levels.old_id) SET staff_qualifications.qualification_level_id = qualification_levels.id;
--- cleanup
-ALTER TABLE `qualification_levels` DROP `old_id`;
 
 
 
