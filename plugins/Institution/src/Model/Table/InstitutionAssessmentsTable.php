@@ -556,7 +556,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$this->educationSubjectIds = $AssessmentItems
 			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
-			->find('visible')
 			->where([
 				$AssessmentItems->aliasField('assessment_id') => $selectedAssessment
 			])
