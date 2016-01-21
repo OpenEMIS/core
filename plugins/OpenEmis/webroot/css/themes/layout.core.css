@@ -351,3 +351,12 @@ tbody tr:first-child .tooltip-blue .tooltip-arrow {
     -webkit-transform: rotate(-90deg) !important; /* Chrome, Safari, Opera */
     transform: rotate(-90deg) !important;
 }
+/* Add in temporary fix for PHPOE-2491 */
+.btn-file-upload {
+    position: absolute !important;
+    right: 105px !important;
+    margin-top: -1px !important;
+    line-height: 22px !important;
+    height: 34px !important;
+    width: 52px !important;
+}
