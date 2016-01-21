@@ -34,7 +34,6 @@ class AdvanceSearchBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.afterAction' => 'afterAction',
 		];
@@ -55,14 +54,17 @@ class AdvanceSearchBehavior extends Behavior {
 			$advancedSearch = false;
 			$session = $this->_table->request->session();
 			$language = $session->read('System.language');
-			$fields = $this->model->schema()->columns();
+			$fields = $this->_table->schema()->columns();
+			$requestData = $this->_table->request->data;
+			$advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
+			$advanceSearchModelData = isset($advanceSearchData[$this->_table->alias()]) ? $advanceSearchData[$this->_table->alias()] : [];
 
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->_exclude)) {
 					if ($this->isForeignKey($key)) {
-						$label = $labels->getLabel($this->modelAlias, $key, $language);
+						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
-						$selected = (is_array($this->data) && isset($this->data[$key])) ? $this->data[$key] : '' ;
+						$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
 						if (!empty($selected) && $advancedSearch == false) {
 							$advancedSearch = true;
 						}
@@ -89,18 +91,20 @@ class AdvanceSearchBehavior extends Behavior {
 					}
 				}
 			}
-			if (! empty ($this->data['isSearch']) ) {
+			if (! empty ($advanceSearchModelData['isSearch']) ) {
 				$advancedSearch = true;
 			}
 
+			$searchables = new ArrayObject();
+	        // trigger events for additional searchable fields
+	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
+
 			$this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'advancedSearch'),
+	            'data' => compact('filters', 'searchables', 'advancedSearch'),
 	            'options' => [],
 	            'order' => 0
 	        ];
-		// 	pr('search behavior');
-		// 	pr($this->_table->controller->viewVars['indexElements']);
 		}
 	}
 
@@ -110,36 +114,31 @@ class AdvanceSearchBehavior extends Behavior {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforeAction(Event $event) {
-		$this->model = $this->_table;
-		$this->modelAlias = $this->model->alias();
-		// pr($this->_table->request->data());
-		$this->data = (isset($this->_table->request->data['AdvanceSearch']) && isset($this->_table->request->data['AdvanceSearch'][$this->modelAlias])) ? $this->_table->request->data['AdvanceSearch'][$this->modelAlias] : [];
-	}
-
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
-		$conditions = $this->advancedSearchQuery ($request, $query);
+		return $this->advancedSearchQuery ($request, $query);
 	}
 
-	public function advancedSearchQuery ($request, $query) {
+	public function advancedSearchQuery (Request $request, Query $query) {
 		$conditions = '';
-		$advancedSearch = [];
+		$advancedSearchBelongsTo = [];
+		$advancedSearchHasMany = [];
 		
 		if (isset($request->data['AdvanceSearch'])) {
-			$advancedSearch = $request->data['AdvanceSearch'][$this->model->alias()];
+			$advancedSearchBelongsTo = $request->data['AdvanceSearch'][$this->_table->alias()]['belongsTo'];
+			$advancedSearchHasMany = $request->data['AdvanceSearch'][$this->_table->alias()]['hasMany'];
 		}
 		$areaKeys[] = 'area_id';
 		$areaKeys[] = 'area_administrative_id';
 		$areaKeys[] = 'birthplace_area_id';
 		$areaKeys[] = 'address_area_id';
 
-		foreach ($advancedSearch as $key=>$value) {
+		foreach ($advancedSearchBelongsTo as $key=>$value) {
 			if (!empty($value) && $value>0) {
 				if(in_array($key, $areaKeys)){
 					switch ($key) {
 						case 'area_id':
 							$tableName = 'areas';
-							$id = $advancedSearch[$key];
+							$id = $advancedSearchBelongsTo[$key];
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 
@@ -147,19 +146,25 @@ class AdvanceSearchBehavior extends Behavior {
 						case 'birthplace_area_id':
 						case 'address_area_id':
 							$tableName = 'area_administratives';
-							$id = $advancedSearch[$key];
+							$id = $advancedSearchBelongsTo[$key];
 							$AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 					}
 				} else {
-					$conditions[$this->model->aliasField($key)] = $value;
+					$conditions[$this->_table->aliasField($key)] = $value;
 				}
         	}
         }
         if (!empty($conditions)) {
         	$query->where($conditions);
         }
+
+        if (!empty($advancedSearchHasMany)) {
+	        // trigger events for additional searchable fields
+	        $this->_table->dispatchEvent('AdvanceSearch.onBuildQuery', [$query, $advancedSearchHasMany], $this);
+	    }
+
         return $query;
 	}
 
@@ -171,7 +176,7 @@ class AdvanceSearchBehavior extends Behavior {
 ******************************************************************************************************************/
 	public function getAssociatedBelongsToModel($field) {
 		$relatedModel = null;
-		foreach ($this->model->associations() as $assoc) {
+		foreach ($this->_table->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // belongsTo associations
 				if ($field === $assoc->foreignKey()) {
 					$relatedModel = $assoc;
@@ -183,7 +188,7 @@ class AdvanceSearchBehavior extends Behavior {
 	}
 
 	public function isForeignKey($field) {
-		foreach ($this->model->associations() as $assoc) {
+		foreach ($this->_table->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // belongsTo associations
 				if ($field === $assoc->foreignKey()) {
 					return true;
@@ -199,7 +204,7 @@ class AdvanceSearchBehavior extends Behavior {
 		if (is_object($associationKey)) {
 			$associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->alias()));
 		} else {
-			die($field . '\'s association not found in ' . $this->modelAlias);
+			die($field . '\'s association not found in ' . $this->_table->alias());
 		}
 		return $associatedEntityArrayKey;
 	}
