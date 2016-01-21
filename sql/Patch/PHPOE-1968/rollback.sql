@@ -9,9 +9,6 @@ RENAME TABLE z1968_staff_qualifications TO staff_qualifications;
 UPDATE field_options SET params = NULL WHERE code = 'QualificationSpecialisations';
 UPDATE field_options SET params = NULL WHERE code = 'QualificationLevels';
 
-DROP TABLE z1968_qualification_specialisations;
-DROP TABLE z1968_qualification_levels;
-
 SET @fieldOptionId := 0;
 SELECT `id` INTO @fieldOptionId FROM field_options WHERE code = 'QualificationSpecialisations';
 UPDATE field_option_values SET visible = 1 WHERE field_option_id = @fieldOptionId;

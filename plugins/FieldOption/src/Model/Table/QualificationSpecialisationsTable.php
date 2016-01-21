@@ -26,6 +26,15 @@ class QualificationSpecialisationsTable extends AppTable {
 
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator
+			->notEmpty('name', __('Please enter a name.'))
+			->notEmpty('default', __('Please choose a default.'))
+		;
+
+		return $validator;
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 
 		$fieldOptionValueData = $this->ControllerAction->request->data;
@@ -59,6 +68,8 @@ class QualificationSpecialisationsTable extends AppTable {
 		}
 	}
 
+	// this is used in the index but not view - the same logic can be found in QualificationSpecialisationsBehavior.php
+	// needs to fix logic in future for field options so the logic can be in 1 place
 	public function onGetEducationSubjects(Event $event, Entity $entity) {
 		if (!$entity->has('education_subjects')) {
 			$query = $this->find()
@@ -77,7 +88,7 @@ class QualificationSpecialisationsTable extends AppTable {
 				$educationSubjects[] = $value->name;
 			}
 		}
-		return implode(', ', $educationSubjects);
 
+		return (!empty($educationSubjects))? implode(', ', $educationSubjects): ' ';
 	}
 }
