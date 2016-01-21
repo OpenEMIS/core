@@ -8,19 +8,21 @@ use Cake\ORM\TableRegistry;
 class SSOComponent extends Component {
 	private $controller;
 
-	public $components = ['OpenEmis.LocalAuth'];
+	protected $_defaultConfig = [
+		'homePageURL' => null,
+		'userNotAuthorisedURL' => null,
+	];
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
 		$controller = $this->_registry->getController();
 		$this->controller = $controller;
 		
-
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$authType = $ConfigItems->value('authentication_type');
 
 		$type = 'OpenEmis.' . ucfirst($authType) . 'Auth';
-		$this->controller->loadComponent($type);
+		$this->controller->loadComponent($type, $this->_config);
 	}
 
 	public function implementedEvents() {
@@ -36,9 +38,9 @@ class SSOComponent extends Component {
 
     	$event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
     	if ($event->result) {
-    		return $this->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+    		return $this->controller->redirect($this->_config['homePageURL']);
     	} else {
-    		return $this->controller->redirect(['action' => 'login']);
+    		return $this->controller->redirect($this->_config['userNotAuthorisedURL']);
     	}
 
     	$this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);

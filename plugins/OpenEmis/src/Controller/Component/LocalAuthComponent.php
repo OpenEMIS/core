@@ -16,10 +16,6 @@ class LocalAuthComponent extends Component {
         return $events;
     }
 
-    // public function beforeAuthenticate() {
-    	
-    // }
-
     public function beforeFilter(Event $event) {
     	$controller = $this->_registry->getController();
     	$controller->Auth->config('authenticate', [
@@ -48,7 +44,7 @@ class LocalAuthComponent extends Component {
 				return $controller->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
 			}
 		} else {
-			return $controller->redirect($this->Auth->logout());
+			return false;
 		}
     }
 

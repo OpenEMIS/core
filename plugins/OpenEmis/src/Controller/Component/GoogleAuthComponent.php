@@ -10,12 +10,16 @@ require_once(ROOT . DS . 'vendor' . DS  . 'googlephpapi' . DS . 'src' . DS . 'Go
 
 class GoogleAuthComponent extends Component {
 
+    protected $_defaultConfig = [
+        'userNotAuthorisedURL' => null,
+    ];
+
 	private $clientId;
     private $clientSecret;
     private $redirectUri;
     private $hostedDomain;
 
-	public $components = ['Auth', 'Alert'];
+	public $components = ['Auth'];
 
 	public function initialize(array $config) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
@@ -70,15 +74,15 @@ class GoogleAuthComponent extends Component {
           If we have a code back from the OAuth 2.0 flow, we need to exchange that with the authenticate()
           function. We store the resultant access token bundle in the session, and redirect to ourself.
          ************************************************************************************************/
-        if (($this->request->query('code'))) {
+        if ($this->request->query('code')) {
         	try {
         		$client->authenticate($this->request->query('code'));
         	} catch (\Google_Auth_Exception $e) {
-        		return $controller->redirect(['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index']);
+        		return;
         	}
             $session->write('Google.accessToken', $client->getAccessToken());
             if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-               $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
+                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
             } else {
                 $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
             }
@@ -95,7 +99,7 @@ class GoogleAuthComponent extends Component {
                 // revoke the access token if the user is not authorised
                 $client->revokeToken($session->read('Google.accessToken'));
                 $session->delete('Google.accessToken');
-                $controller->redirect(['plugin' => 'Error', 'controller' => 'Errors', 'action' => 'error403']);
+                $controller->redirect($this->_config['userNotAuthorisedURL']);
             }
         } else {
             $authUrl = $client->createAuthUrl();
@@ -151,7 +155,7 @@ class GoogleAuthComponent extends Component {
 	        }
 			return $this->checkLogin($username);
 		} else {
-			return $controller->redirect($controller->Auth->logout());
+			return false;
 		}
     }
 
@@ -162,8 +166,7 @@ class GoogleAuthComponent extends Component {
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
-				$this->Alert->error('security.login.inactive');
-				return $controller->redirect(['action' => 'login']);
+				return false;
 			}
 			$controller->Auth->setUser($user);
 			$labels = TableRegistry::get('Labels');
@@ -175,7 +178,6 @@ class GoogleAuthComponent extends Component {
 			// End
 			return true;
 		} else {
-			// $controller->Alert->error('security.login.fail');
 			return false;
 		}
 	}
