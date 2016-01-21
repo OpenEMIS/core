@@ -5,15 +5,29 @@ if (isset($attr['null']) && empty($attr['null'])) {
 } else {
 	$required = '';
 }
+if (isset($attr['label'])){
+	if (!empty($attr['label'])) {
+		$label = __($attr['label']);
+	} else {
+		$label = false;
+	}
+} else {
+	$label = __('File');
+}
 ?>
 
 <div class="input file <?= $required ?>">
-	<label><?= !empty($attr['label']) ? $attr['label'] : __('File') ?></label>
+
+	<?php if ($label): ?>
+	<label><?= $label ?></label>
+	<?php endif; ?>
+
 	<?php if (!empty($attr['value'])) : ?>
 		<div class="fileinput fileinput-exists input-group" data-provides="fileinput">
 	<?php else : ?>
 		<div class="fileinput fileinput-new input-group" data-provides="fileinput">
 	<?php endif ?>
+
 			<div class="form-control" data-trigger="fileinput">
 				<i class="fa fa-file-o fileinput-exists"></i>
 				<span class="fileinput-filename"><?= !empty($attr['value']) ? $attr['value'] : ''; ?></span>
@@ -29,4 +43,5 @@ if (isset($attr['null']) && empty($attr['null'])) {
 			</div>
 		</div>
 		<?= $this->Form->error($attr['field']);?>
+
 </div>
