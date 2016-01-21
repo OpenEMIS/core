@@ -1,4 +1,4 @@
---db_patches
+-- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-2484', NOW());
 
 -- security_functions
