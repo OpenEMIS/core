@@ -81,6 +81,16 @@ trait UtilityTrait {
 		return $value;
 	}
 
+	// PHP 5.5 array_column alternative
+	public function array_column($array, $column_name) {
+        return array_map(
+        	function($element) use($column_name) {
+        		if (isset($element[$column_name])) {
+        			return $element[$column_name];
+        		}
+       		}, $array);
+    }
+
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
