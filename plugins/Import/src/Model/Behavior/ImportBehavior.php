@@ -332,136 +332,126 @@ class ImportBehavior extends Behavior {
 
 			$maxRows = $this->config('max_rows');
 			$maxRows = $maxRows + 3;
-			foreach ($worksheets as $sheet) {
-				$highestRow = $sheet->getHighestRow();
-				if ($highestRow > $maxRows) {
-					$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
-					return false;
+			$sheet = $objPHPExcel->getSheet(0);
+			$highestRow = $sheet->getHighestRow();
+			if ($highestRow > $maxRows) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
+				return false;
+			}
+			if ($highestRow == self::RECORD_HEADER) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
+				return false;
+			}
+
+			for ($row = 2; $row <= $highestRow; ++$row) {
+				if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
+					if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
+						$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
+						return false;
+					}
+					continue;
+				}
+				if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
+					if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
+						break;
+					}
+				}
+				
+				// check for unique record
+				$tempRow = new ArrayObject;
+				$rowInvalidCodeCols = new ArrayObject;
+				$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
+				$this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
+		
+				// for each columns
+				$references = [
+					'sheet'=>$sheet, 
+					'mapping'=>$mapping, 
+					'columns'=>$columns, 
+					'lookup'=>$lookup,
+					'totalColumns'=>$totalColumns, 
+					'row'=>$row, 
+					'activeModel'=>$activeModel,
+					'systemDateFormat'=>$systemDateFormat,
+				];
+				$originalRow = new ArrayObject;
+				$rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
+
+				$tempRow = $tempRow->getArrayCopy();
+				// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
+				if (!isset($tempRow['entity'])) {
+					$tableEntity = $activeModel->newEntity();
+				} else {
+					$tableEntity = $tempRow['entity'];
+					unset($tempRow['entity']);
+				}
+				$activeModel->patchEntity($tableEntity, $tempRow);
+				$errors = $tableEntity->errors();
+				$rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
+				if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
+					$rowCodeError = '';
+					$rowCodeErrorForExcel = [];
+					if (!empty($errors)) {
+						foreach ($errors as $field => $arr) {
+							if (in_array($field, $columns)) {
+								$fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+								$rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
+								$rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
+							} else {
+								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $fieldName . ' => ' . $arr[key($arr)], 'info');
+							}
+						}
+					}
+					if (!empty($rowInvalidCodeCols)) {
+						foreach ($rowInvalidCodeCols as $field => $errMessage) {
+							$fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+							if (!isset($errors[$field])) {
+								$rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
+								$rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
+							}
+						}
+					}
+					$dataFailed[] = [
+						'row_number' => $row,
+						'error' => '<ul>' . $rowCodeError . '</ul>',
+						'errorForExcel' => implode("\n", $rowCodeErrorForExcel),
+						'data' => $originalRow
+					];
+
+					continue;
+				} else {
+					$clonedEntity = clone $tableEntity;
+					$clonedEntity->virtualProperties([]);
+
+					$tempPassedRecord = [
+						'row_number' => $row,
+						'data' => $this->_getReorderedEntityArray($clonedEntity, $columns, $originalRow, $systemDateFormat)
+					];
+					$tempPassedRecord = new ArrayObject($tempPassedRecord);
+
+					// individual import models can specifically define the passed record values which are to be exported
+					$params = [$clonedEntity, $columns, $tempPassedRecord, $originalRow];
+					$this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
+
+					$dataPassed[] = $tempPassedRecord->getArrayCopy();
 				}
 
-				for ($row = 2; $row <= $highestRow; ++$row) {
-					if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
-						if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-							$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
-							return false;
-						}
-						continue;
-					}
-					if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
-						if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
-							break;
-						}
-					}
-					
-					// check for unique record
-					$tempRow = new ArrayObject;
-					$tempRow['duplicates'] = false;
-					$params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes];
-					$this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
-			
-					// for each columns
-					$references = [
-						'sheet'=>$sheet, 
-						'mapping'=>$mapping, 
-						'columns'=>$columns, 
-						'lookup'=>$lookup,
-						'totalColumns'=>$totalColumns, 
-						'row'=>$row, 
-						'activeModel'=>$activeModel,
-						'systemDateFormat'=>$systemDateFormat,
-					];
-					$rowInvalidCodeCols = new ArrayObject;
-					$originalRow = new ArrayObject;
-					$rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
-
-					$tempRow = $tempRow->getArrayCopy();
-					// $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
-					if (!isset($tempRow['entity'])) {
-						$tableEntity = $activeModel->newEntity();
+				$isNew = $tableEntity->isNew();
+				if ($activeModel->save($tableEntity)) {
+					if ($isNew) {
+						$totalImported++;
 					} else {
-						$tableEntity = $tempRow['entity'];
-						unset($tempRow['entity']);
-					}
-					$duplicates = $tempRow['duplicates'];
-					unset($tempRow['duplicates']);
-					$activeModel->patchEntity($tableEntity, $tempRow);
-					$errors = $tableEntity->errors();
-					if (!$rowPass || $duplicates || $errors) { // row contains error or record is a duplicate based on unique key(s)
-
-						$rowCodeError = '';
-						if (is_bool($duplicates) && $duplicates) {
-							$rowCodeError .= $this->getExcelLabel('Import', 'duplicate_unique_key');
-						} else if (!empty($duplicates)) {
-							$rowCodeError .= $duplicates;
-						}
-						if (!$rowPass) {
-							if ($rowCodeError!='') {
-								$rowCodeError .= '
-								';
-							}
-							$rowCodeError .= $this->getExcelLabel('Import', 'invalid_code').': ';
-							$rowCodeError .= implode(', ', $rowInvalidCodeCols->getArrayCopy());
-						}
-						if (!empty($errors)) {
-							$rowCodeError = (!empty($rowCodeError)) ? $rowCodeError.'; ' : '';
-							$rowCodeError .= $this->getExcelLabel('Import', 'validation_failed').': ';
-							$count = 1;
-							foreach($errors as $field => $arr) {
-								$fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
-								if ($count === 1) {
-									$rowCodeError .= $fieldName . ' => ' . $arr[key($arr)];
-								} else {
-									$rowCodeError .= ', ' . $fieldName . ' => ' . $arr[key($arr)];
-								}
-								$count ++;
-							}
-						}
-						$dataFailed[] = array(
-							'row_number' => $row,
-							'error' => $rowCodeError,
-							'data' => $originalRow
-						);
-
-						$model->log('ImportBehavior @ line '.__LINE__, 'debug');
-						$model->log($rowCodeError, 'debug');
-
-						continue;
-					} else {
-						$clonedEntity = clone $tableEntity;
-						$clonedEntity->virtualProperties([]);
-
-						$tempPassedRecord = [
-							'row_number' => $row,
-							'data' => $this->_getReorderedEntityArray($clonedEntity, $columns, $systemDateFormat)
-						];
-						$tempPassedRecord = new ArrayObject($tempPassedRecord);
-
-						// individual import models can specifically define the passed record values which are to be exported
-						$params = [$clonedEntity, $columns, $tempPassedRecord, $originalRow];
-						$this->dispatchEvent($this->_table, $this->eventKey('onImportSetModelPassedRecord'), 'onImportSetModelPassedRecord', $params);
-
-						$dataPassed[] = $tempPassedRecord->getArrayCopy();
+						$totalUpdated++;
 					}
 
-					$isNew = $tableEntity->isNew();
-					if ($activeModel->save($tableEntity)) {
-						if ($isNew) {
-							$totalImported++;
-						} else {
-							$totalUpdated++;
-						}
+					// update importedUniqueCodes either a single key or composite primary keys
+					$this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+				
+				}
 
-						// update importedUniqueCodes either a single key or composite primary keys
-						$this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
-					
-					}
-	
-					// $model->log('ImportBehavior: '.$row.' records imported', 'info');
+				// $model->log('ImportBehavior: '.$row.' records imported', 'info');
 
-				} // for ($row = 1; $row <= $highestRow; ++$row)
-
-				break; // only process first sheet
-			} // foreach ($worksheets as $sheet)
+			} // for ($row = 1; $row <= $highestRow; ++$row)
 
 			$session = $this->_table->Session;
 			$completedData = [
@@ -538,7 +528,11 @@ class ImportBehavior extends Behavior {
 			]);
 			$session->delete($this->sessionKey);
 			if (!empty($completedData['failedExcelFile'])) {
-				$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
+				if (!empty($completedData['passedExcelFile'])) {
+					$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'partial_failed');
+				} else {
+					$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'failed');
+				}
 				$this->_table->Alert->error($message, ['type' => 'string', 'reset' => true]);
 			} else {
 				$message = '<i class="fa fa-check-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'success');
@@ -636,7 +630,11 @@ class ImportBehavior extends Behavior {
 	}
 
 	public function suggestRowHeight($stringLen, $currentRowHeight) {
-		$multiplier = $stringLen % 50;
+		if ($stringLen>=50) {
+			$multiplier = $stringLen % 50;
+		} else {
+			$multiplier = 0;
+		}
 		$rowHeight = (3 * $multiplier) + 25;
 		if ($rowHeight > $currentRowHeight && $rowHeight<=250) {
 			$currentRowHeight = $rowHeight;
@@ -707,6 +705,7 @@ class ImportBehavior extends Behavior {
 		$objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
 		$this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
 	}
+
 	/**
 	 * Set a record columns value based on what is being saved in the table.
 	 * @param  Entity $entity           Cloned entity. The actual entity is not saved yet but already validated but we are using a cloned entity in case it might be messed up.
@@ -714,10 +713,10 @@ class ImportBehavior extends Behavior {
 	 * @param  string $systemDateFormat System Date Format which varies across deployed environments.
 	 * @return Array                   	The columns value that will be written to a downloadable excel file.
 	 */
-	private function _getReorderedEntityArray( Entity $entity, Array $columns, $systemDateFormat ) {
+	private function _getReorderedEntityArray( Entity $entity, Array $columns, ArrayObject $originalRow, $systemDateFormat ) {
 		$array = [];
-		foreach ($columns as $property) {
-			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $entity->$property;
+		foreach ($columns as $col=>$property) {
+			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
 			$array[] = $value;
 		}
 		return $array;
@@ -739,19 +738,26 @@ class ImportBehavior extends Behavior {
 			$objPHPExcel = new \PHPExcel();
 
 			$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $newHeader );
-
+			$activeSheet = $objPHPExcel->getActiveSheet();
 			foreach($data as $index => $record) {
 				if ($type == 'failed') {
 					$values = array_values($record['data']->getArrayCopy());
-					$values[] = $record['error'];
+					$values[] = $record['errorForExcel'];
 				} else {
 					$values = $record['data'];
 				}
+				$activeSheet->getRowDimension( ($index + 3) )->setRowHeight( 15 );
 				foreach ($values as $key => $value) {
 					$alpha = $this->getExcelColumnAlpha($key);
-					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
-					$objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
-				}				
+					$activeSheet->setCellValue( $alpha . ($index + 3), $value);
+					$activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
+
+					if ($key==(count($values)-1) && $type == 'failed') {
+						$suggestedRowHeight = $this->suggestRowHeight( strlen($value), 15 );
+						$activeSheet->getRowDimension( ($index + 3) )->setRowHeight( $suggestedRowHeight );
+						$activeSheet->getStyle( $alpha . ($index + 3) )->getAlignment()->setWrapText(true);
+					}
+				}
 			}
 
 			if ($type == 'failed') {
@@ -1099,49 +1105,60 @@ class ImportBehavior extends Behavior {
 						$val = $cellValue;
 					} else { // if the cell value not found in lookup
 						$rowPass = false;
-						$rowInvalidCodeCols[] = $translatedCol;
+						$rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
 					}
 				} else { // if cell is empty
 					$rowPass = false;
-					$rowInvalidCodeCols[] = $translatedCol;
+					$rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
 				}
 			} else if ($foreignKey == self::DIRECT_TABLE) {
 				$registryAlias = $excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model;
 				if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
-					$excelLookupModel = $this->directTables[$registryAlias];
+					$excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
 				} else {
 					$excelLookupModel = TableRegistry::get($registryAlias);
-					$this->directTables[$registryAlias] = $excelLookupModel;
+					$this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
 				}
 				$excludeValidation = false;
 				if (!empty($cellValue)) {
 					$record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
 					// if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
-					$recordId = $record->first();
+					$record = $record->first();
 				} else {
 					if ($activeModel->schema()->column($columnName) && !$activeModel->schema()->column($columnName)['null']) {
-						$recordId = '';
+						$record = '';
 					} else {
 						$excludeValidation = true;
 					}
 				}
 				if (!$excludeValidation) {
-					if (!empty($recordId)) {
-						$val = $recordId->id;
+					if (!empty($record)) {
+						$val = $record->id;
+						$this->directTables[$registryAlias][$val] = $record->name;
 					} else {
-						$rowPass = false;
-						$rowInvalidCodeCols[] = $translatedCol;
+						if (!empty($cellValue)) {
+							$rowPass = false;
+							$rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+						} else {
+							$rowPass = false;
+							$rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+						}
 					}
 				} else {
 					$val = $cellValue;
 				}
 			} else if ($foreignKey == self::NON_TABLE_LIST) {
-				$recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
-				if (!empty($recordId)) {
-					$val = $recordId->id;
+				if (!empty($cellValue)) {
+					$recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
+					if (!empty($recordId)) {
+						$val = $recordId->id;
+					} else {
+						$rowPass = false;
+						$rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+					}
 				} else {
 					$rowPass = false;
-					$rowInvalidCodeCols[] = $translatedCol;
+					$rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
 				}
 			}
 			$tempRow[$columnName] = $val;
