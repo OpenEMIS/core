@@ -13,25 +13,25 @@ use App\Model\Traits\OptionsTrait;
 class StaffAbsencesTable extends AppTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
-		'academic_period_id', 'security_user_id',
+		'academic_period_id', 'staff_id',
 		'full_day', 'start_date', 'end_date', 'start_time', 'end_time',
 		'absence_type', 'staff_absence_reason_id'
 	];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_staff_absences');
+		$this->table('institution_staff_absences');
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
 			'excludes' => [
 				'start_year',
 				'end_year',
-				'institution_site_id',
-				'security_user_id',
+				'institution_id',
+				'staff_id',
 				'full_day', 
 				'start_date', 
 				'start_time', 
@@ -65,7 +65,7 @@ class StaffAbsencesTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
-			->where([$this->aliasField('institution_site_id') => $institutionId])
+			->where([$this->aliasField('institution_id') => $institutionId])
 			->select(['openemis_no' => 'Users.openemis_no']);
 	}
 
@@ -79,8 +79,8 @@ class StaffAbsencesTable extends AppTable {
 			'label' => ''
 		];
 		$newArray[] = [
-			'key' => 'StaffAbsences.security_user_id',
-			'field' => 'security_user_id',
+			'key' => 'StaffAbsences.staff_id',
+			'field' => 'staff_id',
 			'type' => 'integer',
 			'label' => ''
 		];
@@ -92,6 +92,12 @@ class StaffAbsencesTable extends AppTable {
 		];
 		$newFields = array_merge($newArray, $fields->getArrayCopy());
 		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelGetStaffAbsenceReasonId(Event $event, Entity $entity) {
+		if ($entity->staff_absence_reason_id == 0) {
+			return __('Unexcused');
+		}
 	}
 
 	public function onExcelGetAbsences(Event $event, Entity $entity) {
@@ -120,10 +126,10 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onGetDate(Event $event, Entity $entity) {
-		$startDate = date('d-m-Y', strtotime($entity->start_date));
-		$endDate = date('d-m-Y', strtotime($entity->end_date));
+		$startDate = $this->formatDate($entity->start_date);
+		$endDate = $this->formatDate($entity->end_date);
 		if ($entity->full_day == 1) {
-			if (!empty($entity->end_date) && strtotime($entity->end_date) > strtotime($entity->start_date)) {
+			if (!empty($entity->end_date) && $entity->end_date > $entity->start_date) {
 				$value = sprintf('%s - %s (%s)', $startDate, $endDate, __('full day'));
 			} else {
 				$value = sprintf('%s (%s)', $startDate, __('full day'));
@@ -135,7 +141,7 @@ class StaffAbsencesTable extends AppTable {
 		return $value;
 	}
 
-	public function onGetSecurityUserId(Event $event, Entity $entity) {
+	public function onGetStaffId(Event $event, Entity $entity) {
 		if (isset($entity->user->name_with_id)) {
 			return $entity->user->name_with_id;
 		}
@@ -192,11 +198,11 @@ class StaffAbsencesTable extends AppTable {
 		$this->fields['end_time']['visible'] = false;
 		$this->fields['comment']['visible'] = false;
 
-		$this->_fieldOrder = ['date', 'security_user_id', 'absence_type', 'staff_absence_reason_id'];
+		$this->_fieldOrder = ['date', 'staff_id', 'absence_type', 'staff_absence_reason_id'];
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['staff'] = $entity->security_user_id;
+		$this->request->query['staff'] = $entity->staff_id;
 		$this->request->query['full_day'] = $entity->full_day;
 		$this->request->query['absence_type'] = $entity->staff_absence_reason_id == 0 ? 'UNEXCUSED' : 'EXCUSED';
 	}
@@ -223,31 +229,30 @@ class StaffAbsencesTable extends AppTable {
 		$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
-		$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
-		$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
-	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('start_date');
-		$this->ControllerAction->field('end_date');
+		$this->ControllerAction->field('start_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
+		$this->ControllerAction->field('end_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		list($periodOptions, $selectedPeriod, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
 		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
-
-		$this->ControllerAction->field('academic_period_id', [
-			'options' => $periodOptions
-		]);
-		$this->ControllerAction->field('security_user_id', [
-			'options' => $staffOptions
-		]);
+		$this->ControllerAction->field('academic_period_id');
+		$this->ControllerAction->field('staff_id');
 		$this->ControllerAction->field('full_day', [
 			'options' => $fullDayOptions
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
+			list($periodOptions, $selectedPeriod, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
+		
+			$this->ControllerAction->field('academic_period_id', [
+				'options' => $periodOptions
+			]);
+			$this->ControllerAction->field('staff_id', [
+				'options' => $staffOptions
+			]);
+
 			// Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
 			// $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			// $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
@@ -282,23 +287,25 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
-		$startDate = $request->data[$this->alias()]['academic_start_date'];
-		$endDate = $request->data[$this->alias()]['academic_end_date'];
-
-		$attr['value'] = $startDate->format('d-m-Y');
-		$attr['default_date'] = false;
-		$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-		return $attr;
+		if ($action == 'add'){
+			$startDate = $attr['startDate'];
+			$endDate = $attr['endDate'];
+			$attr['value'] = $startDate->format('d-m-Y');
+			$attr['default_date'] = false;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
-		$startDate = $request->data[$this->alias()]['academic_start_date'];
-		$endDate = $request->data[$this->alias()]['academic_end_date'];
-
-		$attr['value'] = $startDate->format('d-m-Y');
-		$attr['default_date'] = false;
-		$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-		return $attr;
+		if ($action == 'add'){
+			$startDate = $attr['startDate'];
+			$endDate = $attr['endDate'];
+			$attr['value'] = $startDate->format('d-m-Y');
+			$attr['default_date'] = false;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
@@ -313,13 +320,13 @@ class StaffAbsencesTable extends AppTable {
 		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
 
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$Staff = TableRegistry::get('Institution.Staff');
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
 					->find()
-					->where([$Staff->aliasField('institution_site_id') => $institutionId])
+					->where([$Staff->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -335,7 +342,7 @@ class StaffAbsencesTable extends AppTable {
 		*/
 	}
 
-	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			$Users = TableRegistry::get('User.Users');
 			$selectedStaff = $request->query('staff');
@@ -416,7 +423,7 @@ class StaffAbsencesTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Staff = TableRegistry::get('Institution.InstitutionSiteStaff');
+		$Staff = TableRegistry::get('Institution.Staff');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
@@ -428,7 +435,7 @@ class StaffAbsencesTable extends AppTable {
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
 					->find()
-					->where([$Staff->aliasField('institution_site_id') => $institutionId])
+					->where([$Staff->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -440,10 +447,10 @@ class StaffAbsencesTable extends AppTable {
 		// Staff
 		$staffOptions = $Staff
 			->find()
-			->where([$Staff->aliasField('institution_site_id') => $institutionId])
+			->where([$Staff->aliasField('institution_id') => $institutionId])
 			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 			->contain(['Users'])
-			->find('list', ['keyField' => 'security_user_id', 'valueField' => 'staff_name'])
+			->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
 			->toArray();
 		$selectedStaff = !is_null($this->request->query('staff')) ? $this->request->query('staff') : key($staffOptions);
 		// End

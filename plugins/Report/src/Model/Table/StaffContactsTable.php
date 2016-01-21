@@ -13,7 +13,7 @@ class StaffContactsTable extends AppTable  {
 		$this->table('user_contacts');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
 		
 		$this->addBehavior('Excel');
