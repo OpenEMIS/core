@@ -351,3 +351,8 @@ tbody tr:first-child .tooltip-blue .tooltip-arrow {
     -webkit-transform: rotate(-90deg) !important; /* Chrome, Safari, Opera */
     transform: rotate(-90deg) !important;
 }
+
+/* TFOOT for Table is missing */
+tfoot td {
+	font-size: 12px;
+}
