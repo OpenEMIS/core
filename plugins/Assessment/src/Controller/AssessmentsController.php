@@ -50,7 +50,7 @@ class AssessmentsController extends AppController
 		$header = __('Assessment');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+		$this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);
