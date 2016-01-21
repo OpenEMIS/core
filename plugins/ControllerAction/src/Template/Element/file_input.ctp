@@ -33,10 +33,22 @@ if (isset($attr['label'])){
 				<span class="fileinput-filename"><?= !empty($attr['value']) ? $attr['value'] : ''; ?></span>
 			</div>
 			<a href="#" class="input-group-addon btn btn-default fileinput-exists btn-file-cancel" data-dismiss="fileinput"><i class="fa fa-trash"></i></a>
+
+			<?php if (isset($attr['upload-button']) && $attr['upload-button']):?>
+			<?php 
+				if (isset($attr['upload-button']['onclick'])) {
+					$onclick = $attr['upload-button']['onclick'];
+				} else {
+					$onclick = '';
+				}
+			?>
+			<span class="input-group-addon btn btn-default fileinput-exists btn-file-upload" onclick="<?= $onclick ?>"><i class="fa kd-upload"></i></span>
+			<?php endif; ?>
+
 			<span class="input-group-addon btn btn-default btn-file">
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
-				<input type="file" name="<?= sprintf($fieldName, $attr['model'], $attr['field']) ?>" class="fa fa-folder">
+				<input type="file" name="<?= sprintf($fieldName, $attr['model'], $attr['field']) ?>" class="fa fa-folder"/>
 			</span>
 			<div class="file-input-text">
 		   		<p><?= $attr['comment'] ?></p>

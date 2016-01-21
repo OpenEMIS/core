@@ -34,6 +34,7 @@ class TrainingSessionsTable extends AppTable {
 			'through' => 'Training.TrainingSessionsTrainees',
 			'dependent' => true
 		]);
+		$this->addBehavior('Training.ImportTrainingSessionTrainees');
 	}
 
 	public function validationDefault(Validator $validator) {
