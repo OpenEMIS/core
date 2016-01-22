@@ -30,13 +30,15 @@ class AccountBehavior extends Behavior {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+		$this->_table->addBehavior('Security.Password', [
+			'field' => 'password'
+		]);
 	}
 
 	public function getAccountValidation(Validator $validator) {
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleNoSpaces', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
 		return $validator
 			->requirePresence('gender_id', 'create')
@@ -49,15 +51,7 @@ class AccountBehavior extends Behavior {
 				    'rule' => 'alphanumeric',
 				]
 			])
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6],
-					'on' => 'update'
-				]
-			])
+			// password validation now in behavior
 			->add('retype_password' , [
 				'ruleCompare' => [
 					'rule' => ['comparePasswords', 'password'],
