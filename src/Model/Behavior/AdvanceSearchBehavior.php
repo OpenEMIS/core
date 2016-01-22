@@ -122,10 +122,16 @@ class AdvanceSearchBehavior extends Behavior {
 		$conditions = '';
 		$advancedSearchBelongsTo = [];
 		$advancedSearchHasMany = [];
-		
-		if (isset($request->data['AdvanceSearch'])) {
-			$advancedSearchBelongsTo = $request->data['AdvanceSearch'][$this->_table->alias()]['belongsTo'];
-			$advancedSearchHasMany = $request->data['AdvanceSearch'][$this->_table->alias()]['hasMany'];
+
+		$model = $this->_table;
+		$alias = $model->alias();
+		if (isset($request->data['AdvanceSearch']) && isset($request->data['AdvanceSearch'][$alias])) {
+			if (isset($request->data['AdvanceSearch'][$alias]['belongsTo'])) {
+				$advancedSearchBelongsTo = $request->data['AdvanceSearch'][$alias]['belongsTo'];
+			}
+			if (isset($request->data['AdvanceSearch'][$alias]['hasMany'])) {
+				$advancedSearchHasMany = $request->data['AdvanceSearch'][$alias]['hasMany'];
+			}
 		}
 		$areaKeys[] = 'area_id';
 		$areaKeys[] = 'area_administrative_id';
@@ -152,7 +158,7 @@ class AdvanceSearchBehavior extends Behavior {
 							break;
 					}
 				} else {
-					$conditions[$this->_table->aliasField($key)] = $value;
+					$conditions[$model->aliasField($key)] = $value;
 				}
         	}
         }
@@ -162,7 +168,7 @@ class AdvanceSearchBehavior extends Behavior {
 
         if (!empty($advancedSearchHasMany)) {
 	        // trigger events for additional searchable fields
-	        $this->_table->dispatchEvent('AdvanceSearch.onBuildQuery', [$query, $advancedSearchHasMany], $this);
+	        $model->dispatchEvent('AdvanceSearch.onBuildQuery', [$query, $advancedSearchHasMany], $this);
 	    }
 
         return $query;
