@@ -68,7 +68,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		// $importedUniqueCodes[] = $entity->code;
 	}
 
-	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
 
@@ -86,14 +86,15 @@ class ImportStaffAttendancesTable extends AppTable {
 		$institutionHeader = $this->getExcelLabel('Imports', 'institution_id') . ": " . $institution->name;
 		$nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
 		$columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-		$data[$sheetName][] = [
+		$data[$columnOrder]['lookupColumn'] = 3;
+		$data[$columnOrder]['data'][] = [
 			$institutionHeader,
 			$nameHeader,
 			$columnHeader
 		];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$institution->name,
 					$row->name,
 					$row->$lookupColumn

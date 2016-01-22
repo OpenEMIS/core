@@ -280,11 +280,19 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -548,7 +556,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$this->educationSubjectIds = $AssessmentItems
 			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
-			->find('visible')
 			->where([
 				$AssessmentItems->aliasField('assessment_id') => $selectedAssessment
 			])
@@ -724,7 +731,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						$query->innerJoin(
 							[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 							[
-								$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+								$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 								$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 								$this->SubjectStaff->aliasField('status') => 1
 							]

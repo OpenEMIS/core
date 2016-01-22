@@ -364,4 +364,12 @@ class SecurityRolesTable extends AppTable {
 		//Transalation is only for security roles
 		return ($entity->security_group_id == -1) ? __($entity->name) : $entity->name;
 	}
+
+	public function getGroupAdministratorEntity() {
+		return $this->find()
+			->where([
+				$this->aliasField('name') => 'Group Administrator'
+			])
+			->first();
+	}
 }
