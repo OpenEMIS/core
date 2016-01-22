@@ -827,4 +827,17 @@ class ValidationBehavior extends Behavior {
 	public static function checkNoSpaces($field, array $globalData) {
 		return !strrpos($field," ");
 	}
+
+	// move to
+	public static function checkNumberExists($field, array $globalData) {
+		return (!empty(preg_match('#\d#',$field)));
+	}
+
+	public static function checkUppercaseExists($field, array $globalData) {
+		return (!empty(preg_match('/[A-Z]/',$field)));
+	}
+
+	public static function checkNonAlphanumericExists($field, array $globalData) {
+		return !ctype_alnum($field);
+	}
 }
