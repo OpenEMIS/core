@@ -29,6 +29,18 @@
 			'autocomplete-submit' => "$('#reload').val('addTrainee').click();"
 		]);
 		echo $this->Form->hidden('trainee_id', ['autocomplete-value' => 'trainee_id']);
+
+		$importAttr = [
+		    'model' => $attr['model'],
+		    'field' => 'trainees_import',
+		    'className' => $attr['className'],
+			'label' => __('Import Trainees'),
+			'upload-button' => [
+				'onclick' => "$('#reload').val('massAddTrainees').click()"
+			],
+			'comment' => isset($attr['comment']) ? $attr['comment'] : '',
+		];
+		echo $this->HtmlField->binary($ControllerAction['action'], $data, $importAttr);
 	?>
 	<div class="clearfix"></div>
 	<hr>

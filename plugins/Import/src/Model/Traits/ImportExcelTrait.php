@@ -1,24 +1,74 @@
 <?php
 namespace Import\Model\Traits;
 
+use DateTime;
+use DateInterval;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
-trait ImportTrait
+trait ImportExcelTrait
 {
+	protected $RECORD_HEADER = 2;
+	protected $FIRST_RECORD = 3;
+	protected $MAX_ROWS = 2000;
+	protected $MAX_SIZE = 524288;
 	protected $rootFolder = 'import';
-	protected $_fileTypesMap = [
+	protected $fileTypesMap = [
 		// 'csv' 	=> 'text/plain',
 		// 'csv' 	=> 'text/csv',
 		'xls' 	=> ['application/vnd.ms-excel', 'application/vnd.ms-office'],
-		// Use for openoffice .xls format
 		'xlsx' 	=> ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-		// 'xlsx' 	=> ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/download'],
+		// Use for openoffice .xls format
 		'ods' 	=> ['application/vnd.oasis.opendocument.spreadsheet'],
 		'zip' 	=> ['application/zip']
 	];
 
-	public function checkRowCells($sheet, $totalColumns, $row) {
+	protected function prepareDownload() {
+		$folder = WWW_ROOT . $this->rootFolder;
+		if (!file_exists($folder)) {
+			umask(0);
+			mkdir($folder, 0777);
+		} else {
+			$fileList = array_diff(scandir($folder), array('..', '.'));
+			$now = new DateTime();
+			// delete all old files that are more than one hour old
+			$now->sub(new DateInterval('PT1H'));
+
+			foreach ($fileList as $file) {
+				$path = $folder . DS . $file;
+				$timestamp = filectime($path);
+				$date = new DateTime();
+				$date->setTimestamp($timestamp);
+
+				if ($now > $date) {
+					if (!unlink($path)) {
+						$this->_table->log('Unable to delete ' . $path, 'export');
+					}
+				}
+			}
+		}
+		
+		return $folder;
+	}
+	
+	protected function performDownload($excelFile) {
+		$folder = WWW_ROOT . $this->rootFolder;
+		$excelPath = $folder . DS . $excelFile;
+		$filename = basename($excelPath);
+		
+		header("Pragma: public", true);
+		header("Expires: 0"); // set expiration time
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Content-Type: application/force-download");
+		header("Content-Type: application/octet-stream");
+		header("Content-Type: application/download");
+		header("Content-Disposition: attachment; filename=".$filename);
+		header("Content-Transfer-Encoding: binary");
+		header("Content-Length: ".filesize($excelPath));
+		echo file_get_contents($excelPath);
+	}
+
+	protected function checkRowCells($sheet, $totalColumns, $row) {
 		$cellsState = [];
 		for ($col=0; $col < $totalColumns; $col++) {
 			$cell = $sheet->getCellByColumnAndRow($col, $row);
@@ -32,7 +82,7 @@ trait ImportTrait
 		return in_array(true, $cellsState);
 	}
 	
-	public function beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, $lastRowToAlign = 2, $title = '', $titleColumn = 'C' ) {
+	protected function beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, $lastRowToAlign = 2, $title = '', $titleColumn = 'C' ) {
 		if (empty($title)) {
 			$title = $dataSheetName;
 		}
@@ -65,7 +115,7 @@ trait ImportTrait
 	    $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style);
 	}
 
-	public function endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [], $titleColumn = 'C' ) {
+	protected function endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [], $titleColumn = 'C' ) {
 		if (empty($applyFillFontSetting)) {
 			$applyFillFontSetting = ['s'=>2, 'e'=>2];
 		}
@@ -84,7 +134,7 @@ trait ImportTrait
 		$activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
 	}
 
-	public function setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, $autoTitle = true,  $titleColumn = 'C') {
+	protected function setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, $autoTitle = true,  $titleColumn = 'C') {
 
 		$objPHPExcel->setActiveSheetIndex(0);
 
@@ -120,7 +170,7 @@ trait ImportTrait
 	 * @return string               the string representation of a column based on excel grid
 	 * @todo  the alpha string array values should be auto-generated instead of hard-coded
 	 */
-	public function getExcelColumnAlpha($column_number) {
+	protected function getExcelColumnAlpha($column_number) {
 		$alpha = [
 			'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 			'AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','AZ',
@@ -136,6 +186,24 @@ trait ImportTrait
 		return $alpha[$column_number];		
 	}
 
+	/**
+	 * Check if the uploaded file is the correct template by comparing the headers extracted from mapping table
+	 * and first row of the uploaded file record
+	 * @param  array  		$header      	The headers extracted from mapping table according to active model
+	 * @param  WorkSheet 	$sheet      	The worksheet object
+	 * @param  integer 		$totalColumns 	Total number of columns to be checked
+	 * @param  integer 		$row          	Row number
+	 * @return boolean               		the result to be return as true or false
+	 */
+	protected function isCorrectTemplate($header, $sheet, $totalColumns, $row) {
+		$cellsValue = [];
+		for ($col=0; $col < $totalColumns; $col++) {
+			$cell = $sheet->getCellByColumnAndRow($col, $row);
+			$cellsValue[] = $cell->getValue();
+		}
+		return $header === $cellsValue;
+	}
+	
 /**
  * @link("PHP get actual maximum upload size", http://stackoverflow.com/questions/13076480/php-get-actual-maximum-upload-size)
  */
