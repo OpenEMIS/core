@@ -34,6 +34,10 @@ class UserBehavior extends Behavior {
 				'contentEditable' => true,
 				'allowable_file_types' => 'image'
 			]);
+
+			$this->_table->addBehavior('Security.Password', [
+				'field' => 'password'
+			]);
 		}
 	}
 
