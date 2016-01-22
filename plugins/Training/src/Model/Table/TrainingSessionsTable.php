@@ -11,10 +11,12 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
+use Import\Model\Traits\ImportExcelTrait;
 
 class TrainingSessionsTable extends AppTable {
 	use OptionsTrait;
 	use HtmlTrait;
+	use ImportExcelTrait;
 
 	private $_contain = ['Trainers.Users', 'Trainees'];
 
@@ -34,7 +36,6 @@ class TrainingSessionsTable extends AppTable {
 			'through' => 'Training.TrainingSessionsTrainees',
 			'dependent' => true
 		]);
-		$this->addBehavior('Training.ImportTrainingSessionTrainees');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -139,11 +140,11 @@ class TrainingSessionsTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setupFields($entity);
+		$this->setupFields($event, $entity);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->setupFields($entity);
+		$this->setupFields($event, $entity);
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -374,7 +375,7 @@ class TrainingSessionsTable extends AppTable {
 		return null;
 	}
 
-	public function setupFields(Entity $entity) {
+	public function setupFields(Event $event, Entity $entity) {
 		$fieldOrder = [
 			'training_course_id', 'training_provider_id',
 			'code', 'name', 'start_date', 'end_date', 'comment',
@@ -395,13 +396,239 @@ class TrainingSessionsTable extends AppTable {
 		]);
 
 		if (isset($entity->id)) {
+
+			/**
+			 * Import field variables
+			 */
+			$comment = __('* Format Supported: ' . implode(', ', array_keys($this->fileTypesMap)));
+			$comment .= '<br/>';
+			$comment .= __('* Recommended Maximum File Size: ' . $this->bytesToReadableFormat($this->MAX_SIZE));
+			$comment .= '<br/>';
+			$comment .= __('* Recommended Maximum Records: ' . $this->MAX_ROWS);
+			$data = $event->subject()->request->data;
+			if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {
+				$entity->errors('trainees_import', $data['trainees_import_error']);
+			}
+			/**
+			 * End Import field variables
+			 */
+
+			// this is a fake field to make the form render with an "enctype"
+			$this->ControllerAction->field('trainees_fake_field', ['type' => 'binary', 'visible'=>false]);
+
 			$this->ControllerAction->field('trainees', [
 				'type' => 'trainee_table',
-				'valueClass' => 'table-full-width'
+				'valueClass' => 'table-full-width',
+				'comment' => $comment
 			]);
 			$fieldOrder[] = 'trainees';
 		}
 
 		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
+
+
+/******************************************************************************************************************
+**
+** Import Functions
+**
+******************************************************************************************************************/
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
+		$events['ControllerAction.Model.addEdit.onMassAddTrainees'] = ['callable' => 'addEditOnMassAddTrainees'];
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		$customButton = [];
+		switch ($action) {
+			case 'edit':
+			case 'add':
+				$toolbarButtons['import'] = $toolbarButtons['back'];
+				$toolbarButtons['import']['url'][0] = 'template';
+				$toolbarButtons['import']['attr']['title'] = __('Download Template');
+				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
+				break;
+		}
+	}
+
+	public function template() {
+		// prepareDownload() resides in ImportTrait
+		$folder = $this->prepareDownload();
+		// Do not localize file name as certain non-latin characters might cause issue 
+		$excelFile = 'OpenEMIS_Core_Import_Training_Session_Trainees.xlsx';
+		$excelPath = $folder . DS . $excelFile;
+
+		$header = ['OpemEMIS ID'];
+		$dataSheetName = __('Training Session Trainees');
+
+		$objPHPExcel = new \PHPExcel();
+		$autoTitle = false;
+		$titleColumn = 'F';
+		// setImportDataTemplate() resides in ImportTrait
+		$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, $autoTitle, $titleColumn );
+
+		$objPHPExcel->setActiveSheetIndex(0);
+		$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+		$objWriter->save($excelPath);
+
+		// performDownload() resides in ImportTrait
+		$this->performDownload($excelFile);
+		die;
+	}
+
+	public function addEditOnMassAddTrainees(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+
+		$request = $event->subject()->request;
+		$model = $this;
+		$alias = $model->alias();
+		$error = '';
+		// MAX_SIZE resides in ImportTrait
+		if ($request->env('CONTENT_LENGTH') >= $this->MAX_SIZE) {
+			$error = $model->getMessage('Import.over_max');
+		} 
+		// file_upload_max_size() resides in ImportTrait
+		if ($request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
+			$error = $model->getMessage('Import.over_max');
+		} 
+		if ($request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
+			$error = $model->getMessage('Import.over_max');
+		}
+		if (!array_key_exists($alias, $data)) {
+			$error = $model->getMessage('Import.not_supported_format');	
+		}
+		if (!array_key_exists('trainees_import', $data[$alias])) {
+			$error = $model->getMessage('Import.not_supported_format');
+		}
+		if (empty($data[$alias]['trainees_import'])) {
+			$error = $model->getMessage('Import.not_supported_format');
+		}
+		if ($data[$alias]['trainees_import']['error']==4) {
+			$error = $model->getMessage('Import.not_supported_format');
+		}
+		if ($data[$alias]['trainees_import']['error']>0) {
+			$error = $model->getMessage('Import.over_max');
+		}
+
+		$fileObj = $data[$alias]['trainees_import'];
+		// fileTypesMap resides in ImportTrait
+		$supportedFormats = $this->fileTypesMap;
+
+		$finfo = finfo_open(FILEINFO_MIME_TYPE);
+		$fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
+		finfo_close($finfo);
+		$formatFound = false;
+		foreach ($supportedFormats as $eachformat) {
+			if (in_array($fileFormat, $eachformat)) {
+				$formatFound = true;
+			} 
+		}
+		if (!$formatFound) {
+			if (!empty($fileFormat)) {
+				$error = $model->getMessage('Import.not_supported_format');
+			}
+		}				
+
+		$fileExt = $fileObj['name'];
+		$fileExt = explode('.', $fileExt);
+		$fileExt = $fileExt[count($fileExt)-1];
+		if (!array_key_exists($fileExt, $supportedFormats)) {
+			if (!empty($fileFormat)) {
+				$error = $model->getMessage('Import.not_supported_format');
+			}
+		}
+
+		if (!empty($error)) {
+			$data['trainees_import_error'] = $error;
+		} else {
+
+			$controller = $model->controller;
+			$controller->loadComponent('PhpExcel');
+			$columns = ['trainees_import'];
+			$header = ['OpemEMIS ID'];
+
+			$fileObj = $data[$alias]['trainees_import'];
+			$uploaded = $fileObj['tmp_name'];
+			$objPHPExcel = $controller->PhpExcel->loadWorksheet($uploaded);
+
+			$maxRows = $this->MAX_ROWS;
+			$maxRows = $maxRows + 3;
+			$sheet = $objPHPExcel->getSheet(0);
+			$totalColumns = 1;
+			$highestRow = $sheet->getHighestRow();
+			if ($highestRow > $maxRows) {
+				$data['trainees_import_error'] = $model->getMessage('Import.over_max_rows');
+				return $event->response;
+			}
+
+			$TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+			$Staff = TableRegistry::get('Institution.Staff');
+			$Users = TableRegistry::get('User.Users');
+			$Positions = TableRegistry::get('Institution.InstitutionPositions');
+			
+			$targetPopulationIds = $TargetPopulations
+				->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
+				->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
+				->toArray();
+
+			for ($row = 2; $row <= $highestRow; ++$row) {
+				if ($row == $this->RECORD_HEADER) { // skip header but check if the uploaded template is correct
+					if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
+						$data['trainees_import_error'] = $model->getMessage('Import.wrong_template');
+						return $event->response;
+					}
+					continue;
+				}
+				if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
+					if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
+						break;
+					}
+				}
+					
+				$cell = $sheet->getCellByColumnAndRow(0, $row);
+				$openemis_no = $cell->getValue();
+				if (empty($openemis_no)) {
+					continue;
+				}
+				$trainee = $Staff
+							->find()
+							->matching('Users', function($q) use ($openemis_no) {
+								return $q
+									->find('all')
+									->where(['Users.openemis_no' => $openemis_no])
+									;
+							})
+							->matching('Positions', function($q) use ($targetPopulationIds) {
+								return $q
+									->find('all')
+									->where([
+										'Positions.staff_position_title_id IN' => $targetPopulationIds
+									]);
+							})
+							->group([
+								$Staff->aliasField('staff_id')
+							])
+							->order([$Users->aliasField('first_name')])
+							->first();
+
+				if ($trainee) {
+					$key = 'trainees';
+					if (!array_key_exists($key, $data[$alias])) {
+						$data[$alias][$key] = [];
+					}
+					$data[$alias][$key][$trainee->id] = [
+						'id' => $trainee->_matchingData['Users']->id,
+						'_joinData' => ['openemis_no' => $openemis_no, 'trainee_id' => $trainee->_matchingData['Users']->id, 'name' => $trainee->name]
+					];
+				} else {
+					// $model->log(__CLASS__.'->'.__METHOD__ . ': Record not found for id: ' . $openemis_no, 'debug');
+				}
+			}
+		}
+	}
+/******************************************************************************************************************
+** End Import Functions
+******************************************************************************************************************/
+
 }
