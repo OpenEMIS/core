@@ -102,7 +102,7 @@ class UsersTable extends AppTable {
         ];
         $userEntity = $UsersTable->newEntity($data);
         $UsersTable->save($userEntity);
-        return $event->subject()->_findUser($userName);
+        return $userName;
 	}
 
 	public static function handleAssociations($model) {

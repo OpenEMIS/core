@@ -42,6 +42,7 @@ class SSOComponent extends Component {
     	if ($event->result) {
     		return $this->controller->redirect($this->_config['homePageURL']);
     	} else {
+    		$this->controller->Auth->logout();
     		return $this->controller->redirect($this->_config['userNotAuthorisedURL']);
     	}
 
