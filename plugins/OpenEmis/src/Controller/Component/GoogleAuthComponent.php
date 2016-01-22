@@ -38,7 +38,6 @@ class GoogleAuthComponent extends Component {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-        // $events['Controller.Auth.beforeAuthenticate'] = 'beforeAuthenticate';
         $events['Controller.Auth.authenticate'] = 'authenticate';
         return $events;
     }

@@ -20,7 +20,9 @@ class SSOComponent extends Component {
 		
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$authType = $ConfigItems->value('authentication_type');
-
+		if (empty($authType)) {
+			$authType = 'Local';
+		}
 		$type = 'OpenEmis.' . ucfirst($authType) . 'Auth';
 		$this->controller->loadComponent($type, $this->_config);
 	}
@@ -34,7 +36,7 @@ class SSOComponent extends Component {
     public function doAuthentication() {
     	$extra = new ArrayObject([]);
 
-    	$this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
+    	// $this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
 
     	$event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
     	if ($event->result) {
@@ -43,6 +45,6 @@ class SSOComponent extends Component {
     		return $this->controller->redirect($this->_config['userNotAuthorisedURL']);
     	}
 
-    	$this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
+    	// $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
     }
 }
