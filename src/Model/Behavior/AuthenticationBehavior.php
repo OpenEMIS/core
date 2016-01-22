@@ -112,7 +112,7 @@ class AuthenticationBehavior extends Behavior {
 
 	private function googleAuthentication(&$attribute) {
 		$attribute['client_id'] = ['name' => 'Client ID'];
-		$attribute['client_secret'] = ['name' => 'Client Secret', ];
+		$attribute['client_secret'] = ['name' => 'Client Secret'];
 		$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
 		$attribute['hd'] = ['name' => 'Hosted Domain'];
 	}
