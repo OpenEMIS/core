@@ -127,7 +127,7 @@ class AuthenticationBehavior extends Behavior {
 	private function processAuthentication(&$attribute, $authenticationType) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
 		$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-		$attributeFieldsArray = $this->_table->Navigation->array_column($attributesArray, 'attribute_field');
+		$attributeFieldsArray = $this->array_column($attributesArray, 'attribute_field');
 		foreach ($attribute as $key => $values) {
 			$attributeValue = '';
 			if (array_search($key, $attributeFieldsArray) !== false) {
