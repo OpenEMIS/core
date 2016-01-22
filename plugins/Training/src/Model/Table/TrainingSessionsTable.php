@@ -441,10 +441,8 @@ class TrainingSessionsTable extends AppTable {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		$customButton = [];
 		switch ($action) {
 			case 'edit':
-			case 'add':
 				$toolbarButtons['import'] = $toolbarButtons['back'];
 				$toolbarButtons['import']['url'][0] = 'template';
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
