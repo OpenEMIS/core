@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
+use Cake\Collection\Collection;
 use Import\Model\Traits\ImportExcelTrait;
 
 class TrainingSessionsTable extends AppTable {
@@ -158,6 +159,14 @@ class TrainingSessionsTable extends AppTable {
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
+
+		// PHPOE-2491: During edit, if there are more than one trainees and when all trainees were removed at the same time,
+		// "trainees" array will not be included in $data. We have to manually add it so that 'saveStrategy' => 'replace' will work
+		if ($data->offsetExists('TrainingSessions')) {
+			if (!isset($data['TrainingSessions']['trainees'])) {
+				$data['TrainingSessions']['trainees'] = [];
+			}
+		}
 	}
 
 	public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -481,6 +490,7 @@ class TrainingSessionsTable extends AppTable {
 		$request = $event->subject()->request;
 		$model = $this;
 		$alias = $model->alias();
+		$key = 'trainees';
 		$error = '';
 		// MAX_SIZE resides in ImportTrait
 		if ($request->env('CONTENT_LENGTH') >= $this->MAX_SIZE) {
@@ -569,6 +579,9 @@ class TrainingSessionsTable extends AppTable {
 				->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
 				->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
 				->toArray();
+			$trainees = new Collection($data[$alias][$key]);
+			$traineeIds = $trainees->extract('_joinData.openemis_no');
+			$traineeIds = $traineeIds->toArray();
 
 			for ($row = 2; $row <= $highestRow; ++$row) {
 				if ($row == $this->RECORD_HEADER) { // skip header but check if the uploaded template is correct
@@ -587,6 +600,9 @@ class TrainingSessionsTable extends AppTable {
 				$cell = $sheet->getCellByColumnAndRow(0, $row);
 				$openemis_no = $cell->getValue();
 				if (empty($openemis_no)) {
+					continue;
+				}
+				if (in_array($openemis_no, $traineeIds)) {
 					continue;
 				}
 				$trainee = $Staff
@@ -611,11 +627,10 @@ class TrainingSessionsTable extends AppTable {
 							->first();
 
 				if ($trainee) {
-					$key = 'trainees';
 					if (!array_key_exists($key, $data[$alias])) {
 						$data[$alias][$key] = [];
 					}
-					$data[$alias][$key][$trainee->id] = [
+					$data[$alias][$key][$openemis_no] = [
 						'id' => $trainee->_matchingData['Users']->id,
 						'_joinData' => ['openemis_no' => $openemis_no, 'trainee_id' => $trainee->_matchingData['Users']->id, 'name' => $trainee->name]
 					];
