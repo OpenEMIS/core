@@ -65,16 +65,14 @@ class UsersTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.Auth.onCreateUser' => 'onCreateUser'
+			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser'
 		];
 
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
 
-	// implementedEvents -> to add Model.Auth => ModelAuth
-
-	public function onCreateUser(Event $event, $userName, array $userInfo) {
+	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
 		$openemisNo = $this->getUniqueOpenemisId();
 
         $GenderTable = TableRegistry::get('User.Genders');
