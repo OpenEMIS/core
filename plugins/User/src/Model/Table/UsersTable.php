@@ -77,14 +77,15 @@ class UsersTable extends AppTable {
 
         $GenderTable = TableRegistry::get('User.Genders');
         $genderList = $GenderTable->find('list')->toArray();
-        $userGender = $GenderTable->find()->where([$GenderTable->aliasField('name') => $userInfo['gender']])->first();
 
         // Just in case the gender is others
-        if (!empty($userGender)) {
-            $gender = $userGender->id;
-        } else {
+        $gender = array_search($userInfo['gender'], $genderList);
+        if ($gender === false) {
             $gender = key($genderList);
         }
+
+        $dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+
         $date = Time::now();
         $data = [
             'username' => $userName,
@@ -92,7 +93,7 @@ class UsersTable extends AppTable {
             'first_name' => $userInfo['firstName'],
             'last_name' => $userInfo['lastName'],
             'gender_id' => $gender,
-            'date_of_birth' => '1970-01-01',
+            'date_of_birth' => $dateOfBirth,
             'super_admin' => 0,
             'status' => 1,
             'created_user_id' => 1,
