@@ -117,6 +117,13 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['hd'] = ['name' => 'Hosted Domain'];
 	}
 
+	private function googleModifyValue($key, $attributeValue) {
+		if ($key == 'redirect_uri' && empty($attributeValue)) {
+			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+		}
+		return false;
+	}
+
 	private function processAuthentication(&$attribute, $authenticationType) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
 		$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
@@ -125,6 +132,13 @@ class AuthenticationBehavior extends Behavior {
 			$attributeValue = '';
 			if (array_search($key, $attributeFieldsArray) !== false) {
 				$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
+				if (method_exists($this, strtolower($authenticationType).'ModifyValue')) {
+					$method = strtolower($authenticationType).'ModifyValue';
+					$result = $this->$method($key, $attributeValue);
+					if ($result !== false) {
+						$attributeValue = $result;
+					}
+				}
 			}
 			$attribute[$key]['value'] = $attributeValue;
 		}
