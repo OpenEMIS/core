@@ -98,6 +98,7 @@ class GoogleAuthComponent extends Component {
                 // revoke the access token if the user is not authorised
                 $client->revokeToken($session->read('Google.accessToken'));
                 $session->delete('Google.accessToken');
+                $controller->Auth->logout();
                 $controller->redirect($this->_config['userNotAuthorisedURL']);
             }
         } else {
@@ -129,12 +130,17 @@ class GoogleAuthComponent extends Component {
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            if (isset($tokenData['payload']['hd'])) {
-                if ($tokenData['payload']['hd'] == $this->hostedDomain) {
-                    $session->write('Google.tokenData', $tokenData);
-                    $session->write('Google.client', $client);
+            if (!empty($this->hostedDomain)) {
+                if (isset($tokenData['payload']['hd'])) {
+                    if ($tokenData['payload']['hd'] == $this->hostedDomain) {
+                        $session->write('Google.tokenData', $tokenData);
+                        $session->write('Google.client', $client);
+                    }
                 }
-            }
+            } else {
+                $session->write('Google.tokenData', $tokenData);
+                $session->write('Google.client', $client);
+            } 
         } else {
         	$session->delete('Google.tokenData');
         	$session->delete('Google.client', $client);

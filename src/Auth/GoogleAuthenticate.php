@@ -27,7 +27,7 @@ class GoogleAuthenticate extends BaseAuthenticate
             $hostedDomain = $emailArray[1];
             $configHD = $session->read('Google.hostedDomain');
             // Additional check just in case the hosted domain check fail
-            if (strtolower($hostedDomain) != strtolower($configHD)) {
+            if (!empty($configHD) && strtolower($hostedDomain) != strtolower($configHD)) {
             	return false;
             } else {
             	$isFound = $this->_findUser($userName);
@@ -36,7 +36,6 @@ class GoogleAuthenticate extends BaseAuthenticate
 	            if ($isFound) {
 	                return $isFound;
 	            } else {
-
 	            	$client = $session->read('Google.client');
 	                $ServiceOAuth2Object = new \Google_Service_Oauth2($client);
 	        		$me = $ServiceOAuth2Object->userinfo->get();
@@ -54,7 +53,7 @@ class GoogleAuthenticate extends BaseAuthenticate
                     $User = TableRegistry::get('User.Users');
                     $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
                     if ($event->isStopped()) { 
-                        return $event->result;
+                        return $this->_findUser($event->result);
                     }
 	            }
             }
