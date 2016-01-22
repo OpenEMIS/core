@@ -53,14 +53,13 @@ class FieldOptionValuesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
-
 		if ($entity->default == 1) {
 			$this->updateAll(['default' => 0], ['field_option_id' => $entity->field_option_id]);
 		}
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('id_new', ['type' => 'hidden']);
 		$this->ControllerAction->field('parent_field_option_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);

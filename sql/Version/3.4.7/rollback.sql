@@ -53,4 +53,21 @@ DELETE FROM `security_functions` WHERE `id` IN (3028, 3029, 3030, 3031, 3032, 30
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-1227';
 
+DELETE FROM labels WHERE module = 'StudentPromotion' and field = 'fromAcademicPeriod';
+DELETE FROM labels WHERE module = 'StudentPromotion' and field = 'toAcademicPeriod';
+DELETE FROM labels WHERE module = 'StudentPromotion' and field = 'fromGrade';
+DELETE FROM labels WHERE module = 'StudentPromotion' and field = 'toGrade';
+DELETE FROM labels WHERE module = 'StudentPromotion' and field = 'status';
+
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2291';
+
+-- 
+-- PHPOE-832
+--
+
+DROP TABLE `config_items`;
+ALTER TABLE `z_832_config_items` RENAME `config_items`;
+
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-832';
+
 UPDATE config_items SET value = '3.4.6' WHERE code = 'db_version';

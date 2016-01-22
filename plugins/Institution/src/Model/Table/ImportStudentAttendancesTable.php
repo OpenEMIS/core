@@ -71,7 +71,7 @@ class ImportStudentAttendancesTable extends AppTable {
 	/**
 	 * Currently only populates students based on current academic period
 	 */
-	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$currentPeriodId = $this->AcademicPeriods->getCurrent();
 		if (!$currentPeriodId) {
@@ -112,7 +112,8 @@ class ImportStudentAttendancesTable extends AppTable {
 		$gradeHeader = $this->getExcelLabel($lookedUpTable, 'education_grade_id');
 		$nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
 		$columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-		$data[$sheetName][] = [
+		$data[$columnOrder]['lookupColumn'] = 5;
+		$data[$columnOrder]['data'][] = [
 			$institutionHeader,
 			$periodHeader,
 			$gradeHeader,
@@ -121,7 +122,7 @@ class ImportStudentAttendancesTable extends AppTable {
 		];
 		if (!empty($allStudents)) {
 			foreach($allStudents->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$institution->name,
 					$currentPeriod->name,
 					$row->education_grade->name,

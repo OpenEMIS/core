@@ -1,8 +1,38 @@
+v3.4.10
+- Fixed a bug that caused 404 error page when Promoting students but no students are selected
+- Added Search in Student Admission Page (Institutions -> Students -> <Select Pending Admission>)
+- Deleting an institution will now remove all students records properly
+- When adding student to school, the student age is calculated by year only (previously it is determined by month and year)
+- Fixed other UI related issues
+- Added Student Out of School Report
+- Fixed a bug that caused records not appearing after added by users with specific roles
+- Improved UI of System Setup -> Assessments
+- Transfer and Dropout button now appears in Student -> Overview (Only for Enrolled students)
+
+v3.4.9
+- Fixed bugs related to date showing in arabic language
+- Fixed a bug that prompt user to repair excel worksheet after downloading
+- Fixed a bug that caused student report progress bar to always stay at 0%
+- Fixed a bug that caused 404 error page when importing students to school
+- Added Staff absence report
+- Added validation rule to prevent user from adding spaces when changing passwords
+- Added Student Teacher ratio report and Student Class ratio report under Reports -> Institutions
+- Improved UI when entering data for Institutions -> Visits
+- Improved styles/formats for import templates, merged all references excel sheets into one sheet called References
+
+v3.4.8
+- Added new feature to Undo a student status. This feature can be accessible in Institutions -> Students -> Undo
+- Fixed a bug that caused classes and subjects information not removed when the student is removed from the grade in a school
+- Fixed a bug that caused 404 error page when accessing Student Behaviors
+
 v3.4.7
 - Enabled the Health module for Users
 - Administrative Boundaries can now be deleted and reassociate with another record
 - Fixed a bug that caused permissions (All Classes, My Classes) not working correctly
 - Added Area codes to Institution Reports
+- Added Map under Reports to show the location of all Institutions with a valid longitude and latitude
+- Fixed a bug that caused a repair popup prompt to appear when downloading reports
+- During promotion/graduation, user will be able to review the changes in a confirmation page before proceeding with the actual operation
 
 v3.4.6
 - Fixed a bug that caused Institution column in Directory for Staff not displaying any information

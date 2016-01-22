@@ -100,6 +100,8 @@ class StudentListBehavior extends Behavior {
     }
 
     public function onGetCustomStudentListElement(Event $event, $action, $entity, $attr, $options=[]) {
+    	$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+    	
         $value = '';
 
         $Form = $event->subject()->Form;
@@ -176,7 +178,6 @@ class StudentListBehavior extends Behavior {
                 // End
 
                 // Build table header
-                $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
                 $headerHtml = __('OpenEMIS ID');
                 $headerHtml .= $Form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
                 $tableHeaders[] = $headerHtml;
