@@ -2,7 +2,6 @@
 namespace App\Model\Behavior;
 
 use DateTime;
-use Exception;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
@@ -21,6 +20,8 @@ class ValidationBehavior extends Behavior {
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
 
+		$this->attachDateValidation($validator);
+
 		foreach ($validator as $field => $set) {
 			foreach ($set as $ruleName => $rule) {
 				$ruleAttr = [];
@@ -38,6 +39,37 @@ class ValidationBehavior extends Behavior {
 					$ruleAttr['provider'] = 'custom';
 				}
 				$set->add($ruleName, $ruleAttr);
+			}
+		}
+	}
+
+	private function attachDateValidation(Validator $validator) {
+		$schema = $this->_table->schema();
+		$columns = $schema->columns();
+		foreach ($columns as $column) {
+			$columnAttr = $schema->column($column);
+			if (array_key_exists('type', $columnAttr) && $columnAttr['type'] == 'date') {
+				// taking existing rules from behavior's parent and storing them
+				$rules = $validator->field($column)->rules();
+				$rulesStore = [];
+				foreach ($rules as $rkey => $rvalue) {
+					$rulesStore[$rkey] = $validator->field($column)->rule($rkey);
+					$validator->field($column)->remove($rkey);
+				}
+
+				// inserting these rules first
+				$validator->add($column, [
+					'ruleValidDate' => [
+						'rule' => ['date', 'ymd'],
+						'last' => true,
+						'message' => $this->getMessage('general.invalidDate')
+					]
+				]);
+
+				// then inserting the rules from behavior's parent back
+				foreach ($rulesStore as $rkey => $rvalue) {
+					$validator->field($column)->add($rkey, $rvalue);
+				}
 			}
 		}
 	}
@@ -121,11 +153,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function compareDateReverse($field, $compareField, $equals, array $globalData) {
 		$type = self::_getFieldType($compareField);
-		try {
-			$endDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$type);
-		}
+		$endDate = new DateTime($field);
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => true, 'type' => $type];
 			$result = self::doCompareDates($endDate, $compareField, $options, $globalData);
@@ -150,11 +178,7 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function compareDate($field, $compareField, $equals, array $globalData) {
 		$type = self::_getFieldType($compareField);
-		try {
-			$startDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$type);
-		}
+		$startDate = new DateTime($field);
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
 			$result = self::doCompareDates($startDate, $compareField, $options, $globalData);
@@ -180,11 +204,7 @@ class ValidationBehavior extends Behavior {
 		$equals = $options['equals'];
 		$reverse = $options['reverse'];
 		$dateTwo = $globalData['data'][$compareField];
-		try {
-			$dateTwo = new DateTime($dateTwo);
-		} catch (Exception $e) {
-			return __('Please input a proper '.$type.' for '.(ucwords(str_replace('_', ' ', $compareField))));
-		}
+		$dateTwo = new DateTime($dateTwo);
 		if($equals) {
 			if ($reverse) {
 				return $dateOne >= $dateTwo;
@@ -202,11 +222,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function compareWithInstitutionDateOpened($field, array $globalData) {
 		$model = $globalData['providers']['table'];
-		try {
-			$startDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return $model->getMessage('general.invalidDate');
-		}
+		$startDate = new DateTime($field);
 		if (isset($globalData['data']['institution_id'])) {
 			$Institution = TableRegistry::get('Institution.Institutions');
 			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $globalData['data']['institution_id']])->first();
@@ -230,11 +246,7 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function lessThanToday($field, $equal = false, array $globalData) {
 		$label = Inflector::humanize($field);
-		try {
-			$enteredDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$label);
-		}
+		$enteredDate = new DateTime($field);
 		$today = new DateTime('now');
 		if($equal) {
 			return $today >= $enteredDate;
@@ -257,32 +269,12 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function moreThanToday($field, $equal = false, array $globalData) {
 		$label = Inflector::humanize($field);
-		try {
-			$enteredDate = new DateTime($field);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$label);
-		}
+		$enteredDate = new DateTime($field);
 		$today = new DateTime('now');
 		if($equal) {
 			return $enteredDate >= $today;
 		} else {
 			return $enteredDate > $today;
-		}
-	}
-
-	/**
-	 * Check if user input for date is valid
-	 * @param  [type] $field      [description]
-	 * @param  [type] $globalData [description]
-	 * @return [type]             [description]
-	 */
-	public static function checkDateInput($field, array $globalData) {
-		$model = $globalData['providers']['table'];
-		try {
-			$field = new DateTime($field);
-			return true;
-		} catch (Exception $e) {
-		    return $model->getMessage('general.invalidDate');
 		}
 	}
 
@@ -408,13 +400,9 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function checkInputWithinRange($field, $field_name, $start_date, $end_date) {
 		$type = self::_getFieldType($field_name);
-		try {
-			$givenDate = new DateTime($field);
-			$startDate = new DateTime($start_date);
-			$endDate = new DateTime($end_date);
-		} catch (Exception $e) {
-		    return __('Please input a proper '.$type);
-		}
+		$givenDate = new DateTime($field);
+		$startDate = new DateTime($start_date);
+		$endDate = new DateTime($end_date);
 
 		if($givenDate > $startDate && $givenDate < $endDate) {
 			return true;
@@ -527,8 +515,11 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
-			$ageOfStudent = Time::fromNow($dateOfBirth);
-			$ageOfStudent = $ageOfStudent->y;
+			if (is_null($dateOfBirth)) return false;
+
+			$birthYear = $dateOfBirth->format('Y');
+			$nowYear = Time::now()->format('Y');
+			$ageOfStudent = $nowYear - $birthYear;
 
 
 			$ConfigItems = TableRegistry::get('ConfigItems');
@@ -550,10 +541,6 @@ class ValidationBehavior extends Behavior {
 
 			$enrolmentMinimumAge += $yearIncrement;
 			$enrolmentMaximumAge += $yearIncrement;
-
-			// pr('ageOfStudent: '.$ageOfStudent);
-			// pr('enrolmentMinimumAge: '.($enrolmentMinimumAge));
-			// pr('enrolmentMaximumAge: '.($enrolmentMaximumAge));
 
 			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
 		}
@@ -702,6 +689,73 @@ class ValidationBehavior extends Behavior {
 		return ($found == 0);
 	}
 
+	public static function checkStaffExistWithinPeriod($field, array $globalData) {
+		// The logic below will prevent duplicate record that will be produce if the user amend the start or end date for a staff that is inactive when there is an active staff
+		// in the same institution
+		
+		$recordId = $globalData['data']['id'];
+		$institutionId = $globalData['data']['institution_id'];
+		$newEndDate = strtotime($globalData['data']['end_date']);
+		$newStartDate = strtotime($globalData['data']['start_date']);
+		$staffId = $globalData['data']['staff_id'];
+		$positionId = $globalData['data']['institution_position_id'];
+
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+
+		$condition = [
+			$InstitutionStaffTable->aliasField('staff_id') => $staffId,
+			$InstitutionStaffTable->aliasField('institution_position_id') => $positionId,
+			$InstitutionStaffTable->aliasField('id').' IS NOT' => $recordId,
+			$InstitutionStaffTable->aliasField('institution_id') => $institutionId
+		];
+		$count = 0;
+
+		if ($newStartDate !== false) {
+			if (empty($newEndDate)) {
+				$count = $InstitutionStaffTable->find()
+					->where($condition)
+					->where([
+							'OR' => [
+								[$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate, 
+								]
+							]
+						]);
+			} else {
+				$count = $InstitutionStaffTable->find()
+					->where($condition)
+					->where([
+							'OR' => [
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
+									$InstitutionStaffTable->aliasField('end_date').' IS NULL'
+								],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
+									$InstitutionStaffTable->aliasField('end_date').' IS NULL'
+								],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
+									$InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
+								],
+								[
+									$InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
+									$InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
+								],
+							]
+						]);
+			}
+			if ($count->count() > 0) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
 	public static function checkFTE($field, array $globalData) {
 		if (!empty($globalData['data']['start_date'])) {
 			$date = new DateTime($globalData['data']['start_date']);
@@ -768,5 +822,9 @@ class ValidationBehavior extends Behavior {
 		$validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
 
 		return $validationResult;
+	}
+
+	public static function checkNoSpaces($field, array $globalData) {
+		return !strrpos($field," ");
 	}
 }

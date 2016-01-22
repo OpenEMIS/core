@@ -154,12 +154,26 @@ class InstitutionSectionStudentsTable extends AppTable {
 			$autoInsertData->student_id = $securityUserId;
 			$autoInsertData->education_grade_id = $selectedGradeId;
 			$autoInsertData->institution_section_id = $selectedSectionId;
-			$autoInsertData->status = 1;
 
 			if ($this->save($autoInsertData)) {
 				$this->_autoInsertSubjectStudent($data);
 			}
 		}
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// PHPOE-2338 - implement afterDelete in InstitutionSectionStudentsTable.php to delete from InstitutionClassStudentsTable
+		$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+		$deleteClassStudent = $InstitutionClassStudentsTable->find()
+			->where([
+				$InstitutionClassStudentsTable->aliasField('student_id') => $entity->student_id,
+				$InstitutionClassStudentsTable->aliasField('institution_section_id') => $entity->institution_section_id
+			])
+			->toArray();
+			;
+			foreach ($deleteClassStudent as $key => $value) {
+				$InstitutionClassStudentsTable->delete($value);
+			}
 	}
 
 	private function _autoInsertSubjectStudent($data) {

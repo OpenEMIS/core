@@ -61,8 +61,8 @@ class ImportBehavior extends Behavior {
 	const DIRECT_TABLE = 2;
 	const NON_TABLE_LIST = 3;
 
-	const RECORD_HEADER = 1;
-	const FIRST_RECORD = 2;
+	const RECORD_HEADER = 2;
+	const FIRST_RECORD = 3;
 
 	protected $labels = [];
 	protected $directTables = [];
@@ -323,7 +323,7 @@ class ImportBehavior extends Behavior {
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
 
 			$maxRows = $this->config('max_rows');
-			$maxRows = $maxRows + 2;
+			$maxRows = $maxRows + 3;
 			foreach ($worksheets as $sheet) {
 				$highestRow = $sheet->getHighestRow();
 				if ($highestRow > $maxRows) {
@@ -331,7 +331,7 @@ class ImportBehavior extends Behavior {
 					return false;
 				}
 
-				for ($row = 1; $row <= $highestRow; ++$row) {
+				for ($row = 2; $row <= $highestRow; ++$row) {
 					if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
 						if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
 							$entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
@@ -484,30 +484,23 @@ class ImportBehavior extends Behavior {
 		$modelName = $this->config('model');
 		$modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
 		// Do not lcalize file name as certain non-latin characters might cause issue 
-		$excelFile = sprintf('%s_%s_%s_%s.xlsx', 'Import', $this->config('plugin'), $modelName, 'Template');
-
+		$excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
 		$excelPath = $folder . DS . $excelFile;
 
-		$writer = new \XLSXWriter();
-		
 		$mapping = $this->getMapping();
 		$header = $this->getHeader($mapping);
-		$writer->writeSheetRow(__('Data'), array_values($header));
-		
-		$codesData = $this->excelGetCodesData($this->_table);
-		foreach($codesData as $modelName => $modelArr) {
-			// added this check to support rows on sheets that require a specific format.
-			// default cell format is 'string'
-			if (array_key_exists('formats', $modelArr)) {
-				$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
-			} else {
-				foreach($modelArr as $row) {
-					$writer->writeSheetRow($modelName, array_values($row));
-				}
-			}
-		}
-		
-		$writer->writeToFile($excelPath);
+		$dataSheetName = $this->getExcelLabel('general', 'data');
+
+		$objPHPExcel = new \PHPExcel();
+
+		$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header );
+
+		$this->setCodesDataTemplate( $objPHPExcel );
+
+		$objPHPExcel->setActiveSheetIndex(0);
+		$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+		$objWriter->save($excelPath);
+
 		$this->performDownload($excelFile);
 		die;
 	}
@@ -556,6 +549,156 @@ class ImportBehavior extends Behavior {
 ** Import Functions
 **
 ******************************************************************************************************************/
+	public function beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, $lastRowToAlign = 2, $title = '' ) {
+		if (empty($title)) {
+			$title = $dataSheetName;
+		}
+		$activeSheet = $objPHPExcel->getActiveSheet();
+		$activeSheet->setTitle( $dataSheetName );
+
+		$gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
+		$objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
+		$objDrawing->setName('OpenEMIS Logo');
+		$objDrawing->setDescription('OpenEMIS Logo');
+		$objDrawing->setImageResource($gdImage);
+		$objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
+		$objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+		$objDrawing->setHeight(100);
+		$objDrawing->setCoordinates('A1');
+		$objDrawing->setWorksheet($activeSheet);
+
+		$activeSheet->getRowDimension(1)->setRowHeight(75);
+		$activeSheet->getRowDimension(2)->setRowHeight(25);
+
+		$headerLastAlpha = $this->getExcelColumnAlpha('last');
+		$activeSheet->getStyle( "A1:" . $headerLastAlpha . "1" )->getFont()->setBold(true)->setSize(16);
+		$activeSheet->setCellValue( "C1", $title );
+		$style = [
+	        'alignment' => [
+	            'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+	            'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
+	        ]
+	    ];
+	    $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style);
+	}
+
+	public function endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [] ) {
+		if (empty($applyFillFontSetting)) {
+			$applyFillFontSetting = ['s'=>2, 'e'=>2];
+		}
+		if (empty($applyCellBorder)) {
+			$applyCellBorder = ['s'=>2, 'e'=>2];
+		}
+
+		$activeSheet = $objPHPExcel->getActiveSheet();
+
+		// merging should start from cell C1 instead of A1 since the title is already set in cell C1 in beginExcelHeaderStyling()
+		if (!in_array($headerLastAlpha, ['A','B','C'])) {
+			$activeSheet->mergeCells('C1:'. $headerLastAlpha .'1');
+		}
+		$activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
+        $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
+		$activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
+	}
+
+	public function setImportDataTemplate( $objPHPExcel, $dataSheetName, $header ) {
+
+		$objPHPExcel->setActiveSheetIndex(0);
+
+		$this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName );
+
+		$activeSheet = $objPHPExcel->getActiveSheet();
+		$currentRowHeight = $activeSheet->getRowDimension(2)->getRowHeight();
+		foreach ($header as $key=>$value) {
+			$alpha = $this->getExcelColumnAlpha($key);
+			$activeSheet->setCellValue( $alpha . "2", $value);
+			if (strlen($value)<50) {
+				$activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
+			} else {
+				$activeSheet->getColumnDimension( $alpha )->setWidth(35);
+				$currentRowHeight = $this->suggestRowHeight( strlen($value), $currentRowHeight );
+				$activeSheet->getRowDimension(2)->setRowHeight( $currentRowHeight );
+				$activeSheet->getStyle( $alpha . "2" )->getAlignment()->setWrapText(true);
+			}
+		}
+		$headerLastAlpha = $this->getExcelColumnAlpha(count($header)-1);
+
+		$this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha );
+
+	}
+
+	public function suggestRowHeight($stringLen, $currentRowHeight) {
+		$multiplier = $stringLen % 50;
+		$rowHeight = (3 * $multiplier) + 25;
+		if ($rowHeight > $currentRowHeight && $rowHeight<=250) {
+			$currentRowHeight = $rowHeight;
+		}
+		return $currentRowHeight;
+	}
+
+	public function setCodesDataTemplate( $objPHPExcel ) {
+        $sheetName = __('References');
+        $objPHPExcel->createSheet(1);
+        $objPHPExcel->setActiveSheetIndex(1);
+		
+		$this->beginExcelHeaderStyling( $objPHPExcel, $sheetName, 3 );
+
+		$objPHPExcel->getActiveSheet()->getRowDimension(3)->setRowHeight(25);
+
+        if (method_exists($this->_table, 'excelGetCodesData') ) {
+			$codesData = $this->_table->excelGetCodesData();
+        } else {
+			$codesData = $this->excelGetCodesData($this->_table);
+        }
+        $lastColumn = -1;
+		$currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
+		foreach($codesData as $columnOrder => $modelArr) {
+			$modelData = $modelArr['data'];
+			$firstColumn = $lastColumn + 1;
+			$lastColumn = $firstColumn + count($modelArr['data'][0]) - 1;
+
+			$objPHPExcel->getActiveSheet()->mergeCells( $this->getExcelColumnAlpha($firstColumn) ."2:". $this->getExcelColumnAlpha($lastColumn) ."2" );
+			$objPHPExcel->getActiveSheet()->setCellValue( $this->getExcelColumnAlpha($firstColumn) ."2", $modelArr['sheetName'] );
+			if (strlen($modelArr['sheetName'])<50) {
+				$objPHPExcel->getActiveSheet()->getColumnDimension( $this->getExcelColumnAlpha($firstColumn) )->setAutoSize(true);
+			} else {
+				// $objPHPExcel->getActiveSheet()->getColumnDimension( $this->getExcelColumnAlpha($firstColumn) )->setWidth(35);
+				$currentRowHeight = $this->suggestRowHeight( strlen($modelArr['sheetName']), $currentRowHeight );
+				$objPHPExcel->getActiveSheet()->getRowDimension(2)->setRowHeight( $currentRowHeight );
+				$objPHPExcel->getActiveSheet()->getStyle( $this->getExcelColumnAlpha($firstColumn) . "2" )->getAlignment()->setWrapText(true);
+			}
+
+			foreach ($modelData as $index => $sets) {
+				foreach ($sets as $key => $value) {
+					$alpha = $this->getExcelColumnAlpha( ($key + $firstColumn) );
+					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
+					$objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
+				}
+			}
+		
+			if (count($modelData)>1 && !array_key_exists('noDropDownList', $modelArr)) {
+				$lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
+				$alpha = $this->getExcelColumnAlpha( $columnOrder - 1 );
+				$lookupColumnAlpha = $this->getExcelColumnAlpha( $lookupColumn );
+				for ($i=3; $i < 103; $i++) {
+					$objPHPExcel->setActiveSheetIndex(0);
+					$objValidation = $objPHPExcel->getActiveSheet()->getCell( $alpha . $i )->getDataValidation();
+					$objValidation->setType( \PHPExcel_Cell_DataValidation::TYPE_LIST );
+					$objValidation->setErrorStyle( \PHPExcel_Cell_DataValidation::STYLE_INFORMATION );
+					$objValidation->setAllowBlank(false);
+					$objValidation->setShowInputMessage(true);
+					$objValidation->setShowErrorMessage(true);
+					$objValidation->setShowDropDown(true);
+					$listLocation = "'". $sheetName ."'!$". $lookupColumnAlpha ."$4:$". $lookupColumnAlpha ."$". (count($modelData)+2);
+					$objValidation->setFormula1( $listLocation );
+				}
+				$objPHPExcel->setActiveSheetIndex(1);
+			}
+		}
+	    $headerLastAlpha = $this->getExcelColumnAlpha( $lastColumn );
+		$objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
+		$this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
+	}
 	/**
 	 * Set a record columns value based on what is being saved in the table.
 	 * @param  Entity $entity           Cloned entity. The actual entity is not saved yet but already validated but we are using a cloned entity in case it might be messed up.
@@ -576,48 +719,41 @@ class ImportBehavior extends Behavior {
 		if (!empty($data)) {
 			$downloadFolder = $this->prepareDownload();
 			// Do not lcalize file name as certain non-latin characters might cause issue 
-			$excelFile = sprintf('%s_%s_%s_%s_%s.xlsx', 
-					'Import', 
-					$this->config('plugin'),
-					$this->config('model'),
-					ucwords($type), 
-					time()
-			);
+			$excelFile = sprintf( 'OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->config('model'), ucwords($type), time() );
 			$excelPath = $downloadFolder . DS . $excelFile;
 
-			$writer = new \XLSXWriter();
 			$newHeader = $header;
 			if ($type == 'failed') {
 				$newHeader[] = $this->getExcelLabel('general', 'errors');
 			}
 			$dataSheetName = $this->getExcelLabel('general', 'data');
-			$writer->writeSheetRow($dataSheetName, array_values($newHeader));
-			foreach($data as $record) {
+
+			$objPHPExcel = new \PHPExcel();
+
+			$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $newHeader );
+
+			foreach($data as $index => $record) {
 				if ($type == 'failed') {
 					$values = array_values($record['data']->getArrayCopy());
 					$values[] = $record['error'];
 				} else {
 					$values = $record['data'];
 				}
-				$writer->writeSheetRow($dataSheetName, $values);
+				foreach ($values as $key => $value) {
+					$alpha = $this->getExcelColumnAlpha($key);
+					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
+					$objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
+				}				
 			}
-			
+
 			if ($type == 'failed') {
-				$codesData = $this->excelGetCodesData($this->_table);
-				foreach($codesData as $modelName => $modelArr) {
-					// added this check to support rows on sheets that require a specific format.
-					// default cell format is 'string'
-					if (array_key_exists('formats', $modelArr)) {
-						$writer->writeSheet($modelArr['data'], $modelName, $modelArr['formats']);
-					} else {
-						foreach($modelArr as $row) {
-							$writer->writeSheetRow($modelName, array_values($row));
-						}
-					}
-				}
+				$this->setCodesDataTemplate( $objPHPExcel );
 			}
 			
-			$writer->writeToFile($excelPath);
+			$objPHPExcel->setActiveSheetIndex(0);
+			$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+			$objWriter->save($excelPath);
+
 			$downloadUrl = $this->_table->ControllerAction->url( 'download' . ucwords($type) );
 			$downloadUrl[] = $excelFile;
 			$excelFile = $downloadUrl;
@@ -626,6 +762,28 @@ class ImportBehavior extends Behavior {
 		}
 
 		return $excelFile;
+	}
+
+	/**
+	 * Get the string representation of a column based on excel grid
+	 * @param  mixed $column_number either an integer or a string named as "last"
+	 * @return string               the string representation of a column based on excel grid
+	 * @todo  the alpha string array values should be auto-generated instead of hard-coded
+	 */
+	public function getExcelColumnAlpha($column_number) {
+		$alpha = [
+			'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+			'AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','AZ',
+			'BA','BB','BC','BD','BE','BF','BG','BH','BI','BJ','BK','BL','BM','BN','BO','BP','BQ','BR','BS','BT','BU','BV','BW','BX','BY','BZ',
+			'CA','CB','CC','CD','CE','CF','CG','CH','CI','CJ','CK','CL','CM','CN','CO','CP','CQ','CR','CS','CT','CU','CV','CW','CX','CY','CZ',
+			'DA','DB','DC','DD','DE','DF','DG','DH','DI','DJ','DK','DL','DM','DN','DO','DP','DQ','DR','DS','DT','DU','DV','DW','DX','DY','DZ',
+			'EA','EB','EC','ED','EE','EF','EG','EH','EI','EJ','EK','EL','EM','EN','EO','EP','EQ','ER','ES','ET','EU','EV','EW','EX','EY','EZ',
+			'FA','FB','FC','FD','FE','FF','FG','FH','FI','FJ','FK','FL','FM','FN','FO','FP','FQ','FR','FS','FT','FU','FV','FW','FX','FY','FZ'
+		];
+		if ($column_number === 'last') {
+			$column_number = count($alpha) - 1;
+		}
+		return $alpha[$column_number];		
 	}
 
 	/**
@@ -754,8 +912,11 @@ class ImportBehavior extends Behavior {
 			
 			$translatedCol = $this->getExcelLabel($model, $lookupColumn);
 
-			$sheetName = $this->getExcelLabel($row->model, $row->column_name);
-			$data[$sheetName] = [];
+			$sheetName = trim($this->getExcelLabel($row->model, $row->column_name));
+			$data[$row->order] = [
+				'data'=>[], 
+				'sheetName'=>$sheetName
+			];
 			$modelData = [];
 			if ($foreignKey == self::FIELD_OPTION) {
 				if (TableRegistry::exists($lookupModel)) {
@@ -764,15 +925,16 @@ class ImportBehavior extends Behavior {
 					$relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
 				}
 				$modelData = $relatedModel->getList()->toArray();
-				$data[$sheetName][] = [__('Name'), $translatedCol];
+				$data[$row->order]['lookupColumn'] = 2;
+				$data[$row->order]['data'][] = [__('Name'), $translatedCol];
 				if (!empty($modelData)) {
-					foreach($modelData as $key=>$row) {
-						$data[$sheetName][] = [$row, $key];
+					foreach($modelData as $key=>$value) {
+						$data[$row->order]['data'][] = [$value, $key];
 					}
 				}
 			} else if ($foreignKey == self::DIRECT_TABLE || $foreignKey == self::NON_TABLE_LIST) {
 
-				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, $data];
+				$params = [$lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, $data, $row->order];
 				$this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
 
 			}

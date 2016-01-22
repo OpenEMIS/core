@@ -36,7 +36,7 @@
 				<tbody>
 				<?php 
 				foreach($attr['data']['students'] as $i => $obj) : 
-					// pr($obj);die;
+					// pr($obj->_matchingData['Users']);die;
 					if ($obj->status == 0) continue;
 
 					if ($action=='edit') :
@@ -93,9 +93,9 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $obj->user->openemis_no ?></td>
-						<td><?= $obj->user->name ?></td>
-						<td><?= $obj->user->gender->name ?></td>
+						<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
+						<td><?= $obj->_matchingData['Users']->name ?></td>
+						<td><?= $obj->_matchingData['Genders']->name ?></td>
 					</tr>
 
 				<?php endif;?>
