@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Routing\Router;
 
 class AuthenticationBehavior extends Behavior {
 
@@ -109,71 +110,58 @@ class AuthenticationBehavior extends Behavior {
 		}
 	}
 
+	private function googleAuthentication(&$attribute) {
+		$attribute['client_id'] = ['name' => 'Client ID'];
+		$attribute['client_secret'] = ['name' => 'Client Secret', ];
+		$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
+		$attribute['hd'] = ['name' => 'Hosted Domain'];
+	}
+
+	private function processAuthentication(&$attribute, $authenticationType) {
+		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+		$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
+		$attributeFieldsArray = $this->_table->Navigation->array_column($attributesArray, 'attribute_field');
+		foreach ($attribute as $key => $values) {
+			$attributeValue = '';
+			if (array_search($key, $attributeFieldsArray) !== false) {
+				$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
+			}
+			$attribute[$key]['value'] = $attributeValue;
+		}
+	}
+
 	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
-			case "index":
-				// No implementation
-				break;
-
-			case "view":
-				$tableHeaders = [__('Attribute Name'), __('Value')];
-				$tableCells = [];
-
-				$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+			case "view":			
 				$authenticationType = $this->_table->request->data[$this->alias]['value'];
 				$attribute = [];
-
-				switch ($authenticationType) {
-					case 'Google':
-						$attribute['client_id'] = ['name' => 'Client ID'];
-						$attribute['client_secret'] = ['name' => 'Client Secret'];
-						$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
-						$attribute['hd'] = ['name' => 'Hosted Domain'];
-						break;
-				}
-				$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-				$attributeFieldsArray = $this->_table->Navigation->array_column($attributesArray, 'attribute_field');
-				foreach ($attribute as $key => $values) {
-					$attributeValue = '';
-					if (array_search($key, $attributeFieldsArray) !== false) {
-						$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-					}
-					$attribute[$key]['value'] = $attributeValue;
+				$methodName = strtolower($authenticationType).'Authentication';
+				if (method_exists($this, $methodName)) {
+					$this->$methodName($attribute);
+					$this->processAuthentication($attribute, $authenticationType);
 				}
 
-				foreach ($attribute as $key => $value) {
+				$tableHeaders = [__('Attribute Name'), __('Value')];
+				$tableCells = [];
+				foreach ($attribute as $value) {
 					$row = [];
 					$row[] = $value['name'];
 					$row[] = $value['value'];
 					$tableCells[] = $row;
 				}
-				
 				$attr['tableHeaders'] = $tableHeaders;
 		    	$attr['tableCells'] = $tableCells;
 				break;
 
 			case "edit":
-				$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
 				$authenticationType = $this->_table->request->data[$this->alias]['value'];
 				$attribute = [];
+				$methodName = strtolower($authenticationType).'Authentication';
+				if (method_exists($this, $methodName)) {
+					$this->$methodName($attribute);
+					$this->processAuthentication($attribute, $authenticationType);
+				}
 
-				switch ($authenticationType) {
-					case 'Google':
-						$attribute['client_id'] = ['name' => 'Client ID'];
-						$attribute['client_secret'] = ['name' => 'Client Secret'];
-						$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
-						$attribute['hd'] = ['name' => 'Hosted Domain'];
-						break;
-				}
-				$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-				$attributeFieldsArray = $this->_table->Navigation->array_column($attributesArray, 'attribute_field');
-				foreach ($attribute as $key => $values) {
-					$attributeValue = '';
-					if (array_search($key, $attributeFieldsArray) !== false) {
-						$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-					}
-					$attribute[$key]['value'] = $attributeValue;
-				}
 				$attr = $attribute;
 				break;
 
