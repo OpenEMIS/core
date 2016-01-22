@@ -86,23 +86,24 @@ class UsersTable extends AppTable {
             $gender = key($genderList);
         }
         $date = Time::now();
-        // $dateString = $date->format('Y-m-d H:i:s');
-		$UsersTable = TableRegistry::get('User.Users');
         $data = [
             'username' => $userName,
             'openemis_no' => $openemisNo,
             'first_name' => $userInfo['firstName'],
             'last_name' => $userInfo['lastName'],
             'gender_id' => $gender,
-            'date_of_birth' => '0000-00-00',
+            'date_of_birth' => '1970-01-01',
             'super_admin' => 0,
             'status' => 1,
             'created_user_id' => 1,
             'created' => $date,    
         ];
-        $userEntity = $UsersTable->newEntity($data);
-        $UsersTable->save($userEntity);
-        return $userName;
+        $userEntity = $this->newEntity($data);
+        if ($this->save($userEntity)) {
+        	return $userName;
+        } else {
+        	return false;
+        }  
 	}
 
 	public static function handleAssociations($model) {
