@@ -9,7 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
-class StandardReportsTable extends ReportsTable  {
+class CustomReportsTable extends ReportsTable  {
 	public function initialize(array $config) {
 		parent::initialize($config);
 	}
