@@ -13,10 +13,11 @@ class OpenEmisBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		if (isset($this->_table->CAVersion) && $this->_table->CAVersion == '4.0') { // temporary fix
-			$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
-			$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
-		}
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
+		$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
+		$events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 4];
+		$events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'editAfterSave', 'priority' => 4];
+		$events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 4];
 		return $events;
 	}
 
@@ -68,6 +69,33 @@ class OpenEmisBehavior extends Behavior {
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
 		// end deprecated
+	}
+
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		$model = $this->_table;
+		$errors = $entity->errors();
+		if (empty($errors)) {
+			$model->Alert->success('general.add.success');
+		} else {
+			$model->Alert->error('general.add.failed');
+		}
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		$model = $this->_table;
+		$errors = $entity->errors();
+		if (empty($errors)) {
+			$model->Alert->success('general.edit.success');
+		} else {
+			$model->Alert->error('general.edit.failed');
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$model = $this->_table;
+		if (!$entity) {
+			$model->Alert->warning('general.notExists');
+		}
 	}
 
 	private function initializeButtons(ArrayObject $extra) {
