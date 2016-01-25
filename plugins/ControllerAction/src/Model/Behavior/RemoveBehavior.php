@@ -130,25 +130,27 @@ class RemoveBehavior extends Behavior {
 				return $model->controller->redirect($model->url('index', 'QUERY'));
 			}
 			return $entity;
-		} else if ($request->is('delete') && !empty($request->data($model->aliasField($primaryKey)))) {
+		} else if ($request->is('delete')) {
 			$id = $request->data($model->aliasField($primaryKey));
-			try {
-				$entity = $model->get($id);
-			} catch (RecordNotFoundException $exception) { // to handle concurrent deletes
+			if (!empty($id)) {
+				try {
+					$entity = $model->get($id);
+				} catch (RecordNotFoundException $exception) { // to handle concurrent deletes
+					$mainEvent->stopPropagation();
+					return $model->controller->redirect($model->url('index', 'QUERY'));
+				}
+				
+				$convertTo = $request->data($model->aliasField('convert_to'));
+				$entity->convert_to = $convertTo;
+				$result = $this->doDelete($entity, $extra);
+
+				$extra['result'] = $result;
+				$event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
+				if ($event->isStopped()) { return $event->result; }
+
 				$mainEvent->stopPropagation();
 				return $model->controller->redirect($model->url('index', 'QUERY'));
 			}
-			
-			$convertTo = $request->data($model->aliasField('convert_to'));
-			$entity->convert_to = $convertTo;
-			$result = $this->doDelete($entity, $extra);
-
-			$extra['result'] = $result;
-			$event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
-			if ($event->isStopped()) { return $event->result; }
-
-			$mainEvent->stopPropagation();
-			return $model->controller->redirect($model->url('index', 'QUERY'));
 		}
 	}
 
