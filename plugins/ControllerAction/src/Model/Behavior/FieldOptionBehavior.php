@@ -16,10 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 namespace ControllerAction\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -76,24 +77,72 @@ class FieldOptionBehavior extends Behavior {
 		return $entity;
 	}
 
-	// public function getOptions($options=[]) { // need to cater for visible flag
-	// 	$alias = $this->_table->alias();
-	// 	$schema = $this->_table->schema();
-	// 	$columns = $schema->columns();
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
+		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+		return $events;
+	}
 
-	// 	if (!array_key_exists('order', $options) && in_array('order', $columns)) {
-	// 		$options['order'] = [$this->_table->aliasField('order') => 'ASC'];
-	// 	}
+	private function buildFieldOptions() {
+		$model = TableRegistry::get('FieldOption.FieldOptions');
+		$fieldOptions = [];
+		$data = $model->find()->find('visible')->find('order')->all();
 
-	// 	$query = $this->_table->find('list', $options);
-	// 	$query->innerJoin(
-	// 		['FieldOption' => 'field_options'],
-	// 		[
-	// 			'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-	// 			'FieldOption.code' => $alias
-	// 		]
-	// 	);
-	// 	$data = $query->toArray();
-	// 	return $data;
-	// }
+		foreach ($data as $obj) {
+			$key = $obj->id;
+			
+			$parent = __($obj->parent);
+			if (!array_key_exists($parent, $fieldOptions)) {
+				$fieldOptions[$parent] = [];
+			}
+			$fieldOptions[$parent][$key] = __($obj->name);
+		}
+		return $fieldOptions;
+	}
+
+	private function checkFieldOption($event, $selected) {
+		if (!$this->_table->request->is('ajax')) { // to work with reorder
+			$FieldOptions = TableRegistry::get('FieldOption.FieldOptions');
+			$entity = $FieldOptions->get($selected);
+
+			if ($entity->code != $this->_table->alias) {
+				$event->stopPropagation();
+				return $this->_table->controller->redirect(['action' => 'index', 'field_option_id' => $selected]);
+			}
+		}
+	}
+
+	private function addFieldOptionControl(ArrayObject $extra, $data = []) {
+		$extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
+	}
+
+	// for CA v4
+	public function onGetEditable(Event $event, Entity $entity) {
+		return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+
+	public function onGetDefault(Event $event, Entity $entity) {
+		return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$model = $this->_table;
+		$fieldOptions = $this->buildFieldOptions();
+		$selectedOption = $this->_table->queryString('field_option_id', $fieldOptions);
+		$this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
+
+		$this->checkFieldOption($event, $selectedOption); // deprecated
+
+		$model->field('default', ['options' => $model->getSelectOptions('general.yesno')]);
+		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$model = $this->_table;
+		$fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
+
+		$model->setFieldOrder($fields);
+		$model->setFieldVisible(['index'], $fields);
+	}
 }
