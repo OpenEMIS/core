@@ -69,17 +69,19 @@ class AddBehavior extends Behavior {
 				if (is_callable($event->result)) {
 					$process = $event->result;
 				}
+				
+				$result = $process($model, $entity);
 
-				if ($process($model, $entity)) {
-					$event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
-					if ($event->isStopped()) { return $event->result; }
+				if (!$result) {
+					Log::write('debug', $entity->errors());
+				}
 
+				$event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
+				if ($event->isStopped()) { return $event->result; }
+
+				if ($result) {
 					$mainEvent->stopPropagation();
 					return $model->controller->redirect($model->url('index', 'QUERY'));
-				} else {
-					Log::write('debug', $entity->errors());
-					// $this->log($entity->errors(), 'debug');
-					// $this->Alert->error('general.add.failed');
 				}
 			} else {
 				$patchOptions['validate'] = false;
@@ -109,7 +111,6 @@ class AddBehavior extends Behavior {
 		$event = $model->dispatchEvent('ControllerAction.Model.add.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		
-		// $this->config['form'] = true;
 		$model->controller->set('data', $entity);
 		return $entity;
 	}
