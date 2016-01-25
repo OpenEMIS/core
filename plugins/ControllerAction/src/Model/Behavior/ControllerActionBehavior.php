@@ -102,14 +102,14 @@ class ControllerActionBehavior extends Behavior {
 		$columns = $schema->columns();
 		$fields = [];
 		$visibility = ['view' => true, 'edit' => true, 'index' => true];
-		$i = 50;
+		$order = 10;
 
-		foreach ($columns as $col) {
+		foreach ($columns as $i => $col) {
 			$attr = $schema->column($col);
 			$attr['model'] = $alias;
 			$attr['className'] = $className;
 			$attr['visible'] = $col != 'password' ? $visibility : false;
-			$attr['order'] = $i++;
+			$attr['order'] = $order * ($i+1);
 			$attr['field'] = $col;
 
 			$fields[$col] = $attr;
@@ -220,15 +220,25 @@ class ControllerActionBehavior extends Behavior {
 		$model = $this->_table;
 
 		if (!isset($model->fieldOrder)) {
-			$model->fieldOrder = 0;
+			$model->fieldOrder = 1;
 		}
-		$model->fieldOrder++;
+		$order = $model->fieldOrder++;
+
+		if (array_key_exists('after', $attr)) {
+			$after = $attr['after'];
+			$order = $this->getOrderValue($after, 'after');
+		} else if (array_key_exists('before', $attr)) {
+			$before = $attr['before'];
+			$order = $this->getOrderValue($before, 'before');
+		}
+		if ($order == false) {
+			$order = $model->fieldOrder - 1;
+		}
 		
 		$_attr = [
 			'type' => 'string',
 			'null' => true,
 			'autoIncrement' => false,
-			'order' => $model->fieldOrder,
 			'visible' => true,
 			'field' => $name,
 			'model' => $model->alias(),
@@ -240,16 +250,17 @@ class ControllerActionBehavior extends Behavior {
 		}
 
 		$attr = array_merge($_attr, $attr);
+		$attr['order'] = $order;
 		$model->fields[$name] = $attr;
 
 		$method = 'onUpdateField' . Inflector::camelize($name);
 		$eventKey = 'ControllerAction.Model.' . $method;
-		// $params = [$attr, $this->currentAction, $this->request];
-		// $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
-		// if (is_array($event->result)) {
-		// 	$model->fields[$field] = $event->result;
-		// }
-		// $model->fields[$name];
+
+		$params = [$attr, $model->action, $model->request];
+		$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+		if (is_array($event->result)) {
+			$model->fields[$field] = $event->result;
+		}
 	}
 
 	public function setFieldVisible($actions, $fields) {
@@ -367,5 +378,59 @@ class ControllerActionBehavior extends Behavior {
 
 	public function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	}
+
+	private function onEvent($subject, $eventKey, $method) {
+		$eventMap = $subject->implementedEvents();
+		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
+			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
+				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
+			}
+		}
+	}
+
+	private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
+		$this->onEvent($subject, $eventKey, $method);
+		$event = new Event($eventKey, $this, $params);
+		$event = $subject->eventManager()->dispatch($event);
+		if(!is_null($method) && $autoOff) {
+			$this->offEvent($subject, $eventKey, $method);
+		}
+		return $event;
+	}
+
+	private function offEvent($subject, $eventKey, $method) {
+		$subject->eventManager()->off($eventKey, [$subject, $method]);
+	}
+
+	private function getOrderValue($field, $insert) {
+		$model = $this->_table;
+		if (!array_key_exists($field, $model->fields)) {
+			Log::write('Attempted to add ' . $insert . ' invalid field: ' . $field);
+			return false;
+		}
+		$order = 0;
+
+		if ($insert == 'before') {
+			foreach ($model->fields as $key => $attr) {
+				if ($key == $field) {
+					$order = $attr['order'] - 1;
+					break;
+				}
+				$model->fields[$key]['order'] = $attr['order'] - 1;
+			}
+		} else if ($insert == 'after') {
+			$start = false;
+			foreach ($model->fields as $key => $attr) {
+				if ($start) {
+					$model->fields[$key]['order'] = $attr['order'] + 1;
+				}
+				if ($key == $field) {
+					$start = true;
+					$order = $attr['order'] + 1;
+				}
+			}
+		}
+		return $order;
 	}
 }
