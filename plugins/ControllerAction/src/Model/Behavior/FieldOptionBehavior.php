@@ -134,15 +134,14 @@ class FieldOptionBehavior extends Behavior {
 
 		$this->checkFieldOption($event, $selectedOption); // deprecated
 
-		$model->field('default', ['options' => $model->getSelectOptions('general.yesno')]);
-		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
+		$model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
+		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$model = $this->_table;
+		$model->field('name', ['after' => 'editable']);
 		$fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
-
-		$model->setFieldOrder($fields);
 		$model->setFieldVisible(['index'], $fields);
 	}
 }
