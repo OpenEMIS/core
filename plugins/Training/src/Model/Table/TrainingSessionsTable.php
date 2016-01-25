@@ -579,9 +579,15 @@ class TrainingSessionsTable extends AppTable {
 				->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
 				->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
 				->toArray();
-			$trainees = new Collection($data[$alias][$key]);
-			$traineeIds = $trainees->extract('_joinData.openemis_no');
-			$traineeIds = $traineeIds->toArray();
+		
+			if (array_key_exists($key, $data[$alias])) {
+				$trainees = new Collection($data[$alias][$key]);
+				$traineeIds = $trainees->extract('_joinData.openemis_no');
+				$traineeIds = $traineeIds->toArray();
+			} else {
+				$data[$alias][$key] = [];
+				$traineeIds = [];
+			}
 
 			for ($row = 2; $row <= $highestRow; ++$row) {
 				if ($row == $this->RECORD_HEADER) { // skip header but check if the uploaded template is correct
@@ -627,9 +633,6 @@ class TrainingSessionsTable extends AppTable {
 							->first();
 
 				if ($trainee) {
-					if (!array_key_exists($key, $data[$alias])) {
-						$data[$alias][$key] = [];
-					}
 					$data[$alias][$key][$openemis_no] = [
 						'id' => $trainee->_matchingData['Users']->id,
 						'_joinData' => ['openemis_no' => $openemis_no, 'trainee_id' => $trainee->_matchingData['Users']->id, 'name' => $trainee->name]
