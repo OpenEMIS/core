@@ -6,9 +6,12 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 class AreasController extends AppController
 {
+	use UtilityTrait;
+
 	public function initialize() {
 		parent::initialize();
 
@@ -145,8 +148,14 @@ class AreasController extends AppController
 			->all();
 		$count = 1;
 		$prevousOptionId=-1;
-
+		$pathToUnset = [];
 		foreach ($path as $obj) {
+			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
+				if (!in_array($obj->id, $parentIds)) {
+					$pathToUnset[] = $count - 1;
+					continue;
+				}
+			}	
 			$parentId = $obj->parent_id;
 			$list = $Table
 				->find('list')
@@ -163,7 +172,11 @@ class AreasController extends AppController
 					break;
 				default:
 					if( $count > 1 ){
-						if ($AccessControl->isAdmin() || (! $AccessControl->isAdmin() && $accessControlAreaCount > 1)) {
+						if (! $AccessControl->isAdmin()) {
+							if (in_array($parentId, $this->array_column($authorisedArea, 'area_id'))) {
+								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;	
+							}
+						} else {
 							$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;
 						}
 					}
@@ -180,6 +193,13 @@ class AreasController extends AppController
 			$obj->list = $list;
 			$count++;
 		}
+
+		$path = $path->toArray();
+
+		foreach ($pathToUnset as $arrIndex) {
+			unset($path[$arrIndex]);
+		}
+		
 		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName', 'formError', 'displayCountry'));
 	}
 }
