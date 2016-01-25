@@ -7,9 +7,6 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class AreapickerBehavior extends Behavior {
-	protected $_defaultConfig = [
-		'display_country' => true
-	];
 
 	public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$value = $entity->$attr['field'];
@@ -23,13 +20,17 @@ class AreapickerBehavior extends Behavior {
 			$Url = $HtmlField->Url;
 			$Form = $HtmlField->Form;
 			$targetModel = $attr['source_model'];
+			$options['display-country'] = 1;
 			$targetTable = TableRegistry::get($targetModel);
 			$condition = [];
-			if (!$this->config('display_country')) {
-				if ($targetModel == 'Area.AreaAdministratives') {
-					$condition = [$targetTable->aliasField('is_main_country') => 1];
-				}
+
+			if ($targetModel == 'Area.Areas' && isset($attr['displayCountry'])) {
+				$options['display-country'] = $entity->area_id;
+			} else if (isset($attr['displayCountry']) && !$attr['displayCountry']) {
+				$condition = [$targetTable->aliasField('is_main_country') => 1];
+				$options['display-country'] = 0;
 			}
+
 			$areaOptions = $targetTable
 				->find('list')
 				->where($condition)
@@ -49,10 +50,6 @@ class AreapickerBehavior extends Behavior {
 				$options['form-error'] = true;
 			} else {
 				$options['form-error'] = false;
-			}
-			$option['display-country'] = 1;
-			if (!$this->config('display_country')) {
-				$options['display-country'] = 0;
 			}
 
 			$value = "<div class='areapicker'>";
