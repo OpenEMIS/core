@@ -840,6 +840,11 @@ class InstitutionSectionsTable extends AppTable {
 		foreach ($record->institution_classes as $class) {
 			$students = [];
 			foreach($record->institution_section_students as $sectionStudent) {
+				if (!$sectionStudent->has('user')) {
+					// delete orphan records
+					$this->InstitutionSectionStudents->delete($sectionStudent);
+					continue;
+				}
 				$requiredData = (array_key_exists($sectionStudent->user->id, $requestData[$this->alias()]['institution_section_students']))? $requestData[$this->alias()]['institution_section_students'][$sectionStudent->user->id]: null;
 				if (in_array($sectionStudent->user->id, $removedStudentIds)) {
 					$requiredData['status'] = 0;
