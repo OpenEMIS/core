@@ -13,6 +13,9 @@ use App\Model\Table\AppTable;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
+	
+	// these constants are being used in AdvancedPositionSearchBehavior as well
+	// remember to check AdvancedPositionSearchBehavior if these constants are being modified
 	const ALL = 0;
 	const STUDENT = 1;
 	const STAFF = 2;
@@ -32,8 +35,13 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('AdvanceSearch');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+		$this->addBehavior('User.AdvancedIdentitySearch');
+		$this->addBehavior('User.AdvancedContactNumberSearch');
+		$this->addBehavior('User.AdvancedPositionSearch');
+		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [

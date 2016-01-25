@@ -11,8 +11,6 @@ class FieldOptionsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
-
-		// $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search']);
 	}
 
 	public function beforeFilter(Event $event) {
@@ -24,9 +22,20 @@ class FieldOptionsController extends AppController {
 		$action = $this->request->params['action'];
 		
 		$this->set('contentHeader', __($header));
+
+		
 	}
 
-	public function onInitialize(Event $event, $model) {
-		
+	public function onInitialize(Event $event, Table $model) {
+		$alias = $model->alias;
+		$header = __('Field Options') . ' - ' . $model->getHeader($alias);
+
+		$this->Navigation->addCrumb($model->getHeader($alias));
+
+		$this->set('contentHeader', $header);
+	}
+
+	public function NetworkConnectivities() {
+		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.NetworkConnectivities']);
 	}
 }

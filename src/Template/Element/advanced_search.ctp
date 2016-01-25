@@ -1,5 +1,5 @@
 <?php
-	// pr($filters);
+use Cake\Utility\Inflector;
 ?>
 <div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
 
@@ -7,14 +7,13 @@
 	<h4><?= __('Advanced Search')?></h4>
 
 	<?php
-		// pr($model);die;
 		foreach ($filters as $key=>$filter) :
 	?>
 
 		<div class="input select">
 		  <label class="form-label"><?= $filter['label'] ?>:</label>
 		  <div class="input-select-wrapper">	 
-			  <select name="AdvanceSearch[<?= $model ?>][<?= $key ?>]">
+			  <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $key ?>]">
 				<option value="">&nbsp;</option>
 				<?php foreach ($filter['options'] as $optKey=>$optVal): ?>
 					<?php $selected = ($optKey==$filter['selected']) ? 'selected' : ''; ?>
@@ -22,6 +21,18 @@
 				<?php endforeach; ?>
 			  </select>
 		   </div>	  
+		</div>
+
+	<?php endforeach ?>
+
+	<?php
+		foreach ($searchables as $key=>$searchable) :
+	?>
+
+		<div class="input text" style="margin-bottom:10px;">
+			<label for="advancesearch-directories-identity-number" class="form-label"><?= $searchable['label'] ?>:</label>
+
+			<input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
 		</div>
 
 	<?php endforeach ?>
