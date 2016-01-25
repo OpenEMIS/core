@@ -65,12 +65,19 @@ class AppController extends Controller {
 					]
 				]
 			],
+			'loginAction' => [
+				'plugin' => 'User',
+            	'controller' => 'Users',
+            	'action' => 'login'
+            ],
 			'logoutRedirect' => [
 				'plugin' => 'User',
 				'controller' => 'Users',
 				'action' => 'login'
 			]
 		]);
+
+		$this->loadComponent('Paginator');
 
 		$this->Auth->config('authorize', ['Security']);
 
@@ -80,7 +87,7 @@ class AppController extends Controller {
 		$this->loadComponent('ControllerAction.Alert');
 		$this->loadComponent('AccessControl', [
 			'ignoreList' => [
-				'Users' => ['login', 'logout', 'postLogin'],
+				'Users' => ['login', 'logout', 'postLogin', 'login_remote'],
 				'Dashboard' => [],
 				'Preferences' => [],
 				'About' => []

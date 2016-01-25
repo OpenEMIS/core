@@ -11,9 +11,3 @@ echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.scrolltabs', 
 		<?php endforeach; ?>
 	</div>
 <?php endif ?>
-
-<script type="text/javascript">
-$(document).ready(function() {
-	$('#tabs').scrollTabs();
-});
-</script>

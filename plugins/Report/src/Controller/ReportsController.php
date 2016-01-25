@@ -46,6 +46,9 @@ class ReportsController extends AppController {
 				'Report.InstitutionStaff' => __('Staff'),
 				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 				'Report.StaffAbsences' => __('Staff Absence'),
+				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
+				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
+				'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
 			];
 		} else if ($module == 'Students') {
 			$options = [
@@ -106,7 +109,11 @@ class ReportsController extends AppController {
 			} else {
 				$data['percent'] = 0;
 			}
-			$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+			if (is_null($entity->modified)) {
+				$data['modified'] = $ReportProgress->formatDateTime($entity->created);
+			} else {
+				$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+			}
 			$data['status'] = $entity->status;
 		}
 		echo json_encode($data);
