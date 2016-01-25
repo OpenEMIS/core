@@ -13,6 +13,9 @@ use App\Model\Table\AppTable;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
+	
+	// these constants are being used in AdvancedPositionSearchBehavior as well
+	// remember to check AdvancedPositionSearchBehavior if these constants are being modified
 	const ALL = 0;
 	const STUDENT = 1;
 	const STAFF = 2;
@@ -32,7 +35,13 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 		$this->addBehavior('AdvanceSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+		$this->addBehavior('User.AdvancedIdentitySearch');
+		$this->addBehavior('User.AdvancedContactNumberSearch');
+		$this->addBehavior('User.AdvancedPositionSearch');
+		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -123,11 +132,23 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$allInstitutionStudents = $InstitutionStudentTable->find()
+				->where([
+					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
 			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
 					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
+			$allInstitutionStaff = $InstitutionStaffTable->find()
+				->where([
 					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
 				])
 				->bufferResults(false);
@@ -145,15 +166,20 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$userId = $this->Auth->user('id');
+
 			$query->where([
 					'OR' => [
+						['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
+						['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
-						['EXISTS ('.$guardianAndOthers->sql().')']
+						['EXISTS ('.$guardianAndOthers->sql().')'],
 					]
 				])
 				->group([$this->aliasField('id')])
 				;
+			// pr($query->sql());die;
 		}
 		
 		$this->dashboardQuery = clone $query;

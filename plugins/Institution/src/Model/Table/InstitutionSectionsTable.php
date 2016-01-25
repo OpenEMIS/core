@@ -840,6 +840,11 @@ class InstitutionSectionsTable extends AppTable {
 		foreach ($record->institution_classes as $class) {
 			$students = [];
 			foreach($record->institution_section_students as $sectionStudent) {
+				if (!$sectionStudent->has('user')) {
+					// delete orphan records
+					$this->InstitutionSectionStudents->delete($sectionStudent);
+					continue;
+				}
 				$requiredData = (array_key_exists($sectionStudent->user->id, $requestData[$this->alias()]['institution_section_students']))? $requestData[$this->alias()]['institution_section_students'][$sectionStudent->user->id]: null;
 				if (in_array($sectionStudent->user->id, $removedStudentIds)) {
 					$requiredData['status'] = 0;
@@ -887,9 +892,7 @@ class InstitutionSectionsTable extends AppTable {
 	 * academic_period_id field setup
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		$periodOption = ['' => '-- Select Period --'];
 		$academicPeriodOptions = $this->AcademicPeriods->getlist();
-		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
@@ -901,6 +904,7 @@ class InstitutionSectionsTable extends AppTable {
 
 			$attr['options'] = $academicPeriodOptions;
 			$attr['onChangeReload'] = true;
+			$attr['default'] = $this->AcademicPeriods->getCurrent();
 		
 		}
 
@@ -1151,10 +1155,10 @@ class InstitutionSectionsTable extends AppTable {
 		if (!empty($list)) {
 			if ($this->_selectedAcademicPeriodId != 0) {
 				if (!array_key_exists($this->_selectedAcademicPeriodId, $list)) {
-					$this->_selectedAcademicPeriodId = key($list);
+					$this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
 				}
 			} else {
-				$this->_selectedAcademicPeriodId = key($list);
+				$this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
 			}
 		}
 		return $list;
