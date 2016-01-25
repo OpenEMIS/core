@@ -57,10 +57,6 @@ class UsersTable extends AppTable {
 
 		$this->addBehavior('Area.Areapicker');
 		$this->addBehavior('User.AdvancedNameSearch');
-
-		$this->addBehavior('Security.Password', [
-			'field' => 'password'
-		]);
 	}
 
 	public static function handleAssociations($model) {

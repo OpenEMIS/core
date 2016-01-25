@@ -36,7 +36,8 @@ class UserBehavior extends Behavior {
 			]);
 
 			$this->_table->addBehavior('Security.Password', [
-				'field' => 'password'
+				'field' => 'password',
+				'passwordAllowEmpty' => true
 			]);
 		}
 	}
