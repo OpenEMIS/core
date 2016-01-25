@@ -92,9 +92,7 @@ class InstitutionsTable extends AppTable  {
         ]);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
-        $this->addBehavior('Area.Areapicker', [
-        	'display_country' => false
-        ]);
+        $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
@@ -203,8 +201,8 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
-		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
+		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
