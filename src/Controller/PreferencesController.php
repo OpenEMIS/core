@@ -15,6 +15,7 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->model('Users');
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
+			'Account' 				=> ['className' => 'UserAccounts'],
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
@@ -65,13 +66,13 @@ class PreferencesController extends AppController {
 		$isSuperAdmin = $this->Auth->user('super_admin');
 		$userId = $this->Auth->user('id');
 		$tabElements = [
-			'Account' => [
+			'General' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $userId],
-				'text' => __('Account')
+				'text' => __('General')
 			],
-			'Password' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Users', 'password'],
-				'text' => __('Password')
+			'Account' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $userId],
+				'text' => __('Account')
 			],
 			'Contacts' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Contacts'],
