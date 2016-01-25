@@ -26,7 +26,8 @@ class StandardReportsTable extends AppTable  {
 		$this->ControllerAction->field('target', ['type' => 'hidden']);
 		$this->ControllerAction->field('query', ['type' => 'hidden']);
 
-		$query = '{"from":["`institution_students` AS `InstitutionStudents`"], "select":["`InstitutionStudents`.`id` AS `student name`"],
+		$query = '{"from":["`institution_students` AS `InstitutionStudents`"], 
+		"join":[{"table":"security_users","type":"INNER","alias":"SecurityUsers","conditions":["`SecurityUsers`.`id` = `InstitutionStudents`.`student_id`"]}], "select":["`InstitutionStudents`.`id` AS `student name`"],
 		"where":["`InstitutionStudents`.`academic_period_id` = 10"],
 		"having":["COUNT(`InstitutionStudents`.`student_status_id`) > 0"],
 		"group":["`InstitutionStudents`.`student_status_id`"]
@@ -38,14 +39,9 @@ class StandardReportsTable extends AppTable  {
 		
 	}
 
-	private function setupValues(Entity $entity) {
+	protected function setupValues(Entity $entity) {
 		$data[$this->alias()] = [];
 
-		// $selectedInput = $entity->input_id;
-		// $mainTable = $entity->main_table;
-		// $mainTableAlias = !empty($entity->table_alias) ? $entity->table_alias : $this->getTableAlias($mainTable, $selectedInput);
-
-		$selectedInput = '';
 		$mainTable = '';
 		$mainTableAlias = '';
 
@@ -56,6 +52,7 @@ class StandardReportsTable extends AppTable  {
 			if (array_key_exists('from', $arrQuery)) {
 				$records = $arrQuery['from'];
 				$tables = [];
+				// For now we only take the first found table as the main table
 				foreach ($records as $obj) {
 					$str = str_ireplace(" AS ", " as ", $obj);
 					$str = str_replace("`", "", $str);
@@ -70,12 +67,14 @@ class StandardReportsTable extends AppTable  {
 						'table' => $tableName,
 						'alias' => $alias
 					];
+					break;
 				}
-
+				$mainTable = $tables[0]['table'];
+				$mainTableAlias = $tables[0]['alias'];
 				$data[$this->alias()]['tables'] = $tables;
 			}
 
-			// joins (will have to improve on this part)
+			// joins (will have to improve on this part) (To support one main table for now)
 			if (array_key_exists('join', $arrQuery)) {
 				$records = $arrQuery['join'];
 
@@ -83,7 +82,7 @@ class StandardReportsTable extends AppTable  {
 					$joins = $obj;
 
 					$thisTable = $obj['table'];
-					$thisTableAlias = !empty($obj['alias']) ? $obj['alias'] : $this->getTableAlias($thisTable, $selectedInput);
+					$thisTableAlias = !empty($obj['alias']) ? $obj['alias'] : $mainTableAlias;
 
 					$conditions = [];
 					foreach ($obj['conditions'] as $condition) {
@@ -249,7 +248,7 @@ class StandardReportsTable extends AppTable  {
 		return $entity;
 	}
 
-	public function getSelectOptions($code) {
+	private function getSelectOptions($code) {
 		$options = [
 			'general' => [
 				'active' => [1 => __('Active'), 0 => __('Inactive')],
