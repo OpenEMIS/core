@@ -11,4 +11,4 @@ CREATE TABLE `authentication_type_attributes` (
   `attribute_field` VARCHAR(50) NOT NULL COMMENT '',
   `attribute_name` VARCHAR(50) NOT NULL COMMENT '',
   `value` VARCHAR(100) NULL COMMENT '',
-  PRIMARY KEY (`id`)  COMMENT '');
+  PRIMARY KEY (`id`));
