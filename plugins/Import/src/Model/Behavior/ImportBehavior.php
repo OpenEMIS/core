@@ -16,14 +16,6 @@ use Cake\Utility\Inflector;
 use Cake\Network\Session;
 use ControllerAction\Model\Traits\EventTrait;
 
-use Box\Spout\Common\Type;
-use Box\Spout\Writer\WriterFactory;
-use Box\Spout\Writer\Style\StyleBuilder;
-use Box\Spout\Writer\Style\Color;
-
-use Import\Extension\SheetStyler;
-
-
 /**
  * ImportBehavior is to be used with import_mapping table.
  *

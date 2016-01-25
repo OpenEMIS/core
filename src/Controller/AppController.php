@@ -77,6 +77,8 @@ class AppController extends Controller {
 			]
 		]);
 
+		$this->loadComponent('Paginator');
+
 		$this->Auth->config('authorize', ['Security']);
 
 		// Custom Components
