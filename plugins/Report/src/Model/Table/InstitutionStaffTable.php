@@ -76,6 +76,19 @@ class InstitutionStaffTable extends AppTable  {
 		return $entity->FTE*100;
 	}
 
+	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
+		$age = '';
+		if ($entity->has('user')) {
+			if ($entity->user->has('date_of_birth')) {
+				if (!empty($entity->user->date_of_birth)) {
+					$yearOfBirth = $entity->user->date_of_birth->format('Y');
+					$age = date("Y")-$yearOfBirth;
+				}
+			}
+		}
+		return $age;
+	}
+
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 		$identity = $IdentityType
@@ -153,6 +166,13 @@ class InstitutionStaffTable extends AppTable  {
 			'field' => 'FTE',
 			'type' => 'integer',
 			'label' => 'FTE (%)',
+		];
+
+		$extraField[] = [
+			'key' => 'Age',
+			'field' => 'Age',
+			'type' => 'Age',
+			'label' => 'Age',
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());

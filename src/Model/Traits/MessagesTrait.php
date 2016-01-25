@@ -10,7 +10,9 @@ trait MessagesTrait {
 		],
 		'Assessments' => [
 			'noGrades' => 'No Available Grades',
-			'noGradingTypes' => 'You need to configure Grading Types first.'
+			'noGradingTypes' => 'You need to configure Grading Types first.',
+			'addAssessmentItem' => 'Add Assessment Item',
+			'assessmentItems' => 'Assessment Items',
 		],
 		'CustomGroups' => [
 			'custom_modules' => 'Module'
@@ -141,7 +143,8 @@ trait MessagesTrait {
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
-			'noClasses' => 'No Subjects',
+			'noClasses' => 'No Classes',
+			'noSubjects' => 'No Subjects',
 			'subjects' => 'Subjects',
 			'noPeriods' => 'No Available Periods',
 			'education_subject' => 'Subject',
@@ -149,6 +152,8 @@ trait MessagesTrait {
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
+			'studentRemovedFromInstitution' => 'This student was removed from the institution earlier',
+			'noSubjects' => 'There are no available Education Subjects.',
 		],
 		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
@@ -409,8 +414,9 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
+			'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
 			'survey_not_found' => 'No identifiable survey found',
-			'no_answers' => 'No answers were found in the file imported.',
+			'no_answers' => 'No answers were found in the file imported',
 			'institution_network_connectivity_id' => 'code'
 		],
 		'TrainingSessions' => [
@@ -496,7 +502,8 @@ trait MessagesTrait {
 				'institutionGrades' => 'You need to configure Institution Grades first.',
 				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
-				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.'
+				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.',
+				'notInSchool' => '<Not In School>'
 			],
 			'InstitutionStaff' => [
 				'institutionPositionId' => 'You need to configure Institution Site Positions first.',
@@ -504,9 +511,13 @@ trait MessagesTrait {
 				'FTE' => 'There are no available FTE for this position.',
 				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
 				'noInstitutionPosition' => 'There are no position available.',
-				'staffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
+			],
+			'InstitutionPositions' => [
+				'position_no' => [
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+				]
 			],
 			'InstitutionShifts' => [
 				'institution_name' => [
@@ -540,7 +551,10 @@ trait MessagesTrait {
 					'ruleInstitutionStaffId' => 'Staff has already been added.'
 				],
 				'institution_position_id' => [
-					'ruleCheckFTE' => 'No available FTE.'
+					'ruleCheckFTE' => 'No available FTE.',
+				],
+				'start_date' => [
+					'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
 				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -954,6 +968,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			]
+		],
+		'Report' => [
+			'InstitutionStudentsOutOfSchool' => [
+				'reportName' => 'Students Out of School'
 			]
 		],
 	];
