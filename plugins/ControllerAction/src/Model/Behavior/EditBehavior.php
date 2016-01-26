@@ -8,10 +8,10 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Log\Log;
 
-class EditBehavior extends Behavior {
-	public function initialize(array $config) {
+use ControllerAction\Model\Traits\EventTrait;
 
-	}
+class EditBehavior extends Behavior {
+	use EventTrait;
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -111,13 +111,13 @@ class EditBehavior extends Behavior {
 					// Event: addEditOnReload
 					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 					$method = 'addEdit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 
 					// Event: editOnReload
 					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
 					$method = 'edit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 					
 					$patchOptionsArray = $patchOptions->getArrayCopy();

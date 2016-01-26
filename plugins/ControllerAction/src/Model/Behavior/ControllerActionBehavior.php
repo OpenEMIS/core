@@ -10,7 +10,11 @@ use Cake\Validation\Validator;
 // use Cake\I18n\Time;
 use Cake\Log\Log;
 
+use ControllerAction\Model\Traits\EventTrait;
+
 class ControllerActionBehavior extends Behavior {
+	use EventTrait;
+	
 	protected $_defaultConfig = [
 		'actions' => [
 			'index' => true, 
@@ -378,29 +382,6 @@ class ControllerActionBehavior extends Behavior {
 
 	public function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
-	}
-
-	private function onEvent($subject, $eventKey, $method) {
-		$eventMap = $subject->implementedEvents();
-		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
-			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
-			}
-		}
-	}
-
-	private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
-		$this->onEvent($subject, $eventKey, $method);
-		$event = new Event($eventKey, $this, $params);
-		$event = $subject->eventManager()->dispatch($event);
-		if(!is_null($method) && $autoOff) {
-			$this->offEvent($subject, $eventKey, $method);
-		}
-		return $event;
-	}
-
-	private function offEvent($subject, $eventKey, $method) {
-		$subject->eventManager()->off($eventKey, [$subject, $method]);
 	}
 
 	private function getOrderValue($field, $insert) {

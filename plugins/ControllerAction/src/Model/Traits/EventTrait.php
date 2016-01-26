@@ -4,7 +4,7 @@ namespace ControllerAction\Model\Traits;
 use Cake\Event\Event;
 
 trait EventTrait {
-	public function onEvent($subject, $eventKey, $method) {
+	private function onEvent($subject, $eventKey, $method) {
 		$eventMap = $subject->implementedEvents();
 		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
 			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
@@ -13,7 +13,7 @@ trait EventTrait {
 		}
 	}
 
-	public function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
+	private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
 		$this->onEvent($subject, $eventKey, $method);
 		$event = new Event($eventKey, $this, $params);
 		$event = $subject->eventManager()->dispatch($event);
@@ -23,7 +23,7 @@ trait EventTrait {
 		return $event;
 	}
 
-	public function offEvent($subject, $eventKey, $method) {
+	private function offEvent($subject, $eventKey, $method) {
 		$subject->eventManager()->off($eventKey, [$subject, $method]);
 	}
 }

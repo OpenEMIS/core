@@ -8,7 +8,11 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Log\Log;
 
+use ControllerAction\Model\Traits\EventTrait;
+
 class AddBehavior extends Behavior {
+	use EventTrait;
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.add'] = 'add';
@@ -87,17 +91,15 @@ class AddBehavior extends Behavior {
 				$patchOptions['validate'] = false;
 				$methodKey = 'on' . ucfirst($submit);
 
-				// $eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
-				// $this->debug(__METHOD__, ': Event -> ' . $eventKey);
-				// $method = 'addEdit' . ucfirst($methodKey);
-				// $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
-				// if ($event->isStopped()) { return $event->result; }
+				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
+				$method = 'addEdit' . ucfirst($methodKey);
+				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+				if ($event->isStopped()) { return $event->result; }
 				
-				// $eventKey = 'ControllerAction.Model.add.' . $methodKey;
-				// $this->debug(__METHOD__, ': Event -> ' . $eventKey);
-				// $method = 'add' . ucfirst($methodKey);
-				// $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
-				// if ($event->isStopped()) { return $event->result; }
+				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
+				$method = 'add' . ucfirst($methodKey);
+				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+				if ($event->isStopped()) { return $event->result; }
 				
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
