@@ -14,6 +14,12 @@ class ReportsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('reports');
 		parent::initialize($config);
+		$this->CAVersion = '4.0';
+		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('ControllerAction.ControllerAction', [
+			'actions' => ['remove' => false],
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+		]);
 		$this->joinTypes = $this->getSelectOptions('Reports.join_types');
 		$this->joinOperators = $this->getSelectOptions('Reports.join_operators');
 		$this->conditionOperators = $this->getSelectOptions('Reports.condition_operators');
