@@ -25,7 +25,10 @@
 						<th><?= $this->Label->get('Users.name'); ?></th>
 						<th><?= $this->Label->get('Users.gender_id'); ?></th>
 						<th><?= $this->Label->get($attr['model'] . '.education_grade'); ?></th>
-						<th class="cell-delete"></th>
+						<th><?= __('Student Status') ?></th>
+						<?php if ($action=='edit') { ?>
+							<th class="cell-delete"></th>
+						<?php } ?>
 					</tr>
 				</thead>
 
@@ -42,6 +45,7 @@
 						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.id", [ 'value'=> $obj->id ]);
 						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.student_id", [ 'value'=> $obj->student_id ]);
 						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.institution_section_id", [ 'value'=> $obj->institution_section_id ]);
+						echo $this->Form->hidden("InstitutionSections.institution_section_students.$n.student_status_id", [ 'value'=> $obj->student_status_id ]);
 						?>
 						<td><?= $obj->user->openemis_no ?></td>
 						<td><?= $obj->user->name ?></td>
@@ -55,6 +59,7 @@
 							));
 							?>
 						</td>
+						<td><?= __($obj->student_status->name) ?></td>
 						<td> 
 							<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
 							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
@@ -70,6 +75,7 @@
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
+						<td><?= __($obj->student_status->name) ?></td>
 					</tr>
 
 				<?php endif;?>
