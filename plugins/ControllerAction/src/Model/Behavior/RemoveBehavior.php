@@ -59,9 +59,8 @@ class RemoveBehavior extends Behavior {
 			$result = $this->doDelete($entity, $extra);
 		}
 		$extra['result'] = $result;
-		$extra['entity'] = $entity;
 
-		$event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$extra], $this);
+		$event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 
 		$mainEvent->stopPropagation();
