@@ -136,6 +136,8 @@ class FieldOptionBehavior extends Behavior {
 
 		$model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
 		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
+
+		$extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
 	}
 
 	public function indexBeforeAction(Event $event) {
