@@ -330,6 +330,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->contain([
+			'InstitutionSectionStudents.StudentStatuses',
 			'AcademicPeriods',
 			'InstitutionShifts',
 			'Staff',
