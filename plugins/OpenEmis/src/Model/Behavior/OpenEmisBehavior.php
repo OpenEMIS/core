@@ -4,6 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
 class OpenEmisBehavior extends Behavior {
@@ -15,6 +16,7 @@ class OpenEmisBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
 		$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
+		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 4];
 		$events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 4];
 		$events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 4];
 		$events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'editAfterSave', 'priority' => 4];
@@ -70,6 +72,12 @@ class OpenEmisBehavior extends Behavior {
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
 		// end deprecated
+	}
+
+	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+		if ($resultSet->count() == 0) {
+			$this->_table->Alert->info('general.noData');
+		}
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {

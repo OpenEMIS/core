@@ -6,9 +6,9 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
-use Cake\Network\Exception\NotFoundException;
 use Cake\Log\Log;
+use Cake\Core\Configure;
+use Cake\Network\Exception\NotFoundException;
 
 class IndexBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -58,26 +58,16 @@ class IndexBehavior extends Behavior {
 			$data = $query->all();
 		}
 		
-		Log::write('debug', $query->__toString());
+		if (Configure::read('debug')) {
+			Log::write('debug', $query->__toString());
+		}
 
-		$event = $model->dispatchEvent('ControllerAction.Model.index.afterQuery', [$data, $extra], $this);
+		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$data, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		if ($event->result) {
 			$data = $event->result;
 		}
-		
-		// if ($data->count() == 0) {
-		// 	$this->Alert->info('general.noData');
-		// }
-
-		// $modal = $this->getModalOptions('remove');
-		$model->controller->set(compact('data'));
-
-		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$extra], $this);
-		if ($event->isStopped()) {
-			$event->stopPropagation;
-		}
-
+		$model->controller->set('data', $data);
 		return true;
 	}
 }
