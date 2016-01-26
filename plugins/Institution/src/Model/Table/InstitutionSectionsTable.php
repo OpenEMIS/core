@@ -824,18 +824,18 @@ class InstitutionSectionsTable extends AppTable {
 		])->where([$this->aliasField('id')=>$entity->id])->first();
 		
 		// finding removed student ids
-		$currentInstitutionSectionStudents = $entity->institution_section_students;
+		$currentInstitutionSectionStudents = isset($requestData[$this->alias()]['institution_section_students']) ? $requestData[$this->alias()]['institution_section_students'] : [];
 		$currentStudentIds = [];
 		foreach ($currentInstitutionSectionStudents as $key => $value) {
-			$currentStudentIds[] = $value->student_id;
+			$currentStudentIds[] = $value['student_id'];
 		}
+
 		$originalInstitutionSectionStudents = $entity->getOriginal('institution_section_students');
 		$originalStudentIds = [];
 		foreach ($originalInstitutionSectionStudents as $key => $value) {
 			$originalStudentIds[] = $value->student_id;
 		}
 		$removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
-
 		$classes = [];
 		foreach ($record->institution_classes as $class) {
 			$students = [];
