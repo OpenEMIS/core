@@ -8,15 +8,6 @@ trait UtilityTrait {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
 
-	public function array_column($array, $column_name) {
-        return array_map(
-        	function($element) use($column_name) {
-        		if (isset($element[$column_name])) {
-        			return $element[$column_name];
-        		}
-       		}, $array);
-    }
-
 	/**
 	 * Converts the class alias to a label.
 	 * 
