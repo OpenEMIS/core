@@ -6,13 +6,8 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
 
 class ViewBehavior extends Behavior {
-	public function initialize(array $config) {
-
-	}
-
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.view'] = 'view';
@@ -40,15 +35,13 @@ class ViewBehavior extends Behavior {
 		}
 
 		$id = $model->paramsPass(0);
-
 		if (empty($id)) {
 			if ($model->Session->check($sessionKey)) {
 				$id = $model->Session->read($sessionKey);
 			}
 		}
 
-		$entity = null;
-		
+		$entity = false;
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->find()->where([$idKey => $id])->contain($contain);
 
@@ -57,30 +50,18 @@ class ViewBehavior extends Behavior {
 			$event = $model->dispatchEvent('ControllerAction.Model.view.beforeQuery', [$query, $extra], $this);
 
 			$entity = $query->first();
-
-			// if (empty($entity)) {
-			// 	$this->Alert->warning('general.notExists');
-			// 	return $this->controller->redirect($this->url('index'));
-			// }	
 		}
 
-		$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.afterQuery', [$entity, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-
-		$event = $model->dispatchEvent('ControllerAction.Model.view.afterQuery', [$entity, $extra], $this);
+		$event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 
 		if (!empty($entity)) {
 			$model->Session->write($sessionKey, $id);
-			// $modal = $this->getModalOptions('remove');
 			$model->controller->set('data', $entity);
-			// $this->controller->set('modal', $modal);
 		} else {
 			$mainEvent->stopPropagation();
-			return $model->controller->redirect($model->url('index'));
+			return $model->controller->redirect($model->url('index', 'QUERY'));
 		}
-		$event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
 		return $entity;
-		// $this->config['form'] = false;
 	}
 }
