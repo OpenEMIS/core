@@ -11,10 +11,6 @@ use Cake\Core\Configure;
 use Cake\Network\Exception\NotFoundException;
 
 class IndexBehavior extends Behavior {
-	public function initialize(array $config) {
-
-	}
-
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index'] = 'index';
