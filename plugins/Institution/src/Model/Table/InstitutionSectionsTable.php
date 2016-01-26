@@ -845,11 +845,16 @@ class InstitutionSectionsTable extends AppTable {
 					$this->InstitutionSectionStudents->delete($sectionStudent);
 					continue;
 				}
-				$requiredData = (array_key_exists($sectionStudent->user->id, $requestData[$this->alias()]['institution_section_students']))? $requestData[$this->alias()]['institution_section_students'][$sectionStudent->user->id]: null;
-				if (in_array($sectionStudent->user->id, $removedStudentIds)) {
-					$requiredData['status'] = 0;
-				}
-				$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students', $requiredData);
+				$originalEntity = $entity->extractOriginalChanged($entity->visibleProperties());
+
+				if (isset($originalEntity['institution_section_students'])) {
+					$studentEntityKey = array_search($sectionStudent->user->id, $this->array_column($originalEntity['institution_section_students'], 'student_id'));
+					$requiredData = $studentEntityKey ? $originalEntity['institution_section_students'][$studentEntityKey]: [];
+					if (in_array($sectionStudent->user->id, $removedStudentIds)) {
+						$requiredData['status'] = 0;
+					}
+					$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students', $requiredData);
+				}				
 			}
 			if (count($class->institution_class_students)>0) {
 				foreach($class->institution_class_students as $classStudent) {
