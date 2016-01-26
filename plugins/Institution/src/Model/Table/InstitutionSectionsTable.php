@@ -759,6 +759,7 @@ class InstitutionSectionsTable extends AppTable {
 					$data[$this->alias()]['institution_section_students'][$k]['id'] = $record->id;
 				}
 			} else {
+				$data[$this->alias()]['institution_section_students'] = [];
 				// PHPOE-2338 - status no longer used, record will be deleted instead
 			}
 		}
@@ -817,17 +818,11 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-		$record = $this->find()->contain([
-			'InstitutionClasses.InstitutionClassStudents', 
-			'InstitutionClasses.InstitutionSections', 
-			'InstitutionSectionStudents.Users'
-		])->where([$this->aliasField('id')=>$entity->id])->first();
-		
-		// finding removed student ids
-		$currentInstitutionSectionStudents = isset($requestData[$this->alias()]['institution_section_students']) ? $requestData[$this->alias()]['institution_section_students'] : [];
+
+		$currentInstitutionSectionStudents = $entity->institution_section_students;
 		$currentStudentIds = [];
 		foreach ($currentInstitutionSectionStudents as $key => $value) {
-			$currentStudentIds[] = $value['student_id'];
+			$currentStudentIds[] = $value->student_id;
 		}
 
 		$originalInstitutionSectionStudents = $entity->getOriginal('institution_section_students');
@@ -836,38 +831,6 @@ class InstitutionSectionsTable extends AppTable {
 			$originalStudentIds[] = $value->student_id;
 		}
 		$removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
-		$classes = [];
-		foreach ($record->institution_classes as $class) {
-			$students = [];
-			foreach($record->institution_section_students as $sectionStudent) {
-				if (!$sectionStudent->has('user')) {
-					// delete orphan records
-					$this->InstitutionSectionStudents->delete($sectionStudent);
-					continue;
-				}
-				$originalEntity = $entity->extractOriginalChanged($entity->visibleProperties());
-
-				if (isset($originalEntity['institution_section_students'])) {
-					$studentEntityKey = array_search($sectionStudent->user->id, $this->array_column($originalEntity['institution_section_students'], 'student_id'));
-					$requiredData = $studentEntityKey ? $originalEntity['institution_section_students'][$studentEntityKey]: [];
-					if (in_array($sectionStudent->user->id, $removedStudentIds)) {
-						$requiredData['status'] = 0;
-					}
-					$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students', $requiredData);
-				}				
-			}
-			if (count($class->institution_class_students)>0) {
-				foreach($class->institution_class_students as $classStudent) {
-					if (!isset($students[$classStudent->student_id])) {
-						$classStudent->status=0;
-						$students[$classStudent->student_id] = $classStudent;
-					}
-				}
-			}
-
-			$class->institution_class_students = $students;
-			$this->InstitutionClasses->save($class);
-		}
 
 		if (!empty($removedStudentIds)) {
 			// 'deleteAll will not trigger beforeDelete/afterDelete events. If you need those first load a collection of records and delete them.'
