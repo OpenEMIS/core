@@ -163,6 +163,10 @@ class InstitutionSectionStudentsTable extends AppTable {
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		// PHPOE-2338 - implement afterDelete in InstitutionSectionStudentsTable.php to delete from InstitutionClassStudentsTable
+		$this->_autoDeleteSubjectStudent($entity);
+	}
+
+	private function _autoDeleteSubjectStudent(Entity $entity) {
 		$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 		$deleteClassStudent = $InstitutionClassStudentsTable->find()
 			->where([
@@ -170,7 +174,6 @@ class InstitutionSectionStudentsTable extends AppTable {
 				$InstitutionClassStudentsTable->aliasField('institution_section_id') => $entity->institution_section_id
 			])
 			->toArray();
-			;
 			foreach ($deleteClassStudent as $key => $value) {
 				$InstitutionClassStudentsTable->delete($value);
 			}
