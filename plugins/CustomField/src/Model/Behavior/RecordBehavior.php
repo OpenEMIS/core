@@ -530,7 +530,8 @@ class RecordBehavior extends Behavior {
 
 			$order = 0;
 			$fieldOrder = [];
-			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+			// temporary fix: to make custom fields appear before map in Institutions > General > Overview
+			$ignoreFields = ['id', 'map_section', 'map', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 			foreach ($this->_table->fields as $fieldName => $field) {
 				if (!in_array($fieldName, $ignoreFields)) {
 					$order = $field['order'] > $order ? $field['order'] : $order;
