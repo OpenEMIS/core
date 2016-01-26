@@ -618,7 +618,10 @@ class RecordBehavior extends Behavior {
 			}
 
 			foreach ($ignoreFields as $key => $field) {
-				$fieldOrder[++$order] = $field;
+				// add checking (map_section, map) to append ignore fields only if exists
+				if (array_key_exists($field, $this->_table->fields)) {
+					$fieldOrder[++$order] = $field;
+				}
 			}
 			ksort($fieldOrder);
 			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
