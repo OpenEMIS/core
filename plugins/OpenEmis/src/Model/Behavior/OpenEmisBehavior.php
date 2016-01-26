@@ -4,6 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
 class OpenEmisBehavior extends Behavior {
@@ -13,10 +14,13 @@ class OpenEmisBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		if (isset($this->_table->CAVersion) && $this->_table->CAVersion == '4.0') { // temporary fix
-			$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
-			$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
-		}
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
+		$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
+		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 4];
+		$events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'editAfterSave', 'priority' => 4];
+		$events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 4];
 		return $events;
 	}
 
@@ -68,6 +72,44 @@ class OpenEmisBehavior extends Behavior {
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
 		// end deprecated
+	}
+
+	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+		if ($resultSet->count() == 0) {
+			$this->_table->Alert->info('general.noData');
+		}
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if (!$entity) {
+			$this->_table->Alert->warning('general.notExists');
+		}
+	}
+
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		$model = $this->_table;
+		$errors = $entity->errors();
+		if (empty($errors)) {
+			$model->Alert->success('general.add.success');
+		} else {
+			$model->Alert->error('general.add.failed');
+		}
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		$model = $this->_table;
+		$errors = $entity->errors();
+		if (empty($errors)) {
+			$model->Alert->success('general.edit.success');
+		} else {
+			$model->Alert->error('general.edit.failed');
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if (!$entity) {
+			$this->_table->Alert->warning('general.notExists');
+		}
 	}
 
 	private function initializeButtons(ArrayObject $extra) {
