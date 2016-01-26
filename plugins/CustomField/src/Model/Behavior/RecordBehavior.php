@@ -314,7 +314,7 @@ class RecordBehavior extends Behavior {
 
 				if (!empty($filter)) {
 					$modelAlias = $this->getModel($filter)['model'];
-					$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+					$filterKey = $this->getFilterKey($filter, $this->config('model'));
 
 					$filterId = $entity->$filterKey;
 					$filterModelAlias = $this->getModel($this->CustomFormsFilters->registryAlias())['model'];
