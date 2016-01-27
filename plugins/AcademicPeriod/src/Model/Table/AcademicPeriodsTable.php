@@ -253,6 +253,7 @@ class AcademicPeriodsTable extends AppTable {
 			$where[$this->aliasField('current')] = 0;
 			$data += $this->find('list')
 				->find('visible')
+				->find('editable')
 				->find('order')
 				->where($where)
 				->toArray();
@@ -264,6 +265,7 @@ class AcademicPeriodsTable extends AppTable {
 			// get the current period
 			$data = $this->find()
 				->find('visible')
+				->find('editable')
 				->contain(['Levels'])
 				->select([
 						'id' => $this->aliasField('id'),
@@ -287,6 +289,10 @@ class AcademicPeriodsTable extends AppTable {
 			$data = $list;
 		}
 		return $data;
+	}
+
+	public function findEditable(Query $query, array $options) {
+		return $query->where([$this->aliasField('editable') => 1]);
 	}
 
 	public function getDate($dateObject) {
