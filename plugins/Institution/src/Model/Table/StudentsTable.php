@@ -651,6 +651,7 @@ class StudentsTable extends AppTable {
 					$sectionData['student_id'] = $entity->student_id;
 					$sectionData['education_grade_id'] = $entity->education_grade_id;
 					$sectionData['institution_section_id'] = $entity->class;
+					$sectionData['student_status_id'] = $entity->student_status_id;
 					$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
 					$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
 				}
