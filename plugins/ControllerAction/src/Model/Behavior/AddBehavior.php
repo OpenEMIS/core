@@ -8,7 +8,11 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Log\Log;
 
+use ControllerAction\Model\Traits\EventTrait;
+
 class AddBehavior extends Behavior {
+	use EventTrait;
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.add'] = 'add';
@@ -69,33 +73,33 @@ class AddBehavior extends Behavior {
 				if (is_callable($event->result)) {
 					$process = $event->result;
 				}
+				
+				$result = $process($model, $entity);
 
-				if ($process($model, $entity)) {
-					$event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
-					if ($event->isStopped()) { return $event->result; }
+				if (!$result) {
+					Log::write('debug', $entity->errors());
+				}
 
+				$event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
+				if ($event->isStopped()) { return $event->result; }
+
+				if ($result) {
 					$mainEvent->stopPropagation();
 					return $model->controller->redirect($model->url('index', 'QUERY'));
-				} else {
-					Log::write('debug', $entity->errors());
-					// $this->log($entity->errors(), 'debug');
-					// $this->Alert->error('general.add.failed');
 				}
 			} else {
 				$patchOptions['validate'] = false;
 				$methodKey = 'on' . ucfirst($submit);
 
-				// $eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
-				// $this->debug(__METHOD__, ': Event -> ' . $eventKey);
-				// $method = 'addEdit' . ucfirst($methodKey);
-				// $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
-				// if ($event->isStopped()) { return $event->result; }
+				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
+				$method = 'addEdit' . ucfirst($methodKey);
+				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+				if ($event->isStopped()) { return $event->result; }
 				
-				// $eventKey = 'ControllerAction.Model.add.' . $methodKey;
-				// $this->debug(__METHOD__, ': Event -> ' . $eventKey);
-				// $method = 'add' . ucfirst($methodKey);
-				// $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
-				// if ($event->isStopped()) { return $event->result; }
+				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
+				$method = 'add' . ucfirst($methodKey);
+				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+				if ($event->isStopped()) { return $event->result; }
 				
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
@@ -109,7 +113,6 @@ class AddBehavior extends Behavior {
 		$event = $model->dispatchEvent('ControllerAction.Model.add.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		
-		// $this->config['form'] = true;
 		$model->controller->set('data', $entity);
 		return $entity;
 	}

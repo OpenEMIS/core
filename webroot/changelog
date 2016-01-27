@@ -1,3 +1,12 @@
+v3.4.11
+- Fixed a bug that caused removing last student from class not to be deleted
+- Fixed a bug that caused custom fields not appearing in Institutions
+- Fixed a bug that caused Roles with All Classes and All Subjects permissions not able to see students in Results module
+- Fixed a bug that caused Roles with Promote/Graduate permissions not able to see Promote/Graduate buttons
+- Added Dropout and Transfer Reasons will be displayed when accessing Institutions -> Students -> Academic -> Programmes
+- Added names, contacts, identities, positions to Advanced Search
+- The system will auto generate position numbers based on the school code + a set of random numbers
+
 v3.4.10
 - Fixed a bug that caused 404 error page when Promoting students but no students are selected
 - Added Search in Student Admission Page (Institutions -> Students -> <Select Pending Admission>)

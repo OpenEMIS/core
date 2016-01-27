@@ -503,7 +503,11 @@ class HtmlFieldHelper extends Helper {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {
-				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				if ($attr['value'] instanceof Time) {
+					$attr['value'] = $attr['value']->format('d-m-Y');
+				} else {
+					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				}
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
