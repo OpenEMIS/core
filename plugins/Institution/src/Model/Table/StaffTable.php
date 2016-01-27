@@ -735,19 +735,20 @@ class StaffTable extends AppTable {
 		$query = $this->find('all');
 		$staffByPositions = $query
 			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
-			->contain(['Users.Genders','Positions'])
+			->contain(['Users.Genders','Positions.StaffPositionTitles'])
 			->select([
-				'Positions.type',
+				'Positions.id',
+				'StaffPositionTitles.type',
 				'Users.id',
 				'Genders.name',
 				'total' => $query->func()->count('DISTINCT '.$this->aliasField('staff_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([
-				'Positions.type', 'Genders.name'
+				'StaffPositionTitles.type', 'Genders.name'
 			])
 			->order(
-				'Positions.type'
+				'StaffPositionTitles.type'
 			)
 			->toArray();
 
@@ -768,7 +769,7 @@ class StaffTable extends AppTable {
 		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
 			if ($staffByPosition->has('position')) {
-				$positionType = $staffByPosition->position->type;
+				$positionType = $staffByPosition->position->staff_position_title->type;
 				$staffGender = $staffByPosition->user->gender->name;
 				$StaffTotal = $staffByPosition->total;
 
@@ -788,8 +789,8 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
-	// Functions that are migrated over
-	/******************************************************************************************************************
+// Functions that are migrated over
+/******************************************************************************************************************
 **
 ** finders functions to be used with query
 **
@@ -801,13 +802,15 @@ class StaffTable extends AppTable {
 	 */
 	public function findByPositions(Query $query, array $options) {
 		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 			$positions = $this->Positions->find('list')
 						->find('withBelongsTo')
 				        ->where([
 				        	'Institutions.id' => $options['Institutions.id'],
-				        	$this->Positions->aliasField('type') => $options['type']
+				        	$StaffPositionTitles->aliasField('type') => $options['type']
 				        ])
-				        ->toArray();
+				        ->toArray()
+				        ;
 			$positions = array_keys($positions);
 			return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
 		} else {
