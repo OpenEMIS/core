@@ -8,4 +8,4 @@ UPDATE `config_items` SET `value` = 'Local' WHERE `type` = 'Authentication' AND 
 DROP TABLE `authentication_type_attributes`;
 
 -- db_patches
-DELETE FROM `db_patches` WHERE `issue` = 'POIDN-3';
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2505';
