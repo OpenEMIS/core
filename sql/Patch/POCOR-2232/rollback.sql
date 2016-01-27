@@ -3,4 +3,4 @@ UPDATE `field_options` SET `plugin` = 'Staff' WHERE `field_options`.`code` = 'St
 
 UPDATE `field_options` SET `plugin` = 'Students' WHERE `field_options`.`code` = 'StudentDropoutReasons';
 
-DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2232';
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2232';
