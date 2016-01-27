@@ -26,6 +26,7 @@ class StudentPromotionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function implementedEvents() {
@@ -422,18 +423,20 @@ class StudentPromotionTable extends AppTable {
 						$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
 						$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
 						$entity = $this->newEntity($studentObj);
-						$update = $this->updateAll(
-								['student_status_id' => $statusToUpdate],
-								[
-									'student_id' => $studentObj['student_id'], 
-									'education_grade_id' => $currentGrade,
-									'academic_period_id' => $currentAcademicPeriod,
-									'institution_id' => $institutionId,
-									'student_status_id' => $studentStatuses['CURRENT']
-								]
-							);
-						// If the update count is more than 0	
-						if ($update) {
+
+						$existingStudentEntity = $this->find()->where([
+								$this->aliasField('institution_id') => $institutionId,
+								$this->aliasField('student_id') => $studentObj['student_id'],
+								$this->aliasField('academic_period_id') => $currentAcademicPeriod,
+								$this->aliasField('education_grade_id') => $currentGrade,
+								$this->aliasField('student_status_id') => $studentStatuses['CURRENT']
+							])->first();
+
+						$patchData = [
+							'student_status_id' => $statusToUpdate
+						];
+						$existingStudentEntity = $this->patchEntity($existingStudentEntity, $patchData, ['validate' => false]);
+						if ($this->save($existingStudentEntity)) {
 							if ($nextEducationGradeId != 0) {
 								if ($this->save($entity)) {
 									$this->Alert->success($this->aliasField('success'), ['reset' => true]);

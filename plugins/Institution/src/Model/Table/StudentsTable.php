@@ -66,6 +66,7 @@ class StudentsTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function validationDefault(Validator $validator) {
