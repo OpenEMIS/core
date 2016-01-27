@@ -11,6 +11,10 @@ use Cake\Core\Configure;
 use Cake\Network\Exception\NotFoundException;
 
 class IndexBehavior extends Behavior {
+	protected $_defaultConfig = [
+		'pageOptions' => [10, 20, 30, 40, 50]
+	];
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index'] = 'index';
@@ -25,7 +29,7 @@ class IndexBehavior extends Behavior {
 		$extra['auto_contain'] = true;
 		$extra['auto_search'] = true;
 		$extra['auto_order'] = true;
-
+		$extra['config']['pageOptions'] = $this->config('pageOptions');
 		$query = $model->find();
 
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeAction', [$extra], $this);
