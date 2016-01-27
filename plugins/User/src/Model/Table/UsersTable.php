@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
+use Cake\I18n\Time;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -59,6 +60,51 @@ class UsersTable extends AppTable {
 		$this->addBehavior('User.AdvancedNameSearch');
 
 		
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser'
+		];
+
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
+	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
+		$openemisNo = $this->getUniqueOpenemisId();
+
+        $GenderTable = TableRegistry::get('User.Genders');
+        $genderList = $GenderTable->find('list')->toArray();
+
+        // Just in case the gender is others
+        $gender = array_search($userInfo['gender'], $genderList);
+        if ($gender === false) {
+            $gender = key($genderList);
+        }
+
+        $dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+
+        $date = Time::now();
+        $data = [
+            'username' => $userName,
+            'openemis_no' => $openemisNo,
+            'first_name' => $userInfo['firstName'],
+            'last_name' => $userInfo['lastName'],
+            'gender_id' => $gender,
+            'date_of_birth' => $dateOfBirth,
+            'super_admin' => 0,
+            'status' => 1,
+            'created_user_id' => 1,
+            'created' => $date,    
+        ];
+        $userEntity = $this->newEntity($data);
+        if ($this->save($userEntity)) {
+        	return $userName;
+        } else {
+        	return false;
+        }  
 	}
 
 	public static function handleAssociations($model) {
