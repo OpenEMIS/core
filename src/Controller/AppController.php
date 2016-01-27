@@ -63,7 +63,7 @@ class AppController extends Controller {
 						'className' => 'Fallback',
 						'hashers' => ['Default', 'Legacy']
 					]
-				]
+				],
 			],
 			'loginAction' => [
 				'plugin' => 'User',
@@ -95,6 +95,10 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('Workflow.Workflow');
+		$this->loadComponent('OpenEmis.SSO', [
+			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
+			'userNotAuthorisedURL' => ['plugin' => 'Error', 'controller' => 'Errors', 'action' => 'error403'],
+		]); // for single sign on authentication
 	}
 
 	public function beforeFilter(Event $event) {
