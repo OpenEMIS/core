@@ -336,16 +336,31 @@ class HtmlFieldHelper extends Helper {
 		$defaultWidth = 90;
 		$defaultHeight = 115;
 
+		$maxImageWidth = 60;
+
 		if ($action == 'index' || $action == 'view') {
 			$src = $data->photo_content;
-			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
 
-			$jsFunc = "<script>$(function(){    $('img').error(function() { $(this).replaceWith( '<h3>Missing Image</h3>' ); });  }); </script>";
-			echo $jsFunc;
-
-			if (!empty($src)) {
-				$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:60px;" /></div>' : $src;
-			}	
+			if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {				
+				$imageUrl = '';
+				if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
+					$imageUrl = $this->Url->build($attr['imageUrl'], true);
+				}
+				$imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
+				$value= '<div class="table-thumb" 
+					data-load-image=true 
+					data-image-width='.$maxImageWidth.' 
+					data-image-url='.$imageUrl.'
+					>
+					<div class="profile-image-thumbnail">
+					'.$imageDefault.'
+					</div>
+					</div>';
+			} else {
+				if (!empty($src)) {
+					$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
+				}	
+			}			
 		} else if ($action == 'edit') {
 			$defaultImgViewClass = $this->table->getDefaultImgViewClass();
 			$defaultImgMsg = $this->table->getDefaultImgMsg();
@@ -376,6 +391,7 @@ class HtmlFieldHelper extends Helper {
 																							'defaultImgView' => $defaultImgView]);
 
 		} 
+
 		return $value;
 	}
 
@@ -409,7 +425,7 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy H:i:s',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto'
+			'orientation' => 'auto'
 		];
 
 		if (!isset($attr['date_options'])) {
@@ -437,7 +453,7 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto',
+			'orientation' => 'auto',
 			'autoclose' => true,
 		];
 
@@ -487,7 +503,11 @@ class HtmlFieldHelper extends Helper {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {
-				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				if ($attr['value'] instanceof Time) {
+					$attr['value'] = $attr['value']->format('d-m-Y');
+				} else {
+					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				}
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
@@ -629,7 +649,7 @@ class HtmlFieldHelper extends Helper {
 		return $value;
 	}
 
-	public function autocomplete($action, Entity $data, $attr, &$options=[]){
+	public function autocomplete($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
@@ -653,6 +673,28 @@ class HtmlFieldHelper extends Helper {
 			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
 		}
 		return $value;
+	}
+
+	public function table($action, Entity $data, $attr, $options=[]) {
+		$html = '
+			<div class="input clearfix">
+				<label>%s</label>
+				<div class="table-wrapper">
+					<div class="table-in-view">
+						<table class="table">
+							<thead>%s</thead>
+							<tbody>%s</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		';
+
+		$headers = $this->Html->tableHeaders($attr['headers']);
+		$cells = $this->Html->tableCells($attr['cells']);
+
+		$html = sprintf($html, $attr['label'], $headers, $cells);
+		return $html;
 	}
 
 	// a template function for creating new elements

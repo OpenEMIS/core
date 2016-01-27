@@ -129,6 +129,8 @@ class ExcelBehavior extends Behavior {
 			];
 		}
 
+		$sheetNameArr = [];
+
 		foreach ($sheets as $sheet) {
 			$table = $sheet['table'];
 			// sheet info added to settings to avoid adding more parameters to event
@@ -141,6 +143,26 @@ class ExcelBehavior extends Behavior {
 
 			$this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
 			$sheetName = $sheet['name'];
+
+			// Check to make sure the string length does not exceed 31 characters
+			$sheetName = (strlen($sheetName) > 31) ? substr($sheetName,0,27).'....' : $sheetName;
+
+			// Check to make sure that no two sheets has the same name
+			$counter = 1;
+			$initialLength = 0;
+			while (in_array($sheetName, $sheetNameArr)) {
+				if ($counter > 1) {
+					$sheetName = substr($sheetName, 0, $initialLength);
+				} else {
+					$initialLength = strlen($sheetName);
+				}
+				if (strlen($sheetName) > 27) {
+					$sheetName = substr($sheetName,0,27).'('.$counter++.')';
+				} else {	
+					$sheetName = $sheetName.'('.$counter++.')';
+				}
+			}
+			$sheetNameArr[] = $sheetName;
 
 			// if the primary key of the record is given, only generate that record
 			if (array_key_exists('id', $settings)) {
@@ -286,9 +308,9 @@ class ExcelBehavior extends Behavior {
 			if (empty($field['label'])) {
 				$key = explode('.', $field['key']);
 				$module = $key[0];
-
+				$column = $key[1];
 				// Redispatch get label
-				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $field['field'], $language], true);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
 				if (strlen($event->result)) {
 					$field['label'] = $event->result;
 				}
