@@ -22,8 +22,6 @@ class FieldOptionsController extends AppController {
 		$action = $this->request->params['action'];
 		
 		$this->set('contentHeader', __($header));
-
-		
 	}
 
 	public function onInitialize(Event $event, Table $model) {
@@ -37,5 +35,9 @@ class FieldOptionsController extends AppController {
 
 	public function NetworkConnectivities() {
 		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.NetworkConnectivities']);
+	}
+
+	public function StaffPositionTitles() {
+		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionTitles']);
 	}
 }
