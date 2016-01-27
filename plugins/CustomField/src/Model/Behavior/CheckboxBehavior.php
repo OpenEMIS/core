@@ -66,7 +66,7 @@ class CheckboxBehavior extends Behavior {
 						}
 					}
 					$html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
-					$html .= '<label class="checkbox-label">'. $value .'</label>';
+					$html .= '<label class="selection-label">'. $value .'</label>';
 				$html .= '</div>';
 			}
 			$html .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
