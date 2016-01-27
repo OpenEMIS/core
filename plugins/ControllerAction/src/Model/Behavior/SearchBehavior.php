@@ -8,14 +8,20 @@ use Cake\Event\Event;
 
 class SearchBehavior extends Behavior {
 	protected $_defaultConfig = [
-		'orderField' => 'order',
-		'pageOptions' => [10, 20, 30, 40, 50]
+		'orderField' => 'order'
 	];
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 5];
+		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
 		return $events;
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->_table->action == 'index') {
+			$buttons->exchangeArray([]);
+		}
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -24,7 +30,7 @@ class SearchBehavior extends Behavior {
 		$controller = $model->controller;
 		$request = $model->request;
 		$session = $request->session();
-		$pageOptions = $this->config('pageOptions');
+		$pageOptions = $extra['config']['pageOptions'];
 
 		$limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : key($pageOptions);
 		$search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';
@@ -47,7 +53,6 @@ class SearchBehavior extends Behavior {
 		$request->data['Search']['limit'] = $limit;
 
 		$extra['config']['search'] = $search;
-		$extra['config']['pageOptions'] = $pageOptions;
 
 		if ($extra['pagination']) {
 			$extra['options']['limit'] = $pageOptions[$limit];

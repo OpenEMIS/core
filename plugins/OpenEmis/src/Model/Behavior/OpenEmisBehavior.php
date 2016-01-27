@@ -21,6 +21,8 @@ class OpenEmisBehavior extends Behavior {
 		$events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 4];
 		$events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'editAfterSave', 'priority' => 4];
 		$events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.delete.afterAction'] = ['callable' => 'deleteAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.transfer.afterAction'] = ['callable' => 'transferAfterAction', 'priority' => 4];
 		return $events;
 	}
 
@@ -78,6 +80,7 @@ class OpenEmisBehavior extends Behavior {
 		if ($resultSet->count() == 0) {
 			$this->_table->Alert->info('general.noData');
 		}
+		$extra['config']['form'] = ['class' => ''];
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -109,6 +112,26 @@ class OpenEmisBehavior extends Behavior {
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		if (!$entity) {
 			$this->_table->Alert->warning('general.notExists');
+		}
+	}
+
+	public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if ($this->_table->request->is('delete')) {
+			if ($extra['result']) {
+				$this->_table->Alert->success('general.delete.success');
+			} else {
+				$this->_table->Alert->error('general.delete.failed');
+			}
+		}
+	}
+
+	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if ($this->_table->request->is('delete')) {
+			if ($extra['result']) {
+				$this->_table->Alert->success('general.delete.success');
+			} else {
+				$this->_table->Alert->error('general.delete.failed');
+			}
 		}
 	}
 
