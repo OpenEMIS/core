@@ -378,8 +378,8 @@ class DirectoriesTable extends AppTable {
 					// Do nothing
 					break;
 				case self::STUDENT:
-					$this->ControllerAction->field('student_status', ['order' => 51]);
 					$this->ControllerAction->field('institution', ['order' => 50]);
+					$this->ControllerAction->field('student_status', ['order' => 51]);
 					break;
 
 				case self::STAFF:
@@ -398,22 +398,7 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function onGetStudentStatus(Event $event, Entity $entity) {
-		$userId = $entity->id;
-		$InstitutionStudentTable = TableRegistry::get('Institution.Students');
-		$studentInstitutions = $InstitutionStudentTable->find()
-			->matching('StudentStatuses')
-			->where([
-				$InstitutionStudentTable->aliasField('student_id') => $userId
-			])
-			->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
-			->first();
-		
-		if (!empty($studentInstitutions)) {
-			$value = $studentInstitutions->_matchingData['StudentStatuses']['name'];
-		} else {
-			$value = '';
-		}
-		return $value;
+		return __($entity->student_status_name);
 	}
 
 	public function getNumberOfUsersByGender($params=[]) {
@@ -514,21 +499,26 @@ class DirectoriesTable extends AppTable {
 		$studentInstitutions = [];
 		if ($isStudent) {
 			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
-			$studentInstitutions = $InstitutionStudentTable->find('list', [
-					'keyField' => 'id',
-					'valueField' => 'name'
-				])
+			$studentInstitutions = $InstitutionStudentTable->find()
 				->matching('StudentStatuses')
 				->matching('Institutions')
 				->where([
 					$InstitutionStudentTable->aliasField('student_id') => $userId,
-					'StudentStatuses.code' => 'CURRENT'
 				])
 				->distinct(['id'])
-				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name'])
-				->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
+				->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
+				$InstitutionStudentTable->aliasField('created').' END) DESC'])
 				->first();
-			return $studentInstitutions;
+
+			if (!empty($studentInstitutions)) {
+				$value = $studentInstitutions->student_status_name;
+			} else {
+				$value = '';
+			}
+			$entity->student_status_name = $value;
+
+			return $studentInstitutions->name;
 		}
 
 		$staffInstitutions = [];
