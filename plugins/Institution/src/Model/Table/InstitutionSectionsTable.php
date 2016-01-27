@@ -813,9 +813,6 @@ class InstitutionSectionsTable extends AppTable {
 		}
 		$this->fields['students']['data']['students'] = $students;
 		$this->fields['students']['data']['studentOptions'] = $studentOptions;
-
-		$gradeOptions = $this->getSectionGradeOptions($entity);
-		$this->fields['students']['data']['gradeOptions'] = $gradeOptions;
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
@@ -1088,7 +1085,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	protected function createVirtualStudentEntity($id, $entity) {
 		$userData = $this->Institutions->Students->find()
-			->contain(['Users'=>['Genders'], 'StudentStatuses'])
+			->contain(['Users'=>['Genders'], 'StudentStatuses', 'EducationGrades'])
 			->where(['student_id'=>$id])
 			->first();
 
@@ -1096,8 +1093,9 @@ class InstitutionSectionsTable extends AppTable {
 			'id'=>$this->getExistingRecordId($id, $entity),
 			'student_id'=>$id,
 			'institution_section_id'=>$entity->id,
-			'education_grade_id'=>0,
+			'education_grade_id'=>  $userData->education_grade_id,
 			'student_status_id' => $userData->student_status_id,
+			'education_grade' => [],
 			'student_status' => [],
 			'user'=>[]
 		];
@@ -1105,6 +1103,7 @@ class InstitutionSectionsTable extends AppTable {
 		$student = $this->InstitutionSectionStudents->patchEntity($student, $data);
 		$student->user = $userData->user;
 		$student->student_status = $userData->student_status;
+		$student->education_grade = $userData->education_grade;
 		return $student;
 	}
 
