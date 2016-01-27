@@ -23,6 +23,7 @@ class StudentDropoutTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons']);
+		$this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -289,16 +290,20 @@ class StudentDropoutTable extends AppTable {
 		if (!$Students->exists($conditions)) {
 			// Change the status of the student in the school
 			// Update only enrolled statuses student
-			$Students->updateAll(
-				['student_status_id' => $statuses['DROPOUT'], 'end_date' => $effectiveDate],
-				[
-					'institution_id' => $institutionId,
-					'student_id' => $studentId,
-					'academic_period_id' => $periodId,
-					'education_grade_id' => $gradeId,
-					'student_status_id' => $statuses['CURRENT']
-				]
-			);
+			$existingStudentEntity = $Students->find()->where([
+					$Students->aliasField('institution_id') => $previousSchoolId,
+					$Students->aliasField('student_id') => $studentId,
+					$Students->aliasField('academic_period_id') => $periodId,
+					$Students->aliasField('education_grade_id') => $gradeId,
+					$Students->aliasField('student_status_id') => $statuses['CURRENT']
+				])
+				->first();
+			$patchData = [
+					'student_status_id' => $statuses['DROPOUT'], 
+					'end_date' => $effectiveDate
+				];
+			$existingStudentEntity = $Students->patchEntity($existingStudentEntity, $patchData, ['validate' => false]);
+			$Students->save($existingStudentEntity);
 
 			$this->Alert->success('StudentDropout.approve');
 

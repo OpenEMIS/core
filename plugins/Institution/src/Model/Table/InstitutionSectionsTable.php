@@ -1088,7 +1088,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	protected function createVirtualStudentEntity($id, $entity) {
 		$userData = $this->Institutions->Students->find()
-			->contain(['Users'=>['Genders']])
+			->contain(['Users'=>['Genders'], 'StudentStatuses'])
 			->where(['student_id'=>$id])
 			->first();
 
@@ -1097,11 +1097,14 @@ class InstitutionSectionsTable extends AppTable {
 			'student_id'=>$id,
 			'institution_section_id'=>$entity->id,
 			'education_grade_id'=>0,
+			'student_status_id' => $userData->student_status_id,
+			'student_status' => [],
 			'user'=>[]
 		];
 		$student = $this->InstitutionSectionStudents->newEntity();
 		$student = $this->InstitutionSectionStudents->patchEntity($student, $data);
 		$student->user = $userData->user;
+		$student->student_status = $userData->student_status;
 		return $student;
 	}
 
