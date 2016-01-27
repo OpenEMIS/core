@@ -906,6 +906,14 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
+			],
+			'Salaries' => [
+				'gross_salary' => [
+					'ruleMoney' => 'Please enter a valid amount.'
+				],
+				'net_salary' => [
+					'ruleMoney' => 'Please enter a valid amount.'
+				]
 			]
 		],
 		'AcademicPeriod' => [
