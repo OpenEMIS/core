@@ -2,8 +2,6 @@
 namespace CustomField\Model\Behavior;
 
 use Cake\Utility\Inflector;
-use Cake\Event\Event;
-use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 
 class SetupBehavior extends Behavior {
