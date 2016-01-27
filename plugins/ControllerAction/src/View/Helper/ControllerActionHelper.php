@@ -92,16 +92,19 @@ class ControllerActionHelper extends Helper {
 		$event = $this->dispatchEvent($table, $eventKey, null, [$buttons]);
 		// end attach event
 
-		$html = '<div class="form-buttons"><div class="button-label"></div>';
-		foreach ($buttons as $btn) {
-			if (!array_key_exists('url', $btn)) {
-				$html .= $this->Form->button($btn['name'], $btn['attr']);
-			} else {
-				$html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
+		$html = '';
+		if ($buttons->count() > 0) {
+			$html = '<div class="form-buttons"><div class="button-label"></div>';
+			foreach ($buttons as $btn) {
+				if (!array_key_exists('url', $btn)) {
+					$html .= $this->Form->button($btn['name'], $btn['attr']);
+				} else {
+					$html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
+				}
 			}
+			$html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
+			$html .= '</div>';
 		}
-		$html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
-		$html .= '</div>';
 		return $html;
 	}
 
