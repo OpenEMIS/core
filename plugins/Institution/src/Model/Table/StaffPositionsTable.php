@@ -87,16 +87,6 @@ class StaffPositionsTable extends AppTable {
 		$this->ControllerAction->field('FTE', ['visible' => true]);
 	}
 
-	public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request) {
-		$attr['type'] = 'select';
-		$attr['options'] = $this->StaffTypes->getList();
-		if (empty($attr['options'])){
-			$this->_table->ControllerAction->Alert->warning('Institution.StaffPositions.staffTypeId');
-		}
-		
-		return $attr;
-	}
-
 	public function onUpdateFieldStaffStatusId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->StaffStatuses->getList();
