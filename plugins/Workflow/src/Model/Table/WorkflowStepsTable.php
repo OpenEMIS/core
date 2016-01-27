@@ -30,7 +30,14 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('WorkflowStatusMappings', ['className' => 'Workflow.WorkflowStatusMappings', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('WorkflowStatuses' , [
+			'className' => 'Workflow.WorkflowStatuses',
+			'joinTable' => 'workflow_statuses_steps',
+			'foreignKey' => 'workflow_step_id',
+			'targetForeignKey' => 'workflow_status_id',
+			'through' => 'Workflow.WorkflowStatusesSteps',
+			'dependent' => true
+		]);
 		$this->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
 			'joinTable' => 'workflow_steps_roles',
@@ -42,7 +49,6 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
 			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {

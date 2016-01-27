@@ -63,14 +63,21 @@ class AppController extends Controller {
 						'className' => 'Fallback',
 						'hashers' => ['Default', 'Legacy']
 					]
-				]
+				],
 			],
+			'loginAction' => [
+				'plugin' => 'User',
+            	'controller' => 'Users',
+            	'action' => 'login'
+            ],
 			'logoutRedirect' => [
 				'plugin' => 'User',
 				'controller' => 'Users',
 				'action' => 'login'
 			]
 		]);
+
+		$this->loadComponent('Paginator');
 
 		$this->Auth->config('authorize', ['Security']);
 
@@ -80,7 +87,7 @@ class AppController extends Controller {
 		$this->loadComponent('ControllerAction.Alert');
 		$this->loadComponent('AccessControl', [
 			'ignoreList' => [
-				'Users' => ['login', 'logout', 'postLogin'],
+				'Users' => ['login', 'logout', 'postLogin', 'login_remote'],
 				'Dashboard' => [],
 				'Preferences' => [],
 				'About' => []
@@ -88,6 +95,10 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('Workflow.Workflow');
+		$this->loadComponent('OpenEmis.SSO', [
+			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
+			'userNotAuthorisedURL' => ['plugin' => 'Error', 'controller' => 'Errors', 'action' => 'error403'],
+		]); // for single sign on authentication
 	}
 
 	public function beforeFilter(Event $event) {
