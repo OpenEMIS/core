@@ -21,7 +21,7 @@ class StaffPositionsTable extends AppTable {
       	$this->addBehavior('Year', ['end_date' => 'end_year']);
         $this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
-		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionPositions','foreignKey' => 'institution_position_id']);
+		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionPositions',	'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
 		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 	}

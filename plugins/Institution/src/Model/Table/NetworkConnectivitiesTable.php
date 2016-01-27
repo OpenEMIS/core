@@ -12,7 +12,6 @@ class NetworkConnectivitiesTable extends AppTable {
 		
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 
-		$this->CAVersion = '4.0';
 		$this->addBehavior('OpenEmis.OpenEmis');
 		$this->addBehavior('ControllerAction.ControllerAction', [
 			'actions' => ['remove' => 'transfer'],
