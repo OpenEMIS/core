@@ -14,20 +14,33 @@ class CustomRecordsTable extends AppTable {
 		]);
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['form'] = $entity->custom_form_id;
+	}
+
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
 		$entity->custom_form_id = $this->request->query('form');
 	}
 
 	public function onUpdateFieldCustomFormId(Event $event, array $attr, $action, $request) {
-		$formOptions = $this->CustomForms
-			->find('list')
-			->toArray();
-		$selectedForm = $this->queryString('form', $formOptions);
-		$this->advancedSelectOptions($formOptions, $selectedForm);
+		if ($action == 'add') {
+			$formOptions = $this->CustomForms
+				->find('list')
+				->toArray();
+			$selectedForm = $this->queryString('form', $formOptions);
+			$this->advancedSelectOptions($formOptions, $selectedForm);
 
-		$attr['options'] = $formOptions;
-		$attr['onChangeReload'] = 'changeForm';
+			$attr['type'] = 'select';
+			$attr['options'] = $formOptions;
+			$attr['onChangeReload'] = 'changeForm';
+		} else if ($action == 'edit') {
+			$selectedForm = $this->request->query('form');
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedForm;
+			$attr['attr']['value'] = $this->CustomForms->get($selectedForm)->name;
+		}
 
 		return $attr;
 	}
