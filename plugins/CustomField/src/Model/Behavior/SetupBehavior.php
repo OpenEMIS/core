@@ -25,7 +25,12 @@ class SetupBehavior extends Behavior {
     	$events = parent::implementedEvents();
     	$eventMap = [
             'Setup.'.'set'.$this->fieldType.'Elements' => 'onSet'.$this->fieldType.'Elements',
-            'ControllerAction.Model.viewEdit.beforeQuery' => 'viewEditBeforeQuery'
+            'ControllerAction.Model.viewEdit.beforeQuery' => 'viewEditBeforeQuery',
+            'ControllerAction.Model.addEdit.onChangeType' => 'addEditOnChangeType',
+            'ControllerAction.Model.addEdit.onAddOption' => 'addEditOnAddOption',
+            'ControllerAction.Model.addEdit.onAddColumn' => 'addEditOnAddColumn',
+            'ControllerAction.Model.addEdit.onAddRow' => 'addEditOnAddRow',
+            'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch'
         ];
 
         foreach ($eventMap as $event => $method) {

@@ -41,7 +41,7 @@ class CustomFieldsTable extends AppTable {
 		$this->addBehavior('CustomField.SetupTextarea');
 		$this->addBehavior('CustomField.SetupDropdown');
 		$this->addBehavior('CustomField.SetupCheckbox');
-		// $this->addBehavior('CustomField.SetupTable');
+		$this->addBehavior('CustomField.SetupTable');
 		// $this->addBehavior('CustomField.SetupDate');
 		// $this->addBehavior('CustomField.SetupTime');
 		// $this->addBehavior('CustomField.SetupStudentList');
@@ -81,13 +81,20 @@ class CustomFieldsTable extends AppTable {
 
 	public function onUpdateFieldFieldType(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
-		} else if ($action == 'add' || $action == 'edit') {
+		} else if ($action == 'add') {
 			$fieldTypeOptions = $this->fieldTypeOptions;
 			$selectedFieldType = $this->queryString('field_type', $fieldTypeOptions);
 
 			$attr['type'] = 'select';
 			$attr['options'] = $fieldTypeOptions;
 			$attr['onChangeReload'] = 'changeType';
+		} else if ($action == 'edit') {
+			$fieldTypeOptions = $this->fieldTypeOptions;
+			$selectedFieldType = $request->query('field_type');
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedFieldType;
+			$attr['attr']['value'] = $fieldTypeOptions[$selectedFieldType];
 		}
 
 		return $attr;
