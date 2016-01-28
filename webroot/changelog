@@ -1,3 +1,8 @@
+v3.4.12
+- Fixed a bug that caused student data not removed completely when deleting a student from a school
+- Fixed a bug that caused school name and status not displaying the correct value in Directories
+- Fixed a bug that caused Add buttons in Salaries to behave like Save button (only happens in Chrome browser)
+
 v3.4.11
 - Fixed a bug that caused removing last student from class not to be deleted
 - Fixed a bug that caused custom fields not appearing in Institutions
