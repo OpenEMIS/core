@@ -291,20 +291,16 @@ class StudentDropoutTable extends AppTable {
 			// Change the status of the student in the school
 			// Update only enrolled statuses student
 			$existingStudentEntity = $Students->find()->where([
-					$Students->aliasField('institution_id') => $previousSchoolId,
+					$Students->aliasField('institution_id') => $institutionId,
 					$Students->aliasField('student_id') => $studentId,
 					$Students->aliasField('academic_period_id') => $periodId,
 					$Students->aliasField('education_grade_id') => $gradeId,
 					$Students->aliasField('student_status_id') => $statuses['CURRENT']
 				])
 				->first();
-			$patchData = [
-					'student_status_id' => $statuses['DROPOUT'], 
-					'end_date' => $effectiveDate
-				];
-			$existingStudentEntity = $Students->patchEntity($existingStudentEntity, $patchData, ['validate' => false]);
+			$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
+			$existingStudentEntity->end_date = $effectiveDate;
 			$Students->save($existingStudentEntity);
-
 			$this->Alert->success('StudentDropout.approve');
 
 			$entity->status = self::APPROVED;
