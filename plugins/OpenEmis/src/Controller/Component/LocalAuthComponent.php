@@ -9,6 +9,11 @@ use Cake\Event\Event;
 class LocalAuthComponent extends Component {
 	public $components = ['Auth', 'Alert'];
 
+	protected $_defaultConfig = [
+		'homePageURL' => null,
+		'loginPageURL' => null,
+	];
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
         // $events['Controller.Auth.beforeAuthenticate'] = 'beforeAuthenticate';
@@ -41,7 +46,7 @@ class LocalAuthComponent extends Component {
 				$session = $this->request->session();
 				$session->write('login.username', $username);
 				$session->write('login.password', $password);
-				return $controller->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+				return $controller->redirect($this->loginPageURL);
 			}
 		} else {
 			return false;
@@ -54,9 +59,9 @@ class LocalAuthComponent extends Component {
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
-				$this->Alert->error('security.login.inactive');
+				$this->Alert->error('security.login.inactive', ['reset' => true]);
 				$controller = $this->_registry->getController();
-				return $controller->redirect(['action' => 'login']);
+				return false;
 			}
 			$this->Auth->setUser($user);
 			$labels = TableRegistry::get('Labels');
@@ -73,7 +78,7 @@ class LocalAuthComponent extends Component {
 			// End
 			return true;
 		} else {
-			$this->Alert->error('security.login.fail');
+			$this->Alert->error('security.login.fail', ['reset' => true]);
 			return false;
 		}
 	}
