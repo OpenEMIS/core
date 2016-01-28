@@ -12,14 +12,6 @@ class SetupDropdownBehavior extends SetupBehavior {
         parent::initialize($config);
     }
 
-    public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.addEdit.onChangeType'] = 'addEditOnChangeType';
-		$events['ControllerAction.Model.addEdit.onAddOption'] = 'addEditOnAddOption';
-		$events['ControllerAction.Model.addEdit.beforePatch'] = 'addEditBeforePatch';
-		return $events;
-	}
-
 	public function onSetDropdownElements(Event $event, Entity $entity) {
 		$fieldType = strtolower($this->fieldTypeCode);
 		$this->_table->ControllerAction->addField('options', [
