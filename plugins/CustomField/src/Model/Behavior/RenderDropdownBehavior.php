@@ -1,8 +1,6 @@
 <?php
 namespace CustomField\Model\Behavior;
 
-use ArrayObject;
-use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
@@ -23,30 +21,34 @@ class RenderDropdownBehavior extends RenderBehavior {
             }
         }
 
+        $fieldId = $attr['customField']->id;
+        $fieldValues = $attr['customFieldValues'];
         if ($action == 'view') {
-            // if (!empty($dropdownOptions)) {
-            //     $valueKey = !is_null($attr['value']) ? $attr['value'] : key($dropdownOptions);
-            //     $value = $dropdownOptions[$valueKey];
-            // }
+            if (!empty($dropdownOptions)) {
+                if (array_key_exists($fieldId, $fieldValues)) {
+                    $selectedValue = !is_null($fieldValues[$fieldId]['number_value']) ? $fieldValues[$fieldId]['number_value'] : $dropdownDefault;
+                    $value = $dropdownOptions[$selectedValue];
+                }
+            }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $options['type'] = 'select';
-            // $options['default'] = !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
-            // $options['value'] = !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
             $options['options'] = $dropdownOptions;
 
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['key'];
-            $value = $form->input($fieldPrefix.".number_value", $options);
-            $value .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
-            // if (!is_null($attr['id'])) {
-            //     $value .= $form->hidden($fieldPrefix.".id", ['value' => $attr['id']]);
-            // }
+
+            if (array_key_exists($fieldId, $fieldValues)) {
+                $selectedValue = !is_null($fieldValues[$fieldId]['number_value']) ? $fieldValues[$fieldId]['number_value'] : $dropdownDefault;
+                $options['default'] = $selectedValue;
+                $options['value'] = $selectedValue;
+
+                $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
+            }
+            $value .= $form->input($fieldPrefix.".number_value", $options);
+            $value .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $fieldId]);
         }
 
         $event->stopPropagation();
         return $value;
-    }
-
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     }
 }
