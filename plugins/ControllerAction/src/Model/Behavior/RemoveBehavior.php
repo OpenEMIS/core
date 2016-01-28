@@ -141,9 +141,20 @@ class RemoveBehavior extends Behavior {
 				
 				$convertTo = $request->data($model->aliasField('convert_to'));
 				$entity->convert_to = $convertTo;
-				$result = $this->doDelete($entity, $extra);
+				$doDelete = true;
 
+				if (empty($convertTo)) {
+					if ($this->hasAssociatedRecords($model, $entity)) {
+						$doDelete = false;
+					}
+				}
+				
+				$result = false;
+				if ($doDelete) {
+					$result = $this->doDelete($entity, $extra);
+				}
 				$extra['result'] = $result;
+				
 				$event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
 				if ($event->isStopped()) { return $event->result; }
 
@@ -199,6 +210,18 @@ class RemoveBehavior extends Behavior {
 			}
 		}
 		return $associations;
+	}
+
+	private function hasAssociatedRecords($model, $entity) {
+		$records = $this->getAssociatedRecords($model, $entity);
+		$found = false;
+		foreach ($records as $count) {
+			if ($count['count'] > 0) {
+				$found = true;
+				break;
+			}
+		}
+		return $found;
 	}
 
 	private function updateHasManyAssociations($association, $from, $to) {
