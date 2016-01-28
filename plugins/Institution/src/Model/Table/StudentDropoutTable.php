@@ -44,7 +44,6 @@ class StudentDropoutTable extends AppTable {
 	}
 
 	public function afterAction($event) {
-    	$this->ControllerAction->field('student_dropout_reason_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
     	$this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
     	$this->ControllerAction->field('student_id');
@@ -61,12 +60,12 @@ class StudentDropoutTable extends AppTable {
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentDropoutReasons->get($entity->student_dropout_reason_id)->name]]);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'comment', 
+			'effective_date', 'student_dropout_reason_id', 'comment', 
 		]);
 
 		$urlParams = $this->ControllerAction->url('edit');
@@ -77,10 +76,11 @@ class StudentDropoutTable extends AppTable {
 
     public function viewAfterAction($event, Entity $entity) {
     	$this->request->data[$this->alias()]['status'] = $entity->status;
+    	$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentDropoutReasons->get($entity->student_dropout_reason_id)->name]]);
 		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'comment'
+			'effective_date', 'student_dropout_reason_id', 'comment'
 		]);
     }
 
