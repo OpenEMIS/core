@@ -11,6 +11,13 @@ class FieldOptionsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
+
+		$controller = $this->name;
+		$this->request->addParams([
+			'accessMap' => [
+				"$controller.NetworkConnectivities" => "$controller.%s"
+			]
+		]);
 	}
 
 	public function beforeFilter(Event $event) {
@@ -22,8 +29,6 @@ class FieldOptionsController extends AppController {
 		$action = $this->request->params['action'];
 		
 		$this->set('contentHeader', __($header));
-
-		
 	}
 
 	public function onInitialize(Event $event, Table $model) {
