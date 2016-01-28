@@ -87,7 +87,6 @@ class TransferApprovalsTable extends AppTable {
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
 					$this->Alert->success('TransferApprovals.approve');
-
 					$existingStudentEntity = $Students->find()->where([
 							$Students->aliasField('institution_id') => $previousSchoolId,
 							$Students->aliasField('student_id') => $studentId,
@@ -96,11 +95,8 @@ class TransferApprovalsTable extends AppTable {
 							$Students->aliasField('student_status_id') => $statuses['CURRENT']
 						])
 						->first();
-					$patchData = [
-							'student_status_id' => $statuses['TRANSFERRED'], 
-							'end_date' => $startDate
-						];
-					$existingStudentEntity = $Students->patchEntity($existingStudentEntity, $patchData, ['validate' => false]);
+					$existingStudentEntity->student_status_id = $statuses['TRANSFERRED'];
+					$existingStudentEntity->end_date = $startDate;
 					$Students->save($existingStudentEntity);
 					$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
