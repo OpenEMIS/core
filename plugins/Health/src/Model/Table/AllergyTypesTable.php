@@ -10,5 +10,11 @@ class AllergyTypesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->hasMany('Allergies', ['className' => 'Health.Allergies', 'foreignKey' => 'health_allergy_type_id']);
+
+		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('ControllerAction.ControllerAction', [
+			'actions' => ['remove' => 'transfer'],
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+		]);
 	}
 }
