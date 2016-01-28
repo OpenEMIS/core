@@ -248,7 +248,8 @@ trait MessagesTrait {
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.',
-				'inactive' => 'Your account has been disabled.'
+				'inactive' => 'Your account has been disabled.',
+				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
