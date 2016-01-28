@@ -116,21 +116,28 @@ class OpenEmisBehavior extends Behavior {
 	}
 
 	public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if ($this->_table->request->is('delete')) {
+		$model = $this->_table;
+		if ($model->request->is('delete')) {
 			if ($extra['result']) {
-				$this->_table->Alert->success('general.delete.success');
+				$model->Alert->success('general.delete.success');
 			} else {
-				$this->_table->Alert->error('general.delete.failed');
+				$model->Alert->error('general.delete.failed');
 			}
 		}
 	}
 
 	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if ($this->_table->request->is('delete')) {
+		$model = $this->_table;
+		if ($model->request->is('delete')) {
 			if ($extra['result']) {
-				$this->_table->Alert->success('general.delete.success');
+				$model->Alert->success('general.delete.success');
 			} else {
-				$this->_table->Alert->error('general.delete.failed');
+				if (empty($entity->convert_to)) {
+					$model->Alert->error('general.deleteTransfer.restrictDelete');
+					return $model->controller->redirect($model->url('transfer'));
+				} else {
+					$model->Alert->error('general.delete.failed');
+				}
 			}
 		}
 	}
