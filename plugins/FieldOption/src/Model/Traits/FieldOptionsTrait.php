@@ -7,7 +7,6 @@ trait FieldOptionsTrait {
 		'User.ContactTypes' => 			['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
 		'FieldOption.Banks' => 		['behavior' => 'Display'],
 		'FieldOption.Countries' => 	['behavior' => 'Countries'],
-		'Institution.NetworkConnectivities' => 		['behavior' => 'Display'],
 		'Health.AllergyTypes' => ['behavior' => 'Display'],
 		'Health.ConsultationTypes' => ['behavior' => 'Display'],
 		'Health.Relationships' => ['behavior' => 'Display'],

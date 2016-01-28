@@ -138,7 +138,7 @@ class OpenEmisBehavior extends Behavior {
 	private function initializeButtons(ArrayObject $extra) {
 		$model = $this->_table;
 		$controller = $model->controller;
-
+		
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
@@ -251,14 +251,30 @@ class OpenEmisBehavior extends Behavior {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($model->actions('reorder') && $model->actions('edit')) {
-		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
-			$controller->set('reorder', true);
-		}
-
 		if ($toolbarButtons->offsetExists('back')) {
 			$controller->set('backButton', $toolbarButtons['back']);
 		}
+
+		$access = $model->AccessControl;
+		foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+			if (array_key_exists('url', $buttons)) {
+				if (!$access->check($buttons['url'])) {
+					unset($toolbarButtons[$key]);
+				}
+			}
+		}
+		foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+			if (array_key_exists('url', $buttons)) {
+				if (!$access->check($buttons['url'])) {
+					unset($indexButtons[$key]);
+				}
+			}
+		}
+
+		if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
+			$controller->set('reorder', true);
+		}
+
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 }
