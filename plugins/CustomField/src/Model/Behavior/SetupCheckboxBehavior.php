@@ -12,13 +12,6 @@ class SetupCheckboxBehavior extends SetupBehavior {
         parent::initialize($config);
     }
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.addEdit.onChangeType'] = 'addEditOnChangeType';
-		$events['ControllerAction.Model.addEdit.onAddOption'] = 'addEditOnAddOption';
-		return $events;
-	}
-
 	public function onSetCheckboxElements(Event $event, Entity $entity) {
 		$fieldType = strtolower($this->fieldTypeCode);
 		$this->_table->ControllerAction->addField('options', [

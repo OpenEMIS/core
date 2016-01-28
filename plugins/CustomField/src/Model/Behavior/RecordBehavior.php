@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
+use Cake\Log\Log;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -50,7 +51,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderTextarea');
 		$this->_table->addBehavior('CustomField.RenderDropdown');
 		$this->_table->addBehavior('CustomField.RenderCheckbox');
-		// $this->_table->addBehavior('CustomField.RenderTable');
+		$this->_table->addBehavior('CustomField.RenderTable');
 		// $this->_table->addBehavior('CustomField.RenderDate');
 		// $this->_table->addBehavior('CustomField.RenderTime');
 		// $this->_table->addBehavior('CustomField.RenderStudentList');
@@ -101,6 +102,8 @@ class RecordBehavior extends Behavior {
 			if (empty($errors)) {
 				$settings = new ArrayObject([
 					'fieldKey' => $this->config('fieldKey'),
+					'tableColumnKey' => $this->config('tableColumnKey'),
+					'tableRowKey' => $this->config('tableRowKey'),
 					'recordKey' => $this->config('recordKey')
 				]);
 
@@ -109,6 +112,7 @@ class RecordBehavior extends Behavior {
 
 				return $model->save($entity);
 			} else {
+				Log::write('debug', $errors);
 				return false;
 			}
     	};
@@ -270,26 +274,31 @@ class RecordBehavior extends Behavior {
 			}
 
 			$values = [];
-			if (isset($entity->id)) {
-				if ($entity->has('custom_field_values')) {
-					foreach ($entity->custom_field_values as $key => $obj) {
-						$fieldId = $obj->{$this->config('fieldKey')};
-						$numberValue = $obj->number_value;
-						if (strtolower($obj['custom_field']->field_type) == 'checkbox') {
-							$numberValue = [$obj->number_value];
-						}
+			if ($this->_table->request->is(['get'])) {
+				if (isset($entity->id)) {
+					if ($entity->has('custom_field_values')) {
+						foreach ($entity->custom_field_values as $key => $obj) {
+							$fieldId = $obj->{$this->config('fieldKey')};
+							$numberValue = $obj->number_value;
+							
+							if (strtolower($obj['custom_field']->field_type) == 'checkbox') {
+								$numberValue = [$obj->number_value];
+							}
 
-						if (array_key_exists($fieldId, $values)) {
-							$values[$fieldId]['number_value'] = array_merge($values[$fieldId]['number_value'], $numberValue);
-						} else {
-							$values[$fieldId] = [
-								'id' => $obj->id,
-								'text_value' => $obj->text_value,
-								'number_value' => $numberValue,
-								'textarea_value' => $obj->textarea_value,
-								'date_value' => $obj->date_value,
-								'time_value' => $obj->time_value
-							];
+							if (array_key_exists($fieldId, $values)) {
+								if (is_array($numberValue)) {
+									$values[$fieldId]['number_value'] = array_merge($values[$fieldId]['number_value'], $numberValue);
+								}
+							} else {
+								$values[$fieldId] = [
+									'id' => $obj->id,
+									'text_value' => $obj->text_value,
+									'number_value' => $numberValue,
+									'textarea_value' => $obj->textarea_value,
+									'date_value' => $obj->date_value,
+									'time_value' => $obj->time_value
+								];
+							}
 						}
 					}
 				}

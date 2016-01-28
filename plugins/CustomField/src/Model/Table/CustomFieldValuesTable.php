@@ -1,6 +1,9 @@
 <?php
 namespace CustomField\Model\Table;
 
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
@@ -14,7 +17,7 @@ class CustomFieldValuesTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
-		return $validator
+		$validator
 			->allowEmpty('text_value', function ($context) {
 				if (array_key_exists('mandatory', $context['data'])) {
 					return !$context['data']['mandatory'];
@@ -35,6 +38,29 @@ class CustomFieldValuesTable extends AppTable {
 				}
 
 				return true;
-			});
+			})
+			->add('text_value', 'ruleUnique', [
+				'rule' => 'validateUnique',
+				'provider' => 'table',
+				'message' => __('This field has to be unique'),
+				'on' => function ($context) {
+					if (array_key_exists('unique', $context['data'])) {
+						return $context['data']['unique'];
+					}
+			    }
+			])
+			->add('number_value', 'ruleUnique', [
+				'rule' => 'validateUnique',
+				'provider' => 'table',
+				'message' => __('This field has to be unique'),
+				'on' => function ($context) {
+					if (array_key_exists('unique', $context['data'])) {
+						return $context['data']['unique'];
+					}
+			    }
+			])
+			;
+
+		return $validator;
 	}
 }
