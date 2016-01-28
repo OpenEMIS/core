@@ -35,7 +35,10 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+
+		// should we add this statement here or at the later part of the application life-cycle since it is causing an issue on the add form
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+		
 		$this->addBehavior('AdvanceSearch');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 		$this->addBehavior('User.AdvancedIdentitySearch');
@@ -249,6 +252,14 @@ class DirectoriesTable extends AppTable {
 			$userType = $this->request->data[$this->alias()]['user_type'];
 			
 			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
+
+			// User.Mandatory behavior was loaded during initialize with 'Student' as 'userRole' key value.
+			// This is causing an issue when user changes the "User Type" to Staff as the value of 'userRole' is different.
+			// From error log: [RuntimeException] The "Mandatory" alias has already been loaded with different config value...
+			// The if else scope below is a temporary fix...
+			if ($this->behaviors()->has('Mandatory')) {
+				$this->removeBehavior('Mandatory');
+			}
 
 			switch ($userType) {
 				case self::STUDENT:
