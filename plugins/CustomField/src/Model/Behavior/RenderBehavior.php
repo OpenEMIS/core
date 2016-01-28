@@ -23,7 +23,7 @@ class RenderBehavior extends Behavior {
     public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$eventMap = [
-            'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch'
+            'Render.'.'onSave' => 'onSave',
         ];
 
         foreach ($eventMap as $event => $method) {
