@@ -18,6 +18,7 @@ class GoogleAuthComponent extends Component {
     private $clientSecret;
     private $redirectUri;
     private $hostedDomain;
+    private $client;
 
 	public $components = ['Auth'];
 
@@ -34,6 +35,16 @@ class GoogleAuthComponent extends Component {
 		$this->hostedDomain = $googleAttributes['Google']['hd'];
 		$session = $this->request->session();
 		$session->write('Google.hostedDomain', $this->hostedDomain);
+
+        $client = new \Google_Client();
+        $client->setClientId($this->clientId);
+        $client->setClientSecret($this->clientSecret);
+        $client->setRedirectUri($this->redirectUri);
+        $client->setScopes(['openid', 'email', 'profile']);
+        $client->setAccessType('offline');
+        $client->setHostedDomain($this->hostedDomain);
+
+        $this->client = $client;
 	}
 
 	public function implementedEvents() {
@@ -45,6 +56,13 @@ class GoogleAuthComponent extends Component {
     public function beforeFilter(Event $event) {
     	$controller = $this->_registry->getController();
     	$controller->Auth->config('authenticate', [
+            'Form' => [
+                'userModel' => 'User.Users',
+                'passwordHasher' => [
+                    'className' => 'Fallback',
+                    'hashers' => ['Default', 'Legacy']
+                ]
+            ],
     		'Google' => [
 				'userModel' => 'User.Users'
 			]
@@ -53,20 +71,15 @@ class GoogleAuthComponent extends Component {
 
     public function startup(Event $event) {
     	$action = $this->request->params['action'];
-    	if ($action == 'login') {
+        $session = $this->request->session();
+    	if ($action == 'login' && !$session->read('Google.remoteFail')) {
     		$this->idpLogin();
     	}
     }
 
 	private function idpLogin() {
 		$session = $this->request->session();
-		$client = new \Google_Client();
-    	$client->setClientId($this->clientId);
-    	$client->setClientSecret($this->clientSecret);
-        $client->setRedirectUri($this->redirectUri);
-        $client->setScopes(['openid', 'email', 'profile']);
-        $client->setAccessType('offline');
-        $client->setHostedDomain($this->hostedDomain);
+		$client = $this->client;
         $controller = $this->_registry->getController();
 
         /************************************************************************************************
@@ -97,9 +110,13 @@ class GoogleAuthComponent extends Component {
             } else {
                 // revoke the access token if the user is not authorised
                 $client->revokeToken($session->read('Google.accessToken'));
-                $session->delete('Google.accessToken');
+                $session->delete('Google');
                 $controller->Auth->logout();
-                $controller->redirect($this->_config['userNotAuthorisedURL']);
+                
+                if ($session->read('Google.reLogin')) {
+                    $authUrl = $client->createAuthUrl();
+                    $session->write('Google.reLogin', false);
+                }
             }
         } else {
             $authUrl = $client->createAuthUrl();
@@ -149,10 +166,10 @@ class GoogleAuthComponent extends Component {
 
     public function authenticate(Event $event, ArrayObject $extra) {
     	$controller = $this->_registry->getController();
+        $session = $this->request->session();
     	if ($this->request->is('get')) {
     		$username = 'Not Google Authenticated';
     		$this->idpLogin();
-    		$session = $this->request->session();
 			if ($session->check('Google.tokenData')) {	
 				$tokenData = $session->read('Google.tokenData');
 				$email = $tokenData['payload']['email'];
@@ -160,8 +177,24 @@ class GoogleAuthComponent extends Component {
 	        }
 			return $this->checkLogin($username);
 		} else {
+            if ($this->request->is('post') && isset($this->request->data['submit'])) {
+                if ($this->request->data['submit'] == 'login') {
+                    $username = $this->request->data('username');
+                    $checkLogin = $this->checkLogin($username);
+                    if ($checkLogin) {
+                        $session->write('Auth.fallback', true);
+                    }
+                    return $checkLogin;
+                } else if ($this->request->data['submit'] == 'try') {
+                    $session->delete('Google.remoteFail');
+                    $session->write('Google.reLogin', true);
+                    return $controller->redirect($this->redirectUri);
+                }
+            }
+            $controller->Alert->error('security.login.remoteFail', ['reset' => true]);
 			return false;
 		}
+
     }
 
     private function checkLogin($username) {
@@ -171,6 +204,8 @@ class GoogleAuthComponent extends Component {
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
+                $session->write('Google.remoteFail', true);
+                $controller->Alert->error('security.login.inactive', ['reset' => true]);
 				return false;
 			}
 			$controller->Auth->setUser($user);
@@ -183,6 +218,7 @@ class GoogleAuthComponent extends Component {
 			// End
 			return true;
 		} else {
+            $controller->Alert->error('security.login.remoteFail', ['reset' => true]);
 			return false;
 		}
 	}
