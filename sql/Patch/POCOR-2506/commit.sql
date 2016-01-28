@@ -12,20 +12,7 @@ INSERT INTO `staff_position_titles`
 SELECT 	
 	`fov`.`id` as `id`,
 	`fov`.`name` as `name`,
-	CASE `fov`.`name` 
-		WHEN 'Principal' THEN '1'
-		WHEN 'Vice Principal' THEN '1'
-		WHEN 'Teacher' THEN '1'
-		WHEN 'Assistant Lecturer' THEN '1'
-		WHEN 'Assistant Teacher' THEN '1'
-		WHEN 'First Teacher' THEN '1'
-		WHEN 'Instructor' THEN '1'
-		WHEN 'Itinerant Teacher' THEN '1'
-		WHEN 'Lecturer' THEN '1'
-		WHEN 'Lecturer/Supervisor' THEN '1'
-		WHEN 'Public Educator/Trainer' THEN '1'
-		ELSE '0' 
-	END as `type`,
+	'0' as `type`,
 	`fov`.`order` as `order`,
 	`fov`.`visible` as `visible`,
 	`fov`.`editable` as `editable`,
@@ -38,6 +25,10 @@ SELECT
 	`fov`.`created` as `created`
 FROM `field_option_values` as `fov`
 WHERE `fov`.`field_option_id`=(SELECT `fo`.`id` FROM `field_options` as `fo` WHERE `fo`.`code` = 'StaffPositionTitles'); 
+
+UPDATE `staff_position_titles`
+SET `type`=1
+WHERE `staff_position_titles`.`id` IN (SELECT `ip`.`staff_position_title_id` from `institution_positions` as `ip` WHERE `ip`.`type`=1 group by `ip`.`staff_position_title_id`); 
 
 UPDATE `field_option_values` as `fov` set `fov`.`visible`=0 WHERE `fov`.`field_option_id`=(SELECT `fo`.`id` FROM `field_options` as `fo` WHERE `fo`.`code` = 'StaffPositionTitles'); 
 
