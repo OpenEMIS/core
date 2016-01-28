@@ -10,7 +10,7 @@ class SSOComponent extends Component {
 
 	protected $_defaultConfig = [
 		'homePageURL' => null,
-		'userNotAuthorisedURL' => null,
+		'loginPageURL' => null,
 	];
 
 	// Is called before the controller's beforeFilter method.
@@ -43,7 +43,7 @@ class SSOComponent extends Component {
     		return $this->controller->redirect($this->_config['homePageURL']);
     	} else {
     		$this->controller->Auth->logout();
-    		return $this->controller->redirect($this->_config['userNotAuthorisedURL']);
+    		return $this->controller->redirect($this->_config['homePageURL']);
     	}
 
     	// $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
