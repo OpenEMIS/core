@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
-use Cake\Routing\Router;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'googlephpapi' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
 
@@ -43,7 +42,7 @@ class GoogleAuthComponent extends Component {
         $this->client = $client;
         $this->controller = $this->_registry->getController();
 
-        $this->retryMessage = 'Remote authentication failed. Please try local login or <a href="'.Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry'] ,true).'">Click here</a> to try again';
+        $this->retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$this->redirectUri.'?submit=retry">Click here</a> to try again';
 	}
 
 	public function implementedEvents() {
@@ -231,7 +230,7 @@ class GoogleAuthComponent extends Component {
 			$supportUrl = $ConfigItems->value('support_url');
 			$this->session->write('System.help', $supportUrl);
             $this->session->delete('Google');
-            $this->session->delete('_alert');
+            $this->controller->Alert->clear();
 			// End
 			return true;
 		} else {
