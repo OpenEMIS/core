@@ -80,18 +80,22 @@ class InstitutionQualityVisitsTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Classes = $this->Classes;
 
-			$periodOptions = $this->AcademicPeriods->getList();
+			$periodOptions = $this->AcademicPeriods->getList(['withSelect' => true]);
 			$selectedPeriod = $this->queryString('period', $periodOptions);
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 				'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
 				'callable' => function($id) use ($Classes, $institutionId) {
-					return $Classes
-						->find()
-						->where([
-							$Classes->aliasField('institution_id') => $institutionId,
-							$Classes->aliasField('academic_period_id') => $id
-						])
-						->count();
+					if ($id == -1) {
+						return 1;
+					} else {
+						return $Classes
+							->find()
+							->where([
+								$Classes->aliasField('institution_id') => $institutionId,
+								$Classes->aliasField('academic_period_id') => $id
+							])
+							->count();
+					}
 				}
 			]);
 
@@ -118,17 +122,22 @@ class InstitutionQualityVisitsTable extends AppTable {
 						$this->Classes->aliasField('academic_period_id') => $selectedPeriod
 					])
 					->toArray();
+				$classOptions = ['-1' => __('-- Select Subject --')] + $classOptions;
 
 				$selectedClass = $this->queryString('subject', $classOptions);
 				$this->advancedSelectOptions($classOptions, $selectedClass, [
 					'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
 					'callable' => function($id) use ($SubjectStaff) {
-						return $SubjectStaff
-							->find()
-							->where([
-								$SubjectStaff->aliasField('institution_class_id') => $id
-							])
-							->count();
+						if ($id == -1) {
+							return 1;
+						} else {
+							return $SubjectStaff
+								->find()
+								->where([
+									$SubjectStaff->aliasField('institution_class_id') => $id
+								])
+								->count();
+						}
 					}
 				]);
 			}

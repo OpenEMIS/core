@@ -235,6 +235,7 @@ class AcademicPeriodsTable extends AppTable {
 	public function getList($params=[]) {
 
 		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
+		$withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
 
 		if ( !$withLevels ) {
 			$where = [
@@ -286,6 +287,11 @@ class AcademicPeriodsTable extends AppTable {
 
 			$data = $list;
 		}
+
+		if ( $withSelect ) {
+			$data = ['-1' => __('-- Select Period --')] + $data;
+		}
+
 		return $data;
 	}
 
