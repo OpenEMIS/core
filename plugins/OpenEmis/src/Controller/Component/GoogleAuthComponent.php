@@ -218,7 +218,6 @@ class GoogleAuthComponent extends Component {
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
-                $this->session->write('Google.remoteFail', true);
                 $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
 				return false;
 			}
@@ -229,7 +228,6 @@ class GoogleAuthComponent extends Component {
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$supportUrl = $ConfigItems->value('support_url');
 			$this->session->write('System.help', $supportUrl);
-            $this->session->delete('Google');
             $this->controller->Alert->clear();
 			// End
 			return true;

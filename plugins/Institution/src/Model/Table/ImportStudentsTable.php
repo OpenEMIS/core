@@ -77,7 +77,7 @@ class ImportStudentsTable extends AppTable {
 		$Navigation->substituteCrumb($crumbTitle, $crumbTitle);
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
+	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 		$columns = new Collection($columns);
 		$filtered = $columns->filter(function ($value, $key, $iterator) {
 		    return $value == 'student_id';
@@ -86,11 +86,10 @@ class ImportStudentsTable extends AppTable {
 		$studentId = $sheet->getCellByColumnAndRow($studentIdIndex, $row)->getValue();
 
 		if (in_array($studentId, $importedUniqueCodes->getArrayCopy())) {
-			$tempRow['duplicates'] = true;
-			return true;
+			$rowInvalidCodeCols['student_id'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
+			return false;
 		}
 
-		$tempRow['duplicates'] = false;
 		$tempRow['entity'] = $this->InstitutionStudents->newEntity();
 		$tempRow['student_status_id'] = $this->studentStatusId;
 		$tempRow['start_year'] = false;
@@ -217,35 +216,35 @@ class ImportStudentsTable extends AppTable {
 		try {
 			$student = $this->Students->get($tempRow['student_id']);
 		} catch (RecordNotFoundException $e) {
-			$tempRow['duplicates'] = __('No such student in the system.');
+			$rowInvalidCodeCols['student_id'] = __('No such student in the system');
 			return false;
 		} catch (InvalidPrimaryKeyException $e) {
-			$tempRow['duplicates'] = __('Invalid OpenEMIS ID.');
+			$rowInvalidCodeCols['student_id'] = __('Invalid OpenEMIS ID');
 			return false;
 		}
 		if (empty($student->date_of_birth)) {
-			$tempRow['duplicates'] = __('Student\'s date of birth is empty. Please correct it at Directory page.');
+			$rowInvalidCodeCols['date_of_birth'] = __('Student\'s date of birth is empty. Please correct it at Directory page');
 			return false;
 		}
 		$tempRow['student_name'] = $tempRow['student_id'];
 
 		if (!$this->institutionId) {
-			$tempRow['duplicates'] = __('No active institution.');
+			$rowInvalidCodeCols['institution_id'] = __('No active institution');
 			return false;
 		}
 		$tempRow['institution_id'] = $this->institutionId;
 
 		if (empty($tempRow['start_date'])) {
-			$tempRow['duplicates'] = __('No start date specified.');
+			$rowInvalidCodeCols['start_date'] = __('No start date specified');
 			return false;
 		} else if (!$tempRow['start_date'] instanceof Time) {
-			$tempRow['duplicates'] = __('Unknown date format.');
+			$rowInvalidCodeCols['start_date'] = __('Unknown date format');
 			return false;
 		}
 
 		$periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']->format('Y-m-d'));
 		if (!$periods) {
-			$tempRow['duplicates'] = __('No matching academic period based on the start date');
+			$rowInvalidCodeCols['start_date'] = __('No matching academic period based on the start date');
 			return false;
 		}
 		$period='';
@@ -256,16 +255,16 @@ class ImportStudentsTable extends AppTable {
 			}
 		}
 		if (empty($period)) {
-			$tempRow['duplicates'] = __('Start date is not within selected academic period.');
+			$rowInvalidCodeCols['start_date'] = __('Start date is not within selected academic period');
 			return false;
 		}
 		if (!$period->start_date instanceof Time) {
-			$tempRow['duplicates'] = __('Please check the selected academic period start date in Administration.');
+			$rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period start date in Administration');
 			return false;
 		}
 		$periodStartDate = $period->start_date->toUnixString();
 		if (!$period->end_date instanceof Time) {
-			$tempRow['duplicates'] = __('Please check the selected academic period end date in Administration.');
+			$rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period end date in Administration');
 			return false;
 		}
 		$periodEndDate = $period->end_date->toUnixString();
@@ -274,7 +273,7 @@ class ImportStudentsTable extends AppTable {
 		$tempRow['end_year'] = $period->end_year;
 
 		if (!in_array($tempRow['education_grade_id'], $this->gradesInInstitution)) {
-			$tempRow['duplicates'] = __('Selected education grade is not being offered in this institution.');
+			$rowInvalidCodeCols['education_grade_id'] = __('Selected education grade is not being offered in this institution');
 			return false;
 		}
 		$institutionGrade = $this->InstitutionGrades
@@ -283,24 +282,24 @@ class ImportStudentsTable extends AppTable {
 								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
 								;
 		if ($institutionGrade->isEmpty()) {
-			$tempRow['duplicates'] = __('No matching education grade.');
+			$rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
 			return false;
 		}
 
 		$institutionGrade = $institutionGrade->first();
 		if (!$institutionGrade->start_date instanceof Time) {
-			$tempRow['duplicates'] = __('Please check the selected education grade start date at the institution.');
+			$rowInvalidCodeCols['education_grade_id'] = __('Please check the selected education grade start date at the institution');
 			return false;
 		}
 
 		$gradeStartDate = $institutionGrade->start_date->toUnixString();
 		$gradeEndDate = (!empty($institutionGrade->end_date) && (!$institutionGrade->end_date instanceof Time)) ? $institutionGrade->end_date->toUnixString() : '';
 		if (!empty($gradeEndDate) && $gradeEndDate < $periodEndDate) {
-			$tempRow['duplicates'] = __('Selected education grade will end before academic period ends.');
+			$rowInvalidCodeCols['education_grade_id'] = __('Selected education grade will end before academic period ends');
 			return false;
 		}
 		if ($gradeStartDate > $periodStartDate) {
-			$tempRow['duplicates'] = __('Selected education grade start date should be before academic period starts.');
+			$rowInvalidCodeCols['education_grade_id'] = __('Selected education grade start date should be before academic period starts');
 			return false;
 		}
 
@@ -323,7 +322,7 @@ class ImportStudentsTable extends AppTable {
 				}
 			}
 			if (!$selectedClassIdFound) {
-				$tempRow['duplicates'] = __('Selected class does not exists in this institution.');
+				$rowInvalidCodeCols['class'] = __('Selected class does not exists in this institution');
 				return false;
 			}
 		}
@@ -333,7 +332,6 @@ class ImportStudentsTable extends AppTable {
 
 	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
 		$flipped = array_flip($columns);
-		$original = $originalRow->getArrayCopy();
 		$key = $flipped['student_id'];
 		$tempPassedRecord['data'][$key] = $originalRow[$key];
 	}
