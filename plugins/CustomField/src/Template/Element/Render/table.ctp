@@ -11,7 +11,7 @@
 			</table>
 		</div>
 	</div>
-<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+<?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
 	<div class="input table">
 		<label><?= $attr['attr']['label']; ?></label>
 		<div class="table-wrapper">
