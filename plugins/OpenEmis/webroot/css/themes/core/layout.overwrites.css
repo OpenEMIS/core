@@ -1,0 +1,30 @@
+/* 
+Core Overwrites: v.1.0.0
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/core-login-bg.jpg') !important;
+}
+
+
+/* Tooltip */
+
+.tooltip-blue .tooltip {
+    margin-left: 53px !important;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip {
+    margin-top: 20px !important;
+    margin-left: 80px !important;
+}
+
+.rtl .tooltip-blue .tooltip {
+    margin-left: -50px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip {
+    margin-left: -80px !important;
+}
