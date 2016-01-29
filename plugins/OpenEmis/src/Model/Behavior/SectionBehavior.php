@@ -48,28 +48,23 @@ class SectionBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'ControllerAction.Model.view.beforeAction' => 'viewBeforeAction',
-			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
-			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
-			'ControllerAction.Model.edit.beforeAction' => 'editBeforeAction'
+			'ControllerAction.Model.index.afterAction' 		=> 'indexAfterAction',
+			'ControllerAction.Model.view.afterAction' 		=> ['callable' => 'viewAfterAction', 'priority' => 200],
+			'ControllerAction.Model.addEdit.afterAction' 	=> ['callable' => 'addEditAfterAction', 'priority' => 200]
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexAfterAction(Event $event, $data) {
 		$this->_fieldSetup();
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->_fieldSetup();
 	}
 
-	public function addBeforeAction(Event $event) {
-		$this->_fieldSetup();
-	}
-
-	public function editBeforeAction(Event $event) {
+	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->_fieldSetup();
 	}
 
@@ -78,15 +73,25 @@ class SectionBehavior extends Behavior {
 			if ($value['type'] == 'section') {
 				$this->_table->fields[$key]['override'] = true;
 				$this->_table->fields[$key]['label'] = false;
+				$this->_table->fields[$key]['rowClass'] = 'section-header';
 			}
 		}
 	}
 
 	public function onGetSectionElement(Event $event, $action, Entity $entity, $attr, $options) {
+		$html = '';
+
 		if (!array_key_exists('title', $attr)) {
 			$attr['title'] = __(Inflector::humanize($attr['field']));
 		}
-		return $event->subject()->renderElement('OpenEmis./section', ['attr' => $attr]);
-	}
 
+		if ($action == 'view') {
+			$html .= $attr['title'];
+		} else if ($action == 'add' || $action == 'edit') {
+			$html .= '<div class="section-header">'. $attr['title'] .'</div>';
+			$html .= '<div class="clearfix">&nbsp;</div>';
+		}
+
+		return $html;
+	}
 }
