@@ -1,4 +1,4 @@
-//Tooltip v.1.0.0
+//Tooltip v.1.0.1
 
 var Tooltip = {
     init: function() {
@@ -61,7 +61,7 @@ var Tooltip = {
             }
 
             //Tooltip Inner Container Color
-            tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)');
+            tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px');
         });
 
         //If Button Blue Color, Tooltip Change to Blue
