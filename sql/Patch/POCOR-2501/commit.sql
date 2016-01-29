@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-2501', NOW());
+INSERT INTO `db_patches` VALUES ('POCOR-2501', NOW());
 
 -- institution_section_students
 ALTER TABLE `institution_section_students` 
