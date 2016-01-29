@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\I18n\I18n;
 use Cake\ORM\ResultSet;
 
 use App\Model\Table\AppTable;
@@ -98,7 +99,6 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -138,12 +138,6 @@ class InstitutionsTable extends AppTable  {
 
 	        ->allowEmpty('email')
 			->add('email', [
-					'ruleUnique' => [
-		        		'rule' => 'validateUnique',
-		        		'provider' => 'table',
-		        		// 'message' => 'Email has to be unique',
-		        		'last' => true
-				    ],
 					'ruleValidEmail' => [
 						'rule' => 'email'
 					]
@@ -214,7 +208,14 @@ class InstitutionsTable extends AppTable  {
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
-		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => __('Area')]);
+		
+		$language = I18n::locale();
+		$field = 'area_id';
+		$areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => $areaLabel]);
+		$field = 'area_administrative_id';
+		$areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+		$this->ControllerAction->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
 		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
 		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
@@ -229,7 +230,7 @@ class InstitutionsTable extends AppTable  {
 		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
         if ($entity->isNew()) {
-			$obj = $SecurityGroup->newEntity(['name' => $entity->name]);
+			$obj = $SecurityGroup->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
 			$securityGroup = $SecurityGroup->save($obj);
 			if ($securityGroup) {
 				// add the relationship of security group and institutions
@@ -268,7 +269,7 @@ class InstitutionsTable extends AppTable  {
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);
 				if (is_object($obj)) {
-					$data = ['name' => $entity->name];
+					$data = ['name' => $entity->code . ' - ' . $entity->name];
 					$obj = $SecurityGroup->patchEntity($obj, $data);
 					$securityGroup = $SecurityGroup->save($obj);
 					if (!$securityGroup) {
@@ -482,7 +483,10 @@ class InstitutionsTable extends AppTable  {
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
-			'area_id', 'area_administrative_id',
+			'area_id', 
+
+			'area_administrative_section',
+			'area_administrative_id',
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
@@ -509,7 +513,10 @@ class InstitutionsTable extends AppTable  {
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
-			'area_id', 'area_administrative_id',
+			'area_id',
+
+			'area_administrative_section',
+			'area_administrative_id',
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
