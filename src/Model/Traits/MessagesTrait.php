@@ -248,7 +248,8 @@ trait MessagesTrait {
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.',
-				'inactive' => 'Your account has been disabled.'
+				'inactive' => 'Your account has been disabled.',
+				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
@@ -513,6 +514,11 @@ trait MessagesTrait {
 				'noInstitutionPosition' => 'There are no position available.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
+			],
+			'InstitutionPositions' => [
+				'position_no' => [
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+				]
 			],
 			'InstitutionShifts' => [
 				'institution_name' => [
