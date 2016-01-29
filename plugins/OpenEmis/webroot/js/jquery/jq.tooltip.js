@@ -56,12 +56,13 @@ var Tooltip = {
             //LTR & RTL different border color
             if (bodyDir == 'ltr') {
                 tooltipArrow.css('border-right-color', '#CC5C5C');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px 15px 5px 15px');
             } else {
                 tooltipArrow.css('border-left-color', '#CC5C5C');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'right').css('padding', '15px 15px 5px 15px');
             }
-
-            //Tooltip Inner Container Color
-            tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px 15px 5px 15px');
         });
 
         //If Button Blue Color, Tooltip Change to Blue
