@@ -228,7 +228,6 @@ class GoogleAuthComponent extends Component {
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$supportUrl = $ConfigItems->value('support_url');
 			$this->session->write('System.help', $supportUrl);
-            $this->session->delete('Google');
             $this->controller->Alert->clear();
 			// End
 			return true;
