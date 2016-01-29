@@ -12,6 +12,7 @@ SELECT `institution_section_students`.*  FROM  `institution_section_students`
 INNER JOIN `institution_sections` ON `institution_sections`.`id` = `institution_section_students`.`institution_section_id`
 INNER JOIN `institution_students` ON `institution_sections`.`academic_period_id` = `institution_students`.`academic_period_id`
     AND `institution_students`.`student_id` = `institution_section_students`.`student_id`
+    AND `institution_students`.`institution_id` = `institution_sections`.`institution_id`
     AND `institution_section_students`.`education_grade_id` <> `institution_students`.`education_grade_id`
 GROUP BY `institution_section_students`.`id`;
 
