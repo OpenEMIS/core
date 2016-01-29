@@ -17,16 +17,12 @@ class RenderTableBehavior extends RenderBehavior {
         $fieldType = strtolower($this->fieldTypeCode);
         $customField = $attr['customField'];
         $fieldId = $attr['customField']->id;
+        $cellValues = $attr['customTableCells'];
         $form = $event->subject()->Form;
 
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;
-
-        $cells = [];
-        if ($this->_table->request->is(['get'])) {
-        } else if ($this->_table->request->is(['post', 'put'])) {
-        }
 
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];
@@ -48,6 +44,10 @@ class RenderTableBehavior extends RenderBehavior {
                 $cellValue = "";
                 $cellInput = "";
                 $cellOptions = ['label' => false];
+
+                if (isset($cellValues[$fieldId][$tableRowId][$tableColumnId])) {
+                    $cellOptions['value'] = $cellValues[$fieldId][$tableRowId][$tableColumnId];
+                }
 
                 $cellInput .= $form->input($cellPrefix.".text_value", $cellOptions);
 
@@ -81,6 +81,7 @@ class RenderTableBehavior extends RenderBehavior {
         $tableColumnKey = $settings['tableColumnKey'];
         $tableRowKey = $settings['tableRowKey'];
         $recordKey = $settings['recordKey'];
+        $patchOptions = $settings['patchOptions'];
 
         $tableCells = [];
         foreach ($values as $fieldId => $rows) {
@@ -101,6 +102,6 @@ class RenderTableBehavior extends RenderBehavior {
 
         $data[$alias]['custom_table_cells'] = $tableCells;
         $requestData = $data->getArrayCopy();
-        $entity = $this->_table->patchEntity($entity, $requestData);
+        $entity = $this->_table->patchEntity($entity, $requestData, $patchOptions);
     }
 }

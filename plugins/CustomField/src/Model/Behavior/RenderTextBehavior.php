@@ -29,7 +29,7 @@ class RenderTextBehavior extends RenderBehavior {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
             }
             $value .= $form->input($fieldPrefix.".text_value", $options);
-            $value .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $fieldId]);
+            $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
         }
 
         $event->stopPropagation();
