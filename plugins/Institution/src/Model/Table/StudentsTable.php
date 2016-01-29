@@ -34,7 +34,6 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Excel', [
@@ -67,6 +66,7 @@ class StudentsTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -651,6 +651,7 @@ class StudentsTable extends AppTable {
 					$sectionData['student_id'] = $entity->student_id;
 					$sectionData['education_grade_id'] = $entity->education_grade_id;
 					$sectionData['institution_section_id'] = $entity->class;
+					$sectionData['student_status_id'] = $entity->student_status_id;
 					$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
 					$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
 				}
