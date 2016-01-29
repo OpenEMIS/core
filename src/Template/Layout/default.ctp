@@ -49,12 +49,12 @@
 			</div>
 		</bg-pane>
 		
-		<bg-pane class="right-pane pane-container" min-size-p="60">	
+		<bg-pane class="right-pane pane-container" min-size-p="60">
 			<div class="load-content">
 				<div class="loader-text">
 					<i class="fa kd-openemis"></i>
 					<div class="loader lt-ie9"></div>
-					<p>Loading...</p>
+					<p><?= __('Loading...') ?></p>
 				</div>
 			</div>		
 			<?php 
