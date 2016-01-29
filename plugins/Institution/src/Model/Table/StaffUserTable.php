@@ -91,7 +91,11 @@ class StaffUserTable extends UserTable {
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'add') {
+		if ($action == 'view') {
+			if ($toolbarButtons->offsetExists('back')) {
+				unset($toolbarButtons['back']);
+			}
+		} else if ($action == 'add') {
 			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
