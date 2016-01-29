@@ -52,7 +52,7 @@ class RenderCheckboxBehavior extends RenderBehavior {
                     $html .= '<label class="selection-label">'. $value .'</label>';
                 $html .= '</div>';
             }
-            $html .= $form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $fieldId]);
+            $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
 
             $attr['output'] = $html;
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
@@ -62,11 +62,27 @@ class RenderCheckboxBehavior extends RenderBehavior {
         return $value;
     }
 
+    public function onSetCheckboxValues(Event $event, Entity $entity, ArrayObject $values, ArrayObject $settings) {
+        $fieldKey = $settings['fieldKey'];
+        $fieldRecord = $settings['fieldRecord'];
+
+        $fieldId = $fieldRecord->{$fieldKey};
+        $checkboxValues = [$fieldRecord->number_value];
+        if (array_key_exists($fieldId, $values)) {
+            if (is_array($values[$fieldId]['number_value'])) {
+                $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
+            }
+        }
+
+        $settings['fieldValue']['number_value'] = $checkboxValues;
+    }
+
     public function onSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $alias = $this->_table->alias();
         $values = $data[$alias]['custom_field_values'];
         $fieldKey = $settings['fieldKey'];
         $recordKey = $settings['recordKey'];
+        $patchOptions = $settings['patchOptions'];
 
         $count = 0;
         $checkboxes = [];
@@ -105,6 +121,6 @@ class RenderCheckboxBehavior extends RenderBehavior {
         }
 
         $requestData = $data->getArrayCopy();
-        $entity = $this->_table->patchEntity($entity, $requestData);
+        $entity = $this->_table->patchEntity($entity, $requestData, $patchOptions);
     }
 }

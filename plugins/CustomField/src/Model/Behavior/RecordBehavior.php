@@ -16,6 +16,7 @@ class RecordBehavior extends Behavior {
 		'events' => [
 			'ControllerAction.Model.viewEdit.beforeQuery'	=> ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
 			'ControllerAction.Model.view.afterAction'		=> ['callable' => 'viewAfterAction', 'priority' => 100],
+			'ControllerAction.Model.edit.onInitialize'		=> ['callable' => 'editOnInitialize', 'priority' => 100],
 			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
             'ControllerAction.Model.add.beforeSave' 		=> ['callable' => 'addBeforeSave', 'priority' => 100],
             'ControllerAction.Model.edit.beforeSave' 		=> ['callable' => 'editBeforeSave', 'priority' => 100],
@@ -100,11 +101,17 @@ class RecordBehavior extends Behavior {
     		$errors = $entity->errors();
 
 			if (empty($errors)) {
+				$patchOptions['associated'] = [
+					'CustomFieldValues' => ['validate' => false],
+					'CustomTableCells' => ['validate' => false]
+				];
+
 				$settings = new ArrayObject([
 					'fieldKey' => $this->config('fieldKey'),
 					'tableColumnKey' => $this->config('tableColumnKey'),
 					'tableRowKey' => $this->config('tableRowKey'),
-					'recordKey' => $this->config('recordKey')
+					'recordKey' => $this->config('recordKey'),
+					'patchOptions' => $patchOptions
 				]);
 
 				$event = $model->dispatchEvent('Render.onSave', [$entity, $data, $settings], $model);
@@ -258,6 +265,7 @@ class RecordBehavior extends Behavior {
 	}
 
 	public function setupCustomFields($entity) {
+		$model = $this->_table;
 		$query = $this->getCustomFieldQuery($entity);
 
 		if (!is_null($query)) {
@@ -266,79 +274,90 @@ class RecordBehavior extends Behavior {
 			$order = 0;
 			$fieldOrder = [];
 			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-			foreach ($this->_table->fields as $fieldName => $field) {
+			foreach ($model->fields as $fieldName => $field) {
 				if (!in_array($fieldName, $ignoreFields)) {
 					$order = $field['order'] > $order ? $field['order'] : $order;
 					$fieldOrder[$field['order']] = $fieldName;
 				}
 			}
 
-			$values = [];
-			if ($this->_table->request->is(['get'])) {
-				if (isset($entity->id)) {
-					if ($entity->has('custom_field_values')) {
-						foreach ($entity->custom_field_values as $key => $obj) {
-							$fieldId = $obj->{$this->config('fieldKey')};
-							$numberValue = $obj->number_value;
-							
-							if (strtolower($obj['custom_field']->field_type) == 'checkbox') {
-								$numberValue = [$obj->number_value];
-							}
+			$values = new ArrayObject([]);
+			$cells = new ArrayObject([]);
+			$settings = new ArrayObject([
+				'fieldKey' => $this->config('fieldKey')
+			]);
 
-							if (array_key_exists($fieldId, $values)) {
-								if (is_array($numberValue)) {
-									$values[$fieldId]['number_value'] = array_merge($values[$fieldId]['number_value'], $numberValue);
-								}
-							} else {
-								$values[$fieldId] = [
-									'id' => $obj->id,
-									'text_value' => $obj->text_value,
-									'number_value' => $numberValue,
-									'textarea_value' => $obj->textarea_value,
-									'date_value' => $obj->date_value,
-									'time_value' => $obj->time_value
-								];
-							}
-						}
-					}
-				}
-			}
+	        if ($model->request->is(['get'])) {
+	            // onInitialize
+	            if (isset($entity->id)) {
+	            	if ($entity->has('custom_field_values')) {
+	            		foreach ($entity->custom_field_values as $key => $obj) {
+	            			$fieldId = $obj->{$this->config('fieldKey')};
+
+	            			$settings['fieldRecord'] = $obj;
+							$settings['fieldValue'] = [
+								'id' => $obj->id,
+								'text_value' => $obj->text_value,
+								'number_value' => $obj->number_value,
+								'textarea_value' => $obj->textarea_value,
+								'date_value' => $obj->date_value,
+								'time_value' => $obj->time_value
+							];
+
+	            			$fieldType = Inflector::camelize(strtolower($obj['custom_field']->field_type));
+	            			$event = $model->dispatchEvent('Render.onSet'.$fieldType.'Values', [$entity, $values, $settings], $model);
+							if ($event->isStopped()) { return $event->result; }
+
+							$values[$fieldId] = $settings['fieldValue'];
+	            		}
+	            	}
+
+	            	if ($entity->has('custom_table_cells')) {
+	            		foreach ($entity->custom_table_cells as $key => $obj) {
+	            			$fieldId = $obj->{$this->config('fieldKey')};
+	            			$rowId = $obj->{$this->config('tableRowKey')};
+	            			$columnId = $obj->{$this->config('tableColumnKey')};
+
+	            			$cells[$fieldId][$rowId][$columnId] = $obj['text_value'];
+	            		}
+	            	}
+	            }
+	        } else if ($model->request->is(['post', 'put'])) {
+	        	// onPost
+	        }
+
+	        $valuesArray = $values->getArrayCopy();
+	        $cellsArray = $cells->getArrayCopy();
 
 			foreach ($customFields as $key => $obj) {
 				$customField = $obj->custom_field;
 
 				$fieldType = $customField->field_type;
-				$fieldLabel = $customField->name;
-				$fieldAttr = ['label' => $fieldLabel, 'key' => $key];
 				$fieldName = "custom_".$key."_field";
-				$fieldOrder[++$order] = $fieldName;
-				$fieldPrefix = $this->_table->alias() . '.custom_field_values.' . $key;
 				$valueClass = strtolower($fieldType) == 'table' || strtolower($fieldType) == 'student_list' ? 'table-full-width' : '';
 
-				if ($customField->is_mandatory == 1) {
-					$fieldAttr['required'] = 'required';
-				}
+				$attr = [
+					'type' => 'custom_'. strtolower($fieldType),
+					'attr' => [
+						'label' => $customField->name,
+						'key' => $key,
+						'fieldKey' => $this->config('fieldKey')
+					],
+					'customField' => $customField,
+					'customFieldValues' => $valuesArray,
+					'customTableCells' => $cellsArray,
+					'valueClass' => $valueClass
+				];
 
-				$this->_table->ControllerAction->field($fieldName, [
-		            'type' => 'custom_'. strtolower($fieldType),
-		            'visible' => true,
-		            'field' => $fieldName,
-		            'attr' => $fieldAttr,
-		            // 'recordKey' => $this->config('recordKey'),
-		            'fieldKey' => $this->config('fieldKey'),
-		            // 'tableColumnKey' => $this->config('tableColumnKey'),
-		            // 'tableRowKey' => $this->config('tableRowKey'),
-		            'customField' => $customField,
-		            'customFieldValues' => $values,
-		            'valueClass' => $valueClass
-		        ]);
+				$model->ControllerAction->field($fieldName, $attr);
+				$fieldOrder[++$order] = $fieldName;
 			}
 
 			foreach ($ignoreFields as $key => $field) {
 				$fieldOrder[++$order] = $field;
 			}
 			ksort($fieldOrder);
-			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
+			$model->ControllerAction->setFieldOrder($fieldOrder);
 		}
 	}
 }
