@@ -35,6 +35,13 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 	}
 
+	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+		if (empty($settings['entity']->user)) {
+			$entity = $settings['entity'];
+			return $this->delete($entity);
+		}
+	}
+
 	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
 		// Setting request data and modifying fetch condition
 		$requestData = json_decode($settings['process']['params']);
