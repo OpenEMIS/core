@@ -10,11 +10,16 @@ if (!empty($homeUrl)) {
 <header>
 	<nav class="navbar navbar-fixed-top">
 		<div class="navbar-left">
+			<div class="menu-handler">
+				<button class="menu-toggle" type="button">
+					<i class="fa fa-bars"></i>
+				</button>
+			</div>
 			<a href="<?= $this->Url->build($homeUrl) ?>">
-				<span class="brand-logo">
+				<div class="brand-logo">
 					<i class="kd-openemis"></i>
 					<h1><?php echo $_productName ?></h1>
-				</span>
+				</div>
 			</a>
 		</div>
 		<?php if (!isset($headerSideNav) || (isset($headerSideNav) && $headerSideNav)) : ?>
