@@ -1,7 +1,5 @@
 <?php
-$session = $this->request->session();
-$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
-$url = '';
+$url = '#';
 if (!empty($homeUrl)) {
 	$url = $this->Url->build($homeUrl);
 }
@@ -15,7 +13,7 @@ if (!empty($homeUrl)) {
 					<i class="fa fa-bars"></i>
 				</button>
 			</div>
-			<a href="<?= $this->Url->build($homeUrl) ?>">
+			<a href="<?= $url ?>">
 				<div class="brand-logo">
 					<i class="kd-openemis"></i>
 					<h1><?php echo $_productName ?></h1>
