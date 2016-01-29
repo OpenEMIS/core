@@ -42,4 +42,19 @@ UPDATE `field_option_values` as `fov` set `fov`.`visible`=1 WHERE `fov`.`field_o
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2506';
 
+UPDATE security_functions SET _execute = '' WHERE id = 1027;
+
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2465';
+
+--
+-- POCOR-2497
+--
+
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'StaffSubjects.index' WHERE `security_functions`.`id` = 7023;
+DELETE FROM `security_functions` WHERE `id` IN ('7045', '7046');
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2497';
+
 UPDATE config_items SET value = '3.4.11' WHERE code = 'db_version';
