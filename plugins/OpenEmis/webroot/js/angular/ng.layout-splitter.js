@@ -1,5 +1,7 @@
+//Layout Splitter v.1.0.0
+
 var sheet = (function() {
-// Create the <style> tag
+    // Create the <style> tag
     var style = document.createElement("style");
 
     // Add a media (and/or media query) here if you'd like!
@@ -19,13 +21,14 @@ var sheet = (function() {
 
 pos = localStorage.lastHandlerPos;
 
-if(typeof pos == 'undefined'){
+if (typeof pos == 'undefined') {
     pos = window.innerWidth * 0.1;
 }
 // console.log(window.innerWidth);
-sheet.insertRule('.left-pane{width:'+ pos + 'px;}', 0); 
+sheet.insertRule('.left-pane{width:' + pos + 'px;}', 0);
 
 
+// Angular Splitter
 angular.module('bgDirectives', [])
     .directive('bgSplitter', function() {
         return {
@@ -63,59 +66,72 @@ angular.module('bgDirectives', [])
 
                 pane1.elem.after(handler);
 
-                if (!angular.isUndefined(localStorage.lastHandlerPos)) {
+                if (!angular.isUndefined(localStorage.lastHandlerPos) && window.innerWidth > 1024) {
                     pos = localStorage.lastHandlerPos;
 
                     handler.css(affectedDir, pos + 'px');
                     pane1.elem.css('width', pos + 'px');
                     pane2.elem.css(affectedDir, pos + 'px');
                 }
+                else{
+                    handler.css(affectedDir, '0px');
+                    pane1.elem.css('width', pos + 'px');
+                    pane2.elem.css(affectedDir, '0px');
+                }
 
-                element.bind('mousemove', function(ev) {
-                    if (!drag) return;
+                enableDrag();
 
-                    var bounds = element[0].getBoundingClientRect();
-                    var pos = 0;
+                function enableDrag() {
+                    element.bind('mousemove', function(ev) {
+                        if (!drag) return;
 
-                    $.each($('.highchart'), function(key, group) {
-                        $(group).highcharts().reflow();
+                        var bounds = element[0].getBoundingClientRect();
+                        var pos = 0;
+
+                        $.each($('.highchart'), function(key, group) {
+                            $(group).highcharts().reflow();
+                        });
+
+                        if (vertical) {
+
+                            var height = bounds.bottom - bounds.top;
+                            pos = ev.clientY - bounds.top;
+
+                            if (pos < pane1Min) return;
+                            if (height - pos < pane2Min) return;
+
+                            handler.css('top', pos + 'px');
+                            pane1.elem.css('height', pos + 'px');
+                            pane2.elem.css('top', pos + 'px');
+
+                        } else {
+                            var width = bounds.right - bounds.left;
+
+                            if (bodyDir == 'ltr') {
+                                pos = ev.clientX - bounds.left;
+                            } else {
+                                pos = bounds.right - ev.clientX;
+                            }
+
+                            if (pos < pane1Min) return;
+
+                            if (bodyDir == 'ltr') {
+                                if (width - pos < pane2Min) return;
+                            } else {
+                                if (pos > width - pane2Min) return;
+                            }
+
+                            handler.css(affectedDir, pos + 'px');
+                            pane1.elem.css('width', pos + 'px');
+                            pane2.elem.css(affectedDir, pos + 'px');
+                            localStorage.lastHandlerPos = pos;
+                        }
                     });
+                }
 
-                    if (vertical) {
-
-                        var height = bounds.bottom - bounds.top;
-                        pos = ev.clientY - bounds.top;
-
-                        if (pos < pane1Min) return;
-                        if (height - pos < pane2Min) return;
-
-                        handler.css('top', pos + 'px');
-                        pane1.elem.css('height', pos + 'px');
-                        pane2.elem.css('top', pos + 'px');
-
-                    } else {
-                        var width = bounds.right - bounds.left;
-
-                        if (bodyDir == 'ltr') {
-                            pos = ev.clientX - bounds.left;
-                        } else {
-                            pos = bounds.right - ev.clientX;
-                        }
-
-                        if (pos < pane1Min) return;
-
-                        if (bodyDir == 'ltr') {
-                            if (width - pos < pane2Min) return;
-                        } else {
-                            if (pos > width - pane2Min) return;
-                        }
-
-                        handler.css(affectedDir, pos + 'px');
-                        pane1.elem.css('width', pos + 'px');
-                        pane2.elem.css(affectedDir, pos + 'px');
-                        localStorage.lastHandlerPos = pos;
-                    }
-                });
+                function disableDrag(){
+                    element.unbind('mousemove');
+                }
 
                 handler.bind('mousedown', function(ev) {
                     ev.preventDefault();
@@ -124,6 +140,26 @@ angular.module('bgDirectives', [])
 
                 angular.element(document).bind('mouseup', function(ev) {
                     drag = false;
+                });
+
+                angular.element(window).bind('resize', function(ev) {
+                    var screenWidth = window.innerWidth;
+
+                    if (screenWidth <= 1024) {
+                        console.log('smaller than 1024');
+                        disableDrag();
+                        handler.css(affectedDir, '0px');
+                        pane1.elem.css('width', pos + 'px');
+                        pane2.elem.css(affectedDir, '0px');
+                    } else {
+                        enableDrag();
+                        pos = localStorage.lastHandlerPos;
+
+                        handler.css(affectedDir, pos + 'px');
+                        pane1.elem.css('width', pos + 'px');
+                        pane2.elem.css(affectedDir, pos + 'px');
+                    }
+
                 });
             }
         };
