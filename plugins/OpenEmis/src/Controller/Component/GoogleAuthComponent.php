@@ -218,7 +218,6 @@ class GoogleAuthComponent extends Component {
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
-                $this->session->write('Google.remoteFail', true);
                 $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
 				return false;
 			}
