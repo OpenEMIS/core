@@ -1,7 +1,7 @@
 /* 
-Core Overwrites: v.1.0.1
+Core Overwrites: v.1.0.2
 */
-.body-wrapper{background-image:url(../../../img/core-login-bg.jpg)!important}.tooltip-blue .tooltip{margin-left:53px!important}tbody tr:first-child .tooltip-blue .tooltip{margin-top:20px!important;margin-left:80px!important}.rtl .tooltip-blue .tooltip{margin-left:-50px!important}.rtl tbody tr:first-child .tooltip-blue .tooltip{margin-left:-80px!important}@media only screen and (max-width:800px){.pagination-wrapper .counter{clear:both!important}}
+.body-wrapper{background-image:url(../../../img/core-login-bg.jpg)!important}.tooltip-blue .tooltip{margin-left:53px!important}tbody tr:first-child .tooltip-blue .tooltip{margin-top:20px!important;margin-left:80px!important}.rtl .tooltip-blue .tooltip{margin-left:-50px!important}.rtl tbody tr:first-child .tooltip-blue .tooltip{margin-left:-80px!important}.tooltip-inner{max-width:800px!important}@media only screen and (max-width:800px){.pagination-wrapper .counter{clear:both!important}}a.btn-red:hover,a.btn-green:hover{text-decoration:none}
 /* 
 Core Theme: v.1.0.0
 Product Color: #6699CC
