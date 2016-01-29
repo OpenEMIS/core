@@ -35,6 +35,18 @@ tbody tr:first-child .tooltip-blue .tooltip {
     max-width: 800px !important;
 }
 
+@media only screen and (max-width: 1024px) {
+    .tooltip-inner {
+        max-width: 450px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .tooltip-inner {
+        max-width: 250px !important;
+    }
+}
+
 
 /* Pagination */
 
