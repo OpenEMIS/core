@@ -1,9 +1,9 @@
 --
--- PHPOE-2497
+-- POCOR-2497
 --
 
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-2497', NOW());
+INSERT INTO `db_patches` VALUES ('POCOR-2497', NOW());
 
 -- security_functions
 UPDATE `security_functions` SET `_view` = 'StaffClasses.index' WHERE `security_functions`.`id` = 7023;
