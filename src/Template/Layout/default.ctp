@@ -40,7 +40,7 @@
 	
 	<?=  $this->element('OpenEmis.header'); ?>
 
-	<bg-splitter orientation="horizontal" id="rightPane" class="pane-wrapper">
+	<bg-splitter orientation="horizontal" class="pane-wrapper">
 		<bg-pane class="left-pane">
 			<div class="pane-container">
 				<?php 
