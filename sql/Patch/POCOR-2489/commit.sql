@@ -1,9 +1,9 @@
 --
--- PHPOE-2489
+-- POCOR-2489
 --
 
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-2489', NOW());
+INSERT INTO `db_patches` VALUES ('POCOR-2489', NOW());
 
 -- security_functions
 INSERT INTO `security_functions` 
