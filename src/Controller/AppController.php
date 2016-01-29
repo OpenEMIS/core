@@ -36,7 +36,8 @@ class AppController extends Controller {
 
 		// Custom Helper
 		'ControllerAction.ControllerAction',
-		'OpenEmis.Navigation'
+		'OpenEmis.Navigation',
+		'OpenEmis.Resource'
 	];
 
 	/**
@@ -105,7 +106,7 @@ class AppController extends Controller {
 		parent::beforeFilter($event);
 		$session = $this->request->session();
 		
-		$theme = 'OpenEmis.themes/layout.core';
+		$theme = 'OpenEmis.themes/core/layout.min';
 
 		$session = $this->request->session();
 		if (!$session->check('System.home')) {
