@@ -76,6 +76,7 @@ class AuthenticationBehavior extends Behavior {
 						$this->_table->request->data[$this->alias]['value'] = $value;
 					}
 					if ($value != 'Local') {
+						$this->_table->addBehavior($value.'Authentication');
 						$this->_table->ControllerAction->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 					}
 				}
@@ -110,21 +111,7 @@ class AuthenticationBehavior extends Behavior {
 		}
 	}
 
-	private function googleAuthentication(&$attribute) {
-		$attribute['client_id'] = ['name' => 'Client ID'];
-		$attribute['client_secret'] = ['name' => 'Client Secret'];
-		$attribute['redirect_uri'] = ['name' => 'Redirect URI'];
-		$attribute['hd'] = ['name' => 'Hosted Domain'];
-	}
-
-	private function googleModifyValue($key, $attributeValue) {
-		if ($key == 'redirect_uri' && empty($attributeValue)) {
-			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		}
-		return false;
-	}
-
-	private function processAuthentication(&$attribute, $authenticationType) {
+	protected function processAuthentication(&$attribute, $authenticationType) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
 		$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
 		$attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
@@ -142,45 +129,6 @@ class AuthenticationBehavior extends Behavior {
 			}
 			$attribute[$key]['value'] = $attributeValue;
 		}
-	}
-
-	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
-		switch ($action){
-			case "view":			
-				$authenticationType = $this->_table->request->data[$this->alias]['value'];
-				$attribute = [];
-				$methodName = strtolower($authenticationType).'Authentication';
-				if (method_exists($this, $methodName)) {
-					$this->$methodName($attribute);
-					$this->processAuthentication($attribute, $authenticationType);
-				}
-
-				$tableHeaders = [__('Attribute Name'), __('Value')];
-				$tableCells = [];
-				foreach ($attribute as $value) {
-					$row = [];
-					$row[] = $value['name'];
-					$row[] = $value['value'];
-					$tableCells[] = $row;
-				}
-				$attr['tableHeaders'] = $tableHeaders;
-		    	$attr['tableCells'] = $tableCells;
-				break;
-
-			case "edit":
-				$authenticationType = $this->_table->request->data[$this->alias]['value'];
-				$attribute = [];
-				$methodName = strtolower($authenticationType).'Authentication';
-				if (method_exists($this, $methodName)) {
-					$this->$methodName($attribute);
-					$this->processAuthentication($attribute, $authenticationType);
-				}
-
-				$attr = $attribute;
-				break;
-
-		}
-		return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
