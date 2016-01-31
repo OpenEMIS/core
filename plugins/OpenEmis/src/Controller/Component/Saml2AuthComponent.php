@@ -24,51 +24,41 @@ class Saml2AuthComponent extends Component {
         $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
         $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
 
-        $settings['sp'] = [
-            'entityId' => $this->spBaseUrl.'/openemis-phpoe',
+        $AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+        $samlAttributes = $AuthenticationTypeAttributesTable->find('list', [
+                'groupField' => 'authentication_type',
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2'])
+            ->hydrate(false)
+            ->toArray();
+
+        $setting['sp'] = [
+            'entityId' => $samlAttributes['Saml2']['sp_entity_id'],
             'assertionConsumerService' => [
-                'url' => $returnUrl,
+                'url' => $samlAttributes['Saml2']['sp_acs'],
             ],
             'singleLogoutService' => [
-                'url' => $logout,
+                'url' => $samlAttributes['Saml2']['sp_slo'],
             ],
-            'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:emailAddress',
+            'NameIDFormat' => $samlAttributes['Saml2']['sp_name_id_format'],
         ];
 
-        $settings['idp'] = [
-            'entityId' => 'https://app.onelogin.com/saml/metadata/513327',
+        $setting['idp'] = [
+            'entityId' => $samlAttributes['Saml2']['idp_entity_id'],
                 'singleSignOnService' => [
-                    'url' => 'https://app.onelogin.com/trust/saml2/http-post/sso/513327',
+                    'url' => $samlAttributes['Saml2']['idp_sso'],
                 ],
                 'singleLogoutService' => [
-                    'url' => 'https://app.onelogin.com/trust/saml2/http-redirect/slo/513327',
+                    'url' => $samlAttributes['Saml2']['idp_slo'],
                 ],
-                'x509cert' =>   'MIIELDCCAxSgAwIBAgIUZFHHsPaL+Z7p7BKAa48gqrLjmPYwDQYJKoZIhvcNAQEF
-                                BQAwXzELMAkGA1UEBhMCVVMxGDAWBgNVBAoMD0tvcmQgSVQgUHRlIEx0ZDEVMBMG
-                                A1UECwwMT25lTG9naW4gSWRQMR8wHQYDVQQDDBZPbmVMb2dpbiBBY2NvdW50IDc3
-                                MDk3MB4XDTE2MDEyODA5MjEzMloXDTIxMDEyOTA5MjEzMlowXzELMAkGA1UEBhMC
-                                VVMxGDAWBgNVBAoMD0tvcmQgSVQgUHRlIEx0ZDEVMBMGA1UECwwMT25lTG9naW4g
-                                SWRQMR8wHQYDVQQDDBZPbmVMb2dpbiBBY2NvdW50IDc3MDk3MIIBIjANBgkqhkiG
-                                9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyMi+YL4cNVzrEI93vN5ZDV/ruHJN5rNHIq0d
-                                HAe48QbP81quask9da3gWZtqVTKeVlXHnOBx0kwoJpE66+Xo/dMa2nrgaf1c0rqA
-                                1JtwvG6CiX8TsA/W/6oTucnK2NvG7ZJBN664YbfPcWEtsv9Zp68m23kHQO6DV1HJ
-                                ZW6u53nxaDDo3uBrBJBZWDpwM273E2GpXrEQNHiJ7DrSdof3SI7nMPCYqFjEKpec
-                                IYUSPRUedOG1medxi4WS48vJHXRv38Vgw20mE9CH56EsROXmSwyZhh7x+BknA1NF
-                                Bnt1/k6bsDoVYbm0Q+MnqJby9YCGXjbHpoF3+hhTSwB699ml8wIDAQABo4HfMIHc
-                                MAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFK7EN5it2oKKGpMyXv70AI08ueixMIGc
-                                BgNVHSMEgZQwgZGAFK7EN5it2oKKGpMyXv70AI08ueixoWOkYTBfMQswCQYDVQQG
-                                EwJVUzEYMBYGA1UECgwPS29yZCBJVCBQdGUgTHRkMRUwEwYDVQQLDAxPbmVMb2dp
-                                biBJZFAxHzAdBgNVBAMMFk9uZUxvZ2luIEFjY291bnQgNzcwOTeCFGRRx7D2i/me
-                                6ewSgGuPIKqy45j2MA4GA1UdDwEB/wQEAwIHgDANBgkqhkiG9w0BAQUFAAOCAQEA
-                                YAcnP4wsR7Ns28ZDKsP/I5byWeIWy5lFRcg4Jkk7MSBMoThNM6QaTg5m6Tb98LLT
-                                FFGU8RlWQ7GnYukT0pvCwjM+lfj4pn3ebR5MAo1hL/mnLYAo3WVVYivmZZssztgr
-                                16+whEFQjOEHcWL0IU+Qb1ONINFtfBWPbMrfzNGAImXaeU9Kn5GqGma3NGlbYCpQ
-                                VcH1yt5CH6AvtK6POAGe4tLCgDAvL4NyVxXegmH5eaCCBE8Ku/VRJr6QxxfrGZOt
-                                UAKibTQBd+KJUM2RMgMCYBs+fRdm/bH1cKVJKy3Oxo3HmleD2l2NZLk04nLKPl2u
-                                FTCQmT1aJppEydYQArg+Mg==',
+                'x509cert' =>   $samlAttributes['Saml2']['idp_x509cert'],
         ];
 
-        $this->auth = new \OneLogin_Saml2_Auth($settings);
+        $this->userNameField = $samlAttributes['Saml2']['saml_username_mapping'];
+
+        $this->auth = new \OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
     }
 
@@ -94,10 +84,6 @@ class Saml2AuthComponent extends Component {
     }
 
     public function startup(Event $event) {
-        $url = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-        $params = [
-            'ReturnTo' => $url,
-        ];
         $action = $this->request->params['action'];
         if ($action == 'login') {
             $this->auth->login();
@@ -113,19 +99,19 @@ class Saml2AuthComponent extends Component {
         }
 	}
 
-    private function processResponse() {
+    public function processResponse() {
         $this->auth->processResponse();
     }
 
-    private function getErrors() {
+    public function getErrors() {
         return $this->auth->getErrors();
     }
 
-    private function isAuthenticated() {
+    public function isAuthenticated() {
         return $this->auth->isAuthenticated();
     }
 
-    private function getAttributes() {
+    public function getAttributes() {
         return $this->auth->getAttributes();
     }
 
