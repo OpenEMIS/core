@@ -85,7 +85,8 @@ class Saml2AuthComponent extends Component {
 
     public function startup(Event $event) {
         $action = $this->request->params['action'];
-        if ($action == 'login') {
+        $session = $this->request->session();
+        if ($action == 'login' && !$session->read('Auth.fallback')) {
             $this->auth->login();
         }
     }
@@ -118,11 +119,15 @@ class Saml2AuthComponent extends Component {
     public function authenticate(Event $event, ArrayObject $extra) {
     	if ($this->request->is('post')) {
             if ($this->idpLogin()) {
-                $userData = $this->getAttributes();         
-                $emailArray = explode('@', $userData['User.email'][0]);
-                $userName = $emailArray[0];
-                $this->session->write('Saml2.userAttribute', $this->getAttributes());
-                return $this->checkLogin($userName);
+                $userData = $this->getAttributes();
+                if (isset($userData[$this->userNameField][0])) {
+                    $userName = $userData[$this->userNameField][0];
+                    $this->session->write('Saml2.userAttribute', $userData);
+                    return $this->checkLogin($userName);
+                } else {
+                    $this->session->write('Auth.fallback', true);
+                    return false;
+                }
             } else {
                 $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
                 return false;
