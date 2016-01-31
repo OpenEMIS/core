@@ -16,10 +16,22 @@ class Saml2Authenticate extends BaseAuthenticate
 
         if ($session->check('Saml2.userAttribute')) {
             $userAttribute = $session->read('Saml2.userAttribute');
-            $email = $userAttribute['User.email'][0];
-            $emailArray = explode('@', $email);
-            $userName = $emailArray[0];
-            $hostedDomain = $emailArray[1];
+            $AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+            $userNameField = $AuthenticationTypeAttributesTable->find()
+                ->where([
+                    $AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
+                    $AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'saml_username_mapping'
+                ])
+                ->first()
+            if (isset($userNameField['value'])) {
+                $userNameField = $userNameField['value'];
+            } else {
+                return false;
+            }
+            $email = $userAttribute[$userNameField][0];
+            // $emailArray = explode('@', $email);
+            // $userName = $emailArray[0];
+            // $hostedDomain = $emailArray[1];
             $isFound = $this->_findUser($userName);
             if ($isFound) {
                 return $isFound;
