@@ -33,9 +33,9 @@ class Saml2AuthenticationBehavior extends AuthenticationBehavior {
 		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
 		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
 		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500];
-		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text'];
-		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text'];
-		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text'];
+		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text', 'readonly' => true];
+		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
+		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
 		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
 		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text'];
@@ -47,7 +47,11 @@ class Saml2AuthenticationBehavior extends AuthenticationBehavior {
 	}
 
 	public function saml2ModifyValue($key, $attributeValue) {
-		if ($key == 'redirect_uri' && empty($attributeValue)) {
+		if ($key == 'sp_entity_id') {
+			return Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+		} else if ($key == 'sp_slo') {
+			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
+		} else if ($key == 'sp_acs') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
 		}
 		return false;
