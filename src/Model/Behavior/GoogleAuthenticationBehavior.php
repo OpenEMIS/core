@@ -31,7 +31,7 @@ class GoogleAuthenticationBehavior extends AuthenticationBehavior {
 	public function googleAuthentication(&$attribute) {
 		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
 		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
-		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text'];
+		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
 		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text'];
 	}
 
