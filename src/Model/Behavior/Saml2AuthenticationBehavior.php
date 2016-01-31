@@ -34,7 +34,7 @@ class Saml2AuthenticationBehavior extends AuthenticationBehavior {
 		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
 		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500];
 		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text'];
-		$attribute['sp_sso'] = ['label' => 'Service Provider - Single Signon Service', 'type' => 'text'];
+		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text'];
 		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text'];
 		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
 		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
