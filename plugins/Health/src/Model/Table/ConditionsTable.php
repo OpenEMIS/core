@@ -11,5 +11,11 @@ class ConditionsTable extends AppTable {
 
 		$this->hasMany('Families', ['className' => 'Health.Families', 'foreignKey' => 'health_condition_id']);
 		$this->hasMany('Histories', ['className' => 'Health.Histories', 'foreignKey' => 'health_condition_id']);
+
+		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('ControllerAction.ControllerAction', [
+			'actions' => ['remove' => 'transfer'],
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+		]);
 	}
 }
