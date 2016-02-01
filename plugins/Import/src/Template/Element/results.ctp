@@ -41,6 +41,14 @@ if(!empty($attr['results']['passedExcelFile'])) {
 if(!empty($attr['results']['failedExcelFile'])):
 ?>
 
+<style>
+.tooltip-red .tooltip-inner{max-width: 1000px;min-width:300px;padding-left:30px;text-align:left;display: table;}
+.tooltip-red .tooltip-inner ul {
+    display: table-cell;
+    vertical-align: middle;
+}
+</style>
+
 <div class="table-wrapper">
 	<div class="table-responsive">
 		<table class="table">
@@ -62,7 +70,7 @@ if(!empty($attr['results']['failedExcelFile'])):
 				?>
 				<tr>
 					<td class="tooltip-red">
-						<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
+						<i class="fa fa-exclamation-circle fa-lg icon-red" data-html="true" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
 					</td>
 					<td><?= $row['row_number']; ?></td>
 					<?php 
