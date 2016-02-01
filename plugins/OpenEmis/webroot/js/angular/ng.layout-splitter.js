@@ -73,10 +73,14 @@ angular.module('bgDirectives', [])
                     pane1.elem.css('width', pos + 'px');
                     pane2.elem.css(affectedDir, pos + 'px');
                 }
-                else{
-                    handler.css(affectedDir, '15%');
-                    pane1.elem.css('width', '15%');
-                    pane2.elem.css(affectedDir, '15%');
+                else {
+                    var screenWidth = window.innerWidth;
+
+                    if (screenWidth <= 1024) {
+                        handler.css(affectedDir, '0px');
+                        pane1.elem.css('width', pos + 'px');
+                        pane2.elem.css(affectedDir, '0px');
+                    }
                 }
 
                 enableDrag();
@@ -155,9 +159,9 @@ angular.module('bgDirectives', [])
                         enableDrag();
                         pos = localStorage.lastHandlerPos;
 
-                        handler.css(affectedDir, '15%');
-                        pane1.elem.css('width', '15%');
-                        pane2.elem.css(affectedDir, '15%');
+                        handler.css(affectedDir, pos + 'px');
+                        pane1.elem.css('width', pos + 'px');
+                        pane2.elem.css(affectedDir, pos + 'px');
                     }
 
                 });
