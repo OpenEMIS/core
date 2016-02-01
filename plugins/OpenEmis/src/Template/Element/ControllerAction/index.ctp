@@ -13,7 +13,6 @@ if ($displayAction) {
 	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
 }
 if ($displayReorder) {
-	echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
 	echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
 	$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 }
