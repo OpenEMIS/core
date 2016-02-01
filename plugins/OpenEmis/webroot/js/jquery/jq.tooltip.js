@@ -57,11 +57,11 @@ var Tooltip = {
             if (bodyDir == 'ltr') {
                 tooltipArrow.css('border-right-color', '#CC5C5C');
                 //Tooltip Inner Container Color
-                tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px 15px 5px 15px');
+                tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px');
             } else {
                 tooltipArrow.css('border-left-color', '#CC5C5C');
                 //Tooltip Inner Container Color
-                tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'right').css('padding', '15px 15px 5px 15px');
+                tooltipInner.css('background-color', '#CC5C5C').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'right').css('padding', '15px');
             }
         });
 
@@ -78,12 +78,13 @@ var Tooltip = {
             //LTR & RTL different border color
             if (bodyDir == 'ltr') {
                 tooltipArrow.css('border-right-color', '#5C82CC');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#5C82CC').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px');
             } else {
                 tooltipArrow.css('border-left-color', '#5C82CC');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#5C82CC').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'right').css('padding', '15px');
             }
-
-            //Tooltip Inner Container Color
-            tooltipInner.css('background-color', '#5C82CC').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)');
         });
 
         //If Button Green Color, Tooltip Change to Green
@@ -99,12 +100,13 @@ var Tooltip = {
             //LTR & RTL different border color
             if (bodyDir == 'ltr') {
                 tooltipArrow.css('border-right-color', '#77B576');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#77B576').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px');
             } else {
                 tooltipArrow.css('border-left-color', '#77B576');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#77B576').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'right').css('padding', '15px');
             }
-
-            //Tooltip Inner Container Color
-            tooltipInner.css('background-color', '#77B576').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)');
         });
 
         //If Button Orange Color, Tooltip Change to Orange
@@ -120,12 +122,13 @@ var Tooltip = {
             //LTR & RTL different border color
             if (bodyDir == 'ltr') {
                 tooltipArrow.css('border-right-color', '#E6BA64');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#E6BA64').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'left').css('padding', '15px');
             } else {
                 tooltipArrow.css('border-left-color', '#E6BA64');
+                //Tooltip Inner Container Color
+                tooltipInner.css('background-color', '#E6BA64').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)').css('text-align', 'right').css('padding', '15px');
             }
-
-            //Tooltip Inner Container Color
-            tooltipInner.css('background-color', '#E6BA64').css('box-shadow', '0 2px 3px rgba(0,0,0,0.5)');
         });
     }
 
