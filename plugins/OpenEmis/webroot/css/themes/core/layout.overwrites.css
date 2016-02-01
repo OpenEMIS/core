@@ -90,3 +90,10 @@ a.btn-green:hover {
 .rtl .split-panes.horizontal > .split-pane2 {
     right: 10%;
 }
+
+/* IE9 */
+
+.rtl .input-select-wrapper:before {
+    left: 22px !important;
+    top: 2px;    
+}
