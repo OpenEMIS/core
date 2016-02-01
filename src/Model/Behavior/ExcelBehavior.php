@@ -224,6 +224,9 @@ class ExcelBehavior extends Behavior {
 
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
+						
+						$settings['entity'] = $entity;
+
 						$row = [];
 						foreach ($fields as $attr) {
 							$row[] = $this->getValue($entity, $table, $attr);
@@ -235,8 +238,10 @@ class ExcelBehavior extends Behavior {
 						}
 
 						$rowCount++;
-						$this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount], true);
-						$writer->writeSheetRow($sheetName, $row);
+						$event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
+						if (!$event->result) {
+							$writer->writeSheetRow($sheetName, $row);
+						}
 					}
 				}
 			} else {
