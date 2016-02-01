@@ -29,6 +29,7 @@ tbody tr:first-child .tooltip-blue .tooltip {
     margin-left: -80px !important;
 }
 
+
 /* Tooltip Width to be larger in Import Page */
 
 .tooltip-inner {
@@ -56,15 +57,30 @@ tbody tr:first-child .tooltip-blue .tooltip {
     }
 }
 
+
 /* Remove Underline */
 
 a.btn-red:hover,
 a.btn-green:hover {
-	text-decoration: none;
+    text-decoration: none;
 }
+
 
 /* Highcharts */
 
 .highcharts-container {
     position: relative !important;
+}
+
+
+/* Table Tfoot */
+
+.table-in-view tfoot td {
+    border-top: 1px solid #DDD !important;
+}
+
+.table-in-view tfoot td {
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
 }
