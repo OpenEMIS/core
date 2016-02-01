@@ -11,7 +11,7 @@ var TableResponsive = {
         //table shadow appears on scroll
         addScrollbarShadow: function(selector) {
             $(selector).each(function(index) {
-                console.log('index = ' + index);
+                // console.log('index = ' + index);
                 TableResponsive.horzScrollbarDetect(selector, index);
                 $(this).on('scroll', function() {
                     TableResponsive.horzScrollbarDetect(selector, index);
