@@ -29,9 +29,6 @@ class Saml2Authenticate extends BaseAuthenticate
                 return false;
             }
             $userName = $userAttribute[$userNameField][0];
-            // $emailArray = explode('@', $email);
-            // $userName = $emailArray[0];
-            // $hostedDomain = $emailArray[1];
             $isFound = $this->_findUser($userName);
             if ($isFound) {
                 return $isFound;

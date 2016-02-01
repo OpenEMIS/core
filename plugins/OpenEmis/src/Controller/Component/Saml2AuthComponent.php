@@ -85,7 +85,7 @@ class Saml2AuthComponent extends Component {
         $action = $this->request->params['action'];
         $session = $this->request->session();
         if ($action == 'login' && !$session->read('Auth.fallback')) {
-            $this->auth->login();
+            $this->login();
         }
     }
 
@@ -98,20 +98,76 @@ class Saml2AuthComponent extends Component {
         }
 	}
 
-    public function processResponse() {
-        $this->auth->processResponse();
+    /**
+     * Initiates the SSO process.
+     *
+     * @param string $returnTo   The target URL the user should be returned to after login.
+     * @param array  $parameters Extra parameters to be added to the GET
+     * @param bool   $forceAuthn When true the AuthNReuqest will set the ForceAuthn='true'
+     * @param bool   $isPassive  When true the AuthNReuqest will set the Ispassive='true'
+     *  
+     */
+    public function login($returnTo = null, $parameters = [], $forceAuthn = false, $isPassive = false) {
+        $this->auth->login($returnTo, $parameters, $forceAuthn, $isPassive);
     }
 
+    /**
+     * Initiates the SLO process.
+     *
+     * @param string $returnTo      The target URL the user should be returned to after logout.
+     * @param array  $parameters    Extra parameters to be added to the GET
+     * @param string $nameId        The NameID that will be set in the LogoutRequest.
+     * @param string $sessionIndex  The SessionIndex (taken from the SAML Response in the SSO process).
+     */
+    public function logout($returnTo = null, $parameters = array(), $nameId = null, $sessionIndex = null) {
+        $this->auth->logout($returnTo, $parameters, $nameId, $sessionIndex);
+    }
+
+    /**
+     * Process the SAML Response sent by the IdP.
+     *
+     * @param string $requestId The ID of the AuthNRequest sent by this SP to the IdP
+     */
+    public function processResponse($requestId = null) {
+        $this->auth->processResponse($requestId);
+    }
+
+    /**
+     * Returns if there were any error
+     *
+     * @return array  Errors
+     */
     public function getErrors() {
         return $this->auth->getErrors();
     }
 
+    /**
+     * Checks if the user is authenticated or not.
+     *
+     * @return boolean  True if the user is authenticated
+     */
     public function isAuthenticated() {
         return $this->auth->isAuthenticated();
     }
 
+    /**
+     * Returns the set of SAML attributes.
+     *
+     * @return array  Attributes of the user.
+     */
     public function getAttributes() {
         return $this->auth->getAttributes();
+    }
+
+    /**
+     * Returns the requested SAML attribute
+     *
+     * @param string $name The requested attribute of the user.
+     *
+     * @return NULL || array Requested SAML attribute ($name).
+     */
+    public function getAttribute($name) {
+        return $this->auth->getAttribute($name);
     }
 
     public function authenticate(Event $event, ArrayObject $extra) {
