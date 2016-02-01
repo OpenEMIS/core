@@ -20,23 +20,30 @@ class TrainingSessionsTable extends AppTable {
 	use HtmlTrait;
 	use ImportExcelTrait;
 
-	private $_contain = ['Trainers.Users', 'Trainees'];
+	private $_contain = ['Trainers', 'Trainees'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
-		$this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('TraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsToMany('Trainers', [
+			'className' => 'User.Users',
+			'joinTable' => 'training_session_trainers',
+			'foreignKey' => 'training_session_id',
+			'targetForeignKey' => 'trainer_id',
+			'through' => 'Training.TrainingSessionTrainers',
+			'dependent' => false
+		]);
 		$this->belongsToMany('Trainees', [
 			'className' => 'User.Users',
 			'joinTable' => 'training_sessions_trainees',
 			'foreignKey' => 'training_session_id',
 			'targetForeignKey' => 'trainee_id',
 			'through' => 'Training.TrainingSessionsTrainees',
-			'dependent' => true
+			'dependent' => false
 		]);
 	}
 
@@ -88,9 +95,9 @@ class TrainingSessionsTable extends AppTable {
 				$associated = $entity->extractOriginal([$key]);
 				if (!empty($associated[$key])) {
 					foreach ($associated[$key] as $i => $obj) {
-						$this->request->data[$alias][$key][] = [
+						$this->request->data[$alias][$key][$obj->id] = [
 							'id' => $obj->id,
-							'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name]
+							'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id]
 						];
 					}
 				}
@@ -107,6 +114,7 @@ class TrainingSessionsTable extends AppTable {
 					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.trainee_id", ['value' => $joinData['trainee_id']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$name .= $Form->hidden("$alias.$key.$i._joinData.training_session_id", ['value' => $joinData['training_session_id']]);
 					$rowData[] = [$joinData['openemis_no'], ['autocomplete-exclude' => $joinData['trainee_id']]];
 					$rowData[] = $name;
 					$rowData[] = $this->getDeleteButton();
@@ -151,21 +159,36 @@ class TrainingSessionsTable extends AppTable {
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		//Required by patchEntity for associated data
-		$newOptions = [];
 		// _joinData is required for 'saveStrategy' => 'replace' to work
-		$newOptions['associated'] = [
-			'Trainers', 'Trainees._joinData'
+		$newOptions = [];
+		$newOptions = [
+			'associated' => [
+				'Trainers' => ['validate' => false],
+				'Trainees' => ['validate' => false],
+				'Trainers._joinData',
+				'Trainees._joinData',
+			],
 		];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
 
-		// PHPOE-2491: During edit, if there are more than one trainees and when all trainees were removed at the same time,
+		// POCOR-2491: During edit, if there are more than one trainees and when all trainees were removed at the same time,
 		// "trainees" array will not be included in $data. We have to manually add it so that 'saveStrategy' => 'replace' will work
+		// The same behavior occured on trainers.
 		if ($data->offsetExists('TrainingSessions')) {
 			if (!isset($data['TrainingSessions']['trainees'])) {
 				$data['TrainingSessions']['trainees'] = [];
+			}
+			if (!isset($data['TrainingSessions']['trainers'])) {
+				$data['TrainingSessions']['trainers'] = [];
+			} else {
+				foreach ($data['TrainingSessions']['trainers'] as $key => $trainer) {
+					if (isset($trainer['_joinData']['trainer_id'])) {
+						$data['TrainingSessions']['trainers'][$key]['id'] =$trainer['_joinData']['trainer_id'];
+					}
+				}
 			}
 		}
 	}
@@ -185,9 +208,12 @@ class TrainingSessionsTable extends AppTable {
 
 	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$dataOptions = [
-			'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
-			'trainer_id' => '',
-			'name' => ''
+			'_joinData' => [
+				'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
+				'trainer_id' => '',
+				'name' => '',
+				'training_session_id' => $entity->id
+			]
 		];
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
@@ -211,7 +237,7 @@ class TrainingSessionsTable extends AppTable {
 				}
 				$data[$alias][$key][] = [
 					'id' => $obj->id,
-					'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name]
+					'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $entity->id]
 				];
 			} catch (RecordNotFoundException $ex) {
 				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
@@ -352,7 +378,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$Users = $this->Trainers->Users;
+			$Users = $this->Trainers;
 			$trainerOptions = $Users
 				->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
 				->where([
@@ -453,11 +479,6 @@ class TrainingSessionsTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'edit':
-				$toolbarButtons['import'] = $toolbarButtons['back'];
-				$toolbarButtons['import']['url'][0] = 'template';
-				$toolbarButtons['import']['attr']['title'] = __('Download Template');
-				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
-
 				$downloadUrl = $toolbarButtons['back']['url'];
 				$downloadUrl[0] = 'template';
 				$this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
@@ -641,7 +662,7 @@ class TrainingSessionsTable extends AppTable {
 				if ($trainee) {
 					$data[$alias][$key][$openemis_no] = [
 						'id' => $trainee->_matchingData['Users']->id,
-						'_joinData' => ['openemis_no' => $openemis_no, 'trainee_id' => $trainee->_matchingData['Users']->id, 'name' => $trainee->name]
+						'_joinData' => ['openemis_no' => $openemis_no, 'trainee_id' => $trainee->_matchingData['Users']->id, 'name' => $trainee->name, 'training_session_id' => $entity->id]
 					];
 				} else {
 					// $model->log(__CLASS__.'->'.__METHOD__ . ': Record not found for id: ' . $openemis_no, 'debug');
