@@ -24,10 +24,11 @@ var MobileMenu = {
         menuHandler.off('click');
         rightPane.off('click');
         // console.log("width = " + width );
+
         if ((width <= 1024)) {
             menuHandler.on('click', function() {
                 leftPane.css("display", "block", "!important");
-                console.log('click');
+                // console.log('click');
                 if (bodyDir == 'ltr') {
                     rightPane.toggleClass("push-content-right").toggleClass("content-overlay");
                 } else {
