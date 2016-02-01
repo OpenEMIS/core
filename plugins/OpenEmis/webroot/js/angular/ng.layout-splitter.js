@@ -155,9 +155,9 @@ angular.module('bgDirectives', [])
                         enableDrag();
                         pos = localStorage.lastHandlerPos;
 
-                        handler.css(affectedDir, pos + 'px');
-                        pane1.elem.css('width', pos + 'px');
-                        pane2.elem.css(affectedDir, pos + 'px');
+                        handler.css(affectedDir, '15%');
+                        pane1.elem.css('width', '15%');
+                        pane2.elem.css(affectedDir, '15%');
                     }
 
                 });
