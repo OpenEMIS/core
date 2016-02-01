@@ -1,0 +1,64 @@
+/* 
+Core Overwrites: v.1.0.2
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/core-login-bg.jpg') !important;
+}
+
+
+/* Tooltip */
+
+.tooltip-blue .tooltip {
+    margin-left: 53px !important;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip {
+    margin-top: 20px !important;
+    margin-left: 80px !important;
+}
+
+.rtl .tooltip-blue .tooltip {
+    margin-left: -50px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip {
+    margin-left: -80px !important;
+}
+
+/* Tooltip Width to be larger in Import Page */
+
+.tooltip-inner {
+    max-width: 800px !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .tooltip-inner {
+        max-width: 450px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .tooltip-inner {
+        max-width: 250px !important;
+    }
+}
+
+
+/* Pagination */
+
+@media only screen and (max-width: 800px) {
+    .pagination-wrapper .counter {
+        clear: both !important;
+    }
+}
+
+/* Remove Underline */
+
+a.btn-red:hover,
+a.btn-green:hover {
+	text-decoration: none;
+}

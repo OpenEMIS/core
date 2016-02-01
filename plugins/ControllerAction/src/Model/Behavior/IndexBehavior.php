@@ -6,14 +6,14 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
-use Cake\Network\Exception\NotFoundException;
 use Cake\Log\Log;
+use Cake\Core\Configure;
+use Cake\Network\Exception\NotFoundException;
 
 class IndexBehavior extends Behavior {
-	public function initialize(array $config) {
-
-	}
+	protected $_defaultConfig = [
+		'pageOptions' => [10, 20, 30, 40, 50]
+	];
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -29,7 +29,7 @@ class IndexBehavior extends Behavior {
 		$extra['auto_contain'] = true;
 		$extra['auto_search'] = true;
 		$extra['auto_order'] = true;
-
+		$extra['config']['pageOptions'] = $this->config('pageOptions');
 		$query = $model->find();
 
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeAction', [$extra], $this);
@@ -58,26 +58,16 @@ class IndexBehavior extends Behavior {
 			$data = $query->all();
 		}
 		
-		Log::write('debug', $query->__toString());
+		if (Configure::read('debug')) {
+			Log::write('debug', $query->__toString());
+		}
 
-		$event = $model->dispatchEvent('ControllerAction.Model.index.afterQuery', [$data, $extra], $this);
+		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$data, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		if ($event->result) {
 			$data = $event->result;
 		}
-		
-		// if ($data->count() == 0) {
-		// 	$this->Alert->info('general.noData');
-		// }
-
-		// $modal = $this->getModalOptions('remove');
-		$model->controller->set(compact('data'));
-
-		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$extra], $this);
-		if ($event->isStopped()) {
-			$event->stopPropagation;
-		}
-
+		$model->controller->set('data', $data);
 		return true;
 	}
 }

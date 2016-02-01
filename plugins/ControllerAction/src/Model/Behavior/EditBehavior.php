@@ -6,12 +6,12 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
+use Cake\Log\Log;
+
+use ControllerAction\Model\Traits\EventTrait;
 
 class EditBehavior extends Behavior {
-	public function initialize(array $config) {
-
-	}
+	use EventTrait;
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -41,7 +41,7 @@ class EditBehavior extends Behavior {
 
 		$id = $model->paramsPass(0);
 
-		$entity = null;
+		$entity = false;
 
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->find()->where([$idKey => $id]);
@@ -59,7 +59,7 @@ class EditBehavior extends Behavior {
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.afterQuery', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 
-		if (!empty($entity)) {
+		if ($entity) {
 			if ($request->is(['get'])) {
 				$event = $model->dispatchEvent('ControllerAction.Model.edit.onInitialize', [$entity, $extra], $this);
 				if ($event->isStopped()) { return $event->result; }
@@ -91,17 +91,18 @@ class EditBehavior extends Behavior {
 						$process = $event->result;
 					}
 
-					if ($process($model, $entity)) {
-						// event: onSaveSuccess
-						// $this->Alert->success('general.edit.success');
-						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);
-						if ($event->isStopped()) { return $event->result; }
+					$result = $process($model, $entity);
+
+					if (!$result) {
+						Log::write('debug', $entity->errors());
+					}
+
+					$event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);
+					if ($event->isStopped()) { return $event->result; }
+
+					if ($result) {
 						$mainEvent->stopPropagation();
 						return $model->controller->redirect($model->url('view'));
-					} else {
-						// event: onSaveFailed
-						// $this->log($entity->errors(), 'debug');
-						// $this->Alert->error('general.edit.failed');
 					}
 				} else {
 					$patchOptions['validate'] = false;
@@ -110,13 +111,13 @@ class EditBehavior extends Behavior {
 					// Event: addEditOnReload
 					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 					$method = 'addEdit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 
 					// Event: editOnReload
 					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
 					$method = 'edit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 					
 					$patchOptionsArray = $patchOptions->getArrayCopy();
@@ -124,11 +125,7 @@ class EditBehavior extends Behavior {
 					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
 				}
 			}
-
 			$model->controller->set('data', $entity);
-		} else {
-			$mainEvent->stopPropagation();
-			return $model->controller->redirect($model->url('index', 'QUERY'));
 		}
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
@@ -136,11 +133,11 @@ class EditBehavior extends Behavior {
 		
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
-		
+
+		if (!$entity) {
+			$mainEvent->stopPropagation();
+			return $model->controller->redirect($model->url('index', 'QUERY'));
+		}
 		return $entity;
-		//  else {
-		// 	$this->Alert->warning('general.notExists');
-		// 	return $this->controller->redirect($this->url('index'));
-		// }
 	}
 }
