@@ -84,3 +84,16 @@ a.btn-green:hover {
     border-left: 0 !important;
     border-right: 0 !important;
 }
+
+/* Layout Splitter */
+
+.rtl .split-panes.horizontal > .split-pane2 {
+    right: 10%;
+}
+
+/* IE9 */
+
+.rtl .input-select-wrapper:before {
+    left: 22px !important;
+    top: 2px;    
+}
