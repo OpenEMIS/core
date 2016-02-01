@@ -1,3 +1,23 @@
+v3.4.12
+- Fixed a bug that caused student data not removed completely when deleting a student from a school
+- Fixed a bug that caused school name and status not displaying the correct value in Directories
+- Fixed a bug that caused Add buttons in Salaries to behave like Save button (only happens in Chrome browser)
+- Fixed a permission issue that caused user not able to access Directories -> Classes/Subjects
+- Fixed a bug that caused 404 error page when trying to access Field Options -> Position Titles
+- Position Types (Teaching/Non-Teaching) is now linked to Position Titles instead of Institution Positions
+- Improved on the validation error messages when importing data via excel spreadsheet
+- Added Google Authentication support
+- Fixed a number of css issues
+
+v3.4.11
+- Fixed a bug that caused removing last student from class not to be deleted
+- Fixed a bug that caused custom fields not appearing in Institutions
+- Fixed a bug that caused Roles with All Classes and All Subjects permissions not able to see students in Results module
+- Fixed a bug that caused Roles with Promote/Graduate permissions not able to see Promote/Graduate buttons
+- Added Dropout and Transfer Reasons will be displayed when accessing Institutions -> Students -> Academic -> Programmes
+- Added names, contacts, identities, positions to Advanced Search
+- The system will auto generate position numbers based on the school code + a set of random numbers
+
 v3.4.10
 - Fixed a bug that caused 404 error page when Promoting students but no students are selected
 - Added Search in Student Admission Page (Institutions -> Students -> <Select Pending Admission>)

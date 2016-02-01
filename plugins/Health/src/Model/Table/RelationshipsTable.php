@@ -10,5 +10,11 @@ class RelationshipsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->hasMany('Families', ['className' => 'Health.Families', 'foreignKey' => 'health_relationship_id']);
+
+		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('ControllerAction.ControllerAction', [
+			'actions' => ['remove' => 'transfer'],
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+		]);
 	}
 }

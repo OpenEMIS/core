@@ -4,6 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
 class OpenEmisBehavior extends Behavior {
@@ -13,10 +14,15 @@ class OpenEmisBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		if (isset($this->_table->CAVersion) && $this->_table->CAVersion == '4.0') { // temporary fix
-			$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
-			$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
-		}
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
+		$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
+		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 4];
+		$events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'editAfterSave', 'priority' => 4];
+		$events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.delete.afterAction'] = ['callable' => 'deleteAfterAction', 'priority' => 4];
+		$events['ControllerAction.Model.transfer.afterAction'] = ['callable' => 'transferAfterAction', 'priority' => 4];
 		return $events;
 	}
 
@@ -70,10 +76,76 @@ class OpenEmisBehavior extends Behavior {
 		// end deprecated
 	}
 
+	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+		if ($resultSet->count() == 0) {
+			$this->_table->Alert->info('general.noData');
+		}
+		$extra['config']['form'] = ['class' => ''];
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if (!$entity) {
+			$this->_table->Alert->warning('general.notExists');
+		}
+	}
+
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		$model = $this->_table;
+		$errors = $entity->errors();
+		if (empty($errors)) {
+			$model->Alert->success('general.add.success');
+		} else {
+			$model->Alert->error('general.add.failed');
+		}
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		$model = $this->_table;
+		$errors = $entity->errors();
+		if (empty($errors)) {
+			$model->Alert->success('general.edit.success');
+		} else {
+			$model->Alert->error('general.edit.failed');
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if (!$entity) {
+			$this->_table->Alert->warning('general.notExists');
+		}
+	}
+
+	public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$model = $this->_table;
+		if ($model->request->is('delete')) {
+			if ($extra['result']) {
+				$model->Alert->success('general.delete.success');
+			} else {
+				$model->Alert->error('general.delete.failed');
+			}
+		}
+	}
+
+	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$model = $this->_table;
+		if ($model->request->is('delete')) {
+			if ($extra['result']) {
+				$model->Alert->success('general.delete.success');
+			} else {
+				if (empty($entity->convert_to)) {
+					$model->Alert->error('general.deleteTransfer.restrictDelete');
+					return $model->controller->redirect($model->url('transfer'));
+				} else {
+					$model->Alert->error('general.delete.failed');
+				}
+			}
+		}
+	}
+
 	private function initializeButtons(ArrayObject $extra) {
 		$model = $this->_table;
 		$controller = $model->controller;
-
+		
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
@@ -186,14 +258,30 @@ class OpenEmisBehavior extends Behavior {
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($model->actions('reorder') && $model->actions('edit')) {
-		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
-			$controller->set('reorder', true);
-		}
-
 		if ($toolbarButtons->offsetExists('back')) {
 			$controller->set('backButton', $toolbarButtons['back']);
 		}
+
+		$access = $model->AccessControl;
+		foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+			if (array_key_exists('url', $buttons)) {
+				if (!$access->check($buttons['url'])) {
+					unset($toolbarButtons[$key]);
+				}
+			}
+		}
+		foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+			if (array_key_exists('url', $buttons)) {
+				if (!$access->check($buttons['url'])) {
+					unset($indexButtons[$key]);
+				}
+			}
+		}
+
+		if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
+			$controller->set('reorder', true);
+		}
+
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 }
