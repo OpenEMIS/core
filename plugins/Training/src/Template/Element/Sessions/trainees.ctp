@@ -35,10 +35,9 @@
 		    'field' => 'trainees_import',
 		    'className' => $attr['className'],
 			'label' => __('Import Trainees'),
-			'upload-button' => [
-				'onclick' => "$('#reload').val('massAddTrainees').click()"
-			],
 			'comment' => isset($attr['comment']) ? $attr['comment'] : '',
+			'startWithOneLeftButton' => 'download',
+			'alwaysShowOneButton' => false
 		];
 		echo $this->HtmlField->binary($ControllerAction['action'], $data, $importAttr);
 	?>

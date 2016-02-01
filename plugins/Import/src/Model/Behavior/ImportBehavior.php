@@ -148,7 +148,7 @@ class ImportBehavior extends Behavior {
 				if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
 					$downloadUrl[1] = $buttons['add']['url'][1];
 				}
-				$this->_table->controller->set('downloadUrl', Router::url($downloadUrl));
+				$this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
 				break;
 		}
 		if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
