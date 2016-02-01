@@ -22,13 +22,13 @@ class Saml2Authenticate extends BaseAuthenticate
                     $AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
                     $AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'saml_username_mapping'
                 ])
-                ->first()
+                ->first();
             if (isset($userNameField['value'])) {
                 $userNameField = $userNameField['value'];
             } else {
                 return false;
             }
-            $email = $userAttribute[$userNameField][0];
+            $userName = $userAttribute[$userNameField][0];
             // $emailArray = explode('@', $email);
             // $userName = $emailArray[0];
             // $hostedDomain = $emailArray[1];

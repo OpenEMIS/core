@@ -15,8 +15,6 @@ class Saml2AuthComponent extends Component {
 	public $components = ['Auth'];
 
     private $auth;
-    private $spBaseUrl = 'http://localhost:8080';
-    // private $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
 
 	public function initialize(array $config) {
         $this->session = $this->request->session();
