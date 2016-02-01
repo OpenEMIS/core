@@ -209,7 +209,9 @@ class AuthenticationBehavior extends Behavior {
 	public function saml2Authentication(&$attribute) {
 		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
 		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
+		$attribute['idp_sso_binding'] = ['label' => 'Identity Provider - Single Signon Service Binding', 'type' => 'text'];
 		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
+		$attribute['idp_slo_binding'] = ['label' => 'Identity Provider - Single Logout Service Binding', 'type' => 'text'];
 		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500];
 		$attribute['idp_certFingerprint'] = ['label' => 'Identity Provider - Certificate Fingerprint', 'type' => 'text'];
 		$attribute['idp_certFingerprintAlgorithm'] = ['label' => 'Identity Provider - Certificate Fingerprint Algorithm', 'type' => 'text'];
@@ -217,7 +219,7 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
-		$attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'text'];
+		$attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'textarea', 'maxlength' => 1500];
 		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
 		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text'];
 		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text'];
@@ -231,6 +233,10 @@ class AuthenticationBehavior extends Behavior {
 			return Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
 		} else if ($key == 'sp_slo') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
+		} else if ($key == 'idp_sso_binding' && empty($attributeValue)) {
+			return \OneLogin_Saml2_Constants::BINDING_HTTP_POST;
+		} else if ($key == 'idp_slo_binding' && empty($attributeValue)) {
+			return \OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
 		} else if ($key == 'sp_acs') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
 		}

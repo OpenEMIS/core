@@ -40,9 +40,11 @@ class Saml2AuthComponent extends Component {
             'entityId' => $samlAttributes['idp_entity_id'],
             'singleSignOnService' => [
                 'url' => $samlAttributes['idp_sso'],
+                'binding' => $samlAttributes['idp_sso_binding']
             ],
             'singleLogoutService' => [
                 'url' => $samlAttributes['idp_slo'],
+                'binding' => $samlAttributes['idp_slo_binding']
             ],
         ];
 
