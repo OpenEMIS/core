@@ -22,8 +22,8 @@ class AutocompleteBehavior extends Behavior {
 
 			$subject->includes['autocomplete'] = [
 				'include' => true, 
-				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
-				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
 
 			$fieldName = $attr['model'] . '.' . $attr['field'];
