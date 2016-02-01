@@ -212,19 +212,19 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['idp_sso_binding'] = ['label' => 'Identity Provider - Single Signon Service Binding', 'type' => 'text'];
 		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
 		$attribute['idp_slo_binding'] = ['label' => 'Identity Provider - Single Logout Service Binding', 'type' => 'text'];
-		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500];
-		$attribute['idp_certFingerprint'] = ['label' => 'Identity Provider - Certificate Fingerprint', 'type' => 'text'];
-		$attribute['idp_certFingerprintAlgorithm'] = ['label' => 'Identity Provider - Certificate Fingerprint Algorithm', 'type' => 'text'];
+		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
+		$attribute['idp_certFingerprint'] = ['label' => 'Identity Provider - Certificate Fingerprint', 'type' => 'text', 'required' => false];
+		$attribute['idp_certFingerprintAlgorithm'] = ['label' => 'Identity Provider - Certificate Fingerprint Algorithm', 'type' => 'text', 'required' => false];
 		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
-		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
-		$attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'textarea', 'maxlength' => 1500];
+		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text', 'required' => false];
+		$attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
 		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
-		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text'];
-		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text'];
-		$attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text'];
-		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text'];
+		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
+		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
+		$attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
+		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text', 'required' => false];
 		$attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden'];
 	}
 
