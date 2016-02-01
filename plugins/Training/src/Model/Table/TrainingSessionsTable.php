@@ -232,8 +232,8 @@ class TrainingSessionsTable extends AppTable {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
 				'include' => true, 
-				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
-				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
 		}
 	}
