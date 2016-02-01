@@ -17,7 +17,7 @@ class AuthenticationTypeAttributesTable extends AppTable {
                 'valueField' => 'value'
             ])->toArray();
 
-		if (is_null($typeName)) {
+		if (!is_null($typeName)) {
 			if (isset($list[$typeName])) {
 				return $list[$typeName];
 			} else {
