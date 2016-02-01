@@ -76,7 +76,6 @@ class AuthenticationBehavior extends Behavior {
 						$this->_table->request->data[$this->alias]['value'] = $value;
 					}
 					if ($value != 'Local') {
-						$this->_table->addBehavior($value.'Authentication');
 						$this->_table->ControllerAction->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 					}
 				}
@@ -150,5 +149,86 @@ class AuthenticationBehavior extends Behavior {
 				$AuthenticationTypeAttributesTable->save($entity);
 			}
 		}
+	}
+
+	public function saml2Authentication(&$attribute) {
+		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
+		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
+		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
+		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500];
+		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text', 'readonly' => true];
+		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
+		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
+		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
+		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
+		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text'];
+		$attribute['saml_middle_name_mapping'] = ['label' => 'Middle Name Mapping', 'type' => 'text'];
+		$attribute['saml_third_name_mapping'] = ['label' => 'Third Name Mapping', 'type' => 'text'];
+		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text'];
+		$attribute['saml_gender_mapping'] = ['label' => 'Gender', 'type' => 'text'];
+		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text'];
+	}
+
+	public function saml2ModifyValue($key, $attributeValue) {
+		if ($key == 'sp_entity_id') {
+			return Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+		} else if ($key == 'sp_slo') {
+			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
+		} else if ($key == 'sp_acs') {
+			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+		}
+		return false;
+	}
+
+	public function googleAuthentication(&$attribute) {
+		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
+		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
+		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text'];
+	}
+
+	public function googleModifyValue($key, $attributeValue) {
+		if ($key == 'redirect_uri' && empty($attributeValue)) {
+			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+		}
+		return false;
+	}
+
+	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
+		switch ($action){
+			case "view":			
+				$authenticationType = $this->_table->request->data[$this->alias]['value'];
+				$attribute = [];
+				$methodName = strtolower($authenticationType).'Authentication';
+				if (method_exists($this, $methodName)) {
+					$this->$methodName($attribute);
+					$this->processAuthentication($attribute, $authenticationType);
+				}
+
+				$tableHeaders = [__('Attribute Name'), __('Value')];
+				$tableCells = [];
+				foreach ($attribute as $value) {
+					$row = [];
+					$row[] = $value['label'];
+					$row[] = $value['value'];
+					$tableCells[] = $row;
+				}
+				$attr['tableHeaders'] = $tableHeaders;
+		    	$attr['tableCells'] = $tableCells;
+				break;
+
+			case "edit":
+				$authenticationType = $this->_table->request->data[$this->alias]['value'];
+				$attribute = [];
+				$methodName = strtolower($authenticationType).'Authentication';
+				if (method_exists($this, $methodName)) {
+					$this->$methodName($attribute);
+					$this->processAuthentication($attribute, $authenticationType);
+				}
+
+				$attr = $attribute;
+				break;
+		}
+		return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
 	}
 }

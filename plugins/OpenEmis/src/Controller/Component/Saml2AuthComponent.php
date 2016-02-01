@@ -205,9 +205,11 @@ class Saml2AuthComponent extends Component {
 
     private function checkLogin($username) {
 		$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
+        $session = $this->request->session();
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
+                $session->write('Auth.fallback', true);
                 $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
 				return false;
 			}
