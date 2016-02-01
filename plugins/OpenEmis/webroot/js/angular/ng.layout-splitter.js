@@ -80,10 +80,6 @@ angular.module('bgDirectives', [])
                         handler.css(affectedDir, '0px');
                         pane1.elem.css('width', pos + 'px');
                         pane2.elem.css(affectedDir, '0px');
-                    } else {
-                        handler.css(affectedDir, '15%');
-                        pane1.elem.css('width', '15%');
-                        pane2.elem.css(affectedDir, '15%');
                     }
                 }
 
