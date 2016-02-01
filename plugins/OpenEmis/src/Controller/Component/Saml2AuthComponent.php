@@ -23,38 +23,31 @@ class Saml2AuthComponent extends Component {
         $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
 
         $AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-        $samlAttributes = $AuthenticationTypeAttributesTable->find('list', [
-                'groupField' => 'authentication_type',
-                'keyField' => 'attribute_field',
-                'valueField' => 'value'
-            ])
-            ->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2'])
-            ->hydrate(false)
-            ->toArray();
+        $samlAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
 
         $setting['sp'] = [
-            'entityId' => $samlAttributes['Saml2']['sp_entity_id'],
+            'entityId' => $samlAttributes['sp_entity_id'],
             'assertionConsumerService' => [
-                'url' => $samlAttributes['Saml2']['sp_acs'],
+                'url' => $samlAttributes['sp_acs'],
             ],
             'singleLogoutService' => [
-                'url' => $samlAttributes['Saml2']['sp_slo'],
+                'url' => $samlAttributes['sp_slo'],
             ],
-            'NameIDFormat' => $samlAttributes['Saml2']['sp_name_id_format'],
+            'NameIDFormat' => $samlAttributes['sp_name_id_format'],
         ];
 
         $setting['idp'] = [
-            'entityId' => $samlAttributes['Saml2']['idp_entity_id'],
+            'entityId' => $samlAttributes['idp_entity_id'],
                 'singleSignOnService' => [
-                    'url' => $samlAttributes['Saml2']['idp_sso'],
+                    'url' => $samlAttributes['idp_sso'],
                 ],
                 'singleLogoutService' => [
-                    'url' => $samlAttributes['Saml2']['idp_slo'],
+                    'url' => $samlAttributes['idp_slo'],
                 ],
-                'x509cert' =>   $samlAttributes['Saml2']['idp_x509cert'],
+                'x509cert' =>   $samlAttributes['idp_x509cert'],
         ];
 
-        $this->userNameField = $samlAttributes['Saml2']['saml_username_mapping'];
+        $this->userNameField = $samlAttributes['saml_username_mapping'];
 
         $this->auth = new \OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
@@ -83,8 +76,7 @@ class Saml2AuthComponent extends Component {
 
     public function startup(Event $event) {
         $action = $this->request->params['action'];
-        $session = $this->request->session();
-        if ($action == 'login' && !$session->read('Auth.fallback')) {
+        if ($action == 'login' && !$this->session->read('Auth.fallback') && !$this->session->read('Saml2.remoteFail')) {
             $this->login();
         }
     }
@@ -171,7 +163,7 @@ class Saml2AuthComponent extends Component {
     }
 
     public function authenticate(Event $event, ArrayObject $extra) {
-    	if ($this->request->is('post')) {
+    	if ($this->request->is('post') && !$this->session->read('Saml2.remoteFail')) {
             if ($this->idpLogin()) {
                 $userData = $this->getAttributes();
                 if (isset($userData[$this->userNameField][0])) {
@@ -205,11 +197,10 @@ class Saml2AuthComponent extends Component {
 
     private function checkLogin($username) {
 		$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
-        $session = $this->request->session();
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
-                $session->write('Auth.fallback', true);
+                $this->session->write('Auth.fallback', true);
                 $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
 				return false;
 			}
@@ -223,12 +214,8 @@ class Saml2AuthComponent extends Component {
 			// End
 			return true;
 		} else {
-            if (!$this->session->read('Auth.fallback')) {
-                $this->controller->Alert->error($this->retryMessage, ['type' => 'string', 'reset' => true]);
-            } else {
-                $this->controller->Alert->error('security.login.fail', ['reset' => true]);
-            }
-            
+            $this->session->write('Saml2.remoteFail', true);
+            $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
 			return false;
 		}
 	}

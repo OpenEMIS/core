@@ -17,14 +17,9 @@ class Saml2Authenticate extends BaseAuthenticate
         if ($session->check('Saml2.userAttribute')) {
             $userAttribute = $session->read('Saml2.userAttribute');
             $AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-            $userNameField = $AuthenticationTypeAttributesTable->find()
-                ->where([
-                    $AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
-                    $AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'saml_username_mapping'
-                ])
-                ->first();
-            if (isset($userNameField['value'])) {
-                $userNameField = $userNameField['value'];
+            $userNameField = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
+            if (isset($userNameField['saml_username_mapping'])) {
+                $userNameField = $userNameField['saml_username_mapping'];
             } else {
                 return false;
             }
@@ -33,7 +28,21 @@ class Saml2Authenticate extends BaseAuthenticate
             if ($isFound) {
                 return $isFound;
             } else {
-                return false;
+                $fields = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
+                $userInfo = [
+                    'firstName' => isset($userAttribute[$fields['saml_first_name_mapping']][0]) ? $userAttribute[$fields['saml_first_name_mapping']][0] : ' - ',
+                    'lastName' => isset($userAttribute[$fields['saml_last_name_mapping']][0]) ? $userAttribute[$fields['saml_last_name_mapping']][0] : ' - ',
+                    'gender' => isset($userAttribute[$fields['saml_gender_mapping']][0]) ? $userAttribute[$fields['saml_gender_mapping']][0] : ' - ',
+                    'dateOfBirth' => isset($userAttribute[$fields['saml_date_of_birth_mapping']][0]) ? $userAttribute[$fields['saml_date_of_birth_mapping']][0] : ' - ',
+                ];
+
+                $User = TableRegistry::get('User.Users');
+                $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
+                if ($event->result === false) {
+                    return false;
+                } else {
+                    return $this->_findUser($event->result);
+                }
             }
         } else {
             return false;
