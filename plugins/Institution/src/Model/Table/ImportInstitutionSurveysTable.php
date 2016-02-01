@@ -236,6 +236,10 @@ class ImportInstitutionSurveysTable extends AppTable {
 				$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
 				return false;
 			}
+			if ($highestRow == self::RECORD_QUESTION) {
+				$entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
+				return false;
+			}
 
 			$totalImported = 0;
 			$totalUpdated = 0;
@@ -316,7 +320,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
 					if (empty($cellValue) && $question->is_mandatory) {
 						$rowFailed = true;
-						$rowInvalidCodeCols[] = $columnCode;
+						$rowInvalidCodeCols[$question->name] = __('The answer for this question cannot be empty');
 					} 
 
 					switch ($fieldType) {
@@ -333,7 +337,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 								$cellValue = $selectedAnswer[$codeIndex]->id;
 							} else {
 								$rowFailed = true;
-								$rowInvalidCodeCols[] = $columnCode;
+								$rowInvalidCodeCols[$question->name] = __('Selected value is not in the list');
 							}
 							$colCount++;
 							break;
@@ -352,7 +356,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 									$trimmedVal = $selectedAnswer[$codeIndex]->id;
 								} else {
 									$rowFailed = true;
-									$rowInvalidCodeCols[] = $columnCode;
+									$rowInvalidCodeCols[$question->name] = __('Selected value is not in the list');
 								}
 
 								if (!$rowFailed) {
@@ -374,7 +378,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 							if (!empty($cellValue)) {
 								if (!is_numeric($cellValue)) {
 									$rowFailed = true;
-									$rowInvalidCodeCols[] = $columnCode;
+									$rowInvalidCodeCols[$question->name] = __('Value should be numerical only');
 								}	
 							}
 							$colCount++;
@@ -400,7 +404,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 								}
 							} else {
 								$rowFailed = true;
-								$rowInvalidCodeCols[] = $columnCode;
+								$rowInvalidCodeCols[$question->name] = __('Wrong date format. It should be DD/MM/YYYY');
 							}
 							$colCount++;
 							break;
@@ -438,8 +442,8 @@ class ImportInstitutionSurveysTable extends AppTable {
 										} else {
 											if ($question->is_mandatory) {
 												$rowFailed = true;
-												if (!in_array($columnCode, $rowInvalidCodeCols)) {
-													$rowInvalidCodeCols[] = $columnCode;
+												if (!array_key_exists($question->name, $rowInvalidCodeCols)) {
+													$rowInvalidCodeCols[$question->name] = __('The answer for this question cannot be empty');
 												}
 											}
 											$colCount++;
@@ -466,8 +470,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 				}
 
-				if (!$rowFailed) {
-
+				if (empty($rowInvalidCodeCols)) {
 					$dataPassed[] = [
 						'row_number' => $row,
 						'data' => $originalRow
@@ -483,15 +486,20 @@ class ImportInstitutionSurveysTable extends AppTable {
 					}
 					$totalImported++;
 				} else {
-					$rowCodeError = $this->getExcelLabel('Import', 'invalid_code').': ';
-					$rowCodeError .= implode(', ', $rowInvalidCodeCols);
+					$rowCodeError = '';
+					$rowCodeErrorForExcel = [];
+
+					foreach ($rowInvalidCodeCols as $questionName => $errMessage) {
+						$rowCodeError .= '<li>' . $questionName . ' => ' . $errMessage . '</li>';
+						$rowCodeErrorForExcel[] = $questionName . ' => ' . $errMessage;
+					}
+
 					$dataFailed[] = [
 						'row_number' => $row,
-						'error' => $rowCodeError,
+						'error' => '<ul>' . $rowCodeError . '</ul>',
+						'errorForExcel' => implode("\n", $rowCodeErrorForExcel),
 						'data' => $originalRow
 					];
-					$model->log('ImportBehavior @ line '.__LINE__, 'debug');
-					$model->log($rowCodeError, 'debug');
 					continue;
 				}
 			} // for ($row = 1; $row <= $highestRow; ++$row)
@@ -531,18 +539,25 @@ class ImportInstitutionSurveysTable extends AppTable {
 			$objPHPExcel = new \PHPExcel();
 
 			$this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $newHeader );
-
+			$activeSheet = $objPHPExcel->getActiveSheet();
 			foreach($data as $index => $record) {
 				if ($type == 'failed') {
 					$values = array_values($record['data']->getArrayCopy());
-					$values[] = $record['error'];
+					$values[] = $record['errorForExcel'];
 				} else {
 					$values = $record['data'];
 				}
+				$activeSheet->getRowDimension( ($index + 3) )->setRowHeight( 15 );
 				foreach ($values as $key => $value) {
 					$alpha = $this->getExcelColumnAlpha($key);
-					$objPHPExcel->getActiveSheet()->setCellValue( $alpha . ($index + 3), $value);
-					// $objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
+					$activeSheet->setCellValue( $alpha . ($index + 3), $value);
+					$activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
+
+					if ($key==(count($values)-1) && $type == 'failed') {
+						$suggestedRowHeight = $this->suggestRowHeight( strlen($value), 15 );
+						$activeSheet->getRowDimension( ($index + 3) )->setRowHeight( $suggestedRowHeight );
+						$activeSheet->getStyle( $alpha . ($index + 3) )->getAlignment()->setWrapText(true);
+					}
 				}				
 			}
 
