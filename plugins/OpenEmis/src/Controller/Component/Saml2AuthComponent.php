@@ -38,19 +38,35 @@ class Saml2AuthComponent extends Component {
 
         $setting['idp'] = [
             'entityId' => $samlAttributes['idp_entity_id'],
-                'singleSignOnService' => [
-                    'url' => $samlAttributes['idp_sso'],
-                ],
-                'singleLogoutService' => [
-                    'url' => $samlAttributes['idp_slo'],
-                ],
-                'x509cert' =>   $samlAttributes['idp_x509cert'],
+            'singleSignOnService' => [
+                'url' => $samlAttributes['idp_sso'],
+            ],
+            'singleLogoutService' => [
+                'url' => $samlAttributes['idp_slo'],
+            ],
         ];
+
+        $this->addCertFingerPrintInformation('idp', $setting, $samlAttributes);
 
         $this->userNameField = $samlAttributes['saml_username_mapping'];
 
         $this->auth = new \OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
+    }
+
+    private function addCertFingerPrintInformation($type, &$setting, $attributes) {
+        $arr = [
+            'certFingerprint',
+            'certFingerprintAlgorithm',
+            'x509cert',
+            'privateKey'
+        ];
+
+        foreach ($arr as $cert) {
+            if (!empty($attributes[$type.'_'.$cert])) {
+                $setting[$type][$cert] = $attributes[$type.'_'.$cert];
+            }
+        }
     }
 
 	public function implementedEvents() {
