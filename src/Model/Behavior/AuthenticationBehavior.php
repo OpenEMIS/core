@@ -162,10 +162,8 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
 		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
 		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text'];
-		$attribute['saml_middle_name_mapping'] = ['label' => 'Middle Name Mapping', 'type' => 'text'];
-		$attribute['saml_third_name_mapping'] = ['label' => 'Third Name Mapping', 'type' => 'text'];
 		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text'];
-		$attribute['saml_gender_mapping'] = ['label' => 'Gender', 'type' => 'text'];
+		$attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text'];
 		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text'];
 	}
 
