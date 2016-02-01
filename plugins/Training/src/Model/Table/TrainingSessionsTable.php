@@ -12,6 +12,7 @@ use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use Cake\Collection\Collection;
+use Cake\Routing\Router;
 use Import\Model\Traits\ImportExcelTrait;
 
 class TrainingSessionsTable extends AppTable {
@@ -456,6 +457,11 @@ class TrainingSessionsTable extends AppTable {
 				$toolbarButtons['import']['url'][0] = 'template';
 				$toolbarButtons['import']['attr']['title'] = __('Download Template');
 				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
+
+				$downloadUrl = $toolbarButtons['back']['url'];
+				$downloadUrl[0] = 'template';
+				$this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+				$this->controller->set('importOnClick', "$('#reload').val('massAddTrainees').click();$('#file-input-wrapper').trigger('clear.bs.fileinput');");
 				break;
 		}
 	}
