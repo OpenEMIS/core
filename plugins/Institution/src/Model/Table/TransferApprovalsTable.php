@@ -27,7 +27,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
-
+		$this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function implementedEvents() {
@@ -87,18 +87,17 @@ class TransferApprovalsTable extends AppTable {
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
 					$this->Alert->success('TransferApprovals.approve');
-
-					// update status and end date of old school
-					$Students->updateAll(
-						['student_status_id' => $statuses['TRANSFERRED'], 'end_date' => $startDate],
-						[
-							'institution_id' => $previousSchoolId,
-							'student_id' => $studentId,
-							'academic_period_id' => $periodId,
-							'education_grade_id' => $gradeId
-						]
-					);
-
+					$existingStudentEntity = $Students->find()->where([
+							$Students->aliasField('institution_id') => $previousSchoolId,
+							$Students->aliasField('student_id') => $studentId,
+							$Students->aliasField('academic_period_id') => $periodId,
+							$Students->aliasField('education_grade_id') => $gradeId,
+							$Students->aliasField('student_status_id') => $statuses['CURRENT']
+						])
+						->first();
+					$existingStudentEntity->student_status_id = $statuses['TRANSFERRED'];
+					$existingStudentEntity->end_date = $startDate;
+					$Students->save($existingStudentEntity);
 					$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
 					$educationSystemId = $EducationGradesTable->getEducationSystemId($gradeId);

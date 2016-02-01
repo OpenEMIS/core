@@ -133,7 +133,7 @@ class AuthenticationBehavior extends Behavior {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-		if ($data[$this->alias]['value'] != 'Local') {
+		if ($data[$this->alias]['value'] != 'Local' && $data[$this->alias]['type'] == 'Authentication') {
 			$authenticationType = $data[$this->alias]['value'];
 			$AuthenticationTypeAttributesTable->deleteAll(
 				['authentication_type' => $authenticationType]
