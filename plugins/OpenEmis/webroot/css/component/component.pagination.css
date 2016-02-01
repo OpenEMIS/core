@@ -1,4 +1,4 @@
-/* PAGINATION v.1.0.4 */
+/* PAGINATION v.1.0.5 */
 
 .first a:before,
 .prev a:before,
@@ -278,6 +278,13 @@
 
 
 /*==========  Non-Mobile First Method  ==========*/
+
+/* Table Devices */
+@media only screen and (max-width: 800px) {
+    .pagination-wrapper .counter {
+        clear: both !important;
+    }
+}
 
 /* Extra Small Devices, Phones */ 
 @media only screen and (max-width : 480px) {

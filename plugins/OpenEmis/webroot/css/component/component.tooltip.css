@@ -1,11 +1,11 @@
-/* TOOLTIP v.1.0.5 */
+/* TOOLTIP v.1.0.6 */
 
 .tooltip {
     z-index: 9999 !important;
 }
 
 .tooltip-inner {
-    max-width: 300px !important;
+    max-width: 800px !important;
 }
 
 
@@ -219,7 +219,16 @@
         font-size: 20px;
     }
     .tooltip-inner {
-        max-width: 250px;
+        max-width: 400px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .table-tooltip {
+        font-size: 20px;
+    }
+    .tooltip-inner {
+        max-width: 250px !important;
     }
 }
 
