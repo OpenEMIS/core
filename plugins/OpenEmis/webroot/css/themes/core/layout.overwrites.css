@@ -62,3 +62,9 @@ a.btn-red:hover,
 a.btn-green:hover {
 	text-decoration: none;
 }
+
+/* Highcharts */
+
+.highcharts-container {
+    position: relative !important;
+}
