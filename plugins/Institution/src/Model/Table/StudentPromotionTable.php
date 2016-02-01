@@ -26,6 +26,7 @@ class StudentPromotionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function implementedEvents() {
@@ -336,12 +337,6 @@ class StudentPromotionTable extends AppTable {
 
 			case 'reconfirm':
 				unset($toolbarButtons['back']);
-				// $toolbarButtons['back'] = $buttons['add'];
-				// $toolbarButtons['back']['type'] = 'button';
-				// $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-				// $toolbarButtons['back']['attr'] = $attr;
-				// $toolbarButtons['back']['attr']['title'] = __('Back');
-				// $toolbarButtons['back']['attr']['onclick'] = "history.go(-1);";
 				break;
 			
 			default:
@@ -422,18 +417,17 @@ class StudentPromotionTable extends AppTable {
 						$studentObj['start_date'] = $nextPeriod->start_date->format('Y-m-d');
 						$studentObj['end_date'] = $nextPeriod->end_date->format('Y-m-d');
 						$entity = $this->newEntity($studentObj);
-						$update = $this->updateAll(
-								['student_status_id' => $statusToUpdate],
-								[
-									'student_id' => $studentObj['student_id'], 
-									'education_grade_id' => $currentGrade,
-									'academic_period_id' => $currentAcademicPeriod,
-									'institution_id' => $institutionId,
-									'student_status_id' => $studentStatuses['CURRENT']
-								]
-							);
-						// If the update count is more than 0	
-						if ($update) {
+
+						$existingStudentEntity = $this->find()->where([
+								$this->aliasField('institution_id') => $institutionId,
+								$this->aliasField('student_id') => $studentObj['student_id'],
+								$this->aliasField('academic_period_id') => $currentAcademicPeriod,
+								$this->aliasField('education_grade_id') => $currentGrade,
+								$this->aliasField('student_status_id') => $studentStatuses['CURRENT']
+							])->first();
+						$existingStudentEntity->student_status_id = $statusToUpdate;
+						
+						if ($this->save($existingStudentEntity)) {
 							if ($nextEducationGradeId != 0) {
 								if ($this->save($entity)) {
 									$this->Alert->success($this->aliasField('success'), ['reset' => true]);
@@ -498,22 +492,10 @@ class StudentPromotionTable extends AppTable {
 				return $this->controller->redirect($this->url('index'));
 			}
 			
-			if ($this->request->is(['get'])) {
-			} else if ($this->request->is(['post', 'put'])) {
-				$patchOptions = new ArrayObject([]);
+			if ($this->request->is(['post', 'put'])) {
 				$entity = $currentEntity;
-				$requestData = new ArrayObject($currentData);
-
-				$params = [$entity, $requestData, $patchOptions];
-
-				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$currentData = $requestData->getArrayCopy();
-				$entity = $model->patchEntity($entity, $currentData, $patchOptionsArray);
-
-				$process = function ($model, $entity) {
-					return $model->save($entity);
-				};
-
+				$entity = $model->patchEntity($entity, $currentData, []);
 				return $this->savePromotion($currentEntity, new ArrayObject($currentData));
 			}
 			$this->controller->set('data', $entity);
