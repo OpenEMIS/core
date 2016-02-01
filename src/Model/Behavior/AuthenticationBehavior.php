@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
+use Cake\Validation\Validator;
 
 require_once( ROOT . DS . 'vendor' . DS . 'php-saml' . DS . '_toolkit_loader.php');
 
@@ -28,6 +29,7 @@ class AuthenticationBehavior extends Behavior {
 			'ControllerAction.Model.edit.afterSave'	=> 'editAfterSave',
 			'ControllerAction.Model.afterAction'	=> 'afterAction',
 			'ControllerAction.Model.view.beforeAction'	=> 'viewBeforeAction',
+			'ControllerAction.Model.edit.beforePatch'	=> 'editBeforePatch',
 			'ControllerAction.Model.index.beforeAction'	=> ['callable' => 'indexBeforeAction', 'priority' => 100],
 		];
 		$events = array_merge($events, $newEvent);
@@ -206,6 +208,43 @@ class AuthenticationBehavior extends Behavior {
         }
     }
 
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	$configItem = $data[$this->_table->alias()];
+    	if ($configItem['type'] == 'Authentication') {
+    		$methodName = strtolower($configItem['value']).'AuthenticationValidation';
+    		if (method_exists($this, $methodName) && !$this->$methodName($data['AuthenticationTypeAttributes'])) {
+    			$this->_table->Alert->error('security.emptyFields', ['reset' => true]);;
+    			$entity->errors('error', ['There are invalid Authentication Attributes']);
+    		}
+    	}
+    }
+
+    public function saml2AuthenticationValidation($authenticationAttributes) {
+    	$attribute = [];
+    	$this->saml2Authentication($attribute);
+    	foreach ($attribute as $key => $values) {
+    		if (!isset($values['required'])) {
+    			if (empty($authenticationAttributes[$key]['value'])) {
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
+    
+    public function googleAuthenticationValidation($authenticationAttributes) {
+    	$attribute = [];
+    	$this->googleAuthentication($attribute);
+    	foreach ($attribute as $key => $values) {
+    		if (!isset($values['required'])) {
+    			if (empty($authenticationAttributes[$key]['value'])) {
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
+
 	public function saml2Authentication(&$attribute) {
 		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
 		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
@@ -247,7 +286,7 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
 		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
 		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
-		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text'];
+		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
 	}
 
 	public function googleModifyValue($key, $attributeValue) {
