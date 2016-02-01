@@ -1,4 +1,4 @@
-//Layout Splitter v.1.0.0
+//Layout Splitter v.1.0.1
 
 var sheet = (function() {
     // Create the <style> tag
@@ -74,9 +74,9 @@ angular.module('bgDirectives', [])
                     pane2.elem.css(affectedDir, pos + 'px');
                 }
                 else{
-                    handler.css(affectedDir, '0px');
-                    pane1.elem.css('width', pos + 'px');
-                    pane2.elem.css(affectedDir, '0px');
+                    handler.css(affectedDir, '15%');
+                    pane1.elem.css('width', '15%');
+                    pane2.elem.css(affectedDir, '15%');
                 }
 
                 enableDrag();
