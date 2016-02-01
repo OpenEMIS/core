@@ -9,6 +9,8 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 
+require_once( ROOT . DS . 'vendor' . DS . 'php-saml' . DS . '_toolkit_loader.php');
+
 class AuthenticationBehavior extends Behavior {
 
 	private $alias;
@@ -148,23 +150,80 @@ class AuthenticationBehavior extends Behavior {
 				$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
 				$AuthenticationTypeAttributesTable->save($entity);
 			}
+
+			if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
+				$method = strtolower($authenticationType).'AfterSave';
+				$this->$method($data['AuthenticationTypeAttributes']);
+			}
 		}
 	}
+
+	public function saml2AfterSave($samlAttributes) {
+
+		$setting['sp'] = [
+            'entityId' => $samlAttributes['sp_entity_id']['value'],
+            'assertionConsumerService' => [
+                'url' => $samlAttributes['sp_acs']['value'],
+            ],
+            'singleLogoutService' => [
+                'url' => $samlAttributes['sp_slo']['value'],
+            ],
+            'NameIDFormat' => $samlAttributes['sp_name_id_format']['value'],
+        ];
+
+       	$message = $this->getSPMetaData($setting);
+       	
+       	$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+       	$entity = $AuthenticationTypeAttributesTable->find()->where([
+       			$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
+       			$AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'sp_metadata'
+       		])
+       		->first();
+
+       	if (!empty($entity)) {
+       		$entity->value = htmlentities($message);
+       		$AuthenticationTypeAttributesTable->save($entity);
+       	}
+	}
+
+    public function getSPMetaData($settingsInfo) {
+        try {
+            // Now we only validate SP settings
+            $settings = new \OneLogin_Saml2_Settings($settingsInfo, true);
+            $metadata = $settings->getSPMetadata();
+            $errors = $settings->validateMetadata($metadata);
+            if (empty($errors)) {
+                header('Content-Type: text/xml');
+                return $metadata;
+            } else {
+                throw new \OneLogin_Saml2_Error(
+                    'Invalid SP metadata: '.implode(', ', $errors),
+                    \OneLogin_Saml2_Error::METADATA_SP_INVALID
+                );
+            }
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
 
 	public function saml2Authentication(&$attribute) {
 		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
 		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
 		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
 		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500];
+		$attribute['idp_certFingerprint'] = ['label' => 'Identity Provider - Certificate Fingerprint', 'type' => 'text'];
+		$attribute['idp_certFingerprintAlgorithm'] = ['label' => 'Identity Provider - Certificate Fingerprint Algorithm', 'type' => 'text'];
 		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
 		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text'];
+		$attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'text'];
 		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
 		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text'];
 		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text'];
 		$attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text'];
 		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text'];
+		$attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden'];
 	}
 
 	public function saml2ModifyValue($key, $attributeValue) {
