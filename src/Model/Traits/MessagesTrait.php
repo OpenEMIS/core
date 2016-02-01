@@ -252,7 +252,8 @@ trait MessagesTrait {
 				'inactive' => 'Your account has been disabled.',
 				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
-			'noAccess' => 'You do not have access to this location.'
+			'noAccess' => 'You do not have access to this location.',
+			'emptyFields' => 'Some of the required fields for this authentication type are empty.'
 		],
 		'SecurityRoles' => [
 			'userRoles' => 'User Roles',
