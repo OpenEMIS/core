@@ -1,4 +1,4 @@
-//Mobile Menu v.1.0.0
+//Mobile Menu v.1.0.1
 
 //On Mobile View -- Hamburgar Menu will appear
 var MobileMenu = {
@@ -24,10 +24,10 @@ var MobileMenu = {
         menuHandler.off('click');
         rightPane.off('click');
         // console.log("width = " + width );
-
         if ((width <= 1024)) {
+            leftPane.addClass("enable-overflow");
             menuHandler.on('click', function() {
-                leftPane.css("display", "block", "!important");
+                leftPane.toggleClass("enable-overflow");
                 // console.log('click');
                 if (bodyDir == 'ltr') {
                     rightPane.toggleClass("push-content-right").toggleClass("content-overlay");
@@ -39,6 +39,7 @@ var MobileMenu = {
             rightPane.on('click', function() {
                 rightPane.removeClass("push-content-right").removeClass("content-overlay");
                 rightPane.removeClass("push-content-left").removeClass("content-overlay");
+                leftPane.addClass("enable-overflow");
             });
         } else {
 
