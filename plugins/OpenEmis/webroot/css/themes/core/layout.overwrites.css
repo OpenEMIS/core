@@ -105,7 +105,6 @@ a.btn-green:hover {
         overflow: hidden;
     }
     .enable-overflow {
-        display: block !important;
         overflow: hidden !important;
     }
 }
