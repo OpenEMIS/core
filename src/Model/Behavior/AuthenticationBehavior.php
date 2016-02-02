@@ -290,7 +290,7 @@ class AuthenticationBehavior extends Behavior {
 	}
 
 	public function googleModifyValue($key, $attributeValue) {
-		if ($key == 'redirect_uri' && empty($attributeValue)) {
+		if ($key == 'redirect_uri') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
 		}
 		return false;
