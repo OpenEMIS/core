@@ -20,6 +20,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
+		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 
 		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrade']);
 	}
