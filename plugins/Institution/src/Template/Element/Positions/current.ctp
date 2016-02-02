@@ -30,7 +30,15 @@
 										$link = '';
 								?>
 								<tr>
-									<td><?= $obj->user->openemis_no; ?></td>
+									<td>
+										<?= $this->html->link($obj->user->openemis_no, [
+											'plugin' => 'Institution',
+											'controller' => 'Institutions',
+											'action' => 'StaffUser',
+											'view',
+											$obj->user->id
+										]) ?>
+									</td>
 									<td><?= $obj->user->name ?></td>
 									<td><?= $ControllerAction['table']->formatDate($obj->start_date) ?></td>
 									<td><?= $obj->FTE ?></td>

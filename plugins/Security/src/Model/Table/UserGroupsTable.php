@@ -366,7 +366,12 @@ class UserGroupsTable extends AppTable {
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
-					$rowData[] = $obj->openemis_no;
+					$rowData[] = $event->subject()->Html->link($obj->openemis_no , [
+						'plugin' => 'Directory',
+						'controller' => 'Directories',
+						'action' => 'view',
+						$obj->id
+					]);
 					$rowData[] = $obj->name;
 					$roleId = $obj->_joinData->security_role_id;
 

@@ -71,7 +71,17 @@ class InstitutionQualityVisitsTable extends AppTable {
 	}
 
 	public function onGetStaffId(Event $event, Entity $entity) {
-		return $entity->staff->name_with_id;
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->staff->name_with_id , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StaffUser',
+				'view',
+				$entity->staff->id
+			]);
+		} else {
+			return $entity->staff->name_with_id;
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
