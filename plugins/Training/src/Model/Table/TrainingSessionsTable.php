@@ -29,6 +29,9 @@ class TrainingSessionsTable extends AppTable {
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
 		$this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('TraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		
+		// For these two belongsToMany relation, dependent is set to false.
+		// If dependent is set to true, the actual record in User.Users will be removed when a training session is removed.
 		$this->belongsToMany('Trainers', [
 			'className' => 'User.Users',
 			'joinTable' => 'training_session_trainers',
@@ -160,6 +163,8 @@ class TrainingSessionsTable extends AppTable {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		//Required by patchEntity for associated data
 		// _joinData is required for 'saveStrategy' => 'replace' to work
+		// Trainers and Trainees will not be validated since they are User.Users model and only their id is included so that
+		// it will not be treated as a new record.
 		$newOptions = [];
 		$newOptions = [
 			'associated' => [
@@ -177,6 +182,10 @@ class TrainingSessionsTable extends AppTable {
 		// POCOR-2491: During edit, if there are more than one trainees and when all trainees were removed at the same time,
 		// "trainees" array will not be included in $data. We have to manually add it so that 'saveStrategy' => 'replace' will work
 		// The same behavior occured on trainers.
+		// Additional logic written for trainers array is to add "id" parameter outside of each "_joinData" array so that each record
+		// will not be treated as a new User.Users record.
+		// Including the "id" parameter on the web form needs extra javascript or a page reload method to work since the trainers is selected 
+		// through a dropdown input.
 		if ($data->offsetExists('TrainingSessions')) {
 			if (!isset($data['TrainingSessions']['trainees'])) {
 				$data['TrainingSessions']['trainees'] = [];
@@ -186,7 +195,7 @@ class TrainingSessionsTable extends AppTable {
 			} else {
 				foreach ($data['TrainingSessions']['trainers'] as $key => $trainer) {
 					if (isset($trainer['_joinData']['trainer_id'])) {
-						$data['TrainingSessions']['trainers'][$key]['id'] =$trainer['_joinData']['trainer_id'];
+						$data['TrainingSessions']['trainers'][$key]['id'] = $trainer['_joinData']['trainer_id'];
 					}
 				}
 			}
