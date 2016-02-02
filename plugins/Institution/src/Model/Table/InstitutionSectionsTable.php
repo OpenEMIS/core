@@ -153,16 +153,9 @@ class InstitutionSectionsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id) {
-		$students = $this
-						->InstitutionSectionStudents
-						->find()
-						->where([
-							$this->InstitutionSectionStudents->aliasField($this->InstitutionSectionStudents->foreignKey()) => $id,
-							$this->InstitutionSectionStudents->aliasField('student_status_id') . ' = 1',
-						])
-						->toArray()
-						;
-		if (!empty($students)) {
+		$Students = $this->InstitutionSectionStudents;
+		$conditions = [$Students->aliasField($Students->foreignKey()) => $id];
+		if ($Students->exists($conditions)) {
 			$this->Alert->warning($this->aliasField('stop_delete_when_student_exists'));
 			$event->stopPropagation();
 			return $this->controller->redirect($this->ControllerAction->url('index'));
