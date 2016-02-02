@@ -14,6 +14,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Network\Session;
+use Cake\Routing\Router;
 use ControllerAction\Model\Traits\EventTrait;
 
 /**
@@ -142,14 +143,12 @@ class ImportBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'add':
-				$toolbarButtons['import'] = $toolbarButtons['back'];
-				$toolbarButtons['import']['url'][0] = 'template';
-				$toolbarButtons['import']['attr']['title'] = __('Download Template');
-				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
+				$downloadUrl = $toolbarButtons['back']['url'];
+				$downloadUrl[0] = 'template';
 				if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
-					$toolbarButtons['import']['url'][1] = $buttons['add']['url'][1];
+					$downloadUrl[1] = $buttons['add']['url'][1];
 				}
-				
+				$this->_table->controller->set('downloadUrl', Router::url($downloadUrl));
 				break;
 		}
 		if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
@@ -193,9 +192,12 @@ class ImportBehavior extends Behavior {
 		$this->_table->ControllerAction->field('select_file', [
 			'type' => 'binary',
 			'visible' => true,
-			'attr' => ['label' => __('Select File To Import')],
+			'attr' => [
+				'label' => __('Select File To Import')
+			],
 			'null' => false,
-			'comment' => $comment
+			'comment' => $comment,
+			'startWithOneLeftButton' => 'download'
 		]);
 	}
 
@@ -518,7 +520,7 @@ class ImportBehavior extends Behavior {
 				'rowClass' => 'row-reset',
 				'results' => $completedData
 			]);
-			$session->delete($this->sessionKey);
+			// $session->delete($this->sessionKey);
 			if (!empty($completedData['failedExcelFile'])) {
 				if (!empty($completedData['passedExcelFile'])) {
 					$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'partial_failed');
