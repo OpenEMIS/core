@@ -140,6 +140,7 @@ trait MessagesTrait {
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
 
+			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
 		],
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
