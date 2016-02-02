@@ -97,3 +97,15 @@ a.btn-green:hover {
     left: 22px !important;
     top: 2px;    
 }
+
+/* Add Class for Overflow Menu in Chrome */
+
+@media only screen and (max-width: 1024px) {
+    .left-pane {
+        overflow: hidden;
+    }
+    .enable-overflow {
+        display: block !important;
+        overflow: hidden !important;
+    }
+}
