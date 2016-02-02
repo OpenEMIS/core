@@ -66,10 +66,10 @@ class AreapickerBehavior extends Behavior {
 		$entityKey = $attr['field'];
 		$areaId = $entity->$entityKey;
 		switch ($action) {
-			// case 'view':
 			case 'edit':
-				$fieldName = $attr['model'] . '.' . $attr['field'];
 				$attr['label'] = $options['label'];
+			case 'view':
+				$fieldName = $attr['model'] . '.' . $attr['field'];
 				$attr['key'] = $entityKey;
 				$attr['id'] = $areaId;
 				$list = $this->getAreaLevelName($targetModel, $areaId);
@@ -87,6 +87,10 @@ class AreapickerBehavior extends Behavior {
 			->select(['level' => 'Levels.name', 'area_name' => $targetTable->aliasField('name')])
 			->hydrate(false)
 			->toArray();
+		if ($targetModel == 'Area.AreaAdministratives') {
+			// unset world
+			unset($path[0]);
+		}
 		return $path;
 	}
 }
