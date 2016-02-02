@@ -502,6 +502,11 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 	public function addEditBeforeAction(Event $event) {
+		$userId = $this->Auth->user('id');
+		$areasByUser = $this->AccessControl->getAreasByUser($userId);
+		if (!$this->AccessControl->isAdmin() && empty($areasByUser)) {
+			$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'displayCountry' => true]);		
+		}
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
@@ -519,14 +524,6 @@ class InstitutionsTable extends AppTable  {
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
 		]);
-	}
-
-	public function editAfterAction(Event $event, Entity $entity) {
-		$userId = $this->Auth->user('id');
-		$areasByUser = $this->AccessControl->getAreasByUser($userId);
-		if (!$this->AccessControl->isAdmin() && empty($areasByUser)) {
-			$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'displayCountry' => true]);		
-		}
 	}
 
 
