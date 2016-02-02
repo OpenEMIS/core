@@ -105,3 +105,9 @@ a.btn-green:hover {
         overflow: hidden !important;
     }
 }
+
+@media only screen and (max-width : 800px) {
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
+    }
+}
