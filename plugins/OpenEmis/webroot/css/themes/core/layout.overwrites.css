@@ -91,6 +91,10 @@ a.btn-green:hover {
     right: 10%;
 }
 
+.rtl .left-menu {
+    left: 0;
+}
+
 /* IE9 */
 
 .rtl .input-select-wrapper:before {
