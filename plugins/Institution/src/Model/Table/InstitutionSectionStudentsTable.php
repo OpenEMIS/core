@@ -121,11 +121,6 @@ class InstitutionSectionStudentsTable extends AppTable {
 		return $count;
 	}
 
-	public function getStudentCategoryList() {
-		$query = $this->StudentCategories->getList();
-		return $query->toArray();
-	}
-
 	public function autoInsertSectionStudent($data) {
 		$securityUserId = $data['student_id'];
 		$selectedGradeId = $data['education_grade_id'];
