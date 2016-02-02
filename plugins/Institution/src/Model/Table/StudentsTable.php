@@ -646,7 +646,7 @@ class StudentsTable extends AppTable {
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
 				// to automatically add the student into a specific class when the student is successfully added to a school
-				if ($entity->class > 0) {
+				if ($entity->has('class') && $entity->class > 0) {
 					$sectionData = [];
 					$sectionData['student_id'] = $entity->student_id;
 					$sectionData['education_grade_id'] = $entity->education_grade_id;
