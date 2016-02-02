@@ -521,6 +521,14 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+	public function editAfterAction(Event $event, Entity $entity) {
+		$userId = $this->Auth->user('id');
+		$areasByUser = $this->AccessControl->getAreasByUser($userId);
+		if (!$this->AccessControl->isAdmin() && empty($areasByUser)) {
+			$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'displayCountry' => true]);		
+		}
+	}
+
 
 /******************************************************************************************************************
 **
