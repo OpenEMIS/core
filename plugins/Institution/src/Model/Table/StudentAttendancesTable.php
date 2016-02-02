@@ -32,7 +32,6 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
 			'excludes' => ['status', 'education_grade_id'],
