@@ -517,7 +517,7 @@ class InstitutionSectionsTable extends AppTable {
 								'status' => 1
 							];
 					}
-					$classes = $model->newEntities($data['MultiClasses']);
+					$classes = $model->newEntities($data['MultiClasses'], ['associated' => [ 'InstitutionSectionGrades' => ['validate'=>false]]]);
 					$error = false;
 					foreach ($classes as $key=>$class) {
 					    if ($class->errors()) {
@@ -552,9 +552,6 @@ class InstitutionSectionsTable extends AppTable {
 							}
 						}
 						unset($value);
-						if ($errorMessage != 'AcademicPeriodId') {
-							$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage, ['reset' => true]);
-						}
 						$model->fields['single_grade_field']['data']['sections'] = $classes;
 						$model->request->data['MultiClasses'] = $data['MultiClasses'];
 						return false;
@@ -699,7 +696,7 @@ class InstitutionSectionsTable extends AppTable {
 			}
 
 			if (!empty($newSchoolSubjects)) {
-				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
+				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects, ['associated' => ['InstitutionSectionClasses' => ['validate' => false]]]);
 				foreach ($newSchoolSubjects as $subject) {
 				    $InstitutionSubjects->save($subject);
 				}
@@ -718,6 +715,7 @@ class InstitutionSectionsTable extends AppTable {
 				foreach($data['InstitutionSections']['institution_section_grades'] as $key => $row) {
 					$data['InstitutionSections']['institution_section_grades'][$key]['status'] = 1;
 				}
+				$options['associated'] = ['InstitutionSectionGrades' => ['validate' => false]];
 			} else {
 				/**
 				 * set institution_id to empty to trigger validation error in ControllerActionComponent
@@ -809,12 +807,21 @@ class InstitutionSectionsTable extends AppTable {
 			/**
 			 * Insert the newly added record into the UI table & unset the record from studentOptions
 			 */
-			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']>0) {
-				$id = $this->request->data['student_id'];
-				if ($id != 0) {
-					$students[] = $this->createVirtualStudentEntity($id, $entity);
+			if (array_key_exists('student_id', $this->request->data)) {
+				if ($this->request->data['student_id']>0) {
+					$id = $this->request->data['student_id'];
+					if ($id != 0) {
+						$students[] = $this->createVirtualStudentEntity($id, $entity);
+					}
+					unset($studentOptions[$id]);
+				} else if ($this->request->data['student_id'] == -1) {
+					foreach ($studentOptions as $id => $name) {
+						if ($id > 0) {
+							$students[] = $this->createVirtualStudentEntity($id, $entity);
+							unset($studentOptions[$id]);
+						}
+					}
 				}
-				unset($studentOptions[$id]);
 			}
 		} else {
 			/**
@@ -825,6 +832,9 @@ class InstitutionSectionsTable extends AppTable {
 					unset($studentOptions[$row->student_id]);
 				}
 			}
+		}
+		if (count($studentOptions) < 3) {
+			$studentOptions = [$this->getMessage('Users.select_student_empty')];
 		}
 		$this->fields['students']['data']['students'] = $students;
 		$this->fields['students']['data']['studentOptions'] = $studentOptions;
@@ -989,6 +999,9 @@ class InstitutionSectionsTable extends AppTable {
 			])
 			->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
+		if (!empty($query)) {
+			$studentOptions[-1] = $this->getMessage('Users.add_all_student');
+		}
 		foreach ($query as $skey => $obj) {
 			/**
 			 * Modified this filter in PHPOE-1799.
