@@ -1,4 +1,4 @@
-//Header v.1.0.0
+//Header v.1.0.1
 
 //Header will wrap with ellipsis
 var Header = {
@@ -19,13 +19,13 @@ var Header = {
 
                     headerToolbar.css('display', 'none');
                     toolbarElements.css('display', 'none');
-                    $(this).css('max-width', '100%').css('white-space', 'normal').css('text-overflow', 'unset').css('display', 'inline-block');
+                    $(this).css('max-width', '100%').css('white-space', 'normal').css('text-overflow', 'unset');
                 }, // mouseover
                 function(e) {
                     var toolbarElements = $(".toolbar");
 
                     toolbarElements.css('display', 'inline-block');
-                    $(this).css('max-width', '350px').css('white-space', 'nowrap').css('text-overflow', 'ellipsis').css('display', 'inline-block');
+                    $(this).css('max-width', '350px').css('white-space', 'nowrap').css('text-overflow', 'ellipsis');
 
                 } // mouseout
             );
