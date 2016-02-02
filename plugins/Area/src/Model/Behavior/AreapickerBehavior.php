@@ -60,4 +60,33 @@ class AreapickerBehavior extends Behavior {
 		}
 		return $value;
 	}
+
+	public function onGetReadOnlyAreasElement(Event $event, $action, Entity $entity, $attr, $options) {
+		$targetModel = $attr['source_model'];
+		$entityKey = $attr['field'];
+		$areaId = $entity->$entityKey;
+		switch ($action) {
+			// case 'view':
+			case 'edit':
+				$fieldName = $attr['model'] . '.' . $attr['field'];
+				$attr['label'] = $options['label'];
+				$attr['key'] = $entityKey;
+				$attr['id'] = $areaId;
+				$list = $this->getAreaLevelName($targetModel, $areaId);
+				$attr['list'] = $list;
+				return $event->subject()->renderElement('Area.read_only_areas', ['attr' => $attr]);
+				break;
+		}
+	}
+
+	public function getAreaLevelName($targetModel, $areaId) {
+		$targetTable = TableRegistry::get($targetModel);
+		$path = $targetTable
+			->find('path', ['for' => $areaId])
+			->contain(['Levels'])
+			->select(['level' => 'Levels.name', 'area_name' => $targetTable->aliasField('name')])
+			->hydrate(false)
+			->toArray();
+		return $path;
+	}
 }
