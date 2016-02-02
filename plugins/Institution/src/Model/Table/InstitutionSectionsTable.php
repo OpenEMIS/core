@@ -537,9 +537,6 @@ class InstitutionSectionsTable extends AppTable {
 							}
 						}
 						unset($value);
-						if ($errorMessage != 'AcademicPeriodId') {
-							$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage, ['reset' => true]);
-						}
 						$model->fields['single_grade_field']['data']['sections'] = $classes;
 						$model->request->data['MultiClasses'] = $data['MultiClasses'];
 						return false;
