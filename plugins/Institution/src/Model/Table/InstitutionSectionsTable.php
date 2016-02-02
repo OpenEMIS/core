@@ -149,6 +149,21 @@ class InstitutionSectionsTable extends AppTable {
 
 /******************************************************************************************************************
 **
+** delete action methods
+**
+******************************************************************************************************************/
+	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id) {
+		$Students = $this->InstitutionSectionStudents;
+		$conditions = [$Students->aliasField($Students->foreignKey()) => $id];
+		if ($Students->exists($conditions)) {
+			$this->Alert->warning($this->aliasField('stopDeleteWhenStudentExists'));
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
+		}
+	}
+
+/******************************************************************************************************************
+**
 ** index action methods
 **
 ******************************************************************************************************************/
