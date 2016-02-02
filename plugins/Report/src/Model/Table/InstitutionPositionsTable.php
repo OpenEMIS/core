@@ -40,8 +40,17 @@ class InstitutionPositionsTable extends AppTable  {
 		return $options[$entity->status];
 	}
 
-	public function onExcelGetType(Event $event, Entity $entity) {
-		$options = $this->getSelectOptions('Staff.position_types');
-		return $options[$entity->type];
+	public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity) {
+   		$options = $this->getSelectOptions('Staff.position_types');
+		if ($entity->has('staff_position_title')) {
+	        $type = array_key_exists($entity->staff_position_title->type, $options) ? $options[$entity->staff_position_title->type] : '';
+	        if (empty($type)) {
+	    		return $entity->staff_position_title->name;
+   		    } else {
+				return $entity->staff_position_title->name .' - '. $type;
+   			}
+   		} else {
+   			$this->log($entity->name . ' has no staff_position_title...', 'debug');
+   		}
 	}
 }
