@@ -19,7 +19,6 @@ class InstitutionSectionStudentsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrade']);
 	}
@@ -119,11 +118,6 @@ class InstitutionSectionStudentsTable extends AppTable {
 			->count()
 		;
 		return $count;
-	}
-
-	public function getStudentCategoryList() {
-		$query = $this->StudentCategories->getList();
-		return $query->toArray();
 	}
 
 	public function autoInsertSectionStudent($data) {
