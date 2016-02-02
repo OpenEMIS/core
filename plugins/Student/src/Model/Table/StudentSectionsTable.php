@@ -14,6 +14,7 @@ class StudentSectionsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 
 		$this->hasMany('InstitutionSectionGrade', ['className' => 'Institution.InstitutionSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
