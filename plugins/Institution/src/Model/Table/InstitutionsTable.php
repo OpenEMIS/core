@@ -387,9 +387,8 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {
-		$areaName = $entity->Areas['name'];
-
 		if($this->action == 'index'){
+			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
@@ -411,9 +410,15 @@ class InstitutionsTable extends AppTable  {
 			} catch (InvalidPrimaryKeyException $ex) {
 				$this->log($ex->getMessage(), 'error');
 			}
+			return $areaName;
 		}
+		return $entity->area_id;
+	}
 
-		return $areaName;
+	public function onGetAreaAdministrativeId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return $entity->area_administrative_id;
+		}	
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -481,6 +486,8 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'label' => false, 'override' => true]);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'read_only_areas', 'source_model' => 'Area.AreaAdministratives', 'label' => false, 'override' => true]);
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
