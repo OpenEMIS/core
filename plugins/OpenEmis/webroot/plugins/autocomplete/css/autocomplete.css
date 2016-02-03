@@ -30,13 +30,19 @@
 /* Extra Small Devices, Phones */
 
 @media only screen and (max-width: 800px) {
+	.autocomplete {
+		position: relative;
+	}
 	.autocomplete-loader {
-		margin-left: -30px;
-		left: 0 !important;
+		margin-left: 0 !important;
+		left: auto !important;
+		right: 5px !important;
+		position: absolute;
+		top: auto !important;
+		margin: 7px;
 	}
 	.rtl .autocomplete-loader {
-		margin-right: -30px;
-		margin-left: 0 !important;
-		right: 0 !important;
+		right: auto !important;
+		left: 10px !important;
 	}
 }
