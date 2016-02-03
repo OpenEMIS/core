@@ -20,6 +20,8 @@ class StaffPositionTitlesTable extends AppTable {
 			'actions' => ['remove' => 'transfer'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
+
+		$this->systemRolesList = $this->SecurityRoles->getSystemRolesList();
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -34,8 +36,10 @@ class StaffPositionTitlesTable extends AppTable {
 			'options' => $this->getSelectOptions('Staff.position_types'),
 			'after' => 'name'
 		]);
+	}
 
-		$systemRolesList = ['' => '--'.__('Select One').'--'] + $this->SecurityRoles->getSystemRolesList();
+	public function addEditBeforeAction(Event $event) {
+		$systemRolesList = ['' => '--'.__('Select One').'--'] + $this->systemRolesList;
 		$this->field('security_role_id', [
 			'visible' => true,
 			'type' => 'select',
@@ -49,7 +53,13 @@ class StaffPositionTitlesTable extends AppTable {
 		return array_key_exists($entity->type, $types) ? $types[$entity->type] : $entity->type;
 	}
 
+	public function onGetSecurityRoleId(Event $event, Entity $entity) {
+		$systemRole = $this->systemRolesList;
+		return array_key_exists($entity->security_role_id, $systemRole) ? $systemRole[$entity->security_role_id] : $entity->security_role_id;
+	}
+
 	public function indexBeforeAction(Event $event) {
 		$this->field('type', ['after' => 'name', 'visible' => true]);
+		$this->field('security_role_id', ['after' => 'type', 'visible' => true]);
 	}
 }
