@@ -118,7 +118,6 @@ class InstitutionShiftsTable extends AppTable {
 
 	public function viewBeforeAction($event) {
 		$this->ControllerAction->field('period', ['visible' => false]);
-		$this->ControllerAction->field('location', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
 			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_id',
