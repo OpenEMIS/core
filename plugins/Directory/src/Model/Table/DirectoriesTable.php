@@ -221,7 +221,7 @@ class DirectoriesTable extends AppTable {
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
 			
-			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 1];
+			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
 			
 			$indexElements[] = [
 				'name' => $indexDashboard,
@@ -232,8 +232,19 @@ class DirectoriesTable extends AppTable {
 					'iconClass' => $iconClass
 				],
 				'options' => [],
-				'order' => 0
+				'order' => 2
 			];
+			foreach ($indexElements as $key => $value) {
+				if ($value['name']=='advanced_search') {
+					$indexElements[$key]['order'] = 1;
+				} else if ($value['name']=='OpenEmis.ControllerAction/index') {
+					$indexElements[$key]['order'] = 3;
+				} else if ($value['name']=='OpenEmis.pagination') {
+					$indexElements[$key]['order'] = 4;
+				} else {
+					// $indexElements[$key]['order'] = $key + 4;
+				}
+			}
 			$this->controller->set('indexElements', $indexElements);
 		}
 	}
