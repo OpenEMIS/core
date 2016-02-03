@@ -304,12 +304,19 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$positionOptions = $this->Positions
-			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-			->contain(['StaffPositionTitles'])
-			->where([$this->Positions->aliasField('institution_id') => $institutionId])
-			->toArray();
-			$attr['options'] = $positionOptions;
+	   		$types = $this->getSelectOptions('Staff.position_types');
+			$positionOptions = new ArrayObject();
+			$this->Positions
+					->find()
+					->contain(['StaffPositionTitles'])
+					->where([$this->Positions->aliasField('institution_id') => $institutionId])
+				    ->map(function ($row) use ($types, $positionOptions) { // map() is a collection method, it executes the query
+				        $type = array_key_exists($row->staff_position_title->type, $types) ? $types[$row->staff_position_title->type] : $row->staff_position_title->type;
+				        $positionOptions[$type][$row->id] = $row->name;
+				        return $row;
+				    })
+				    ->toArray(); // Also a collections library method
+			$attr['options'] = $positionOptions->getArrayCopy();
 		}
 		return $attr;
 	}
@@ -735,19 +742,20 @@ class StaffTable extends AppTable {
 		$query = $this->find('all');
 		$staffByPositions = $query
 			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
-			->contain(['Users.Genders','Positions'])
+			->contain(['Users.Genders','Positions.StaffPositionTitles'])
 			->select([
-				'Positions.type',
+				'Positions.id',
+				'StaffPositionTitles.type',
 				'Users.id',
 				'Genders.name',
 				'total' => $query->func()->count('DISTINCT '.$this->aliasField('staff_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([
-				'Positions.type', 'Genders.name'
+				'StaffPositionTitles.type', 'Genders.name'
 			])
 			->order(
-				'Positions.type'
+				'StaffPositionTitles.type'
 			)
 			->toArray();
 
@@ -768,7 +776,7 @@ class StaffTable extends AppTable {
 		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
 			if ($staffByPosition->has('position')) {
-				$positionType = $staffByPosition->position->type;
+				$positionType = $staffByPosition->position->staff_position_title->type;
 				$staffGender = $staffByPosition->user->gender->name;
 				$StaffTotal = $staffByPosition->total;
 
@@ -788,8 +796,8 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
-	// Functions that are migrated over
-	/******************************************************************************************************************
+// Functions that are migrated over
+/******************************************************************************************************************
 **
 ** finders functions to be used with query
 **
@@ -801,13 +809,15 @@ class StaffTable extends AppTable {
 	 */
 	public function findByPositions(Query $query, array $options) {
 		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 			$positions = $this->Positions->find('list')
 						->find('withBelongsTo')
 				        ->where([
 				        	'Institutions.id' => $options['Institutions.id'],
-				        	$this->Positions->aliasField('type') => $options['type']
+				        	$StaffPositionTitles->aliasField('type') => $options['type']
 				        ])
-				        ->toArray();
+				        ->toArray()
+				        ;
 			$positions = array_keys($positions);
 			return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
 		} else {
