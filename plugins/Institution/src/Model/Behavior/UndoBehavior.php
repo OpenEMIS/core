@@ -69,9 +69,8 @@ class UndoBehavior extends Behavior {
 
 	protected function updateStudentStatus($code, $conditions) {
 		$status = $this->statuses[$code];
-		$this->model->updateAll(
-			['student_status_id' => $status],
-			[$conditions]
-		);
+		$entity = $this->model->find()->where([$conditions])->first();
+		$entity->student_status_id = $status;
+		$this->model->save($entity);
 	}
 }
