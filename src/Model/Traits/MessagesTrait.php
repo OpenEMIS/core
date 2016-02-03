@@ -520,6 +520,9 @@ trait MessagesTrait {
 			'InstitutionShifts' => [
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				],
+				'location' => [
+					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
 			'StudentGuardians' => [
