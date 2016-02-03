@@ -13,6 +13,7 @@ class StaffPositionTitlesTable extends AppTable {
         parent::initialize($config);
         $this->hasMany('Titles', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_title_id']);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id']);
+        $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
 
 		$this->addBehavior('OpenEmis.OpenEmis');
 		$this->addBehavior('ControllerAction.ControllerAction', [
@@ -21,12 +22,25 @@ class StaffPositionTitlesTable extends AppTable {
 		]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator->notEmpty('security_role_id');
+		return $validator;
+	}
+
 	public function beforeAction($event) {
 		$this->field('type', [
 			'visible' => true,
 			'type' => 'select',
 			'options' => $this->getSelectOptions('Staff.position_types'),
 			'after' => 'name'
+		]);
+
+		$systemRolesList = ['' => '--'.__('Select One').'--'] + $this->SecurityRoles->getSystemRolesList();
+		$this->field('security_role_id', [
+			'visible' => true,
+			'type' => 'select',
+			'options' => $systemRolesList,
+			'after' => 'type'
 		]);
 	}
 
