@@ -540,6 +540,74 @@ class ValidationBehavior extends Behavior {
 		return true;
 	}
 
+	public static function checkShiftAvailable($field, array $globalData) {
+		// have to account for edit and itself... do not count itself into the query
+		$existingId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
+
+		$academicPeriodId = (array_key_exists('academic_period_id', $globalData['data']))? $globalData['data']['academic_period_id']: null;
+		$locationInstitutionId = (array_key_exists('location_institution_id', $globalData['data']))? $globalData['data']['location_institution_id']: null;
+		// no academic period or location fails
+		if (empty($academicPeriodId)) return false;
+		if (empty($locationInstitutionId)) return false;
+
+		$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+		// find any shift with overlap
+		$query = $InstitutionShifts->find()
+			->where([
+				$InstitutionShifts->aliasField('academic_period_id') => $academicPeriodId,
+				$InstitutionShifts->aliasField('location_institution_id') => $locationInstitutionId,
+			])
+			;
+
+		// to handle edits
+		if (!empty($existingId)) {
+			$query->where([$InstitutionShifts->aliasField('id') .' != ' . $existingId]);
+		}
+
+		$timeConditions = [];
+		$startTime = (array_key_exists('start_time', $globalData['data']))? $globalData['data']['start_time']: null;
+		$endTime = (array_key_exists('end_time', $globalData['data']))? $globalData['data']['end_time']: null;
+		// no academic period or location fails
+		if (empty($startTime)) return false;
+		if (empty($endTime)) return false;
+
+		$format = 'H:i:s';
+		$startTime = date($format, strtotime($startTime));
+		$endTime = date($format, strtotime($endTime));
+
+		$timeConditions['OR'] = [
+			'OR' => [
+				[	
+					$InstitutionShifts->aliasField('start_time') . ' <= ' => $startTime,
+					$InstitutionShifts->aliasField('end_time') . ' > ' => $startTime,
+				],
+				[
+					$InstitutionShifts->aliasField('start_time') . ' < ' => $endTime,
+					$InstitutionShifts->aliasField('end_time') . ' >= ' => $endTime,
+				],
+				[
+					$InstitutionShifts->aliasField('start_time') . ' >= ' => $startTime,
+					$InstitutionShifts->aliasField('end_time') . ' <= ' => $endTime,
+				],
+				[
+					// means full day
+					$InstitutionShifts->aliasField('start_time') . ' IS NULL',	
+					$InstitutionShifts->aliasField('end_time') . ' IS NULL',
+				]
+			]
+		];
+
+		$query->where($timeConditions);
+
+		// pr($query->toArray());
+		// die;
+
+		$query = $query->count();
+		return ($query == 0);
+	}
+
+
+
 	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
 		$data = $globalData['data'];
 		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
