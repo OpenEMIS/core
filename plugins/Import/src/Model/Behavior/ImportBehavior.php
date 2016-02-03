@@ -392,7 +392,7 @@ class ImportBehavior extends Behavior {
 								$rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
 								$rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
 							} else {
-								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $fieldName . ' => ' . $arr[key($arr)], 'info');
+								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $field . ' => ' . $arr[key($arr)], 'info');
 							}
 						}
 					}
