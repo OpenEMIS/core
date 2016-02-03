@@ -1,12 +1,20 @@
+.autocomplete:focus {
+	outline: none !important;
+}
+
 .autocomplete-loader {
-	float: left;
+	display: inline-block;
+	position: relative;
 	background-image: url('../img/loader.gif');
+	background-repeat: no-repeat;
 	height: 16px;
 	width: 16px;
-	margin: 7px 0 0 5px;
+	left: -25px;
+	vertical-align: middle;
+	margin-bottom: 5px;
 }
 
 .rtl .autocomplete-loader {
-	float: right;
-	margin-right: 5px;
+	left: auto !important;
+	right: -25px;
 }
