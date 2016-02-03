@@ -10,8 +10,13 @@
 	height: 16px;
 	width: 16px;
 	left: -25px;
+	top: -1px !important;
 	vertical-align: middle;
 	margin-bottom: 5px;
+}
+
+.safari .autocomplete-loader {
+	top: 2px;
 }
 
 .rtl .autocomplete-loader {
