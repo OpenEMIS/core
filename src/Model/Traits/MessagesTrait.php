@@ -140,6 +140,7 @@ trait MessagesTrait {
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
 
+			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
 		],
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
@@ -249,7 +250,8 @@ trait MessagesTrait {
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.',
-				'inactive' => 'Your account has been disabled.'
+				'inactive' => 'Your account has been disabled.',
+				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
 			'noAccess' => 'You do not have access to this location.'
 		],
@@ -510,6 +512,11 @@ trait MessagesTrait {
 				'noInstitutionPosition' => 'There are no position available.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
+			],
+			'InstitutionPositions' => [
+				'position_no' => [
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+				]
 			],
 			'InstitutionShifts' => [
 				'institution_name' => [
@@ -897,6 +904,14 @@ trait MessagesTrait {
 				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'Salaries' => [
+				'gross_salary' => [
+					'ruleMoney' => 'Please enter a valid amount.'
+				],
+				'net_salary' => [
+					'ruleMoney' => 'Please enter a valid amount.'
 				]
 			]
 		],

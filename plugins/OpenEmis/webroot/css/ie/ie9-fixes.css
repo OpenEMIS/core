@@ -1,4 +1,4 @@
-/* IE9 v.1.0.0 */
+/* IE9 v.1.0.1 */
 html, body {
 	font-size: 12px;	
 }
@@ -7,27 +7,14 @@ html, body {
 	margin-right: 0 !important;
 }
 
-/* LOGIN */
-
-.rtl .login .text:after, 
-.rtl .login .password:after, 
-.rtl .login .select:after {
-	border-right: 1px solid #DDD;
-	border-left: 0 !important;
-}
-
 /* NAVIGATION */
-.rtl .menu-toggle {
-	right: -2px;
-    left: auto;
-    -webkit-border-top-left-radius: 3px;
-            border-top-left-radius: 3px;
-    -webkit-border-bottom-left-radius: 3px;
-            border-bottom-left-radius: 3px;
-    -webkit-border-top-right-radius: 3px;
-            border-top-right-radius: 3px;
-    -webkit-border-bottom-right-radius: 3px;
-            border-bottom-right-radius: 3px;
+
+.split-panes.horizontal > .split-handler:after,
+.rtl .split-panes.horizontal > .split-handler:after {
+	-webkit-border-radius: 0;
+	   -moz-border-radius: 0; 
+	    -ms-border-radius: 0;
+		    border-radius: 0;	
 }
 
 /* FORM INPUT */
@@ -37,21 +24,6 @@ label, button, input, select, textarea {
 }
 
 /* SELECT */
-
-.login-box .input-select-wrapper:before {
-	height: 30px;
-	width: 30px;
-}
-
-.rtl .login-box .input-select-wrapper:before {
-	left: -1px;
-	right: auto;
-}
-
-.rtl .login-box .input-select-wrapper:after {
-	z-index: 9;
-	left: 12px;
-}
 
 .input-select-wrapper:before {
 	display: block;
@@ -74,6 +46,35 @@ label, button, input, select, textarea {
 	right: auto;
 	left: 4px;
 }
+
+/* LOGIN */
+
+.login-box .input-select-wrapper:before {
+	height: 30px;
+	width: 30px;
+}
+
+.rtl .login-box .input-select-wrapper:before {
+	left: -1px;
+	right: auto;
+}
+
+.rtl .login-box .input-select-wrapper:after {
+	z-index: 9;
+	left: 12px;
+}
+
+.rtl .login-box input {
+	padding: 10px 5px 10px 40px !important;
+}
+
+.rtl .login .text:after, 
+.rtl .login .password:after,
+.rtl .login .select:after {
+	border-left: 1px solid #DDD !important;
+}
+
+/* PAGINATION */
 
 .display-limit	{
 	width: 160px !important;
@@ -204,4 +205,49 @@ label, button, input, select, textarea {
 
 .rtl .toolbar-wrapper .input-select-wrapper:after {
 	z-index: 9;
+}
+
+/* PRGRESS BAR */
+
+.spinner-wrapper .lt-ie9 {
+	top: 50%;
+	left: -5px;
+}
+
+.lt-ie9 {
+  	position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    background-image: url('img/loader.gif');    
+    @include animation(none);
+    animation: none !important;
+    border: none !important;
+    border-color: transparent !important;
+    border-width: 0 !important;
+    width: 55px !important;
+    height: 55px !important;
+    -webkit-border-radius: 0 !important;
+            border-radius: 0 !important;
+    -webkit-box-shadow: 0 2px 1px rgba(0,0,0,0);
+    -moz-box-shadow: 0 2px 1px rgba(0,0,0,0);
+    -o-box-shadow: 0 2px 1px rgba(0,0,0,0);
+    -ms-box-shadow: 0 2px 1px rgba(0,0,0,0);
+            box-shadow: 0 2px 1px rgba(0,0,0,0);
+}
+
+.spinner-text .loading-percentage {
+	font-size: 12px !important;
+	top: 42% !important;
+}
+
+.ie9 .loader-text i {
+	display: none;
+}
+
+/* TABS */
+.scroll_tabs_container div.scroll_tab_inner span {
+    line-height: 30px;
 }

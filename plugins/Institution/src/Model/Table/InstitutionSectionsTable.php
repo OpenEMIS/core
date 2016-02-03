@@ -149,6 +149,21 @@ class InstitutionSectionsTable extends AppTable {
 
 /******************************************************************************************************************
 **
+** delete action methods
+**
+******************************************************************************************************************/
+	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id) {
+		$Students = $this->InstitutionSectionStudents;
+		$conditions = [$Students->aliasField($Students->foreignKey()) => $id];
+		if ($Students->exists($conditions)) {
+			$this->Alert->warning($this->aliasField('stopDeleteWhenStudentExists'));
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
+		}
+	}
+
+/******************************************************************************************************************
+**
 ** index action methods
 **
 ******************************************************************************************************************/
@@ -330,6 +345,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->contain([
+			'InstitutionSectionStudents.StudentStatuses',
 			'AcademicPeriods',
 			'InstitutionShifts',
 			'Staff',
@@ -501,7 +517,7 @@ class InstitutionSectionsTable extends AppTable {
 								'status' => 1
 							];
 					}
-					$classes = $model->newEntities($data['MultiClasses']);
+					$classes = $model->newEntities($data['MultiClasses'], ['associated' => [ 'InstitutionSectionGrades' => ['validate'=>false]]]);
 					$error = false;
 					foreach ($classes as $key=>$class) {
 					    if ($class->errors()) {
@@ -536,9 +552,6 @@ class InstitutionSectionsTable extends AppTable {
 							}
 						}
 						unset($value);
-						if ($errorMessage != 'AcademicPeriodId') {
-							$model->Alert->error('Institution.'.$model->alias().'.empty'.$errorMessage, ['reset' => true]);
-						}
 						$model->fields['single_grade_field']['data']['sections'] = $classes;
 						$model->request->data['MultiClasses'] = $data['MultiClasses'];
 						return false;
@@ -683,7 +696,7 @@ class InstitutionSectionsTable extends AppTable {
 			}
 
 			if (!empty($newSchoolSubjects)) {
-				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
+				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects, ['associated' => ['InstitutionSectionClasses' => ['validate' => false]]]);
 				foreach ($newSchoolSubjects as $subject) {
 				    $InstitutionSubjects->save($subject);
 				}
@@ -702,6 +715,7 @@ class InstitutionSectionsTable extends AppTable {
 				foreach($data['InstitutionSections']['institution_section_grades'] as $key => $row) {
 					$data['InstitutionSections']['institution_section_grades'][$key]['status'] = 1;
 				}
+				$options['associated'] = ['InstitutionSectionGrades' => ['validate' => false]];
 			} else {
 				/**
 				 * set institution_id to empty to trigger validation error in ControllerActionComponent
@@ -759,6 +773,7 @@ class InstitutionSectionsTable extends AppTable {
 					$data[$this->alias()]['institution_section_students'][$k]['id'] = $record->id;
 				}
 			} else {
+				$data[$this->alias()]['institution_section_students'] = [];
 				// PHPOE-2338 - status no longer used, record will be deleted instead
 			}
 		}
@@ -792,12 +807,21 @@ class InstitutionSectionsTable extends AppTable {
 			/**
 			 * Insert the newly added record into the UI table & unset the record from studentOptions
 			 */
-			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']>0) {
-				$id = $this->request->data['student_id'];
-				if ($id != 0) {
-					$students[] = $this->createVirtualStudentEntity($id, $entity);
+			if (array_key_exists('student_id', $this->request->data)) {
+				if ($this->request->data['student_id']>0) {
+					$id = $this->request->data['student_id'];
+					if ($id != 0) {
+						$students[] = $this->createVirtualStudentEntity($id, $entity);
+					}
+					unset($studentOptions[$id]);
+				} else if ($this->request->data['student_id'] == -1) {
+					foreach ($studentOptions as $id => $name) {
+						if ($id > 0) {
+							$students[] = $this->createVirtualStudentEntity($id, $entity);
+							unset($studentOptions[$id]);
+						}
+					}
 				}
-				unset($studentOptions[$id]);
 			}
 		} else {
 			/**
@@ -809,55 +833,27 @@ class InstitutionSectionsTable extends AppTable {
 				}
 			}
 		}
+		if (count($studentOptions) < 3) {
+			$studentOptions = [$this->getMessage('Users.select_student_empty')];
+		}
 		$this->fields['students']['data']['students'] = $students;
 		$this->fields['students']['data']['studentOptions'] = $studentOptions;
-
-		$gradeOptions = $this->getSectionGradeOptions($entity);
-		$this->fields['students']['data']['gradeOptions'] = $gradeOptions;
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-		$record = $this->find()->contain([
-			'InstitutionClasses.InstitutionClassStudents', 
-			'InstitutionClasses.InstitutionSections', 
-			'InstitutionSectionStudents.Users'
-		])->where([$this->aliasField('id')=>$entity->id])->first();
-		
-		// finding removed student ids
+
 		$currentInstitutionSectionStudents = $entity->institution_section_students;
 		$currentStudentIds = [];
 		foreach ($currentInstitutionSectionStudents as $key => $value) {
 			$currentStudentIds[] = $value->student_id;
 		}
+
 		$originalInstitutionSectionStudents = $entity->getOriginal('institution_section_students');
 		$originalStudentIds = [];
 		foreach ($originalInstitutionSectionStudents as $key => $value) {
 			$originalStudentIds[] = $value->student_id;
 		}
 		$removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
-
-		$classes = [];
-		foreach ($record->institution_classes as $class) {
-			$students = [];
-			foreach($record->institution_section_students as $sectionStudent) {
-				$requiredData = (array_key_exists($sectionStudent->user->id, $requestData[$this->alias()]['institution_section_students']))? $requestData[$this->alias()]['institution_section_students'][$sectionStudent->user->id]: null;
-				if (in_array($sectionStudent->user->id, $removedStudentIds)) {
-					$requiredData['status'] = 0;
-				}
-				$students[$sectionStudent->user->id] = $this->InstitutionClasses->createVirtualEntity($sectionStudent->user->id, $class, 'students', $requiredData);
-			}
-			if (count($class->institution_class_students)>0) {
-				foreach($class->institution_class_students as $classStudent) {
-					if (!isset($students[$classStudent->student_id])) {
-						$classStudent->status=0;
-						$students[$classStudent->student_id] = $classStudent;
-					}
-				}
-			}
-
-			$class->institution_class_students = $students;
-			$this->InstitutionClasses->save($class);
-		}
 
 		if (!empty($removedStudentIds)) {
 			// 'deleteAll will not trigger beforeDelete/afterDelete events. If you need those first load a collection of records and delete them.'
@@ -1003,6 +999,9 @@ class InstitutionSectionsTable extends AppTable {
 			])
 			->toArray();
 		$studentOptions = [$this->getMessage('Users.select_student')];
+		if (!empty($query)) {
+			$studentOptions[-1] = $this->getMessage('Users.add_all_student');
+		}
 		foreach ($query as $skey => $obj) {
 			/**
 			 * Modified this filter in PHPOE-1799.
@@ -1114,7 +1113,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	protected function createVirtualStudentEntity($id, $entity) {
 		$userData = $this->Institutions->Students->find()
-			->contain(['Users'=>['Genders']])
+			->contain(['Users'=>['Genders'], 'StudentStatuses', 'EducationGrades'])
 			->where(['student_id'=>$id])
 			->first();
 
@@ -1122,12 +1121,17 @@ class InstitutionSectionsTable extends AppTable {
 			'id'=>$this->getExistingRecordId($id, $entity),
 			'student_id'=>$id,
 			'institution_section_id'=>$entity->id,
-			'education_grade_id'=>0,
+			'education_grade_id'=>  $userData->education_grade_id,
+			'student_status_id' => $userData->student_status_id,
+			'education_grade' => [],
+			'student_status' => [],
 			'user'=>[]
 		];
 		$student = $this->InstitutionSectionStudents->newEntity();
 		$student = $this->InstitutionSectionStudents->patchEntity($student, $data);
 		$student->user = $userData->user;
+		$student->student_status = $userData->student_status;
+		$student->education_grade = $userData->education_grade;
 		return $student;
 	}
 

@@ -57,7 +57,11 @@ use Cake\I18n\I18n;
 use Cake\Core\Configure;
 use Cake\Log\Log;
 
+use ControllerAction\Model\Traits\ControllerActionV4Trait;
+
 class ControllerActionComponent extends Component {
+	use ControllerActionV4Trait; // extended functionality from v4
+	
 	private $plugin;
 	private $controller;
 	private $triggerFrom = 'Controller';
