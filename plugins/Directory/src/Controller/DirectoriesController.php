@@ -126,10 +126,12 @@ class DirectoriesController extends AppController {
 			}
 
 			$alias = $model->alias;
-			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
+			else if ($alias == 'StaffSections') $alias = 'Staff Classes';
+			else if ($alias == 'StaffClasses') $alias = 'Staff Subjects';
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
 			// $params = $this->request->params;
