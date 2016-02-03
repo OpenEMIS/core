@@ -1,0 +1,225 @@
+/* 
+Dashboard Overwrites: v.1.0.0 
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../img/dashboard-login-bg.jpg') !important;
+}
+
+
+/* Dashboard Canvas */
+
+.dashboard-canvas {
+    display: block;
+    width: 100%;
+    min-width: 800px;
+    min-height: 768px;
+    background: rgba(0, 0, 0, 0) url("../../../img/dashboard-canvas.png") repeat scroll 0 0;
+    border: 1px solid #DDD;
+    margin: -10px auto;
+    padding: 5px;
+}
+
+
+/* For Dashboard - Builder > Share Tab Group & Users Table */
+
+tbody + tbody tr:first-child td {
+    border-top: 1px solid #DDD !important;
+}
+
+
+/* For Shared Page Preview */
+
+.preview body {
+    overflow: scroll;
+}
+
+.preview #wrapper {
+    padding-left: 0px !important;
+}
+
+.preview .wrapper {
+    top: 0 !important;
+}
+
+.preview .content-wrapper {
+    padding: 0px !important;
+}
+
+.preview .content-wrapper .wrapper {
+    padding: 0px !important;
+}
+
+.preview #page-content-wrapper {
+    padding: 0px !important;
+}
+
+.preview .dashboard-canvas {
+    background: none;
+    border: none;
+    margin: 0;
+}
+
+.preview .dragdrop-chart {
+    border: 0;
+}
+
+.preview .gridster-element-scroll:hover {
+    margin-top: 0;
+}
+
+
+/* Dataset Progress Bar */
+
+.progress-wrapper.jsonstat-progress {
+    height: auto;
+    margin: auto;
+    border-radius: 3px;
+}
+
+.progress-wrapper.jsonstat-progress .progress.progress-striped .progress-bar.progress-bar-striped {
+    height: 40px;
+    background-color: #5cb85c;
+}
+
+.progress-wrapper.jsonstat-progress .progress.progress-striped .progress-bar.progress-bar-striped span {
+    color: #333;
+    text-align: center;
+}
+
+.progress-wrapper.jsonstat-progress .progress-text {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    z-index: 5;
+    text-align: center;
+    line-height: 20px;
+}
+
+
+/* Overwrite the Filter Check on Gridster */
+
+.filter-check {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.5);
+    color: #FFF;
+    text-align: right;
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.filter-check-selector i {
+    color: #990000 !important;
+}
+
+
+/* Tinymce Overrides */
+
+.mce-container {
+    width: 90%;
+}
+
+.mce-panel {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-top: 1px solid #DDD !important;
+    border-bottom: 1px solid #DDD !important;
+    margin: 2px 0 !important;
+}
+
+.mce-stack-layout-item {
+    margin: 0 !important;
+    border-top: 0 !important;
+    padding-right: 18px !important;
+}
+
+.mce-floatpanel {
+    border: 1px solid #CCC !important;
+}
+
+.mce-caret {
+    margin-left: 5px !important;
+}
+
+.mce-btn:hover,
+.mce-btn:active,
+.mce-btn button:hover,
+.mce-btn button:focus {
+    border-color: #DDD !important;
+    background-color: #DDD !important;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.mce-wordcount {
+    padding: 10px !important;
+}
+
+.mce-btn-small button .mce-ico {
+    padding: 1px 5px 1px 0px !important;
+}
+
+.mce-tinymce {
+    border-right: 0 !important;
+}
+
+.mce-resizehandle {
+    display: none !important;
+}
+
+.mce-last {
+    border-bottom: 0 !important;
+}
+
+
+/* Dashboard Filter Checkbox on the Drag Drop Element */
+
+.filter-check-selector {
+    clear: both;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+.filter-check-selector i {
+    font-size: 6em !important;
+}
+
+.filter-check-background {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+
+/* Dashboard Sizing/Resize Function */
+
+.handle-n,
+.handle-e,
+.handle-s,
+.handle-w,
+.handle-ne,
+.handle-se,
+.handle-sw,
+.handle-nw {
+    z-index: 2;
+}
+
+
+/* Table Chart Container */
+
+.chart-container .table-responsive div {
+    height: auto !important;
+}
