@@ -291,11 +291,11 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		/**
-		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 60 seconds
+		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 90 seconds
 		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
-		ini_set('max_execution_time', 60);
+		ini_set('max_execution_time', 90);
 		/**
 		 */
 
