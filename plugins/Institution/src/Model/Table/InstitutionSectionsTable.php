@@ -883,7 +883,7 @@ class InstitutionSectionsTable extends AppTable {
 	 * academic_period_id field setup
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
