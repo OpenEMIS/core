@@ -64,7 +64,11 @@ class AreapickerBehavior extends Behavior {
 	public function onGetReadOnlyAreasElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$targetModel = $attr['source_model'];
 		$entityKey = $attr['field'];
-		$areaId = $entity->$entityKey;
+		if ($entity->has($entityKey)) {
+			$areaId = $entity->$entityKey;
+		} else {
+			$areaId = 0;
+		}
 		switch ($action) {
 			case 'edit':
 				$attr['label'] = $options['label'];
@@ -72,7 +76,11 @@ class AreapickerBehavior extends Behavior {
 				$fieldName = $attr['model'] . '.' . $attr['field'];
 				$attr['key'] = $entityKey;
 				$attr['id'] = $areaId;
-				$list = $this->getAreaLevelName($targetModel, $areaId);
+				if ($areaId != 0) {
+					$list = $this->getAreaLevelName($targetModel, $areaId);	
+				} else {
+					$list = [];
+				}
 				$attr['list'] = $list;
 				return $event->subject()->renderElement('Area.read_only_areas', ['attr' => $attr]);
 				break;
