@@ -285,11 +285,11 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		/**
-		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 90 seconds
+		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
 		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
-		ini_set('max_execution_time', 90);
+		ini_set('max_execution_time', 180);
 		/**
 		 */
 
@@ -392,7 +392,11 @@ class ImportBehavior extends Behavior {
 								$rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
 								$rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
 							} else {
-								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $field . ' => ' . $arr[key($arr)], 'info');
+								if ($field == 'student_name') {
+									$rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
+									$rowCodeErrorForExcel[] = $arr[key($arr)];
+								}
+								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() .' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
 							}
 						}
 					}
