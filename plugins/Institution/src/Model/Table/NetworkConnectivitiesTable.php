@@ -11,5 +11,11 @@ class NetworkConnectivitiesTable extends AppTable {
         parent::initialize($config);
 		
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+
+		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('ControllerAction.ControllerAction', [
+			'actions' => ['remove' => 'transfer'],
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+		]);
 	}
 }
