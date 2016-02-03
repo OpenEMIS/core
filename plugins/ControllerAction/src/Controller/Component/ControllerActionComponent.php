@@ -693,7 +693,7 @@ class ControllerActionComponent extends Component {
 			}
 
 			if (!empty($OR)) {
-				$query->where(['OR' => $OR]);
+				$query->orWhere(['OR' => $OR]);
 			}
 		}
 

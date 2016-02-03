@@ -20,6 +20,7 @@ class InstitutionPositionsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
+		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
@@ -38,7 +39,7 @@ class InstitutionPositionsTable extends AppTable {
 			;
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('staff_position_title_id', [
 			'visible' => true,
@@ -47,11 +48,6 @@ class InstitutionPositionsTable extends AppTable {
 		$this->ControllerAction->field('staff_position_grade_id', [
 			'visible' => true,
 			'type' => 'select'
-		]);
-		$this->ControllerAction->field('status', [
-			'visible' => true,
-			'type' => 'select',
-			'options' => $this->getSelectOptions('general.active')
 		]);
 		$this->ControllerAction->field('current_staff_list', [
 			'label' => '',
@@ -131,21 +127,43 @@ class InstitutionPositionsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
-
 		$this->fields['current_staff_list']['visible'] = false;
 		$this->fields['past_staff_list']['visible'] = false;
 
+		$this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
+		$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
+
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'status',
+			'staff_position_grade_id',
 		]);
-
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		// pr($options);die;
-		// $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
-		// $query->select($this->StaffPositionTitles);
+		$options['auto_contain'] = false;
+		$options['auto_order'] = false;
+
+		$query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions'])
+			->autoFields(true);
+
+		$sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+
+		if ($options['auto_search']) {
+			$search = $this->ControllerAction->getSearchKey();
+
+			$OR = [];
+			if (!empty($search)) {
+				$OR[$this->StaffPositionTitles->aliasField('name').' LIKE'] = '%' . $search . '%';
+			}
+
+			if (!empty($OR)) {
+				$query->where(['OR' => $OR]);
+			}
+		}
 	}
 
 /******************************************************************************************************************
@@ -161,7 +179,7 @@ class InstitutionPositionsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'status',
+			'staff_position_grade_id',
 		]);
 
 	}
@@ -176,7 +194,7 @@ class InstitutionPositionsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'status',
+			'staff_position_grade_id',
 			'modified_user_id', 'modified', 'created_user_id', 'created',
 			'current_staff_list', 'past_staff_list'
 		]);
