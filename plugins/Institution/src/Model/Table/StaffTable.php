@@ -78,16 +78,7 @@ class StaffTable extends AppTable {
 			->add('institution_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
-			// Added in add before patch and add on new as it is only use by the add action
-			// ->requirePresence('role');
 		;
-	}
-
-	// Dynamic adding of role validation
-	public function validationRole (Validator $validator) {
-		$validator = $this->validationDefault($validator);
-		$validator->requirePresence('role');
-		return $validator;
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
@@ -182,11 +173,28 @@ class StaffTable extends AppTable {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($entity->role > 0) {
+		$securityRoleId = $this->Positions->find()
+			->where([
+				$this->Positions->aliasField('id') => $entity->institution_position_id
+			])
+			->matching('StaffPositionTitles.SecurityRoles')
+			->select(['security_role_id' => 'SecurityRoles.id'])
+			->first()
+			->security_role_id;
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+		$securityGroupUsersRecord = $SecurityGroupUsersTable->find()
+			->where([
+				$SecurityGroupUsersTable->aliasField('security_group_id') => $entity->group_id, 
+				$SecurityGroupUsersTable->aliasField('security_role_id') => $securityRoleId,
+				$SecurityGroupUsersTable->aliasField('security_user_id') => $entity->staff_id
+			])
+			->hydrate('false')
+			->toArray();
+		if (empty($securityGroupUsersRecord)) {
 			$obj = [
-				'id' => Text::uuid(),
 				'security_group_id' => $entity->group_id, 
-				'security_role_id' => $entity->role, 
+				'security_role_id' => $securityRoleId, 
 				'security_user_id' => $entity->staff_id
 			];
 			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -197,13 +205,14 @@ class StaffTable extends AppTable {
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_position_id');
-		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
-
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+		$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
 		$this->ControllerAction->setFieldOrder([
-			'institution_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
+			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 	}
 
@@ -339,25 +348,6 @@ class StaffTable extends AppTable {
 		return $buttons;
 	}
 
-	public function onUpdateFieldRole(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
-			$Roles = TableRegistry::get('Security.SecurityRoles');
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$institutionEntity = $this->Institutions->get($institutionId);
-			$groupId = $institutionEntity->security_group_id;
-			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
-
-			$userId = $this->Auth->user('id');
-			if ($this->AccessControl->isAdmin()) {
-				$userId = null;
-			}
-			$roleOptions = ['' => '-- ' . __('Select Role') . ' --'];
-			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
-			$attr['options'] = $roleOptions;
-		}
-		return $attr;
-	}
-
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
 		$options = $this->getSelectOptions('Position.types');
 		if ($action == 'add') {
@@ -444,12 +434,7 @@ class StaffTable extends AppTable {
 		$this->Session->delete('Institution.Staff.new');
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = 'Role';
-	}
-
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = 'Role';
 		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($patch->errors());
 		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('staff_id', $patch->errors()))) {
@@ -660,13 +645,46 @@ class StaffTable extends AppTable {
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
 		try {
-			$institutionEntity = $this->Institutions->get($institutionId);
-			$groupId = $institutionEntity->security_group_id;
-			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-			$GroupUsers->deleteAll([
-				'security_user_id' => $entity->staff_id,
-				'security_group_id' => $groupId
-			]);
+
+			$securityRoleId = $this->Positions
+				->find()
+				->where([
+					$this->Positions->aliasField('id') => $entity->institution_position_id
+				])
+				->matching('StaffPositionTitles.SecurityRoles')
+				->select(['security_role_id' => 'SecurityRoles.id'])
+				->first()
+				->security_role_id;
+
+			$staffSecurityRoleList = $this->find('list', [
+					'keyField' => 'security_role_id',
+					'valueField' => 'security_role_id'
+				])
+				->matching('Positions.StaffPositionTitles.SecurityRoles')
+				->where([
+					$this->aliasField('staff_id') => $entity->staff_id,
+					$this->aliasField('institution_id') => $institutionId,
+					$this->aliasField('institution_position_id').' <> ' => $entity->institution_position_id
+				])
+				->group([
+					$this->aliasField('staff_id'),
+					$this->aliasField('institution_id'),
+					$this->aliasField('institution_position_id')
+				])
+				->select(['security_role_id' => 'SecurityRoles.id'])
+				->toArray();
+
+			if (!in_array($securityRoleId, $staffSecurityRoleList) & !empty($securityRoleId)) {
+				$institutionEntity = $this->Institutions->get($institutionId);
+				$groupId = $institutionEntity->security_group_id;
+				$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$GroupUsers->deleteAll([
+					'security_user_id' => $entity->staff_id,
+					'security_group_id' => $groupId,
+					'security_role_id' => $securityRoleId,
+				]);
+			}
+			
 		} catch (InvalidPrimaryKeyException $ex) {
 			Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
 		}
