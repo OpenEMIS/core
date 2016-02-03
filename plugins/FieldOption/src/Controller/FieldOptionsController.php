@@ -23,6 +23,7 @@ class FieldOptionsController extends AppController {
 				"$controller.Statuses" 				=> "$controller.%s",
 				"$controller.Types" 				=> "$controller.%s",
 				"$controller.NetworkConnectivities" => "$controller.%s",
+				"$controller.StaffPositionGrades" 	=> "$controller.%s",
 				"$controller.StaffPositionTitles" 	=> "$controller.%s",
 				"$controller.AllergyTypes" 			=> "$controller.%s",
 				"$controller.ConsultationTypes" 	=> "$controller.%s",
@@ -63,6 +64,7 @@ class FieldOptionsController extends AppController {
 	public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'Institution.Statuses']); }
 	public function Types() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'Institution.Types']); }
 	public function NetworkConnectivities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 	'className' => 'Institution.NetworkConnectivities']); }
+	public function StaffPositionGrades() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'Institution.StaffPositionGrades']); }
 	public function StaffPositionTitles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'Institution.StaffPositionTitles']); }
 	public function AllergyTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'Health.AllergyTypes']); }
 	public function ConsultationTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'Health.ConsultationTypes']); }
