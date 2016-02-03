@@ -23,3 +23,20 @@
 	left: auto !important;
 	right: -25px;
 }
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 800px) {
+	.autocomplete-loader {
+		margin-left: -30px;
+		left: 0 !important;
+	}
+	.rtl .autocomplete-loader {
+		margin-right: -30px;
+		margin-left: 0 !important;
+		right: 0 !important;
+	}
+}
