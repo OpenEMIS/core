@@ -486,8 +486,8 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'label' => false, 'override' => true]);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'read_only_areas', 'source_model' => 'Area.AreaAdministratives', 'label' => false, 'override' => true]);
+		$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'override' => true]);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'read_only_areas', 'source_model' => 'Area.AreaAdministratives', 'override' => true]);
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
