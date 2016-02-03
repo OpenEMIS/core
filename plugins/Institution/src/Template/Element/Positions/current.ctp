@@ -1,4 +1,4 @@
-<?php $_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
+<?php //$_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
 	<div class="clearfix"></div>
 
 	<hr>
