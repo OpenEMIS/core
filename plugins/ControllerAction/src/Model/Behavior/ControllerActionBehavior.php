@@ -263,7 +263,7 @@ class ControllerActionBehavior extends Behavior {
 		$params = [$attr, $model->action, $model->request];
 		$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 		if (is_array($event->result)) {
-			$model->fields[$field] = $event->result;
+			$model->fields[$name] = $event->result;
 		}
 	}
 
@@ -354,6 +354,11 @@ class ControllerActionBehavior extends Behavior {
 			Log::write('debug', $field . '\'s association not found in ' . $this->_table->alias());
 		}
 		return $associatedEntity;
+	}
+
+	public function getSearchKey() {
+		$session = $this->_table->request->session();
+		return $session->read($this->_table->registryAlias().'.search.key');
 	}
 
 	public function getContains($type = 'belongsTo') { // type is not being used atm
