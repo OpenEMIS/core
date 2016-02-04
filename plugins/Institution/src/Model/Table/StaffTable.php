@@ -396,6 +396,8 @@ class StaffTable extends AppTable {
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
 			}
+			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
+			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$Roles = TableRegistry::get('Security.SecurityRoles');
 			$roleOptions = $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
 			$securityRoleIds = array_keys($roleOptions);
@@ -405,7 +407,7 @@ class StaffTable extends AppTable {
 			$this->Positions
 					->find()
 					->matching('StaffPositionTitles.SecurityRoles')
-					->where([$this->Positions->aliasField('institution_id') => $institutionId])
+					->where([$this->Positions->aliasField('institution_id') => $institutionId, $this->Positions->aliasField('status_id').' IN ' => $activeStatusId])
 				    ->map(function ($row) use ($types, $positionOptions, $securityRoleIds) { // map() is a collection method, it executes the query
 				        $type = array_key_exists($row->_matchingData['StaffPositionTitles']->type, $types) ? $types[$row->_matchingData['StaffPositionTitles']->type] : $row->_matchingData['StaffPositionTitles']->type;
 				        if (in_array($row->_matchingData['SecurityRoles']->id, $securityRoleIds)) {
