@@ -152,7 +152,7 @@ class ControllerActionComponent extends Component {
 			$event = new Event('ControllerAction.Model.beforeAction', $this);
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
-			// $this->buildDefaultValidation();
+			$this->buildDefaultValidation();
 		}
 	}
 
@@ -321,37 +321,37 @@ class ControllerActionComponent extends Component {
 		return $url;
 	}
 
-	// public function buildDefaultValidation() {
-	// 	$action = $this->currentAction;
-	// 	if ($action != 'index' && $action != 'view') {
-	// 		$validator = $this->model->validator();
-	// 		foreach ($this->model->fields as $key => $attr) {
-	// 			if ($validator->hasField($key)) {
-	// 				$set = $validator->field($key);
+	public function buildDefaultValidation() {
+		$action = $this->currentAction;
+		if ($action != 'index' && $action != 'view') {
+			$validator = $this->model->validator();
+			foreach ($this->model->fields as $key => $attr) {
+				if ($validator->hasField($key)) {
+					$set = $validator->field($key);
 
-	// 				if (!$set->isEmptyAllowed()) {
-	// 					$set->add('notBlank', ['rule' => 'notBlank']);
-	// 				}
-	// 				if (!$set->isPresenceRequired()) {
-	// 					if ($this->isForeignKey($key)) {
-	// 						$validator->requirePresence($key);
-	// 					}
-	// 				}
-	// 			} else { // field not presence in validator
-	// 				if (array_key_exists('null', $attr)) {
-	// 					if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
-	// 						$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
-	// 						if ($this->isForeignKey($key)) {
-	// 							$validator->requirePresence($key);
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 		// pr('buildDefaultValidation');
-	// 		// pr($validator);
-	// 	}
-	// }
+					if (!$set->isEmptyAllowed()) {
+						$set->add('notBlank', ['rule' => 'notBlank']);
+					}
+					if (!$set->isPresenceRequired()) {
+						if ($this->isForeignKey($key)) {
+							$validator->requirePresence($key);
+						}
+					}
+				} else { // field not presence in validator
+					if (array_key_exists('null', $attr)) {
+						if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
+							$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
+							if ($this->isForeignKey($key)) {
+								$validator->requirePresence($key);
+							}
+						}
+					}
+				}
+			}
+			// pr('buildDefaultValidation');
+			// pr($validator);
+		}
+	}
 
 	public function isForeignKey($field) {
 		$model = $this->model;
