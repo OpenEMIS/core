@@ -17,8 +17,6 @@ class ValidationBehavior extends Behavior {
 	private $validationCode = [];
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
-		$this->attachDefaultValidation($validator);
-
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
 
@@ -74,51 +72,6 @@ class ValidationBehavior extends Behavior {
 				}
 			}
 		}
-	}
-
-	private function attachDefaultValidation($validator) {
-		$schema = $this->_table->schema();
-		$columns = $schema->columns();
-
-		// added this temporary, will need to revisit this code
-		$ignoreFields = ['modified_user_id', 'created_user_id', 'modified', 'created', 'order'];
-
-		foreach ($columns as $col) {
-			$columnInfo = $schema->column($col);
-			if ($validator->hasField($col)) {
-				$set = $validator->field($col);
-
-				if (!$set->isEmptyAllowed()) {
-					$set->add('notBlank', ['rule' => 'notBlank']);
-				}
-				if (!$set->isPresenceRequired()) {
-					if ($this->isForeignKey($col)) {
-						$validator->requirePresence($col);
-					}
-				}
-			} else { // field not presence in validator
-				if (array_key_exists('null', $columnInfo)) {
-					if ($columnInfo['null'] === false && $col !== 'id' && !in_array($col, $ignoreFields)) {
-						$validator->add($col, 'notBlank', ['rule' => 'notBlank']);
-						if ($this->isForeignKey($col)) {
-							$validator->requirePresence($col);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private function isForeignKey($field) {
-		$model = $this->_table;
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public function setValidationCode($key, $code) {
