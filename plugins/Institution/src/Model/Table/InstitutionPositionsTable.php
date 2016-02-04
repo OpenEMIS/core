@@ -15,7 +15,6 @@ use App\Model\Traits\OptionsTrait;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
-	public $institutionId = 0;
 	public $CAVersion = '4.0';
 	
 	public function initialize(array $config) {
