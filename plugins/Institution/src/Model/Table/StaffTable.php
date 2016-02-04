@@ -195,7 +195,8 @@ class StaffTable extends AppTable {
 				$SecurityGroupUsersTable->aliasField('security_role_id') => $securityRoleId,
 				$SecurityGroupUsersTable->aliasField('security_user_id') => $staffId
 			])
-			->hydrate('false')
+			->hydrate(false)
+			->bufferResults(false)
 			->toArray();
 
 		if (empty($securityGroupUsersRecord)) {
@@ -248,6 +249,7 @@ class StaffTable extends AppTable {
 					$this->aliasField('institution_id') => $institutionId
 				]
 			])
+			->hydrate(false)
 			->toArray();
 
 		// List of active roles in the same institution
@@ -257,6 +259,8 @@ class StaffTable extends AppTable {
 					$this->aliasField('institution_position_id') => $institutionPositionId,
 					$this->aliasField('institution_id') => $institutionId
 			], [], true)
+			->hydrate(false)
+			->bufferResults(false)
 			->toArray();
 
 		$groupUserIds = array_diff($currentRole, $activeRoles);
@@ -361,7 +365,7 @@ class StaffTable extends AppTable {
 			} else {
 				$currentCakeTime = Time::now();
 				$todayDate = Time::parseDate($currentCakeTime);
-				if (empty($entity->end_date) || (!empty($entity->end_date) && $entity->end_date >= $date)) {	
+				if (empty($entity->end_date) || (!empty($entity->end_date) && $entity->end_date >= $todayDate)) {	
 					$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 					$this->addStaffRole($institutionPositionId, $staffId, $securityGroupId);
 				} else {
@@ -730,46 +734,9 @@ class StaffTable extends AppTable {
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
 		try {
-
-			$securityRoleId = $this->Positions
-				->find()
-				->where([
-					$this->Positions->aliasField('id') => $entity->institution_position_id
-				])
-				->matching('StaffPositionTitles.SecurityRoles')
-				->select(['security_role_id' => 'SecurityRoles.id'])
-				->first()
-				->security_role_id;
-
-			$staffSecurityRoleList = $this->find('list', [
-					'keyField' => 'security_role_id',
-					'valueField' => 'security_role_id'
-				])
-				->matching('Positions.StaffPositionTitles.SecurityRoles')
-				->where([
-					$this->aliasField('staff_id') => $entity->staff_id,
-					$this->aliasField('institution_id') => $institutionId,
-					$this->aliasField('institution_position_id').' <> ' => $entity->institution_position_id
-				])
-				->group([
-					$this->aliasField('staff_id'),
-					$this->aliasField('institution_id'),
-					$this->aliasField('institution_position_id')
-				])
-				->select(['security_role_id' => 'SecurityRoles.id'])
-				->toArray();
-
-			if (!in_array($securityRoleId, $staffSecurityRoleList) & !empty($securityRoleId)) {
-				$institutionEntity = $this->Institutions->get($institutionId);
-				$groupId = $institutionEntity->security_group_id;
-				$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-				$GroupUsers->deleteAll([
-					'security_user_id' => $entity->staff_id,
-					'security_group_id' => $groupId,
-					'security_role_id' => $securityRoleId,
-				]);
-			}
 			
+			$this->removeStaffRole($entity->institution_position_id, $entity->staff_id, $institutionId);
+
 		} catch (InvalidPrimaryKeyException $ex) {
 			Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
 		}
@@ -1016,6 +983,7 @@ class StaffTable extends AppTable {
 					[$this->aliasField('end_date').' IS NULL']
 				]
 			])
+			->hydrate(false)
 			->toArray();
 
 		// List of active institution staff id -> security group user id
@@ -1023,6 +991,7 @@ class StaffTable extends AppTable {
 			->where([function ($exp) use ($InstitutionStaffTable, $query) {
 						return $exp->lt($InstitutionStaffTable->aliasField('end_date'), $query->func()->now('date'));
 					}], [], true)
+			->hydrate(false)
 			->toArray();
 
 		// If the inactive security group user id does not exist in the list of active staff's security group user id
