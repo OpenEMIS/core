@@ -59,6 +59,13 @@ class TranslationsTable extends AppTable {
 		]);
 	}
 
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		if ($entity->editable == 0) {
+			$this->ControllerAction->field('en', ['type' => 'readonly']);
+		}
+		$this->ControllerAction->field('editable', ['visible' => false]);
+	}
+
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		// Include the js file for the compiling
 		$includes['localization'] = ['include' => true, 'js' => 'Localization.translations'];
@@ -73,6 +80,10 @@ class TranslationsTable extends AppTable {
 		if (!empty($search)) {
 			$query->where([$this->aliasField('en')." LIKE '%" . $search . "%'"]);
 		}
+	}
+
+	public function onGetEditable(Event $event, Entity $entity) {
+		return ($entity->editable == 0)? __('No'): __('Yes');
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
