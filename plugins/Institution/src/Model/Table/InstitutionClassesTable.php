@@ -565,11 +565,6 @@ class InstitutionClassesTable extends AppTable {
 			}
 		}
 		unset($data[$this->alias()]['teachers']);
-		if (isset($options['associated'])) {
-			$options['associated'] = array_merge($options['associated'], [ 'InstitutionClassStaff' => ['validate'=>false], 'InstitutionClassStudents' => ['validate'=>false]]);
-		} else {
-			$options['associated'] = [ 'InstitutionClassStaff' => ['validate'=>false], 'InstitutionClassStudents' => ['validate'=>false]];
-		}
 	}
 
 	/**
