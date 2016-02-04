@@ -70,7 +70,9 @@ class OpenEmisBehavior extends Behavior {
 			$modal['buttons'] = [
 				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
 			];
-			$model->controller->set('modal', $modal);
+			if (!isset($model->controller->viewVars['modal'])) {
+				$model->controller->set('modal', $modal);
+			}
 		}
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
