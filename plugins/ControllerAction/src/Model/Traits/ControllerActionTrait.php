@@ -4,7 +4,7 @@ namespace ControllerAction\Model\Traits;
 trait ControllerActionTrait {
 	protected $_controllerActionEvents = [
 		'ControllerAction.Controller.onInitialize'			=> 'onInitialize',
-		// public function onInitialize(Event $event, Table $model) {}
+		// public function onInitialize(Event $event, Table $model, ArrayObject $extra) {}
 
 		'ControllerAction.Controller.beforePaginate'		=> 'beforePaginate',
 		// public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {}

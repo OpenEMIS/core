@@ -1,6 +1,7 @@
 <?php
 namespace FieldOption\Controller;
 
+use ArrayObject;
 use FieldOption\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -47,7 +48,7 @@ class FieldOptionsController extends AppController {
 		$this->set('contentHeader', __($header));
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$alias = $model->alias;
 		$header = __('Field Options') . ' - ' . $model->getHeader($alias);
 
