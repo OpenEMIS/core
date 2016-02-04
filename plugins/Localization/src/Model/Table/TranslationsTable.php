@@ -102,6 +102,15 @@ class TranslationsTable extends AppTable {
 		}
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if ($entity->editable == 0) {
+			// remove the delete button
+			unset($buttons['remove']);
+		}
+    	return $buttons;
+    }
+
     public function validationDefault(Validator $validator) {
 		$validator
 			->add('en', 'ruleUnique', [
