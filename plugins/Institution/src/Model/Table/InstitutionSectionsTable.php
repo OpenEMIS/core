@@ -517,7 +517,7 @@ class InstitutionSectionsTable extends AppTable {
 								'status' => 1
 							];
 					}
-					$classes = $model->newEntities($data['MultiClasses'], ['associated' => [ 'InstitutionSectionGrades' => ['validate'=>false]]]);
+					$classes = $model->newEntities($data['MultiClasses']);
 					$error = false;
 					foreach ($classes as $key=>$class) {
 					    if ($class->errors()) {
@@ -696,7 +696,7 @@ class InstitutionSectionsTable extends AppTable {
 			}
 
 			if (!empty($newSchoolSubjects)) {
-				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects, ['associated' => ['InstitutionSectionClasses' => ['validate' => false]]]);
+				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
 				foreach ($newSchoolSubjects as $subject) {
 				    $InstitutionSubjects->save($subject);
 				}
@@ -715,7 +715,6 @@ class InstitutionSectionsTable extends AppTable {
 				foreach($data['InstitutionSections']['institution_section_grades'] as $key => $row) {
 					$data['InstitutionSections']['institution_section_grades'][$key]['status'] = 1;
 				}
-				$options['associated'] = ['InstitutionSectionGrades' => ['validate' => false]];
 			} else {
 				/**
 				 * set institution_id to empty to trigger validation error in ControllerActionComponent
