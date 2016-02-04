@@ -60,7 +60,7 @@ class AreasController extends AppController
 		$this->set('contentHeader', $header);
 	}
 
-	public function ajaxGetArea($tableName, $targetModel, $areaLabel, $id, $displayCountry = true) {
+	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
 		$this->getView()->layout('ajax');
 		$rootId = -1; // Root node
 
@@ -200,6 +200,6 @@ class AreasController extends AppController
 			unset($path[$arrIndex]);
 		}
 		
-		$this->set(compact('path', 'targetModel', 'areaLabel', 'tableName', 'formError', 'displayCountry'));
+		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry'));
 	}
 }

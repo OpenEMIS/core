@@ -486,8 +486,6 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'override' => true]);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'read_only_areas', 'source_model' => 'Area.AreaAdministratives', 'override' => true]);
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
@@ -518,11 +516,6 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 	public function addEditBeforeAction(Event $event) {
-		$userId = $this->Auth->user('id');
-		$areasByUser = $this->AccessControl->getAreasByUser($userId);
-		if (!$this->AccessControl->isAdmin() && empty($areasByUser)) {
-			$this->ControllerAction->field('area_id', ['type' => 'read_only_areas', 'source_model' => 'Area.Areas', 'displayCountry' => true]);		
-		}
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
