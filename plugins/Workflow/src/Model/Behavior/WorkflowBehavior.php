@@ -50,13 +50,21 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
+	private function isCAv4() {
+		return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+	}
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		// priority has to be set at 1000 so that method(s) in model will be triggered first
 		// priority of indexBeforeAction and indexBeforePaginate is set to 1 for it to run first before the event in model
 		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 1000];
 		$events['ControllerAction.Model.index.beforeAction'] 	= ['callable' => 'indexBeforeAction', 'priority' => 1];
-		$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
+		if ($this->isCAv4()) {
+			$events['ControllerAction.Model.index.beforeQuery'] 	= ['callable' => 'indexBeforeQuery', 'priority' => 1];
+		} else {
+			$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
+		}
 		$events['ControllerAction.Model.index.afterAction'] 	= ['callable' => 'indexAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.addEdit.beforeAction'] 		= ['callable' => 'addEditBeforeAction', 'priority' => 1];
@@ -92,8 +100,8 @@ class WorkflowBehavior extends Behavior {
 	public function beforeAction(Event $event) {
 		// Initialize workflow
 		$this->controller = $this->_table->controller;
-		$this->model = $this->controller->ControllerAction->model();
-		$this->currentAction = $this->controller->ControllerAction->action();
+		$this->model = $this->isCAv4() ? $this->_table : $this->controller->ControllerAction->model();
+		$this->currentAction = $this->isCAv4() ? $this->_table->action : $this->controller->ControllerAction->action();
 
 		if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
 			$this->attachWorkflow = true;
@@ -122,10 +130,17 @@ class WorkflowBehavior extends Behavior {
 			$this->hasWorkflow = true;
 			$this->controller->Workflow->hasWorkflow = $this->hasWorkflow;
 
-			$toolbarElements = [
-	            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
-	        ];
-			$this->controller->set('toolbarElements', $toolbarElements);
+			if ($this->isCAv4()) {
+				$extra = func_get_arg(1);
+				$elements = $extra['elements'];
+				$elements = ['controls' => ['name' => 'Workflow.controls', 'order' => 1]] + $elements;
+				$extra['elements'] = $elements;
+			} else {
+				$toolbarElements = [
+		            ['name' => 'Workflow.controls', 'data' => [], 'options' => []]
+		        ];
+				$this->controller->set('toolbarElements', $toolbarElements);
+			}
 
 			$filterOptions = [];
 			$selectedFilter = null;
@@ -187,7 +202,9 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$options = $this->isCAv4() ? $extra['options'] : $extra;
+
 		$registryAlias = $this->_table->registryAlias();
 		$workflowModel = $this->getWorkflowSetup($registryAlias);
 
@@ -216,34 +233,31 @@ class WorkflowBehavior extends Behavior {
 				$this->_table->aliasField('status_id') => $selectedStatus
 			]);
 		}
+
+		if ($this->isCAv4()) { $extra['options'] = $options; }
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$this->indexBeforeQuery($event, $query, $options);
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		// Reorder fields
-		$fieldOrder = [];
-		$fields = $this->_table->fields;
-		foreach ($fields as $fieldKey => $fieldAttr) {
-			if (!in_array($fieldKey, ['status_id'])) {
-				$fieldOrder[$fieldAttr['order']] = $fieldKey;
-			}
-		}
-		ksort($fieldOrder);
-		array_unshift($fieldOrder, 'status_id');	// Set Status to first
-		$this->_table->ControllerAction->setFieldOrder($fieldOrder);
-		// End
+		$this->reorderFields();
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+
 		// setup workflow
 		if ($this->attachWorkflow) {
 			$this->workflowRecord = $this->getRecord($this->config('model'), $entity);
 			if (!empty($this->workflowRecord)) {
-				$this->controller->ControllerAction->field('status_id', ['visible' => false]);
+				$model->field('status_id', ['visible' => false]);
 
 				// Workflow Status - extra field
 				$status = isset($this->workflowRecord->workflow_step->name) ? $this->workflowRecord->workflow_step->name : __('Open');
 				$entity->workflow_status = $status;
-				$this->_table->ControllerAction->field('workflow_status', ['attr' => ['label' => __('Status')]]);
+				$model->field('workflow_status', ['attr' => ['label' => __('Status')]]);
 				// End
 
 				// Workflow Transitions - extra field
@@ -286,7 +300,7 @@ class WorkflowBehavior extends Behavior {
 					}
 				}
 
-				$this->_table->ControllerAction->field('workflow_transitions', [
+				$model->field('workflow_transitions', [
 					'type' => 'element',
 					'element' => 'Workflow.transitions',
 					'override' => true,
@@ -307,7 +321,7 @@ class WorkflowBehavior extends Behavior {
 				ksort($fieldOrder);
 				array_unshift($fieldOrder, 'workflow_status');	// Set workflow_status to first
 				$fieldOrder[] = 'workflow_transitions';	// Set workflow_transitions to last
-				$this->_table->ControllerAction->setFieldOrder($fieldOrder);
+				$model->setFieldOrder($fieldOrder);
 				// End
 			} else {
 				// Workflow is not configured
@@ -316,7 +330,8 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		$this->controller->ControllerAction->field('status_id');
+		$model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+		$model->field('status_id');
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -444,8 +459,9 @@ class WorkflowBehavior extends Behavior {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		// check line by line, whether to show / hide the action buttons
 		if ($this->attachWorkflow) {
-			if (!$this->_table->AccessControl->isAdmin()) {
-				$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+			$model = $this->_table;
+			if (!$model->AccessControl->isAdmin()) {
+				$buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
 				$workflowRecord = $this->getRecord($this->config('model'), $entity);
 				if (!empty($workflowRecord)) {
@@ -481,6 +497,23 @@ class WorkflowBehavior extends Behavior {
 		}
 
 		return $attr;
+	}
+
+	public function reorderFields() {
+		$fieldOrder = [];
+		$fields = $this->_table->fields;
+		foreach ($fields as $fieldKey => $fieldAttr) {
+			if (!in_array($fieldKey, ['status_id'])) {
+				$fieldOrder[$fieldAttr['order']] = $fieldKey;
+			}
+		}
+		ksort($fieldOrder);
+		array_unshift($fieldOrder, 'status_id');	// Set Status to first
+		if ($this->isCAv4()) {
+			$this->_table->setFieldOrder($fieldOrder);
+		} else {
+			$this->_table->ControllerAction->setFieldOrder($fieldOrder);
+		}
 	}
 
 	public function getWorkflowSetup($registryAlias) {
