@@ -36,7 +36,7 @@ switch ($fieldName) {
 		<div class="table-toolbar">
 			<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click(); return false;">
 				<i class="fa fa-plus"></i> 
-				<span>Add <?= $addBtnName ?></span>
+				<span><?= __('Add '.$addBtnName) ?></span>
 			</button>
 		</div>
 		<div class="table-wrapper">
@@ -104,7 +104,7 @@ switch ($fieldName) {
 
 					<tfoot>
 						<tr>
-							<td class="cell-number">Total</td>
+							<td class="cell-number"><?= __('Total') ?></td>
 							<td class="total_salary_<?php echo $fieldName; ?>s cell-number"><?php echo $totalAmount; ?></td>
 							<td/>
 						</tr>
