@@ -46,14 +46,14 @@ class StudentsTable extends AppTable {
 			'number_of_students_by_year' => [
 				'_function' => 'getNumberOfStudentsByYear',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Years']],
-				'yAxis' => ['title' => ['text' => 'Total']]
+				'xAxis' => ['title' => ['text' => __('Years')]],
+				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
 			'number_of_students_by_grade' => [
 				'_function' => 'getNumberOfStudentsByGrade',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Education']],
-				'yAxis' => ['title' => ['text' => 'Total']]
+				'xAxis' => ['title' => ['text' => __('Education')]],
+				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
 			'institution_student_gender' => [
 				'_function' => 'getNumberOfStudentsByGender'
@@ -1295,7 +1295,7 @@ class StudentsTable extends AppTable {
 		}
 
 		$params['dataSet'] = $dataSet;
-		
+
 		return $params;
 	}
 
@@ -1369,7 +1369,8 @@ class StudentsTable extends AppTable {
 			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
 		}
 
-		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		// $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
 		$params['options']['xAxis']['categories'] = array_values($grades);
 		$params['dataSet'] = $dataSet;
 
