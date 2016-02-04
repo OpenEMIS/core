@@ -7,6 +7,14 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 
 class AreapickerBehavior extends Behavior {
+	public function implementedEvents() {
+        $events = parent::implementedEvents();
+
+		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+
+        return $events;
+    }
 
 	public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$value = $entity->$attr['field'];
@@ -61,30 +69,56 @@ class AreapickerBehavior extends Behavior {
 		return $value;
 	}
 
-	public function onGetReadOnlyAreasElement(Event $event, $action, Entity $entity, $attr, $options) {
-		$targetModel = $attr['source_model'];
-		$entityKey = $attr['field'];
-		if ($entity->has($entityKey)) {
-			$areaId = $entity->$entityKey;
-		} else {
-			$areaId = 0;
-		}
-		switch ($action) {
-			case 'edit':
-				$attr['label'] = $options['label'];
-			case 'view':
-				$fieldName = $attr['model'] . '.' . $attr['field'];
-				$attr['key'] = $entityKey;
-				$attr['id'] = $areaId;
-				if ($areaId != 0) {
-					$list = $this->getAreaLevelName($targetModel, $areaId);	
+	public function viewAfterAction(Event $event, Entity $entity) {
+		foreach ($this->_table->fields as $field => $attr) {
+			if ($attr['type'] == 'areapicker') {
+				$this->_table->fields[$field]['type'] = 'hidden';
+				$targetModel = $attr['source_model'];
+				$areaId = $entity->$field;
+				if (!empty($areaId)) {
+					$list = $this->getAreaLevelName($targetModel, $areaId);
 				} else {
 					$list = [];
 				}
-				$attr['list'] = $list;
-				return $event->subject()->renderElement('Area.read_only_areas', ['attr' => $attr]);
-				break;
+				$after = $field;
+				foreach ($list as $key => $area) {
+					$this->_table->ControllerAction->field($field.$key, [
+						'type' => 'readonly', 
+						'attr' => ['label' => __($area['level'])],
+						'value' => $area['area_name'],
+						'after' => $after
+					]);
+					$after = $field.$key;
+				}
+			}
 		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$userId = $this->_table->Auth->user('id');
+		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
+		if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
+			foreach ($this->_table->fields as $field => $attr) {
+				if ($attr['type'] == 'areapicker') {
+					if ($attr['source_model'] == 'Area.Areas') {
+						$this->_table->fields[$field]['type'] = 'hidden';
+						$targetModel = $attr['source_model'];
+						$areaId = $entity->$field;
+						$list = $this->getAreaLevelName($targetModel, $areaId);
+						$after = $field;
+						foreach ($list as $key => $area) {
+							$this->_table->ControllerAction->field($field.$key, [
+								'type' => 'readonly', 
+								'attr' => ['label' => __($area['level']), 'value' => $area['area_name']],
+								'value' => $area['area_name'],
+								'after' => $after
+							]);
+							$after = $field.$key;
+						}
+					}
+				}
+			}
+		}	
 	}
 
 	public function getAreaLevelName($targetModel, $areaId) {
