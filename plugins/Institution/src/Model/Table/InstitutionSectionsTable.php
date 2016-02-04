@@ -1045,7 +1045,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	protected function getStaffOptions($action='edit') {
 		if (in_array($action, ['edit', 'add'])) {
-			$options = [0=>'-- Select Teacher or Leave Blank --'];
+			$options = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
 		} else {
 			$options = [0=>'No Teacher Assigned'];
 		}
