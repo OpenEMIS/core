@@ -203,13 +203,14 @@ class StaffTable extends AppTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+		$this->security_group_id = $securityGroupId;
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_position_id');
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 		$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
 		$this->ControllerAction->setFieldOrder([
 			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
@@ -292,10 +293,6 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-		
-	}
-
 	private function setupTabElements($entity) {
 		$options = [
 			'userRole' => 'Staff',
@@ -312,16 +309,26 @@ class StaffTable extends AppTable {
 
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
+			$groupId = $this->security_group_id;
+			$userId = $this->Auth->user('id');
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+			}
+			$Roles = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
+			$securityRoleIds = array_keys($roleOptions);
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 	   		$types = $this->getSelectOptions('Staff.position_types');
 			$positionOptions = new ArrayObject();
 			$this->Positions
 					->find()
-					->contain(['StaffPositionTitles'])
+					->matching('StaffPositionTitles.SecurityRoles')
 					->where([$this->Positions->aliasField('institution_id') => $institutionId])
-				    ->map(function ($row) use ($types, $positionOptions) { // map() is a collection method, it executes the query
-				        $type = array_key_exists($row->staff_position_title->type, $types) ? $types[$row->staff_position_title->type] : $row->staff_position_title->type;
-				        $positionOptions[$type][$row->id] = $row->name;
+				    ->map(function ($row) use ($types, $positionOptions, $securityRoleIds) { // map() is a collection method, it executes the query
+				        $type = array_key_exists($row->_matchingData['StaffPositionTitles']->type, $types) ? $types[$row->_matchingData['StaffPositionTitles']->type] : $row->_matchingData['StaffPositionTitles']->type;
+				        if (in_array($row->_matchingData['SecurityRoles']->id, $securityRoleIds)) {
+				        	$positionOptions[$type][$row->id] = $row->name;
+				        }
 				        return $row;
 				    })
 				    ->toArray(); // Also a collections library method
