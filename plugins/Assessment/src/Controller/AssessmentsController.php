@@ -1,6 +1,7 @@
 <?php
 namespace Assessment\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
@@ -46,7 +47,7 @@ class AssessmentsController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Assessment');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
