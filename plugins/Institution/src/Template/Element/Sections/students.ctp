@@ -50,7 +50,7 @@
 						?>
 						<td><?= $obj->user->openemis_no ?></td>
 						<td><?= $obj->user->name ?></td>
-						<td><?= $obj->user->gender->name ?></td>
+						<td><?= __($obj->user->gender->name) ?></td>
 						<td><?= $obj->education_grade->name ?></td>
 						<td><?= __($obj->student_status->name) ?></td>
 						<td> 
