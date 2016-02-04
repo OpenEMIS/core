@@ -1,241 +1,262 @@
 /* 
-Version: v.1.0.2
+Version: v.1.0.6
 Created: 18/8/2015
-Modified: 7/10/2015
+Modified: 26/1/2016
 */
 
+
 @font-face {
-	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?gxf0nt');
-	src:url('fonts/kordit-fonts.eot?gxf0nt#iefix') format('embedded-opentype'),
-		url('fonts/kordit-fonts.ttf?gxf0nt') format('truetype'),
-		url('fonts/kordit-fonts.woff?gxf0nt') format('woff'),
-		url('fonts/kordit-fonts.svg?gxf0nt#kordit-fonts') format('svg');
-	font-weight: normal;
-	font-style: normal;
+    font-family: 'kordit-fonts';
+    src:    url('fonts/kordit-fonts.eot?77n9m8');
+    src:    url('fonts/kordit-fonts.eot?77n9m8#iefix') format('embedded-opentype'),
+        url('fonts/kordit-fonts.ttf?77n9m8') format('truetype'),
+        url('fonts/kordit-fonts.woff?77n9m8') format('woff'),
+        url('fonts/kordit-fonts.svg?77n9m8#kordit-fonts') format('svg');
+    font-weight: normal;
+    font-style: normal;
 }
 
 [class^="kd-"], [class*=" kd-"] {
-	font-family: 'kordit-fonts';
-	speak: none;
-	font-style: normal;
-	font-weight: normal;
-	font-variant: normal;
-	text-transform: none;
-	line-height: 1;
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'kordit-fonts' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
 
-	/* Better Font Rendering =========== */
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+.kd-download-success:before {
+    content: "\e905";
+}
+.kd-download-fail:before {
+    content: "\e904";
+}
+.kd-sort-alphabet-asc:before {
+    content: "\e902";
+}
+.kd-sort-alphabet-desc:before {
+    content: "\e903";
+}
+.kd-sort-date-desc:before {
+    content: "\e900";
+}
+.kd-sort-date-asc:before {
+    content: "\e901";
+}
 .kd-shipment:before {
-	content: "\e800";
+    content: "\e800";
 }
 .kd-header:before {
-	content: "\e642";
+    content: "\e642";
 }
 .kd-rows:before {
-	content: "\e643";
+    content: "\e643";
 }
 .kd-table:before {
-	content: "\e644";
+    content: "\e644";
 }
 .kd-draggable-line:before {
-	content: "\e641";
+    content: "\e641";
 }
 .kd-draggable:before {
-	content: "\e640";
+    content: "\e640";
 }
 .kd-reorder:before {
-	content: "\e63f";
+    content: "\e63f";
 }
 .kd-guardian:before {
-	content: "\e63d";
+    content: "\e63d";
 }
 .kd-dropout:before {
-	content: "\e63a";
+    content: "\e63a";
 }
 .kd-transfer:before {
-	content: "\e63b";
+    content: "\e63b";
 }
 .kd-graduate:before {
-	content: "\e63c";
+    content: "\e63c";
 }
 .kd-reject:before {
-	content: "\e638";
+    content: "\e638";
 }
 .kd-approve:before {
-	content: "\e639";
+    content: "\e639";
 }
 .kd-compile:before {
-	content: "\e63e";
+    content: "\e63e";
 }
 .kd-404-error:before {
-	content: "\e600";
+    content: "\e600";
 }
 .kd-403-error:before {
-	content: "\e636";
+    content: "\e636";
 }
 .kd-role:before {
-	content: "\e637";
+    content: "\e637";
 }
 .kd-preview:before {
-	content: "\e601";
+    content: "\e601";
 }
 .kd-staff:before {
-	content: "\e602";
+    content: "\e602";
 }
 .kd-institutions:before {
-	content: "\e603";
+    content: "\e603";
 }
 .kd-students:before {
-	content: "\e604";
+    content: "\e604";
 }
-.kd-dashboard:before {
-	content: "\e605";
+.kd-dashboard_icon:before {
+    content: "\e605";
 }
 .kd-upload-download:before {
-	content: "\e606";
+    content: "\e606";
 }
 .kd-export:before {
-	content: "\e607";
+    content: "\e607";
 }
 .kd-import:before {
-	content: "\e608";
+    content: "\e608";
 }
 .kd-download:before {
-	content: "\e609";
+    content: "\e609";
 }
 .kd-upload:before {
-	content: "\e60a";
+    content: "\e60a";
 }
 .kd-text:before {
-	content: "\e60b";
+    content: "\e60b";
 }
 .kd-resolution:before {
-	content: "\e60c";
+    content: "\e60c";
 }
 .kd-html:before {
-	content: "\e60d";
+    content: "\e60d";
 }
 .kd-audio:before {
-	content: "\e60e";
+    content: "\e60e";
 }
 .kd-iframe:before {
-	content: "\e60f";
+    content: "\e60f";
 }
 .kd-video:before {
-	content: "\e610";
+    content: "\e610";
 }
 .kd-image:before {
-	content: "\e611";
+    content: "\e611";
 }
 .kd-y-axis:before {
-	content: "\e612";
+    content: "\e612";
 }
 .kd-x-axis:before {
-	content: "\e613";
+    content: "\e613";
 }
 .kd-redo:before {
-	content: "\e614";
+    content: "\e614";
 }
 .kd-undo:before {
-	content: "\e615";
+    content: "\e615";
 }
 .kd-save:before {
-	content: "\e616";
+    content: "\e616";
 }
 .kd-label:before {
-	content: "\e617";
+    content: "\e617";
 }
 .kd-series:before {
-	content: "\e618";
+    content: "\e618";
 }
 .kd-legend:before {
-	content: "\e619";
+    content: "\e619";
 }
 .kd-grid2:before {
-	content: "\e61a";
+    content: "\e61a";
 }
 .kd-axis:before {
-	content: "\e61b";
+    content: "\e61b";
 }
 .kd-customize:before {
-	content: "\e61c";
+    content: "\e61c";
 }
 .kd-title:before {
-	content: "\e61d";
+    content: "\e61d";
 }
 .kd-check:before {
-	content: "\e61e";
+    content: "\e61e";
 }
 .kd-cross:before {
-	content: "\e61f";
+    content: "\e61f";
 }
 .kd-back:before {
-	content: "\e620";
+    content: "\e620";
 }
 .kd-lists:before {
-	content: "\e621";
+    content: "\e621";
 }
 .kd-edit:before {
-	content: "\e622";
+    content: "\e622";
 }
 .kd-trash:before {
-	content: "\e623";
+    content: "\e623";
 }
 .kd-add:before {
-	content: "\e624";
+    content: "\e624";
 }
 .kd-data_collection_icon:before {
-	content: "\e625";
+    content: "\e625";
 }
 .kd-openemis:before {
-	content: "\e626";
+    content: "\e626";
 }
 .kd-administration:before {
-	content: "\e627";
+    content: "\e627";
 }
 .kd-web_icon:before {
-	content: "\e628";
+    content: "\e628";
 }
 .kd-results:before {
-	content: "\e629";
+    content: "\e629";
 }
 .kd-reports:before {
-	content: "\e62a";
+    content: "\e62a";
 }
 .kd-play:before {
-	content: "\e62b";
+    content: "\e62b";
 }
 .kd-packages:before {
-	content: "\e62c";
+    content: "\e62c";
 }
 .kd-mobile_icon:before {
-	content: "\e62d";
+    content: "\e62d";
 }
 .kd-items:before {
-	content: "\e62e";
+    content: "\e62e";
 }
 .kd-data_management_icon:before {
-	content: "\e62f";
+    content: "\e62f";
 }
 .kd-ellipsis:before {
-	content: "\e630";
+    content: "\e630";
 }
 .kd-grid:before {
-	content: "\e631";
+    content: "\e631";
 }
 .kd-arrow-down:before {
-	content: "\e632";
+    content: "\e632";
 }
 .kd-arrow-up:before {
-	content: "\e633";
+    content: "\e633";
 }
 .kd-arrow-last:before {
-	content: "\e634";
+    content: "\e634";
 }
 .kd-arrow-first:before {
-	content: "\e635";
+    content: "\e635";
 }
+
