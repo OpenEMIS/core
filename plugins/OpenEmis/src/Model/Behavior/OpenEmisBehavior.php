@@ -48,11 +48,12 @@ class OpenEmisBehavior extends Behavior {
 		$form = false; // deprecated
 		if ($action == 'index') $form = true; // deprecated
 		$this->_table->controller->set('form', $form); // deprecated
+
+		$this->initializeButtons($extra);
 	}
 
 	public function afterAction(Event $event, ArrayObject $extra) {
 		$model = $this->_table;
-		$this->initializeButtons($extra);
 
 		// deprecated
 		$modal = [];
@@ -69,11 +70,20 @@ class OpenEmisBehavior extends Behavior {
 			$modal['buttons'] = [
 				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
 			];
-			$model->controller->set('modal', $modal);
+			if (!isset($model->controller->viewVars['modal'])) {
+				$model->controller->set('modal', $modal);
+			}
 		}
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
 		// end deprecated
+
+		if (array_key_exists('toolbarButtons', $extra)) {
+			$model->controller->set('toolbarButtons', $extra['toolbarButtons']);
+		}
+		if (array_key_exists('indexButtons', $extra)) {
+			$model->controller->set('indexButtons', $extra['indexButtons']);
+		}
 	}
 
 	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
@@ -282,6 +292,7 @@ class OpenEmisBehavior extends Behavior {
 			$controller->set('reorder', true);
 		}
 
-		$controller->set(compact('toolbarButtons', 'indexButtons'));
+		$extra['toolbarButtons'] = $toolbarButtons;
+		$extra['indexButtons'] = $indexButtons;
 	}
 }
