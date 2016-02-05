@@ -1,0 +1,44 @@
+/* MODAL v.1.0.1 */
+
+.modal-dialog {
+    margin: 20% auto !important;
+}
+
+.modal-title {
+    width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    -ms-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+}
+
+.modal-body img {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.modal-body .modal-description {
+    margin: 15px 0 0;
+}
+
+.modal-body .modal-description p {
+    width: 90%;
+    -ms-word-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.modal a:hover {
+    text-decoration: none !important;
+}
+
+body > svg,
+.modal .modal-img-svg {
+    display: none;
+}
+
+@media (min-width: 100px) and (max-width: 480px) {
+    .modal-content {
+        margin: 15px;
+    }
+}

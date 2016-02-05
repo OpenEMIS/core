@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 
-//ControllerActionComponent - Version 1.0.4
+//ControllerActionComponent - Version 1.0.5
 $dataKeys = [];
 $table = $ControllerAction['table'];
 $tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->alias(), $dataKeys);
@@ -13,7 +13,6 @@ if ($displayAction) {
 	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
 }
 if ($displayReorder) {
-	echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
 	echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
 	$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 }
