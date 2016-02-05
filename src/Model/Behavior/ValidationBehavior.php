@@ -412,6 +412,20 @@ class ValidationBehavior extends Behavior {
 	}
 
 	// Return false if not enrolled in other education system
+	public static function checkInstitutionClassMaxLimit($class_id, array $globalData) {
+		$SectionStudents = TableRegistry::get("Institution.InstitutionSectionStudents");
+		$currentNumberOfStudents = $SectionStudents->find()->where([
+				$SectionStudents->aliasField('institution_section_id') => $class_id,
+				$SectionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+			])->count();
+		/**
+		 * @todo  add this max limit to config
+		 * This limit value is being used in InstitutionSections->editAfterAction()
+		 */
+		return ($currentNumberOfStudents < 100);
+	}
+
+	// Return false if not enrolled in other education system
 	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
 		$enrolled = false;

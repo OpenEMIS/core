@@ -134,13 +134,12 @@ trait MessagesTrait {
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Class Grades',
-			
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
-
 			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
+			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
 		],
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
@@ -547,7 +546,10 @@ trait MessagesTrait {
 					'ruleInstitutionStudentId' => 'Student has already been added.',
 					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
-				]
+				],
+				'class' => [
+					'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+				],
 			],
 			'Staff' => [
 				'staff_name' => [
