@@ -117,6 +117,8 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Student.Students.id', $entity->id);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
