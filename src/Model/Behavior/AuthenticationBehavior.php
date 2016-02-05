@@ -264,7 +264,7 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
 		$attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
 		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text', 'required' => false];
-		$attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden'];
+		$attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden', 'required' => false];
 	}
 
 	public function saml2ModifyValue($key, $attributeValue) {

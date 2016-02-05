@@ -14,7 +14,7 @@ class Saml2AuthComponent extends Component {
 
 	public $components = ['Auth'];
 
-    private $auth;
+    private $saml;
 
 	public function initialize(array $config) {
         $this->session = $this->request->session();
@@ -52,7 +52,7 @@ class Saml2AuthComponent extends Component {
 
         $this->userNameField = $samlAttributes['saml_username_mapping'];
 
-        $this->auth = new \OneLogin_Saml2_Auth($setting);
+        $this->saml = new \OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
     }
 
@@ -118,7 +118,7 @@ class Saml2AuthComponent extends Component {
      *  
      */
     public function login($returnTo = null, $parameters = [], $forceAuthn = false, $isPassive = false) {
-        $this->auth->login($returnTo, $parameters, $forceAuthn, $isPassive);
+        $this->saml->login($returnTo, $parameters, $forceAuthn, $isPassive);
     }
 
     /**
@@ -130,7 +130,7 @@ class Saml2AuthComponent extends Component {
      * @param string $sessionIndex  The SessionIndex (taken from the SAML Response in the SSO process).
      */
     public function logout($returnTo = null, $parameters = array(), $nameId = null, $sessionIndex = null) {
-        $this->auth->logout($returnTo, $parameters, $nameId, $sessionIndex);
+        $this->saml->logout($returnTo, $parameters, $nameId, $sessionIndex);
     }
 
     /**
@@ -139,7 +139,7 @@ class Saml2AuthComponent extends Component {
      * @param string $requestId The ID of the AuthNRequest sent by this SP to the IdP
      */
     public function processResponse($requestId = null) {
-        $this->auth->processResponse($requestId);
+        $this->saml->processResponse($requestId);
     }
 
     /**
@@ -148,7 +148,7 @@ class Saml2AuthComponent extends Component {
      * @return array  Errors
      */
     public function getErrors() {
-        return $this->auth->getErrors();
+        return $this->saml->getErrors();
     }
 
     /**
@@ -157,7 +157,7 @@ class Saml2AuthComponent extends Component {
      * @return boolean  True if the user is authenticated
      */
     public function isAuthenticated() {
-        return $this->auth->isAuthenticated();
+        return $this->saml->isAuthenticated();
     }
 
     /**
@@ -166,7 +166,7 @@ class Saml2AuthComponent extends Component {
      * @return array  Attributes of the user.
      */
     public function getAttributes() {
-        return $this->auth->getAttributes();
+        return $this->saml->getAttributes();
     }
 
     /**
@@ -177,7 +177,7 @@ class Saml2AuthComponent extends Component {
      * @return NULL || array Requested SAML attribute ($name).
      */
     public function getAttribute($name) {
-        return $this->auth->getAttribute($name);
+        return $this->saml->getAttribute($name);
     }
 
     public function authenticate(Event $event, ArrayObject $extra) {
@@ -207,7 +207,6 @@ class Saml2AuthComponent extends Component {
                     return $checkLogin;
                 }
             }
-            
 			return false;
 		}
 
