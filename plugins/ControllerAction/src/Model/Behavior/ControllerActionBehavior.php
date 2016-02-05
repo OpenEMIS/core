@@ -83,6 +83,9 @@ class ControllerActionBehavior extends Behavior {
 			if ($actions[$action] !== false) {
 				$behavior = ucfirst($action);
 				if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
+					if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
+						continue;
+					}
 					if (is_array($value)) {
 						if ($model->hasBehavior($behavior)) {
 							$model->removeBehavior($behavior);
@@ -92,7 +95,6 @@ class ControllerActionBehavior extends Behavior {
 					} else {
 						$model->addBehavior('ControllerAction.' . $behavior);
 					}
-					
 				}
 			}
 		}
@@ -135,6 +137,14 @@ class ControllerActionBehavior extends Behavior {
 		}
 		
 		$this->_table->fields = $fields;
+	}
+
+	public function isColumnExists($field) {
+		$model = $this->_table;
+		$schema = $model->schema();
+		$columns = $schema->columns();
+
+		return in_array($field, $columns);
 	}
 
 	public function actions($action=null) {
@@ -263,7 +273,7 @@ class ControllerActionBehavior extends Behavior {
 		$params = [$attr, $model->action, $model->request];
 		$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 		if (is_array($event->result)) {
-			$model->fields[$field] = $event->result;
+			$model->fields[$name] = $event->result;
 		}
 	}
 
@@ -354,6 +364,11 @@ class ControllerActionBehavior extends Behavior {
 			Log::write('debug', $field . '\'s association not found in ' . $this->_table->alias());
 		}
 		return $associatedEntity;
+	}
+
+	public function getSearchKey() {
+		$session = $this->_table->request->session();
+		return $session->read($this->_table->registryAlias().'.search.key');
 	}
 
 	public function getContains($type = 'belongsTo') { // type is not being used atm
