@@ -93,6 +93,10 @@ class StudentsTable extends AppTable {
 				'rule' => ['checkEnrolledInOtherInstitution'],
 				'on' => 'create'
 			])
+			->add('class', 'ruleClassMaxLimit', [
+				'rule' => ['checkInstitutionClassMaxLimit'],
+				'on' => 'create'
+			])
 			;
 		return $validator;
 	}
