@@ -81,6 +81,7 @@ class SystemGroupsTable extends AppTable {
 				return $this->controller->redirect($urlParams);
 			}
 		}
+		$this->request->data['user_search'] = '';
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
