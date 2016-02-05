@@ -1,6 +1,7 @@
 <?php
 namespace Report\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -27,7 +28,7 @@ class ReportsController extends AppController {
 		$this->Navigation->addCrumb($this->request->action);
 	}
 
-	public function onInitialize(Event $event, Table $table) {
+	public function onInitialize(Event $event, Table $table, ArrayObject $extra) {
 		$header = __('Reports') . ' - ' . __($table->alias());
 		$this->set('contentHeader', $header);
 	}
