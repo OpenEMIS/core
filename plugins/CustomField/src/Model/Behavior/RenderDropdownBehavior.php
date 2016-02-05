@@ -1,6 +1,8 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
@@ -32,23 +34,34 @@ class RenderDropdownBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
+            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
+
             $options['type'] = 'select';
             $options['options'] = $dropdownOptions;
 
-            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['key'];
+            $selectedValue = isset($attr['value']) && !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
+            $options['default'] = $selectedValue;
+            $options['value'] = $selectedValue;
+            // for edit
+            // if (array_key_exists($fieldId, $fieldValues)) {
+            //     $selectedValue = $fieldValues[$fieldId]['number_value'];
+            //     if (!is_null($selectedValue)) {
+            //         $options['default'] = $selectedValue;
+            //         $options['value'] = $selectedValue;
+            //     }
 
-            if (array_key_exists($fieldId, $fieldValues)) {
-                $selectedValue = !is_null($fieldValues[$fieldId]['number_value']) ? $fieldValues[$fieldId]['number_value'] : $dropdownDefault;
-                $options['default'] = $selectedValue;
-                $options['value'] = $selectedValue;
-
-                $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
-            }
+            //     $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
+            // }
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
         }
 
         $event->stopPropagation();
         return $value;
+    }
+
+    public function processDropdownValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $settings['valueKey'] = 'number_value';
+        $this->processValues($entity, $data, $settings);
     }
 }

@@ -1,6 +1,8 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
@@ -20,19 +22,26 @@ class RenderNumberBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
+            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
+
             $options['type'] = 'number';
-
-            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['key'];
-
-            if (array_key_exists($fieldId, $fieldValues)) {
-                $options['value'] = $fieldValues[$fieldId]['number_value'];
-                $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
-            }
+            // for edit
+            // if (array_key_exists($fieldId, $fieldValues)) {
+            //     if ($attr['attr']['request'] == 'get') {
+            //         $options['value'] = $fieldValues[$fieldId]['number_value'];
+            //     }
+            //     $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
+            // }
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
         }
 
         $event->stopPropagation();
         return $value;
+    }
+
+    public function processNumberValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $settings['valueKey'] = 'number_value';
+        $this->processValues($entity, $data, $settings);
     }
 }
