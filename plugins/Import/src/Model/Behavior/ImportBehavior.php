@@ -1198,9 +1198,9 @@ class ImportBehavior extends Behavior {
 		return 'Model.import.' . $key;
 	}
 
-/**
- * @link("PHP get actual maximum upload size", http://stackoverflow.com/questions/13076480/php-get-actual-maximum-upload-size)
- */
+	/**
+	 * @link("PHP get actual maximum upload size", http://stackoverflow.com/questions/13076480/php-get-actual-maximum-upload-size)
+	 */
 	// Returns a file size limit in bytes based on the PHP upload_max_filesize
 	// and post_max_size
 	protected function file_upload_max_size() {
@@ -1231,9 +1231,9 @@ class ImportBehavior extends Behavior {
 			return round($size);
 		}
 	}
-/**
- * 
- */
+	/**
+	 * 
+	 */
 
 	protected function post_upload_max_size() {
 		$max_size = $this->parse_size(ini_get('post_max_size'));
@@ -1253,11 +1253,11 @@ class ImportBehavior extends Behavior {
 		return $this->parse_size(ini_get('upload_max_filesize'));
 	}
 
-/**
- * http://codereview.stackexchange.com/questions/6476/quick-way-to-convert-bytes-to-a-more-readable-format
- * @param  [type] $bytes [description]
- * @return [type]        [description]
- */
+	/**
+	 * http://codereview.stackexchange.com/questions/6476/quick-way-to-convert-bytes-to-a-more-readable-format
+	 * @param  [type] $bytes [description]
+	 * @return [type]        [description]
+	 */
 	protected function bytesToReadableFormat($bytes) {
 		$KILO = 1024;
 		$MEGA = $KILO * 1024;
@@ -1279,10 +1279,10 @@ class ImportBehavior extends Behavior {
 	    return round($bytes / $TERA, 2) . 'TB';
 	}
 
-/**
- * @link("Upload errors defination", http://php.net/manual/en/features.file-upload.errors.php#115746)
- * For reference.
- */
+	/**
+	 * @link("Upload errors defination", http://php.net/manual/en/features.file-upload.errors.php#115746)
+	 * For reference.
+	 */
 	protected $phpFileUploadErrors = array(
 	    0 => 'There is no error, the file uploaded with success',
 	    1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
