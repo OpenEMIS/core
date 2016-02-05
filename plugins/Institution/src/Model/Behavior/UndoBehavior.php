@@ -61,10 +61,16 @@ class UndoBehavior extends Behavior {
 
 	protected function deleteEnrolledStudents($studentId) {
 		$currentStatus = $this->statuses['CURRENT'];
-		$this->model->deleteAll([
-			'student_status_id' => $currentStatus,
-			'student_id' => $studentId
-		]);
+		$entity = $this->model
+			->find()
+			->where([
+				$this->model->aliasField('student_id') => $studentId,
+				$this->model->aliasField('student_status_id') => $currentStatus
+			])
+			->first();
+		if (!empty($entity)) {
+			$this->model->delete($entity);
+		}
 	}
 
 	protected function updateStudentStatus($code, $conditions) {
