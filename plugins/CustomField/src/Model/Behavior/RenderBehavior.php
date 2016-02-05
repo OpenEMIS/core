@@ -1,6 +1,8 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
+use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\ORM\Behavior;
 
@@ -24,6 +26,7 @@ class RenderBehavior extends Behavior {
     	$events = parent::implementedEvents();
     	$eventMap = [
             'Render.'.'onSet'.$this->fieldType.'Values' => 'onSet'.$this->fieldType.'Values',
+            'Render.'.'process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
             'Render.'.'onSave' => 'onSave'
         ];
 
@@ -35,4 +38,21 @@ class RenderBehavior extends Behavior {
         }
 		return $events;
 	}
+
+    protected function processValues(Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $fieldKey = $settings['fieldKey'];
+        $valueKey = $settings['valueKey'];
+
+        $customValue = $settings['customValue'];
+        $fieldValues = $settings['fieldValues'];
+
+        if (strlen($customValue[$valueKey]) == 0) {
+            if (isset($entity->id)) {
+                $settings['deleteFieldIds'][] = $customValue[$fieldKey];
+            }
+        } else {
+            $fieldValues[] = $customValue;
+        }
+        $settings['fieldValues'] = $fieldValues;
+    }
 }

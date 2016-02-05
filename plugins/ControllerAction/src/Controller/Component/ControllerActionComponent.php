@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.12
+ControllerActionComponent - Current Version 3.1.13
+3.1.13 (Thed) - added new event editAfterQuery to modified $entity after query is executed
 3.1.12 (Zack) - added new event onGetConvertOptions to add additional condition to the query to generate the convert options for delete and transfer
 3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
 3.1.10 (Thed) - added new event onDeleteTransfer
@@ -1012,6 +1013,12 @@ class ControllerActionComponent extends Component {
 			// End Event
 
 			$entity = $query->first();
+
+			// Event: editAfterQuery
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterQuery');
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.afterQuery', null, [$entity]);
+			if ($event->isStopped()) { return $event->result; }
+			// End Event
 
 			if (empty($entity)) {
 				$this->Alert->warning('general.notExists');

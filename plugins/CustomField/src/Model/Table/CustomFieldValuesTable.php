@@ -40,7 +40,7 @@ class CustomFieldValuesTable extends AppTable {
 				return true;
 			})
 			->add('text_value', 'ruleUnique', [
-				'rule' => 'validateUnique',
+				'rule' => ['validateUnique', ['scope' => 'custom_field_id']],
 				'provider' => 'table',
 				'message' => __('This field has to be unique'),
 				'on' => function ($context) {
@@ -50,7 +50,7 @@ class CustomFieldValuesTable extends AppTable {
 			    }
 			])
 			->add('number_value', 'ruleUnique', [
-				'rule' => 'validateUnique',
+				'rule' => ['validateUnique', ['scope' => 'custom_field_id']],
 				'provider' => 'table',
 				'message' => __('This field has to be unique'),
 				'on' => function ($context) {
