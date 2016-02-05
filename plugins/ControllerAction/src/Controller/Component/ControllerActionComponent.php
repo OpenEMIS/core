@@ -139,7 +139,7 @@ class ControllerActionComponent extends Component {
 						$this->initComponentsForModel();
 
 						$this->debug(__METHOD__, ': Event -> ControllerAction.Controller.onInitialize');
-						$event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model]);
+						$event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model, new ArrayObject([])]);
 						$event = $this->controller->eventManager()->dispatch($event);
 						if ($event->isStopped()) { return $event->result; }
 						
