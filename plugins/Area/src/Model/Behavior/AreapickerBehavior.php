@@ -99,22 +99,20 @@ class AreapickerBehavior extends Behavior {
 		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
 		if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
 			foreach ($this->_table->fields as $field => $attr) {
-				if ($attr['type'] == 'areapicker') {
-					if ($attr['source_model'] == 'Area.Areas') {
-						$this->_table->fields[$field]['type'] = 'hidden';
-						$targetModel = $attr['source_model'];
-						$areaId = $entity->$field;
-						$list = $this->getAreaLevelName($targetModel, $areaId);
-						$after = $field;
-						foreach ($list as $key => $area) {
-							$this->_table->ControllerAction->field($field.$key, [
-								'type' => 'readonly', 
-								'attr' => ['label' => __($area['level']), 'value' => $area['area_name']],
-								'value' => $area['area_name'],
-								'after' => $after
-							]);
-							$after = $field.$key;
-						}
+				if ($attr['type'] == 'areapicker' && $attr['source_model'] == 'Area.Areas') {
+					$this->_table->fields[$field]['type'] = 'hidden';
+					$targetModel = $attr['source_model'];
+					$areaId = $entity->$field;
+					$list = $this->getAreaLevelName($targetModel, $areaId);
+					$after = $field;
+					foreach ($list as $key => $area) {
+						$this->_table->ControllerAction->field($field.$key, [
+							'type' => 'readonly', 
+							'attr' => ['label' => __($area['level']), 'value' => $area['area_name']],
+							'value' => $area['area_name'],
+							'after' => $after
+						]);
+						$after = $field.$key;
 					}
 				}
 			}
