@@ -34,7 +34,7 @@ class ImportInstitutionsTable extends AppTable {
 		return $events;
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
+	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 		$columns = new Collection($columns);
 		$filtered = $columns->filter(function ($value, $key, $iterator) {
 		    return $value == 'code';
@@ -43,8 +43,8 @@ class ImportInstitutionsTable extends AppTable {
 		$code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
 
 		if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
-			$tempRow['duplicates'] = true;
-			return true;
+			$rowInvalidCodeCols['code'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
+			return false;
 		}
 
 		$institution = $this->Institutions->find()->where(['code'=>$code])->first();
@@ -133,4 +133,5 @@ class ImportInstitutionsTable extends AppTable {
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
 		return true;
 	}
+
 }

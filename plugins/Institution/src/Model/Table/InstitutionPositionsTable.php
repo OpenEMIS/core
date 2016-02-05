@@ -48,11 +48,6 @@ class InstitutionPositionsTable extends AppTable {
 			'visible' => true,
 			'type' => 'select'
 		]);
-		$this->ControllerAction->field('type', [
-			'visible' => true,
-			'type' => 'select',
-			'options' => $this->getSelectOptions('Staff.position_types')
-		]);
 		$this->ControllerAction->field('status', [
 			'visible' => true,
 			'type' => 'select',
@@ -81,6 +76,44 @@ class InstitutionPositionsTable extends AppTable {
 		}
 	}
 
+	public function onGetStaffPositionTitleId(Event $event, Entity $entity) {
+		$types = $this->getSelectOptions('Staff.position_types');
+   		if ($entity->has('staff_position_title')) {
+			return $this->fields['staff_position_title_id']['options'][$entity->staff_position_title->id];
+   		}
+	}
+
+   	public function onUpdateFieldStaffPositionTitleId(Event $event, array $attr, $action, $request) {
+   		$types = $this->getSelectOptions('Staff.position_types');
+		$titles = new ArrayObject();
+		if (in_array($action, ['add', 'edit'])) {
+			$this->StaffPositionTitles
+					->find()
+				    ->where(['id >' => 1])
+				    ->order(['order'])
+				    ->map(function ($row) use ($types, $titles) { // map() is a collection method, it executes the query
+				        $type = array_key_exists($row->type, $types) ? $types[$row->type] : $row->type;
+				        $titles[$type][$row->id] = $row->name;
+				        return $row;
+				    })
+				    ->toArray(); // Also a collections library method
+			$titles = $titles->getArrayCopy();
+		} else {
+			$titles = $this->StaffPositionTitles
+							->find()
+						    ->where(['id >' => 1])
+						    ->order(['order'])
+						    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
+						        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
+						        return $row;
+						    })
+						    ->combine('id', 'name_and_type') // combine() is another collection method
+						    ->toArray(); // Also a collections library method
+		}
+		$attr['options'] = $titles;
+		return $attr;
+	}
+
 	public function getUniquePositionNo() {
 		$prefix = '';
 		$currentStamp = time();
@@ -104,9 +137,15 @@ class InstitutionPositionsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'type', 'status',
+			'staff_position_grade_id', 'status',
 		]);
 
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		// pr($options);die;
+		// $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
+		// $query->select($this->StaffPositionTitles);
 	}
 
 /******************************************************************************************************************
@@ -122,11 +161,10 @@ class InstitutionPositionsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'type', 'status',
+			'staff_position_grade_id', 'status',
 		]);
 
 	}
-
 
 /******************************************************************************************************************
 **
@@ -138,7 +176,7 @@ class InstitutionPositionsTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'type', 'status',
+			'staff_position_grade_id', 'status',
 			'modified_user_id', 'modified', 'created_user_id', 'created',
 			'current_staff_list', 'past_staff_list'
 		]);
@@ -199,46 +237,9 @@ class InstitutionPositionsTable extends AppTable {
 
 /******************************************************************************************************************
 **
-** view action methods
+** add action methods
 **
 ******************************************************************************************************************/
-	public function addBeforeAction($event) {
-	}
-
-	/**
-	 * Used by Staff.add
-	 * @param  boolean $institutionId [description]
-	 * @param  boolean $status        [description]
-	 * @return [type]                 [description]
-	 */
-	public function getInstitutionPositionList($institutionId = false, $status = false) {
-		$data = $this->find();
-
-		if ($institutionId !== false) {
-			$data->where(['institution_id' => $institutionId]);
-		}
-
-		if ($status !== false) {
-			$data->where(['status' => $status]);
-		}
-
-		$list = array();
-		if (is_object($data)) {
-			
-			$staffOptions = $this->StaffPositionTitles->getList();
-			$staffOptions = (is_object($staffOptions))? $staffOptions->toArray(): [];
-
-			// pr($staffOptions);
-			
-			foreach ($data as $posInfo) {
-				$list[$posInfo['id']] = sprintf('%s - %s', 
-					$posInfo->position_no, 
-					$staffOptions[$posInfo->staff_position_title_id]
-					);
-			}
-		}
-		return $list;
-	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
