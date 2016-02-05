@@ -4,6 +4,7 @@ namespace Cache\Controller;
 use Cache\Controller\AppController;
 use Cake\Event\Event;
 use Cake\Cache\Cache;
+use Cake\ORM\TableRegistry;
 
 class CachesController extends AppController {
 	public function initialize() {
@@ -24,5 +25,7 @@ class CachesController extends AppController {
 		Cache::gc('labels');
 		Cache::gc('_cake_core_');
 		Cache::gc('_cake_model_');
+		$Labels = TableRegistry::get('Labels');
+		$Labels->storeLabelsInCache();
 	}
 }

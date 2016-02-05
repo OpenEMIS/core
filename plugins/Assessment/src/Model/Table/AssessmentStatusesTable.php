@@ -76,6 +76,7 @@ class AssessmentStatusesTable extends AppTable {
 		$periodOptions = $AcademicPeriods
 			->find('list')
 			->find('visible')
+			->find('editable', ['isEditable'=>true])
 			->find('order')
 			->where([$AcademicPeriods->aliasField('academic_period_level_id') => $selectedLevel])
 			->toArray();

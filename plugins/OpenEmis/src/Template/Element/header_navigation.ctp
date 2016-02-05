@@ -2,32 +2,12 @@
 $session = $this->request->session();
 $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
 $lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
-$userId = $session->check('Auth.User.id') ? $session->read('Auth.User.id') : '';
-$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
-$supportUrl = $session->check('System.help') ? $session->read('System.help') : 'https://support.openemis.org/core/';
 
-$dropdown = [
-	'About' => [
-		'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'contact'], 
-		'icon' => 'fa-info-circle'
-	],
-	'Preferences' => [
-		'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index'], 
-		'icon' => 'fa-cog'
-	],
-	'Help' => [
-		'url' => $supportUrl,
-		'icon' => 'fa-question-circle',
-		'target' => '_blank'
-	],
-	'_divider',
-	'Logout' => [
-		'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
-		'icon' => 'fa-power-off'
-	]
-];
+if (!isset($headerMenu)) {
+	$headerMenu = [];
+}
 
-$roles = '';
+$roles = 'User Role: Principal';
 if ($session->check('System.User.roles')) {
 	$roles = $session->read('System.User.roles');
 }
@@ -40,12 +20,12 @@ if ($session->check('System.User.roles')) {
 	</div>
 
 	<div class="btn-group">
-		<a class="btn" href="<?= $this->Url->build($homeUrl) ?>">
-			<i class="fa fa-home"></i>
-		</a>
-	</div>
-	
-	<?php 
+        <a class="btn" href="<?= $this->Url->build($homeUrl) ?>">
+            <i class="fa fa-home"></i>
+        </a>
+    </div>
+
+    <?php 
 	if (isset($showProductList) && $showProductList) {
 		echo $this->element('OpenEmis.product_list');
 	}
@@ -60,7 +40,7 @@ if ($session->check('System.User.roles')) {
 			<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>
 			<div class="more-menu-item">
 				<?php
-				foreach ($dropdown as $name => $attr) {
+				foreach ($headerMenu as $name => $attr) {
 					if ($name != '_divider') {
 						$target = isset($attr['target']) ? $attr['target'] : '_self';
 						echo '<li>';
