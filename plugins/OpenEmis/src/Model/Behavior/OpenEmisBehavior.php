@@ -54,26 +54,33 @@ class OpenEmisBehavior extends Behavior {
 
 	public function afterAction(Event $event, ArrayObject $extra) {
 		$model = $this->_table;
-
-		// deprecated
-		$modal = [];
+		
 		if ($model->action == 'index' || $model->action == 'view') {
-			$modal['id'] = 'delete-modal';
+			$modal = [];
 			$modal['title'] = $model->alias();
 			$modal['content'] = __('All associated information related to this record will also be removed.');
 			$modal['content'] .= '<br><br>';
 			$modal['content'] .= __('Are you sure you want to delete this record?');
-			$modal['formOptions'] = ['type' => 'delete', 'url' => $model->url('remove')];
-			$modal['fields'] = [
-				'id' => array('type' => 'hidden', 'id' => 'recordId')
+
+			$modal['form'] = [
+				'model' => $model,
+				'formOptions' => ['type' => 'delete', 'url' => $model->url('remove')],
+				'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId']]
 			];
+
 			$modal['buttons'] = [
 				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
 			];
-			if (!isset($model->controller->viewVars['modal'])) {
-				$model->controller->set('modal', $modal);
+			$modal['cancelButton'] = true;
+
+			if (!isset($model->controller->viewVars['modals'])) {
+				$model->controller->set('modals', ['delete-modal' => $modal]);
+			} else {
+				$modals = array_merge($model->controller->viewVars['modals'], ['delete-modal' => $modal]);
+				$model->controller->set('modals', $modals);
 			}
 		}
+		// deprecated
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
 		// end deprecated
