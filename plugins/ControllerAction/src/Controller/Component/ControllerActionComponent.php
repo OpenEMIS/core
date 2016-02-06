@@ -584,19 +584,22 @@ class ControllerActionComponent extends Component {
 	}
 
 	public function getModalOptions($type) {
-		$modal = array();
+		$modal = [];
 
 		if ($type == 'remove' && in_array($type, $this->defaultActions)) {
-			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
-			$modal['formOptions'] = ['type' => 'delete', 'url' => $this->url('remove')];
-			$modal['fields'] = [
-				'id' => array('type' => 'hidden', 'id' => 'recordId')
+
+			$modal['form'] = [
+				'model' => $this->model,
+				'formOptions' => ['type' => 'delete', 'url' => $this->url('remove')],
+				'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId']]
 			];
+
 			$modal['buttons'] = [
 				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
 			];
+			$modal['cancelButton'] = true;
 		}
 		return $modal;
 	}
@@ -769,10 +772,10 @@ class ControllerActionComponent extends Component {
 		}
 		if ($event->isStopped()) { return $event->result; }
 
-		$modal = $this->getModalOptions('remove');
+		$modals = ['delete-modal' => $this->getModalOptions('remove')];
 		$this->config['form'] = true;
 		$this->config['formButtons'] = false;
-		$this->controller->set(compact('data', 'modal', 'indexElements'));
+		$this->controller->set(compact('data', 'modals', 'indexElements'));
 	}
 
 	public function view($id=0) {
@@ -833,9 +836,9 @@ class ControllerActionComponent extends Component {
 			// End Event
 
 			$this->Session->write($sessionKey, $id);
-			$modal = $this->getModalOptions('remove');
+			$modals = ['delete-modal' => $this->getModalOptions('remove')];
 			$this->controller->set('data', $entity);
-			$this->controller->set('modal', $modal);
+			$this->controller->set('modals', $modals);
 		} else {
 			$this->Alert->warning('general.notExists');
 			return $this->controller->redirect($this->url('index'));
