@@ -407,6 +407,8 @@ class ControllerActionBehavior extends Behavior {
 		}
 		$order = 0;
 
+		uasort($model->fields, [$this, '_sortByOrder']);
+
 		if ($insert == 'before') {
 			foreach ($model->fields as $key => $attr) {
 				if ($key == $field) {
@@ -428,5 +430,17 @@ class ControllerActionBehavior extends Behavior {
 			}
 		}
 		return $order;
+	}
+
+	private function _sortByOrder($a, $b) {
+ 		if (!isset($a['order']) && !isset($b['order'])) {
+ 			return true;
+ 		} else if (!isset($a['order']) && isset($b['order'])) {
+ 			return true;
+ 		} else if (isset($a['order']) && !isset($b['order'])) {
+ 			return false;
+ 		} else {
+ 			return $a["order"] - $b["order"];
+ 		}
 	}
 }
