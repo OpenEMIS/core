@@ -6,7 +6,7 @@ $dataKeys = [];
 $table = $ControllerAction['table'];
 $tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->alias(), $dataKeys);
 
-$displayAction = $indexButtons->count() > 0;
+$displayAction = is_array($indexButtons) ? count($indexButtons) : $indexButtons->count() > 0;
 $displayReorder = isset($reorder) && $reorder && $data->count() > 1;
 
 if ($displayAction) {
