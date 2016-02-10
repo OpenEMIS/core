@@ -21,16 +21,12 @@
 			<?php 
 				foreach ($attr as $key => $value) {
 				echo 
-					$this->Form->input('AuthenticationTypeAttributes'.'.'.$key.'.value', [
-						'label' => $value['name'],
-						'type' => 'text',
-						'value' => $value['value']
-					]);
+					$this->Form->input('AuthenticationTypeAttributes'.'.'.$key.'.value', $value);
 
 				echo 
 					$this->Form->input('AuthenticationTypeAttributes'.'.'.$key.'.name', [
 						'type' => 'hidden',
-						'value' => $value['name']
+						'value' => $value['label']
 					]);
 				}
 			?>
