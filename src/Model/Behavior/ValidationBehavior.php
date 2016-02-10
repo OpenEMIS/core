@@ -17,8 +17,6 @@ class ValidationBehavior extends Behavior {
 	private $validationCode = [];
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
-		$this->attachDefaultValidation($validator);
-
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
 
@@ -74,51 +72,6 @@ class ValidationBehavior extends Behavior {
 				}
 			}
 		}
-	}
-
-	private function attachDefaultValidation($validator) {
-		$schema = $this->_table->schema();
-		$columns = $schema->columns();
-
-		// added this temporary, will need to revisit this code
-		$ignoreFields = ['modified_user_id', 'created_user_id', 'modified', 'created', 'order'];
-
-		foreach ($columns as $col) {
-			$columnInfo = $schema->column($col);
-			if ($validator->hasField($col)) {
-				$set = $validator->field($col);
-
-				if (!$set->isEmptyAllowed()) {
-					$set->add('notBlank', ['rule' => 'notBlank']);
-				}
-				if (!$set->isPresenceRequired()) {
-					if ($this->isForeignKey($col)) {
-						$validator->requirePresence($col);
-					}
-				}
-			} else { // field not presence in validator
-				if (array_key_exists('null', $columnInfo)) {
-					if ($columnInfo['null'] === false && $col !== 'id' && !in_array($col, $ignoreFields)) {
-						$validator->add($col, 'notBlank', ['rule' => 'notBlank']);
-						if ($this->isForeignKey($col)) {
-							$validator->requirePresence($col);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private function isForeignKey($field) {
-		$model = $this->_table;
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public function setValidationCode($key, $code) {
@@ -459,6 +412,20 @@ class ValidationBehavior extends Behavior {
 	}
 
 	// Return false if not enrolled in other education system
+	public static function checkInstitutionClassMaxLimit($class_id, array $globalData) {
+		$SectionStudents = TableRegistry::get("Institution.InstitutionSectionStudents");
+		$currentNumberOfStudents = $SectionStudents->find()->where([
+				$SectionStudents->aliasField('institution_section_id') => $class_id,
+				$SectionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+			])->count();
+		/**
+		 * @todo  add this max limit to config
+		 * This limit value is being used in InstitutionSections->editAfterAction()
+		 */
+		return ($currentNumberOfStudents < 100);
+	}
+
+	// Return false if not enrolled in other education system
 	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
 		$enrolled = false;
@@ -539,6 +506,74 @@ class ValidationBehavior extends Behavior {
 		}
 		return true;
 	}
+
+	public static function checkShiftAvailable($field, array $globalData) {
+		// have to account for edit and itself... do not count itself into the query
+		$existingId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
+
+		$academicPeriodId = (array_key_exists('academic_period_id', $globalData['data']))? $globalData['data']['academic_period_id']: null;
+		$locationInstitutionId = (array_key_exists('location_institution_id', $globalData['data']))? $globalData['data']['location_institution_id']: null;
+		// no academic period or location fails
+		if (empty($academicPeriodId)) return false;
+		if (empty($locationInstitutionId)) return false;
+
+		$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+		// find any shift with overlap
+		$query = $InstitutionShifts->find()
+			->where([
+				$InstitutionShifts->aliasField('academic_period_id') => $academicPeriodId,
+				$InstitutionShifts->aliasField('location_institution_id') => $locationInstitutionId,
+			])
+			;
+
+		// to handle edits
+		if (!empty($existingId)) {
+			$query->where([$InstitutionShifts->aliasField('id') .' != ' . $existingId]);
+		}
+
+		$timeConditions = [];
+		$startTime = (array_key_exists('start_time', $globalData['data']))? $globalData['data']['start_time']: null;
+		$endTime = (array_key_exists('end_time', $globalData['data']))? $globalData['data']['end_time']: null;
+		// no academic period or location fails
+		if (empty($startTime)) return false;
+		if (empty($endTime)) return false;
+
+		$format = 'H:i:s';
+		$startTime = date($format, strtotime($startTime));
+		$endTime = date($format, strtotime($endTime));
+
+		$timeConditions['OR'] = [
+			'OR' => [
+				[	
+					$InstitutionShifts->aliasField('start_time') . ' <= ' => $startTime,
+					$InstitutionShifts->aliasField('end_time') . ' > ' => $startTime,
+				],
+				[
+					$InstitutionShifts->aliasField('start_time') . ' < ' => $endTime,
+					$InstitutionShifts->aliasField('end_time') . ' >= ' => $endTime,
+				],
+				[
+					$InstitutionShifts->aliasField('start_time') . ' >= ' => $startTime,
+					$InstitutionShifts->aliasField('end_time') . ' <= ' => $endTime,
+				],
+				[
+					// means full day
+					$InstitutionShifts->aliasField('start_time') . ' IS NULL',	
+					$InstitutionShifts->aliasField('end_time') . ' IS NULL',
+				]
+			]
+		];
+
+		$query->where($timeConditions);
+
+		// pr($query->toArray());
+		// die;
+
+		$query = $query->count();
+		return ($query == 0);
+	}
+
+
 
 	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
 		$data = $globalData['data'];

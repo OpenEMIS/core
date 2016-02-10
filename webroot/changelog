@@ -1,3 +1,14 @@
+v3.4.13
+- Class column in Institutions -> Students can be sortable now
+- The system does not allow users to create shifts with overlapped timing now
+- Improved on Shifts list page to display shifts used by other schools
+- Reports -> Maps permission is now available
+- Positions are searchable by Position titles now, titles and grades are sortable now
+- Fixed a bug that caused principal accounts not able to see the areas in Institution -> edit mode
+- Added SAML2 support for Single Sign On
+- Fixed a bug that caused the breadcrumb home icon not working properly	Actions
+- Implemented customised workflow for Positions
+
 v3.4.12
 - Fixed a bug that caused student data not removed completely when deleting a student from a school
 - Fixed a bug that caused school name and status not displaying the correct value in Directories

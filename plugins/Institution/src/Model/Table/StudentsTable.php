@@ -34,6 +34,7 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Excel', [
@@ -90,6 +91,10 @@ class StudentsTable extends AppTable {
 			])
 			->add('student_name', 'ruleStudentEnrolledInOthers', [
 				'rule' => ['checkEnrolledInOtherInstitution'],
+				'on' => 'create'
+			])
+			->add('class', 'ruleClassMaxLimit', [
+				'rule' => ['checkInstitutionClassMaxLimit'],
 				'on' => 'create'
 			])
 			;
@@ -246,6 +251,7 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
+		$this->fields['class']['sort'] = ['field' => 'InstitutionSections.name'];
 		
 		$StudentStatusesTable = $this->StudentStatuses;
 		$status = $StudentStatusesTable->findCodeList();
@@ -373,6 +379,18 @@ class StudentsTable extends AppTable {
 
 		$query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
+		// Start: sort by class column
+		$session = $request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+		$query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
+
+		$sortList = ['openemis_no', 'first_name', 'InstitutionSections.name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+		// End
+
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
@@ -380,6 +398,34 @@ class StudentsTable extends AppTable {
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+	}
+
+	public function findWithClass(Query $query, array $options) {
+		$institutionId = $options['institution_id'];
+		$periodId = $options['period_id'];
+
+		$ClassStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+		$Classes = TableRegistry::get('Institution.InstitutionSections');
+
+		return $query
+			->select([$Classes->aliasField('name')])
+			->leftJoin(
+				[$ClassStudents->alias() => $ClassStudents->table()],
+				[
+					$ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+					$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+					$ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id')
+				]
+			)
+			->leftJoin(
+				[$Classes->alias() => $Classes->table()],
+				[
+					$Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_section_id'),
+					$Classes->aliasField('academic_period_id') => $periodId,
+					$Classes->aliasField('institution_id') => $institutionId
+				]
+			)
+			->autoFields(true);
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
@@ -893,7 +939,7 @@ class StudentsTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 		if (empty($this->request->query['period'])) {
 			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
 		}
@@ -1134,7 +1180,7 @@ class StudentsTable extends AppTable {
 		$InstitutionStudentCount = $InstitutionRecords
 			->matching('Users.Genders')
 			->select([
-				'count' => $InstitutionRecords->func()->count('DISTINCT student_id'),	
+				'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('student_id')),
 				'gender' => 'Genders.name'
 			])
 			->group(['gender']);
