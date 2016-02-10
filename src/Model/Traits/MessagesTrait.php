@@ -124,6 +124,10 @@ trait MessagesTrait {
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
 			'end_time' => 'End Time',
+			'our_shifts' => 'Our Shifts',
+			'external_shifts' => 'External Shifts',
+			'location' => 'Location',
+			'institution' => 'Institution',
 		],
 		'InstitutionSections' => [
 			'noClasses' => 'No Classes',
@@ -525,6 +529,9 @@ trait MessagesTrait {
 			'InstitutionShifts' => [
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				],
+				'location' => [
+					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
 			'StudentGuardians' => [
