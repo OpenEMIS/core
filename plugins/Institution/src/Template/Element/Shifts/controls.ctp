@@ -9,12 +9,12 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
-			echo $this->Form->input('toggle_id_', array(
+			echo $this->Form->input('toggle_', array(
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $toggleOptions,
 				'url' => $baseUrl,
-				'data-named-key' => 'toggle_id',
+				'data-named-key' => 'toggle',
 				'default' => $selectedToggleOption,
 			));
 		?>
