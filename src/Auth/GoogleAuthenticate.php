@@ -53,7 +53,11 @@ class GoogleAuthenticate extends BaseAuthenticate
 
                     $User = TableRegistry::get('User.Users');
                     $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                    return $this->_findUser($event->result);
+                    if ($event->result === false) {
+                        return false;
+                    } else {
+                        return $this->_findUser($event->result);
+                    }
 	            }
             }
         } else {
