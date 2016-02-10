@@ -1469,6 +1469,15 @@ class ControllerActionComponent extends Component {
 			$model->fieldOrder = 0;
 		}
 		$model->fieldOrder = $model->fieldOrder + 1;
+
+		$order = false;
+		if (array_key_exists('after', $attr)) {
+			$after = $attr['after'];
+			$order = $this->getOrderValue($model, $after, 'after');
+		} else if (array_key_exists('before', $attr)) {
+			$before = $attr['before'];
+			$order = $this->getOrderValue($model, $before, 'before');
+		}
 		
 		if (!empty($this->plugin)) {
 			$className = $this->plugin . '.' . $className;
@@ -1478,7 +1487,7 @@ class ControllerActionComponent extends Component {
 			'type' => 'string',
 			'null' => true,
 			'autoIncrement' => false,
-			'order' => $model->fieldOrder,
+			'order' => $order ? $order : $model->fieldOrder,
 			'visible' => true,
 			'field' => $field,
 			'model' => $model->alias(),
@@ -1627,5 +1636,37 @@ class ControllerActionComponent extends Component {
 
 	public function getTriggerFrom() {
 		return $this->triggerFrom;
+	}
+
+	private function getOrderValue($model, $field, $insert) {
+		if (!array_key_exists($field, $model->fields)) {
+			Log::write('Attempted to add ' . $insert . ' invalid field: ' . $field);
+			return false;
+		}
+		$order = 0;
+
+		uasort($model->fields, [$this, '_sortByOrder']);
+
+		if ($insert == 'before') {
+			foreach ($model->fields as $key => $attr) {
+				if ($key == $field) {
+					$order = $attr['order'] - 1;
+					break;
+				}
+				$model->fields[$key]['order'] = $attr['order'] - 1;
+			}
+		} else if ($insert == 'after') {
+			$start = false;
+			foreach ($model->fields as $key => $attr) {
+				if ($start) {
+					$model->fields[$key]['order'] = $attr['order'] + 1;
+				}
+				if ($key == $field) {
+					$start = true;
+					$order = $attr['order'] + 1;
+				}
+			}
+		}
+		return $order;
 	}
 }
