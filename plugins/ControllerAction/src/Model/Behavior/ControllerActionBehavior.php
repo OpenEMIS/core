@@ -84,6 +84,7 @@ class ControllerActionBehavior extends Behavior {
 				$behavior = ucfirst($action);
 				if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
 					if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
+						$this->config('actions.reorder', false);
 						continue;
 					}
 					if (is_array($value)) {
