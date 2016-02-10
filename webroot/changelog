@@ -1,3 +1,6 @@
+v3.4.13
+- Class column in Institutions -> Students can be sortable now
+
 v3.4.12
 - Fixed a bug that caused student data not removed completely when deleting a student from a school
 - Fixed a bug that caused school name and status not displaying the correct value in Directories
@@ -7,6 +10,7 @@ v3.4.12
 - Position Types (Teaching/Non-Teaching) is now linked to Position Titles instead of Institution Positions
 - Improved on the validation error messages when importing data via excel spreadsheet
 - Added Google Authentication support
+- The system will not allow delete operations on Class if students still exists in the class
 - Fixed a number of css issues
 
 v3.4.11
