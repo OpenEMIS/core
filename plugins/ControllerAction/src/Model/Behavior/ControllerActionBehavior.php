@@ -84,6 +84,7 @@ class ControllerActionBehavior extends Behavior {
 				$behavior = ucfirst($action);
 				if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
 					if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
+						$this->config('actions.reorder', false);
 						continue;
 					}
 					if (is_array($value)) {
@@ -402,10 +403,12 @@ class ControllerActionBehavior extends Behavior {
 	private function getOrderValue($field, $insert) {
 		$model = $this->_table;
 		if (!array_key_exists($field, $model->fields)) {
-			Log::write('Attempted to add ' . $insert . ' invalid field: ' . $field);
+			Log::write('debug', 'Attempted to add ' . $insert . ' invalid field: ' . $field);
 			return false;
 		}
 		$order = 0;
+
+		uasort($model->fields, [$this, '_sortByOrder']);
 
 		if ($insert == 'before') {
 			foreach ($model->fields as $key => $attr) {
@@ -428,5 +431,17 @@ class ControllerActionBehavior extends Behavior {
 			}
 		}
 		return $order;
+	}
+
+	private function _sortByOrder($a, $b) {
+ 		if (!isset($a['order']) && !isset($b['order'])) {
+ 			return true;
+ 		} else if (!isset($a['order']) && isset($b['order'])) {
+ 			return true;
+ 		} else if (isset($a['order']) && !isset($b['order'])) {
+ 			return false;
+ 		} else {
+ 			return $a["order"] - $b["order"];
+ 		}
 	}
 }
