@@ -59,9 +59,11 @@ class WorkflowBehavior extends Behavior {
 		// priority has to be set at 1000 so that method(s) in model will be triggered first
 		// priority of indexBeforeAction and indexBeforePaginate is set to 1 for it to run first before the event in model
 		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 1000];
+		$events['ControllerAction.Model.afterAction'] 			= ['callable' => 'afterAction', 'priority' => 1];
 		$events['ControllerAction.Model.index.beforeAction'] 	= ['callable' => 'indexBeforeAction', 'priority' => 1];
 		if ($this->isCAv4()) {
 			$events['ControllerAction.Model.index.beforeQuery'] 	= ['callable' => 'indexBeforeQuery', 'priority' => 1];
+			$events['ControllerAction.Model.processWorkflow'] 	= ['callable' => 'processWorkflow', 'priority' => 5];
 		} else {
 			$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
 		}
@@ -106,6 +108,24 @@ class WorkflowBehavior extends Behavior {
 		if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
 			$this->attachWorkflow = true;
 			$this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
+		}
+	}
+
+	public function afterAction(Event $event) {
+		if ($this->isCAv4()) {
+			$extra = func_get_arg(1);
+
+			$toolbarButtons = $extra['toolbarButtons'];
+			$action = $this->_table->action;
+			$toolbarAttr = [
+				'class' => 'btn btn-xs btn-default',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false
+			];
+
+			$this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
+			$extra['toolbarButtons'] = $toolbarButtons;
 		}
 	}
 
@@ -335,125 +355,7 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		// Unset edit buttons and add action buttons
-		if ($this->attachWorkflow) {
-			$isEditable = false;
-
-			if (is_null($this->workflowRecord)) {
-				// In index page, unset add buttons if Workflows is not configured
-				if ($action == 'index') {
-					if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
-						unset($toolbarButtons['add']);
-					}
-				}
-			} else {
-				$workflowStep = $this->getWorkflowStep($this->workflowRecord);
-
-				$actionButtons = [];
-				if (!empty($workflowStep)) {
-					// Enabled edit button only when login user in approval role for the step and that step is editable
-					if ($workflowStep->is_editable == 1) {
-						$isEditable = true;
-					}
-					// End
-
-					foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
-						$action = $actionObj->action;
-						$button = [
-							'id' => $actionObj->id,
-							'name' => $actionObj->name,
-							'next_step_id' => $actionObj->next_workflow_step_id,
-							'next_step_name' => $actionObj->next_workflow_step->name,
-							'comment_required' => $actionObj->comment_required
-						];
-						$json = json_encode($button, JSON_NUMERIC_CHECK);
-
-						$buttonAttr = [
-							'escapeTitle' => false,
-							'escape' => true,
-							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
-							'data-toggle' => 'modal',
-							'data-target' => '#workflowTansition'
-						];
-						$buttonAttr = array_merge($attr, $buttonAttr);
-
-						if (is_null($action)) {
-							if (array_key_exists('class', $buttonAttr)) {
-								unset($buttonAttr['class']);
-							}
-
-							$actionButton = [];
-							$actionButton['label'] = __($actionObj->name);
-							$actionButton['url'] = '#';
-							$actionButton['attr'] = $buttonAttr;
-							$actionButton['attr']['title'] = __($actionObj->name);
-							$actionButton['attr']['role'] = 'menuitem';
-
-							$actionButtons[] = $actionButton;
-						} else {
-							if ($action == 0) { // Approve
-								$approveButton = [];
-								$approveButton['type'] = 'button';
-								$approveButton['label'] = '<i class="fa kd-approve"></i>';
-								$approveButton['url'] = '#';
-								$approveButton['attr'] = $buttonAttr;
-								$approveButton['attr']['title'] = __($actionObj->name);
-
-								$toolbarButtons['approve'] = $approveButton;
-							} else if ($action == 1) { // Reject
-								$rejectButton = [];
-								$rejectButton['type'] = 'button';
-								$rejectButton['label'] = '<i class="fa kd-reject"></i>';
-								$rejectButton['url'] = '#';
-								$rejectButton['attr'] = $buttonAttr;
-								$rejectButton['attr']['title'] = __($actionObj->name);
-
-								$toolbarButtons['reject'] = $rejectButton;
-							}
-						}
-					}
-				}
-
-				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
-					unset($toolbarButtons['edit']);
-				}
-
-				// More Actions
-				$moreButtonLink = [];
-				if (!empty($actionButtons)) {
-					$moreButtonLink = [
-						'title' => __('More Actions') . '<span class="caret-down"></span>',
-						'url' => '#',
-						'options' => [
-							'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
-							'id' => 'action-menu',
-							'class' => 'btn btn-default action-toggle outline-btn',
-							'data-toggle' => 'dropdown',
-							'aria-expanded' => true
-						]
-					];
-
-					$moreButton = [];
-					$moreButton['type'] = 'element';
-					$moreButton['element'] = 'Workflow.buttons';
-					$moreButton['data'] = [
-						'buttons' => $actionButtons
-					];
-					$moreButton['options'] = [];
-
-					$toolbarButtons['more'] = $moreButton;
-				}
-				$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
-				// End
-
-				// Modal
-				$modal = $this->getModalOptions();
-				$this->_table->controller->set('modal', $modal);
-				// End
-			}
-		} else {
-
-		}
+		$this->setToolbarButtons($toolbarButtons, $attr, $action);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -750,15 +652,19 @@ class WorkflowBehavior extends Behavior {
 		];
 
 		$modal = [
-			'id' => 'workflowTansition',
-			'fields' => $fields,
+			'id' => 'workflowTransition',
 			'title' => __('Add Comment'),
 			'content' => $content,
-			'formOptions' => [
-				'class' => 'form-horizontal',
-				'url' => $this->_table->ControllerAction->url('processWorkflow')
+			'form' => [
+				'model' => $this->_table,
+				'formOptions' => [
+					'class' => 'form-horizontal',
+					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow')
+				],
+				'fields' => $fields
 			],
-			'buttons' => $buttons
+			'buttons' => $buttons,
+			'cancelButton' => true
 		];
 
 		return $modal;
@@ -796,6 +702,131 @@ class WorkflowBehavior extends Behavior {
 		$steps = $query->toArray();
 
 		return $steps;
+	}
+
+	public function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action) {
+		// Unset edit buttons and add action buttons
+		if ($this->attachWorkflow) {
+			$isEditable = false;
+
+			if (is_null($this->workflowRecord)) {
+				// In index page, unset add buttons if Workflows is not configured
+				if ($action == 'index') {
+					if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
+						unset($toolbarButtons['add']);
+					}
+				}
+			} else {
+				$workflowStep = $this->getWorkflowStep($this->workflowRecord);
+
+				$actionButtons = [];
+				if (!empty($workflowStep)) {
+					// Enabled edit button only when login user in approval role for the step and that step is editable
+					if ($workflowStep->is_editable == 1) {
+						$isEditable = true;
+					}
+					// End
+
+					foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
+						$actionType = $actionObj->action;
+						$button = [
+							'id' => $actionObj->id,
+							'name' => $actionObj->name,
+							'next_step_id' => $actionObj->next_workflow_step_id,
+							'next_step_name' => $actionObj->next_workflow_step->name,
+							'comment_required' => $actionObj->comment_required
+						];
+						$json = json_encode($button, JSON_NUMERIC_CHECK);
+
+						$buttonAttr = [
+							'escapeTitle' => false,
+							'escape' => true,
+							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
+							'data-toggle' => 'modal',
+							'data-target' => '#workflowTransition'
+						];
+						$buttonAttr = array_merge($attr, $buttonAttr);
+
+						if (is_null($actionType)) {
+							if (array_key_exists('class', $buttonAttr)) {
+								unset($buttonAttr['class']);
+							}
+
+							$actionButton = [];
+							$actionButton['label'] = __($actionObj->name);
+							$actionButton['url'] = '#';
+							$actionButton['attr'] = $buttonAttr;
+							$actionButton['attr']['title'] = __($actionObj->name);
+							$actionButton['attr']['role'] = 'menuitem';
+
+							$actionButtons[] = $actionButton;
+						} else {
+							if ($actionType == 0) { // Approve
+								$approveButton = [];
+								$approveButton['type'] = 'button';
+								$approveButton['label'] = '<i class="fa kd-approve"></i>';
+								$approveButton['url'] = '#';
+								$approveButton['attr'] = $buttonAttr;
+								$approveButton['attr']['title'] = __($actionObj->name);
+
+								$toolbarButtons['approve'] = $approveButton;
+							} else if ($actionType == 1) { // Reject
+								$rejectButton = [];
+								$rejectButton['type'] = 'button';
+								$rejectButton['label'] = '<i class="fa kd-reject"></i>';
+								$rejectButton['url'] = '#';
+								$rejectButton['attr'] = $buttonAttr;
+								$rejectButton['attr']['title'] = __($actionObj->name);
+
+								$toolbarButtons['reject'] = $rejectButton;
+							}
+						}
+					}
+				}
+
+				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
+					unset($toolbarButtons['edit']);
+				}
+
+				// More Actions
+				$moreButtonLink = [];
+				if (!empty($actionButtons)) {
+					$moreButtonLink = [
+						'title' => __('More Actions') . '<span class="caret-down"></span>',
+						'url' => '#',
+						'options' => [
+							'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
+							'id' => 'action-menu',
+							'class' => 'btn btn-default action-toggle outline-btn',
+							'data-toggle' => 'dropdown',
+							'aria-expanded' => true
+						]
+					];
+
+					$moreButton = [];
+					$moreButton['type'] = 'element';
+					$moreButton['element'] = 'Workflow.buttons';
+					$moreButton['data'] = [
+						'buttons' => $actionButtons
+					];
+					$moreButton['options'] = [];
+
+					$toolbarButtons['more'] = $moreButton;
+				}
+				$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
+				// End
+
+				// Modal
+				$modal = $this->getModalOptions();
+				if (!isset($this->_table->controller->viewVars['modals'])) {
+					$this->_table->controller->set('modals', ['workflowTransition' => $modal]);
+				} else {
+					$modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
+					$this->_table->controller->set('modals', $modals);
+				}
+				// End
+			}
+		}
 	}
 
 	public function setStatusId(Entity $entity) {
@@ -853,7 +884,12 @@ class WorkflowBehavior extends Behavior {
 			// End
 
 			// Redirect
-			$url = $this->_table->ControllerAction->url('view');
+			if ($this->isCAv4()) {
+				$url = $this->_table->url('view');
+			} else {
+				$url = $this->_table->ControllerAction->url('view');
+			}
+			
 			return $this->_table->controller->redirect($url);
 			// End
 		}
