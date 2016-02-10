@@ -652,15 +652,19 @@ class WorkflowBehavior extends Behavior {
 		];
 
 		$modal = [
-			'id' => 'workflowTansition',
-			'fields' => $fields,
+			'id' => 'workflowTransition',
 			'title' => __('Add Comment'),
 			'content' => $content,
-			'formOptions' => [
-				'class' => 'form-horizontal',
-				'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow')
+			'form' => [
+				'model' => $this->_table,
+				'formOptions' => [
+					'class' => 'form-horizontal',
+					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow')
+				],
+				'fields' => $fields
 			],
-			'buttons' => $buttons
+			'buttons' => $buttons,
+			'cancelButton' => true
 		];
 
 		return $modal;
@@ -739,7 +743,7 @@ class WorkflowBehavior extends Behavior {
 							'escape' => true,
 							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
 							'data-toggle' => 'modal',
-							'data-target' => '#workflowTansition'
+							'data-target' => '#workflowTransition'
 						];
 						$buttonAttr = array_merge($attr, $buttonAttr);
 
@@ -814,7 +818,12 @@ class WorkflowBehavior extends Behavior {
 
 				// Modal
 				$modal = $this->getModalOptions();
-				$this->_table->controller->set('modal', $modal);
+				if (!isset($this->_table->controller->viewVars['modals'])) {
+					$this->_table->controller->set('modals', ['workflowTransition' => $modal]);
+				} else {
+					$modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
+					$this->_table->controller->set('modals', $modals);
+				}
 				// End
 			}
 		}
