@@ -14,6 +14,7 @@ class RemoveBehavior extends Behavior {
 		$events['ControllerAction.Model.remove'] = 'remove';
 		$events['ControllerAction.Model.transfer'] = 'transfer';
 		$events['ControllerAction.Model.transfer.afterAction'] = ['callable' => 'transferAfterAction', 'priority' => 5];
+		$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
 		return $events;
 	}
 
@@ -33,6 +34,26 @@ class RemoveBehavior extends Behavior {
 					}
 				}
 			}
+		}
+	}
+
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$model = $this->_table;
+		$visibleFields = [''];
+		if ($model->action == 'transfer') {
+			$entity = $extra['entity'];
+			$convertOptions = $extra['convertOptions'];
+			$cells = $extra['cells'];
+			
+			$model->fields = [];
+			$model->field('id', ['type' => 'hidden']);
+			$model->field('convert_from', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
+			$model->field('convert_to', ['type' => 'select', 'options' => $convertOptions, 'attr' => ['required' => 'required']]);
+			$model->field('apply_to', [
+				'type' => 'table',
+				'headers' => [__('Feature'), __('No of Records')],
+				'cells' => $cells
+			]);
 		}
 	}
 
@@ -108,15 +129,9 @@ class RemoveBehavior extends Behavior {
 				foreach ($associations as $row) {
 					$cells[] = [$row['model'], $row['count']];
 				}
-				$model->fields = [];
-				$model->field('id', ['type' => 'hidden']);
-				$model->field('convert_from', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
-				$model->field('convert_to', ['type' => 'select', 'options' => $convertOptions, 'attr' => ['required' => 'required']]);
-				$model->field('apply_to', [
-					'type' => 'table',
-					'headers' => [__('Feature'), __('No of Records')],
-					'cells' => $cells
-				]);
+
+				$extra['convertOptions'] = $convertOptions;
+				$extra['cells'] = $cells;
 
 				$controller->set('data', $entity);
 			}
