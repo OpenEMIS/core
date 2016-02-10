@@ -179,6 +179,8 @@ class InstitutionShiftsTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
+		$attr['options'] = $academicPeriodOptions;
 		if ($action == 'add' && empty($request->data)) {
 			$attr['attr']['value'] = $this->AcademicPeriods->getCurrent();
 		}

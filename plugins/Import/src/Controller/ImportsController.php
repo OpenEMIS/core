@@ -1,6 +1,7 @@
 <?php
 namespace Import\Controller;
 
+use ArrayObject;
 use Import\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -22,7 +23,7 @@ class ImportsController extends AppController {
 	// 	$this->set('contentHeader', __($header));
 	// }
 
-	// public function onInitialize(Event $event, $model) {
+	// public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		
 	// }
 }

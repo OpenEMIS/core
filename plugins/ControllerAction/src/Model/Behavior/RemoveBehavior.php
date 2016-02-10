@@ -188,7 +188,7 @@ class RemoveBehavior extends Behavior {
 		$associations = [];
 		foreach ($model->associations() as $assoc) {
 			if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
-				if (!array_key_exists($assoc->table(), $associations)) {
+				if (!array_key_exists($assoc->alias(), $associations)) {
 					$count = 0;
 					if ($assoc->type() == 'oneToMany') {
 						$count = $assoc->find()
@@ -205,7 +205,7 @@ class RemoveBehavior extends Behavior {
 					if (!is_null($event->result)) {
 						$title = $event->result;
 					}
-					$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
+					$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
 				}
 			}
 		}
