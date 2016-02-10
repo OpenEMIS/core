@@ -83,6 +83,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 						$this->aliasField('location_institution_id') => $institutionId
 					], [], true); // undoing all where before this
 					$query->where([$this->aliasField('institution_id') . ' != ' .$institutionId]);
+					$extra['indexButtons'] = [];
 					break;
 				
 				default:
@@ -93,8 +94,10 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	}
 
 	public function transferOnInitialize(Event $event, Entity $entity, Query $query) {
-		$institutionId = $entity->institution_id;
-		$query->where(['institution_id' => $institutionId]);
+		$query->where([
+			'institution_id' => $entity->institution_id,
+			'academic_period_id' => $entity->academic_period_id
+		]);
 	}
 
 	public function afterAction(Event $event, ArrayObject $extra) {
@@ -110,6 +113,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 
 	public function viewBeforeAction($event) {
 		$this->field('period', ['visible' => false]);
+		$this->field('location', ['visible' => false]);
 	}
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
