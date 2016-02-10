@@ -93,7 +93,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		}
 	}
 
-	public function transferOnInitialize(Event $event, Entity $entity, Query $query) {
+	public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([
 			'institution_id' => $entity->institution_id,
 			'academic_period_id' => $entity->academic_period_id
