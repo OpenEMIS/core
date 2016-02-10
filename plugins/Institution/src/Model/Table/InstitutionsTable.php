@@ -65,7 +65,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true]);
 		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true]);
 		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true]);
-		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true]);
+		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'foreignKey' => 'previous_institution_id']);
 		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true]);
 		$this->hasMany('InstitutionAssessments', 			['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
 		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true]);
@@ -101,9 +101,7 @@ class InstitutionsTable extends AppTable  {
         ]);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
-        $this->addBehavior('Area.Areapicker', [
-        	'display_country' => false
-        ]);
+        $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
@@ -212,8 +210,8 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
-		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
+		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
@@ -389,9 +387,8 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {
-		$areaName = $entity->Areas['name'];
-
 		if($this->action == 'index'){
+			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
@@ -413,9 +410,15 @@ class InstitutionsTable extends AppTable  {
 			} catch (InvalidPrimaryKeyException $ex) {
 				$this->log($ex->getMessage(), 'error');
 			}
+			return $areaName;
 		}
+		return $entity->area_id;
+	}
 
-		return $areaName;
+	public function onGetAreaAdministrativeId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return $entity->area_administrative_id;
+		}	
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {

@@ -517,7 +517,7 @@ class InstitutionSectionsTable extends AppTable {
 								'status' => 1
 							];
 					}
-					$classes = $model->newEntities($data['MultiClasses'], ['associated' => [ 'InstitutionSectionGrades' => ['validate'=>false]]]);
+					$classes = $model->newEntities($data['MultiClasses']);
 					$error = false;
 					foreach ($classes as $key=>$class) {
 					    if ($class->errors()) {
@@ -696,7 +696,7 @@ class InstitutionSectionsTable extends AppTable {
 			}
 
 			if (!empty($newSchoolSubjects)) {
-				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects, ['associated' => ['InstitutionSectionClasses' => ['validate' => false]]]);
+				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
 				foreach ($newSchoolSubjects as $subject) {
 				    $InstitutionSubjects->save($subject);
 				}
@@ -715,7 +715,6 @@ class InstitutionSectionsTable extends AppTable {
 				foreach($data['InstitutionSections']['institution_section_grades'] as $key => $row) {
 					$data['InstitutionSections']['institution_section_grades'][$key]['status'] = 1;
 				}
-				$options['associated'] = ['InstitutionSectionGrades' => ['validate' => false]];
 			} else {
 				/**
 				 * set institution_id to empty to trigger validation error in ControllerActionComponent
@@ -754,11 +753,11 @@ class InstitutionSectionsTable extends AppTable {
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		/**
-		 * Unable to utilise updateAll for this scenario.
-		 * Only new student records will be saved as status=1 at the later part of this scope.
-		 * Existitng records which is not removed from the UI list, will remain as status=0 instead of 1.
+		 * System is unable to cope if there are too many students to be added.
+		 * Temporarily extend the server's max_execution_time to 60 seconds.
+		 * @todo  Changed the way to save huge hasMany records.
 		 */
-		// $this->InstitutionSectionStudents->updateAll(['status'=>0], ['institution_section_id' => $entity->id]);
+		ini_set('max_execution_time', 60);
 
 		/**
 		 * In students.ctp, we set the student_id as the array keys for easy search and compare.
@@ -780,6 +779,11 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		/**
+		 * @todo  add this max limit to config
+		 * This limit value is being used in ValidationBehavior->checkInstitutionClassMaxLimit() and ImportStudents as well
+		 */
+		$maxNumberOfStudents = 100;
 
 		$students = $entity->institution_section_students;
 		$studentOptions = $this->getStudentsOptions($entity);
@@ -804,24 +808,32 @@ class InstitutionSectionsTable extends AppTable {
 					}
 				}
 			}
-			/**
-			 * Insert the newly added record into the UI table & unset the record from studentOptions
-			 */
-			if (array_key_exists('student_id', $this->request->data)) {
-				if ($this->request->data['student_id']>0) {
-					$id = $this->request->data['student_id'];
-					if ($id != 0) {
-						$students[] = $this->createVirtualStudentEntity($id, $entity);
-					}
-					unset($studentOptions[$id]);
-				} else if ($this->request->data['student_id'] == -1) {
-					foreach ($studentOptions as $id => $name) {
-						if ($id > 0) {
+			if (count($students)<$maxNumberOfStudents) {
+				/**
+				 * Insert the newly added record into the UI table & unset the record from studentOptions
+				 */
+				if (array_key_exists('student_id', $this->request->data)) {
+					if ($this->request->data['student_id']>0) {
+						$id = $this->request->data['student_id'];
+						if ($id != 0) {
 							$students[] = $this->createVirtualStudentEntity($id, $entity);
-							unset($studentOptions[$id]);
+						}
+						unset($studentOptions[$id]);
+					} else if ($this->request->data['student_id'] == -1) {
+						foreach ($studentOptions as $id => $name) {
+							if (count($students)==$maxNumberOfStudents) {
+								$this->Alert->warning($this->aliasField('maximumStudentsReached'));
+								break;
+							}
+							if ($id > 0) {
+								$students[] = $this->createVirtualStudentEntity($id, $entity);
+								unset($studentOptions[$id]);
+							}
 						}
 					}
 				}
+			} else {
+				$this->Alert->warning($this->aliasField('maximumStudentsReached'));
 			}
 		} else {
 			/**
@@ -883,7 +895,7 @@ class InstitutionSectionsTable extends AppTable {
 	 * academic_period_id field setup
 	 */
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
 		if ($action == 'edit') {
 		
 			$attr['type'] = 'readonly';
