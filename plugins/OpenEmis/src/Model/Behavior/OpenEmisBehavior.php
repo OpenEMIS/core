@@ -294,7 +294,7 @@ class OpenEmisBehavior extends Behavior {
 				}
 			}
 		}
-
+		
 		if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
 			$controller->set('reorder', true);
 		}
