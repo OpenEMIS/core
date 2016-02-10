@@ -23,7 +23,6 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			'Shifts' 			=> ['className' => 'Institution.InstitutionShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
@@ -76,6 +75,7 @@ class InstitutionsController extends AppController  {
 
 	// CAv4
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
+	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
 	// End
 
 	public function beforeFilter(Event $event) {

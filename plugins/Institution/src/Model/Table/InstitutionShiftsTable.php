@@ -10,10 +10,11 @@ use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
 
-class InstitutionShiftsTable extends AppTable {
-	public $institutionId = 0;
+class InstitutionShiftsTable extends ControllerActionTable {
+	use MessagesTrait;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -21,9 +22,11 @@ class InstitutionShiftsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
 		$this->belongsTo('LocationInstitutions',	['className' => 'Institution.LocationInstitutions']);
-		$this->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 	'foreignKey' => 'institution_shift_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 	'foreignKey' => 'institution_shift_id']);
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -33,38 +36,74 @@ class InstitutionShiftsTable extends AppTable {
 	    	    ])
  	        ->add('institution_name', 'ruleCheckLocationInstitutionId', [
  	        		'rule' => ['checkInstitutionLocation']
- 	        	]);
+ 	        	])
+			->add('location', 'ruleCheckShiftAvailable', [
+        		'rule' => ['checkShiftAvailable'],
+        		])
+			;
 		return $validator;
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('start_time', ['type' => 'string', 'visible' => true]);
-		$this->ControllerAction->field('end_time', ['type' => 'string', 'visible' => true]);
-
-		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
-		$this->ControllerAction->field('name', ['type' => 'string']);
-		$this->ControllerAction->field('period', ['type' => 'string']);	
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('academic_period_id', ['type' => 'select']);
+		$this->field('name', ['type' => 'string']);
+		$this->field('period', ['type' => 'string']);	
 	}
 
-	public function indexBeforeAction(Event $event){
-		$this->ControllerAction->field('location', ['visible' => false]);
+	public function indexBeforeAction(Event $event, ArrayObject $extra){
+		$this->field('period', ['visible' => false]);
+
+		$toggleOptions = [
+			'OurShifts' => $this->getMessage('InstitutionShifts.our_shifts'),
+			'ExternalShifts' => $this->getMessage('InstitutionShifts.external_shifts')
+		];
+		$extra['selectedToggleOption'] = $this->queryString('toggle', $toggleOptions);
+		$extra['elements']['control'] = [
+			'name' => 'Institution.Shifts/controls', 
+			'data' => [
+				'toggleOptions'=> $toggleOptions,
+				'selectedToggleOption'=> $extra['selectedToggleOption']
+			],
+			'order' => 3
+		];
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->field('location');
-		$this->ControllerAction->field('location_institution_id');
-		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'period', 'location', 'location_institution_id'
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		if (array_key_exists('selectedToggleOption', $extra)) {
+			switch ($extra['selectedToggleOption']) {
+				case 'OurShifts': //institution_id == current school id
+					$this->field('location', ['visible' => false]);
+					// already automatically done in controller
+					break;
+
+				case 'ExternalShifts': //location == current school id 
+					$this->field('location_institution_id', ['visible' => false]);
+					$query->where([
+						$this->aliasField('location_institution_id') => $institutionId
+					], [], true); // undoing all where before this
+					$query->where([$this->aliasField('institution_id') . ' != ' .$institutionId]);
+					$extra['indexButtons'] = [];
+					break;
+				
+				default:
+					# code...
+					break;
+			}
+		}
+	}
+
+	public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+		$query->where([
+			'institution_id' => $entity->institution_id,
+			'academic_period_id' => $entity->academic_period_id
 		]);
 	}
 
-
-	// public function onPopulateSelectOptions(Event $event, $query) {
-		// $query = parent::onPopulateSelectOptions($event, $query);
-		// $query->
-		// // pr($result->toArray());
-		// return $query;
-	// }
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->field('location', ['after' => 'end_time', 'attr' => ['label' => $this->getMessage('InstitutionShifts.location')]]);
+		$this->field('location_institution_id', ['after' => 'location']);
+	}
 
 /******************************************************************************************************************
 **
@@ -73,17 +112,11 @@ class InstitutionShiftsTable extends AppTable {
 ******************************************************************************************************************/
 
 	public function viewBeforeAction($event) {
-		$this->ControllerAction->field('period', ['visible' => true]);
-		$this->ControllerAction->field('location', ['visible' => false]);
-
-
-		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_id',
-		]);
-
+		$this->field('period', ['visible' => false]);
+		$this->field('location', ['visible' => false]);
 	}
 
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
@@ -97,26 +130,25 @@ class InstitutionShiftsTable extends AppTable {
 **
 ******************************************************************************************************************/
 
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->field('period', ['visible' => false]);
+	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('period', ['visible' => false]);
 		$this->fields['start_time']['visible'] = true;
 		$this->fields['start_time']['type'] = 'time';
 		$this->fields['end_time']['visible'] = true;
 		$this->fields['end_time']['type'] = 'time';
-
-		$this->ControllerAction->setFieldOrder([
-			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_id',
-		]);
-
 	}
 	
-	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		unset($data[$this->alias()]['location_institution_id']);
+	}
+
+	public function onGetLocation(Event $event, Entity $entity) {
+		return $entity->institution->name;
 	}
 
 	public function onUpdateFieldLocation(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$attr['options'] = ['CURRENT' => __('This School'), 'OTHER' => __('Other School')];
+			$attr['options'] = ['CURRENT' => __('This Institution'), 'OTHER' => __('Other Institution')];
 			$attr['onChangeReload'] = 'changeLocation';
 
 			if($action == 'edit'){
@@ -135,7 +167,7 @@ class InstitutionShiftsTable extends AppTable {
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
 		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
 		$attr['options'] = $academicPeriodOptions;
-		if ($action == 'add') {
+		if ($action == 'add' && empty($request->data)) {
 			$attr['attr']['value'] = $this->AcademicPeriods->getCurrent();
 		}
 		return $attr;
@@ -149,6 +181,7 @@ class InstitutionShiftsTable extends AppTable {
 			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
 			$attr['url'] = ['controller' => $this->controller->name, 'action' => 'ajaxInstitutionAutocomplete'];
 			$attr['attr']['value'] = '';
+			$attr['attr']['label'] = $this->getMessage('InstitutionShifts.institution');
 			// pr('ere');
 			if($request->data){
 				$data = $request->data[$this->alias()];
@@ -190,9 +223,6 @@ class InstitutionShiftsTable extends AppTable {
 **
 ******************************************************************************************************************/
 
-	public function onGetPeriod(Event $event, Entity $entity) {
-		return $entity->start_time . ' - ' .$entity->end_time;
-	}
 
 
 /******************************************************************************************************************
