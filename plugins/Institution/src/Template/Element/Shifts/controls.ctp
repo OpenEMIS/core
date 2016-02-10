@@ -9,7 +9,7 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
-			echo $this->Form->input('toggle_', array(
+			echo $this->Form->input('toggle', array(
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $toggleOptions,
