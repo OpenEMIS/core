@@ -17,4 +17,4 @@ SET @fieldOptionId := 0;
 SELECT `id` INTO @fieldOptionId FROM field_options WHERE code = 'QualificationLevels';
 UPDATE field_option_values SET visible = 1 WHERE field_option_id = @fieldOptionId;
 
-DELETE FROM `db_patches` WHERE `issue`='PHPOE-1968';
+DELETE FROM `db_patches` WHERE `issue`='POCOR-1968';
