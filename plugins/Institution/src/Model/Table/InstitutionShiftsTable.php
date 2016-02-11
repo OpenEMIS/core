@@ -191,6 +191,13 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$institutionId = $this->Session->read('Institution.Institutions.id');
 					$attr['value'] = $institutionId;
 				} else {
+					if($action == 'edit') {
+						if (!empty($request->data)) {
+							$Institutions = TableRegistry::get('Institution.Institutions');
+							$entity = $Institutions->findById($request->data[$this->alias()]['location_institution_id'])->first(); 
+							$attr['attr']['value'] = $entity->name;
+						}
+					}
 					$attr['fieldName'] = $this->aliasField('institution_name');
 				}
 			} else {
