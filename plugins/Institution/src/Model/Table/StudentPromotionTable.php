@@ -377,6 +377,9 @@ class StudentPromotionTable extends AppTable {
 	}
 
 	public function savePromotion(Entity $entity, ArrayObject $data) {
+		$url = $this->ControllerAction->url('index');
+		$url['action'] = 'Students';
+
 		$nextAcademicPeriodId = null;
 		$nextEducationGradeId = null;
 		$currentAcademicPeriod = null;
@@ -403,10 +406,16 @@ class StudentPromotionTable extends AppTable {
 		if ($statusToUpdate == $studentStatuses['REPEATED']) {
 			$nextEducationGradeId = $currentGrade;
 		}
+		if ($statusToUpdate == $studentStatuses['PROMOTED']) {
+			$successMessage = $this->aliasField('success');
+		} else if ($statusToUpdate == $studentStatuses['GRADUATED']) {
+			$successMessage = $this->aliasField('successGraduated');
+		} else {
+			$successMessage = $this->aliasField('successOthers');
+		}
 		if (!empty($nextAcademicPeriodId) && !empty($currentAcademicPeriod) && !empty($currentGrade)) {
 			if (array_key_exists('students', $data[$this->alias()])) {
 				$nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
-				$tranferCount = 0;
 				foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
 					if ($studentObj['selected']) {
 						unset($studentObj['selected']);
@@ -430,30 +439,50 @@ class StudentPromotionTable extends AppTable {
 						if ($this->save($existingStudentEntity)) {
 							if ($nextEducationGradeId != 0) {
 								if ($this->save($entity)) {
-									$this->Alert->success($this->aliasField('success'), ['reset' => true]);
+									$this->Alert->success($successMessage, ['reset' => true]);
 								} else {
 									$this->log($entity->errors(), 'debug');
 								}
 							} else {
-								$this->Alert->success($this->aliasField('success'), ['reset' => true]);
+								$this->Alert->success($successMessage, ['reset' => true]);
 							}
+						} else {
+							$message = 'failed to update student status';
+							$this->Alert->error($this->aliasField('savingPromotionError'), ['reset' => true]);
+							$this->log($message, 'debug');
+							$url['action'] = 'Promotion';
+							$url[0] = 'add';
 						}
 					}
 				}
-				$url = $this->ControllerAction->url('add');
-
-				return $this->controller->redirect($url);
+			} else {
+				$message = 'students does not exists in data';
+				$this->Alert->error($this->aliasField('noStudentSelected'), ['reset' => true]);
+				$this->log($message, 'debug');
+				$url['action'] = 'Promotion';
+				$url[0] = 'add';
 			}
+		} else {
+			$message = 'nextAcademicPeriodId && currentAcademicPeriod && currentGrade are empty';
+			$this->Alert->error($this->aliasField('noNextGradeOrNextPeriod'), ['reset' => true]);
+			$this->log($message, 'debug');
+			$url['action'] = 'Promotion';
+			$url[0] = 'add';
 		}
+
+		return $this->controller->redirect($url);
 	}
 
 	public function reconfirm() {
-		$this->Alert->info($this->aliasField('reconfirm'));
+		$this->Alert->info($this->aliasField('reconfirm', ['reset' => true]));
 
 		$sessionKey = $this->registryAlias() . '.confirm';
 		if ($this->Session->check($sessionKey)) {
 			$currentEntity = $this->Session->read($sessionKey);
 			$currentData = $this->Session->read($sessionKey.'Data');
+		} else {
+			$this->Alert->warning('general.notExists');
+			return $this->controller->redirect($this->ControllerAction->url('add'));
 		}
 		$academicPeriodData = $this->AcademicPeriods
 			->find()
@@ -479,29 +508,18 @@ class StudentPromotionTable extends AppTable {
 			$this->ControllerAction->setFieldOrder(['current_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'student_status',  'students']);
 		}
 
-		$model = $this;
-		$request = $this->request;
-
-		$primaryKey = $model->primaryKey();
-		$idKey = $model->aliasField($primaryKey);
-
-		if ($currentEntity) {
-			$entity = $currentEntity;
-			if (empty($entity)) {
-				$this->Alert->warning('general.notExists');
-				return $this->controller->redirect($this->url('index'));
-			}
-			
+		if ($currentEntity && !empty($currentEntity)) {
 			if ($this->request->is(['post', 'put'])) {
-				$entity = $currentEntity;
-				$currentData = $requestData->getArrayCopy();
-				$entity = $model->patchEntity($entity, $currentData, []);
+				if ($currentData instanceOf ArrayObject) {
+					$currentData = $currentData->getArrayCopy();
+				}
+				$currentEntity = $this->patchEntity($currentEntity, $currentData, []);
 				return $this->savePromotion($currentEntity, new ArrayObject($currentData));
 			}
-			$this->controller->set('data', $entity);
+			$this->controller->set('data', $currentEntity);
 		} else {
 			$this->Alert->warning('general.notExists');
-			return $this->controller->redirect($this->url('index'));
+			return $this->controller->redirect($this->ControllerAction->url('add'));
 		}
 
 		$this->ControllerAction->renderView('/ControllerAction/edit');

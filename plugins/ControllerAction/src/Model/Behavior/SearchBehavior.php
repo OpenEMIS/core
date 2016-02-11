@@ -13,6 +13,7 @@ class SearchBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
+		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 5];
 		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
 		return $events;
@@ -24,7 +25,7 @@ class SearchBehavior extends Behavior {
 		}
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$model = $this->_table;
 		$alias = $model->registryAlias();
 		$controller = $model->controller;
@@ -57,6 +58,11 @@ class SearchBehavior extends Behavior {
 		if ($extra['pagination']) {
 			$extra['options']['limit'] = $pageOptions[$limit];
 		}
+	}
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$model = $this->_table;
+		$search = $extra['config']['search'];
 
 		if ($extra['auto_contain']) {
 			$contain = $model->getContains();
@@ -79,6 +85,10 @@ class SearchBehavior extends Behavior {
 						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
 					}
 				}
+			}
+
+			if (array_key_exists('OR', $extra)) {
+				$OR = array_merge($OR, $extra['OR']);
 			}
 
 			if (!empty($OR)) {

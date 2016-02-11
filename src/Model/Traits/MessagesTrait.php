@@ -124,6 +124,10 @@ trait MessagesTrait {
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
 			'end_time' => 'End Time',
+			'our_shifts' => 'Our Shifts',
+			'external_shifts' => 'External Shifts',
+			'location' => 'Location',
+			'institution' => 'Institution',
 		],
 		'InstitutionSections' => [
 			'noClasses' => 'No Classes',
@@ -134,12 +138,12 @@ trait MessagesTrait {
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Class Grades',
-			
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
-
+			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
+			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
 		],
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
@@ -252,7 +256,8 @@ trait MessagesTrait {
 				'inactive' => 'Your account has been disabled.',
 				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
-			'noAccess' => 'You do not have access to this location.'
+			'noAccess' => 'You do not have access to this location.',
+			'emptyFields' => 'Some of the required fields for this authentication type are empty.'
 		],
 		'SecurityRoles' => [
 			'userRoles' => 'User Roles',
@@ -349,15 +354,19 @@ trait MessagesTrait {
 		'StudentPromotion' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
-			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
-			'noData' => 'There are no available Students for Promotion / Graduation.',
+			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
+			'noData' => 'There are no available Students for Promotion / Graduation',
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
-			'success' => 'Students have been promoted.',
-			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.',
-			'reconfirm' => 'Please review the information before proceeding with the operation.',
-			'noStudentSelected' => 'There are no students selected.',
+			'success' => 'Students have been promoted',
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
+			'reconfirm' => 'Please review the information before proceeding with the operation',
+			'noStudentSelected' => 'There are no students selected',
 			'noAvailableGrades' => 'No Available Grades in this Institution',
+			'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
+			'savingPromotionError' => 'Some selected students record were not updated succesfully',
+			'successGraduated' => 'Students have graduated',
+			'successOthers' => 'Students status changed successfully',
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -520,6 +529,9 @@ trait MessagesTrait {
 			'InstitutionShifts' => [
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				],
+				'location' => [
+					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
 			'StudentGuardians' => [
@@ -542,7 +554,10 @@ trait MessagesTrait {
 					'ruleInstitutionStudentId' => 'Student has already been added.',
 					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
-				]
+				],
+				'class' => [
+					'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+				],
 			],
 			'Staff' => [
 				'staff_name' => [
