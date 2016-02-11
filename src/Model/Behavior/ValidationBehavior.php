@@ -3,6 +3,7 @@ namespace App\Model\Behavior;
 
 use DateTime;
 use Cake\Event\Event;
+use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
@@ -576,20 +577,17 @@ class ValidationBehavior extends Behavior {
 
 
 	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
+		// this function is ONLY catered for 'on' => 'create'
+		$model = $globalData['providers']['table'];
 		$data = $globalData['data'];
-		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
-			// getting admission  age
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$educationGradeQuery = $EducationGrades->find()
-				->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
-				->contain('EducationProgrammes.EducationCycles')
-				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $data['education_grade_id']])
-				->first()
-				;
-			$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
-			$cycleId = $educationGradeQuery->EducationCycles->id;
+		$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ruleCheckAdmissionAgeWithEducationCycleGrade');
 
-			// getting age fo student
+		$educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+		// if no education grade. fail it
+		if (empty($educationGradeId)) return $validationErrorMsg;
+
+		if (array_key_exists('student_id', $data)) {
+			// saving for existing students
 			$Students = TableRegistry::get('Student.Students');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
@@ -597,38 +595,53 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
-			if (is_null($dateOfBirth)) return false;
-
-			$birthYear = $dateOfBirth->format('Y');
-			$nowYear = Time::now()->format('Y');
-			$ageOfStudent = $nowYear - $birthYear;
-
-
-			$ConfigItems = TableRegistry::get('ConfigItems');
-			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
-			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
-
-			// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$gradeInCycleList = $EducationGrades->find('list')
-				->contain('EducationProgrammes.EducationCycles')
-				->where(['EducationCycles.id' => $cycleId])
-				->find('order');
-
-			$yearIncrement = 0;
-			foreach ($gradeInCycleList as $key => $value) {
-				if ($key == $data['education_grade_id']) break;
-				$yearIncrement++;
-			}
-
-			$enrolmentMinimumAge += $yearIncrement;
-			$enrolmentMaximumAge += $yearIncrement;
-
-			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
+		} else {
+			// saving for new students
+			$dateOfBirth = new DateTime($field);
 		}
+
+		// for cases where date of birth is null, probably only in cases of data error
+		if (is_null($dateOfBirth)) return $validationErrorMsg;
+
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$educationGradeQuery = $EducationGrades->find()
+			->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
+			->contain('EducationProgrammes.EducationCycles')
+			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
+			->first()
+			;
+		$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
+		$cycleId = $educationGradeQuery->EducationCycles->id;
 		
-		// if there is no cycle to check with, allow validation to pass
-		return true;;
+		$birthYear = $dateOfBirth->format('Y');
+		$nowYear = Time::now()->format('Y');
+		$ageOfStudent = $nowYear - $birthYear;
+
+		$ConfigItems = TableRegistry::get('ConfigItems');
+		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
+		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
+
+		// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$gradeInCycleList = $EducationGrades->find('list')
+			->contain('EducationProgrammes.EducationCycles')
+			->where(['EducationCycles.id' => $cycleId])
+			->find('order');
+
+		$yearIncrement = 0;
+		foreach ($gradeInCycleList as $key => $value) {
+			if ($key == $educationGradeId) break;
+			$yearIncrement++;
+		}
+
+		$enrolmentMinimumAge += $yearIncrement;
+		$enrolmentMaximumAge += $yearIncrement;
+
+		// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
+		// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
+		// pr('ageOfStudent: '.$ageOfStudent);
+
+		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
 	}
 
 	// To allow case sensitive entry
