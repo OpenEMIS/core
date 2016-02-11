@@ -425,7 +425,10 @@ class InstitutionSectionsTable extends AppTable {
 			$this->ControllerAction->field('education_grade', [
 				'type' => 'select',
 				'options' => $gradeOptions,
-				'onChangeReload' => true
+				'onChangeReload' => true,
+				'attr' => [
+ 					'empty' => ((empty($gradeOptions)) ? $this->Alert->getMessage($this->aliasField('education_grade_options_empty')) : '')
+				]
 			]);
 
 			$numberOfSectionsOptions = $this->numberOfSectionsOptions();
