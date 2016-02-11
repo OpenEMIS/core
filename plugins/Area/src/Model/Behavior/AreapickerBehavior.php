@@ -5,6 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 class AreapickerBehavior extends Behavior {
 	public function implementedEvents() {
@@ -121,16 +122,19 @@ class AreapickerBehavior extends Behavior {
 
 	public function getAreaLevelName($targetModel, $areaId) {
 		$targetTable = TableRegistry::get($targetModel);
+		$levelAssociation = Inflector::singularize($targetTable->alias()).'Levels';
 		$path = $targetTable
 			->find('path', ['for' => $areaId])
-			->contain(['Levels'])
-			->select(['level' => 'Levels.name', 'area_name' => $targetTable->aliasField('name')])
-			->hydrate(false)
+			->contain([$levelAssociation])
+			->select(['level' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
+			->bufferResults(false)
 			->toArray();
+
 		if ($targetModel == 'Area.AreaAdministratives') {
 			// unset world
 			unset($path[0]);
 		}
 		return $path;
+	
 	}
 }
