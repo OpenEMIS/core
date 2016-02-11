@@ -46,7 +46,7 @@ class StaffTable extends AppTable {
 		]);
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death' ],
 			'filename' => 'Staff',
 			'pages' => ['view']
 		]);
