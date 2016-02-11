@@ -54,24 +54,19 @@ class ImportStudentAttendancesTable extends AppTable {
 		$Navigation->substituteCrumb($crumbTitle, $crumbTitle);
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
-		$tempRow['duplicates'] = false;
+	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 		$tempRow['entity'] = $this->StudentAbsences->newEntity();
-
 		$tempRow['full_day'] = 1;
 		$tempRow['institution_id'] = false;
 		$tempRow['academic_period_id'] = false;
-
 	}
 
-	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
-		// $importedUniqueCodes[] = $entity->code;
-	}
+	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
 	/**
 	 * Currently only populates students based on current academic period
 	 */
-	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$currentPeriodId = $this->AcademicPeriods->getCurrent();
 		if (!$currentPeriodId) {
@@ -112,7 +107,8 @@ class ImportStudentAttendancesTable extends AppTable {
 		$gradeHeader = $this->getExcelLabel($lookedUpTable, 'education_grade_id');
 		$nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
 		$columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-		$data[$sheetName][] = [
+		$data[$columnOrder]['lookupColumn'] = 5;
+		$data[$columnOrder]['data'][] = [
 			$institutionHeader,
 			$periodHeader,
 			$gradeHeader,
@@ -121,7 +117,7 @@ class ImportStudentAttendancesTable extends AppTable {
 		];
 		if (!empty($allStudents)) {
 			foreach($allStudents->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$institution->name,
 					$currentPeriod->name,
 					$row->education_grade->name,
@@ -175,12 +171,12 @@ class ImportStudentAttendancesTable extends AppTable {
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
 		if (empty($tempRow['student_id'])) {
-			$tempRow['duplicates'] = __('OpenEMIS ID was not defined.');
+			$rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
 			return false;
 		}
 
 		if (!$this->institutionId) {
-			$tempRow['duplicates'] = __('No active institution');
+			$rowInvalidCodeCols['institution_id'] = __('No active institution');
 			$tempRow['institution_id'] = false;
 			return false;
 		}
@@ -194,13 +190,13 @@ class ImportStudentAttendancesTable extends AppTable {
 		}
 		$isEditable = $this->AcademicPeriods->getAvailableAcademicPeriods($currentPeriodId);
 		if (!$isEditable) {
-			$tempRow['duplicates'] = __('No data changes can be made for the current academic period');
+			$rowInvalidCodeCols['academic_period_id'] = __('No data changes can be made for the current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
 		$periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
 		if (!$periods) {
-			$tempRow['duplicates'] = __('No matching academic period based on the start date');
+			$rowInvalidCodeCols['academic_period_id'] = __('No matching academic period based on the start date');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
@@ -208,7 +204,7 @@ class ImportStudentAttendancesTable extends AppTable {
 		$periodIds = $periods->extract('id');
 		$periodIds = $periodIds->toArray();
 		if (!in_array($currentPeriodId, $periodIds)) {
-			$tempRow['duplicates'] = __('Date is not within current academic period');
+			$rowInvalidCodeCols['academic_period_id'] = __('Date is not within current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
@@ -220,7 +216,7 @@ class ImportStudentAttendancesTable extends AppTable {
 			'student_id' => $tempRow['student_id'],
 		])->first();
 		if (!$student) {
-			$tempRow['duplicates'] = __('No such student in the institution');
+			$rowInvalidCodeCols['student_id'] = __('No such student in the institution');
 			$tempRow['student_id'] = false;
 			return false;
 		}
@@ -232,7 +228,7 @@ class ImportStudentAttendancesTable extends AppTable {
 		$flipped = array_flip($columns);
 		$original = $originalRow->getArrayCopy();
 		$key = $flipped['student_id'];
-		$tempPassedRecord['data'][$key] = $originalRow[$key];
+		$tempPassedRecord['data'][$key] = $original[$key];
 	}
 
 }

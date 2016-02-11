@@ -280,11 +280,19 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -548,7 +556,6 @@ class InstitutionAssessmentsTable extends AppTable {
 		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$this->educationSubjectIds = $AssessmentItems
 			->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_id'])
-			->find('visible')
 			->where([
 				$AssessmentItems->aliasField('assessment_id') => $selectedAssessment
 			])
@@ -613,18 +620,26 @@ class InstitutionAssessmentsTable extends AppTable {
 			)
 			->where($_conditions);
 
-		if ($this->AccessControl->isAdmin()) {
-			// Superadmin should see all Classes
+		$AllClasses = $this->AccessControl->check(['Institutions', 'AllClasses', 'index']);
+		$MyClasses = $this->AccessControl->check(['Institutions', 'Sections', 'index']);
+		$AllSubjects = $this->AccessControl->check(['Institutions', 'AllSubjects', 'index']);
+		$MySubjects = $this->AccessControl->check(['Institutions', 'Classes', 'index']);
+
+		if ($this->AccessControl->isAdmin() || $AllClasses == true || ($MyClasses == false && $MySubjects == false)) {
+			// Superadmin
+			// or user has permission to All Classes
+			// or user don't have access to My Classes and My Subjects
+			// should see all Classes
 			$classOptions = $query->toArray();
 		} else {
-			if ($this->AccessControl->check(['Institutions', 'Sections', 'index'])) {
+			if ($MyClasses == true) {
 				$conditions = array_merge($_conditions, [
 					$this->Classes->aliasField('staff_id') => $this->userId // homeroom teacher
 				]);
 
 				$query->where($conditions, [], true);
 
-				if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+				if ($MySubjects == true) {
 					// User has access to My Classes and My Subjects
 					$classOptions = $query->toArray();
 
@@ -649,7 +664,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					$classOptions = $query->toArray();
 				}
 			} else {
-				if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+				if ($MySubjects == true) {
 					// User don't have access to My Classes but has access to My Subjects
 					$query->innerJoin(
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
@@ -661,14 +676,11 @@ class InstitutionAssessmentsTable extends AppTable {
 					);
 
 					$classOptions = $query->toArray();
-				} else {
-					// User don't have access to My Classes and My Subjects
-					$classOptions = $query->toArray();
 				}
 			}
 		}
 
-		if (empty($classOptions )) {
+		if (empty($classOptions)) {
 	  		$this->Alert->warning($this->aliasField('noSections'));
 	  	} else {
 	  		$selectedClass = $this->queryString('class', $classOptions);
@@ -710,12 +722,20 @@ class InstitutionAssessmentsTable extends AppTable {
 				$this->Subjects->aliasField('education_subject_id IN') => $this->educationSubjectIds
 			]);
 
-		if ($this->AccessControl->isAdmin()) {
-			// Superadmin should see all Subjects
+		$AllClasses = $this->AccessControl->check(['Institutions', 'AllClasses', 'index']);
+		$MyClasses = $this->AccessControl->check(['Institutions', 'Sections', 'index']);
+		$AllSubjects = $this->AccessControl->check(['Institutions', 'AllSubjects', 'index']);
+		$MySubjects = $this->AccessControl->check(['Institutions', 'Classes', 'index']);
+
+		if ($this->AccessControl->isAdmin() || $AllSubjects == true || ($MyClasses == false && $MySubjects == false)) {
+			// Superadmin
+			// or user has permission to All Subjects
+			// or user don't have access to My Classes and My Subjects
+			// should see all Subjects
 			$subjectOptions = $query->toArray();
 		} else {
-			if ($this->AccessControl->check(['Institutions', 'Sections', 'index'])) {
-				if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+			if ($MyClasses == true) {
+				if ($MySubjects == true) {
 					// User has access to My Classes and My Subjects
 					// Check if the login user is not the Homeroom teacher then filter by Subject teacher
 
@@ -724,7 +744,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						$query->innerJoin(
 							[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 							[
-								$this->SubjectStaff->aliasField('institution_site_class_id = ') . $this->Subjects->aliasField('id'),
+								$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
 								$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 								$this->SubjectStaff->aliasField('status') => 1
 							]
@@ -737,7 +757,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					$subjectOptions = $query->toArray();
 				}
 			} else {
-				if ($this->AccessControl->check(['Institutions', 'Classes', 'index'])) {
+				if ($MySubjects == true) {
 					// User don't have access to My Classes but has access to My Subjects
 					$query->innerJoin(
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
@@ -748,9 +768,6 @@ class InstitutionAssessmentsTable extends AppTable {
 						]
 					);
 
-					$subjectOptions = $query->toArray();
-				} else {
-					// User don't have access to My Classes and My Subjects
 					$subjectOptions = $query->toArray();
 				}
 			}

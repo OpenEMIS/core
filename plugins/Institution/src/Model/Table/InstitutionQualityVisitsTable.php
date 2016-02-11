@@ -80,7 +80,10 @@ class InstitutionQualityVisitsTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Classes = $this->Classes;
 
-			$periodOptions = $this->AcademicPeriods->getList();
+			$periodOptions = $this->AcademicPeriods->getList(['withSelect' => true, 'isEditable'=>true]);
+			if (is_null($request->query('period'))) {
+				$this->request->query['period'] = '';
+			}
 			$selectedPeriod = $this->queryString('period', $periodOptions);
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 				'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
@@ -118,7 +121,11 @@ class InstitutionQualityVisitsTable extends AppTable {
 						$this->Classes->aliasField('academic_period_id') => $selectedPeriod
 					])
 					->toArray();
+				$classOptions = ['' => __('-- Select Subject --')] + $classOptions;
 
+				if (is_null($request->query('subject'))) {
+					$this->request->query['subject'] = '';
+				}
 				$selectedClass = $this->queryString('subject', $classOptions);
 				$this->advancedSelectOptions($classOptions, $selectedClass, [
 					'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),

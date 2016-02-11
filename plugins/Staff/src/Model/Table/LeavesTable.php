@@ -36,7 +36,6 @@ class LeavesTable extends AppTable {
 	}
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		$dateFrom = date_create($entity->date_from);
 		$dateTo = date_create($entity->date_to);
 		$diff = date_diff($dateFrom, $dateTo, true);

@@ -14,13 +14,13 @@ class StudentSectionsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 
 		$this->hasMany('InstitutionSectionGrade', ['className' => 'Institution.InstitutionSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$this->fields['education_grade_id']['visible'] = false;
-		$this->fields['status']['visible'] = false;
 
 		$this->ControllerAction->addField('academic_period', []);
 		$this->ControllerAction->addField('institution', []);

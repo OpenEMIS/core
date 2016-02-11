@@ -80,7 +80,7 @@ class ImportUsersTable extends AppTable {
 		return $events;
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
+	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 		$columns = new Collection($columns);
 		$extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
 		    return $value == 'openemis_no';
@@ -89,7 +89,7 @@ class ImportUsersTable extends AppTable {
 		$openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
 
 		if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-			$tempRow['duplicates'] = true;
+			$rowInvalidCodeCols['openemis_no'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
 			return false;
 		}
 
@@ -100,7 +100,9 @@ class ImportUsersTable extends AppTable {
 		$accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
 		$tempRow['account_type'] = $this->getAccountTypeId($accountType);
 		if (empty($tempRow['account_type'])) {
-			$tempRow['duplicates'] = __('Account type cannot be empty.');
+			$tempRow['duplicates'] = __('Account type cannot be empty');
+			$rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
+			$tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, 'others');
 			return false;
 		}
 
@@ -122,27 +124,35 @@ class ImportUsersTable extends AppTable {
 		$importedUniqueCodes[] = $entity->openemis_no;
 	}
 
-	public function onImportPopulateAccountTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportGetAccountTypesId(Event $event, $cellValue) {
+		return $this->getAccountTypeId($cellValue);
+	}
+
+	public function onImportGetAccountTypesName(Event $event, $value) {
+		$name = '';
+		foreach ($this->accountTypes as $key=>$type) {
+			if ($type['code']==$value) {
+				$name = $type['name'];
+				break;
+			}
+		}
+		return $name;
+	}
+
+	public function onImportPopulateAccountTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$translatedReadableCol = $this->getExcelLabel('Imports', 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		$modelData = $this->accountTypes;
 		foreach($modelData as $row) {
-			$data[$sheetName][] = [
+			$data[$columnOrder]['data'][] = [
 				$row['name'],
 				$row[$lookupColumn]
 			];
 		}
 	}
 
-	public function onImportGetAccountTypesId(Event $event, $cellValue) {
-		return $this->getAccountTypeId($cellValue);
-	}
-
-	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		if (!empty($data[$sheetName])) {
-			return true;
-		}
-
+	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')
 								->select(['name', $lookupColumn])
@@ -150,10 +160,11 @@ class ImportUsersTable extends AppTable {
 								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];
@@ -161,7 +172,7 @@ class ImportUsersTable extends AppTable {
 		}
 	}
 
-	public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')
 								->select(['name', $lookupColumn])
@@ -169,10 +180,11 @@ class ImportUsersTable extends AppTable {
 								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];
@@ -221,6 +233,12 @@ class ImportUsersTable extends AppTable {
 			}
 		}
 		return $accountType;
+	}
+
+	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+		$flipped = array_flip($columns);
+		$key = $flipped['openemis_no'];
+		$tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
 	}
 
 }

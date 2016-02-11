@@ -195,7 +195,9 @@ class NavigationHelper extends Helper {
 				if (isset($value['params'])) {
 					$params = $value['params'];
 				}
+				
 				// Setting the selected navigation item for navigation items that does not have children
+				// deprecated
 				if ($linkName == $key || $controllerActionLink == $key) {
 					$aOptions['class'] = 'nav-active';
 				} elseif (isset($value['selected'])) {
@@ -203,7 +205,15 @@ class NavigationHelper extends Helper {
 						$aOptions['class'] = 'nav-active';
 					}
 				}
-				$html .= $this->Html->link($name, $this->getLink($key, $params), $aOptions);
+				// end deprecated
+
+				$url = $this->getLink($key, $params);
+				$id = $url;
+				if (array_key_exists('plugin', $id)) {
+					unset($id['plugin']);
+				}
+				$aOptions['id'] = implode('-', $id);
+				$html .= $this->Html->link($name, $url, $aOptions);
 			}
 		}
 		$html .= $this->closeUlTag($closeUl, true);
