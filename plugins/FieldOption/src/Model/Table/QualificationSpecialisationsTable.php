@@ -4,7 +4,9 @@ namespace FieldOption\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
@@ -34,6 +36,37 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 		;
 
 		return $validator;
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query) {
+		$query->contain(['EducationSubjects']);	
+	}
+
+	public function afterAction(Event $event) {
+		$this->field('education_subjects');
+		$this->setFieldOrder(['id','name','visible','editable','default','international_code','national_code', 'education_subjects','modified_user_id','modified','created_user_id','created']);
+	}
+
+	public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, Request $request) {
+		switch ($action) {
+			 case 'edit': case 'add':
+				$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+				$subjectOptions = $EducationSubjects
+					->find('list')
+					->find('visible')
+					->find('order')
+					->toArray();
+				
+				$attr['type'] = 'chosenSelect';
+				$attr['options'] = $subjectOptions;
+				$attr['model'] = 'QualificationSpecialisations';
+				break;
+			
+			default:
+				# code...
+				break;
+		}
+		return $attr;
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
