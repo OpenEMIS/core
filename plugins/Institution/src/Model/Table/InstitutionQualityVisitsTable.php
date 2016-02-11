@@ -90,7 +90,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Classes = $this->Classes;
 
-			$periodOptions = $this->AcademicPeriods->getList(['withSelect' => true]);
+			$periodOptions = $this->AcademicPeriods->getList(['withSelect' => true, 'isEditable'=>true]);
 			if (is_null($request->query('period'))) {
 				$this->request->query['period'] = '';
 			}

@@ -249,7 +249,13 @@ class ControllerActionHelper extends Helper {
 				$value = __($event->result);
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
-				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
+				$associatedObject = '';
+				if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
+					$associatedObject = $table->getAssociatedEntity($field);
+				} else {
+					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
+				}
+				
 				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
 					$value = $entity->$associatedObject->name;
 					$associatedFound = true;
@@ -478,8 +484,13 @@ class ControllerActionHelper extends Helper {
 					$value = $event->result;
 					$data->$_field = $event->result;
 				} else if ($this->endsWith($_field, '_id')) {
-					$table = TableRegistry::get($attr['className']);
-					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
+					$associatedObject = '';
+					if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
+						$associatedObject = $table->getAssociatedEntity($_field);
+					} else {
+						$table = TableRegistry::get($attr['className']);
+						$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
+					}
 					
 					if ($data->has($associatedObject)) {
 						$value = $data->$associatedObject->name;

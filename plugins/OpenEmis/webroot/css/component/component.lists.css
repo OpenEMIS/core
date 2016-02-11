@@ -1,0 +1,30 @@
+/* LISTS v.1.0.0 */
+
+.alphabet-list,
+.bullet-list,
+.number-list {
+    margin: 5px 15px;
+}
+
+.alphabet-list li,
+.bullet-list li,
+.number-list li,
+.list-unstyled li {
+    margin: 0 0 15px;
+}
+
+.alphabet-list li {
+    list-style: lower-alpha outside !important;
+}
+
+.bullet-list li {
+    list-style: disc outside;
+}
+
+.number-list li {
+    list-style: decimal outside;
+}
+
+.list-unstyled li {
+    list-style: none;
+}
