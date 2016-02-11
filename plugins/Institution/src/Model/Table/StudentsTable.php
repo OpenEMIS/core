@@ -83,7 +83,8 @@ class StudentsTable extends AppTable {
 			])
 			->add('student_name', 'ruleInstitutionStudentId', [
 				'rule' => ['institutionStudentId'],
-				'on' => 'create'
+				'on' => 'create',
+				'last' => true
 			])
 			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
@@ -905,18 +906,6 @@ class StudentsTable extends AppTable {
 			if (!empty($term)) {
 				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
 			}
-
-			/**
-			 * filter out students having 'Enrolled' status
-			 */
-			$query->where([
-				'NOT EXISTS (
-					SELECT `id` 
-					FROM `institution_students` 
-					WHERE `institution_students`.`student_id` = `Users`.`id`
-					AND `institution_students`.`student_status_id` = 1
-				)'
-			]);
 
     		$list = $query->all();
 
