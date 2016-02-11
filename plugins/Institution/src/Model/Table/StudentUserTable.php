@@ -22,6 +22,28 @@ class StudentUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator
+			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+				'on' => 'create'
+			])
+			;
+		return $validator;
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$sessionKey = 'Institution.Students.new';
+		if ($this->Session->check($sessionKey)) {
+			$academicData = $this->Session->read($sessionKey);
+			$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
+		} else {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			return $this->controller->redirect($action);
+		}
+	}
+
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
