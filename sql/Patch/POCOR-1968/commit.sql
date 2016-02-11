@@ -72,7 +72,7 @@ CREATE TABLE `qualification_specialisation_subjects` (
   `id` char(36) CHARACTER SET utf8 NOT NULL,
   `qualification_specialisation_id` int(11) NOT NULL,
   `education_subject_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE `qualification_specialisation_subjects`
   ADD PRIMARY KEY (`id`);
