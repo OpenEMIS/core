@@ -261,15 +261,35 @@ class InstitutionGradesTable extends AppTable {
 		$data[$this->alias()]['programme'] = 0;
 	}
 
+	public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $listOnly=true) {
+		/**
+		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php
+		 */
+		/**
+		 * PHPOE-2132, changed to find by AcademicPeriod function in PeriodBehavior.php with extra parameter to exclude finding grades within date range.
+		 * Common statements with getGradeOptions() were moved to _gradeOptions().
+		 */
+		$query = $this->find('all')
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId, 'beforeEndDate' => $this->aliasField('start_date')]);
+		return $this->_gradeOptions($query, $institutionsId, $listOnly);
+	}
+
 	public function getGradeOptions($institutionsId, $academicPeriodId, $listOnly=true) {
 		/**
 		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php
 		 */
+		/**
+		 * PHPOE-2132, Common statements with getGradeOptionsForIndex() were moved to _gradeOptions().
+		 */
 		$query = $this->find('all')
-					->contain(['EducationGrades'])
-					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-					->where(['InstitutionGrades.institution_id = ' . $institutionsId])
-					->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId]);
+		return $this->_gradeOptions($query, $institutionsId, $listOnly);
+	}
+
+	private function _gradeOptions(Query $query, $institutionsId, $listOnly) {
+		$query->contain(['EducationGrades'])
+			->where(['InstitutionGrades.institution_id = ' . $institutionsId])
+			->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
 		$data = $query->toArray();
 		if($listOnly) {
 			$list = [];
