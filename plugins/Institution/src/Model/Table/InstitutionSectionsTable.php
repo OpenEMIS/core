@@ -184,10 +184,10 @@ class InstitutionSectionsTable extends AppTable {
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->find('byNumberOfActiveGrades', ['institution_id' => $institutionId, 'academic_period_id'=>$id]);
+				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (!empty($gradeOptions)) {
 			/**
@@ -279,38 +279,6 @@ class InstitutionSectionsTable extends AppTable {
 		/**/
 		;
 	}
-
-    public function findByNumberOfActiveGrades(Query $query, array $options) {
-    	return $this->find()
-					->join([
-						'AcademicPeriods' => [
-							'type' => 'LEFT',
-							'table' => 'academic_periods',
-							'conditions' => [
-								'AcademicPeriods.id = '.$options['academic_period_id']
-							]
-						],
-						'SectionGrades' => [
-							'table' => 'institution_section_grades',
-							'conditions' => [
-								'SectionGrades.institution_section_id = InstitutionSections.id'
-							]
-						],
-						'InstitutionGrades' => [
-							'table' => 'institution_grades',
-							'conditions' => [
-								'InstitutionGrades.education_grade_id = SectionGrades.education_grade_id',
-								'InstitutionGrades.institution_id = '.$options['institution_id'],
-								"date(InstitutionGrades.end_date) >= date(AcademicPeriods.end_date)"
-							]
-						]
-					])
-					->where([
-						$this->aliasField('institution_id') => $options['institution_id'],
-						$this->aliasField('academic_period_id') => $options['academic_period_id']
-					])
-					->count();
-    }
 
     public function findByGrades(Query $query, array $options) {
     	if ($this->_selectedEducationGradeId != -1) {
