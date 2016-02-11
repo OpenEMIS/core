@@ -122,17 +122,22 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 			}
 
-			$this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content']);
-			$this->_table->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address']);
+			if ($this->_table->registryAlias() != 'Security.Users') {
+				$this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+				$this->_table->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 
-			$language = I18n::locale();
-			$field = 'address_area_id';
-			$areaLabel = $this->onGetFieldLabel($event, $this->_table->alias(), $field, $language, true);
-			$this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field]);
-			$field = 'birthplace_area_id';
-			$areaLabel = $this->onGetFieldLabel($event, $this->_table->alias(), $field, $language, true);
-			$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field]);
-			$this->_table->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field]);
+				$language = I18n::locale();
+				$field = 'address_area_id';
+				$areaLabel = $this->onGetFieldLabel($event, $this->_table->alias(), $field, $language, true);
+				$this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+				$field = 'birthplace_area_id';
+				$areaLabel = $this->onGetFieldLabel($event, $this->_table->alias(), $field, $language, true);
+				$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+
+				if ($this->_table->registryAlias() != 'Directory.Directories') {
+					$this->_table->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+				}
+			}	
 		}
 	}
 
