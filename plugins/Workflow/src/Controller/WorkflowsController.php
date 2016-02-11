@@ -12,7 +12,7 @@ class WorkflowsController extends AppController
 		parent::initialize();
 
         $this->ControllerAction->models = [
-            'Workflows' => ['className' => 'Workflow.Workflows'],
+            'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
@@ -57,7 +57,7 @@ class WorkflowsController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Workflow');
 
         $header .= ' - ' . $model->getHeader($model->alias);

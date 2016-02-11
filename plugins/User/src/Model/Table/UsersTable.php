@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
+use Cake\I18n\Time;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -61,6 +62,60 @@ class UsersTable extends AppTable {
 		
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser'
+		];
+
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
+	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
+		$openemisNo = $this->getUniqueOpenemisId();
+
+        $GenderTable = TableRegistry::get('User.Genders');
+        $genderList = $GenderTable->find('list')->toArray();
+
+        // Just in case the gender is others
+        $gender = array_search($userInfo['gender'], $genderList);
+        if ($gender === false) {
+            $gender = key($genderList);
+        }
+
+        if (isset($userInfo['dateOfBirth'])) {
+			try {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', $userInfo['dateOfBirth']);
+			} catch (\Exception $e) {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+			}
+        } else {
+        	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+        }
+        
+
+        $date = Time::now();
+        $data = [
+            'username' => $userName,
+            'openemis_no' => $openemisNo,
+            'first_name' => $userInfo['firstName'],
+            'last_name' => $userInfo['lastName'],
+            'gender_id' => $gender,
+            'date_of_birth' => $dateOfBirth,
+            'super_admin' => 0,
+            'status' => 1,
+            'created_user_id' => 1,
+            'created' => $date,    
+        ];
+        $userEntity = $this->newEntity($data, ['validate' => false]);
+        if ($this->save($userEntity)) {
+        	return $userName;
+        } else {
+        	return false;
+        }  
+	}
+
 	public static function handleAssociations($model) {
 		$model->belongsTo('Genders', ['className' => 'User.Genders']);
 		$model->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -105,8 +160,8 @@ class UsersTable extends AppTable {
 		);
 
 		if ($this->action == 'add') {
-			$this->ControllerAction->field('username', ['visible' => true]);
-			$this->ControllerAction->field('password', ['visible' => true, 'type' => 'password']);
+			$this->ControllerAction->field('username', ['visible' => false]);
+			$this->ControllerAction->field('password', ['visible' => false, 'type' => 'password']);
 		}
 	}
 
@@ -386,6 +441,14 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->allowEmpty('password')
+			->add('password' , [
+				'ruleNoSpaces' => [
+					'rule' => 'checkNoSpaces'
+				],
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6]
+				]
+			])
 			->add('address', [])
 			->allowEmpty('photo_content')
 			;
@@ -426,16 +489,14 @@ class UsersTable extends AppTable {
 			->allowEmpty('username')
 			->allowEmpty('password')
 			->add('password' , [
+				'ruleNoSpaces' => [
+					'rule' => 'checkNoSpaces'
+				],
 				'ruleMinLength' => [
 					'rule' => ['minLength', 6]
 				]
 			])
 			->allowEmpty('photo_content')
-			->add('date_of_birth', [
-					'ruleValidDate' => [
-						'rule' => ['date', 'dmy']
-					]
-				])
 			;
 
 		$thisModel = ($thisModel == null)? $this: $thisModel;
@@ -445,6 +506,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$thisModel->setValidationCode('password.ruleNoSpaces', 'User.Users');
 		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
 		return $validator;

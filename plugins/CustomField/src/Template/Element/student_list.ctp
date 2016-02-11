@@ -49,14 +49,16 @@
 			$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 			$dataNamedGroup[] = 'section_id';
 		}
-		echo $this->Form->input('institution_site_section', $inputOptions);
+		echo $this->Form->input('institution_section', $inputOptions);
 	?>
 	<div class="clearfix"></div>
-	<div class="table-in-view">
-		<table class="table">
-			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-		</table>
+	<div class="table-wrapper">
+		<div class="table-in-view">
+			<table class="table">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
 	</div>
 <?php else : ?>
 	<div class="clearfix"></div>
@@ -64,7 +66,7 @@
 	<h3><?= $attr['attr']['label']; ?></h3>
 	<div class="clearfix">
 		<?php
-			echo $this->Form->input($alias.".institution_site_section", [
+			echo $this->Form->input($alias.".institution_section", [
 				'label' => $this->Label->get('InstitutionSurveys.section'),
 				'type' => 'select',
 				'options' => $sectionOptions,
@@ -72,10 +74,12 @@
 			]);
 		?>
 	</div>
-	<div class="table-responsive">
-		<table class="table table-curved">
-			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-		</table>
+	<div class="table-wrapper">
+		<div class="table-responsive">
+			<table class="table table-curved">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
 	</div>
 <?php endif ?>

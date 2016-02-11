@@ -324,7 +324,7 @@ class TrainingSessionResultsTable extends AppTable {
 		if ($action == 'view') {
 			$attr['type'] = 'select';
 		} else if ($action == 'edit') {
-			$sessionOptions = $this->controller->getSessionList();
+			$sessionOptions = $this->Training->getSessionList();
 			if (isset($attr['attr']['value'])) {
 				$sessionId = $attr['attr']['value'];
 
@@ -379,7 +379,7 @@ class TrainingSessionResultsTable extends AppTable {
     }
 
 	public function buildRecords($sessionId=null) {
-		$sessions = $this->controller->getSessionList();
+		$sessions = $this->Training->getSessionList();
 		
 		$openStatusId = null;
 		$workflow = $this->getWorkflow($this->registryAlias());
