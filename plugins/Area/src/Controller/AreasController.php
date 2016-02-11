@@ -141,10 +141,12 @@ class AreasController extends AppController
 			$hasChildren = true;
 		}
 
+		$levelAssociation = Inflector::singularize($Table->alias()).'Levels';
+
 		// Find the path of the tree from the children to the root
 		$path = $Table
 			->find('path', ['for' => $pathId])
-			->contain(['Levels'])
+			->contain([$levelAssociation])
 			->order([$Table->aliasField('lft')])
 			->all();
 		$count = 1;
@@ -200,7 +202,7 @@ class AreasController extends AppController
 		foreach ($pathToUnset as $arrIndex) {
 			unset($path[$arrIndex]);
 		}
-		
-		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry'));
+		$levelAssociation = Inflector::underscore(Inflector::singularize($levelAssociation));
+		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry', 'levelAssociation'));
 	}
 }
