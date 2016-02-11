@@ -437,7 +437,7 @@ class StaffAbsencesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 
 		$selectedPeriod = $this->request->data[$this->alias()]['academic_period_id'];
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [

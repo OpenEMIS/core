@@ -240,7 +240,7 @@ class StudentBehavioursTable extends AppTable {
 
 		if ($action == 'add') {
 			$periodOptions = ['0' => $this->selectEmpty('period')];
-			$periodOptions = $periodOptions + $AcademicPeriod->getList();
+			$periodOptions = $periodOptions + $AcademicPeriod->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));

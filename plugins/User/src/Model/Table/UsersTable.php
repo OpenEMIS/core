@@ -84,7 +84,16 @@ class UsersTable extends AppTable {
             $gender = key($genderList);
         }
 
-        $dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+        if (isset($userInfo['dateOfBirth'])) {
+			try {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', $userInfo['dateOfBirth']);
+			} catch (\Exception $e) {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+			}
+        } else {
+        	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+        }
+        
 
         $date = Time::now();
         $data = [
@@ -99,7 +108,7 @@ class UsersTable extends AppTable {
             'created_user_id' => 1,
             'created' => $date,    
         ];
-        $userEntity = $this->newEntity($data);
+        $userEntity = $this->newEntity($data, ['validate' => false]);
         if ($this->save($userEntity)) {
         	return $userName;
         } else {

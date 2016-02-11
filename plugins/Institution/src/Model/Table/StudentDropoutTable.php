@@ -23,7 +23,6 @@ class StudentDropoutTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
-		$this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {

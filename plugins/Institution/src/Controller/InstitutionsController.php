@@ -22,9 +22,7 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
-			'Positions' 		=> ['className' => 'Institution.InstitutionPositions', 'options' => ['deleteStrategy' => 'transfer']],
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			'Shifts' 			=> ['className' => 'Institution.InstitutionShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
@@ -73,6 +71,11 @@ class InstitutionsController extends AppController  {
 			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
 	}
+
+	// CAv4
+	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
+	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -131,7 +134,7 @@ class InstitutionsController extends AppController  {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
 			$institutionId = $session->read('Institution.Institutions.id');
@@ -234,6 +237,10 @@ class InstitutionsController extends AppController  {
 				}
 			}
 		}
+	}
+
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
 	}
 
 	public function excel($id=0) {

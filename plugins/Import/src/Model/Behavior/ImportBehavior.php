@@ -14,6 +14,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Network\Session;
+use Cake\Routing\Router;
 use ControllerAction\Model\Traits\EventTrait;
 
 /**
@@ -142,14 +143,12 @@ class ImportBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'add':
-				$toolbarButtons['import'] = $toolbarButtons['back'];
-				$toolbarButtons['import']['url'][0] = 'template';
-				$toolbarButtons['import']['attr']['title'] = __('Download Template');
-				$toolbarButtons['import']['label'] = '<i class="fa kd-download"></i>';
+				$downloadUrl = $toolbarButtons['back']['url'];
+				$downloadUrl[0] = 'template';
 				if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
-					$toolbarButtons['import']['url'][1] = $buttons['add']['url'][1];
+					$downloadUrl[1] = $buttons['add']['url'][1];
 				}
-				
+				$this->_table->controller->set('downloadUrl', Router::url($downloadUrl));
 				break;
 		}
 		if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
@@ -193,9 +192,12 @@ class ImportBehavior extends Behavior {
 		$this->_table->ControllerAction->field('select_file', [
 			'type' => 'binary',
 			'visible' => true,
-			'attr' => ['label' => __('Select File To Import')],
+			'attr' => [
+				'label' => __('Select File To Import')
+			],
 			'null' => false,
-			'comment' => $comment
+			'comment' => $comment,
+			'startWithOneLeftButton' => 'download'
 		]);
 	}
 
@@ -213,7 +215,7 @@ class ImportBehavior extends Behavior {
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
 			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
-		} 
+		}
 		if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
 			$entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
 			$options['validate'] = true;
@@ -283,11 +285,11 @@ class ImportBehavior extends Behavior {
 	 */
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		/**
-		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 60 seconds
+		 * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
 		 * to avoid server timed out issue.
 		 * to be reviewed...
 		 */
-		ini_set('max_execution_time', 60);
+		ini_set('max_execution_time', 180);
 		/**
 		 */
 
@@ -321,6 +323,7 @@ class ImportBehavior extends Behavior {
 			$dataPassed = [];
 
 			$activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
+			$activeModel->addBehavior('DefaultValidation');
 
 			$maxRows = $this->config('max_rows');
 			$maxRows = $maxRows + 3;
@@ -390,7 +393,11 @@ class ImportBehavior extends Behavior {
 								$rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
 								$rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
 							} else {
-								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $fieldName . ' => ' . $arr[key($arr)], 'info');
+								if ($field == 'student_name') {
+									$rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
+									$rowCodeErrorForExcel[] = $arr[key($arr)];
+								}
+								$model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() .' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
 							}
 						}
 					}
@@ -518,7 +525,7 @@ class ImportBehavior extends Behavior {
 				'rowClass' => 'row-reset',
 				'results' => $completedData
 			]);
-			$session->delete($this->sessionKey);
+			// $session->delete($this->sessionKey);
 			if (!empty($completedData['failedExcelFile'])) {
 				if (!empty($completedData['passedExcelFile'])) {
 					$message = '<i class="fa fa-exclamation-circle fa-lg"></i> ' . $this->getExcelLabel('Import', 'the_file') . ' "' . $completedData['uploadedName'] . '" ' . $this->getExcelLabel('Import', 'partial_failed');
@@ -1191,9 +1198,9 @@ class ImportBehavior extends Behavior {
 		return 'Model.import.' . $key;
 	}
 
-/**
- * @link("PHP get actual maximum upload size", http://stackoverflow.com/questions/13076480/php-get-actual-maximum-upload-size)
- */
+	/**
+	 * @link("PHP get actual maximum upload size", http://stackoverflow.com/questions/13076480/php-get-actual-maximum-upload-size)
+	 */
 	// Returns a file size limit in bytes based on the PHP upload_max_filesize
 	// and post_max_size
 	protected function file_upload_max_size() {
@@ -1201,12 +1208,12 @@ class ImportBehavior extends Behavior {
 
 		if ($max_size < 0) {
 			// Start with post_max_size.
-			$max_size = $this->parse_size(ini_get('post_max_size'));
+			$max_size = $this->post_upload_max_size();
 
 			// If upload_max_size is less, then reduce. Except if upload_max_size is
 			// zero, which indicates no limit.
-			$upload_max = $this->parse_size(ini_get('upload_max_filesize'));
-
+			$upload_max = $this->upload_max_filesize();
+			
 			if ($upload_max > 0 && $upload_max < $max_size) {
 				$max_size = $upload_max;
 			}
@@ -1224,23 +1231,33 @@ class ImportBehavior extends Behavior {
 			return round($size);
 		}
 	}
-/**
- * 
- */
+	/**
+	 * 
+	 */
 
 	protected function post_upload_max_size() {
-		return $this->parse_size(ini_get('post_max_size'));
+		$max_size = $this->parse_size(ini_get('post_max_size'));
+		$system_limit = $this->system_memory_limit();
+
+		if ($max_size == 0) {
+			$max_size = $system_limit;
+		}
+		return $max_size;
 	}
 
 	protected function system_memory_limit() {
 		return $this->parse_size(ini_get('memory_limit'));
 	}
 
-/**
- * http://codereview.stackexchange.com/questions/6476/quick-way-to-convert-bytes-to-a-more-readable-format
- * @param  [type] $bytes [description]
- * @return [type]        [description]
- */
+	protected function upload_max_filesize() {
+		return $this->parse_size(ini_get('upload_max_filesize'));
+	}
+
+	/**
+	 * http://codereview.stackexchange.com/questions/6476/quick-way-to-convert-bytes-to-a-more-readable-format
+	 * @param  [type] $bytes [description]
+	 * @return [type]        [description]
+	 */
 	protected function bytesToReadableFormat($bytes) {
 		$KILO = 1024;
 		$MEGA = $KILO * 1024;
@@ -1262,10 +1279,10 @@ class ImportBehavior extends Behavior {
 	    return round($bytes / $TERA, 2) . 'TB';
 	}
 
-/**
- * @link("Upload errors defination", http://php.net/manual/en/features.file-upload.errors.php#115746)
- * For reference.
- */
+	/**
+	 * @link("Upload errors defination", http://php.net/manual/en/features.file-upload.errors.php#115746)
+	 * For reference.
+	 */
 	protected $phpFileUploadErrors = array(
 	    0 => 'There is no error, the file uploaded with success',
 	    1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
