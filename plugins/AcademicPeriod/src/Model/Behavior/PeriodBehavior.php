@@ -28,7 +28,17 @@ class PeriodBehavior extends Behavior {
 				$endDate = date('Y-m-d', strtotime($periodObj->end_date));
 			}
 
-			return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+			if (array_key_exists('beforeEndDate', $options)) {
+				$conditions = [];
+				$conditions['OR'] = [
+					[
+						$options['beforeEndDate'] . ' <=' => $endDate
+					]
+				];
+				return $query->where($conditions);
+			} else {
+				return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+			}
 		} else {
 			return $query;
 		}
