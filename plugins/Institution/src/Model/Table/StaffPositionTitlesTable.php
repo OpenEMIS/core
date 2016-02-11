@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Text;
 
 use ArrayObject;
 
@@ -84,7 +85,7 @@ class StaffPositionTitlesTable extends AppTable {
 				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
 			]);
 
-		// Subquery to get the security user id
+		// Query to update security role id
 		$securityGroupUserIdQuery = $this->query()
 			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
 			->from(['GroupUsers' => $subQuery]);
@@ -94,6 +95,7 @@ class StaffPositionTitlesTable extends AppTable {
 			['id IN ' => $securityGroupUserIdQuery]
 		);
 
+		// Query to delete duplicate records
 		$duplicateRecordQuery = $SecurityGroupUsersTable->find()
 			->select([
 				'id' => $SecurityGroupUsersTable->aliasField('id'),
@@ -107,14 +109,40 @@ class StaffPositionTitlesTable extends AppTable {
 			->having(['COUNT(counter) > 1'])
 			;
 
-		$securityGroupUserIdQuery = $this->query()
+		$deleteDuplicateQuery = $this->query()
 			->select(['security_group_user_id' => 'GroupUsers.id'])
 			->from(['GroupUsers' => $duplicateRecordQuery]);
 
-		$SecurityGroupUsersTable->deleteAll(['id IN ' => $securityGroupUserIdQuery]);
+		$SecurityGroupUsersTable->deleteAll(['id IN ' => $deleteDuplicateQuery]);
 
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
+		// Query to delete the wrong records
+		$deleteWrongRecordsQuery = $InstitutionStaffTable->find()
+			->innerJoin(['Institutions' => 'institutions'], [
+				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
+			])
+			->innerJoin(['Positions' => 'institution_positions'], [
+				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
+			])
+			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+				'StaffPositionTitles.id = Positions.staff_position_title_id',
+			])
+			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+				'SecurityGroupUsers.security_user_id = Staff.staff_id',
+				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
+				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
+			])
+			->select([
+				'security_group_user_id' => 'SecurityGroupUsers.id'
+			]);
+
+		$deleteQuery = $this->query()
+			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
+			->from(['GroupUsers' => $deleteWrongRecordsQuery]);
+		$SecurityGroupUsersTable->deleteAll(['id NOT IN' => $deleteQuery]);
+
+		// Query to insert missing security role records
 		$insertMissingRecords = $InstitutionStaffTable->find()
 			->innerJoin(['Institutions' => 'institutions'], [
 				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
@@ -124,7 +152,7 @@ class StaffPositionTitlesTable extends AppTable {
 			])
 			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
 				'StaffPositionTitles.id = Positions.staff_position_title_id',
-				'StaffPositionTitles.id <> ' => 0
+				'StaffPositionTitles.security_role_id <> ' => 0
 			])
 			->where([
 				'NOT EXISTS('.
@@ -135,20 +163,22 @@ class StaffPositionTitlesTable extends AppTable {
 							$SecurityGroupUsersTable->aliasField('security_role_id').' = StaffPositionTitles.security_role_id'
 						])
 				.')'
-
 			])
 			->select([
+				'security_group_user_id' => 'uuid()',
 				'security_user_id' => $InstitutionStaffTable->aliasField('staff_id'), 
 				'security_role_id' => 'StaffPositionTitles.security_role_id',
-				'security_group_id' => 'Institutions.security_group_id'
-			])
-			->hydrate(false)
-			->toArray();
+				'security_group_id' => 'Institutions.security_group_id',
+				'created_user_id' => intval($this->Auth->user()),
+				'created' => $InstitutionStaffTable->find()->func()->now()
+			]);
 
-		foreach($insertMissingRecords as $record) {
-			$entity = $SecurityGroupUsersTable->newEntity($record);
-			$SecurityGroupUsersTable->save($entity);
-		}
+		$SecurityGroupUsersTable->query()
+			->insert(['id', 'security_user_id', 'security_role_id', 'security_group_id', 'created_user_id', 'created'])
+			->values($insertMissingRecords)
+			->execute();
+
+		
 	}
 
 	public function onGetType(Event $event, Entity $entity) {
