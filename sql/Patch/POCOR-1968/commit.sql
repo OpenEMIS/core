@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-1968', NOW());
+INSERT INTO `db_patches` VALUES ('POCOR-1968', NOW());
 
 -- backup the table
 CREATE TABLE z1968_staff_qualifications LIKE staff_qualifications;
