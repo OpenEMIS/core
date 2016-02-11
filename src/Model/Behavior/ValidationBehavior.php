@@ -512,8 +512,14 @@ class ValidationBehavior extends Behavior {
 		// this function is ONLY catered for 'on' => 'create'
 		$model = $globalData['providers']['table'];
 		$data = $globalData['data'];
-		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
-			// saving existing student pr('keys exist');
+		$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ruleCheckAdmissionAgeWithEducationCycleGrade');
+
+		$educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+		// if no education grade. fail it
+		if (empty($educationGradeId)) return $validationErrorMsg;
+
+		if (array_key_exists('student_id', $data)) {
+			// saving for existing students
 			$Students = TableRegistry::get('Student.Students');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
@@ -521,24 +527,13 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
-			$educationGradeId = $data['education_grade_id'];
 		} else {
-			// saving new student pr('keys doesnt exist');
-			$session = new Session();
-			$sessionKey = 'Institution.Students.new';
-			if ($session->check($sessionKey)) {
-				$academicData = $session->read($sessionKey);
-				$dateOfBirth = new DateTime($field);
-				$educationGradeId = $academicData['education_grade_id'];
-			} else {
-				// when session (which contains academic data has expired) has expired redirect
-				$action = ['plugin' => $model->controller->plugin, 'controller' => $model->controller->name, 'action' => 'Students', 'add'];
-				return $model->controller->redirect($action);
-			}
+			// saving for new students
+			$dateOfBirth = new DateTime($field);
 		}
 
 		// for cases where date of birth is null, probably only in cases of data error
-		if (is_null($dateOfBirth)) return false;
+		if (is_null($dateOfBirth)) return $validationErrorMsg;
 
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
 		$educationGradeQuery = $EducationGrades->find()
@@ -578,7 +573,7 @@ class ValidationBehavior extends Behavior {
 		// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
 		// pr('ageOfStudent: '.$ageOfStudent);
 
-		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $model->getMessage('Institution.Students.student_name.ruleCheckAdmissionAgeWithEducationCycleGrade');	
+		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
 	}
 
 	// To allow case sensitive entry
