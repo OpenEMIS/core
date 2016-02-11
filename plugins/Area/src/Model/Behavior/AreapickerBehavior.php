@@ -36,13 +36,11 @@ class AreapickerBehavior extends Behavior {
 			if ($targetModel == 'Area.Areas' && isset($attr['displayCountry'])) {
 				$options['display-country'] = $entity->area_id;
 			} else if (isset($attr['displayCountry']) && !$attr['displayCountry']) {
-				$condition = [$targetTable->aliasField('is_main_country') => 1];
 				$options['display-country'] = 0;
 			}
 
 			$areaOptions = $targetTable
 				->find('list')
-				->where($condition)
 				->toArray();
 				;
 			$fieldName = $attr['model'] . '.' . $attr['field'];
