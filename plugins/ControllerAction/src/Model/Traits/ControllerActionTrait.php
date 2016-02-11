@@ -4,7 +4,7 @@ namespace ControllerAction\Model\Traits;
 trait ControllerActionTrait {
 	protected $_controllerActionEvents = [
 		'ControllerAction.Controller.onInitialize'			=> 'onInitialize',
-		// public function onInitialize(Event $event, Table $model) {}
+		// public function onInitialize(Event $event, Table $model, ArrayObject $extra) {}
 
 		'ControllerAction.Controller.beforePaginate'		=> 'beforePaginate',
 		// public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {}
@@ -129,8 +129,31 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
 		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {}
 
-		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete'
+		'ControllerAction.Model.onGetConvertOptions'=> 'onGetConvertOptions',
+		// public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {}
+
+		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete',
 		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+
+		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
+		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
+
+		// CAv4
+		'ControllerAction.Controller.beforeQuery'		=> 'beforeQuery',
+		// public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.index.beforeQuery'		=> 'indexBeforeQuery',
+		// public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.transfer.beforeAction'		=> 'transferBeforeAction',
+		// public function transferBeforeAction(Event $event, ArrayObject $extra) {}
+
+		'ControllerAction.Model.transfer.onInitialize'		=> 'transferOnInitialize',
+		// public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.transfer.afterAction'		=> 'transferAfterAction',
+		// public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {}
+		// End CAv4
 	];
 
 	public function getControllerActionEvents() {

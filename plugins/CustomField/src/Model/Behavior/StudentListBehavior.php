@@ -20,8 +20,8 @@ class StudentListBehavior extends Behavior {
             'CustomForms' => 'Survey.SurveyForms',
             'CustomFormsFields' => 'Survey.SurveyFormsQuestions',
             'SurveyQuestionParams' => 'Survey.SurveyQuestionParams',
-            'Sections' => 'Institution.InstitutionSiteSections',
-            'SectionStudents' => 'Institution.InstitutionSiteSectionStudents',
+            'Sections' => 'Institution.InstitutionSections',
+            'SectionStudents' => 'Institution.InstitutionSectionStudents',
             'StudentSurveys' => 'Student.StudentSurveys',
             'StudentSurveyAnswers' => 'Student.StudentSurveyAnswers'
         ],
@@ -100,6 +100,8 @@ class StudentListBehavior extends Behavior {
     }
 
     public function onGetCustomStudentListElement(Event $event, $action, $entity, $attr, $options=[]) {
+    	$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+    	
         $value = '';
 
         $Form = $event->subject()->Form;
@@ -150,14 +152,14 @@ class StudentListBehavior extends Behavior {
                 ->toArray();
 
             if (!empty($customFields)) {
-                $institutionId = $entity->institution_site_id;
+                $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
 
                 // Classes Options
                 $sectionQuery = $this->Sections
                     ->find('list')
                     ->where([
-                        $this->Sections->aliasField('institution_site_id') => $institutionId,
+                        $this->Sections->aliasField('institution_id') => $institutionId,
                         $this->Sections->aliasField('academic_period_id') => $periodId
                     ]);
 
@@ -168,7 +170,7 @@ class StudentListBehavior extends Behavior {
                     // My Classes
                     $userId = $this->_table->Auth->user('id');
                     $sectionQuery->where([
-                        $this->Sections->aliasField('security_user_id') => $userId
+                        $this->Sections->aliasField('staff_id') => $userId
                     ]);
 
                     $sectionOptions = $sectionQuery->toArray();
@@ -176,7 +178,6 @@ class StudentListBehavior extends Behavior {
                 // End
 
                 // Build table header
-                $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
                 $headerHtml = __('OpenEMIS ID');
                 $headerHtml .= $Form->hidden($fieldPrefix.".".$attr['fieldKey'], ['value' => $attr['customField']->id]);
                 $tableHeaders[] = $headerHtml;
@@ -195,7 +196,7 @@ class StudentListBehavior extends Behavior {
                     $session = $this->_table->request->session();
                     $plugin = $this->_table->controller->plugin;
                     $model = $this->_table->alias();
-                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_site_section";
+                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_section";
                     $fieldKey = $customFieldObj->id;
 
                     if ($this->_table->request->is(['get'])) {
@@ -210,8 +211,8 @@ class StudentListBehavior extends Behavior {
                         $requestData = $this->_table->request->data;
                         if (array_key_exists($this->_table->alias(), $requestData)) {
                             if (array_key_exists($attr['field'], $requestData[$this->_table->alias()]['custom_field_values'])) {
-                                if (array_key_exists('institution_site_section', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
-                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_site_section']);
+                                if (array_key_exists('institution_section', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
+                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_section']);
                                 }
                             }
                         }
@@ -231,7 +232,7 @@ class StudentListBehavior extends Behavior {
                     if ($action == 'view' || $action == 'edit') {
                         $studentQuery
                             ->where([
-                                $this->SectionStudents->aliasField('institution_site_section_id') => $selectedSection
+                                $this->SectionStudents->aliasField('institution_section_id') => $selectedSection
                         ]);
                     }
 

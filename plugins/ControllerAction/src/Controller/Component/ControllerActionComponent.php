@@ -13,7 +13,10 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.9
+ControllerActionComponent - Current Version 3.1.12
+3.1.12 (Zack) - added new event onGetConvertOptions to add additional condition to the query to generate the convert options for delete and transfer
+3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
+3.1.10 (Thed) - added new event onDeleteTransfer
 3.1.9 (Malcolm) - Added 'getTriggerFrom()' get method
 3.1.8 (Jeff) - session variable to store the primary key value of object includes the plugin name now
 3.1.7 (Jeff) - added properties $view and function renderView() so that custom view can be rendered with all events triggered
@@ -54,7 +57,11 @@ use Cake\I18n\I18n;
 use Cake\Core\Configure;
 use Cake\Log\Log;
 
+use ControllerAction\Model\Traits\ControllerActionV4Trait;
+
 class ControllerActionComponent extends Component {
+	use ControllerActionV4Trait; // extended functionality from v4
+	
 	private $plugin;
 	private $controller;
 	private $triggerFrom = 'Controller';
@@ -132,7 +139,7 @@ class ControllerActionComponent extends Component {
 						$this->initComponentsForModel();
 
 						$this->debug(__METHOD__, ': Event -> ControllerAction.Controller.onInitialize');
-						$event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model]);
+						$event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model, new ArrayObject([])]);
 						$event = $this->controller->eventManager()->dispatch($event);
 						if ($event->isStopped()) { return $event->result; }
 						
@@ -577,19 +584,22 @@ class ControllerActionComponent extends Component {
 	}
 
 	public function getModalOptions($type) {
-		$modal = array();
+		$modal = [];
 
 		if ($type == 'remove' && in_array($type, $this->defaultActions)) {
-			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
-			$modal['formOptions'] = ['type' => 'delete', 'url' => $this->url('remove')];
-			$modal['fields'] = [
-				'id' => array('type' => 'hidden', 'id' => 'recordId')
+
+			$modal['form'] = [
+				'model' => $this->model,
+				'formOptions' => ['type' => 'delete', 'url' => $this->url('remove')],
+				'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId']]
 			];
+
 			$modal['buttons'] = [
 				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
 			];
+			$modal['cancelButton'] = true;
 		}
 		return $modal;
 	}
@@ -762,10 +772,10 @@ class ControllerActionComponent extends Component {
 		}
 		if ($event->isStopped()) { return $event->result; }
 
-		$modal = $this->getModalOptions('remove');
+		$modals = ['delete-modal' => $this->getModalOptions('remove')];
 		$this->config['form'] = true;
 		$this->config['formButtons'] = false;
-		$this->controller->set(compact('data', 'modal', 'indexElements'));
+		$this->controller->set(compact('data', 'modals', 'indexElements'));
 	}
 
 	public function view($id=0) {
@@ -826,9 +836,9 @@ class ControllerActionComponent extends Component {
 			// End Event
 
 			$this->Session->write($sessionKey, $id);
-			$modal = $this->getModalOptions('remove');
+			$modals = ['delete-modal' => $this->getModalOptions('remove')];
 			$this->controller->set('data', $entity);
-			$this->controller->set('modal', $modal);
+			$this->controller->set('modals', $modals);
 		} else {
 			$this->Alert->warning('general.notExists');
 			return $this->controller->redirect($this->url('index'));
@@ -1159,6 +1169,11 @@ class ControllerActionComponent extends Component {
 				}
 				$query->find('list', $listOptions->getArrayCopy())->where([$idKey . ' <> ' => $id]);
 
+				// Event: deleteUpdateCovertOptions
+				$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
+				$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
+				if ($event->isStopped()) { return $event->result; }
+
 				$convertOptions = $query->toArray();
 				if (empty($convertOptions)) {
 					$convertOptions[''] = __('No Available Options');
@@ -1168,7 +1183,7 @@ class ControllerActionComponent extends Component {
 				foreach ($model->associations() as $assoc) {
 					if (!$assoc->dependent()) {
 						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-							if (!array_key_exists($assoc->table(), $associations)) {
+							if (!array_key_exists($assoc->alias(), $associations)) {
 								$count = 0;
 								if($assoc->type() == 'oneToMany') {
 									$count = $assoc->find()
@@ -1184,7 +1199,7 @@ class ControllerActionComponent extends Component {
 								if ($title == '[Message Not Found]') {
 									$title = $assoc->name();
 								}
-								$associations[$assoc->table()] = ['model' => $title, 'count' => $count];
+								$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
 							}
 						}
 					}
@@ -1235,7 +1250,7 @@ class ControllerActionComponent extends Component {
 					$associations = [];
 					foreach ($model->associations() as $assoc) {
 						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-							if (!in_array($assoc->table(), $associations)) {
+							if (!array_key_exists($assoc->alias(), $associations)) {
 								$count = 0;
 								if($assoc->type() == 'oneToMany') {
 									$count = $assoc->find()
@@ -1249,7 +1264,7 @@ class ControllerActionComponent extends Component {
 										->count();
 									$totalCount = $totalCount + $count;
 								}
-								$associations[] = $assoc->table();
+								$associations[$assoc->alias()] = $assoc->table();
 							}
 						}
 					}
@@ -1261,58 +1276,73 @@ class ControllerActionComponent extends Component {
 					$associations = [];
 					foreach ($model->associations() as $assoc) {
 						if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-							if (!array_key_exists($assoc->table(), $associations)) {
+							if (!array_key_exists($assoc->alias(), $associations)) {
 								// $assoc->dependent(false);
-								$associations[$assoc->table()] = $assoc;
+								$associations[$assoc->alias()] = $assoc;
 							}
 						}
 					}
+
 					if ($process($model, $transferFrom, $deleteOptions)) {
-						foreach ($associations as $assoc) {
-							if ($assoc->type() == 'oneToMany') {
-								$assoc->updateAll(
-									[$assoc->foreignKey() => $transferTo],
-									[$assoc->foreignKey() => $transferFrom]
-								);
+						$id = $request->data[$primaryKey];
+						$transferOptions = new ArrayObject([]);
 
-							} else if ($assoc->type() == 'manyToMany') {
-								$modelAssociationTable = $assoc->junction();
+						$transferProcess = function($associations, $transferFrom, $transferTo, $model) {
+							foreach ($associations as $assoc) {
+								if ($assoc->type() == 'oneToMany') {
+									$assoc->updateAll(
+										[$assoc->foreignKey() => $transferTo],
+										[$assoc->foreignKey() => $transferFrom]
+									);
 
-								// List of the target foreign keys for subqueries
-								$targetForeignKeys = $modelAssociationTable->find()
-									->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
-									->where([
-										$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-									]);
+								} else if ($assoc->type() == 'manyToMany') {
+									$modelAssociationTable = $assoc->junction();
 
-								// List of id in the junction table to be deleted
-								$idNotToUpdate = $modelAssociationTable->find('list',[
-										'keyField' => 'id',
-										'valueField' => 'id'
-									])
-									->where([
-										$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
-										$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
-									])
-									->toArray();
+									// List of the target foreign keys for subqueries
+									$targetForeignKeys = $modelAssociationTable->find()
+										->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+										->where([
+											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+										]);
 
-								$condition = [];
+									// List of id in the junction table to be deleted
+									$idNotToUpdate = $modelAssociationTable->find('list',[
+											'keyField' => 'id',
+											'valueField' => 'id'
+										])
+										->where([
+											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
+											$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
+										])
+										->toArray();
 
-								if (empty($idNotToUpdate)) {
-									$condition = [$assoc->foreignKey() => $transferFrom];
-								} else {
-									$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+									$condition = [];
+
+									if (empty($idNotToUpdate)) {
+										$condition = [$assoc->foreignKey() => $transferFrom];
+									} else {
+										$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
+									}
+									
+									// Update all transfer records
+									$modelAssociationTable->updateAll(
+										[$assoc->foreignKey() => $transferTo],
+										$condition
+									);
 								}
-								
-								// Update all transfer records
-								$modelAssociationTable->updateAll(
-									[$assoc->foreignKey() => $transferTo],
-									$condition
-								);
 							}
+						};
 
-
+						// Event: onDeleteTransfer
+						$params = [$transferOptions, $id];
+						$this->debug(__METHOD__, ': Event -> ControllerAction.Model.onDeleteTransfer');
+						$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onDeleteTransfer', null, $params);
+						if ($event->isStopped()) { return $event->result; }
+						if (is_callable($event->result)) {
+							$transferProcess = $event->result;
 						}
+
+						$transferProcess($associations, $transferFrom, $transferTo, $model);
 						$this->Alert->success('general.delete.success');
 					} else {
 						$this->Alert->error('general.delete.failed');
@@ -1367,10 +1397,19 @@ class ControllerActionComponent extends Component {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->orderField;
 			
-			$ids = json_decode($request->data("ids"));		
+			$ids = json_decode($request->data("ids"));
+
+			$originalOrder = $model->find('list')
+				->where([$model->aliasField($primaryKey).' IN ' => $ids])
+				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+				->order([$model->aliasField($orderField)])
+				->toArray();
+
+			$originalOrder = array_reverse($originalOrder);
 
 			foreach ($ids as $order => $id) {
-				$model->updateAll([$orderField => $order + 1], [$primaryKey => $id]);
+				$orderValue = array_pop($originalOrder);
+				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
 			}
 		}
 	}
@@ -1433,6 +1472,15 @@ class ControllerActionComponent extends Component {
 			$model->fieldOrder = 0;
 		}
 		$model->fieldOrder = $model->fieldOrder + 1;
+
+		$order = false;
+		if (array_key_exists('after', $attr)) {
+			$after = $attr['after'];
+			$order = $this->getOrderValue($model, $after, 'after');
+		} else if (array_key_exists('before', $attr)) {
+			$before = $attr['before'];
+			$order = $this->getOrderValue($model, $before, 'before');
+		}
 		
 		if (!empty($this->plugin)) {
 			$className = $this->plugin . '.' . $className;
@@ -1442,7 +1490,7 @@ class ControllerActionComponent extends Component {
 			'type' => 'string',
 			'null' => true,
 			'autoIncrement' => false,
-			'order' => $model->fieldOrder,
+			'order' => $order ? $order : $model->fieldOrder,
 			'visible' => true,
 			'field' => $field,
 			'model' => $model->alias(),
@@ -1591,5 +1639,37 @@ class ControllerActionComponent extends Component {
 
 	public function getTriggerFrom() {
 		return $this->triggerFrom;
+	}
+
+	private function getOrderValue($model, $field, $insert) {
+		if (!array_key_exists($field, $model->fields)) {
+			Log::write('Attempted to add ' . $insert . ' invalid field: ' . $field);
+			return false;
+		}
+		$order = 0;
+
+		uasort($model->fields, [$this, '_sortByOrder']);
+
+		if ($insert == 'before') {
+			foreach ($model->fields as $key => $attr) {
+				if ($key == $field) {
+					$order = $attr['order'] - 1;
+					break;
+				}
+				$model->fields[$key]['order'] = $attr['order'] - 1;
+			}
+		} else if ($insert == 'after') {
+			$start = false;
+			foreach ($model->fields as $key => $attr) {
+				if ($start) {
+					$model->fields[$key]['order'] = $attr['order'] + 1;
+				}
+				if ($key == $field) {
+					$start = true;
+					$order = $attr['order'] + 1;
+				}
+			}
+		}
+		return $order;
 	}
 }

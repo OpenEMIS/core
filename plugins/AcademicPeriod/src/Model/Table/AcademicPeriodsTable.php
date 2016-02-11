@@ -36,7 +36,6 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		$entity->start_year = date("Y", strtotime($entity->start_date));
 		$entity->end_year = date("Y", strtotime($entity->end_date));
 		if ($entity->current == 1) {
@@ -45,12 +44,8 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
-
-	public function beforeAction(Event $event) {
+	public function beforeAction (Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
-		$this->ControllerAction->field('current');
-		$this->ControllerAction->field('editable');
-
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['school_days']['visible'] = false;
@@ -59,7 +54,14 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
+		$this->ControllerAction->field('current');
+		$this->ControllerAction->field('editable');
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['current'] = $entity->current;
+		$this->ControllerAction->field('visible');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -133,7 +135,6 @@ class AcademicPeriodsTable extends AppTable {
 			array_unshift($this->_fieldOrder, "parent");
 		}
 	}
-
 	
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
@@ -191,10 +192,26 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
+		$attr['onChangeReload'] = true;
 		return $attr;
 	}
 
 	public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['current'])) {
+			if ($request->data[$this->alias()]['current'] == 1) {
+				$attr['type'] = 'hidden';
+			}
+		}
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
+	}
+
+	public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request) {
+		if (isset($request->data[$this->alias()]['current'])) {
+			if ($request->data[$this->alias()]['current'] == 1) {
+				$attr['type'] = 'hidden';
+			}
+		}
 		$attr['options'] = $this->getSelectOptions('general.yesno');
 		return $attr;
 	}
@@ -218,6 +235,8 @@ class AcademicPeriodsTable extends AppTable {
 	public function getList($params=[]) {
 
 		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
+		$withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
+		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
 		if ( !$withLevels ) {
 			$where = [
@@ -236,6 +255,7 @@ class AcademicPeriodsTable extends AppTable {
 			$where[$this->aliasField('current')] = 0;
 			$data += $this->find('list')
 				->find('visible')
+				->find('editable', ['isEditable' => $isEditable])
 				->find('order')
 				->where($where)
 				->toArray();
@@ -247,6 +267,7 @@ class AcademicPeriodsTable extends AppTable {
 			// get the current period
 			$data = $this->find()
 				->find('visible')
+				->find('editable', ['isEditable' => $isEditable])
 				->contain(['Levels'])
 				->select([
 						'id' => $this->aliasField('id'),
@@ -269,7 +290,21 @@ class AcademicPeriodsTable extends AppTable {
 
 			$data = $list;
 		}
+
+		if ( $withSelect ) {
+			$data = ['' => __('-- Select Period --')] + $data;
+		}
+
 		return $data;
+	}
+
+	public function findEditable(Query $query, array $options) {
+		$isEditable = array_key_exists('isEditable', $options) ? $options['isEditable'] : null;
+		if (is_null($isEditable)) {
+			return $query;
+		} else {
+			return $query->where([$this->aliasField('editable') => (bool)$isEditable]);
+		}
 	}
 
 	public function getDate($dateObject) {

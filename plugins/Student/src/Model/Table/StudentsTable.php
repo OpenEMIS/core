@@ -47,9 +47,9 @@ class StudentsTable extends AppTable {
 			'filterKey' => 'student_custom_filter_id',
 			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'student_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
@@ -71,14 +71,14 @@ class StudentsTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -116,15 +116,8 @@ class StudentsTable extends AppTable {
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-			$query->innerJoin(
-				['InstitutionStudent' => 'institution_students'],
-				[
-					'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStudent.institution_id IN ' => $institutionIds
-				]
-			)
-			->group([$this->aliasField('id')]);
-			;
+			$this->joinInstitutionStudents($institutionIds, $query);
+			$query->group([$this->aliasField('id')]);
 		}
 	}
 
@@ -225,8 +218,21 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 71]);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => false]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
@@ -240,25 +246,48 @@ class StudentsTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
+
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this, $this->request->data['Search']['searchField']));
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_student') => 1])->count();
+			$count = $this->find()
+				->where([$this->aliasField('is_student') => 1])
+				->where($searchConditions);
+
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$this->joinInstitutionStudents($institutionIds, $count);
+				$count->group([$this->aliasField('id')]);
+			}
+
+			$this->advancedSearchQuery($this->request, $count);
 
 			// Get the gender for all students
 			$data = [];
-			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
+			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['searchConditions' => $searchConditions,'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'students',
-	            	'modelCount' => $count,
+	            	'modelCount' => $count->count(),
 	            	'modelArray' => $data,
 	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
+	}
+
+	private function joinInstitutionStudents(array $institutionIds, Query $query) {
+		$query->innerJoin(
+			['InstitutionStudent' => 'institution_students'],
+			[
+				'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
+				'InstitutionStudent.institution_id IN ' => $institutionIds
+			]
+		);
 	}
 	
 	private function setupTabElements($options) {
@@ -268,16 +297,25 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Student.Students)
 	public function getNumberOfStudentsByGender($params=[]) {
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$query = $this->find();
 		$query
-		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
+		->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
 		->where([$this->aliasField('is_student') => 1])
+		->where($searchConditions)
 		->group('gender_id')
 		;
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStudents($institutionIds, $query);
+		}
+
+		$this->advancedSearchQuery($this->request, $query);
 
 		$genders = $this->Genders->getList()->toArray();
 
 		$resultSet = $query->all();
+		$dataSet = [];
 		foreach ($resultSet as $entity) {
 			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}

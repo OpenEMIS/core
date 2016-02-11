@@ -1,6 +1,7 @@
 <?php
 namespace StaffCustomField\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
@@ -36,7 +37,7 @@ class StaffCustomFieldsController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Custom Field (Staff)');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

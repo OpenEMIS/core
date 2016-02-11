@@ -36,7 +36,8 @@ class AppController extends Controller {
 
 		// Custom Helper
 		'ControllerAction.ControllerAction',
-		'OpenEmis.Navigation'
+		'OpenEmis.Navigation',
+		'OpenEmis.Resource'
 	];
 
 	/**
@@ -48,7 +49,6 @@ class AppController extends Controller {
 	 */
 	public function initialize() {
 		parent::initialize();
-		$this->loadComponent('Flash');
 
 		// ControllerActionComponent must be loaded before AuthComponent for it to work
 		$this->loadComponent('ControllerAction.ControllerAction', [
@@ -63,8 +63,13 @@ class AppController extends Controller {
 						'className' => 'Fallback',
 						'hashers' => ['Default', 'Legacy']
 					]
-				]
+				],
 			],
+			'loginAction' => [
+				'plugin' => 'User',
+            	'controller' => 'Users',
+            	'action' => 'login'
+            ],
 			'logoutRedirect' => [
 				'plugin' => 'User',
 				'controller' => 'Users',
@@ -72,15 +77,26 @@ class AppController extends Controller {
 			]
 		]);
 
+		$this->loadComponent('Paginator');
+
 		$this->Auth->config('authorize', ['Security']);
 
 		// Custom Components
 		$this->loadComponent('Navigation');
 		$this->loadComponent('Localization.Localization');
+		$this->loadComponent('OpenEmis.OpenEmis', [
+			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
+			'headerMenu' => [
+				'Preferences' => [
+					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
+				]
+			],
+			'theme' => 'core'
+		]);
 		$this->loadComponent('ControllerAction.Alert');
 		$this->loadComponent('AccessControl', [
 			'ignoreList' => [
-				'Users' => ['login', 'logout', 'postLogin'],
+				'Users' => ['login', 'logout', 'postLogin', 'login_remote'],
 				'Dashboard' => [],
 				'Preferences' => [],
 				'About' => []
@@ -88,21 +104,15 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('Workflow.Workflow');
+		$this->loadComponent('OpenEmis.SSO', [
+			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
+			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
+		]); // for single sign on authentication
 	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$session = $this->request->session();
-		
-		$theme = 'OpenEmis.themes/layout.core';
-
-		$session = $this->request->session();
-		if (!$session->check('System.home')) {
-			$session->write('System.home', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-		}
-
-		$homeUrl = ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'];
-		$session->write('System.home', $homeUrl);
 
 		if (!is_null($this->Auth->user())) { // if user is logged in
 			if ($this->Auth->user('super_admin') == 1) {
@@ -118,46 +128,5 @@ class AppController extends Controller {
 				$session->write('System.User.roles', implode(', ', $roles));
 			}
 		}
-
-		$this->set('theme', $theme);
-		$this->set('SystemVersion', $this->getCodeVersion());
-		$this->set('_productName', $this->_productName);
-
-		//Retriving the panel width size from session
-		if ($session->check('System.layout')) {
-			$layout = $session->read('System.layout');
-			$this->set('SystemLayout_leftPanel', 'width:'.$layout['panelLeft'].'px');
-			$this->set('SystemLayout_rightPanel','width:'.$layout['panelRight'].'px');
-		} else {
-			$this->set('SystemLayout_leftPanel', 'width: 10%');
-			$this->set('SystemLayout_rightPanel','width: 90%');
-		}
 	}
-
-	public function getCodeVersion() {
-		$path = 'version';
-		$session = $this->request->session();
-		$version = '';
-
-		if (file_exists($path)) {
-			$version = file_get_contents($path);
-			$session->write('System.version', $version);
-		} else if ($session->check('System.version')) {
-			$version = $session->read('System.version');
-		}
-		return $version;
-	}
-
-	//Storing the panel width size from session
-	public function setJqxSpliterSize() {
-		$this->autoRender = false;
-
-		if ($this->request->is(['ajax'])) {
-			$session = $this->request->session();
-			$session->write('System.layout', $this->request->data);
-			$layout = $session->read('System.layout');
-		}
-	}
-
-
 }

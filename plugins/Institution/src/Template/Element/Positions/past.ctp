@@ -1,10 +1,9 @@
-<?php $_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
-	<div class="clearfix"></div>
+<div class="clearfix"></div>
 
-	<hr>
+<hr>
 
-	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
-
+<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
+<div class="table-wrapper">
 	<div class="table-responsive">
 		<table class="table table-curved">
 			<thead>
@@ -14,7 +13,7 @@
 					<th><?= $this->Label->get('date.start'); ?></th>
 					<th><?= $this->Label->get('date.end'); ?></th>
 					<th><?= $this->Label->get('Users.status'); ?></th>
-					<th><?= $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
+					<th><?= $this->Label->get('InstitutionStaff.fte'); ?></th>
 				</tr>
 			</thead>
 	
@@ -40,3 +39,4 @@
 			</tbody>
 		</table>
 	</div>
+</div>
