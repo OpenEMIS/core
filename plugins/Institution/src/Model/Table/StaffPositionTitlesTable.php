@@ -52,8 +52,8 @@ class StaffPositionTitlesTable extends AppTable {
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$oldRoleId = $entity->security_role_id;
-		$data['oldRoleId'] = $oldRoleId;
+		$oldRoleId = $entity->getOriginal('security_role_id');
+		$data['oldRoleId'] = intval($oldRoleId);
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -76,11 +76,11 @@ class StaffPositionTitlesTable extends AppTable {
 			])
 			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
 				'StaffPositionTitles.id = Positions.staff_position_title_id',
-				'StaffPositionTitles.id = '.$titleId
+				'StaffPositionTitles.id' => $titleId
 			])
 			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
 				'SecurityGroupUsers.security_user_id = '.$InstitutionStaffTable->aliasField('staff_id'),
-				'SecurityGroupUsers.security_role_id = '.$oldRoleId,
+				'SecurityGroupUsers.security_role_id' => $oldRoleId,
 				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
 			]);
 
@@ -89,10 +89,10 @@ class StaffPositionTitlesTable extends AppTable {
 			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
 			->from(['GroupUsers' => $subQuery]);
 
-		pr($SecurityGroupUsersTable->updateAll(
+		$SecurityGroupUsersTable->updateAll(
 			['security_role_id' => $newRole],
 			['id IN ' => $securityGroupUserIdQuery]
-		));
+		);
 
 		$duplicateRecordQuery = $SecurityGroupUsersTable->find()
 			->select([
@@ -104,14 +104,14 @@ class StaffPositionTitlesTable extends AppTable {
 				$SecurityGroupUsersTable->aliasField('security_group_id'),
 				$SecurityGroupUsersTable->aliasField('security_role_id')
 			])
-			->having(['COUNT(counter) >' => 1])
+			->having(['COUNT(counter) > 1'])
 			;
 
 		$securityGroupUserIdQuery = $this->query()
 			->select(['security_group_user_id' => 'GroupUsers.id'])
 			->from(['GroupUsers' => $duplicateRecordQuery]);
 
-		pr($SecurityGroupUsersTable->deleteAll(['id IN ' => $securityGroupUserIdQuery]));
+		$SecurityGroupUsersTable->deleteAll(['id IN ' => $securityGroupUserIdQuery]);
 
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
