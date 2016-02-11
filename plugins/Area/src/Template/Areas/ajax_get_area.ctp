@@ -10,8 +10,7 @@
 
 	$count = 0;
 	foreach ($path as $obj) {
-		
-		$name = $obj->level->name;
+		$name = $obj->$levelAssociation->name;
 		if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
 			echo $this->Form->input($name, [
 				'class' => $formClass,
