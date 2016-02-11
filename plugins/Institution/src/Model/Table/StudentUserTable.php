@@ -33,6 +33,17 @@ class StudentUserTable extends UserTable {
 		return $validator;
 	}
 
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$sessionKey = 'Institution.Students.new';
+		if ($this->Session->check($sessionKey)) {
+			$academicData = $this->Session->read($sessionKey);
+			$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
+		} else {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			return $this->controller->redirect($action);
+		}
+	}
+
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
