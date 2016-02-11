@@ -83,6 +83,10 @@ class ControllerActionBehavior extends Behavior {
 			if ($actions[$action] !== false) {
 				$behavior = ucfirst($action);
 				if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
+					if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
+						$this->config('actions.reorder', false);
+						continue;
+					}
 					if (is_array($value)) {
 						if ($model->hasBehavior($behavior)) {
 							$model->removeBehavior($behavior);
@@ -92,7 +96,6 @@ class ControllerActionBehavior extends Behavior {
 					} else {
 						$model->addBehavior('ControllerAction.' . $behavior);
 					}
-					
 				}
 			}
 		}
@@ -135,6 +138,14 @@ class ControllerActionBehavior extends Behavior {
 		}
 		
 		$this->_table->fields = $fields;
+	}
+
+	public function isColumnExists($field) {
+		$model = $this->_table;
+		$schema = $model->schema();
+		$columns = $schema->columns();
+
+		return in_array($field, $columns);
 	}
 
 	public function actions($action=null) {
@@ -263,7 +274,7 @@ class ControllerActionBehavior extends Behavior {
 		$params = [$attr, $model->action, $model->request];
 		$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 		if (is_array($event->result)) {
-			$model->fields[$field] = $event->result;
+			$model->fields[$name] = $event->result;
 		}
 	}
 
@@ -356,6 +367,11 @@ class ControllerActionBehavior extends Behavior {
 		return $associatedEntity;
 	}
 
+	public function getSearchKey() {
+		$session = $this->_table->request->session();
+		return $session->read($this->_table->registryAlias().'.search.key');
+	}
+
 	public function getContains($type = 'belongsTo') { // type is not being used atm
 		$model = $this->_table;
 		$contain = [];
@@ -387,10 +403,12 @@ class ControllerActionBehavior extends Behavior {
 	private function getOrderValue($field, $insert) {
 		$model = $this->_table;
 		if (!array_key_exists($field, $model->fields)) {
-			Log::write('Attempted to add ' . $insert . ' invalid field: ' . $field);
+			Log::write('debug', 'Attempted to add ' . $insert . ' invalid field: ' . $field);
 			return false;
 		}
 		$order = 0;
+
+		uasort($model->fields, [$this, '_sortByOrder']);
 
 		if ($insert == 'before') {
 			foreach ($model->fields as $key => $attr) {
@@ -413,5 +431,17 @@ class ControllerActionBehavior extends Behavior {
 			}
 		}
 		return $order;
+	}
+
+	private function _sortByOrder($a, $b) {
+ 		if (!isset($a['order']) && !isset($b['order'])) {
+ 			return true;
+ 		} else if (!isset($a['order']) && isset($b['order'])) {
+ 			return true;
+ 		} else if (isset($a['order']) && !isset($b['order'])) {
+ 			return false;
+ 		} else {
+ 			return $a["order"] - $b["order"];
+ 		}
 	}
 }
