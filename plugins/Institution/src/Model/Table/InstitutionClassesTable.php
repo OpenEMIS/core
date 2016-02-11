@@ -324,7 +324,7 @@ class InstitutionClassesTable extends AppTable {
 
 		$institutionId = $this->institutionId;
 		$periodOption = ['' => '-- Select Period --'];
-		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
 		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 
 		if ($this->request->is(['post', 'put']) && $this->request->data($this->aliasField('academic_period_id'))) {

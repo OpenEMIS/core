@@ -60,7 +60,7 @@
 			<?php 
 				echo $this->element('OpenEmis.header');
 				echo $this->fetch('content');
-				if (isset($modal)) {
+				if (isset($modals)) {
 					echo $this->element('ControllerAction.modal');
 				}
 			?>	
