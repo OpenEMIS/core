@@ -2,13 +2,13 @@
 namespace FieldOption\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-class QualificationSpecialisationsTable extends AppTable {
+class QualificationSpecialisationsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('qualification_specialisations');
@@ -24,6 +24,7 @@ class QualificationSpecialisationsTable extends AppTable {
 			'dependent' => false
 		]);
 
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 
 	public function validationDefault(Validator $validator) {
