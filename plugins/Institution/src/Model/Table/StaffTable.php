@@ -71,6 +71,10 @@ class StaffTable extends AppTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
+			->add('start_date', 'ruleStaffExistWithinPeriod', [
+				'rule' => ['checkStaffExistWithinPeriod'],
+				'on' => 'update'
+			])
 			->add('institution_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
@@ -218,77 +222,22 @@ class StaffTable extends AppTable {
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$alias = $this->alias();
-		$recordId = $entity->id;
-		$institutionId = $entity->institution_id;
-		$newEndDate = strtotime($data[$this->alias()]['end_date']);
-		$newStartDate = strtotime($data[$this->alias()]['start_date']);
-		$staffId = $data[$this->alias()]['staff_id'];
-		$positionId = $data[$this->alias()]['institution_position_id'];
-		$condition = [
-			$this->aliasField('staff_id') => $staffId,
-			$this->aliasField('institution_position_id') => $positionId,
-			$this->aliasField('id').' IS NOT' => $recordId,
-			$this->aliasField('institution_id') => $institutionId
-		];
-		$count = 0;
-		if (empty($newEndDate)) {
-			$count = $this->find()
-				->where($condition)
-				->where([
-						'OR' => [
-							[$this->aliasField('end_date').' IS NULL'],
-							[
-								$this->aliasField('start_date').' >=' => $newStartDate, 
-							]
-						]
-					]);
-		} else {
-			$count = $this->find()
-				->where($condition)
-				->where([
-						'OR' => [
-							[
-								$this->aliasField('start_date').' <=' => $newEndDate,
-								$this->aliasField('end_date').' IS NULL'
-							],
-							[
-								$this->aliasField('start_date').' <=' => $newStartDate,
-								$this->aliasField('end_date').' IS NULL'
-							],
-							[
-								$this->aliasField('start_date').' <=' => $newEndDate,
-								$this->aliasField('end_date').' >=' => $newEndDate,
-							],
-							[
-								$this->aliasField('start_date').' <=' => $newStartDate,
-								$this->aliasField('end_date').' >=' => $newStartDate,
-							],
-						]
-					]);
-		}
-		if ($count->count() > 0) {
-			$this->Alert->error('Institution.InstitutionStaff.staffExistWithinPeriod');
-			$urlParams = $this->ControllerAction->url('edit');
-			$event->stopPropagation();
-			return $this->controller->redirect($urlParams);
-		} else {
-			if (array_key_exists('FTE', $data[$alias])) {
-				$newFTE = $data[$alias]['FTE'];
-				$newEndDate = $data[$alias]['end_date'];
+		if (array_key_exists('FTE', $data[$alias])) {
+			$newFTE = $data[$alias]['FTE'];
+			$newEndDate = $data[$alias]['end_date'];
 
-				if ($newFTE != $entity->FTE) {
-					$data[$alias]['FTE'] = $entity->FTE;
-					$entity->newFTE = $newFTE;
+			if ($newFTE != $entity->FTE) {
+				$data[$alias]['FTE'] = $entity->FTE;
+				$entity->newFTE = $newFTE;
 
-					if (empty($newEndDate)) {
-						if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
-							$data[$alias]['end_date'] = date('Y-m-d');
-						} else {
-							$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
-						}
+				if (empty($newEndDate)) {
+					if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+						$data[$alias]['end_date'] = date('Y-m-d');
 					} else {
-						$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
 					}
+				} else {
+					$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
 				}
 			}
 		}
@@ -355,12 +304,19 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$positionOptions = $this->Positions
-			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-			->contain(['StaffPositionTitles'])
-			->where([$this->Positions->aliasField('institution_id') => $institutionId])
-			->toArray();
-			$attr['options'] = $positionOptions;
+	   		$types = $this->getSelectOptions('Staff.position_types');
+			$positionOptions = new ArrayObject();
+			$this->Positions
+					->find()
+					->contain(['StaffPositionTitles'])
+					->where([$this->Positions->aliasField('institution_id') => $institutionId])
+				    ->map(function ($row) use ($types, $positionOptions) { // map() is a collection method, it executes the query
+				        $type = array_key_exists($row->staff_position_title->type, $types) ? $types[$row->staff_position_title->type] : $row->staff_position_title->type;
+				        $positionOptions[$type][$row->id] = $row->name;
+				        return $row;
+				    })
+				    ->toArray(); // Also a collections library method
+			$attr['options'] = $positionOptions->getArrayCopy();
 		}
 		return $attr;
 	}
@@ -786,19 +742,20 @@ class StaffTable extends AppTable {
 		$query = $this->find('all');
 		$staffByPositions = $query
 			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
-			->contain(['Users.Genders','Positions'])
+			->contain(['Users.Genders','Positions.StaffPositionTitles'])
 			->select([
-				'Positions.type',
+				'Positions.id',
+				'StaffPositionTitles.type',
 				'Users.id',
 				'Genders.name',
 				'total' => $query->func()->count('DISTINCT '.$this->aliasField('staff_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([
-				'Positions.type', 'Genders.name'
+				'StaffPositionTitles.type', 'Genders.name'
 			])
 			->order(
-				'Positions.type'
+				'StaffPositionTitles.type'
 			)
 			->toArray();
 
@@ -819,7 +776,7 @@ class StaffTable extends AppTable {
 		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
 			if ($staffByPosition->has('position')) {
-				$positionType = $staffByPosition->position->type;
+				$positionType = $staffByPosition->position->staff_position_title->type;
 				$staffGender = $staffByPosition->user->gender->name;
 				$StaffTotal = $staffByPosition->total;
 
@@ -839,8 +796,8 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
-	// Functions that are migrated over
-	/******************************************************************************************************************
+// Functions that are migrated over
+/******************************************************************************************************************
 **
 ** finders functions to be used with query
 **
@@ -852,13 +809,15 @@ class StaffTable extends AppTable {
 	 */
 	public function findByPositions(Query $query, array $options) {
 		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 			$positions = $this->Positions->find('list')
 						->find('withBelongsTo')
 				        ->where([
 				        	'Institutions.id' => $options['Institutions.id'],
-				        	$this->Positions->aliasField('type') => $options['type']
+				        	$StaffPositionTitles->aliasField('type') => $options['type']
 				        ])
-				        ->toArray();
+				        ->toArray()
+				        ;
 			$positions = array_keys($positions);
 			return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
 		} else {

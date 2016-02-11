@@ -90,24 +90,53 @@
       
       var size_checking = function(){
         var panel_width = $('.scroll_tab_inner', _this).outerWidth();
-        
+        var bodyDir = getComputedStyle(document.body).direction;
+        var FF = !(window.mozInnerScreenX == null);
+        var buttonLeft = '.scroll_tab_left_button';
+        var buttonRight = '.scroll_tab_right_button';
+        var buttonLeftDisabled = 'scroll_tab_left_button_disabled';
+        var buttonRightDisabled = 'scroll_tab_right_button_disabled';
+        var IE = /*@cc_on!@*/false || !!document.documentMode; // At least IE6
+        var IE9 = ($('html').hasClass('ie9'));
+
         if($('.scroll_tab_inner', _this)[0].scrollWidth > panel_width){
           $('.scroll_tab_right_button',_this).show();
           $('.scroll_tab_left_button',_this).show();
           $('.scroll_tab_inner',_this).css({left: opts.left_arrow_size + 'px', right: opts.right_arrow_size + 'px'});
           $('.scroll_tab_left_finisher',_this).css('display','none');
           $('.scroll_tab_right_finisher',_this).css('display','none');
-          
-          if($('.scroll_tab_inner', _this)[0].scrollWidth - panel_width == $('.scroll_tab_inner', _this).scrollLeft()){
-            $('.scroll_tab_right_button', _this).addClass('scroll_arrow_disabled').addClass('scroll_tab_right_button_disabled');
-          } else {
-            $('.scroll_tab_right_button', _this).removeClass('scroll_arrow_disabled').removeClass('scroll_tab_right_button_disabled');
+
+          var remainingWidth = $('.scroll_tab_inner', _this)[0].scrollWidth - panel_width;
+          // console.log('remainingWidth = '+ ($('.scroll_tab_inner', _this)[0].scrollWidth - panel_width) );
+          if((FF || IE) && bodyDir == 'rtl'){
+            //When users scroll to the last Right Button should be disabled -- RTL
+              buttonLeft = '.scroll_tab_right_button';
+              buttonRight = '.scroll_tab_left_button';
+
+              remainingWidth = panel_width - $('.scroll_tab_inner', _this)[0].scrollWidth;
+              // console.log('remainingWidth = ' + remainingWidth);
+
+              buttonLeftDisabled = 'scroll_tab_right_button_disabled';
+              buttonRightDisabled = 'scroll_tab_left_button_disabled';
           }
+
+          // console.log("remainingWidth = " + remainingWidth);
+
+          remainingWidth = (IE)? Math.abs(remainingWidth) : remainingWidth;
+          //When users scroll to the last Right Button should be disabled -- RTL 
+          if(remainingWidth == $('.scroll_tab_inner', _this).scrollLeft()){
+            $(buttonRight, _this).addClass('scroll_arrow_disabled').addClass(buttonRightDisabled);
+          } else {
+            $(buttonRight, _this).removeClass('scroll_arrow_disabled').removeClass(buttonRightDisabled);
+          }
+          //This is for the Left Button in LTR to be disabled
+          // console.log("$('.scroll_tab_inner', _this).scrollLeft() = "+ $('.scroll_tab_inner', _this).scrollLeft());
           if ($('.scroll_tab_inner', _this).scrollLeft() == 0) {
-            $('.scroll_tab_left_button', _this).addClass('scroll_arrow_disabled').addClass('scroll_tab_left_button_disabled');
+            $(buttonLeft, _this).addClass('scroll_arrow_disabled').addClass(buttonLeftDisabled);
           } else {
-            $('.scroll_tab_left_button', _this).removeClass('scroll_arrow_disabled').removeClass('scroll_tab_left_button_disabled');
+            $(buttonLeft, _this).removeClass('scroll_arrow_disabled').removeClass(buttonLeftDisabled);
           }
+
         } else {
           $('.scroll_tab_right_button',_this).hide();
           $('.scroll_tab_left_button',_this).hide();
@@ -130,10 +159,26 @@
       
       $('.scroll_tab_right_button', this).mousedown(function(e){
         e.stopPropagation();
+
         var scrollRightFunc = function(){
+          
           var left = $('.scroll_tab_inner', _this).scrollLeft(); 
-          state.scrollPos = Math.min(left + opts.scroll_distance,$('.scroll_tab_inner', _this)[0].scrollWidth - $('.scroll_tab_inner', _this).outerWidth());
-          $('.scroll_tab_inner', _this).animate({scrollLeft: (left + opts.scroll_distance) + 'px'}, opts.scroll_duration);
+          var IE = /*@cc_on!@*/false || !!document.documentMode; // At least IE6
+          var IE9 = ($('html').hasClass('ie9'));
+          var bodyDir = getComputedStyle(document.body).direction;
+
+          if ((IE || IE9) && bodyDir == 'rtl') {
+          // if(bodyDir == "rtl" && IE){
+            state.scrollPos = Math.max(left - opts.scroll_distance,0);
+            $('.scroll_tab_inner', _this).animate({scrollLeft: (left - opts.scroll_distance) + 'px'}, opts.scroll_duration);
+          }
+          else{
+            state.scrollPos = Math.min(left + opts.scroll_distance,$('.scroll_tab_inner', _this)[0].scrollWidth - $('.scroll_tab_inner', _this).outerWidth());
+            $('.scroll_tab_inner', _this).animate({scrollLeft: (left + opts.scroll_distance) + 'px'}, opts.scroll_duration);
+          }
+           
+           // state.scrollPos = Math.min(left + opts.scroll_distance,$('.scroll_tab_inner', _this)[0].scrollWidth - $('.scroll_tab_inner', _this).outerWidth());
+          // $('.scroll_tab_inner', _this).animate({scrollLeft: (left + opts.scroll_distance) + 'px'}, opts.scroll_duration);
         };
         scrollRightFunc();
         
@@ -152,8 +197,21 @@
         e.stopPropagation();
         var scrollLeftFunc = function(){
           var left = $('.scroll_tab_inner', _this).scrollLeft(); 
-          state.scrollPos = Math.max(left - opts.scroll_distance,0);
-          $('.scroll_tab_inner', _this).animate({scrollLeft: (left - opts.scroll_distance) + 'px'}, opts.scroll_duration);
+          var IE = /*@cc_on!@*/false || !!document.documentMode; // At least IE6
+          var IE9 = ($('html').hasClass('ie9'));
+          var bodyDir = getComputedStyle(document.body).direction;
+
+          if ((IE || IE9) && bodyDir == 'rtl') {
+          // if(bodyDir == "rtl" && IE){
+            state.scrollPos = Math.min(left + opts.scroll_distance,$('.scroll_tab_inner', _this)[0].scrollWidth - $('.scroll_tab_inner', _this).outerWidth());
+            $('.scroll_tab_inner', _this).animate({scrollLeft: (left + opts.scroll_distance) + 'px'}, opts.scroll_duration);
+          }
+          else{
+            state.scrollPos = Math.max(left - opts.scroll_distance,0);
+            $('.scroll_tab_inner', _this).animate({scrollLeft: (left - opts.scroll_distance) + 'px'}, opts.scroll_duration);
+          }
+          // state.scrollPos = Math.max(left - opts.scroll_distance,0);
+          // $('.scroll_tab_inner', _this).animate({scrollLeft: (left - opts.scroll_distance) + 'px'}, opts.scroll_duration);
         };
         scrollLeftFunc();
         

@@ -89,7 +89,7 @@ class StudentsController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -122,10 +122,10 @@ class StudentsController extends AppController {
 			}
 
 			$alias = $model->alias;
-			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
 			// $params = $this->request->params;

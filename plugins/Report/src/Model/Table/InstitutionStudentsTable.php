@@ -35,6 +35,13 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 	}
 
+	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+		if (empty($settings['entity']->user)) {
+			$entity = $settings['entity'];
+			return $this->delete($entity);
+		}
+	}
+
 	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
 		// Setting request data and modifying fetch condition
 		$requestData = json_decode($settings['process']['params']);
@@ -43,7 +50,7 @@ class InstitutionStudentsTable extends AppTable  {
 
 		if ($academicPeriodId!=0) {
 			$query->where([
-				$this->aliasField('academic_period_id') => $statusId
+				$this->aliasField('academic_period_id') => $academicPeriodId
 			]);
 		}
 
@@ -64,6 +71,19 @@ class InstitutionStudentsTable extends AppTable  {
 		);
 
 		$query->contain(['Users.Genders', 'Institutions.Areas'])->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number', 'code' => 'Institutions.code', 'gender_id' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code']);
+	}
+
+	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
+		$age = '';
+		if ($entity->has('user')) {
+			if ($entity->user->has('date_of_birth')) {
+				if (!empty($entity->user->date_of_birth)) {
+					$yearOfBirth = $entity->user->date_of_birth->format('Y');
+					$age = date("Y")-$yearOfBirth;
+				}
+			}
+		}
+		return $age;
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -136,6 +156,13 @@ class InstitutionStudentsTable extends AppTable  {
 			'field' => 'area_code',
 			'type' => 'string',
 			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Age',
+			'field' => 'Age',
+			'type' => 'Age',
+			'label' => 'Age',
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());

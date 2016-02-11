@@ -9,13 +9,5 @@ trait FieldOptionsTrait {
 		'FieldOption.Countries' => 	['behavior' => 'Countries'],
 		'FieldOption.QualificationSpecialisations' => 	['parentModel' => 'FieldOption.QualificationSpecialisations', 'behavior' => 'QualificationSpecialisations'],
 		'FieldOption.QualificationLevels' => 	['behavior' => 'Display'],
-		'Institution.NetworkConnectivities' => 		['behavior' => 'Display'],
-		'Health.AllergyTypes' => ['behavior' => 'Display'],
-		'Health.ConsultationTypes' => ['behavior' => 'Display'],
-		'Health.Relationships' => ['behavior' => 'Display'],
-		'Health.Conditions' => ['behavior' => 'Display'],
-		'Health.ImmunizationTypes' => ['behavior' => 'Display'],
-		'Health.TestTypes' => ['behavior' => 'Display'],
-		'FieldOption.QualityVisitTypes' => ['behavior' => 'Display'],
 	];
 }

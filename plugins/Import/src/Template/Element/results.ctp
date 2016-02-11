@@ -33,7 +33,7 @@
 
 <?php 
 if(!empty($attr['results']['passedExcelFile'])) {
-	$passedRecordsLink = $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-success", 'escape'=>false]);
+	$passedRecordsLink = $this->Html->link('<i class="fa kd-download-success"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-green", 'escape'=>false]);
 } else {
 	$passedRecordsLink = '';
 }
@@ -42,7 +42,7 @@ if(!empty($attr['results']['failedExcelFile'])):
 ?>
 
 <div class="table-wrapper">
-	<div class="table-responsive">
+	<div class="table-responsive table-scroll-y">
 		<table class="table">
 			<thead>
 				<tr>
@@ -62,7 +62,11 @@ if(!empty($attr['results']['failedExcelFile'])):
 				?>
 				<tr>
 					<td class="tooltip-red">
-						<i class="fa fa-exclamation-circle fa-lg icon-red" data-placement="right" data-toggle="tooltip" title="" data-original-title="<?= $row['error']; ?>"></i>
+						<?php
+							$buffer = explode(';', $row['error']);
+							$error = '<ul><li>'. implode('</li><li>', $buffer) . '</li></ul>';
+						?>
+						<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="<?= $error ?>"></i>
 					</td>
 					<td><?= $row['row_number']; ?></td>
 					<?php 
@@ -84,7 +88,7 @@ if(!empty($attr['results']['failedExcelFile'])):
 </div>
 
 <div class="form-buttons">
-	<?= $this->Html->link('<i class="fa kd-download"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['failedExcelFile'], ['class'=>"btn btn-danger", 'style'=>"text-decoration:none;", 'escape'=>false]); ?>
+	<?= $this->Html->link('<i class="fa kd-download-fail"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['failedExcelFile'], ['class'=>"btn btn-red", 'escape'=>false]); ?>
 	<?= $passedRecordsLink; ?>
 </div>
 

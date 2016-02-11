@@ -13,6 +13,9 @@ use App\Model\Table\AppTable;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
+	
+	// these constants are being used in AdvancedPositionSearchBehavior as well
+	// remember to check AdvancedPositionSearchBehavior if these constants are being modified
 	const ALL = 0;
 	const STUDENT = 1;
 	const STAFF = 2;
@@ -33,6 +36,11 @@ class DirectoriesTable extends AppTable {
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AdvanceSearch');
+		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+		$this->addBehavior('User.AdvancedIdentitySearch');
+		$this->addBehavior('User.AdvancedContactNumberSearch');
+		$this->addBehavior('User.AdvancedPositionSearch');
+		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -123,11 +131,23 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$allInstitutionStudents = $InstitutionStudentTable->find()
+				->where([
+					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
 			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
 			$institutionStaff = $InstitutionStaffTable->find()
 				->where([
 					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+				])
+				->bufferResults(false);
+
+			$allInstitutionStaff = $InstitutionStaffTable->find()
+				->where([
 					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
 				])
 				->bufferResults(false);
@@ -145,15 +165,20 @@ class DirectoriesTable extends AppTable {
 				])
 				->bufferResults(false);
 
+			$userId = $this->Auth->user('id');
+
 			$query->where([
 					'OR' => [
+						['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
+						['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
 						['EXISTS ('.$institutionStaff->sql().')'],
 						['EXISTS ('.$institutionStudents->sql().')'],
-						['EXISTS ('.$guardianAndOthers->sql().')']
+						['EXISTS ('.$guardianAndOthers->sql().')'],
 					]
 				])
 				->group([$this->aliasField('id')])
 				;
+			// pr($query->sql());die;
 		}
 		
 		$this->dashboardQuery = clone $query;
@@ -352,8 +377,8 @@ class DirectoriesTable extends AppTable {
 					// Do nothing
 					break;
 				case self::STUDENT:
-					$this->ControllerAction->field('student_status', ['order' => 51]);
 					$this->ControllerAction->field('institution', ['order' => 50]);
+					$this->ControllerAction->field('student_status', ['order' => 51]);
 					break;
 
 				case self::STAFF:
@@ -372,22 +397,7 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function onGetStudentStatus(Event $event, Entity $entity) {
-		$userId = $entity->id;
-		$InstitutionStudentTable = TableRegistry::get('Institution.Students');
-		$studentInstitutions = $InstitutionStudentTable->find()
-			->matching('StudentStatuses')
-			->where([
-				$InstitutionStudentTable->aliasField('student_id') => $userId
-			])
-			->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
-			->first();
-		
-		if (!empty($studentInstitutions)) {
-			$value = $studentInstitutions->_matchingData['StudentStatuses']['name'];
-		} else {
-			$value = '';
-		}
-		return $value;
+		return __($entity->student_status_name);
 	}
 
 	public function getNumberOfUsersByGender($params=[]) {
@@ -488,21 +498,26 @@ class DirectoriesTable extends AppTable {
 		$studentInstitutions = [];
 		if ($isStudent) {
 			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
-			$studentInstitutions = $InstitutionStudentTable->find('list', [
-					'keyField' => 'id',
-					'valueField' => 'name'
-				])
+			$studentInstitutions = $InstitutionStudentTable->find()
 				->matching('StudentStatuses')
 				->matching('Institutions')
 				->where([
 					$InstitutionStudentTable->aliasField('student_id') => $userId,
-					'StudentStatuses.code' => 'CURRENT'
 				])
 				->distinct(['id'])
-				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name'])
-				->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
+				->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
+				$InstitutionStudentTable->aliasField('created').' END) DESC'])
 				->first();
-			return $studentInstitutions;
+
+			if (!empty($studentInstitutions)) {
+				$value = $studentInstitutions->student_status_name;
+			} else {
+				$value = '';
+			}
+			$entity->student_status_name = $value;
+
+			return $studentInstitutions->name;
 		}
 
 		$staffInstitutions = [];
