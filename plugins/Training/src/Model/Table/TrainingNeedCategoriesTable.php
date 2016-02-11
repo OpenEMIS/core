@@ -7,6 +7,6 @@ class TrainingNeedCategoriesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
-		// $this->hasMany('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'training_need_category_id']);
 	}
 }

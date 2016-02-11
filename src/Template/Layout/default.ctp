@@ -40,23 +40,30 @@
 	
 	<?=  $this->element('OpenEmis.header'); ?>
 
-	<bg-splitter orientation="horizontal">
-		<bg-pane>
+	<bg-splitter orientation="horizontal" class="pane-wrapper">
+		<bg-pane class="left-pane">
 			<div class="pane-container">
 				<?php 
-	        			echo $this->element('OpenEmis.navigation');
+	        		echo $this->element('OpenEmis.navigation');
 				?>
 			</div>
 		</bg-pane>
 		
-		<bg-pane class="pane-container" min-size-p="60">
+		<bg-pane class="right-pane pane-container" min-size-p="60">
+			<div class="load-content">
+				<div class="loader-text">
+					<i class="fa kd-openemis"></i>
+					<div class="loader lt-ie9"></div>
+					<p><?= __('Loading...') ?></p>
+				</div>
+			</div>		
 			<?php 
-					echo $this->element('OpenEmis.header');
-					echo $this->fetch('content');
-					if (isset($modal)) {
-						echo $this->element('ControllerAction.modal');
-					}
-			?>
+				echo $this->element('OpenEmis.header');
+				echo $this->fetch('content');
+				if (isset($modals)) {
+					echo $this->element('ControllerAction.modal');
+				}
+			?>	
 		</bg-pane>
 	</bg-splitter>	
 

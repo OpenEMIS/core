@@ -30,6 +30,17 @@ trait OptionsTrait {
 			],
 			'TrainingSessions' => [
 				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
+			],
+			'TrainingNeeds' => [
+				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
+			],
+			'Health' => [
+				'blood_types' => [
+					'O+' => 'O+', 'O-' => 'O-',
+					'A+' => 'A+', 'A-' => 'A-',
+					'B+' => 'B+', 'B-' => 'B-',
+					'AB+' => 'AB+', 'AB-' => 'AB-'
+				]
 			]
 		];
 

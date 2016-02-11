@@ -1,10 +1,9 @@
-<?php $_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
-	<div class="clearfix"></div>
+<div class="clearfix"></div>
 
-	<hr>
+<hr>
 
-	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
-
+<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
+<div class="table-wrapper">
 	<div class="table-responsive">
 		<table class="table table-curved">
 			<thead>
@@ -12,7 +11,7 @@
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
 					<th><?= $this->Label->get('Users.name'); ?></th>
 					<th><?= $this->Label->get('date.start'); ?></th>
-					<th><?= $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
+					<th><?= $this->Label->get('InstitutionStaff.fte'); ?></th>
 				</tr>
 			</thead>
 	
@@ -23,7 +22,6 @@
 				// Probably due to the existence of <tfoot> element.
 				if (count($attr['data'])>0): 
 				?>
-
 					<?php foreach ($attr['data'] as $i => $obj) : ?>
 						<?php if (!is_object($obj->user)): ?>
 							<tr><td>There is an error with this user data. User might have been deleted from users table.</td></tr>
@@ -48,12 +46,12 @@
 				
 				<?php endif; ?>
 			</tbody>
-
 			<tfoot>
 				<tr>
-					<td colspan="3" class="side-label"><?php echo $this->Label->get('InstitutionSiteStaff.total_fte'); ?></td>
+					<td colspan="3" class="side-label"><?php echo $this->Label->get('InstitutionStaff.total_fte'); ?></td>
 					<td><?= $attr['totalCurrentFTE'];?></td>
 				</tr>
 			</tfoot>
 		</table>
 	</div>
+</div>

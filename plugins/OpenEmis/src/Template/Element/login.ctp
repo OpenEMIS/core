@@ -15,14 +15,20 @@ $description = __d('open_emis', $_productName);
 		echo $this->Html->css('OpenEmis.../plugins/bootstrap/css/bootstrap.min', ['media' => 'screen']);
 		echo $this->Html->css('OpenEmis.../plugins/font-awesome/css/font-awesome.min', ['media' => 'screen']);
 		echo $this->Html->css('OpenEmis.reset', ['media' => 'screen']);
-		echo $this->Html->css('OpenEmis.master.min');
+		
+		$debug = Cake\Core\Configure::read('debug');
+		if ($debug) { //This is to the dev testing purpose.
+			echo $this->Html->css('OpenEmis.master');
+		} else {
+			echo $this->Html->css('OpenEmis.master.min');
+		}
 
 		if (isset($theme)) {
 			echo $this->Html->css($theme);
 		}
 		
-		echo $this->Html->script('OpenEmis.css_browser_selector');
-		echo $this->Html->script('OpenEmis.jquery.min');
+		echo $this->Html->script('OpenEmis.lib/css_browser_selector');
+		echo $this->Html->script('OpenEmis.lib/jquery/jquery.min');
 		echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 	?>
 
@@ -40,9 +46,8 @@ $description = __d('open_emis', $_productName);
 		<div class="login-box">
 			<div class="title">
 				<span class="title-wrapper">
-					<i class="kd-openemis ltl-view"></i>
+					<i class="kd-openemis"></i>
 					<h1>OpenEMIS Core</h1>
-					<i class="kd-openemis rtl-view"></i>
 				</span>
 			</div>
 			<?php 

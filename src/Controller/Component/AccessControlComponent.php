@@ -18,7 +18,7 @@ class AccessControlComponent extends Component {
 		'separator' => '|'
 	];
 
-	public $components = ['Auth', 'ControllerAction'];
+	public $components = ['Auth'];
 
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
@@ -53,7 +53,7 @@ class AccessControlComponent extends Component {
 					if (is_null($lastModified)) {
 						$this->buildPermissions();
 					} else {
-						if ($entity->modified->gt($lastModified)) {
+						if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
 							$this->buildPermissions();
 						}
 					}
@@ -89,7 +89,7 @@ class AccessControlComponent extends Component {
 			foreach ($functions as $entity) { // for each function in roles
 				if (!empty($entity->security_function)) {
 					$function = $entity->security_function;
-					if (is_null($lastModified) || (!is_null($lastModified) && $lastModified->lt($entity->modified))) {
+					if (is_null($lastModified) || (!is_null($lastModified) && !is_null($entity->modified) && $lastModified->lt($entity->modified))) {
 						$lastModified = $entity->modified;
 					} 
 
@@ -136,10 +136,9 @@ class AccessControlComponent extends Component {
 		if ($superAdmin) {
 			return true;
 		}
-
 		// we only need controller and action
 		foreach ($url as $i => $val) {
-			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val)) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
 				unset($url[$i]);
 			}
 		}
@@ -148,6 +147,8 @@ class AccessControlComponent extends Component {
 		if (empty($url)) {
 			$url = [$this->controller->name, $this->action];
 		}
+
+		$url = $this->checkAccessMap($url);
 
 		// check if the action is excluded from permissions checking
 		$action = next($url);
@@ -170,6 +171,43 @@ class AccessControlComponent extends Component {
 			}
 		}
 		return false;
+	}
+
+	public function checkAccessMap($url) {
+		$urlValues = array_values($url);
+		$key = implode('.', [$urlValues[0], $urlValues[1]]);
+
+		$paramKey = 'accessMap';
+		$request = $this->request;
+		if (array_key_exists($paramKey, $request->params)) {
+			$accessMap = $request->params['accessMap'];
+
+			if (array_key_exists($key, $accessMap)) {
+				$action = 'index';
+				if (isset($urlValues[2])) {
+					if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action
+						$action = $urlValues[2];
+					}
+				} else {
+					$paramsPass = $request->params['pass'];
+					if (count($paramsPass) > 0) {
+						if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
+							$action = array_shift($paramsPass);
+						}
+					}
+				}
+				$url = explode('.', sprintf($accessMap[$key], $action));
+			}
+		}
+		return $url;
+	}
+
+	private function isUuid($input) {
+		if (preg_match('/^\{?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}?$/', strtolower($input))) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public function isAdmin() {
@@ -224,7 +262,7 @@ class AccessControlComponent extends Component {
 
 		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 		$institutionIds = $SecurityGroupInstitutions
-		->find('list', ['keyField' => 'institution_site_id', 'valueField' => 'institution_site_id'])
+		->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
 		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
@@ -237,7 +275,7 @@ class AccessControlComponent extends Component {
 			'Areas.lft >= AreaAll.lft',
 			'Areas.rght <= AreaAll.rght'
 		])
-		->innerJoin(['Institutions' => 'institution_sites'], ['Institutions.area_id = Areas.id'])
+		->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
 		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
 		->toArray();
 
@@ -250,25 +288,8 @@ class AccessControlComponent extends Component {
 			$userId = $this->Auth->user('id');
 		}
 
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$groupIds = $SecurityGroupUsers
-		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
-		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-		->toArray();
-
 		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$areas = $SecurityGroupAreas
-		->find('all')
-		->distinct(['area_id'])
-		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
-		->innerJoin(['Areas' => 'areas'], [
-			'Areas.lft >= AreaAll.lft',
-			'Areas.rght <= AreaAll.rght'
-		])
-		->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
-		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
-
+		$areas = $SecurityGroupAreas->getAreasByUser($userId);
 		return $areas;
 	}
 }
