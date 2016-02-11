@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Table;
 
 class PreferencesController extends AppController {
 	public $activeObj = null;
@@ -44,7 +45,7 @@ class PreferencesController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		if (!is_null($this->activeObj)) {
 			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';

@@ -150,10 +150,10 @@ class TransferRequestsTable extends AppTable {
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
     	if ($this->Session->read($this->registryAlias().'.id')) {
-	    	$id = $this->Session->read($this->registryAlias().'.id');
+	    	$id = $this->Session->read('Students.Student.id');
 	    	// $action = $this->ControllerAction->buttons['add']['url'];
 	    	$action = $this->ControllerAction->url('add');
-			$action['action'] = 'Students';
+			$action['action'] = 'StudentUser';
 			$action[0] = 'view';
 			$action[1] = $id;
 	    	$event->stopPropagation();
@@ -335,8 +335,8 @@ class TransferRequestsTable extends AppTable {
 		}
 
 		if ($this->Session->read($this->registryAlias().'.id')) {
-			$Students = TableRegistry::get('Institution.Students');
-			$id = $this->Session->read($this->registryAlias().'.id');
+			$Students = TableRegistry::get('Institution.StudentUser');
+			$id = $this->Session->read('Students.Student.id');
 			// $action = $this->ControllerAction->buttons['edit']['url'];
 			$action = $this->ControllerAction->url('edit');
 			$action['action'] = $Students->alias();
@@ -354,8 +354,8 @@ class TransferRequestsTable extends AppTable {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
 				'include' => true, 
-				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
-				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+				'css' => ['OpenEmis.lib/jquery/jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.lib/jquery/jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
 		}
 	}
@@ -613,10 +613,10 @@ class TransferRequestsTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'add' || $action == 'edit') {
 			if ($this->Session->read($this->registryAlias().'.id')) {
-				$Students = TableRegistry::get('Institution.Students');
+				$Students = TableRegistry::get('Institution.StudentUser');
 				$toolbarButtons['back']['url']['action'] = $Students->alias();
 				$toolbarButtons['back']['url'][0] = 'view';
-				$toolbarButtons['back']['url'][1] = $this->Session->read($this->registryAlias().'.id');
+				$toolbarButtons['back']['url'][1] = $this->Session->read('Student.Students.id');
 			} else {
 				if ($action == 'edit') {
 					$toolbarButtons['back']['url'][0] = 'index';

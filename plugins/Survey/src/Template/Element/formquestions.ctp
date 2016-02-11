@@ -22,7 +22,6 @@
 		
 		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 0;
 		if ($displayReorder) {
-			echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
 			echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
 			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];	
 		}else{

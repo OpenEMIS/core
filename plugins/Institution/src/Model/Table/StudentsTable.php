@@ -34,6 +34,7 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Excel', [
@@ -66,6 +67,7 @@ class StudentsTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -89,6 +91,10 @@ class StudentsTable extends AppTable {
 			])
 			->add('student_name', 'ruleStudentEnrolledInOthers', [
 				'rule' => ['checkEnrolledInOtherInstitution'],
+				'on' => 'create'
+			])
+			->add('class', 'ruleClassMaxLimit', [
+				'rule' => ['checkInstitutionClassMaxLimit'],
 				'on' => 'create'
 			])
 			;
@@ -245,6 +251,7 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
+		$this->fields['class']['sort'] = ['field' => 'InstitutionSections.name'];
 		
 		$StudentStatusesTable = $this->StudentStatuses;
 		$status = $StudentStatusesTable->findCodeList();
@@ -372,6 +379,18 @@ class StudentsTable extends AppTable {
 
 		$query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
+		// Start: sort by class column
+		$session = $request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+		$query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
+
+		$sortList = ['openemis_no', 'first_name', 'InstitutionSections.name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+		// End
+
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
@@ -379,6 +398,34 @@ class StudentsTable extends AppTable {
 		}
 
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+	}
+
+	public function findWithClass(Query $query, array $options) {
+		$institutionId = $options['institution_id'];
+		$periodId = $options['period_id'];
+
+		$ClassStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+		$Classes = TableRegistry::get('Institution.InstitutionSections');
+
+		return $query
+			->select([$Classes->aliasField('name')])
+			->leftJoin(
+				[$ClassStudents->alias() => $ClassStudents->table()],
+				[
+					$ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+					$ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+					$ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id')
+				]
+			)
+			->leftJoin(
+				[$Classes->alias() => $Classes->table()],
+				[
+					$Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_section_id'),
+					$Classes->aliasField('academic_period_id') => $periodId,
+					$Classes->aliasField('institution_id') => $institutionId
+				]
+			)
+			->autoFields(true);
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
@@ -498,6 +545,77 @@ class StudentsTable extends AppTable {
 		]);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$studentStatusId = $entity->student_status_id;
+		$statuses = $this->StudentStatuses->findCodeList();
+		$code = array_search($studentStatusId, $statuses);
+
+		if ($code == 'DROPOUT' || $code == 'TRANSFERRED') {
+			$this->ControllerAction->field('reason', ['type' => 'custom_status_reason']);
+			$this->ControllerAction->field('comment');
+			$this->ControllerAction->setFieldOrder([
+				'photo_content', 'openemis_no', 'student_id', 'student_status_id', 'reason', 'comment'
+			]);
+		}
+	}
+
+	public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[]) {
+		if ($this->action == 'view') {
+			$studentStatusId = $entity->student_status_id;
+			$statuses = $this->StudentStatuses->findCodeList();
+			$code = array_search($studentStatusId, $statuses);
+			$institutionId = $entity->institution_id;
+			$educationGradeId = $entity->education_grade_id;
+			$studentId = $entity->student_id;
+			$academicPeriodId = $entity->academic_period_id;
+
+			switch ($code) {
+				case 'TRANSFERRED':
+					$TransferApprovalsTable = TableRegistry::get('Institution.TransferApprovals');
+					$transferReason = $TransferApprovalsTable->find()
+						->matching('StudentTransferReasons')
+						->where([
+							// Type = 2 is transfer type
+							$TransferApprovalsTable->aliasField('type') => 2,
+							$TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId,
+							$TransferApprovalsTable->aliasField('previous_institution_id') => $institutionId,
+							$TransferApprovalsTable->aliasField('education_grade_id') => $educationGradeId,
+							$TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId
+						])
+						->first();
+
+					$entity->comment = $transferReason->comment;
+
+					return $transferReason->_matchingData['StudentTransferReasons']->name;
+					break;
+
+				case 'DROPOUT':
+					$DropoutRequestsTable = TableRegistry::get('Institution.DropoutRequests');
+
+					$dropoutReason = $DropoutRequestsTable->find()
+						->matching('StudentDropoutReasons')
+						->where([
+							$DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
+							$DropoutRequestsTable->aliasField('institution_id') => $institutionId,
+							$DropoutRequestsTable->aliasField('education_grade_id') => $educationGradeId,
+							$DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId
+						])
+						->first();
+
+					$entity->comment = $dropoutReason->comment;
+
+					return $dropoutReason->_matchingData['StudentDropoutReasons']->name;
+					break;
+			}
+		}
+	}
+
+	public function onGetComment(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return nl2br($entity->comment);
+		}
+	}
+
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'add') {
 			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
@@ -574,11 +692,12 @@ class StudentsTable extends AppTable {
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
 				// to automatically add the student into a specific class when the student is successfully added to a school
-				if ($entity->class > 0) {
+				if ($entity->has('class') && $entity->class > 0) {
 					$sectionData = [];
 					$sectionData['student_id'] = $entity->student_id;
 					$sectionData['education_grade_id'] = $entity->education_grade_id;
 					$sectionData['institution_section_id'] = $entity->class;
+					$sectionData['student_status_id'] = $entity->student_status_id;
 					$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
 					$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
 				}
@@ -820,7 +939,7 @@ class StudentsTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 		if (empty($this->request->query['period'])) {
 			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
 		}
@@ -976,123 +1095,6 @@ class StudentsTable extends AppTable {
 			}
 			// End PHPOE-1897
 
-
-			if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
-				$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-				$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
-				$studentData = $this->get($id);
-				$selectedStudent = $studentData->student_id;
-				$selectedPeriod = $studentData->academic_period_id;
-				$selectedGrade = $studentData->education_grade_id;
-				$this->Session->write($TransferRequests->registryAlias().'.id', $id);
-
-				// Show Transfer button only if the Student Status is Current
-				$institutionId = $this->Session->read('Institution.Institutions.id');
-				
-				$student = $StudentPromotion
-					->find()
-					->where([
-						$StudentPromotion->aliasField('institution_id') => $institutionId,
-						$StudentPromotion->aliasField('student_id') => $selectedStudent,
-						$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
-						$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
-					])
-					->first();
-
-				$checkIfCanTransfer = $this->checkIfCanTransfer($student);
-				// End
-
-				// Transfer button
-				$transferButton = $buttons['back'];
-				$transferButton['type'] = 'button';
-				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
-				$transferButton['attr'] = $attr;
-				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$transferButton['attr']['title'] = __('Transfer');
-				//End
-
-				$transferRequest = $TransferRequests
-						->find()
-						->where([
-							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
-							$TransferRequests->aliasField('student_id') => $selectedStudent,
-							$TransferRequests->aliasField('status') => 0
-						])
-						->first();
-
-				if (!empty($transferRequest)) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'edit',
-						$transferRequest->id
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				} else if ($checkIfCanTransfer) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'add'
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				} 
-			}
-
-			if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
-				// Institution student id
-				$id = $this->request->pass[1];
-				$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-				$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
-				$studentData = $this->get($id);
-				// Check if the student is enrolled
-				if ($studentData->student_status_id == $enrolledStatus) {
-
-					$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
-					$this->Session->write($DropoutRequests->registryAlias().'.id', $id);
-					$NEW = 0;
-					
-					$selectedStudent = $DropoutRequests->find()
-						->select(['institution_student_dropout_id' => 'id'])
-						->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
-								$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
-								$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
-								$DropoutRequests->aliasField('status') => $NEW
-							])
-						->first();
-
-					// Dropout button
-					$dropoutButton = $buttons['back'];
-					$dropoutButton['type'] = 'button';
-					$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
-					$dropoutButton['attr'] = $attr;
-					$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-					$dropoutButton['attr']['title'] = __('Dropout');
-
-					// If this is a new application
-					if (count($selectedStudent) == 0) {
-						$dropoutButton['url'] = [
-								'plugin' => $buttons['back']['url']['plugin'],
-								'controller' => $buttons['back']['url']['controller'],
-								'action' => 'DropoutRequests',
-								'add'
-							];
-					} 
-					// If the application is not new
-					else {
-						$dropoutButton['url'] = [
-								'plugin' => $buttons['back']['url']['plugin'],
-								'controller' => $buttons['back']['url']['controller'],
-								'action' => 'DropoutRequests',
-								'edit',
-								$selectedStudent->institution_student_dropout_id
-							];
-					}
-					$toolbarButtons['dropout'] = $dropoutButton;
-				}
-			}
-
 			if (isset($toolbarButtons['back'])) {
 				$refererUrl = $this->request->referer();
 				$toolbarButtons['back']['url'] = $refererUrl;
@@ -1100,7 +1102,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	private function checkIfCanTransfer($student) {
+	public function checkIfCanTransfer($student, $institutionId) {
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$studentStatusList = array_flip($StudentStatuses->findCodeList());
 		
@@ -1145,8 +1147,7 @@ class StudentsTable extends AppTable {
 			$studentEducationGradeOrder = [];
 			if (!empty($studentEducationGrade)) {
 				$studentEducationGradeOrder = $studentEducationGrade->order;
-			}					
-			$institutionId = $this->Session->read('Institution.Institutions.id');
+			}
 	
 			$advancedGradeOptionsLeft = $InstitutionEducationGrades
 				->find('list', [
@@ -1179,7 +1180,7 @@ class StudentsTable extends AppTable {
 		$InstitutionStudentCount = $InstitutionRecords
 			->matching('Users.Genders')
 			->select([
-				'count' => $InstitutionRecords->func()->count('DISTINCT student_id'),	
+				'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('student_id')),
 				'gender' => 'Genders.name'
 			])
 			->group(['gender']);

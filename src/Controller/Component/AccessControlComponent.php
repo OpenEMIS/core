@@ -18,7 +18,7 @@ class AccessControlComponent extends Component {
 		'separator' => '|'
 	];
 
-	public $components = ['Auth', 'ControllerAction'];
+	public $components = ['Auth'];
 
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
@@ -148,6 +148,8 @@ class AccessControlComponent extends Component {
 			$url = [$this->controller->name, $this->action];
 		}
 
+		$url = $this->checkAccessMap($url);
+
 		// check if the action is excluded from permissions checking
 		$action = next($url);
 		$controller = reset($url);
@@ -169,6 +171,35 @@ class AccessControlComponent extends Component {
 			}
 		}
 		return false;
+	}
+
+	public function checkAccessMap($url) {
+		$urlValues = array_values($url);
+		$key = implode('.', [$urlValues[0], $urlValues[1]]);
+
+		$paramKey = 'accessMap';
+		$request = $this->request;
+		if (array_key_exists($paramKey, $request->params)) {
+			$accessMap = $request->params['accessMap'];
+
+			if (array_key_exists($key, $accessMap)) {
+				$action = 'index';
+				if (isset($urlValues[2])) {
+					if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action
+						$action = $urlValues[2];
+					}
+				} else {
+					$paramsPass = $request->params['pass'];
+					if (count($paramsPass) > 0) {
+						if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
+							$action = array_shift($paramsPass);
+						}
+					}
+				}
+				$url = explode('.', sprintf($accessMap[$key], $action));
+			}
+		}
+		return $url;
 	}
 
 	private function isUuid($input) {

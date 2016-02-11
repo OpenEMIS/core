@@ -54,21 +54,16 @@ class ImportStaffAttendancesTable extends AppTable {
 		$Navigation->substituteCrumb($crumbTitle, $crumbTitle);
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
-		$tempRow['duplicates'] = false;
+	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 		$tempRow['entity'] = $this->StaffAbsences->newEntity();
-
 		$tempRow['full_day'] = 1;
 		$tempRow['institution_id'] = false;
 		$tempRow['academic_period_id'] = false;
-
 	}
 
-	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
-		// $importedUniqueCodes[] = $entity->code;
-	}
+	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
-	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
 
@@ -86,14 +81,15 @@ class ImportStaffAttendancesTable extends AppTable {
 		$institutionHeader = $this->getExcelLabel('Imports', 'institution_id') . ": " . $institution->name;
 		$nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
 		$columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
-		$data[$sheetName][] = [
+		$data[$columnOrder]['lookupColumn'] = 3;
+		$data[$columnOrder]['data'][] = [
 			$institutionHeader,
 			$nameHeader,
 			$columnHeader
 		];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
 					$institution->name,
 					$row->name,
 					$row->$lookupColumn
@@ -104,12 +100,12 @@ class ImportStaffAttendancesTable extends AppTable {
 
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
 		if (empty($tempRow['staff_id'])) {
-			$tempRow['duplicates'] = __('OpenEMIS ID was not defined.');
+			$rowInvalidCodeCols['staff_id'] = __('OpenEMIS ID was not defined');
 			return false;
 		}
 
 		if (!$this->institutionId) {
-			$tempRow['duplicates'] = __('No active institution');
+			$rowInvalidCodeCols['institution_id'] = __('No active institution');
 			$tempRow['institution_id'] = false;
 			return false;
 		}
@@ -123,13 +119,13 @@ class ImportStaffAttendancesTable extends AppTable {
 		}
 		$isEditable = $this->AcademicPeriods->getAvailableAcademicPeriods($currentPeriodId);
 		if (!$isEditable) {
-			$tempRow['duplicates'] = __('No data changes can be made for the current academic period');
+			$rowInvalidCodeCols['academic_period_id'] = __('No data changes can be made for the current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
 		$periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
 		if (!$periods) {
-			$tempRow['duplicates'] = __('No matching academic period based on the start date');
+			$rowInvalidCodeCols['academic_period_id'] = __('No matching academic period based on the start date');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
@@ -137,7 +133,7 @@ class ImportStaffAttendancesTable extends AppTable {
 		$periodIds = $periods->extract('id');
 		$periodIds = $periodIds->toArray();
 		if (!in_array($currentPeriodId, $periodIds)) {
-			$tempRow['duplicates'] = __('Date is not within current academic period');
+			$rowInvalidCodeCols['academic_period_id'] = __('Date is not within current academic period');
 			$tempRow['academic_period_id'] = false;
 			return false;
 		}
@@ -148,7 +144,7 @@ class ImportStaffAttendancesTable extends AppTable {
 			'staff_id' => $tempRow['staff_id'],
 		])->first();
 		if (!$staff) {
-			$tempRow['duplicates'] = __('No such staff in the institution');
+			$rowInvalidCodeCols['staff_id'] = __('No such staff in the institution');
 			$tempRow['staff_id'] = false;
 			return false;
 		}
@@ -158,7 +154,6 @@ class ImportStaffAttendancesTable extends AppTable {
 
 	public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
 		$flipped = array_flip($columns);
-		$original = $originalRow->getArrayCopy();
 		$key = $flipped['staff_id'];
 		$tempPassedRecord['data'][$key] = $originalRow[$key];
 	}

@@ -1,0 +1,122 @@
+/* BREADCRUMB v.1.0.4 */
+
+.breadcrumb {
+    clear: both;
+}
+
+.breadcrumb > li + li::before {
+    font-family: 'FontAwesome';
+    content: "\f054";
+    font-size: 0.6em;
+    margin: 0 2px;
+    color: #999;
+    font-weight: normal;
+    display: inline-block;
+}
+
+.panel-breadcrumb {
+    background-color: #FFF;
+    border-bottom: 1px solid #DDD;
+    border-radius: 0;
+    padding: 8px 0;
+    margin: 0;
+}
+
+.panel-breadcrumb i {
+    color: #999;
+}
+
+.panel-breadcrumb i:hover {
+    color: #6B6B6B;
+}
+
+.panel-breadcrumb li,
+.treemap-breadcrumb li {
+    margin: 0 !important;
+}
+
+.panel-breadcrumb li a {
+    color: #999;
+    font-weight: normal;
+}
+
+.breadcrumb-active,
+.panel-breadcrumb a:hover,
+.treemap-breadcrumb li a:hover {
+    color: #6B6B6B;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+.treemap-breadcrumb {
+    background: none;
+    margin: 2px;
+    padding: 8px 10px;
+    height: 35px;
+    font-weight: normal;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.treemap-breadcrumb li a,
+.treemap-breadcrumb li a:hover {
+    padding: 0;
+    background: none;
+    height: 18px;
+}
+
+.panel-toolbar .treemap-breadcrumb a:hover,
+.panel-toolbar .treemap-breadcrumb a:active,
+.panel-toolbar .treemap-breadcrumb a:focus,
+.panel-toolbar .treemap-breadcrumb a:visited,
+.panel-toolbar .treemap-breadcrumb a.active {
+    padding: 0;
+    background: none;
+}
+
+/*==========  Non-Mobile First Method  ==========*/
+
+@media only screen and (max-width : 480px) {
+    .panel-breadcrumb {
+        padding: 10px 0;
+    }
+}
+
+
+/* RTL BREADCRUMBS */
+
+.rtl .breadcrumb > li + li::before,
+.rtl .treemap-breadcrumb > li:after {
+    font-family: 'FontAwesome';
+    content: "\f053";
+    font-size: 0.6em;
+    margin: 0 2px;
+    color: #999;
+    font-weight: normal;
+    display: inline-block;
+}
+
+.rtl .treemap-breadcrumb > li:after {
+    margin: 0 8px 0 4px;
+}
+
+.rtl .panel-breadcrumb {
+    text-align: right;
+    padding: 8px 0;
+}
+
+.rtl .treemap-breadcrumb > li:after {
+    padding-left: 0 !important;
+}
+
+.rtl .treemap-breadcrumb > li.active:after {
+    display: none;
+}
+
+.rtl .treemap-breadcrumb > li + li:before {
+    display: none;
+}
+
+.rtl .panel-breadcrumb {
+    border-bottom: 1px solid #DDD;
+}

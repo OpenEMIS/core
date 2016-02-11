@@ -115,10 +115,6 @@ class UndoStudentStatusTable extends AppTable {
 				$buttons[1]['url'] = $this->ControllerAction->url('add');
 				break;
 		}
-
-		if (empty($this->dataCount)) {
-			$buttons->exchangeArray([]);
-		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {

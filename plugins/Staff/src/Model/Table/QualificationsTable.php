@@ -43,7 +43,8 @@ class QualificationsTable extends AppTable {
 
 		// temporary disable
 		$this->ControllerAction->field('file_name', 			['visible' => false]);
-		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
+		// file_content is a required field
+		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true], 'null'=>false]);
 
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
