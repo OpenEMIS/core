@@ -71,9 +71,7 @@ UPDATE field_options SET params = '{"model":"FieldOption.QualificationLevels"}' 
 CREATE TABLE `qualification_specialisation_subjects` (
   `id` char(36) CHARACTER SET utf8 NOT NULL,
   `qualification_specialisation_id` int(11) NOT NULL,
-  `education_subject_id` int(11) NOT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
+  `education_subject_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ALTER TABLE `qualification_specialisation_subjects`
