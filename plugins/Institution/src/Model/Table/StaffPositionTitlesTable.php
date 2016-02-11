@@ -52,166 +52,102 @@ class StaffPositionTitlesTable extends AppTable {
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$titleId = $entity->id;
-		// A
-		// Get a list of staff / group user id that belongs to the current title
-		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-		$query = $InstitutionStaffTable->find()
-			->innerJoin(['Institutions' => 'institutions'], [
-				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
-			])
-			->innerJoin(['Positions' => 'institution_positions'], [
-				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
-			])
-			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = Positions.staff_position_title_id',
-				'StaffPositionTitles.id' => $titleId
-			])
-			->leftJoin(['SecurityGroupUsers' => 'security_group_users'], [
-				'SecurityGroupUsers.security_user_id = '.$InstitutionStaffTable->aliasField('staff_id'),
-				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
-				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
-			]);
-
-		$cloneQuery = clone ($query);
-		$data['staffWithCurrentRole'] = $cloneQuery
-			->select([
-				'institution_staff_id' => $InstitutionStaffTable->aliasField('id'),
-				'security_group_users_id' => 'SecurityGroupUsers.id',
-				'staff_id' => $InstitutionStaffTable->aliasField('staff_id'),
-				'security_group_id' => 'Institutions.security_group_id',
-				'institution_position_id' => $InstitutionStaffTable->aliasField('institution_position_id')
-			])
-			->hydrate(false)
-			->toArray();
+		$oldRoleId = $entity->security_role_id;
+		$data['oldRoleId'] = $oldRoleId;
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 		$titleId = $entity->id;
-		$newSecurityRoleId = $entity->security_role_id;
-		$originalSecurityRoleId = $entity->getOriginal('security_role_id');
-		$staffInCurrentTitle = $data['staffWithCurrentRole'];
+		$newRole = $entity->security_role_id;
+		$oldRoleId = $data['oldRoleId'];
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-		$query = $InstitutionStaffTable->find()
+		$subQuery = $InstitutionStaffTable->find()
+			->select([
+				'security_group_user_id' => 'SecurityGroupUsers.id'
+			])
 			->innerJoin(['Institutions' => 'institutions'], [
 				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
 			])
 			->innerJoin(['Positions' => 'institution_positions'], [
 				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
 			])
-			->select(['institution_staff_id' => $InstitutionStaffTable->aliasField('id'), 'security_group_users_id' => 'SecurityGroupUsers.id']);
-
-		$cloneQuery = clone $query;
-
-		// B
-		// Get a list of staff / group user id that belongs to other titles but havint the same role id as the current title
-		$staffWithCurrentRole = $cloneQuery
 			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
 				'StaffPositionTitles.id = Positions.staff_position_title_id',
-				'StaffPositionTitles.id <> ' => $titleId
+				'StaffPositionTitles.id = '.$titleId
 			])
 			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
 				'SecurityGroupUsers.security_user_id = '.$InstitutionStaffTable->aliasField('staff_id'),
-				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
-				'SecurityGroupUsers.security_group_id = Institutions.security_group_id',
-				'SecurityGroupUsers.security_role_id' => $originalSecurityRoleId
+				'SecurityGroupUsers.security_role_id = '.$oldRoleId,
+				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
+			]);
+
+		// Subquery to get the security user id
+		$securityGroupUserIdQuery = $this->query()
+			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
+			->from(['GroupUsers' => $subQuery]);
+
+		pr($SecurityGroupUsersTable->updateAll(
+			['security_role_id' => $newRole],
+			['id IN ' => $securityGroupUserIdQuery]
+		));
+
+		$duplicateRecordQuery = $SecurityGroupUsersTable->find()
+			->select([
+				'id' => $SecurityGroupUsersTable->aliasField('id'),
+				'counter' => 1
 			])
-			->hydrate(false)
-			->toArray();
+			->group([
+				$SecurityGroupUsersTable->aliasField('security_user_id'),
+				$SecurityGroupUsersTable->aliasField('security_group_id'),
+				$SecurityGroupUsersTable->aliasField('security_role_id')
+			])
+			->having(['COUNT(counter) >' => 1])
+			;
 
-		$cloneQuery = clone $query;
+		$securityGroupUserIdQuery = $this->query()
+			->select(['security_group_user_id' => 'GroupUsers.id'])
+			->from(['GroupUsers' => $duplicateRecordQuery]);
 
-		// C
-		// Get a list of staff / group user id that belongs to the new role id
-		$staffBelongingToNewRole = $cloneQuery
+		pr($SecurityGroupUsersTable->deleteAll(['id IN ' => $securityGroupUserIdQuery]));
+
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+
+		$insertMissingRecords = $InstitutionStaffTable->find()
+			->innerJoin(['Institutions' => 'institutions'], [
+				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
+			])
+			->innerJoin(['Positions' => 'institution_positions'], [
+				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
+			])
 			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = Positions.staff_position_title_id'
+				'StaffPositionTitles.id = Positions.staff_position_title_id',
+				'StaffPositionTitles.id <> ' => 0
 			])
-			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
-				'SecurityGroupUsers.security_user_id = '.$InstitutionStaffTable->aliasField('staff_id'),
-				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
-				'SecurityGroupUsers.security_group_id = Institutions.security_group_id',
-				'SecurityGroupUsers.security_role_id' => $newSecurityRoleId
+			->where([
+				'NOT EXISTS('.
+					$SecurityGroupUsersTable->find()
+						->where([
+							$SecurityGroupUsersTable->aliasField('security_user_id').' = '.$InstitutionStaffTable->aliasField('staff_id'),
+							$SecurityGroupUsersTable->aliasField('security_group_id').' = Institutions.security_group_id',
+							$SecurityGroupUsersTable->aliasField('security_role_id').' = StaffPositionTitles.security_role_id'
+						])
+				.')'
+
+			])
+			->select([
+				'security_user_id' => $InstitutionStaffTable->aliasField('staff_id'), 
+				'security_role_id' => 'StaffPositionTitles.security_role_id',
+				'security_group_id' => 'Institutions.security_group_id'
 			])
 			->hydrate(false)
 			->toArray();
-		
-		// staff in current title security group user id (A)
-		$staffInCurrentTitleSGUId = $this->array_column($staffInCurrentTitle, 'security_group_users_id');
-		// staff in existing role but does not belong to the same title's security group user id (B)
-		$staffWithCurrentRoleSGUId = $this->array_column($staffWithCurrentRole, 'security_group_users_id');
-		// staff in new roles's security group user id (C)
-		$staffBelongingToNewRoleIdSGUId = $this->array_column($staffBelongingToNewRole, 'security_group_users_id');
 
-		// Records that may be either updated or deleted (D)
-		$recordsToBeProcessed = array_diff($staffInCurrentTitleSGUId, $staffWithCurrentRoleSGUId);
-		$recordsToBeProcessed = array_intersect_key($staffInCurrentTitle, $recordsToBeProcessed);
-
-		// Records that may be inserted (E)
-		$recordsToBeInserted = array_intersect($staffInCurrentTitleSGUId, $staffWithCurrentRoleSGUId);
-
-		// Records that has been check against existing new role id and are ready to be inserted (F)
-		$recordsToBeInserted = array_diff($recordsToBeInserted, $staffBelongingToNewRoleIdSGUId);
-		$recordsToBeInserted = array_intersect_key($staffInCurrentTitle, $recordsToBeInserted);
-
-		// Logic to handle insertion of security group user records
-		foreach ($recordsToBeInserted as $value) {
-			$staffId = $value['staff_id'];
-			$securityGroupId = $value['security_group_id'];
-			$obj = [
-				'security_group_id' => $securityGroupId, 
-				'security_role_id' => $newSecurityRoleId, 
-				'security_user_id' => $staffId
-			];
-			$entity = $SecurityGroupUsersTable->newEntity($obj);
+		foreach($insertMissingRecords as $record) {
+			$entity = $SecurityGroupUsersTable->newEntity($record);
 			$SecurityGroupUsersTable->save($entity);
-		}
-
-		// staff with new role's institution staff id
-		$staffBelongingToNewRoleISId = $this->array_column($staffBelongingToNewRole, 'institution_staff_id');
-
-		// staff records to be processed's institution staff id
-		$recordsToBeProcessedISId = $this->array_column($recordsToBeProcessed, 'institution_staff_id');
-
-		// Records that has been check against existing new role id and are ready to be updated (G)
-		$recordsToBeUpdated = array_diff($recordsToBeProcessedISId, $staffBelongingToNewRoleISId);
-
-		// Records remaining in the records to be processed will be send for deletion (H)
-		$recordsToBeDeleted = array_diff($recordsToBeProcessedISId, $recordsToBeUpdated);
-
-		// Logic to handle update of security group user records
-		$recordsToBePatched = array_intersect_key($recordsToBeProcessed, $recordsToBeUpdated);
-		$recordsToBeUpdated = $this->array_column($recordsToBePatched, 'security_group_users_id');
-		$recordsToBeUpdated = array_filter($recordsToBeUpdated);
-		foreach ($recordsToBeUpdated as $value) {
-			$groupRecord = $SecurityGroupUsersTable->get($value);
-			$groupRecord->security_role_id = $newSecurityRoleId;
-			$SecurityGroupUsersTable->save($groupRecord);
-		}
-
-		// Logic to handle unassigned security role position
-		$recordToInsert = array_diff_key($recordsToBePatched, $recordsToBeUpdated);
-		foreach ($recordToInsert as $value) {
-			$staffId = $value['staff_id'];
-			$securityGroupId = $value['security_group_id'];
-			$obj = [
-				'security_group_id' => $securityGroupId, 
-				'security_role_id' => $newSecurityRoleId, 
-				'security_user_id' => $staffId
-			];
-			$entity = $SecurityGroupUsersTable->newEntity($obj);
-			$SecurityGroupUsersTable->save($entity);
-		}
-
-		// Logic to handle delete of security group user records
-		$recordsToBeDeleted = array_intersect_key($recordsToBeProcessed, $recordsToBeDeleted);
-		$recordsToBeDeleted = $this->array_column($recordsToBeDeleted, 'security_group_users_id');
-		$recordsToBeDeleted = array_filter($recordsToBeDeleted);
-		foreach ($recordsToBeDeleted as $value) {
-			$groupRecord = $SecurityGroupUsersTable->get($value);
-			$SecurityGroupUsersTable->delete($groupRecord);
 		}
 	}
 

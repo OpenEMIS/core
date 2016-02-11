@@ -205,8 +205,7 @@ class StaffTable extends AppTable {
 				'security_role_id' => $securityRoleId, 
 				'security_user_id' => $staffId
 			];
-			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-			return $GroupUsers->save($GroupUsers->newEntity($obj));
+			return $SecurityGroupUsersTable->save($SecurityGroupUsersTable->newEntity($obj));
 		} else {
 			return true;
 		}
