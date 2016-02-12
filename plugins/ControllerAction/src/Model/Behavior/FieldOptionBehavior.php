@@ -144,6 +144,10 @@ class FieldOptionBehavior extends Behavior {
 		$model = $this->_table;
 		$model->field('name', ['after' => 'editable']);
 		$fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
-		$model->setFieldVisible(['index'], $fields);
+		foreach ($fields as $field) {
+			if (array_key_exists($field, $model->fields)) {
+				$model->fields[$field]['visible']['index'] = true;
+			}
+		}
 	}
 }
