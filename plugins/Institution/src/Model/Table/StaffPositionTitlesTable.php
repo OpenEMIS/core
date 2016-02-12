@@ -1,16 +1,16 @@
 <?php
 namespace Institution\Model\Table;
 
-use Cake\Event\Event;
-use Cake\ORM\Entity;
-use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
-use Cake\ORM\TableRegistry;
-use Cake\Utility\Text;
-
 use ArrayObject;
 
-class StaffPositionTitlesTable extends AppTable {
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Network\Session;
+
+use App\Model\Table\ControllerActionTable;
+
+class StaffPositionTitlesTable extends ControllerActionTable {
 	public function initialize(array $config) {
         $this->addBehavior('ControllerAction.FieldOption');
         $this->table('staff_position_titles');
@@ -19,49 +19,43 @@ class StaffPositionTitlesTable extends AppTable {
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id']);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
-
-		$this->systemRolesList = $this->SecurityRoles->getSystemRolesList();
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator->notEmpty('security_role_id');
-		return $validator;
-	}
-
-	public function beforeAction($event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('type', [
 			'visible' => true,
-			'type' => 'select',
 			'options' => $this->getSelectOptions('Staff.position_types'),
 			'after' => 'name'
 		]);
+
+		$extra['roleList'] = ['' => '-- '.__('Select Role').' --'] + $this->SecurityRoles->getSystemRolesList();
+		$this->field('security_role_id', ['after' => 'type', 'options' => $extra['roleList']]);
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$systemRolesList = ['' => '--'.__('Select One').'--'] + $this->systemRolesList;
-		$this->field('security_role_id', [
-			'visible' => true,
-			'type' => 'select',
-			'options' => $systemRolesList,
-			'after' => 'type'
-		]);
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('type', ['after' => 'name']);
+		$this->field('security_role_id', ['after' => 'type']);
 	}
 
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$oldRoleId = $entity->getOriginal('security_role_id');
-		$data['oldRoleId'] = intval($oldRoleId);
+	public function onGetType(Event $event, Entity $entity) {
+		$types = $this->getSelectOptions('Staff.position_types');
+		return array_key_exists($entity->type, $types) ? $types[$entity->type] : $entity->type;
 	}
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$titleId = $entity->id;
-		$newRole = $entity->security_role_id;
-		$oldRoleId = $data['oldRoleId'];
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew() && $entity->dirty('security_role_id')) {
+			$oldRoleId = $entity->getOriginal('security_role_id');
+			$newRoleId = $entity->security_role_id;
+			$titleId = $entity->id;
 
+			$this->securityRolesUpdates($oldRoleId, $newRoleId, $titleId);
+			$this->securityRolesDeletes();
+			$this->securityRolesInserts();
+		}
+	}
+
+	private function securityRolesUpdates($oldRoleId, $newRoleId, $titleId) {
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
@@ -91,9 +85,13 @@ class StaffPositionTitlesTable extends AppTable {
 			->from(['GroupUsers' => $subQuery]);
 
 		$SecurityGroupUsersTable->updateAll(
-			['security_role_id' => $newRole],
+			['security_role_id' => $newRoleId],
 			['id IN ' => $securityGroupUserIdQuery]
 		);
+	}
+
+	private function securityRolesDeletes() {
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 
 		// Query to delete duplicate records
 		$duplicateRecordQuery = $SecurityGroupUsersTable->find()
@@ -141,6 +139,13 @@ class StaffPositionTitlesTable extends AppTable {
 			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
 			->from(['GroupUsers' => $deleteWrongRecordsQuery]);
 		$SecurityGroupUsersTable->deleteAll(['id NOT IN' => $deleteQuery]);
+	}
+
+	private function securityRolesInserts() {
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+		$session = new Session();
+		$userId = $session->read('Auth.User.id');
 
 		// Query to insert missing security role records
 		$insertMissingRecords = $InstitutionStaffTable->find()
@@ -169,7 +174,7 @@ class StaffPositionTitlesTable extends AppTable {
 				'security_user_id' => $InstitutionStaffTable->aliasField('staff_id'), 
 				'security_role_id' => 'StaffPositionTitles.security_role_id',
 				'security_group_id' => 'Institutions.security_group_id',
-				'created_user_id' => intval($this->Auth->user()),
+				'created_user_id' => intval($userId),
 				'created' => $InstitutionStaffTable->find()->func()->now()
 			]);
 
@@ -177,22 +182,5 @@ class StaffPositionTitlesTable extends AppTable {
 			->insert(['id', 'security_user_id', 'security_role_id', 'security_group_id', 'created_user_id', 'created'])
 			->values($insertMissingRecords)
 			->execute();
-
-		
-	}
-
-	public function onGetType(Event $event, Entity $entity) {
-		$types = $this->getSelectOptions('Staff.position_types');
-		return array_key_exists($entity->type, $types) ? $types[$entity->type] : $entity->type;
-	}
-
-	public function onGetSecurityRoleId(Event $event, Entity $entity) {
-		$systemRole = $this->systemRolesList;
-		return array_key_exists($entity->security_role_id, $systemRole) ? $systemRole[$entity->security_role_id] : $entity->security_role_id;
-	}
-
-	public function indexBeforeAction(Event $event) {
-		$this->field('type', ['after' => 'name', 'visible' => true]);
-		$this->field('security_role_id', ['after' => 'type', 'visible' => true]);
 	}
 }
