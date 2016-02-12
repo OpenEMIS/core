@@ -53,7 +53,7 @@ class ContactsTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function afterAction(Event $event) {
 		$this->setupTabElements();
 	}
 

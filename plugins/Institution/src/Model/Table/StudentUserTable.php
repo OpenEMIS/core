@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Network\Session;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
@@ -21,13 +22,35 @@ class StudentUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator
+			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+				'on' => 'create'
+			])
+			;
+		return $validator;
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$sessionKey = 'Institution.Students.new';
+		if ($this->Session->check($sessionKey)) {
+			$academicData = $this->Session->read($sessionKey);
+			$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
+		} else {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			return $this->controller->redirect($action);
+		}
+	}
+
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
 			$academicData['student_id'] = $entity->id;
-			$class = $academicData['class'];
-			unset($academicData['class']);
+			// $class = $academicData['class'];
+			// unset($academicData['class']);
 			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
@@ -37,16 +60,8 @@ class StudentUserTable extends UserTable {
 				}
 
 				$newStudentEntity = $Student->newEntity($academicData);
-				if ($Student->save($newStudentEntity)) {
-					if ($class > 0) {
-						$sectionData = [];
-						$sectionData['student_id'] = $entity->id;
-						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-						$sectionData['institution_section_id'] = $class;
-						$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-						$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
-					}
-				} else {
+				$newStudentEntity->class = $academicData['class']; // add the class value so the student will be added to the selected class
+				if (!$Student->save($newStudentEntity)) {
 					$validationErrors = [];
 					foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
 						foreach ($nvalue as $ekey => $evalue) {
@@ -59,7 +74,29 @@ class StudentUserTable extends UserTable {
 					$event->stopPropagation();
 					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
 					return $this->controller->redirect($action);
+					// if ($class > 0) {
+					// 	$sectionData = [];
+					// 	$sectionData['student_id'] = $entity->id;
+					// 	$sectionData['education_grade_id'] = $academicData['education_grade_id'];
+					// 	$sectionData['institution_section_id'] = $class;
+					// 	$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+					// 	$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+					// }
 				}
+				//  else {
+				// 	$validationErrors = [];
+				// 	foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
+				// 		foreach ($nvalue as $ekey => $evalue) {
+				// 			$validationErrors[] = $evalue;
+				// 		}
+				// 	}
+
+				// 	$validationErrors = implode('; ', $validationErrors);
+				// 	$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
+				// 	$event->stopPropagation();
+				// 	$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+				// 	return $this->controller->redirect($action);
+				// }
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 				$admissionStatus = 1;
@@ -126,12 +163,134 @@ class StudentUserTable extends UserTable {
     	return $events;
     }
 
+    private function addTransferButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session) {
+    	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
+		$id = $session->read('Institution.Students.id');
+		$studentStatusId = $InstitutionStudentsTable->get($id)->student_status_id;	
+		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
+			$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
+			$studentData = $InstitutionStudentsTable->get($id);
+			$selectedStudent = $studentData->student_id;
+			$selectedPeriod = $studentData->academic_period_id;
+			$selectedGrade = $studentData->education_grade_id;
+			$session->write($TransferRequests->registryAlias().'.id', $id);
+
+			// Show Transfer button only if the Student Status is Current
+			$institutionId = $session->read('Institution.Institutions.id');
+			$student = $StudentPromotion
+				->find()
+				->where([
+					$StudentPromotion->aliasField('institution_id') => $institutionId,
+					$StudentPromotion->aliasField('student_id') => $selectedStudent,
+					$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
+					$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
+				])
+				->first();
+				
+			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($student, $institutionId);
+			// End
+
+			// Transfer button
+			$transferButton = $buttons['back'];
+			$transferButton['type'] = 'button';
+			$transferButton['label'] = '<i class="fa kd-transfer"></i>';
+			$transferButton['attr'] = $attr;
+			$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+			$transferButton['attr']['title'] = __('Transfer');
+			//End
+
+			$transferRequest = $TransferRequests
+					->find()
+					->where([
+						$TransferRequests->aliasField('previous_institution_id') => $institutionId,
+						$TransferRequests->aliasField('student_id') => $selectedStudent,
+						$TransferRequests->aliasField('status') => 0
+					])
+					->first();
+
+			if (!empty($transferRequest)) {
+				$transferButton['url'] = [
+					'plugin' => $buttons['back']['url']['plugin'],
+					'controller' => $buttons['back']['url']['controller'],
+					'action' => 'TransferRequests',
+					'edit',
+					$transferRequest->id
+				];
+				$toolbarButtons['transfer'] = $transferButton;
+			} 
+			else if ($checkIfCanTransfer) {
+				$transferButton['url'] = [
+					'plugin' => $buttons['back']['url']['plugin'],
+					'controller' => $buttons['back']['url']['controller'],
+					'action' => 'TransferRequests',
+					'add'
+				];
+				$toolbarButtons['transfer'] = $transferButton;
+			} 
+		}
+    }
+
+    private function addDropoutButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session) {
+    	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+		if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
+			// Institution student id
+			$id = $session->read('Institution.Students.id');
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
+			$studentData = $InstitutionStudentsTable->get($id);
+			// Check if the student is enrolled
+			if ($studentData->student_status_id == $enrolledStatus) {
+
+				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
+				$session->write($DropoutRequests->registryAlias().'.id', $id);
+				$NEW = 0;
+				
+				$selectedStudent = $DropoutRequests->find()
+					->select(['institution_student_dropout_id' => 'id'])
+					->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
+							$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
+							$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
+							$DropoutRequests->aliasField('status') => $NEW
+						])
+					->first();
+
+				// Dropout button
+				$dropoutButton = $buttons['back'];
+				$dropoutButton['type'] = 'button';
+				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
+				$dropoutButton['attr'] = $attr;
+				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$dropoutButton['attr']['title'] = __('Dropout');
+
+				// If this is a new application
+				if (count($selectedStudent) == 0) {
+					$dropoutButton['url'] = [
+							'plugin' => $buttons['back']['url']['plugin'],
+							'controller' => $buttons['back']['url']['controller'],
+							'action' => 'DropoutRequests',
+							'add'
+						];
+				} 
+				// If the application is not new
+				else {
+					$dropoutButton['url'] = [
+							'plugin' => $buttons['back']['url']['plugin'],
+							'controller' => $buttons['back']['url']['controller'],
+							'action' => 'DropoutRequests',
+							'edit',
+							$selectedStudent->institution_student_dropout_id
+						];
+				}
+				$toolbarButtons['dropout'] = $dropoutButton;
+			}
+		}
+    }
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 			unset($toolbarButtons['back']);
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $this->request->query('id');
 			if (!empty($id)) {
@@ -147,6 +306,11 @@ class StudentUserTable extends UserTable {
 				}
 			}
 			// End PHPOE-1897
+			
+			$session = $this->request->session();
+			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
+			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
+
 		} else if ($action == 'add') {
 			$toolbarButtons['back']['url'] = $this->request->referer(true);
 			if ($toolbarButtons->offsetExists('export')) {

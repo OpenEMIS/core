@@ -260,12 +260,6 @@ ALTER TABLE `student_guardians`
 DROP INDEX `student_id` ,
 ADD INDEX `security_user_id` (`student_id`);
 
--- staff_activities
-ALTER TABLE `staff_activities` 
-CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '',
-DROP INDEX `staff_id` ,
-ADD INDEX `security_user_id` (`security_user_id`);
-
 -- staff_custom_field_values
 ALTER TABLE `staff_custom_field_values` 
 CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '',
@@ -328,12 +322,6 @@ ADD INDEX `security_user_id` (`security_user_id`);
 ALTER TABLE `student_custom_table_cells` 
 CHANGE COLUMN `student_id` `security_user_id` INT(11) NOT NULL COMMENT '' ;
 
--- guardian_activities
-ALTER TABLE `guardian_activities` 
-CHANGE COLUMN `guardian_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
-DROP INDEX `guardian_id` ,
-ADD INDEX `security_user_id` (`security_user_id`);
-
 -- assessment_item_results
 ALTER TABLE `assessment_item_results` 
 DROP INDEX `student_id` ,
@@ -373,9 +361,21 @@ RENAME TO  `student_activities` ;
 ALTER TABLE `z_2193_staff_activities` 
 RENAME TO  `staff_activities` ;
 
+-- staff_activities
+ALTER TABLE `staff_activities` 
+CHANGE COLUMN `staff_id` `security_user_id` INT(11) NOT NULL COMMENT '',
+DROP INDEX `staff_id` ,
+ADD INDEX `security_user_id` (`security_user_id`);
+
 -- guardian_activities
 ALTER TABLE `z_2193_guardian_activities` 
 RENAME TO  `guardian_activities` ;
+
+-- guardian_activities
+ALTER TABLE `guardian_activities` 
+CHANGE COLUMN `guardian_id` `security_user_id` INT(11) NOT NULL COMMENT '' ,
+DROP INDEX `guardian_id` ,
+ADD INDEX `security_user_id` (`security_user_id`);
 
 -- security_functions
 UPDATE `security_functions` SET `module`='Students', `category`='General' WHERE `id`=2000;
@@ -429,6 +429,23 @@ UPDATE `security_functions` SET `module`='Staff', `category`='Training' WHERE `i
 UPDATE `security_functions` SET `module`='Staff', `category`='General' WHERE `id`=3027;
 
 DELETE FROM `security_functions` WHERE `id` >= 7000 AND `id` <= 7035;
+
+-- removal of security_function for guardians module
+INSERT INTO `security_functions` SELECT * FROM `z_2193_security_function`;
+DROP TABLE `z_2193_security_function`;
+
+-- security_functions (Missing permission for data quality report)
+DELETE FROM `security_functions` WHERE `id` = 6007;
+UPDATE `security_functions` SET `name`='Audit', `_view`='Audit.index', `_add`='Audit.add', `_execute`='Audit.download' WHERE `id`=6006;
+UPDATE `security_functions` SET `name`='InstitutionRubrics' WHERE `id`=6004;
+
+-- removal of security_role_functions
+UPDATE `security_role_functions` INNER JOIN `z_2193_security_role_functions` ON `security_role_functions`.`id` = `z_2193_security_role_functions`.`id`
+SET `security_role_functions`.`security_function_id` = `z_2193_security_role_functions`.`security_function_id`;
+DROP TABLE `z_2193_security_role_functions`;
+
+-- security_functions
+UPDATE `security_functions` SET `_execute` = NULL WHERE `id`=3010;
 
 -- labels
 DELETE FROM `labels` WHERE `module` = 'Results' AND `field` = 'assessment_grading_option_id' AND `field_name` = 'Student -> Results';

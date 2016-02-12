@@ -26,8 +26,19 @@ class DirectoriesController extends AppController {
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
-					
-			
+
+
+			// Users - Health
+			'Healths' 				=> ['className' => 'Health.Healths'],
+			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
+			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
+			'HealthFamilies' 		=> ['className' => 'Health.Families'],
+			'HealthHistories' 		=> ['className' => 'Health.Histories'],
+			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
+			'HealthMedications' 	=> ['className' => 'Health.Medications'],
+			'HealthTests' 			=> ['className' => 'Health.Tests'],
+
+
 			// Student
 			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
 			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
@@ -40,8 +51,8 @@ class DirectoriesController extends AppController {
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
-			'StudentAwards' 		=> ['className' => 'User.Awards'],	
-			
+			'StudentAwards' 		=> ['className' => 'User.Awards'],
+
 
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
@@ -57,11 +68,15 @@ class DirectoriesController extends AppController {
 			'StaffMemberships'		=> ['className' => 'Staff.Memberships'],
 			'StaffLicenses'			=> ['className' => 'Staff.Licenses'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
-			'TrainingResults'		=> ['className' => 'Staff.TrainingResults'],
+			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
 			'StaffBankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'StaffAwards' 			=> ['className' => 'User.Awards'],
+
+			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
 		];
 
+		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
 
 		$this->set('contentHeader', 'Directories');
@@ -97,7 +112,7 @@ class DirectoriesController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -106,33 +121,17 @@ class DirectoriesController extends AppController {
 			$header = '';
 			$userId = $session->read('Directory.Directories.id');
 
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $session->read('AccessControl.Institutions.ids');
-				$studentId = $session->read('Student.Students.id');
-				$enrolledStatus = false;
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				foreach ($institutionIds as $id) {
-					$enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-					if ($enrolledStatus) {
-						break;
-					}
-				}
-				if (! $enrolledStatus) {
-					if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
-						$this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
-					}
-				}
-			}
-
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
 			}
 
 			$alias = $model->alias;
-			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
+			else if ($alias == 'StaffSections') $alias = 'Staff Classes';
+			else if ($alias == 'StaffClasses') $alias = 'Staff Subjects';
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
 			// $params = $this->request->params;
@@ -200,9 +199,9 @@ class DirectoriesController extends AppController {
 				}
 			}
 		} else {
-			if ($model->alias() == 'ImportStudents') {
+			if ($model->alias() == 'ImportUsers') {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
-				$header = __('Students') . ' - ' . $model->getHeader($model->alias());
+				$header = __('Users') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
 			} else {
 				$this->Alert->warning('general.notExists');
@@ -266,6 +265,10 @@ class DirectoriesController extends AppController {
 			'Nationalities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
+			],
+			'Contacts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts', $id],
+				'text' => __('Contacts')	
 			],
 			'Languages' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
@@ -417,6 +420,7 @@ class DirectoriesController extends AppController {
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
 			'TrainingResults' => ['text' => __('Training Results')],
+			'TrainingNeeds' => ['text' => __('Training Needs')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

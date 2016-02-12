@@ -42,7 +42,17 @@ class StaffController extends AppController {
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
 			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
-			'Achievements'		=> ['className' => 'Staff.Achievements']
+			'Achievements'		=> ['className' => 'Staff.Achievements'],
+
+			// Healths
+			'Healths' 				=> ['className' => 'Health.Healths'],
+			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
+			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
+			'HealthFamilies' 		=> ['className' => 'Health.Families'],
+			'HealthHistories' 		=> ['className' => 'Health.Histories'],
+			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
+			'HealthMedications' 	=> ['className' => 'Health.Medications'],
+			'HealthTests' 			=> ['className' => 'Health.Tests']
 		];
 
 		$this->loadComponent('Training.Training');
@@ -63,8 +73,7 @@ class StaffController extends AppController {
 		$header = __('Staff');
 
 		if ($action == 'index') {
-			$session->delete('Staff.Staff.id');
-			$session->delete('Staff.Staff.name');
+			
 		} else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
 			// add the student name to the header
 			$id = 0;
@@ -72,20 +81,21 @@ class StaffController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Staff.Staff.id')) {
 				$id = $session->read('Staff.Staff.id');
+			} else if ($session->check('Institution.Staff.id')) {
+				$id = $session->read('Institution.Staff.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Staff->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$institutionStaffId = $session->read('Institution.Staff.id');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'view', $institutionStaffId]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id]);
 			}
 		}
 		$this->set('contentHeader', $header);
     }
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**
 		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -99,10 +109,10 @@ class StaffController extends AppController {
 			}
 
 			$alias = $model->alias;
-			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
 			// $params = $this->request->params;

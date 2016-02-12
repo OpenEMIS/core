@@ -68,15 +68,6 @@ class BankAccountsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('remarks', $order++);
 	}
 
-	public function onGetActive(Event $event, Entity $entity) {
-		$active = $entity->active;
-		if ($active == 1) {
-			return __('Yes');
-		} else {
-			return __('No');
-		}
-	}
-
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -84,6 +75,14 @@ class BankAccountsTable extends AppTable {
 			->add('bank_name', [
 			])
 		;
+	}
+
+	public function onGetActive(Event $event, Entity $entity) {
+		$icons = [
+			0 => '<i class="fa kd-cross red"></i>', 
+			1 => '<i class="fa kd-check green"></i>'
+		];
+		return $icons[$entity->active];
 	}
 
 	private function setupTabElements() {
@@ -115,7 +114,7 @@ class BankAccountsTable extends AppTable {
 		}
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function afterAction(Event $event) {
 		$this->setupTabElements();
 	}
 }
