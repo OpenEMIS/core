@@ -680,6 +680,13 @@ class StaffAttendancesTable extends AppTable {
 				}
 			}
 		}
+
+		$selectedDay = $this->request->query('day');
+		if ($selectedDay == -1) { // selecting all days
+			$toolbarArray = $toolbarButtons->getArrayCopy();
+			unset($toolbarArray['edit']);
+			$toolbarButtons->exchangeArray($toolbarArray);
+		}
 	}
 
 	public function indexEdit() {
