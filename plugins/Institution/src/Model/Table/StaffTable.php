@@ -174,7 +174,8 @@ class StaffTable extends AppTable {
 		$this->dashboardQuery = clone $query;
 	}
 
-	public function addStaffRole($institutionPositionId, $staffId, $securityGroupId) {
+	public function addStaffRole($institutionPositionId, $staffId, $institutionId) {
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 		$securityRoleId = $this->Positions->find()
 			->where([
 				$this->Positions->aliasField('id') => $institutionPositionId
@@ -254,13 +255,14 @@ class StaffTable extends AppTable {
 					$this->aliasField('institution_position_id') => $institutionPositionId,
 					$this->aliasField('institution_id') => $institutionId
 			], [], true)
+			->distinct(['security_group_users_id'])
 			->hydrate(false)
 			->bufferResults(false)
 			->toArray();
-
+		
 		$groupUserIds = array_diff($currentRole, $activeRoles);
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 		foreach ($groupUserIds as $id) {
 			$entity = $SecurityGroupUsersTable->get($id);
 			$SecurityGroupUsersTable->delete($entity);
@@ -343,10 +345,9 @@ class StaffTable extends AppTable {
 				unset($entity->staff_status);
 				unset($entity->position);
 				unset($entity->user);
-				
 				$newEntity = $this->newEntity($entity->toArray());
 				if (!$this->save($newEntity)) {
-					$this->addStaffRole($institutionPositionId, $staffId, $securityGroupId);
+					$this->addStaffRole($institutionPositionId, $staffId, $institutionId);
 				} else {
 					$url = [
 						'plugin' => 'Institution', 
@@ -363,13 +364,13 @@ class StaffTable extends AppTable {
 				$currentCakeTime = Time::now();
 				$todayDate = Time::parseDate($currentCakeTime);
 				if (empty($entity->end_date) || (!empty($entity->end_date) && $entity->end_date >= $todayDate)) {	
-					$this->addStaffRole($institutionPositionId, $staffId, $securityGroupId);
+					$this->addStaffRole($institutionPositionId, $staffId, $institutionId);
 				} else {
 					$this->removeStaffRole($institutionPositionId, $staffId, $institutionId);
 				}
 			}
 		} else { // add operation
-			$this->addStaffRole($institutionPositionId, $staffId, $securityGroupId);
+			$this->addStaffRole($institutionPositionId, $staffId, $institutionId);
 		}
 	}
 
@@ -991,6 +992,7 @@ class StaffTable extends AppTable {
 			->where([function ($exp) use ($InstitutionStaffTable, $query) {
 						return $exp->lt($InstitutionStaffTable->aliasField('end_date'), $query->func()->now('date'));
 					}], [], true)
+			->distinct(['security_group_users_id'])
 			->hydrate(false)
 			->toArray();
 
