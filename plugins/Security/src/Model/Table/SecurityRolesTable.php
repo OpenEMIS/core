@@ -12,7 +12,6 @@ use App\Model\Traits\MessagesTrait;
 
 class SecurityRolesTable extends AppTable {
 	use MessagesTrait;
-	const SYSTEMROLE_GROUPID = [-1,0];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -257,9 +256,10 @@ class SecurityRolesTable extends AppTable {
 	}
 
 	public function getSystemRolesList() {
+		$systemRoleGroupIds = [-1,0];
 		return $this->find('list')
 			->where([
-				$this->aliasField('security_group_id').' IN ' => self::SYSTEMROLE_GROUPID
+				$this->aliasField('security_group_id').' IN ' => $systemRoleGroupIds
 			])
 			->order([$this->aliasField('order')])
 			->hydrate(false)
