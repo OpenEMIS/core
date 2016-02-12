@@ -10,6 +10,7 @@ class EducationFieldOfStudiesTable extends AppTable {
 		$this->addBehavior('Education.Setup');
 		$this->belongsTo('ProgrammeOrientations', ['className' => 'Education.EducationProgrammeOrientations', 'foreignKey' => 'education_programme_orientation_id']);
 		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
+		$this->addBehavior('RestrictAssoicatedDelete');
 	}
 
 	public function addEditBeforeAction(Event $event) {
