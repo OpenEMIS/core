@@ -16,23 +16,25 @@ class FieldOptionsController extends AppController {
 		$controller = $this->name;
 		$this->request->addParams([
 			'accessMap' => [
-				"$controller.Genders" 				=> "$controller.%s",
-				"$controller.Localities" 			=> "$controller.%s",
-				"$controller.Ownerships" 			=> "$controller.%s",
-				"$controller.Providers" 			=> "$controller.%s",
-				"$controller.Sectors" 				=> "$controller.%s",
-				"$controller.Statuses" 				=> "$controller.%s",
-				"$controller.Types" 				=> "$controller.%s",
-				"$controller.NetworkConnectivities" => "$controller.%s",
-				"$controller.StaffPositionGrades" 	=> "$controller.%s",
-				"$controller.StaffPositionTitles" 	=> "$controller.%s",
-				"$controller.AllergyTypes" 			=> "$controller.%s",
-				"$controller.ConsultationTypes" 	=> "$controller.%s",
-				"$controller.Relationships" 		=> "$controller.%s",
-				"$controller.Conditions" 			=> "$controller.%s",
-				"$controller.ImmunizationTypes" 	=> "$controller.%s",
-				"$controller.TestTypes" 			=> "$controller.%s",
-				"$controller.QualityVisitTypes" 	=> "$controller.%s"
+				"$controller.Genders" 					=> "$controller.%s",
+				"$controller.Localities" 				=> "$controller.%s",
+				"$controller.Ownerships" 				=> "$controller.%s",
+				"$controller.Providers" 				=> "$controller.%s",
+				"$controller.Sectors" 					=> "$controller.%s",
+				"$controller.Statuses" 					=> "$controller.%s",
+				"$controller.Types" 					=> "$controller.%s",
+				"$controller.NetworkConnectivities" 	=> "$controller.%s",
+				"$controller.StaffPositionGrades" 		=> "$controller.%s",
+				"$controller.StaffPositionTitles" 		=> "$controller.%s",
+				"$controller.AllergyTypes" 				=> "$controller.%s",
+				"$controller.ConsultationTypes" 		=> "$controller.%s",
+				"$controller.Relationships" 			=> "$controller.%s",
+				"$controller.Conditions" 				=> "$controller.%s",
+				"$controller.ImmunizationTypes" 		=> "$controller.%s",
+				"$controller.TestTypes" 				=> "$controller.%s",
+				"$controller.QualityVisitTypes" 		=> "$controller.%s",
+				"$controller.InfrastructureOwnerships" 	=> "$controller.%s",
+				"$controller.InfrastructureConditions" 	=> "$controller.%s"
 			]
 		]);
 	}
@@ -74,4 +76,6 @@ class FieldOptionsController extends AppController {
 	public function ImmunizationTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'Health.ImmunizationTypes']); }
 	public function TestTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'Health.TestTypes']); }
 	public function QualityVisitTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.QualityVisitTypes']); }
+	public function InfrastructureOwnerships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 	'className' => 'FieldOption.InfrastructureOwnerships']); }
+	public function InfrastructureConditions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 	'className' => 'FieldOption.InfrastructureConditions']); }
 }
