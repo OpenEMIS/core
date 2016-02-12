@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\ORM\TableRegistry;
 
 class PermissionsTable extends AppTable {
 	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
@@ -46,7 +47,7 @@ class PermissionsTable extends AppTable {
 		$this->ControllerAction->field('_delete', $checkboxOptions);
 		$this->ControllerAction->field('_execute', $checkboxOptions);
 
-		$modules = ['Institutions', 'Guardians', 'Directory', 'Reports', 'Administration'];
+		$modules = ['Institutions', 'Directory', 'Reports', 'Administration'];
 		$this->setupTabElements($modules);
 
 		$module = $this->request->query('module');
@@ -68,6 +69,11 @@ class PermissionsTable extends AppTable {
 			return $this->controller->redirect(['action' => 'Roles']);
 		}
 		$roleId = $this->request->pass[1];
+		if (! $this->checkRolesHierarchy($roleId)) {
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+			$event->stopPropagation();
+			return $this->controller->redirect($action);
+		}
 		$module = $this->request->query('module');
 		$settings['pagination'] = false;
 		
@@ -96,12 +102,43 @@ class PermissionsTable extends AppTable {
 		return $list;
 	}
 
+	public function checkRolesHierarchy($roleId) {
+		$user = $this->Auth->user();
+		$userId = $user['id'];
+		if ($user['super_admin'] == 1) { // super admin will show all roles
+			$userId = null;
+		}
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+		$userRole = $GroupRoles
+			->find()
+			->contain('SecurityRoles')
+			->order(['SecurityRoles.order'])
+			->where([
+				$GroupRoles->aliasField('security_user_id') => $userId
+			])
+			->first();
+
+		$SecurityRolesTable = $this->SecurityRoles;
+		$roleOrder = $this->SecurityRoles->get($roleId)->order;
+
+		// Redirect the user out of the user is not allowed to edit the permission
+		if ($roleOrder > $userRole['security_role']['order']) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public function edit($roleId=0) {
 		$request = $this->request;
 		$params = $this->ControllerAction->paramsQuery();
 
+		if (! $this->checkRolesHierarchy($roleId)) {
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+			return $this->controller->redirect($action);
+		}
+		
 		if ($request->is(['post', 'put'])) {
-			// pr($request->data);die;
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
 				foreach ($permissions as $row) {

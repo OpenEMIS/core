@@ -33,7 +33,14 @@ class AppTable extends Table {
 		$columns = $schema->columns();
 
 		if (in_array('modified', $columns) || in_array('created', $columns)) {
-			$this->addBehavior('Timestamp');
+			$this->addBehavior('Timestamp', [
+				'events' => [
+            		'Model.beforeSave' => [
+                		'created' => 'new',
+               			'modified' => 'existing'
+           			]
+        		]
+			]);
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
@@ -50,6 +57,14 @@ class AppTable extends Table {
 
 		if (in_array('order', $columns)) {
 			$this->addBehavior('Reorder');
+			// to be removed after field_option_values is dropped
+			if ($this->table() == 'field_option_values') {
+				if ($this->behaviors()->has('Reorder')) {
+					$this->behaviors()->get('Reorder')->config([
+						'filter' => 'field_option_id',
+					]);
+				}
+			}
 		}
 
 		$dateFields = [];
@@ -69,6 +84,7 @@ class AppTable extends Table {
 		}
 		$this->addBehavior('Validation');
 		$this->attachWorkflow();
+		$this->addBehavior('Modification');
 	}
 
 	public function attachWorkflow($config=[]) {
@@ -117,7 +133,16 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDate($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Time($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -125,7 +150,12 @@ class AppTable extends Table {
 
 	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDateTime($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				$date = new Time($entity->$attr['field']);
+				return $this->formatDate($date);
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -205,12 +235,15 @@ class AppTable extends Table {
 				$label = str_replace(' Id', '', $label);
 			}
 		}
+		if (substr($label, -1) == ')') {
+			$label = $label.' ';
+		}
 		return $label;
 	}
 
 	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return $this->getFieldLabel($module, $col, $language);
+		return __($this->getFieldLabel($module, $col, $language));
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
@@ -364,24 +397,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-	
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$schema = $this->schema();
-		$columns = $schema->columns();
-		
-		$userId = null;
-		if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
-			$userId = $_SESSION['Auth']['User']['id'];
-		}
-		if (!is_null($userId)) {
-			if (in_array('modified_user_id', $columns)) {
-				$entity->modified_user_id = $userId;
-			}
-			if (in_array('created_user_id', $columns)) {
-				$entity->created_user_id = $userId;
-			}
-		}
 	}
 
 	public function checkIdInOptions($key, $options) {

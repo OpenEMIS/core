@@ -34,7 +34,7 @@ switch ($fieldName) {
 	<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 	<div class="input-form-wrapper">
 		<div class="table-toolbar">
-			<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click()">
+			<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click(); return false;">
 				<i class="fa fa-plus"></i> 
 				<span>Add <?= $addBtnName ?></span>
 			</button>

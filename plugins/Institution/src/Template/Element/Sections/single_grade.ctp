@@ -43,7 +43,7 @@
 		    			} else {
 		    				if ($this->request->data['submit'] == 'save') {
 		    					$attrValue = $this->request->data['MultiClasses'][$i]['name'];
-		    					$attrErrors = $this->request->data['MultiClasses'][$i]['errors'];
+		    					$attrErrors = (array_key_exists('errors', $this->request->data['MultiClasses'][$i]))? $this->request->data['MultiClasses'][$i]['errors']: null;
 		    				} else {
 			    				$attrValue = $defaultName;
 		    				}

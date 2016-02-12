@@ -30,7 +30,7 @@ class StaffTrainingsTable extends AppTable {
 		$this->controller->set('selectedAction', 'Trainings');
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function afterAction(Event $event) {
 		$this->setupTabElements();
 	}
 }

@@ -43,7 +43,8 @@ class QualificationsTable extends AppTable {
 
 		// temporary disable
 		$this->ControllerAction->field('file_name', 			['visible' => false]);
-		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
+		// file_content is a required field
+		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true], 'null'=>false]);
 
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
@@ -121,7 +122,7 @@ class QualificationsTable extends AppTable {
 			$attr['target'] = ['key' => 'qualification_institution_id', 'name' => $this->aliasField('qualification_institution_id')];
 			$attr['noResults'] = 'false';
 			$attr['attr'] = ['placeholder' => __('Institution')];
-			$attr['url'] = ['controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
+			$attr['url'] = ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
 		}
 		return $attr;
 	}
@@ -161,7 +162,7 @@ class QualificationsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function afterAction(Event $event) {
 		$this->setupTabElements();
 	}
 	

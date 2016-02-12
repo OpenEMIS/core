@@ -13,11 +13,16 @@ use Cake\Controller\Controller;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Inflector;
+use Cake\ORM\ResultSet;
+use Cake\I18n\Time;
+
 use DateTime;
 
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
+
+	private $dashboardQuery = null;
 
 	public function initialize(array $config) {
 		$this->table('institution_staff');
@@ -69,19 +74,14 @@ class StaffTable extends AppTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
+			->add('start_date', 'ruleStaffExistWithinPeriod', [
+				'rule' => ['checkStaffExistWithinPeriod'],
+				'on' => 'update'
+			])
 			->add('institution_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
-			// Added in add before patch and add on new as it is only use by the add action
-			// ->requirePresence('role');
 		;
-	}
-
-	// Dynamic adding of role validation
-	public function validationRole (Validator $validator) {
-		$validator = $this->validationDefault($validator);
-		$validator->requirePresence('role');
-		return $validator;
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
@@ -152,6 +152,8 @@ class StaffTable extends AppTable {
 					->count();
 			}
 		]);
+		$request->query['academic_period_id'] = $selectedPeriod;
+
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
@@ -168,29 +170,118 @@ class StaffTable extends AppTable {
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
 	}
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($entity->role > 0) {
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
+		$query = $resultSet->__debugInfo()['query'];
+		$this->dashboardQuery = clone $query;
+	}
+
+	public function addStaffRole($institutionPositionId, $staffId, $institutionId) {
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+		$securityRoleId = $this->Positions->find()
+			->where([
+				$this->Positions->aliasField('id') => $institutionPositionId
+			])
+			->matching('StaffPositionTitles.SecurityRoles')
+			->select(['security_role_id' => 'SecurityRoles.id'])
+			->first()
+			->security_role_id;
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+		$securityGroupUsersRecord = $SecurityGroupUsersTable->find()
+			->where([
+				$SecurityGroupUsersTable->aliasField('security_group_id') => $securityGroupId, 
+				$SecurityGroupUsersTable->aliasField('security_role_id') => $securityRoleId,
+				$SecurityGroupUsersTable->aliasField('security_user_id') => $staffId
+			])
+			->hydrate(false)
+			->bufferResults(false)
+			->toArray();
+
+		if (empty($securityGroupUsersRecord)) {
 			$obj = [
-				'id' => Text::uuid(),
-				'security_group_id' => $entity->group_id, 
-				'security_role_id' => $entity->role, 
-				'security_user_id' => $entity->staff_id
+				'security_group_id' => $securityGroupId, 
+				'security_role_id' => $securityRoleId, 
+				'security_user_id' => $staffId
 			];
-			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-			$GroupUsers->save($GroupUsers->newEntity($obj));
+			return $SecurityGroupUsersTable->save($SecurityGroupUsersTable->newEntity($obj));
+		} else {
+			return true;
+		}
+	}
+
+	public function removeStaffRole($institutionPositionId, $staffId, $institutionId) {
+		$query = $this->find('list', [
+				'keyField' => 'institution_staff_id',
+				'valueField' => 'security_group_users_id'
+			])
+			->innerJoin(['Institutions' => 'institutions'], [
+				'Institutions.id = '.$this->aliasField('institution_id')
+			])
+			->innerJoin(['Positions' => 'institution_positions'], [
+				'Positions.id = '.$this->aliasField('institution_position_id')
+			])
+			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+				'StaffPositionTitles.id = Positions.staff_position_title_id'
+			])
+			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+				'SecurityGroupUsers.security_user_id = '.$this->aliasField('staff_id'),
+				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
+				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
+			])
+			->select(['institution_staff_id' => $this->aliasField('id'), 'security_group_users_id' => 'SecurityGroupUsers.id']);
+
+		$InstitutionStaffTable = $this;
+		
+		// List of active roles in the same institution
+		$activeRoles = $query
+			->where([
+				'OR' => [
+					[function ($exp) use ($InstitutionStaffTable, $query) {
+						return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $query->func()->now('date'));
+					}],
+					[$this->aliasField('end_date').' IS NULL']
+				],
+				[
+					$this->aliasField('staff_id') => $staffId,
+					$this->aliasField('institution_id') => $institutionId
+				]
+			])
+			->hydrate(false)
+			->toArray();
+
+		// List of active roles in the same institution
+		$currentRole = $query
+			->where([
+					$this->aliasField('staff_id') => $staffId,
+					$this->aliasField('institution_position_id') => $institutionPositionId,
+					$this->aliasField('institution_id') => $institutionId
+			], [], true)
+			->distinct(['security_group_users_id'])
+			->hydrate(false)
+			->bufferResults(false)
+			->toArray();
+		
+		$groupUserIds = array_diff($currentRole, $activeRoles);
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+		foreach ($groupUserIds as $id) {
+			$entity = $SecurityGroupUsersTable->get($id);
+			$SecurityGroupUsersTable->delete($entity);
 		}
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+		$this->security_group_id = $securityGroupId;
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('institution_position_id');
-		$this->ControllerAction->field('role', ['attr' => ['required' => true]]);
 		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
-
+		$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
 		$this->ControllerAction->setFieldOrder([
-			'institution_position_id', 'role', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
+			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 	}
 
@@ -209,83 +300,33 @@ class StaffTable extends AppTable {
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$alias = $this->alias();
-		$recordId = $entity->id;
-		$institutionId = $entity->institution_id;
-		$newEndDate = strtotime($data[$this->alias()]['end_date']);
-		$newStartDate = strtotime($data[$this->alias()]['start_date']);
-		$staffId = $data[$this->alias()]['staff_id'];
-		$positionId = $data[$this->alias()]['institution_position_id'];
-		$condition = [
-			$this->aliasField('staff_id') => $staffId,
-			$this->aliasField('institution_position_id') => $positionId,
-			$this->aliasField('id').' IS NOT' => $recordId,
-			$this->aliasField('institution_id') => $institutionId
-		];
-		$count = 0;
-		if (empty($newEndDate)) {
-			$count = $this->find()
-				->where($condition)
-				->where([
-						'OR' => [
-							[$this->aliasField('end_date').' IS NULL'],
-							[
-								$this->aliasField('start_date').' >=' => $newStartDate, 
-							]
-						]
-					]);
-		} else {
-			$count = $this->find()
-				->where($condition)
-				->where([
-						'OR' => [
-							[
-								$this->aliasField('start_date').' <=' => $newEndDate,
-								$this->aliasField('end_date').' IS NULL'
-							],
-							[
-								$this->aliasField('start_date').' <=' => $newStartDate,
-								$this->aliasField('end_date').' IS NULL'
-							],
-							[
-								$this->aliasField('start_date').' <=' => $newEndDate,
-								$this->aliasField('end_date').' >=' => $newEndDate,
-							],
-							[
-								$this->aliasField('start_date').' <=' => $newStartDate,
-								$this->aliasField('end_date').' >=' => $newStartDate,
-							],
-						]
-					]);
-		}
-		if ($count->count() > 0) {
-			$this->Alert->error('Institution.InstitutionStaff.staffExistWithinPeriod');
-			$urlParams = $this->ControllerAction->url('edit');
-			$event->stopPropagation();
-			return $this->controller->redirect($urlParams);
-		} else {
-			if (array_key_exists('FTE', $data[$alias])) {
-				$newFTE = $data[$alias]['FTE'];
-				$newEndDate = $data[$alias]['end_date'];
+		if (array_key_exists('FTE', $data[$alias])) {
+			$newFTE = $data[$alias]['FTE'];
+			$newEndDate = $data[$alias]['end_date'];
 
-				if ($newFTE != $entity->FTE) {
-					$data[$alias]['FTE'] = $entity->FTE;
-					$entity->newFTE = $newFTE;
+			if ($newFTE != $entity->FTE) {
+				$data[$alias]['FTE'] = $entity->FTE;
+				$entity->newFTE = $newFTE;
 
-					if (empty($newEndDate)) {
-						if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
-							$data[$alias]['end_date'] = date('Y-m-d');
-						} else {
-							$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
-						}
+				if (empty($newEndDate)) {
+					if (date('Y-m-d', strtotime($data[$alias]['start_date'])) < date('Y-m-d')) {
+						$data[$alias]['end_date'] = date('Y-m-d');
 					} else {
-						$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
+						$data[$alias]['end_date'] = date('Y-m-d', strtotime($data[$alias]['start_date']));
 					}
+				} else {
+					$data[$alias]['end_date'] = date('Y-m-d', strtotime($newEndDate));
 				}
 			}
 		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$institutionPositionId = $entity->institution_position_id;
+		$staffId = $entity->staff_id;
+		$institutionId = $entity->institution_id;
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+
 		if (!$entity->isNew()) { // edit operation
 			if ($entity->has('newFTE')) {
 				unset($entity->id);
@@ -305,10 +346,9 @@ class StaffTable extends AppTable {
 				unset($entity->staff_status);
 				unset($entity->position);
 				unset($entity->user);
-				
 				$newEntity = $this->newEntity($entity->toArray());
 				if (!$this->save($newEntity)) {
-						
+					$this->addStaffRole($institutionPositionId, $staffId, $institutionId);
 				} else {
 					$url = [
 						'plugin' => 'Institution', 
@@ -321,12 +361,18 @@ class StaffTable extends AppTable {
 					$event->stopPropagation();
 					return $this->controller->redirect($url);
 				}
+			} else {
+				$currentCakeTime = Time::now();
+				$todayDate = Time::parseDate($currentCakeTime);
+				if (empty($entity->end_date) || (!empty($entity->end_date) && $entity->end_date >= $todayDate)) {	
+					$this->addStaffRole($institutionPositionId, $staffId, $institutionId);
+				} else {
+					$this->removeStaffRole($institutionPositionId, $staffId, $institutionId);
+				}
 			}
+		} else { // add operation
+			$this->addStaffRole($institutionPositionId, $staffId, $institutionId);
 		}
-	}
-
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-		
 	}
 
 	private function setupTabElements($entity) {
@@ -345,13 +391,32 @@ class StaffTable extends AppTable {
 
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
+			$groupId = $this->security_group_id;
+			$userId = $this->Auth->user('id');
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+			}
+			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
+			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+			$Roles = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
+			$securityRoleIds = array_keys($roleOptions);
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$positionOptions = $this->Positions
-			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-			->contain(['StaffPositionTitles'])
-			->where([$this->Positions->aliasField('institution_id') => $institutionId])
-			->toArray();
-			$attr['options'] = $positionOptions;
+	   		$types = $this->getSelectOptions('Staff.position_types');
+			$positionOptions = new ArrayObject();
+			$this->Positions
+					->find()
+					->matching('StaffPositionTitles.SecurityRoles')
+					->where([$this->Positions->aliasField('institution_id') => $institutionId, $this->Positions->aliasField('status_id').' IN ' => $activeStatusId])
+				    ->map(function ($row) use ($types, $positionOptions, $securityRoleIds) { // map() is a collection method, it executes the query
+				        $type = array_key_exists($row->_matchingData['StaffPositionTitles']->type, $types) ? $types[$row->_matchingData['StaffPositionTitles']->type] : $row->_matchingData['StaffPositionTitles']->type;
+				        if (in_array($row->_matchingData['SecurityRoles']->id, $securityRoleIds)) {
+				        	$positionOptions[$type][$row->id] = $row->name;
+				        }
+				        return $row;
+				    })
+				    ->toArray(); // Also a collections library method
+			$attr['options'] = $positionOptions->getArrayCopy();
 		}
 		return $attr;
 	}
@@ -367,31 +432,11 @@ class StaffTable extends AppTable {
 
 		if (isset($buttons['edit'])) {
 			$url = $this->ControllerAction->url('edit');
-			$url['action'] = 'StaffUser';
-			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url[1] = $entity->id;
 			$buttons['edit']['url'] = $url;
 		}
 
 		return $buttons;
-	}
-
-	public function onUpdateFieldRole(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
-			$Roles = TableRegistry::get('Security.SecurityRoles');
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$institutionEntity = $this->Institutions->get($institutionId);
-			$groupId = $institutionEntity->security_group_id;
-			$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $groupId]);
-
-			$userId = $this->Auth->user('id');
-			if ($this->AccessControl->isAdmin()) {
-				$userId = null;
-			}
-			$roleOptions = ['' => '-- ' . __('Select Role') . ' --'];
-			$roleOptions = $roleOptions + $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
-			$attr['options'] = $roleOptions;
-		}
-		return $attr;
 	}
 
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
@@ -480,12 +525,7 @@ class StaffTable extends AppTable {
 		$this->Session->delete('Institution.Staff.new');
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = 'Role';
-	}
-
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = 'Role';
 		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($patch->errors());
 		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('staff_id', $patch->errors()))) {
@@ -516,25 +556,24 @@ class StaffTable extends AppTable {
 
 			$positionId = $this->request->query('position');
 
-			// Get Number of staff in an institution
-			$staffCount = $this->find()
-				->find('academicPeriod', ['academic_period_id' => $periodId])
-				->where([$this->aliasField('institution_id') => $institutionId])
-				->distinct(['staff_id']);
+			$searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->data['Search']['searchField']));
 
-			if ($positionId != 0) {
-				$staffCount->where([$this->aliasField('institution_position_id') => $positionId]);
-				$conditions = array_merge($conditions, ['institution_position_id' => $positionId])	;
-			}
+			$institutionStaffQuery = clone $this->dashboardQuery;
+			// Get Number of staff in an institution
+			$staffCount = $institutionStaffQuery->count();
+
+			unset($institutionStaffQuery);
+
 			// Get Gender
 			$InstitutionArray[__('Gender')] = $this->getDonutChart('institution_staff_gender', 
-				['conditions' => $conditions, 'key' => __('Gender')]);
+				['query' => $this->dashboardQuery, 'key' => __('Gender')]);
 
 			// Get Staff Licenses
 			$table = TableRegistry::get('Staff.Licenses');
 			// Revisit here in awhile
 			$InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
-				['conditions' => $conditions, 'key' => __('Licenses')]);
+				['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]);
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
 			$indexDashboard = 'dashboard';
@@ -542,7 +581,7 @@ class StaffTable extends AppTable {
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $staffCount->count(['staff_id']),
+	            	'modelCount' => $staffCount,
 	            	'modelArray' => $InstitutionArray,
 	            ],
 	            'options' => [],
@@ -603,8 +642,8 @@ class StaffTable extends AppTable {
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
-
 		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
 		$sectionsInPosition = $InstitutionSections->find()
 			->where(
@@ -623,7 +662,6 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-			
 		$sectionArray = [];
 		foreach ($sectionsInPosition as $key => $value) {
 			$sectionArray[] = $value->id;
@@ -634,11 +672,12 @@ class StaffTable extends AppTable {
 				['id IN ' => $sectionArray]
 			);
 		}
-
 		// delete the staff from subjects		
 		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+
 		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');	
 		$classesDuringStaffPeriod = $InstitutionClasses->find()
+			->where([$InstitutionClasses->aliasField('institution_id') => $institutionId])
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -657,37 +696,49 @@ class StaffTable extends AppTable {
 			$classIdsDuringStaffPeriod[] = $value->id;
 		}
 
-		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
+		// Staff behavior associated to institution must be deleted.
+		$StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
+		$StaffBehaviours->deleteAll([
+			$StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
+			$StaffBehaviours->aliasField('institution_id') => $entity->institution_id,
+		]);
 
-		$targetData = $InstitutionClassStaff->find()
-			->where([$InstitutionClassStaff->aliasField('staff_id') => $staffId,
-			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod])
-			;
+		// Staff absence associated to institution must be deleted.
+		$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
+		$StaffAbsences->deleteAll([
+			$StaffAbsences->aliasField('staff_id') => $entity->staff_id,
+			$StaffAbsences->aliasField('institution_id') => $entity->institution_id,
+		]);
+
+		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
+		// association cascade deletes institution_site_quality_rubric_answers
+		$InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
+		$institutionRubricsQuery = $InstitutionRubrics->find()
+			->where([
+				$InstitutionRubrics->aliasField('staff_id') => $entity->staff_id,
+				$InstitutionRubrics->aliasField('institution_id') => $entity->institution_id,
+			])
+		;
+		foreach ($institutionRubricsQuery as $key => $value) {
+			$InstitutionRubrics->delete($value);
+		}
+
+		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
 
 		$InstitutionClassStaff->deleteAll([
 			$InstitutionClassStaff->aliasField('staff_id') => $staffId,
 			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
 		]);
 
-
 		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.
-
-
-
-
-
 		// this will be a problem as staff with more than one position will get all their roles deleted from groups
 		// solution is to link position to roles so only roles linked to that position will be deleted
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
 		try {
-			$institutionEntity = $this->Institutions->get($institutionId);
-			$groupId = $institutionEntity->security_group_id;
-			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-			$GroupUsers->deleteAll([
-				'security_user_id' => $entity->staff_id,
-				'security_group_id' => $groupId
-			]);
+			
+			$this->removeStaffRole($entity->institution_position_id, $entity->staff_id, $institutionId);
+
 		} catch (InvalidPrimaryKeyException $ex) {
 			Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
 		}
@@ -722,30 +773,26 @@ class StaffTable extends AppTable {
 
 	// Function used by the Mini-Dashboard (Institution Staff)
 	public function getNumberOfStaffsByGender($params=[]) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
-			foreach ($conditions as $key => $value) {
-				$_conditions[$this->alias().'.'.$key] = $value;
-			}
+		$query = $params['query'];
+		$InstitutionRecords = clone $query;
+		$InstitutionStaffCount = $InstitutionRecords
+			->matching('Users.Genders')
+			->select([
+				'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
+				'gender' => 'Genders.name'
+			])
+			->group('gender_id');
 
-			$InstitutionRecords = $this->find();
-			$InstitutionStaffCount = $InstitutionRecords
-				->contain(['Users', 'Users.Genders'])
-				->select([
-					'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),	
-					'gender' => 'Genders.name'
-				])
-				->where($_conditions)
-				->group('gender_id');
+		// Creating the data set		
+		$dataSet = [];
+		foreach ($InstitutionStaffCount->toArray() as $value) {
+            //Compile the dataset
+			$dataSet[] = [__($value['gender']), $value['count']];
+		}
+		$params['dataSet'] = $dataSet;
+		
+		unset($InstitutionRecords);
 
-			// Creating the data set		
-			$dataSet = [];
-			foreach ($InstitutionStaffCount->toArray() as $value) {
-	            //Compile the dataset
-				$dataSet[] = [__($value['gender']), $value['count']];
-			}
-			$params['dataSet'] = $dataSet;
-		//}
 		return $params;
 	}
 
@@ -767,19 +814,20 @@ class StaffTable extends AppTable {
 		$query = $this->find('all');
 		$staffByPositions = $query
 			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
-			->contain(['Users.Genders','Positions'])
+			->contain(['Users.Genders','Positions.StaffPositionTitles'])
 			->select([
-				'Positions.type',
+				'Positions.id',
+				'StaffPositionTitles.type',
 				'Users.id',
 				'Genders.name',
 				'total' => $query->func()->count('DISTINCT '.$this->aliasField('staff_id'))
 			])
 			->where($staffsByPositionConditions)
 			->group([
-				'Positions.type', 'Genders.name'
+				'StaffPositionTitles.type', 'Genders.name'
 			])
 			->order(
-				'Positions.type'
+				'StaffPositionTitles.type'
 			)
 			->toArray();
 
@@ -800,7 +848,7 @@ class StaffTable extends AppTable {
 		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
 			if ($staffByPosition->has('position')) {
-				$positionType = $staffByPosition->position->type;
+				$positionType = $staffByPosition->position->staff_position_title->type;
 				$staffGender = $staffByPosition->user->gender->name;
 				$StaffTotal = $staffByPosition->total;
 
@@ -820,8 +868,8 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
-	// Functions that are migrated over
-	/******************************************************************************************************************
+// Functions that are migrated over
+/******************************************************************************************************************
 **
 ** finders functions to be used with query
 **
@@ -833,13 +881,15 @@ class StaffTable extends AppTable {
 	 */
 	public function findByPositions(Query $query, array $options) {
 		if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 			$positions = $this->Positions->find('list')
 						->find('withBelongsTo')
 				        ->where([
 				        	'Institutions.id' => $options['Institutions.id'],
-				        	$this->Positions->aliasField('type') => $options['type']
+				        	$StaffPositionTitles->aliasField('type') => $options['type']
 				        ])
-				        ->toArray();
+				        ->toArray()
+				        ;
 			$positions = array_keys($positions);
 			return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
 		} else {
@@ -902,5 +952,58 @@ class StaffTable extends AppTable {
 			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
 	}
 
+	public function removeInactiveStaffSecurityRole() {
+		$query = $this->find('list', [
+				'keyField' => 'institution_staff_id',
+				'valueField' => 'security_group_users_id'
+			])
+			->innerJoin(['Institutions' => 'institutions'], [
+				'Institutions.id = '.$this->aliasField('institution_id')
+			])
+			->innerJoin(['Positions' => 'institution_positions'], [
+				'Positions.id = '.$this->aliasField('institution_position_id')
+			])
+			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
+				'StaffPositionTitles.id = Positions.staff_position_title_id'
+			])
+			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+				'SecurityGroupUsers.security_user_id = '.$this->aliasField('staff_id'),
+				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
+				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
+			])
+			->select(['institution_staff_id' => $this->aliasField('id'), 'security_group_users_id' => 'SecurityGroupUsers.id']);
 
+		$InstitutionStaffTable = $this;
+
+		// List of active institution staff id -> security group user id
+		$activeStaff = $query
+			->where([
+				'OR' => [
+					[function ($exp) use ($InstitutionStaffTable, $query) {
+						return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $query->func()->now('date'));
+					}],
+					[$this->aliasField('end_date').' IS NULL']
+				]
+			])
+			->hydrate(false)
+			->toArray();
+
+		// List of active institution staff id -> security group user id
+		$inactiveStaff = $query
+			->where([function ($exp) use ($InstitutionStaffTable, $query) {
+						return $exp->lt($InstitutionStaffTable->aliasField('end_date'), $query->func()->now('date'));
+					}], [], true)
+			->distinct(['security_group_users_id'])
+			->hydrate(false)
+			->toArray();
+
+		// If the inactive security group user id does not exist in the list of active staff's security group user id
+		$securityGroupUserRolesToRemove = array_diff($inactiveStaff, $activeStaff);
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+		foreach ($securityGroupUserRolesToRemove as $securityGroupUserId) {
+			$entity = $SecurityGroupUsersTable->get($securityGroupUserId);
+			$SecurityGroupUsersTable->delete($entity);
+		}
+	}
 }

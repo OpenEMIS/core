@@ -26,7 +26,7 @@
 	<?= $this->element('OpenEmis.breadcrumbs') ?>
 
 	<div class="page-header">
-		<h2><?= $this->fetch('contentHeader') ?></h2>
+		<h2 id="main-header"><?= $this->fetch('contentHeader') ?></h2>
 		<?php if (!empty($toolbar)) : ?>
 			<div class="toolbar <?= implode(' ', $toolbarClass) ?>">
 				<?= $this->fetch('toolbar') ?>
