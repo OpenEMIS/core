@@ -12,9 +12,8 @@ var Area = {
 			var formError = $(this).find('select').attr('form-error');
 			var modelName = $(this).find('select').attr('data-source');
 			modelName += "/" + $(this).find('select').attr('target-model');
-			var areaLabel = $(this).find('select').attr('area-label');
 			var displayCountry = $(this).find('select').attr('display-country');
-			url += "/" + modelName + "/" + areaLabel + "/" + value + "/" + displayCountry;
+			url += "/" + modelName + "/" + value + "/" + displayCountry;
 			Area.populate(closestObject,url, formError);
 			// Update hidden field value
 			$(this).next().val(value);
@@ -27,9 +26,8 @@ var Area = {
 		var modelName= $(obj).attr('data-source');
 		modelName += "/" + $(obj).attr('target-model');
 		var parent = $(obj).closest('.areapicker');
-		var areaLabel = $(obj).attr('area-label');
 		var displayCountry = $(obj).attr('display-country');
-		url += "/" + modelName + "/" + areaLabel + "/" + value + "/" + displayCountry;
+		url += "/" + modelName + "/" + value + "/" + displayCountry;
 		Area.populate(parent, url, formError)
 		// Update hidden field value
 		$( parent ).next().val(value);
