@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class InstitutionInfrastructuresTable extends AppTable {
 	private $_fieldOrder = [
@@ -65,7 +66,8 @@ class InstitutionInfrastructuresTable extends AppTable {
 			->count();
 
 		if ($count) {
-			$this->recover();
+			// $this->recover();
+			$this->runRecover();
 		}
 		// End
 
@@ -110,6 +112,34 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$query->where([$this->aliasField('parent_id') => $parentId]);
 		} else {
 			$query->where([$this->aliasField('parent_id IS NULL')]);
+		}
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		foreach ($this->fields as $field => $attr) {
+			if ($field == 'parent_id' && $attr['type'] != 'hidden') {
+				$this->fields[$field]['type'] = 'hidden';
+				$parentId = $entity->parent_id;
+				if (!empty($parentId)) {
+					$list = $this
+						->find('path', ['for' => $parentId])
+						->matching('Levels')
+						->toArray();
+				} else {
+					$list = [];
+				}
+
+				$after = $field;
+				foreach ($list as $key => $infrastructure) {
+					$this->ControllerAction->field($field.$key, [
+						'type' => 'readonly', 
+						'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
+						'value' => $infrastructure->code_name,
+						'after' => $after
+					]);
+					$after = $field.$key;
+				}
+			}
 		}
 	}
 
@@ -167,7 +197,8 @@ class InstitutionInfrastructuresTable extends AppTable {
 					]
 				);
 
-			$this->recover();
+			// $this->recover();
+			$this->runRecover();
 
 			$process = function($model, $id, $options) {
 				$entity = $model->get($id);
@@ -187,20 +218,8 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$attr['value'] = null;
 		} else {
 			if ($action == 'add') {
-				// $crumbs = $this
-				// 	->find('path', ['for' => $parentId])
-				// 	->order([$this->aliasField('lft')])
-				// 	->toArray();
-
-				// $parentPath = '';
-				// foreach ($crumbs as $crumb) {
-				// 	$parentPath .= $crumb->name;
-				// 	$parentPath .= $crumb === end($crumbs) ? '' : ' > ';
-				// }
-
 				$attr['type'] = 'readonly';
 				$attr['value'] = $parentId;
-				// $attr['attr']['value'] = $parentPath;
 				$attr['attr']['value'] = $this->getParentPath($parentId);
 			} else if ($action == 'edit') {
 				$session = $request->session();
@@ -299,6 +318,21 @@ class InstitutionInfrastructuresTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function runRecover() {
+		$script = 'tree';
+
+		$consoleDir = ROOT . DS . 'bin' . DS;
+		$cmd = sprintf("%scake %s %d", $consoleDir, $script, $this->registryAlias());
+		$nohup = '%s >> %slogs/'.$script.'.log & echo $!';
+		$shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+		Log::write('debug', $shellCmd);
+		exec($shellCmd);
+	}
+
+	public function execRecover() {
+		$this->recover();
 	}
 
 	public function getParentPath($parentId=null) {
