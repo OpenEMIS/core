@@ -9,13 +9,12 @@ use Exception;
 class TreeShell extends Shell {
 	public function initialize() {
 		parent::initialize();
-		// $this->loadModel('Institution.InstitutionInfrastructures');
 	}
 
 	public function main() {
 		$this->out('Initialize Tree Shell ...');
 
-		$registryAlias = 'Institution.InstitutionInfrastructures';
+		$registryAlias = $this->args[0];
 
 		try {
 			list($plugin, $modelName) = explode(".", $registryAlias, 2);
