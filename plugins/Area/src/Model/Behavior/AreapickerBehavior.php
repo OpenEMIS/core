@@ -5,11 +5,17 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 class AreapickerBehavior extends Behavior {
-	protected $_defaultConfig = [
-		'display_country' => true
-	];
+	public function implementedEvents() {
+        $events = parent::implementedEvents();
+
+		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+
+        return $events;
+    }
 
 	public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$value = $entity->$attr['field'];
@@ -23,16 +29,18 @@ class AreapickerBehavior extends Behavior {
 			$Url = $HtmlField->Url;
 			$Form = $HtmlField->Form;
 			$targetModel = $attr['source_model'];
+			$options['display-country'] = 1;
 			$targetTable = TableRegistry::get($targetModel);
 			$condition = [];
-			if (!$this->config('display_country')) {
-				if ($targetModel == 'Area.AreaAdministratives') {
-					$condition = [$targetTable->aliasField('is_main_country') => 1];
-				}
+
+			if ($targetModel == 'Area.Areas' && isset($attr['displayCountry'])) {
+				$options['display-country'] = $entity->area_id;
+			} else if (isset($attr['displayCountry']) && !$attr['displayCountry']) {
+				$options['display-country'] = 0;
 			}
+
 			$areaOptions = $targetTable
 				->find('list')
-				->where($condition)
 				->toArray();
 				;
 			$fieldName = $attr['model'] . '.' . $attr['field'];
@@ -50,10 +58,6 @@ class AreapickerBehavior extends Behavior {
 			} else {
 				$options['form-error'] = false;
 			}
-			$option['display-country'] = 1;
-			if (!$this->config('display_country')) {
-				$options['display-country'] = 0;
-			}
 
 			$value = "<div class='areapicker'>";
 			$value .= $Form->input($fieldName, $options);
@@ -62,5 +66,73 @@ class AreapickerBehavior extends Behavior {
 			$value .= $Form->error($fieldName);
 		}
 		return $value;
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		foreach ($this->_table->fields as $field => $attr) {
+			if ($attr['type'] == 'areapicker') {
+				$this->_table->fields[$field]['type'] = 'hidden';
+				$targetModel = $attr['source_model'];
+				$areaId = $entity->$field;
+				if (!empty($areaId)) {
+					$list = $this->getAreaLevelName($targetModel, $areaId);
+				} else {
+					$list = [];
+				}
+				$after = $field;
+				foreach ($list as $key => $area) {
+					$this->_table->ControllerAction->field($field.$key, [
+						'type' => 'readonly', 
+						'attr' => ['label' => __($area['level'])],
+						'value' => $area['area_name'],
+						'after' => $after
+					]);
+					$after = $field.$key;
+				}
+			}
+		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$userId = $this->_table->Auth->user('id');
+		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
+		if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
+			foreach ($this->_table->fields as $field => $attr) {
+				if ($attr['type'] == 'areapicker' && $attr['source_model'] == 'Area.Areas') {
+					$this->_table->fields[$field]['type'] = 'hidden';
+					$targetModel = $attr['source_model'];
+					$areaId = $entity->$field;
+					$list = $this->getAreaLevelName($targetModel, $areaId);
+					$after = $field;
+					foreach ($list as $key => $area) {
+						$this->_table->ControllerAction->field($field.$key, [
+							'type' => 'readonly', 
+							'attr' => ['label' => __($area['level']), 'value' => $area['area_name']],
+							'value' => $area['area_name'],
+							'after' => $after
+						]);
+						$after = $field.$key;
+					}
+				}
+			}
+		}	
+	}
+
+	public function getAreaLevelName($targetModel, $areaId) {
+		$targetTable = TableRegistry::get($targetModel);
+		$levelAssociation = Inflector::singularize($targetTable->alias()).'Levels';
+		$path = $targetTable
+			->find('path', ['for' => $areaId])
+			->contain([$levelAssociation])
+			->select(['level' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
+			->bufferResults(false)
+			->toArray();
+
+		if ($targetModel == 'Area.AreaAdministratives') {
+			// unset world
+			unset($path[0]);
+		}
+		return $path;
+	
 	}
 }

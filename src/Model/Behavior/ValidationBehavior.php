@@ -3,6 +3,7 @@ namespace App\Model\Behavior;
 
 use DateTime;
 use Cake\Event\Event;
+use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
@@ -17,8 +18,6 @@ class ValidationBehavior extends Behavior {
 	private $validationCode = [];
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
-		$this->attachDefaultValidation($validator);
-
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
 		$validator->provider('custom', get_class($this));
 
@@ -74,51 +73,6 @@ class ValidationBehavior extends Behavior {
 				}
 			}
 		}
-	}
-
-	private function attachDefaultValidation($validator) {
-		$schema = $this->_table->schema();
-		$columns = $schema->columns();
-
-		// added this temporary, will need to revisit this code
-		$ignoreFields = ['modified_user_id', 'created_user_id', 'modified', 'created', 'order'];
-
-		foreach ($columns as $col) {
-			$columnInfo = $schema->column($col);
-			if ($validator->hasField($col)) {
-				$set = $validator->field($col);
-
-				if (!$set->isEmptyAllowed()) {
-					$set->add('notBlank', ['rule' => 'notBlank']);
-				}
-				if (!$set->isPresenceRequired()) {
-					if ($this->isForeignKey($col)) {
-						$validator->requirePresence($col);
-					}
-				}
-			} else { // field not presence in validator
-				if (array_key_exists('null', $columnInfo)) {
-					if ($columnInfo['null'] === false && $col !== 'id' && !in_array($col, $ignoreFields)) {
-						$validator->add($col, 'notBlank', ['rule' => 'notBlank']);
-						if ($this->isForeignKey($col)) {
-							$validator->requirePresence($col);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private function isForeignKey($field) {
-		$model = $this->_table;
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public function setValidationCode($key, $code) {
@@ -459,6 +413,20 @@ class ValidationBehavior extends Behavior {
 	}
 
 	// Return false if not enrolled in other education system
+	public static function checkInstitutionClassMaxLimit($class_id, array $globalData) {
+		$SectionStudents = TableRegistry::get("Institution.InstitutionSectionStudents");
+		$currentNumberOfStudents = $SectionStudents->find()->where([
+				$SectionStudents->aliasField('institution_section_id') => $class_id,
+				$SectionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+			])->count();
+		/**
+		 * @todo  add this max limit to config
+		 * This limit value is being used in InstitutionSections->editAfterAction()
+		 */
+		return ($currentNumberOfStudents < 100);
+	}
+
+	// Return false if not enrolled in other education system
 	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
 		$enrolled = false;
@@ -540,21 +508,86 @@ class ValidationBehavior extends Behavior {
 		return true;
 	}
 
-	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
-		$data = $globalData['data'];
-		if ((array_key_exists('education_grade_id', $data)) && (array_key_exists('student_id', $data))) {
-			// getting admission  age
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$educationGradeQuery = $EducationGrades->find()
-				->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
-				->contain('EducationProgrammes.EducationCycles')
-				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $data['education_grade_id']])
-				->first()
-				;
-			$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
-			$cycleId = $educationGradeQuery->EducationCycles->id;
+	public static function checkShiftAvailable($field, array $globalData) {
+		// have to account for edit and itself... do not count itself into the query
+		$existingId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
 
-			// getting age fo student
+		$academicPeriodId = (array_key_exists('academic_period_id', $globalData['data']))? $globalData['data']['academic_period_id']: null;
+		$locationInstitutionId = (array_key_exists('location_institution_id', $globalData['data']))? $globalData['data']['location_institution_id']: null;
+		// no academic period or location fails
+		if (empty($academicPeriodId)) return false;
+		if (empty($locationInstitutionId)) return false;
+
+		$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+		// find any shift with overlap
+		$query = $InstitutionShifts->find()
+			->where([
+				$InstitutionShifts->aliasField('academic_period_id') => $academicPeriodId,
+				$InstitutionShifts->aliasField('location_institution_id') => $locationInstitutionId,
+			])
+			;
+
+		// to handle edits
+		if (!empty($existingId)) {
+			$query->where([$InstitutionShifts->aliasField('id') .' != ' . $existingId]);
+		}
+
+		$timeConditions = [];
+		$startTime = (array_key_exists('start_time', $globalData['data']))? $globalData['data']['start_time']: null;
+		$endTime = (array_key_exists('end_time', $globalData['data']))? $globalData['data']['end_time']: null;
+		// no academic period or location fails
+		if (empty($startTime)) return false;
+		if (empty($endTime)) return false;
+
+		$format = 'H:i:s';
+		$startTime = date($format, strtotime($startTime));
+		$endTime = date($format, strtotime($endTime));
+
+		$timeConditions['OR'] = [
+			'OR' => [
+				[	
+					$InstitutionShifts->aliasField('start_time') . ' <= ' => $startTime,
+					$InstitutionShifts->aliasField('end_time') . ' > ' => $startTime,
+				],
+				[
+					$InstitutionShifts->aliasField('start_time') . ' < ' => $endTime,
+					$InstitutionShifts->aliasField('end_time') . ' >= ' => $endTime,
+				],
+				[
+					$InstitutionShifts->aliasField('start_time') . ' >= ' => $startTime,
+					$InstitutionShifts->aliasField('end_time') . ' <= ' => $endTime,
+				],
+				[
+					// means full day
+					$InstitutionShifts->aliasField('start_time') . ' IS NULL',	
+					$InstitutionShifts->aliasField('end_time') . ' IS NULL',
+				]
+			]
+		];
+
+		$query->where($timeConditions);
+
+		// pr($query->toArray());
+		// die;
+
+		$query = $query->count();
+		return ($query == 0);
+	}
+
+
+
+	public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
+		// this function is ONLY catered for 'on' => 'create'
+		$model = $globalData['providers']['table'];
+		$data = $globalData['data'];
+		$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ruleCheckAdmissionAgeWithEducationCycleGrade');
+
+		$educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+		// if no education grade. fail it
+		if (empty($educationGradeId)) return $validationErrorMsg;
+
+		if (array_key_exists('student_id', $data)) {
+			// saving for existing students
 			$Students = TableRegistry::get('Student.Students');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
@@ -562,38 +595,53 @@ class ValidationBehavior extends Behavior {
 				->first();
 				;
 			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
-			if (is_null($dateOfBirth)) return false;
-
-			$birthYear = $dateOfBirth->format('Y');
-			$nowYear = Time::now()->format('Y');
-			$ageOfStudent = $nowYear - $birthYear;
-
-
-			$ConfigItems = TableRegistry::get('ConfigItems');
-			$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
-			$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
-
-			// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$gradeInCycleList = $EducationGrades->find('list')
-				->contain('EducationProgrammes.EducationCycles')
-				->where(['EducationCycles.id' => $cycleId])
-				->find('order');
-
-			$yearIncrement = 0;
-			foreach ($gradeInCycleList as $key => $value) {
-				if ($key == $data['education_grade_id']) break;
-				$yearIncrement++;
-			}
-
-			$enrolmentMinimumAge += $yearIncrement;
-			$enrolmentMaximumAge += $yearIncrement;
-
-			return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge);
+		} else {
+			// saving for new students
+			$dateOfBirth = new DateTime($field);
 		}
+
+		// for cases where date of birth is null, probably only in cases of data error
+		if (is_null($dateOfBirth)) return $validationErrorMsg;
+
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$educationGradeQuery = $EducationGrades->find()
+			->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
+			->contain('EducationProgrammes.EducationCycles')
+			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
+			->first()
+			;
+		$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
+		$cycleId = $educationGradeQuery->EducationCycles->id;
 		
-		// if there is no cycle to check with, allow validation to pass
-		return true;;
+		$birthYear = $dateOfBirth->format('Y');
+		$nowYear = Time::now()->format('Y');
+		$ageOfStudent = $nowYear - $birthYear;
+
+		$ConfigItems = TableRegistry::get('ConfigItems');
+		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
+		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
+
+		// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$gradeInCycleList = $EducationGrades->find('list')
+			->contain('EducationProgrammes.EducationCycles')
+			->where(['EducationCycles.id' => $cycleId])
+			->find('order');
+
+		$yearIncrement = 0;
+		foreach ($gradeInCycleList as $key => $value) {
+			if ($key == $educationGradeId) break;
+			$yearIncrement++;
+		}
+
+		$enrolmentMinimumAge += $yearIncrement;
+		$enrolmentMaximumAge += $yearIncrement;
+
+		// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
+		// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
+		// pr('ageOfStudent: '.$ageOfStudent);
+
+		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
 	}
 
 	// To allow case sensitive entry

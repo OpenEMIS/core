@@ -70,5 +70,9 @@ class UsersController extends AppController {
 		$user->last_login = new DateTime();
 		$this->Users->save($user);
 		$this->log('[' . $user->username . '] Login successfully.', 'debug');
+
+		// To remove inactive staff security group users records
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+		$InstitutionStaffTable->removeInactiveStaffSecurityRole();
 	}
 }
