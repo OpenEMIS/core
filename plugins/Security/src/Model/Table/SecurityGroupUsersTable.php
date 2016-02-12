@@ -46,4 +46,23 @@ class SecurityGroupUsersTable extends AppTable {
 			return false;
 		}
 	}
+
+	public function checkEditGroup($userId, $securityGroupId, $field) {
+		// Security function: Group
+		$securityFunctionId = 5023;
+		$results = $this
+			->find()
+			->innerJoin(
+				['SecurityRoleFunctions' => 'security_role_functions'],
+				[
+					'SecurityRoleFunctions.security_role_id = '.$this->aliasField('security_role_id'),
+					'SecurityRoleFunctions.security_function_id' => $securityFunctionId,
+					'SecurityRoleFunctions.'.$field => 1
+				]
+			)
+			->where([$this->aliasField('security_user_id') => $userId, $this->aliasField('security_group_id') => $securityGroupId])
+			->hydrate(false)
+			->toArray();
+		return $results;
+	}
 }

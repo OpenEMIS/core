@@ -21,6 +21,8 @@ class ConfigItemsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
+		$this->addBehavior('Authentication');
+
 		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
 
@@ -50,6 +52,10 @@ class ConfigItemsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
+		$this->buildSystemConfigFilters();
+	}
+
+	public function buildSystemConfigFilters() {
 		$toolbarElements = [
 			['name' => 'Configurations/controls', 'data' => [], 'options' => []]
 		];
@@ -60,6 +66,7 @@ class ConfigItemsTable extends AppTable {
 		$selectedType = $this->queryString('type', $typeOptions);
 		$this->advancedSelectOptions($typeOptions, $selectedType);
 		$buffer = $typeOptions;
+
 		foreach ($buffer as $key => $value) {
 			$result = $this->find()->where([$this->aliasField('type') => $value['text'], $this->aliasField('visible') => 1])->count();
 			if (!$result) {
@@ -67,6 +74,7 @@ class ConfigItemsTable extends AppTable {
 			}
 		}
 		$this->request->query['type_value'] = $typeOptions[$selectedType]['text'];
+		
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
@@ -166,6 +174,11 @@ class ConfigItemsTable extends AppTable {
 							->toArray();
 						$attr['options'] = $options;
 					}
+
+					if (isset($this->request->data[$this->alias()]['value'])) {
+						$attr['onChangeReload'] = true;	
+					}
+
 				} else {
 					if ($entity->code == 'start_time') {
 						$attr['type'] = 'time';
@@ -375,11 +388,6 @@ class ConfigItemsTable extends AppTable {
 	];
 	   
 	private $validateStartTime = [
-		'dateInput' => [
-			'rule'	=> ['checkDateInput'],
-			'provider' => 'table',
-			'last' => true
-		],
 		'aPValue' => [
 			'rule'	=> ['amPmValue'],
 			'provider' => 'table',
@@ -455,12 +463,12 @@ class ConfigItemsTable extends AppTable {
   	private $validateStudentAdmissionAge = [
 		'num' => [
 			'rule'  => 'numeric',
-			'message' => 'Numeric Value should be between 0 to 101',
+			'message' => 'Numeric Value should be between -1 to 101',
 			'last' => true
 		],
 		'bet' => [
-			'rule'	=> ['range', 1, 100],
-			'message' => 'Numeric Value should be between 0 to 101',
+			'rule'	=> ['range', 0, 100],
+			'message' => 'Numeric Value should be between -1 to 101',
 			'last' => true
 		]
   	];

@@ -1,81 +1,44 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
-
-<?php if ($action == 'add' || $action == 'edit') : ?>
-	<div class="input table">
-		<label for="<?= $attr['id'] ?>"><?= __($attr['label']); ?></label>
-		<div class="table-wrapper">
-			<div class="table-in-view">
-				<table class="table table-checkable">
-					<thead>
-						<tr>
-							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-							<th><?= __('Code') ?></th>
-							<th><?= __('Name') ?></th>
-							<th><?= __('Type') ?></th>
-							<th><?= __('Pass') ?></th>
-							<th><?= __('Max') ?></th>
-							<th><?= __('Grading Types') ?></th>
-						</tr>
-					</thead>
-
-					<tbody>
-					<?php foreach ($data->assessment_items as $i => $obj) : ?>
-						<tr>
-							<td class="checkbox-column">
-								<?php
-								echo $this->Form->input("$model.assessment_items.$i.visible", [
-									'type' => 'checkbox',
-									'class' => 'icheck-input',
-									'label' => false
-								]);
-								echo $this->Form->hidden("$model.assessment_items.$i.id");
-								echo $this->Form->hidden("$model.assessment_items.$i.education_subject_id", ['value' => $obj['education_subject']->id]);
-								?>
-							</td>
-							<td><?= $obj['education_subject']->code ?></td>
-							<td><?= $obj['education_subject']->name ?></td>
-							<td><?= $this->Form->input("$model.assessment_items.$i.result_type", ['options' => $markTypeOptions, 'label' => false]) ?></td>
-							<td><?= $this->Form->input("$model.assessment_items.$i.pass_mark", ['label' => false]) ?></td>
-							<td><?= $this->Form->input("$model.assessment_items.$i.max", ['label' => false]) ?></td>
-							<td><?= $this->Form->input("$model.assessment_items.$i.assessment_grading_type_id", ['options' => $gradingTypeOptions, 'label' => false]) ?></td>
-						</tr>
-					<?php endforeach ?>
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-<?php else : ?>
+<?php if ($ControllerAction['action'] == 'index') : ?>
+	<?= isset($attr['value']) ? $attr['value'] : 0; ?>
+<?php elseif ($ControllerAction['action'] == 'view') : ?>
+	<?php
+		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
+		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+	?>
 	<div class="table-wrapper">
 		<div class="table-in-view">
 			<table class="table">
-				<thead>
-					<tr>
-						<th><?= __('Visible') ?></th>
-						<th><?= __('Code') ?></th>
-						<th><?= __('Name') ?></th>
-						<th><?= __('Type') ?></th>
-						<th><?= __('Pass') ?></th>
-						<th><?= __('Max') ?></th>
-						<th><?= __('Grading Types') ?></th>
-					</tr>
-				</thead>
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
+	</div>
+<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+	<?php
+		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
+		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+	?>
+	<div class="clearfix"></div>
+		<hr>
+		<h3><?= $this->Label->get('Assessments.assessmentItems'); ?></h3>
+		<div class="clearfix">
+			<?= 
+				// pr($options);
+				$this->Form->input($ControllerAction['table']->alias().".new_education_subject_id", [
+					'label' => $this->Label->get('Assessments.addAssessmentItem'),
+					'type' => 'select',
+					'options' => $attr['options'],
+					'value' => 0,
+					'onchange' => "$('#reload').val('addSubject').click();"
+				]);
+			?>
+		</div>
 
-				<tbody>
-				<?php foreach ($data->assessment_items as $i => $obj) : ?>
-					<tr>
-						<td><?= $obj->visible == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>'; ?></td>
-						<td><?= $obj->education_subject->code ?></td>
-						<td><?= $obj->education_subject->name ?></td>
-						<td><?= isset($markTypeOptions[$obj->result_type]) ? $markTypeOptions[$obj->result_type] : current($markTypeOptions) ?></td>
-						<td><?= $obj->pass_mark ?></td>
-						<td><?= $obj->max ?></td>
-						<td><?= isset($gradingTypeOptions[$obj->assessment_grading_type_id]) ? $gradingTypeOptions[$obj->assessment_grading_type_id] : current($gradingTypeOptions) ?></td>
-					</tr>
-				<?php endforeach ?>
-				</tbody>
+	<div class="table-wrapper">
+		<div class="table-responsive">
+			<table class="table table-curved table-input">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 			</table>
 		</div>
 	</div>

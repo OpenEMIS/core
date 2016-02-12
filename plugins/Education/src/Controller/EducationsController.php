@@ -1,8 +1,10 @@
 <?php
 namespace Education\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
 class EducationsController extends AppController
 {
@@ -63,7 +65,7 @@ class EducationsController extends AppController
         $this->set('selectedAction', $selectedAction);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Education');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
