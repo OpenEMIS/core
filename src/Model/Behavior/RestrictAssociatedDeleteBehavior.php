@@ -18,7 +18,6 @@ class RestrictAssociatedDeleteBehavior extends Behavior {
 	}
 
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
-		$id = $entity->id;
 		if ($this->_table->hasAssociatedRecords($this->_table, $entity)) {
 			$event->stopPropagation();
 			$extra['Alert']['message'] = 'general.deleteTransfer.restrictDelete';
