@@ -4,6 +4,7 @@ namespace ControllerAction\Model\Traits;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\Controller\Exception\MissingActionException;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
