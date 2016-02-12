@@ -124,6 +124,10 @@ trait MessagesTrait {
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
 			'end_time' => 'End Time',
+			'our_shifts' => 'Our Shifts',
+			'external_shifts' => 'External Shifts',
+			'location' => 'Location',
+			'institution' => 'Institution',
 		],
 		'InstitutionSections' => [
 			'noClasses' => 'No Classes',
@@ -140,6 +144,7 @@ trait MessagesTrait {
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
 			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
 			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
+			'education_grade_options_empty' => 'No available Grades for the selected period'
 		],
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
@@ -252,7 +257,8 @@ trait MessagesTrait {
 				'inactive' => 'Your account has been disabled.',
 				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
-			'noAccess' => 'You do not have access to this location.'
+			'noAccess' => 'You do not have access to this location.',
+			'emptyFields' => 'Some of the required fields for this authentication type are empty.'
 		],
 		'SecurityRoles' => [
 			'userRoles' => 'User Roles',
@@ -524,6 +530,9 @@ trait MessagesTrait {
 			'InstitutionShifts' => [
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				],
+				'location' => [
+					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
 			'StudentGuardians' => [
