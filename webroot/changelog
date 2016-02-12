@@ -9,6 +9,7 @@ v3.4.13
 - Fixed a bug that caused the breadcrumb home icon not working properly	Actions
 - Implemented customised workflow for Positions
 - The system does not allow new student profile to be created if the student age does not fall within the allowed age range
+- Infrastructures can be added as hierarchy now
 
 v3.4.12
 - Fixed a bug that caused student data not removed completely when deleting a student from a school
