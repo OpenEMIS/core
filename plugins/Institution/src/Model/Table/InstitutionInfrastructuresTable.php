@@ -66,7 +66,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 			->count();
 
 		if ($count) {
-			// $this->recover();
 			$this->runRecover();
 		}
 		// End
@@ -197,7 +196,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 					]
 				);
 
-			// $this->recover();
 			$this->runRecover();
 
 			$process = function($model, $id, $options) {
@@ -324,15 +322,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$script = 'tree';
 
 		$consoleDir = ROOT . DS . 'bin' . DS;
-		$cmd = sprintf("%scake %s %d", $consoleDir, $script, $this->registryAlias());
+		$cmd = sprintf("%scake %s %s", $consoleDir, $script, $this->registryAlias());
 		$nohup = '%s >> %slogs/'.$script.'.log & echo $!';
 		$shellCmd = sprintf($nohup, $cmd, ROOT.DS);
 		Log::write('debug', $shellCmd);
 		exec($shellCmd);
-	}
-
-	public function execRecover() {
-		$this->recover();
 	}
 
 	public function getParentPath($parentId=null) {
