@@ -1,6 +1,7 @@
 <?php
 namespace Training\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -19,7 +20,7 @@ class TrainingsController extends AppController
         $this->loadComponent('Training.Training');
     }
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Training');
 
         $header .= ' - ' . $model->getHeader($model->alias);
