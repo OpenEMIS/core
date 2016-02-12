@@ -682,9 +682,12 @@ class StudentAttendancesTable extends AppTable {
 			}
 		}
 
-		// if ($action == 'index') {
-		// 	$toolbarButtons['export']['url']['action'] = 'AttendanceExport';
-		// }
+		$selectedDay = $this->request->query('day');
+		if ($selectedDay == -1) { // selecting all days
+			$toolbarArray = $toolbarButtons->getArrayCopy();
+			unset($toolbarArray['edit']);
+			$toolbarButtons->exchangeArray($toolbarArray);
+		}
 	}
 
 	public function indexEdit() {
