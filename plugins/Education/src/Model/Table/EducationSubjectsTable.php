@@ -16,5 +16,6 @@ class EducationSubjectsTable extends AppTable {
 			'through' => 'Education.EducationGradesSubjects',
 			'dependent' => false
 		]);
+		$this->addBehavior('RestrictAssoicatedDelete');
 	}
 }

@@ -8,5 +8,6 @@ class EducationProgrammeOrientationsTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
 		$this->hasMany('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'cascadeCallbacks' => true]);
+		$this->addBehavior('RestrictAssoicatedDelete');
 	}
 }
