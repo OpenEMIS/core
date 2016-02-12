@@ -174,10 +174,6 @@ class StaffTable extends AppTable {
 		$this->dashboardQuery = clone $query;
 	}
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$this->addStaffRole($entity->institution_position_id, $entity->staff_id, $entity->group_id);
-	}
-
 	public function addStaffRole($institutionPositionId, $staffId, $securityGroupId) {
 		$securityRoleId = $this->Positions->find()
 			->where([
@@ -326,6 +322,8 @@ class StaffTable extends AppTable {
 		$institutionPositionId = $entity->institution_position_id;
 		$staffId = $entity->staff_id;
 		$institutionId = $entity->institution_id;
+		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+
 		if (!$entity->isNew()) { // edit operation
 			if ($entity->has('newFTE')) {
 				unset($entity->id);
@@ -365,12 +363,13 @@ class StaffTable extends AppTable {
 				$currentCakeTime = Time::now();
 				$todayDate = Time::parseDate($currentCakeTime);
 				if (empty($entity->end_date) || (!empty($entity->end_date) && $entity->end_date >= $todayDate)) {	
-					$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 					$this->addStaffRole($institutionPositionId, $staffId, $securityGroupId);
 				} else {
 					$this->removeStaffRole($institutionPositionId, $staffId, $institutionId);
 				}
 			}
+		} else { // add operation
+			$this->addStaffRole($institutionPositionId, $staffId, $securityGroupId);
 		}
 	}
 
