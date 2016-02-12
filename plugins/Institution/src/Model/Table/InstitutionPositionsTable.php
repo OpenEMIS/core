@@ -15,11 +15,12 @@ use App\Model\Traits\OptionsTrait;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
-	public $institutionId = 0;
+	public $CAVersion = '4.0';
 	
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
+		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
@@ -27,6 +28,12 @@ class InstitutionPositionsTable extends AppTable {
 		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
 		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
+
+		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('ControllerAction.ControllerAction', [
+			'actions' => ['remove' => 'transfer'],
+			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
+		]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -38,29 +45,24 @@ class InstitutionPositionsTable extends AppTable {
 			;
 	}
 
-	public function beforeAction($event) {
-		$this->ControllerAction->field('position_no', ['visible' => true]);
-		$this->ControllerAction->field('staff_position_title_id', [
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('position_no', ['visible' => true]);
+		$this->field('staff_position_title_id', [
 			'visible' => true,
 			'type' => 'select'
 		]);
-		$this->ControllerAction->field('staff_position_grade_id', [
+		$this->field('staff_position_grade_id', [
 			'visible' => true,
 			'type' => 'select'
 		]);
-		$this->ControllerAction->field('status', [
-			'visible' => true,
-			'type' => 'select',
-			'options' => $this->getSelectOptions('general.active')
-		]);
-		$this->ControllerAction->field('current_staff_list', [
+		$this->field('current_staff_list', [
 			'label' => '',
 			'override' => true,
 			'type' => 'element', 
 			'element' => 'Institution.Positions/current',
 			'visible' => true
 		]);
-		$this->ControllerAction->field('past_staff_list', [
+		$this->field('past_staff_list', [
 			'label' => '',
 			'override' => true,
 			'type' => 'element',
@@ -130,22 +132,39 @@ class InstitutionPositionsTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforeAction(Event $event) {
-
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['current_staff_list']['visible'] = false;
 		$this->fields['past_staff_list']['visible'] = false;
 
-		$this->ControllerAction->setFieldOrder([
+		$this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
+		$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
+
+		$this->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'status',
+			'staff_position_grade_id',
 		]);
 
+		if ($extra['auto_search']) {
+			$search = $this->getSearchKey();
+			if (!empty($search)) {
+				$extra['OR'] = [$this->StaffPositionTitles->aliasField('name').' LIKE' => '%' . $search . '%'];
+			}
+		}
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		// pr($options);die;
-		// $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
-		// $query->select($this->StaffPositionTitles);
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		// pr('model - indexBeforeQuery');
+		$extra['auto_contain'] = false;
+		$extra['auto_order'] = false;
+
+		$query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions'])
+			->autoFields(true);
+
+		$sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
+		if (array_key_exists('sortWhitelist', $extra['options'])) {
+			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+		}
+		$extra['options']['sortWhitelist'] = $sortList;
 	}
 
 /******************************************************************************************************************
@@ -159,9 +178,9 @@ class InstitutionPositionsTable extends AppTable {
 		$this->fields['current_staff_list']['visible'] = false;
 		$this->fields['past_staff_list']['visible'] = false;
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'status',
+			'staff_position_grade_id',
 		]);
 
 	}
@@ -174,14 +193,14 @@ class InstitutionPositionsTable extends AppTable {
 
 	public function viewBeforeAction(Event $event) {
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'position_no', 'staff_position_title_id', 
-			'staff_position_grade_id', 'status',
+			'staff_position_grade_id',
 			'modified_user_id', 'modified', 'created_user_id', 'created',
 			'current_staff_list', 'past_staff_list'
 		]);
 
-		$session = $this->controller->request->session();
+		$session = $this->Session;
 		$pass = $this->request->param('pass');
 		if (is_array($pass) && !empty($pass)) {
 			$id = $pass[1];
@@ -241,7 +260,7 @@ class InstitutionPositionsTable extends AppTable {
 **
 ******************************************************************************************************************/
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
 	}

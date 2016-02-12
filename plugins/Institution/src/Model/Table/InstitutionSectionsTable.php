@@ -187,7 +187,7 @@ class InstitutionSectionsTable extends AppTable {
 				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (!empty($gradeOptions)) {
 			/**
@@ -425,7 +425,10 @@ class InstitutionSectionsTable extends AppTable {
 			$this->ControllerAction->field('education_grade', [
 				'type' => 'select',
 				'options' => $gradeOptions,
-				'onChangeReload' => true
+				'onChangeReload' => true,
+				'attr' => [
+ 					'empty' => ((empty($gradeOptions)) ? $this->Alert->getMessage($this->aliasField('education_grade_options_empty')) : '')
+				]
 			]);
 
 			$numberOfSectionsOptions = $this->numberOfSectionsOptions();
