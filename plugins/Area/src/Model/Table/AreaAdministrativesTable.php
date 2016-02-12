@@ -14,8 +14,8 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('Parents', ['className' => 'Area.AreaAdministratives']);
-		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
+		$this->belongsTo('AreaAdministrativeParents', ['className' => 'Area.AreaAdministratives']);
+		$this->belongsTo('AreaAdministrativeLevels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
 		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
