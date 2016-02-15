@@ -1,5 +1,199 @@
---POCOR-2535
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2392', NOW());
 
+-- Backup table
+CREATE TABLE `z_2392_institution_infrastructures` LIKE  `institution_infrastructures`;
+INSERT INTO `z_2392_institution_infrastructures` SELECT * FROM `institution_infrastructures` WHERE 1;
+
+-- Start: infrastructure_ownerships
+DROP TABLE IF EXISTS `infrastructure_ownerships`;
+CREATE TABLE IF NOT EXISTS `infrastructure_ownerships` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- update field_options
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.InfrastructureOwnerships"}' WHERE `code` = 'InfrastructureOwnerships';
+
+-- move out infrastructure_ownerships from field_option_values and start with new id
+INSERT INTO `infrastructure_ownerships` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`,`created`)
+SELECT `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `id`, `created` FROM `field_option_values`
+WHERE `field_option_id` = (SELECT `id` FROM `field_options` WHERE `code` = 'InfrastructureOwnerships');
+UPDATE `field_option_values` SET `visible` = 0 WHERE `field_option_id` = (SELECT `id` FROM `field_options` WHERE `code` = 'InfrastructureOwnerships');
+
+-- update new id back to field_option_values
+UPDATE `field_option_values` AS `FieldOptionValues`
+INNER JOIN `infrastructure_ownerships` AS `InfrastructureOwnerships` ON `InfrastructureOwnerships`.`created_user_id` = `FieldOptionValues`.`id`
+SET `FieldOptionValues`.`id_new` = `InfrastructureOwnerships`.`id`;
+
+-- pacth new id to all hasMany tables
+UPDATE `institution_infrastructures` AS `InstitutionInfrastructures`
+INNER JOIN `field_option_values` AS `FieldOptionValues` ON `FieldOptionValues`.`id` = `InstitutionInfrastructures`.`infrastructure_ownership_id`
+SET `InstitutionInfrastructures`.`infrastructure_ownership_id` = `FieldOptionValues`.`id_new`;
+
+-- update created_user_id in infrastructure_ownerships with the original value
+UPDATE `infrastructure_ownerships` AS `InfrastructureOwnerships`
+INNER JOIN `field_option_values` AS `FieldOptionValues` ON `FieldOptionValues`.`id_new` = `InfrastructureOwnerships`.`id`
+SET `InfrastructureOwnerships`.`created_user_id` = `FieldOptionValues`.`created_user_id`;
+-- End
+
+-- Start: infrastructure_conditions
+DROP TABLE IF EXISTS `infrastructure_conditions`;
+CREATE TABLE IF NOT EXISTS `infrastructure_conditions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- update field_options
+UPDATE `field_options` SET `params` = '{"model":"FieldOption.InfrastructureConditions"}' WHERE `code` = 'InfrastructureConditions';
+
+-- move out infrastructure_conditions from field_option_values and start with new id
+INSERT INTO `infrastructure_conditions` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`,`created`)
+SELECT `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `id`, `created` FROM `field_option_values`
+WHERE `field_option_id` = (SELECT `id` FROM `field_options` WHERE `code` = 'InfrastructureConditions');
+UPDATE `field_option_values` SET `visible` = 0 WHERE `field_option_id` = (SELECT `id` FROM `field_options` WHERE `code` = 'InfrastructureConditions');
+
+-- update new id back to field_option_values
+UPDATE `field_option_values` AS `FieldOptionValues`
+INNER JOIN `infrastructure_conditions` AS `InfrastructureConditions` ON `InfrastructureConditions`.`created_user_id` = `FieldOptionValues`.`id`
+SET `FieldOptionValues`.`id_new` = `InfrastructureConditions`.`id`;
+
+-- pacth new id to all hasMany tables
+UPDATE `institution_infrastructures` AS `InstitutionInfrastructures`
+INNER JOIN `field_option_values` AS `FieldOptionValues` ON `FieldOptionValues`.`id` = `InstitutionInfrastructures`.`infrastructure_condition_id`
+SET `InstitutionInfrastructures`.`infrastructure_condition_id` = `FieldOptionValues`.`id_new`;
+
+-- update created_user_id in infrastructure_conditions with the original value
+UPDATE `infrastructure_conditions` AS `InfrastructureConditions`
+INNER JOIN `field_option_values` AS `FieldOptionValues` ON `FieldOptionValues`.`id_new` = `InfrastructureConditions`.`id`
+SET `InfrastructureConditions`.`created_user_id` = `FieldOptionValues`.`created_user_id`;
+-- End
+
+-- institution_infrastructures
+ALTER TABLE `institution_infrastructures` ADD `parent_id` INT(11) NULL DEFAULT NULL AFTER `size`;
+ALTER TABLE `institution_infrastructures` ADD `lft` INT(11) NULL DEFAULT NULL AFTER `parent_id`;
+ALTER TABLE `institution_infrastructures` ADD `rght` INT(11) NULL DEFAULT NULL AFTER `lft`;
+
+-- patch Infrastructure
+DROP PROCEDURE IF EXISTS patchInfrastructure;
+DELIMITER $$
+
+CREATE PROCEDURE patchInfrastructure()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE levelId, parentId, minId INT(11);
+  DECLARE infra_levels CURSOR FOR
+		SELECT `InfrastructureLevels`.`id`, `InfrastructureLevels`.`parent_id`
+		FROM `infrastructure_levels` AS `InfrastructureLevels`
+		WHERE `InfrastructureLevels`.`parent_id` <> 0
+		ORDER BY `InfrastructureLevels`.`parent_id`;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN infra_levels;
+
+  read_loop: LOOP
+    FETCH infra_levels INTO levelId, parentId;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+
+	SELECT MIN(`id`) INTO minId FROM `institution_infrastructures` WHERE `infrastructure_level_id` = parentId;
+	UPDATE `institution_infrastructures` SET `parent_id` = minId WHERE `infrastructure_level_id` = levelId;
+
+  END LOOP read_loop;
+
+  CLOSE infra_levels;
+END
+$$
+
+DELIMITER ;
+
+CALL patchInfrastructure;
+
+DROP PROCEDURE IF EXISTS patchInfrastructure;
+
+--
+-- POCOR-2489
+--
+
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2489', NOW());
+
+-- security_functions
+INSERT INTO `security_functions` 
+(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES ('6008', 'Map', 'Map', 'Reports', 'Reports', '-1', 'index', NULL, NULL, NULL, NULL, '6008', '1', '1', NOW());
+
+INSERT INTO `db_patches` VALUES ('POCOR-2515', NOW());
+
+CREATE TABLE z2515_institution_shifts LIKE institution_shifts;
+INSERT INTO z2515_institution_shifts SELECT * FROM institution_shifts;
+
+UPDATE institution_shifts SET start_time = STR_TO_DATE(start_time, '%h:%i %p');
+UPDATE institution_shifts SET end_time = STR_TO_DATE(end_time, '%h:%i %p');
+
+ALTER TABLE `institution_shifts` CHANGE `start_time` `start_time` TIME NOT NULL, CHANGE `end_time` `end_time` TIME NOT NULL;
+
+UPDATE `labels` SET `field_name` = 'Location' WHERE field = 'location_institution_id' AND module_name = 'Institutions -> Shifts';
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (uuid(), 'InstitutionShifts', 'location', 'Institutions -> Shifts', 'Occupied By', NULL, NULL, '1', NULL, NULL, '1', now());
+
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2526', NOW());
+
+-- authentication_type_attributes
+ALTER TABLE `authentication_type_attributes` 
+RENAME TO `z_2526_authentication_type_attributes`;
+
+CREATE TABLE `authentication_type_attributes` (
+  `id` char(36) NOT NULL,
+  `authentication_type` varchar(50) NOT NULL,
+  `attribute_field` varchar(50) NOT NULL,
+  `attribute_name` varchar(50) NOT NULL,
+  `value` text,
+  `modified` datetime DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL,
+  `created_user_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- config_item_options
+INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) VALUES ('authentication_type', 'Saml2', 'Saml2', 4, 1);
+
+-- config_items
+CREATE TABLE `z_2526_config_items` LIKE `config_items`;
+
+INSERT INTO `z_2526_config_items` SELECT * FROM `config_items` WHERE `code` = 'authentication_type' AND `type` = 'Authentication';
+
+UPDATE `config_items` SET `value` = 'Local' WHERE `code` = 'authentication_type' AND `type` = 'Authentication';
+
+--POCOR-2535
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-2535', NOW());
 
@@ -136,6 +330,16 @@ SELECT 'Open', 'Active', 'Administration - Initial Setup', `id`, 1, NOW() FROM `
 INSERT INTO `workflow_transitions` (`prev_workflow_step_name`, `workflow_step_name`, `workflow_action_name`, `workflow_record_id`, `created_user_id`, `created`)
 SELECT 'Open', 'Inactive', 'Administration - Initial Setup', `id`, 1, NOW() FROM `workflow_records` WHERE `workflow_model_id` = @modelId AND `workflow_step_id` = @inactiveStepId ORDER BY `model_reference`;
 
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2539', NOW());
+
+-- staff_position_titles
+ALTER TABLE `staff_position_titles` 
+ADD COLUMN `security_role_id` INT NULL DEFAULT 0 COMMENT '' AFTER `type`;
+
+ALTER TABLE `staff_position_titles` 
+CHANGE COLUMN `security_role_id` `security_role_id` INT(11) NOT NULL COMMENT '' ,
+ADD INDEX `security_role_id` (`security_role_id`);
 
 -- DB Version
 UPDATE config_items SET value = '3.4.13' WHERE code = 'db_version';
