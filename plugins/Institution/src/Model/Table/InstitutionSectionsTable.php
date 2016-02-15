@@ -1146,9 +1146,14 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	protected function createVirtualStudentEntity($id, $entity) {
-		$userData = $this->Institutions->Students->find()
+		$InstitutionStudentsTable = $this->Institutions->Students;
+		$userData = $InstitutionStudentsTable->find()
 			->contain(['Users'=>['Genders'], 'StudentStatuses', 'EducationGrades'])
-			->where(['student_id'=>$id])
+			->where([
+				$InstitutionStudentsTable->aliasField('student_id') => $id,
+				$InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
+				$InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id
+			])
 			->first();
 
 		$data = [
