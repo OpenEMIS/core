@@ -83,6 +83,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 		$customFields = $this->getCustomFields($filterValue);
 		$tableCustomFieldIds = [];
+		$fieldCount = count($fields);
 		
 		foreach ($customFields as $customField) {
 			if ($customField['field_type'] != 'TABLE') {
@@ -125,6 +126,8 @@ class CustomFieldListBehavior extends Behavior {
 			}
 		}
 
+		$fields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
+
 		// Setting the list of options into the sheet for easier fetching
 		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
 	}
@@ -138,7 +141,11 @@ class CustomFieldListBehavior extends Behavior {
 		// the temporary field values
 		// This is to avoid multiple fetch to the database
 		if (!array_key_exists($entity->id, $tmpFieldValues)) {
-			$tmpFieldValues = $this->setTmpFieldValues($this->getFieldValue($entity->id));
+			$fieldValues = $this->getFieldValue($entity->id);
+			if (isset($attr['tableCustomFieldIds'])) {
+				
+			}
+			$tmpFieldValues = $this->setTmpFieldValues($fieldValues);
 		}
 
 		// Check if the temporary field value has this record information.
