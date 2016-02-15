@@ -285,7 +285,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->Session->write('Staff.Staff.id', $entity->security_user_id);
+		$this->Session->write('Staff.Staff.id', $entity->staff_id);
 		$this->Session->write('Staff.Staff.name', $entity->user->name);
 		$this->setupTabElements($entity);
 	}
@@ -381,11 +381,10 @@ class StaffTable extends AppTable {
 			'id' => $entity->id,
 			'userId' => $entity->staff_id
 		];
-
-		$tabElements = $this->controller->getUserTabElements($options);
+		$tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', 'Positions');
 	}
 
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
@@ -628,7 +627,9 @@ class StaffTable extends AppTable {
 				'attr' => ['value' => $entity->FTE]
 			]);
 		}
-		
+		$this->Session->write('Staff.Staff.id', $entity->staff_id);
+		$this->Session->write('Staff.Staff.name', $entity->user->name);
+		$this->setupTabElements($entity);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {

@@ -558,6 +558,16 @@ class StudentsTable extends AppTable {
 				'photo_content', 'openemis_no', 'student_id', 'student_status_id', 'reason', 'comment'
 			]);
 		}
+		$this->Session->write('Student.Students.id', $entity->student_id);
+		$this->Session->write('Student.Students.name', $entity->user->name);
+		$this->setupTabElements($entity);
+	}
+
+	private function setupTabElements($entity) {
+		$options['type'] = 'student';
+		$tabElements = TableRegistry::get('Student.Students')->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Programmes');
 	}
 
 	public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -756,6 +766,10 @@ class StudentsTable extends AppTable {
 		$endDate = $period->end_date->copy();
 		$this->fields['start_date']['date_options'] = ['startDate' => $period->start_date->format('d-m-Y')];
 		$this->fields['end_date']['date_options'] = ['endDate' => $endDate->subDay()->format('d-m-Y')];
+
+		$this->Session->write('Student.Students.id', $entity->student_id);
+		$this->Session->write('Student.Students.name', $entity->user->name);
+		$this->setupTabElements($entity);
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
